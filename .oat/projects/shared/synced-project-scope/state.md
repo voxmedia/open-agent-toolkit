@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | review_pending | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | review_pending | complete | pr_open
 oat_orchestration_retry_limit: 5 # final operator-authorized p02 review-fix extension; range 0-5
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -128,7 +128,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-29T09:58:14Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p17
   pre_approval:
@@ -138,6 +138,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: approved
   approval_source: user
   post_approval: []
@@ -148,7 +149,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T09:58:14.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T10:00:14.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -158,13 +159,13 @@ oat_project_recap:
 
 # Project State: synced-project-scope
 
-**Status:** Implementation and final reviews complete; approved closeout in progress
+**Status:** PR #227 open; implementation closeout complete
 **Started:** 2026-08-26
 **Last Updated:** 2026-08-29
 
 ## Current Phase
 
-Implementation complete; approved closeout is refreshing summary, documentation, and PR artifacts.
+Implementation closeout complete; PR #227 is open with refreshed artifacts.
 
 ## Artifacts
 
@@ -347,6 +348,4 @@ None.
 
 ## Next Milestone
 
-Refresh the project summary, documentation state, and PR artifacts, then update
-PR #227. The refreshed configured exit gate has passed and been durably
-received; no implementation or review blocker remains.
+Monitor PR #227 checks and review. No implementation or review blocker remains.
