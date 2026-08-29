@@ -217,7 +217,19 @@ oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 3. If something is not found, use "Not detected" or "Not applicable"
 4. Always include file paths with backticks
 
-Use templates from `.agents/skills/oat-repo-knowledge-index/references/templates/`.
+This agent is materialized into provider-specific views, so no portable
+loaded-agent root exists. Resolve the template owner from installed scope
+instead: independently probe each required `<name>/SKILL.md` in order,
+`${HOME}/.agents/skills` then `<repo-root>/.agents/skills`. Bind the first
+match for `oat-repo-knowledge-index` to its own
+`${KNOWLEDGE_INDEX_SKILLS_ROOT}`; never ambient discovery. On a miss, name the
+skill, stop before writing any document instead of inventing a format, and give
+its intended-scope recovery command:
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>`.
+
+Use templates from
+`${KNOWLEDGE_INDEX_SKILLS_ROOT}/oat-repo-knowledge-index/references/templates/`.
 
 Use the Write tool to create each document.
 
@@ -250,7 +262,7 @@ Ready for orchestrator summary.
 
 **NO RECOMMENDATIONS.** No “recommended setup” or “consider using X” in knowledge docs. Capture gaps as current-state issues in `concerns.md` only.
 
-**USE THE TEMPLATES.** Fill in the template structure from `.agents/skills/oat-repo-knowledge-index/references/templates/`. Don't invent your own format.
+**USE THE TEMPLATES.** Fill in the template structure from `${KNOWLEDGE_INDEX_SKILLS_ROOT}/oat-repo-knowledge-index/references/templates/`. Don't invent your own format.
 
 **INCLUDE FRONTMATTER.** Every generated document must have frontmatter with oat_generated: true and both SHA fields.
 
