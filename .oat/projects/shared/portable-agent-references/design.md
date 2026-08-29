@@ -177,7 +177,11 @@ metadata describe the same portable behavior.
 
 - Replace the phase-implementer bare-path exemption with positive portable
   assertions and add equivalent reviewer/codebase-mapper coverage.
-- Verify bundled skill/agent assets and generated provider views.
+- Verify bundled skill/agent assets, and generated provider views for the
+  Codex materialization surface. Codex is the contract-gated provider; the
+  Claude and Cursor views rely on manual regeneration plus the
+  `oat sync --scope all --dry-run` drift check. Broadening the sync contract
+  test to a second adapter is a recorded follow-up.
 - Enforce one version bump for each changed canonical skill or agent and the
   lockstep public-package release contract.
 

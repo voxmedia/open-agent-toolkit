@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-08-29
 oat_current_task_id: null
@@ -418,24 +418,132 @@ run, and is corrected here.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A manifest-driven portability ratchet covering the entire user-default asset
+  surface. It derives skill _and_ agent assets from `PACK_MANIFEST` and
+  classifies cross-skill `SKILL.md` reads plus file- and directory-form targets
+  at or below `references/`, across backticked, plain, Markdown-link, `./`,
+  `../`, and repeated-parent spellings.
+- All nine canonical callers ported to installed-scope resolution: six skills
+  use loaded → user → project, and three agents use user → project, because no
+  provider exposes a stable loaded-agent source directory.
+- The `oat-phase-implementer` bare-path exemption removed and replaced with the
+  same positive portable assertions its consumers use.
+- Zero portable-reference debt as an enforced invariant: a temporary migration
+  inventory of 21 exact entries was introduced and drained to zero, leaving only
+  the six pre-existing non-executable historical entries.
+- The contract documented for contributors, shipped provider views regenerated,
+  and the five public packages released together as `0.2.40`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Cross-skill and agent-to-skill references in shipped assets now resolve when
+  a pack is installed at user scope, instead of dangling on a repo-relative
+  path.
+- Generated Codex and Cursor role views carry the portable two-step resolver
+  with independent per-dependency root bindings and pack-specific fail-closed
+  recovery commands.
+- A new non-portable reference added to any user-default skill or agent now
+  fails the contract test with exact `source -> target` evidence.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts` - the ratchet: matcher, manifest-derived surface, historical baseline, zero-debt invariant
+- `packages/cli/src/validation/skills.test.ts` - caller contract assertions; exemption removal
+- `packages/cli/src/commands/sync/index.test.ts` - provider materialization contract (Codex surface)
+- `.agents/skills/{oat-dispatch-subagents,oat-repo-improve,oat-review-provide-remote,analyze,compare,oat-project-review-provide}/SKILL.md` - ported skill callers
+- `.agents/agents/{oat-phase-implementer,oat-reviewer,oat-codebase-mapper}.md` - ported agent callers
+- `apps/oat-docs/docs/contributing/skills.md`, `apps/oat-docs/docs/cli-utilities/tool-packs.md` - contract documentation
+- `.codex/agents/*.toml`, `.cursor/agents/*.md`, `.oat/sync/manifest.json`, five `package.json` files, `packages/cli/assets/public-package-versions.json` - regenerated views and the lockstep release
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Full CI gate list in CI's order, uncached and HOME-isolated at the final head:
+  `pnpm check`, `pnpm type-check`, `pnpm exec turbo run test --force`,
+  `pnpm build`, `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+  `pnpm release:validate`, `pnpm build:docs` — all exit 0, with
+  `Cached: 0 cached, 10 total` and zero cache-replay markers.
+- Mutation testing of the ratchet, twice and independently: reverting a ported
+  agent file, and injecting a bare read into `oat-codebase-mapper.md`, each
+  failed the suite with exact `source -> target` evidence; worktree restored
+  clean both times.
+- End-to-end confirmation on the shipped artifact: all tracked generated agent
+  views scanned with the ratchet's own matcher yield 0 non-portable reads.
+- Historical-baseline honesty: `PINNED_HISTORICAL_CROSS_SKILL_READS` verified
+  byte-identical to the base commit across every phase commit, proving live debt
+  was drained rather than reclassified into the baseline.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- `plan.md` p01-t05 and `design.md` originally implied per-provider
+  materialization coverage. Shipped coverage gates the Codex surface only;
+  Claude and Cursor views rely on manual regeneration plus the
+  `oat sync --scope all --dry-run` drift check. Accepted as artifact alignment
+  (final review M1): the implementation is defensible and the shipped
+  documentation already disclosed the limit honestly, so both artifacts were
+  corrected to match. Broadening the sync contract test to a second adapter is a
+  recorded follow-up.
+- `tool-packs.md` was edited under the plan's explicit conditional. The reviewer
+  independently confirmed the condition was met.
+
+### Review Received: final
+
+**Date:** 2026-08-29
+**Review artifact:** `reviews/archived/final-review-2026-08-29T082359Z.md`
+
+**Findings:** 0 Critical, 0 Important, 3 Medium, 5 Minor
+
+**Disposition:** No fix tasks added. Zero Critical/Important. With user
+approval at the final HiLL checkpoint:
+
+- **M1 — artifact_alignment_required, resolved now.** `plan.md` p01-t05 and
+  `design.md` implied per-provider materialization coverage while shipped
+  coverage gates Codex only. The implementation is defensible and
+  `apps/oat-docs/docs/contributing/skills.md` already disclosed the limit
+  honestly, so both lifecycle artifacts were corrected to match rather than
+  changing code. Implementation is source of truth.
+- **M2, M3 — explicit_deferral.** See Deferred Findings (Medium) below.
+- **m1, m2 — explicit_deferral.** See Deferred Findings (Minor) below.
+- **m3, m4 — resolved in flight** in `7c3ebf496`, after the reviewed head.
+- **m5 — converted and resolved:** the Final Summary above is now filled.
+
+**Review cycle:** 1 of 3.
+
+**Next:** Final review marked `passed`; continue to closeout.
+
+## Deferred Findings (Medium)
+
+Dispositioned at final review with user approval; none blocking.
+
+- **M2 — bare `.agents/agents/*.md` reads in user-default skills.** Nine sites
+  across five skills in two packs, four executable. The ratchet structurally
+  cannot see this path shape. Deferred: nothing breaks while `.agents/agents/`
+  exists at project scope, and a correct fix requires inventing a portable
+  agent-read convention that does not yet exist. Captured as
+  `BL-260829-unified-agent-provider-root` plus a scaffolded project at
+  `.oat/projects/shared/agent-provider-root` with seeded discovery.
+  Follow-up trigger: any new bare agent read, or the first report of a
+  user-scope resolution failure.
+- **M3 — sibling paths outside `SKILL.md` and `references/` unenforced.**
+  Deferred: the reviewer re-derived with a broadened matcher and found zero live
+  cross-skill violations. This is missing enforcement breadth, not a live defect.
+  Follow-up trigger: first live instance, or the `BL-260829` matcher work.
+
+## Deferred Findings (Minor)
+
+- **m1 — duplicate weaker matcher at `packages/cli/src/validation/skills.test.ts:4695`.**
+  Deferred: redundant, since the canonical ratchet already scans those same four
+  agent files with the stronger pattern. No coverage hole today.
+- **m2 — matcher cannot see prefixed skills-root spellings** such as
+  `$PWD/.agents/skills/...` or `$REPO_ROOT/.agents/skills/...`. The negative
+  lookbehind that lets portable `${HOME}/.agents/skills` pass also suppresses
+  these non-portable forms. Zero live instances. Deferred and folded into
+  `BL-260829`, whose suggested fix — an allowlist of accepted root variables
+  instead of a blanket lookbehind — is the same matcher work.
+
+Resolved in flight, after the reviewed head `b4c71f790`: **m3** (stale
+`Last Updated` header) and **m4** (unattributed Phase 2 test-results row) were
+both corrected in `7c3ebf496`. **m5** (template Final Summary) is resolved by
+this section.
 
 ## References
 

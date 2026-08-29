@@ -288,8 +288,11 @@ copy canonical `.agents/agents/*.md` into that root for project-scope
 affected provider role paths from that temporary materialization plan/manifest,
 read every generated role there, require the portable resolver markers in each
 copy, and reject executable bare sibling-skill paths. Cover the phase
-implementer, reviewer, and codebase mapper wherever each provider materializes
-that role. Do not inspect the stale tracked provider views for this contract;
+implementer, reviewer, and codebase mapper for the Codex materialization
+surface, which is the contract-gated provider. Claude and Cursor views are
+covered by manual regeneration plus the `oat sync --scope all --dry-run` drift
+check rather than by this contract test; extending the harness to a second
+adapter is recorded as a follow-up, not delivered here. Do not inspect the stale tracked provider views for this contract;
 p02-t02 remains responsible for refreshing those tracked views.
 
 ```bash
@@ -460,7 +463,7 @@ git commit -m "chore(p02-t02): release portable agent references"
 | p01    | code     | passed          | 2026-08-29 | reviews/p01-review-2026-08-29T074543Z.md                                            | 52745ef93674fe0098e54208bf84d98132bc87ca | manual     | -           |
 | p02    | code     | fixes_completed | 2026-08-29 | reviews/p02-review-2026-08-29T080559Z.md                                            | 69d011bbc3ca19bac8848e3694706dd29835023e | manual     | -           |
 | p02    | code     | passed          | 2026-08-29 | reviews/p02-review-2026-08-29T081859Z.md                                            | fa9d6e37d98dfbc7e69d6c7d98b25a60c8d55885 | manual     | -           |
-| final  | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T082359Z.md                                          | b4c71f790b1960554598fff1b1ab1a40c3127e5a | auto       | -           |
+| final  | code     | passed          | 2026-08-29 | reviews/archived/final-review-2026-08-29T082359Z.md                                 | b4c71f790b1960554598fff1b1ab1a40c3127e5a | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                                                   | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-08-28 | structured in-memory review (head c47586ce; reviewer oat-reviewer-gpt-5-6-sol-high) | -                                        | -          | -           |

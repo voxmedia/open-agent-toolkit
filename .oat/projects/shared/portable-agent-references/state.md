@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: fa9d6e37d98dfbc7e69d6c7d98b25a60c8d55885
+oat_last_commit: a3a622084
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,10 +9,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p02'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-28T21:36:51.245Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T08:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T09:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -97,11 +97,13 @@ oat_generated: false
 
 ## Current Phase
 
-All eight planned tasks are implemented and both phases have passed root-owned
-code review at the Critical/Important threshold: Phase 1 at `52745ef93`
-(round 3) and Phase 2 at `fa9d6e37d` (round 2). Phase 2 shipped the lockstep
-`0.2.40` release. Remaining work is final verification, the final lifecycle
-review, and the Phase 2 HiLL checkpoint approval.
+Implementation closeout. All eight planned tasks are complete, both phases
+passed root-owned code review at the Critical/Important threshold (Phase 1 at
+`52745ef93` round 3; Phase 2 at `fa9d6e37d` round 2), and the final lifecycle
+review passed at `b4c71f790` with 0 Critical and 0 Important. Final
+verification re-ran the full CI gate list uncached and HOME-isolated, all
+exit 0. The user approved the Phase 2 HiLL checkpoint and the final review
+dispositions. No configured implementation exit gate exists for this repo.
 
 ## Artifacts
 
@@ -130,6 +132,9 @@ review, and the Phase 2 HiLL checkpoint approval.
 - ✓ Phase 1 passed code review at the Critical/Important threshold (round 3)
 - ✓ Phase 2 implemented: docs contract + provider-view refresh + `0.2.40` lockstep release
 - ✓ Phase 2 passed code review at the Critical/Important threshold (round 2)
+- ✓ Final verification passed (full CI gate list, uncached, HOME-isolated)
+- ✓ Final review passed (0 Critical, 0 Important); findings dispositioned
+- ✓ HiLL checkpoint approved by user
 
 ## Blockers
 
@@ -137,5 +142,5 @@ None
 
 ## Next Milestone
 
-Final verification and final lifecycle review, then the Phase 2 HiLL checkpoint
-approval
+Closeout follow-ons: `oat-project-summary`, `oat-project-document`, then
+`oat-project-pr-final`
