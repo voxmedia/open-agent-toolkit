@@ -75,9 +75,8 @@ function recordSlugFromPath(path: string): string {
   return basename(path, extname(path));
 }
 
-function recordRecovery(path: string): string {
-  const slug = recordSlugFromPath(path);
-  return `Restore the record from Git, or quarantine the invalid file and run \`oat project pull ${slug} --no-commit\` from a clean checkout before committing the repaired record.`;
+function recordRecovery(): string {
+  return `Restore this exact record from a trusted Git revision before retrying. Do not delete or quarantine it to trigger pull adoption: regeneration creates an active record and can discard lifecycle fields such as status, completedAt, and archiveSnapshot. If no trusted Git copy exists, repair those fields losslessly before continuing.`;
 }
 
 function parseRecord(path: string, value: unknown): SyncedProjectRecord {
@@ -86,14 +85,14 @@ function parseRecord(path: string, value: unknown): SyncedProjectRecord {
     throw new CliError(
       `Invalid synced project record ${path}: ${result.error.issues
         .map((issue) => issue.message)
-        .join('; ')} ${recordRecovery(path)}`,
+        .join('; ')} ${recordRecovery()}`,
       1,
     );
   }
   const filenameSlug = recordSlugFromPath(path);
   if (result.data.slug !== filenameSlug) {
     throw new CliError(
-      `Synced project record filename slug "${filenameSlug}" does not match record slug "${result.data.slug}". ${recordRecovery(path)}`,
+      `Synced project record filename slug "${filenameSlug}" does not match record slug "${result.data.slug}". ${recordRecovery()}`,
       1,
     );
   }
@@ -121,7 +120,7 @@ export async function readSyncedRecord(
     }
     const message = error instanceof Error ? error.message : String(error);
     throw new CliError(
-      `Invalid JSON in synced project record ${path}: ${message} ${recordRecovery(path)}`,
+      `Invalid JSON in synced project record ${path}: ${message} ${recordRecovery()}`,
       1,
     );
   }

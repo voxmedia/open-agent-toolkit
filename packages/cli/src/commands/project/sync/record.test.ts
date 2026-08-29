@@ -109,9 +109,63 @@ describe('record persistence', () => {
       await expect(readSyncedRecord(path)).rejects.toMatchObject({
         exitCode: 1,
         message: expect.stringMatching(
-          /Restore the record from Git.*oat project pull demo --no-commit.*clean checkout/s,
+          /Restore this exact record from a trusted Git revision.*Do not delete or quarantine.*status, completedAt, and archiveSnapshot/s,
         ),
       });
+    },
+  );
+
+  it.each([
+    [
+      'active',
+      {
+        ...buildSyncedRecord('demo', new Date('2026-08-27T00:00:00.000Z')),
+        createdAt: 'not-a-date',
+      },
+    ],
+    [
+      'completed',
+      {
+        ...buildSyncedRecord('demo', new Date('2026-08-27T00:00:00.000Z')),
+        status: 'complete',
+        completedAt: '2026-08-28T00:00:00.000Z',
+        ref: 'refs/oat/projects/wrong',
+      },
+    ],
+    [
+      'archived',
+      {
+        ...buildSyncedRecord('demo', new Date('2026-08-27T00:00:00.000Z')),
+        status: 'complete',
+        completedAt: '2026-08-28T00:00:00.000Z',
+        archiveSnapshot: 's3://archive/demo.tar.gz',
+        schemaVersion: 2,
+      },
+    ],
+  ])(
+    'requires lossless Git restoration for a malformed %s lifecycle record',
+    async (_, record) => {
+      const root = await createScopeRoot();
+      const path = join(root, 'demo.json');
+      await writeFile(path, `${JSON.stringify(record)}\n`, 'utf8');
+
+      let error: unknown;
+      try {
+        await readSyncedRecord(path);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(error).toMatchObject({
+        exitCode: 1,
+        message: expect.stringContaining(
+          'Restore this exact record from a trusted Git revision',
+        ),
+      });
+      expect((error as Error).message).toContain(
+        'regeneration creates an active record',
+      );
+      expect((error as Error).message).not.toContain('oat project pull');
     },
   );
 
