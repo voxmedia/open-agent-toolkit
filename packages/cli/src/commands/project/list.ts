@@ -1,5 +1,13 @@
 import { stat } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import {
+  basename,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 import {
   buildCommandContext,
@@ -140,7 +148,9 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
     hint:
       project.kind === 'materialized'
         ? '—'
-        : `oat project pull ${project.name}`,
+        : project.kind === 'recorded-invalid'
+          ? 'restore record from Git'
+          : `oat project pull ${project.name}`,
   }));
 
   const widths = {
@@ -250,6 +260,23 @@ async function collectProjectRows(
         onInvalid: (path, error) => {
           const message =
             error instanceof Error ? error.message : String(error);
+          rows.push({
+            kind: 'recorded-invalid',
+            name: basename(path, extname(path)),
+            path: displayPath(repoRoot, path),
+            scope: 'synced',
+            checkout: 'invalid',
+            recordError: message,
+            phase: null,
+            phaseStatus: null,
+            workflowMode: null,
+            lifecycle: null,
+            progress: null,
+            recommendation: {
+              skill: 'none',
+              reason: 'restore invalid record from a trusted Git revision',
+            },
+          });
           context.logger.warn(
             `Skipping invalid synced project record ${displayPath(repoRoot, path)}: ${message}`,
           );

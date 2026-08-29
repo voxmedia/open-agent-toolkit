@@ -17,7 +17,6 @@ import {
   pushSynced,
 } from '@commands/project/sync/ref-sync';
 import { syncedRecordPath } from '@commands/shared/project-scope';
-import { CliError } from '@errors/cli-error';
 import {
   addLinkedWorktree,
   createSyncedFixture,
@@ -111,21 +110,42 @@ describe('createProjectPruneCommand', () => {
   });
 
   it('fails closed with recovery guidance for a malformed discovery record', async () => {
-    const setup = harness('---\noat_pr_status: closed\n---\n');
-    setup.resolveSyncedTarget.mockRejectedValueOnce(
-      new CliError(
-        'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
-        1,
-      ),
-    );
+    const fixture = await createSyncedFixture();
+    try {
+      const syncedRoot = join(fixture.cloneA, '.oat', 'projects', 'synced');
+      await mkdir(syncedRoot, { recursive: true });
+      await writeFile(join(syncedRoot, 'demo.json'), '{ malformed\n', 'utf8');
+      const capture = createLoggerCapture();
+      const pruneSyncedMock = vi.fn();
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        pruneSynced: pruneSyncedMock,
+        processEnv: {},
+      });
 
-    await run(setup.command, ['demo']);
+      await run(command, ['demo']);
 
-    expect(setup.capture.error).toEqual([
-      'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
-    ]);
-    expect(setup.pruneSynced).not.toHaveBeenCalled();
-    expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        `Invalid JSON in synced project record ${join(syncedRoot, 'demo.json')}`,
+      );
+      expect(capture.error[0]).toContain(
+        'Restore this exact record from a trusted Git revision before retrying.',
+      );
+      expect(pruneSyncedMock).not.toHaveBeenCalled();
+      expect(process.exitCode).toBe(1);
+    } finally {
+      await fixture.cleanup();
+    }
   });
 });
 

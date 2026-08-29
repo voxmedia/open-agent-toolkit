@@ -155,6 +155,23 @@ export type ProjectListRow =
       };
     }
   | {
+      kind: 'recorded-invalid';
+      name: string;
+      path: string;
+      scope: 'synced';
+      checkout: 'invalid';
+      recordError: string;
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: null;
+      progress: null;
+      recommendation: {
+        skill: 'none';
+        reason: 'restore invalid record from a trusted Git revision';
+      };
+    }
+  | {
       kind: 'remote';
       name: string;
       scope: 'synced';

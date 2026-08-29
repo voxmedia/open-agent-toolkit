@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { symlink, writeFile } from 'node:fs/promises';
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -143,21 +143,42 @@ describe('createProjectPushCommand', () => {
   });
 
   it('fails closed with recovery guidance for a malformed discovery record', async () => {
-    const { command, capture, pushSynced, resolveTarget } = harness('pushed');
-    resolveTarget.mockRejectedValueOnce(
-      new CliError(
-        'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
-        1,
-      ),
-    );
+    const fixture = await createSyncedFixture();
+    try {
+      const syncedRoot = join(fixture.cloneA, '.oat', 'projects', 'synced');
+      await mkdir(syncedRoot, { recursive: true });
+      await writeFile(join(syncedRoot, 'demo.json'), '{ malformed\n', 'utf8');
+      const capture = createLoggerCapture();
+      const pushSynced = vi.fn();
+      const command = createProjectPushCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        pushSynced,
+        processEnv: {},
+      });
 
-    await run(command, ['demo']);
+      await run(command, ['demo']);
 
-    expect(capture.error).toEqual([
-      'Invalid synced project record .oat/projects/synced/demo.json: malformed JSON. Restore this exact record from a trusted Git revision before retrying.',
-    ]);
-    expect(pushSynced).not.toHaveBeenCalled();
-    expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain(
+        `Invalid JSON in synced project record ${join(syncedRoot, 'demo.json')}`,
+      );
+      expect(capture.error[0]).toContain(
+        'Restore this exact record from a trusted Git revision before retrying.',
+      );
+      expect(pushSynced).not.toHaveBeenCalled();
+      expect(process.exitCode).toBe(1);
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('does not push when an explicit descendant target is rejected', async () => {

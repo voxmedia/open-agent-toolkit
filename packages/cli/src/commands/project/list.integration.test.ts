@@ -213,15 +213,27 @@ describe('oat project list coordination integration', () => {
           checkout: 'absent',
           phase: null,
         }),
+        expect.objectContaining({
+          name: 'malformed',
+          kind: 'recorded-invalid',
+          checkout: 'invalid',
+          phase: null,
+          recordError: expect.stringContaining(
+            'Restore this exact record from a trusted Git revision',
+          ),
+          recommendation: {
+            skill: 'none',
+            reason: 'restore invalid record from a trusted Git revision',
+          },
+        }),
       ]),
-    );
-    expect(payload.projects).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: 'malformed' })]),
     );
 
     const humanResult = await runCli(root, ['project', 'list']);
     expect(humanResult.exitCode).toBe(0);
     expect(humanResult.stdout).toContain('synced-absent');
+    expect(humanResult.stdout).toContain('malformed');
+    expect(humanResult.stdout).toContain('restore record from Git');
     expect(humanResult.stderr).toContain(
       'Skipping invalid synced project record .oat/projects/synced/malformed.json:',
     );
