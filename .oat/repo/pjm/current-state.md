@@ -34,7 +34,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.41` (synced-project-scope, PR #227 integrated branch) adds a Git-native
+- CLI `0.2.43` (synced-project-scope, PR #227 integrated branch) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
   New projects default to the configurable synced scope; explicit `shared` and
@@ -45,7 +45,7 @@ copying their content here. -->
   reviewer access without exposing machine-only artifacts, with canonical
   identity checks, exact parent-path allowlists, non-forced publication, and
   resumable completion receipts protecting every cross-repository mutation.
-- CLI `0.2.41` (portable-skill-references, PR #226 merged) makes the
+- CLI `0.2.39` (portable-skill-references, PR #226 merged) makes the
   identified packaged sibling-skill reads portable across loaded, user, and
   project scopes. Idea, implementation, plan-writing, and brainstorm handoff
   surfaces now fail closed with pack-specific install/update recovery; the
