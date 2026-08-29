@@ -83,12 +83,19 @@ Notable commands introduced in the current CLI surface:
   and short SHA without guessing a web URL. `--durable-summary <path>` accepts
   only a path contained in the repository, normalizes it repository-relative,
   and renders it as a code span rather than a guessed remote link.
+- `oat project pause [project]` - persist the pause state and clear the active
+  project pointer. If synced publication is declined or fails after the pause
+  commit is created, that clean commit is retained; address the publication
+  failure and rerun `pause` to publish it.
 - `oat project prune [project] [--force] [--no-commit]` - remove every
   checkout, the local and remote project refs, and the tracked record. When the
   project is omitted, the active project is used. This is the explicit
   destructive operation; `--force` may discard dirty or unpushed artifacts,
   while `--no-commit` leaves the parent-record deletion for a library caller to
-  commit.
+  commit. If remote deletion succeeds but local checkout removal fails, the
+  local ref, record, and checkouts are retained. Resolve the reported local
+  obstruction and retry `prune --force`; do not run `project push`, which would
+  republish the deleted remote ref.
 - `oat project migrate <path> --to synced [--no-commit]` - migrate an existing
   shared project to synced storage while preserving its artifacts and
   retargeting the active project pointer. `--no-commit` leaves the parent
@@ -96,9 +103,10 @@ Notable commands introduced in the current CLI surface:
 - `oat project list --scope shared|local|synced` - filter tracked projects by
   scope. Add `--remote` to discover project refs that do not yet have a local
   record or checkout, and `--include-coordination` to include coordination
-  parents. A malformed discovery record appears as one `recorded-invalid` row;
-  the table output identifies the record to restore, while `--json` includes
-  the parse diagnostic in that row's `recordError` field.
+  parents. A malformed discovery record with no materialized checkout appears
+  as a `recorded-invalid` row. When the checkout is materialized, its existing
+  row instead carries the restore hint and `recordError` parse diagnostic in
+  `--json` output.
 - `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
 - `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
 - `oat config dump --json` - merged config with source attribution
