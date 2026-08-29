@@ -118,6 +118,50 @@ describe('createProjectPullCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('pulls and records the parent while --no-children skips child pulls', async () => {
+    const setup = harness('created');
+    setup.resolveTarget.mockResolvedValueOnce({
+      repoRoot: '/repo',
+      sharedRoot: '/repo/.oat/projects/shared',
+      syncedRoot: '/repo/.oat/projects/synced',
+      slug: 'parent',
+      projectPath: '/repo/.oat/projects/synced/parent',
+      ref: 'refs/oat/projects/parent',
+      remote: 'origin',
+      adopt: true,
+      adoptionRecord: 'create',
+    });
+    setup.pullSynced.mockResolvedValueOnce({
+      status: 'created',
+      sha: '1234567890123456789012345678901234567890',
+      adopted: true,
+      pendingRecordPaths: ['/repo/.oat/projects/synced/parent.json'],
+    });
+
+    await run(setup.command, ['parent', '--no-children'], ['--json']);
+
+    expect(setup.pullSynced).toHaveBeenCalledOnce();
+    expect(setup.pullChildren).not.toHaveBeenCalled();
+    expect(setup.commitRecordChange).toHaveBeenCalledWith(
+      '/repo',
+      ['/repo/.oat/projects/synced/parent.json'],
+      'chore(oat): adopt synced project parent',
+      expect.anything(),
+      {
+        projectRoots: expect.objectContaining({
+          sharedRoot: '/repo/.oat/projects/shared',
+          syncedRoot: '/repo/.oat/projects/synced',
+        }),
+      },
+    );
+    expect(setup.capture.jsonPayloads[0]).toMatchObject({
+      status: 'created',
+      adopted: true,
+      children: [],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('routes continue and abort recovery actions', async () => {
     const continued = harness('updated');
     await run(continued.command, ['demo', '--continue']);
