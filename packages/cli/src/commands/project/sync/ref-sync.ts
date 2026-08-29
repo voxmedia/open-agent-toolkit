@@ -55,6 +55,7 @@ export type PushResult = {
   status: 'pushed' | 'up-to-date' | 'rejected' | 'conflict';
   sha: string;
   conflicts?: string[];
+  remoteBeforePushSha?: string | null;
 };
 
 export type PullResult = {
@@ -523,11 +524,15 @@ export async function pushSynced(
     { cwd: target.repoRoot, allowFailure: true },
   );
   const remoteExists = fetched.code === 0;
+  let remoteBeforePushSha: string | null = null;
   if (!remoteExists && !isMissingRemoteRef(fetched.stderr)) {
     assertExpectedGitResult('git fetch synced ref', fetched, [0]);
   }
 
   if (remoteExists) {
+    remoteBeforePushSha = (
+      await git.run(['rev-parse', target.ref], { cwd: target.repoRoot })
+    ).stdout;
     const ancestor = await git.run(
       ['merge-base', '--is-ancestor', target.ref, 'HEAD'],
       { cwd: target.projectPath, allowFailure: true },
@@ -543,7 +548,12 @@ export async function pushSynced(
         if (conflicts.length === 0) {
           assertExpectedGitResult('git rebase synced ref', rebased, [0]);
         }
-        return { status: 'conflict', sha: localCommit, conflicts };
+        return {
+          status: 'conflict',
+          sha: localCommit,
+          conflicts,
+          remoteBeforePushSha,
+        };
       }
     }
 
@@ -552,7 +562,11 @@ export async function pushSynced(
       await git.run(['rev-parse', target.ref], { cwd: target.repoRoot })
     ).stdout;
     if (currentHead === fetchedHead) {
-      return { status: 'up-to-date', sha: currentHead };
+      return {
+        status: 'up-to-date',
+        sha: currentHead,
+        remoteBeforePushSha,
+      };
     }
   }
 
@@ -569,14 +583,14 @@ export async function pushSynced(
   );
   if (pushed.code !== 0) {
     if (isNonFastForwardPushRejection(pushed.stderr)) {
-      return { status: 'rejected', sha: pushedHead };
+      return { status: 'rejected', sha: pushedHead, remoteBeforePushSha };
     }
     assertExpectedGitResult('git push synced ref', pushed, [0]);
   }
   await git.run(['update-ref', target.ref, pushedHead], {
     cwd: target.repoRoot,
   });
-  return { status: 'pushed', sha: pushedHead };
+  return { status: 'pushed', sha: pushedHead, remoteBeforePushSha };
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -1139,6 +1153,7 @@ export async function migrateSharedToSynced(
 
   let created = false;
   let publishedRemoteSha: string | null = null;
+  let prePublishRemoteSha: string | null = null;
   let activeProjectUpdated = false;
   let gitignoreSelfHealStarted = false;
   try {
@@ -1166,6 +1181,7 @@ export async function migrateSharedToSynced(
     }
     if (pushed.status === 'pushed') {
       publishedRemoteSha = pushed.sha;
+      prePublishRemoteSha = pushed.remoteBeforePushSha ?? null;
     }
 
     await writeSyncedRecord(
@@ -1285,9 +1301,12 @@ export async function migrateSharedToSynced(
       );
     }
     if (publishedRemoteSha !== null) {
+      const rollbackRefspec = prePublishRemoteSha
+        ? `${prePublishRemoteSha}:${target.ref}`
+        : `:${target.ref}`;
       await compensate(
         `remote ref ${target.remote}/${target.ref}`,
-        `git push --force-with-lease=${target.ref}:${publishedRemoteSha} ${target.remote} :${target.ref}`,
+        `git push --force-with-lease=${target.ref}:${publishedRemoteSha} ${target.remote} ${rollbackRefspec}`,
         async () =>
           git
             .run(
@@ -1295,7 +1314,7 @@ export async function migrateSharedToSynced(
                 'push',
                 `--force-with-lease=${target.ref}:${publishedRemoteSha}`,
                 target.remote,
-                `:${target.ref}`,
+                rollbackRefspec,
               ],
               { cwd: target.repoRoot },
             )
