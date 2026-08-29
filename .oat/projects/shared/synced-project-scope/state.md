@@ -93,9 +93,9 @@ oat_dispatch_policy: # project dispatch policy (named maximum tier; set during p
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -105,8 +105,8 @@ oat_implement_exit_gate:
   reviewed_head: b51385c2ff6f9de7465d12973512dd90e90ac008
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:125d960fa2ea6c27c51867161395619247335dc5e508bbad0db453a7ea750f72
-  freshness_head: 4d44e82f7c7dd44da88af011592e308a54bb1a4f
-  freshness_fingerprint: sha256:effective-delta-v1:be929c7a2800170e92dd1945990cc55c45b71d82dd9b704d61f43691acd80e5c
+  freshness_head: e4b4ba877989011e5b1062b6bcc44eb71bbe7b5e
+  freshness_fingerprint: sha256:effective-delta-v1:9559c37a1aaf81dca93ec59e62c756ead654823cd564cbb996ace5265bc5415e
   launch_state: result_persisted
   launch_attempt_id: 5b4f732b-0b95-4565-97ec-d2eeb8a7f3f6
   launch_started_at: '2026-08-29T09:37:39Z'
@@ -116,17 +116,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=5). Run oat-project-review-receive for .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=ca7641ce-8c7e-48ed-86c3-7dc92bfadf85; handoff=receive; source=reviews/final-review-2026-08-29T094230Z.md; scope=final; type=code'
   receive_source_artifact: .oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T094230Z.md
   receive_archived_artifact: .oat/projects/shared/synced-project-scope/reviews/archived/final-review-2026-08-29T094230Z.md
   receive_event_identity: 'final | code | final-review-2026-08-29T094230Z.md'
   receive_pre_head: 0910d8d73d1fbbb366b5570421b4f3a424ec76a9
-  receive_commit: null
+  receive_commit: e4b4ba877989011e5b1062b6bcc44eb71bbe7b5e
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-29T09:45:43Z'
+  updated_at: '2026-08-29T09:46:51Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -149,7 +149,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/227' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-26T20:44:36.077Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T09:45:43.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-29T09:46:51.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -332,6 +332,7 @@ Implementation — Phase 17 complete and verified; independent final review pend
 - ✓ Phase 17 final-head Definition of Done gates pass in exact CI order, plus skill validation, lint, format, and diff checks
 - ✓ Fresh Phase 17 full-range gate passed at 0 Critical / 0 Important / 1 Medium / 9 Minor
 - ✓ Passing-gate sweep addressed the Medium and two Minors; all remaining Minors received explicit dispositions
+- ✓ Refreshed configured exit gate passed at 0 Critical / 0 Important / 0 Medium / 5 Minor and was durably received
 - ✓ Cycle-5 findings converted into consolidated task p09-t01 with no deferrals
 - ✓ Phase 9 task p09-t01 completed and verified in `e193c8ffb`
 - ✓ Phase 9 recovery ledger settled at 0/10 with no pending attempt
