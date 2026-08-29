@@ -77,8 +77,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p19:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: recovery-p19-02-archive-runner-dependency
+        original_request_id: impl-p19-20260829T141500Z
+        original_task_id: p19-t09
+        original_commit: 8148e1e16d8bbaae9206784f5b046ab0b6a5ca54
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 4420b007877ccc1dd599c376c07c140ad332b5d5
+        status: active
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
