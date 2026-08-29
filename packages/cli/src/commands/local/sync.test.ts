@@ -349,4 +349,68 @@ describe('oat local sync', () => {
       ).resolves.toContain(markerKind === 'file' ? 'gitdir:' : '[core]');
     },
   );
+
+  it.each([
+    { direction: 'to' as const, destinationExists: false, force: false },
+    { direction: 'to' as const, destinationExists: true, force: true },
+    { direction: 'from' as const, destinationExists: false, force: false },
+    { direction: 'from' as const, destinationExists: true, force: true },
+  ])(
+    'refuses an ancestor entry overlapping a nested worktree direction=$direction destinationExists=$destinationExists force=$force',
+    async ({ direction, destinationExists, force }) => {
+      const sourceRoot = await createDir();
+      const targetRoot = await createDir();
+      const fromRoot = direction === 'to' ? sourceRoot : targetRoot;
+      const toRoot = direction === 'to' ? targetRoot : sourceRoot;
+      const localPath = '.oat/projects';
+      const sourceEntry = join(fromRoot, localPath);
+      const destinationEntry = join(toRoot, localPath);
+      const protectedSide = destinationExists ? destinationEntry : sourceEntry;
+      const nestedCheckout = join(protectedSide, 'synced', 'protected');
+
+      await mkdir(sourceEntry, { recursive: true });
+      await writeFile(join(sourceEntry, 'source.md'), 'source\n', 'utf8');
+      if (destinationExists) {
+        await mkdir(destinationEntry, { recursive: true });
+        await writeFile(
+          join(destinationEntry, 'existing.md'),
+          'existing\n',
+          'utf8',
+        );
+      }
+      await mkdir(nestedCheckout, { recursive: true });
+      await writeFile(
+        join(nestedCheckout, '.git'),
+        'gitdir: /tmp/repo.git/worktrees/protected\n',
+        'utf8',
+      );
+      await writeFile(
+        join(nestedCheckout, 'unsaved.txt'),
+        'do not delete\n',
+        'utf8',
+      );
+
+      const result = await syncLocalPaths({
+        sourceRoot,
+        targetRoot,
+        localPaths: [localPath],
+        direction,
+        force,
+      });
+
+      expect(result.entries).toEqual([
+        { path: localPath, status: 'skipped', reason: 'nested-worktree' },
+      ]);
+      await expect(
+        readFile(join(nestedCheckout, 'unsaved.txt'), 'utf8'),
+      ).resolves.toBe('do not delete\n');
+      if (destinationExists) {
+        await expect(
+          readFile(join(destinationEntry, 'existing.md'), 'utf8'),
+        ).resolves.toBe('existing\n');
+      } else {
+        expect(await fileExists(destinationEntry)).toBe(false);
+      }
+    },
+  );
 });

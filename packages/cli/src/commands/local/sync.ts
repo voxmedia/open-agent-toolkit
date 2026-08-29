@@ -1,4 +1,4 @@
-import { rm } from 'node:fs/promises';
+import { lstat, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { copyDirectory, dirExists, fileExists } from '@fs/io';
@@ -26,6 +26,42 @@ export interface SyncOptions {
   localPaths: string[];
   direction: 'to' | 'from';
   force: boolean;
+}
+
+async function containsNestedGitMarker(root: string): Promise<boolean> {
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      'code' in error &&
+      (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+    ) {
+      return false;
+    }
+    throw error;
+  }
+
+  for (const entry of entries) {
+    if (entry.name === '.git') return true;
+    const entryPath = join(root, entry.name);
+    if (entry.isSymbolicLink()) {
+      // Local sync does not follow directory symlinks while looking for a
+      // worktree boundary. A symlink target is copied as a link by the I/O
+      // layer and cannot authorize recursive deletion of its destination.
+      continue;
+    }
+    if (entry.isDirectory() && (await containsNestedGitMarker(entryPath))) {
+      return true;
+    }
+    if (!entry.isDirectory() && !entry.isFile()) {
+      // Force filesystem errors to surface instead of silently treating an
+      // unfamiliar entry as safe.
+      await lstat(entryPath);
+    }
+  }
+  return false;
 }
 
 export async function syncLocalPaths(
@@ -60,13 +96,12 @@ export async function syncLocalPaths(
       continue;
     }
 
-    const sourceGitMarker = join(sourcePath, '.git');
-    const destinationGitMarker = join(destPath, '.git');
+    // This check must cover the whole selected entry on both sides and must
+    // happen before force-removal. A localPath may be an ancestor of a linked
+    // worktree, so checking only `<entry>/.git` is insufficient.
     if (
-      (await dirExists(sourceGitMarker)) ||
-      (await fileExists(sourceGitMarker)) ||
-      (await dirExists(destinationGitMarker)) ||
-      (await fileExists(destinationGitMarker))
+      (await containsNestedGitMarker(sourcePath)) ||
+      (await containsNestedGitMarker(destPath))
     ) {
       entries.push({
         path: localPath,
