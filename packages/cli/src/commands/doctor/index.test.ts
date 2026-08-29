@@ -352,6 +352,7 @@ function createHarness(options: HarnessOptions = {}): {
     checkSkillVersions,
     runPjmDoctorChecks,
     checkStaleInvocations,
+    checkSyncedProjects: vi.fn(async () => [] as DoctorCheck[]),
     inventoryPack,
     resolvePjmAdoption,
     validateMatrixCell,
