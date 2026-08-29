@@ -3705,7 +3705,7 @@ git commit -m "fix(p12-t01): preserve normal completion publications"
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T002706Z.md               | ab2a05ca4a3663acc752bb186c9c3e2393f30546 | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T051437Z.md               | d1867ee31cc8b6cf01a745c2351cde6470170557 | gate       | claude-fable-skip-permissions |
 | final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T063413Z.md               | 26f53309caca8e6360cdb24b8d1778e115a8b5e8 | gate       | claude-fable-skip-permissions |
-| final   | code     | received        | 2026-08-29 | reviews/final-review-2026-08-29T083908Z.md                        | 4b8c598623f184b75b7de9bdfa69b3b4592539da | gate       | claude-fable-skip-permissions |
+| final   | code     | fixes_added     | 2026-08-29 | reviews/archived/final-review-2026-08-29T083908Z.md               | 4b8c598623f184b75b7de9bdfa69b3b4592539da | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -5117,6 +5117,104 @@ Commit as `fix(p16-t20): normalize invalid slug errors`.
 
 ---
 
+## Phase 17: Final lifecycle durability and provider parity
+
+Goal: close every finding from the full-range review at `4b8c5986`, including
+the lifecycle-artifact test dependency, declined pause publication recovery,
+provider-view drift, and eleven contained correctness, portability, and docs
+residuals.
+
+### Task p17-t01: (review) Decouple release contracts from project artifacts
+
+Remove the `design.md` dependency from the release-contract test or move the
+asserted Git-floor contract to a durable shipped docs surface. Keep executable
+coverage for quickstart and hook behavior, and prove the suite survives project
+archive/migration. Commit as `test(p17-t01): decouple release contract artifacts`.
+
+### Task p17-t02: (review) Retain clean pause commits on remote decline
+
+Treat pre-receive and transport push failures as committed-pause publication
+failures: retain a clean nested checkout when HEAD advanced, print exact retry
+guidance, and add a real pre-receive-hook regression proving one pause commit
+after retry. Commit as `fix(p17-t02): retain declined pause commits`.
+
+### Task p17-t03: (review) Regenerate phase-implementer provider variants
+
+Regenerate all Codex and Cursor model-specific phase-implementer views from the
+canonical agent after the fail-closed push rule, and add parity coverage so
+variant drift is detectable. Commit as `fix(p17-t03): sync implementer variants`.
+
+### Task p17-t04: (review) Make doctor diagnose invalid default scope
+
+Route doctor root resolution through the repair-tolerant config reader, align
+command exit semantics, and add CLI-level invalid-`defaultScope` coverage.
+Commit as `fix(p17-t04): diagnose invalid default scope`.
+
+### Task p17-t05: (review) Deduplicate malformed materialized list rows
+
+Attach malformed-record diagnostics to the materialized row or suppress the
+duplicate `recorded-invalid` row, while retaining the absent-checkout degraded
+row. Cover JSON and table output. Commit as
+`fix(p17-t05): deduplicate invalid project rows`.
+
+### Task p17-t06: (review) Explain prune recovery after remote deletion
+
+Wrap local checkout-removal failure after successful remote deletion with
+explicit state and safe retry guidance; cover a locked-worktree retry and guard
+against accidental republish. Commit as `fix(p17-t06): guide partial prune recovery`.
+
+### Task p17-t07: (review) Ignore custom-root archive snapshots
+
+Manage the non-default root's archive-sibling ignore rule and remove test-owned
+manual masking. Prove alternate and absolute-root completion leaves parent
+status clean. Commit as `fix(p17-t07): ignore custom root archives`.
+
+### Task p17-t08: (review) Make locale regression coverage effective
+
+Drive locale-sensitive Git classification through a deterministic translated
+stderr shim or remove redundant ineffective coverage in favor of the pinned
+environment unit contract. Commit as `test(p17-t08): harden locale regression`.
+
+### Task p17-t09: (review) Require configured commit allowlist roots
+
+Make `projectRoots` mandatory in commit allowlist options and eliminate the
+reachable hardcoded `.oat/projects` fallback. Update every caller and focused
+type/runtime coverage. Commit as `refactor(p17-t09): require project roots`.
+
+### Task p17-t10: (review) Normalize canonicalization failures
+
+Wrap non-`ENOENT` realpath failures such as `ENOTDIR`, `ELOOP`, and `EACCES` in
+path-specific `CliError` messages and test command-boundary behavior. Commit as
+`fix(p17-t10): normalize canonical path errors`.
+
+### Task p17-t11: (review) Harden skill validator command parsing
+
+Recognize guarded/prefixed Git and project-push commands and generalize array
+pathspec detection without allowing false positives. Add validator fixtures for
+compound shell lines and nonstandard artifact arrays. Commit as
+`fix(p17-t11): harden skill command validation`.
+
+### Task p17-t12: (review) Document malformed project list rows
+
+Document the `recorded-invalid` row, restore-record hint, and `recordError` JSON
+field in the CLI reference, then run docs checks. Commit as
+`docs(p17-t12): document invalid project rows`.
+
+### Task p17-t13: (review) Protect scaffold gitignore edits
+
+Apply the dirty-file guard during scaffold gitignore repair and handle an
+unterminated managed block without mis-slicing or relocating user rules. Add
+focused staged/unstaged and malformed-block tests. Commit as
+`fix(p17-t13): protect scaffold gitignore repair`.
+
+### Task p17-t14: (review) Clear ambient Git repository variables
+
+Clear `GIT_COMMON_DIR`, object/alternate-object paths, namespace, and ceiling
+directories for nested Git commands, with environment contract coverage.
+Commit as `fix(p17-t14): isolate nested git environment`.
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -5138,8 +5236,9 @@ Commit as `fix(p16-t20): normalize invalid slug errors`.
 - Phase 14: 19 tasks - Final integration review fixes across custom roots, validators/config, arrival, doctor, safety/recovery residuals, skills/docs, and closeout alignment
 - Phase 15: 19 tasks - Full-range final-review fixes for custom-root Git plumbing, conflict-safe pause recovery, offline creation, config durability, and residual portability/contract gaps
 - Phase 16: 20 tasks - Final full-range safety fixes for custom-root archive completion, locale-stable Git, repository confinement, symlink canonicalization, lifecycle bookkeeping, and residual contract coverage
+- Phase 17: 14 tasks - Final lifecycle durability and provider parity fixes for release contracts, declined pause publication, generated views, custom roots, diagnostics, validators, docs, and Git isolation
 
-**Total: 164 tasks**
+**Total: 178 tasks**
 
 **Recommended first act after completion:** `oat project migrate .oat/projects/shared/synced-project-scope --to synced` — dogfood the migration on this project before the final PR, then open the PR with the pinned-links block.
 
