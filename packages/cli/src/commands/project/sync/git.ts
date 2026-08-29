@@ -34,7 +34,15 @@ export type ExecFileImplementation = (
 ) => unknown;
 
 function numericExitCode(error: ExecFileException | null): number {
-  return typeof error?.code === 'number' ? error.code : error ? 1 : 0;
+  return typeof error?.code === 'number' ? error.code : 0;
+}
+
+function spawnFailure(error: ExecFileException): CliError {
+  const code = typeof error.code === 'string' ? ` (${error.code})` : '';
+  return new CliError(
+    `Unable to run the Git executable${code}: ${error.message || 'unknown process spawn error'}. Install Git and ensure it is available on PATH.`,
+    2,
+  );
 }
 
 export function createGitRunner(
@@ -42,7 +50,7 @@ export function createGitRunner(
 ): GitRunner {
   return {
     async run(args, options) {
-      const result = await new Promise<GitResult>((resolve) => {
+      const result = await new Promise<GitResult>((resolve, reject) => {
         execFileImpl(
           'git',
           args,
@@ -52,6 +60,10 @@ export function createGitRunner(
             encoding: 'utf8',
           },
           (error, stdout, stderr) => {
+            if (error && typeof error.code !== 'number') {
+              reject(spawnFailure(error));
+              return;
+            }
             resolve({
               stdout: stdout.trim(),
               stderr: stderr.trim(),

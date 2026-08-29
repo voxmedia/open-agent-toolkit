@@ -118,4 +118,40 @@ describe('GitRunner', () => {
       CliError,
     );
   });
+
+  it.each([false, true])(
+    'classifies a missing Git executable as a system error when allowFailure=%s',
+    async (allowFailure) => {
+      const execFile = vi.fn(
+        (
+          _file: string,
+          _args: readonly string[],
+          _options: object,
+          callback: (
+            error: Error & { code: string },
+            stdout: string,
+            stderr: string,
+          ) => void,
+        ) => {
+          callback(
+            Object.assign(new Error('spawn git ENOENT'), { code: 'ENOENT' }),
+            '',
+            '',
+          );
+          return undefined;
+        },
+      );
+      const runner = createGitRunner(execFile);
+
+      await expect(
+        runner.run(['status'], { cwd: '/repo', allowFailure }),
+      ).rejects.toMatchObject({
+        name: 'CliError',
+        exitCode: 2,
+        message: expect.stringMatching(
+          /Unable to run the Git executable \(ENOENT\).*available on PATH/,
+        ),
+      });
+    },
+  );
 });
