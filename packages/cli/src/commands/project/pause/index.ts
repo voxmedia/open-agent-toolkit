@@ -197,7 +197,7 @@ async function publishPausedState(
   if (result.status !== 'pushed' && result.status !== 'up-to-date') {
     const recovery =
       result.status === 'conflict'
-        ? ` Resolve the conflicted files without discarding either side, then run oat project pull ${target.slug} --continue followed by oat project push ${target.slug}; or run oat project pull ${target.slug} --abort to leave the committed local pause unpublished.`
+        ? ` Resolve the conflicted files without discarding either side, then run oat project pull ${target.slug} --continue followed by oat project push ${target.slug}, then re-run oat project pause ${target.slug} to finish and clear the active pointer; or run oat project pull ${target.slug} --abort to leave the committed local pause unpublished.`
         : ` The committed local pause was retained with a clean checkout; re-run oat project pause ${target.slug} to retry publication.`;
     throw new PausePublicationError(
       `Unable to pause synced project ${target.slug}: push ${result.status}; active project pointer was not changed.${recovery}`,

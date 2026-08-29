@@ -301,6 +301,9 @@ describe('oat project pause', () => {
       'oat project pull synced-demo --continue',
     );
     expect(capture.error.join('\n')).toContain(
+      're-run oat project pause synced-demo to finish and clear the active pointer',
+    );
+    expect(capture.error.join('\n')).toContain(
       'oat project pull synced-demo --abort',
     );
     expect(process.exitCode).toBe(1);
@@ -398,6 +401,14 @@ describe('oat project pause', () => {
     });
     expect(published).toContain('remote_note: survives');
     expect(published).toContain('oat_lifecycle: paused');
+
+    process.exitCode = undefined;
+    await runCommand(command, []);
+    expect(process.exitCode).toBe(0);
+    const finalizedConfig = JSON.parse(
+      await readFile(join(fixture.cloneB!, '.oat/config.local.json'), 'utf8'),
+    );
+    expect(finalizedConfig.activeProject).toBeNull();
   });
 
   it('publishes a synced pause before clearing the active pointer', async () => {
