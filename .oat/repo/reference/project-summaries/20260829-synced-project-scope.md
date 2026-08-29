@@ -274,3 +274,19 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 ### 2026-08-29 · structural · oat-project-review-provide · final-review-2026-08-29T134331Z
 
 Independent final review used two consequential reconnaissance lanes; see reviews/final-review-2026-08-29T134331Z.md.
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T154355Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T160525Z.md
+
+### 2026-08-29 · structural · oat gate review · final
+
+target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/synced-project-scope/reviews/final-review-2026-08-29T212108Z.md
+
+### 2026-08-29 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/synced-project-scope/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=2 upstream=1 apply=deferred filing=deferred
