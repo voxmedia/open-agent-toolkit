@@ -48,7 +48,7 @@ guidance, and tool-pack lifecycle/configuration edges:
 - [`BL-260828-add-project-level-oat-guidance` — Add project-level OAT guidance
   prompt during init and workflow installation](../../../repo/pjm/backlog/items/BL-260828-add-project-level-oat-guidance.md)
 - [`BL-260827-clean-up-tool-pack-lifecycle` — Clean up tool-pack lifecycle and
-  config contracts](../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md)
+  config contracts](../../../repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md)
 - [`BL-260829-unified-agent-provider-root` — Unified AGENT_PROVIDER_ROOT binding
   for portable skill and agent references](../../../repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md)
 - [`agent-provider-root`](../agent-provider-root/) — Spec-driven sibling project

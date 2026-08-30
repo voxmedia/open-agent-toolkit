@@ -51,8 +51,10 @@ provider limitation silently change the user's selected scope. Source:
 [verbatim transcript comment](https://github.com/voxmedia/open-agent-toolkit/issues/228#issuecomment-5459103358).
 
 Related boundaries: [BL-260818-make-the-project-management](../archived/BL-260818-make-the-project-management.md)
-shipped user-scope eligibility; [BL-260827-clean-up-tool-pack-lifecycle](BL-260827-clean-up-tool-pack-lifecycle.md)
-owns adjacent lifecycle/config consistency; [BL-260827-correct-scope-and-adoption](BL-260827-correct-scope-and-adoption.md)
+shipped user-scope eligibility; [BL-260827-clean-up-tool-pack-lifecycle](../archived/BL-260827-clean-up-tool-pack-lifecycle.md)
+completed the adjacent lifecycle/config consistency work, while this item owns
+the remaining scope-selection and provider-truthfulness follow-up;
+[BL-260827-correct-scope-and-adoption](BL-260827-correct-scope-and-adoption.md)
 contains the existing provider-aware diagnostic project but intentionally does
 not broaden user-agent syncing; [BL-260724-support-provider-directory](BL-260724-support-provider-directory.md)
 owns collection-level provider symlink adoption and divergence safety;

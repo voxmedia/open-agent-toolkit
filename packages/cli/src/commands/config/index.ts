@@ -2261,8 +2261,13 @@ async function setConfigValue(
 
   if (key.startsWith('tools.')) {
     const packName = key.slice('tools.'.length) as keyof OatToolsConfig;
+    if (rawValue.trim().toLowerCase() !== 'true') {
+      throw new Error(
+        `Pack intent '${key}' can only be declared with true. To remove the pack and clear its intent, run: oat tools remove --pack ${packName} --scope project`,
+      );
+    }
     const tools = { ...config.tools };
-    tools[packName] = rawValue.trim().toLowerCase() === 'true';
+    tools[packName] = true;
 
     await dependencies.writeOatConfig(repoRoot, {
       ...config,

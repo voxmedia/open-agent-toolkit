@@ -195,30 +195,38 @@ export function createToolsUpdateCommand(
         ) ||
         result.assetRefreshes.some(({ scope }) => scope === 'project') ||
         result.plans.some(({ scope }) => scope === 'project');
+      let adoptedPacks: PackName[] = [];
       if (
         assetsRoot &&
         result.notInstalled.length === 0 &&
         changedProjectScope
       ) {
         const repoRoot = await resolveProjectRoot(context.cwd);
-        await reconcileProjectToolsConfig(
-          {
-            repoRoot,
-            cwd: context.cwd,
-            home: context.home,
-          },
-          {
-            resolveAssetsRoot: dependencies.resolveAssetsRoot,
-            scanTools: dependencies.scanTools,
-            readOatConfig,
-            writeOatConfig,
-          },
-        );
+        adoptedPacks = (
+          await reconcileProjectToolsConfig(
+            {
+              repoRoot,
+              cwd: context.cwd,
+              home: context.home,
+            },
+            {
+              resolveAssetsRoot: dependencies.resolveAssetsRoot,
+              scanTools: dependencies.scanTools,
+              readOatConfig,
+              writeOatConfig,
+            },
+          )
+        ).adoptedPacks;
       }
 
       if (result.notInstalled.length > 0) {
         if (context.json) {
-          logger.json({ target: describeTarget(target), dryRun, result });
+          logger.json({
+            target: describeTarget(target),
+            dryRun,
+            result,
+            ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+          });
         } else {
           logger.error(`Tool '${result.notInstalled[0]}' not found.`);
         }
@@ -252,8 +260,17 @@ export function createToolsUpdateCommand(
       }
 
       if (context.json) {
-        logger.json({ target: describeTarget(target), dryRun, result });
+        logger.json({
+          target: describeTarget(target),
+          dryRun,
+          result,
+          ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+        });
         return;
+      }
+
+      for (const pack of adoptedPacks) {
+        logger.info(`Adopted project tool pack: ${pack}`);
       }
 
       if (result.updated.length > 0) {
