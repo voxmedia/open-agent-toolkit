@@ -2,7 +2,11 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues:
+  - type: backlog
+    ref: BL-260826-gate-targets-must-not-yield
+  - type: backlog
+    ref: BL-260726-validate-structured-output
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -74,21 +78,22 @@ oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
-oat_project_created: "2026-08-30T21:57:48.570Z" # ISO 8601 UTC timestamp — set once at project creation
+oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-08-30T21:57:48.570Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T22:01:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-execution-contract-hardening
 
-**Status:** Discovery
+**Status:** Discovery — consolidated and revalidated
 **Started:** 2026-08-30
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Discovery - Consolidated evidence is complete; lightweight design will resolve
+the configuration/runtime seam before planning.
 
 ## Artifacts
 
@@ -102,7 +107,9 @@ Discovery - Gathering requirements for a quick workflow before planning
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Superseded project discoveries absorbed and revalidated
+- ✓ Lightweight design selected for the configuration/runtime seam
+- ⧗ Configuration failure policy confirmation
 
 ## Blockers
 
@@ -110,4 +117,5 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Confirm the lightweight-design policy, then generate the quick implementation
+plan.
