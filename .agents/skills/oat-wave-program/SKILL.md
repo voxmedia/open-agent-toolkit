@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.4.0
+version: 1.5.0
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -152,7 +152,8 @@ The mechanical caller constructs an `explainer-kit.run-request/v1` document whos
 required keys are exactly:
 `schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
 `{ "id": "program-recap", "version": "1" }`; this is an object with exactly
-`id` and `version`. Set `outputRoot` to `.oat/repo/explainers/<slug>/`. Bind the
+`id` and `version`. Set `outputRoot` to
+`.oat/repo/reference/explainers/<slug>/`. Bind the
 synthesized fact-base file through `factBase` with the required keys
 `mode, freshnessPolicy`, set `mode` to `"supplied"`, set `freshnessPolicy` to
 `"live-wins"`, and set `path` to that file.

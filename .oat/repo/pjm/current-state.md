@@ -37,7 +37,20 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.47` (agent-provider-root, branch pending merge) makes canonical
+- CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
+  `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
+  pointer correctness to `oat instructions validate`. The repository's 23
+  legacy ADRs are now file-per-record decisions, 18 residual legacy backlog
+  records have canonical `BL-260830-*` identities, and shipped, absorbed, or
+  obsolete residue is recorded in completed history instead of a parallel
+  backlog tree. The durable program recap moved byte-for-byte under
+  `reference/explainers/`, and wave recap callers now target that canonical
+  destination. The 74 obsolete `.cursor/skills` mirrors were also removed:
+  portable skills remain canonical in native-read `.agents/skills`, while
+  `.cursor/skills` stays reserved for genuinely Cursor-only packages. The
+  source PJM doctor reports declared adoption with every check passing, and
+  project provider status is clean with zero drift, missing entries, or strays.
+- CLI `0.2.47` (agent-provider-root, merged as PR #242 and released) makes canonical
   skill-to-agent reads portable without changing provider-native dispatch.
   Seven live reviewer and implementer reads now bind their workflows dependency
   locally and resolve exact canonical Markdown through loaded, user, then
@@ -50,12 +63,12 @@ copying their content here. -->
   Mutation, provider-sync, HOME-isolated uncached, release, docs, lint, format,
   and the full Definition-of-Done gates passed; final lifecycle and configured
   exit-gate reviews reported zero findings.
-- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240; pending release) completes
+- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240 and released) completes
   the tool-pack lifecycle/config cleanup with content-aware inventory, exact
   adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
   and removal of the inert per-pack install `--force` option. Compatibility
   guidance now directs operators to scoped update and remove commands. The
-  lifecycle/config backlog item is closed; `0.2.46` has not yet been published.
+  lifecycle/config backlog item is closed.
 - CLI `0.2.45` (synced-project-scope, merged as PR #227 and released) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
@@ -82,10 +95,8 @@ copying their content here. -->
   historical entries. This closes the residual agent-surface and
   cross-skill `references/*.md` deferral recorded against `0.2.39`. Mutation
   testing twice confirmed the ratchet is live; the full CI gate list passed
-  uncached and HOME-isolated. One direction remains unenforced and is tracked as
-  `BL-260829-unified-agent-provider-root`: skills reading canonical _agent_
-  definitions still use bare `.agents/agents/<name>.md` paths, a path shape the
-  matcher structurally cannot see.
+  uncached and HOME-isolated. The remaining canonical-agent read direction was
+  subsequently closed by CLI `0.2.47` in PR #242.
 - CLI `0.2.39` (portable-skill-references, merged as PR #226) makes the
   identified packaged sibling-skill reads portable across loaded, user, and
   project scopes. Idea, implementation, plan-writing, and brainstorm handoff
@@ -108,7 +119,7 @@ copying their content here. -->
   explicitly. All eleven repository gates and a zero-finding final closeout
   review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
   diagnostics remain as an implementation-ready follow-up, while the
-  lifecycle/config cleanup is complete on the pending-release `0.2.46` branch.
+  lifecycle/config cleanup shipped in `0.2.46` through PR #240.
 - CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently
@@ -407,17 +418,19 @@ bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
 
-The `agent-provider-root` branch closes the remaining unenforced portable-read
-direction with a dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
-exact-canonical-identity rule. After merge, the
-`tool-pack-scope-provider-truthfulness` project can consume that contract for
-canonical fallback provenance while retaining ownership of provider
-materialization, reachability diagnostics, restart visibility, and dispatch
-truthfulness.
+PR #242 closes the remaining unenforced portable-read direction with a
+dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
+exact-canonical-identity rule. The `tool-pack-scope-provider-truthfulness`
+project can now consume that shipped contract while retaining ownership of
+provider materialization, reachability diagnostics, restart visibility, and
+dispatch truthfulness. Revalidate that project against PRs #227, #240, and
+#242 before advancing from discovery to design.
 
-The canonical PJM operating files are current, but `oat pjm doctor` still
-reports four pre-existing layout warning classes from older reference
-generations. `BL-260830-migrate-the-legacy-pjm` (Migrate the legacy PJM
-reference layout) and its kickoff handoff isolate the lossless reconciliation
-and cleanup in a dedicated branch after PR #240 merges; this branch does not
-delete or restructure the legacy material.
+The legacy PJM reference-layout migration is complete: all four warning classes
+are cleared, source doctor is clean, 13 actionable residual records are active
+canonical backlog items, and five product-direction records are canonical
+`needs-discussion` ideas. Six shipped, absorbed, or obsolete records were folded
+into completed history. No parallel legacy PJM tree remains. The verifying
+11-issue triage ledger records proposed GitHub dispositions without mutating
+issue state; its #205 recommendation now points to the promoted canonical
+discovery-policy item.

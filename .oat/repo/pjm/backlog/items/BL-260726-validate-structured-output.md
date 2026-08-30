@@ -4,11 +4,11 @@ title: Validate structured-output contract in gate skill commands
 status: open
 priority: medium
 scope: task
-scope_estimate: null
+scope_estimate: M
 labels: []
 assignee: null
 created: 2026-07-26T01:11:44.950Z
-updated: 2026-07-26T01:11:44.950Z
+updated: 2026-08-30T21:53:59Z
 associated_issues: []
 external_plans: []
 ---

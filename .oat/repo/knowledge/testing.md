@@ -1,77 +1,70 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-08-19
-oat_source_head_sha: e0408f4676a7b84e4240b4c568b78265f1d5cd0a
-oat_source_main_merge_base_sha: 6f443c0843d75b704168b8ca739b5bcf7f406f07
+oat_generated_at: 2026-08-30
+oat_source_head_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
+oat_source_main_merge_base_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
-<!--
-Vendored from: https://github.com/glittercowboy/get-shit-done
-License: MIT
-Original: agents/gsd-codebase-mapper.md (embedded template)
-Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
--->
-
 # Testing Patterns
 
-**Analysis Date:** 2026-08-19
+**Analysis Date:** 2026-08-30
 
 ## Test Framework
 
 **Runner:**
 
-- Vitest is declared at `^4.0.18` in `packages/cli/package.json:55-62`, `packages/control-plane/package.json:48-55`, `packages/docs-config/package.json:56-63`, and `packages/docs-transforms/package.json:49-56`.
-- CLI tests use `packages/cli/vitest.config.ts`, which includes `src/**/*.test.ts` and configures package aliases in `packages/cli/vitest.config.ts:1-30`.
-- Docs package configs include `src/**/*.test.ts` and set `passWithNoTests: true` in `packages/docs-config/vitest.config.ts:1-8` and `packages/docs-transforms/vitest.config.ts:1-8`. No `packages/control-plane/vitest.config.ts` is present in the repository file inventory; its package manifest still invokes `vitest run` in `packages/control-plane/package.json:31-39`.
+- Vitest `^4.0.18` runs TypeScript package tests in `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, and `packages/docs-transforms/package.json`.
+- `packages/cli/vitest.config.ts`, `packages/docs-config/vitest.config.ts`, and `packages/docs-transforms/vitest.config.ts` include `src/**/*.test.ts` and set `passWithNoTests: true`; the CLI config also resolves its TypeScript aliases and clears `OAT_ASSETS_DIR` for the suite.
+- Node's built-in `node:test` runs the root smoke, skill, and release suites through `tools/smoke/**/*.test.mjs`, `.agents/skills/*/tests/*.test.mjs`, and the named release files in `package.json`; `tools/smoke/evidence/collect.test.mjs` is an example.
 
 **Assertion Library:**
 
-- Assertions use Vitest's `expect`, including object matching, promise assertions, inline snapshots, and `expectTypeOf`, as shown in `packages/cli/src/commands/backlog/new.test.ts:68-116`, `packages/cli/src/providers/shared/materialization-extension.test.ts:1-100`, and `packages/cli/src/commands/help-snapshots.test.ts:114-169`.
+- Vitest assertions (`expect`) and mocking utilities (`vi`) are imported from `vitest`, for example `packages/cli/src/fs/io.test.ts`.
+- Node-run suites use `node:assert/strict`, as in `tools/smoke/evidence/collect.test.mjs`.
 
 **Run Commands:**
 
 ```bash
-pnpm test                         # Root suite: Turbo package tests plus smoke, skills, and release Node tests (`package.json:24-31`)
-pnpm --filter @open-agent-toolkit/cli test
-pnpm --filter @open-agent-toolkit/cli test:watch
-pnpm --filter @open-agent-toolkit/cli test:coverage
-node --test tools/smoke/*/*.test.mjs tools/smoke/*/*/*.test.mjs
-node --test .agents/skills/*/tests/*.test.mjs
+pnpm test                                      # Workspace Vitest, smoke, skill, and release suites
+pnpm --filter @open-agent-toolkit/cli test     # CLI package Vitest suite
+pnpm --filter @open-agent-toolkit/cli test:watch # CLI watch mode
+pnpm --filter @open-agent-toolkit/cli test:coverage # CLI coverage report
+pnpm test:smoke                                # Node built-in smoke suites
+pnpm test:skills                               # Node built-in skill suites
+pnpm test:release                              # Node built-in release suites
 ```
-
-The package scripts defining Vitest run, watch, and coverage commands are in `packages/cli/package.json:32-48`; root smoke/skills/release commands are in `package.json:24-31`.
 
 ## Test File Organization
 
 **Location:**
 
-- Tests are predominantly co-located with implementation under `src`, for example `packages/cli/src/commands/backlog/new.ts` and `packages/cli/src/commands/backlog/new.test.ts`, plus `packages/control-plane/src/state/parser.ts` and `packages/control-plane/src/state/parser.test.ts`.
-- Cross-cutting suites have explicit `__tests__`, `__integration__`, `integration`, or `e2e` directories, including `packages/cli/src/commands/project/split/__tests__/` and `packages/cli/src/review-remote/__integration__/`.
+- Most Vitest suites are co-located with implementation, such as `packages/cli/src/fs/io.ts` and `packages/cli/src/fs/io.test.ts`.
+- Cross-module groups use scoped directories: `packages/cli/src/__tests__/`, `packages/cli/src/commands/project/split/__tests__/`, `packages/cli/src/review-remote/__integration__/`, and `packages/cli/src/e2e/`.
+- Node smoke tests live under `tools/smoke/`; skill tests are located under their respective `.agents/skills/<skill>/tests/` directories when present, as targeted by root `package.json`.
 
 **Naming:**
 
-- Unit and integration files use the `.test.ts` suffix; integration and end-to-end intent is also encoded in names such as `cleanup.integration.test.ts`, `e2e-pipeline.test.ts`, and `workflow.test.ts` in `packages/cli/src/commands/cleanup/`, `packages/cli/src/commands/docs/`, and `packages/cli/src/e2e/`.
+- Unit tests use `*.test.ts`; tests that specify a broader behavior use suffixes such as `*.integration.test.ts` and `*.readdir-order.test.ts`, for example `packages/cli/src/commands/docs/init/integration.test.ts` and `packages/cli/src/commands/backlog/regenerate-index.readdir-order.test.ts`.
 
 **Structure:**
 
 ```text
-packages/cli/src/<domain>/<module>.test.ts
-packages/cli/src/<domain>/__tests__/<scenario>.test.ts
-packages/cli/src/<domain>/__integration__/<rail>/<scenario>.test.ts
-packages/control-plane/src/<module>.test.ts
-packages/docs-config/src/<module>.test.ts
-packages/docs-transforms/src/<module>.test.ts
+packages/cli/src/
+  fs/io.ts
+  fs/io.test.ts
+  commands/<area>/<operation>.ts
+  commands/<area>/<operation>.integration.test.ts
+  e2e/workflow.test.ts
+tools/smoke/<area>/*.test.mjs
 ```
-
-These patterns are represented by `packages/cli/src/commands/shared/frontmatter.test.ts`, `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`, and `packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`.
 
 ## Test Structure
 
 **Suite Organization:**
 
 ```typescript
-describe('frontmatter', () => {
+describe('fs/io', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
@@ -81,77 +74,68 @@ describe('frontmatter', () => {
     tempDirs.length = 0;
   });
 
-  describe('parseGeneratedTime', () => {
-    it('treats a bare date as UTC midnight', () => {
-      expect(parseGeneratedTime('2026-07-05')).toBe(
-        Date.parse('2026-07-05T00:00:00Z'),
-      );
-    });
+  it('copyDirectory recursively copies all files', async () => {
+    // Arrange, execute, and assert filesystem behavior.
   });
 });
 ```
 
-This nested `describe`/`it` organization and cleanup pattern is from `packages/cli/src/commands/shared/frontmatter.test.ts:20-66`.
+The source pattern is `packages/cli/src/fs/io.test.ts`.
 
 **Patterns:**
 
-- Suites use `describe` for the module/feature, nested `describe` for related cases, and descriptive `it` strings, as in `packages/docs-transforms/src/remark-tabs.test.ts:43-73`.
-- Tests isolate filesystem behavior with `mkdtemp`, track created directories, and remove them in `afterEach`, as in `packages/control-plane/src/project.test.ts:9-25` and `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts:110-120`.
-- Assertions favor exact structured results (`toEqual`, `toMatchObject`), semantic containment (`toContain`), and explicit async resolution/rejection assertions, as in `packages/cli/src/commands/backlog/new.test.ts:68-116` and `packages/cli/src/commands/backlog/new.test.ts:210-235`.
+- Suites use `describe` and behavior-oriented `it` labels; async behavior is awaited directly and checked with `await expect(...).resolves` or `.rejects`, as in `packages/cli/src/fs/io.test.ts`.
+- Temporary directories are created with `mkdtemp`, recorded in an array, then removed in `afterEach`; this occurs in `packages/cli/src/fs/io.test.ts`, `packages/cli/src/config/resolve.test.ts`, and `packages/cli/src/e2e/workflow.test.ts`.
+- Tests inject dependencies where supported instead of requiring global process state. `packages/cli/src/config/resolve.test.ts` passes fake `readOatConfig`, `readOatLocalConfig`, and `readUserConfig` implementations.
 
 ## Mocking
 
-**Framework:** Vitest's `vi.mock`, `vi.hoisted`, `vi.fn`, `vi.mocked`, and `vi.spyOn`.
+**Framework:** Vitest `vi`.
 
 **Patterns:**
 
 ```typescript
-const mdxMocks = vi.hoisted(() => {
-  const withMDX = vi.fn((config: Record<string, unknown>) => ({
-    ...config,
-    mdxWrapped: true,
-  }));
-  const createMDX = vi.fn(() => withMDX);
-  return { createMDX, withMDX };
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof fsp>();
+  return { ...actual, readdir: vi.fn().mockImplementation(actual.readdir) };
 });
 
-vi.mock('fumadocs-mdx/next', () => ({
-  createMDX: mdxMocks.createMDX,
-}));
+const mockedReaddir = vi.mocked(fsp.readdir);
+mockedReaddir.mockRejectedValueOnce(eaccesError);
 ```
 
-The module-mocking pattern and `beforeEach` mock reset are in `packages/docs-config/src/next-config.test.ts:1-22`; process I/O spying is used in `packages/cli/src/ui/logger.test.ts:10-86`.
+This partial-module mocking pattern is implemented in `packages/cli/src/engine/edge-cases.test.ts`.
 
 **What to Mock:**
 
-- External modules, prompts, process I/O, and unstable boundaries are mocked, including `fumadocs-mdx/next` in `packages/docs-config/src/next-config.test.ts:13-15`, `@inquirer/prompts` in `packages/cli/src/e2e/workflow.test.ts:20-23`, and `ora` in `packages/cli/src/ui/spinner.test.ts:1-28`.
-- Internal filesystem, network, and command behavior is often replaced through explicit dependency overrides rather than module mocks, as in `packages/cli/src/commands/backlog/new.ts:41-49` and the harness in `packages/cli/src/commands/repo/archive/index.test.ts:28-83`.
+- Mock narrow failure seams or observable collaborators, such as `node:fs/promises` failure behavior in `packages/cli/src/engine/edge-cases.test.ts` and dependency callbacks in `packages/cli/src/config/resolve.test.ts`.
+- Restore patched global/mock state in teardown; `packages/cli/src/app/command-context.test.ts` resets `process.stdin.isTTY` and calls `vi.restoreAllMocks()` in `afterEach`.
 
 **What NOT to Mock:**
 
-- Pure parsers, normalizers, renderers, and domain transformations are exercised directly with inline input, as in `packages/cli/src/commands/shared/frontmatter.test.ts:30-112`, `packages/control-plane/src/shared/utils/normalize.test.ts:1-80`, and `packages/docs-transforms/src/remark-tabs.test.ts:20-73`.
+- Filesystem behavior is often exercised against real temporary directories rather than mocked. `packages/cli/src/fs/io.test.ts` creates files, directories, and symlinks to verify copy and write behavior.
+- Integration tests run real asset bundling and read scaffolded output, as in `packages/cli/src/commands/docs/init/integration.test.ts`.
 
 ## Fixtures and Factories
 
 **Test Data:**
 
 ```typescript
-const root = await mkdtemp(join(tmpdir(), 'oat-split-integration-'));
+const root = await mkdtemp(join(tmpdir(), 'oat-config-resolve-'));
 tempDirs.push(root);
-await seedTemplates(root);
-const document = documentFor('declared');
+await mkdir(join(root, '.oat'), { recursive: true });
 ```
 
-Filesystem fixture construction and cleanup are defined in `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts:31-56` and `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts:110-128`.
+`packages/cli/src/config/resolve.test.ts` builds isolated temporary repositories; it also uses a `createResolvedConfig` helper for typed defaults.
 
 **Location:**
 
-- Reusable command test helpers live in `packages/cli/src/commands/__tests__/helpers.ts:1-49`; skill-flow fixture builders live in `packages/cli/src/__tests__/skills/split-flow-fixtures.ts`.
-- Most data is declared inline in each test; temporary Markdown/YAML, project trees, and provider directories are created beneath the OS temp directory, as in `packages/cli/src/commands/shared/frontmatter.test.ts:114-216`.
+- Shared CLI helpers live in `packages/cli/src/__tests__/`; feature fixtures are co-located under `packages/cli/src/commands/cleanup/__fixtures__/`, `packages/cli/src/commands/gate/__fixtures__/`, and `packages/cli/src/commands/docs/migrate/fixtures/`.
+- Smoke fixtures and golden data are stored under `tools/smoke/fixture/` and `tools/smoke/evidence/golden/`, exercised by `tools/smoke/evidence/collect.test.mjs`.
 
 ## Coverage
 
-**Requirements:** No repository-wide numeric coverage threshold or coverage configuration is detected. The CLI exposes a coverage command in `packages/cli/package.json:44-48`, while `packages/cli/vitest.config.ts:25-30` contains no coverage section.
+**Requirements:** No repository coverage percentage or threshold configuration was detected. The root composite `pnpm test` command in `package.json` does not invoke coverage.
 
 **View Coverage:**
 
@@ -159,54 +143,44 @@ Filesystem fixture construction and cleanup are defined in `packages/cli/src/com
 pnpm --filter @open-agent-toolkit/cli test:coverage
 ```
 
-The command is defined in `packages/cli/package.json:44-48`; equivalent coverage scripts are not present in the control-plane or docs package manifests (`packages/control-plane/package.json:31-39`, `packages/docs-config/package.json:33-42`, and `packages/docs-transforms/package.json:28-37`).
+The CLI coverage command is defined in `packages/cli/package.json`; no matching coverage script was detected in the other package manifests.
 
 ## Test Types
 
 **Unit Tests:**
 
-- Pure parsing, normalization, configuration, provider codec, and command helper behavior is tested directly, for example `packages/control-plane/src/state/parser.test.ts`, `packages/control-plane/src/shared/utils/normalize.test.ts`, and `packages/cli/src/providers/codex/codec/config-merge.test.ts`.
+- The dominant pattern is co-located Vitest unit tests for modules and command helpers, such as `packages/cli/src/fs/io.test.ts` and `packages/cli/src/config/resolve.test.ts`.
 
 **Integration Tests:**
 
-- Suites exercise real temporary project/filesystem state and multiple modules, including `packages/control-plane/src/project.test.ts`, `packages/cli/src/engine/engine.integration.test.ts`, and `packages/cli/src/commands/project/split/__tests__/integration/split-flow.test.ts`.
+- Integration suites use real filesystem/process behavior and explicit `*.integration.test.ts` names, including `packages/cli/src/commands/docs/init/integration.test.ts` and `packages/cli/src/commands/cleanup/cleanup.integration.test.ts`.
 
 **E2E Tests:**
 
-- The CLI has a Vitest-driven command workflow suite in `packages/cli/src/e2e/workflow.test.ts`; smoke-level server/process checks live in `packages/cli/src/integration/visual-companion-smoke.test.ts`.
-- Root-level smoke, skill, and release suites use Node's built-in test runner through commands in `package.json:27-31`.
+- Workflow-level tests use Vitest and temporary workspaces in `packages/cli/src/e2e/workflow.test.ts`; browser E2E test configuration was not detected.
 
 ## Common Patterns
 
 **Async Testing:**
 
 ```typescript
-it('returns null when SKILL.md is missing', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
-  tempDirs.push(dir);
-  await expect(getSkillVersion(dir)).resolves.toBeNull();
-});
+await expect(fileExists(join(root, 'missing.txt'))).resolves.toBe(false);
+await expect(readFile(`${output}.tmp`, 'utf8')).rejects.toThrow();
 ```
 
-Async setup and `resolves` assertions follow `packages/cli/src/commands/shared/frontmatter.test.ts:182-187`; async transformations use `await processor.run(tree)` in `packages/docs-transforms/src/remark-tabs.test.ts:20-25`.
+Both patterns appear in `packages/cli/src/fs/io.test.ts`.
 
 **Error Testing:**
 
 ```typescript
-await expect(
-  createBacklogItem({
-    backlogRoot,
-    assetsRoot: BUNDLED_ASSETS_ROOT,
-    title: 'Demo',
-    priority: 'critical',
-  }),
-).rejects.toThrow();
+await expect(loadManifest(manifestPath)).rejects.toThrow(CliError);
+await expect(loadManifest(manifestPath)).rejects.toThrow(
+  /Delete or repair the file and re-run oat sync\./,
+);
 ```
 
-Rejected promises are asserted with `rejects.toThrow` in `packages/cli/src/commands/backlog/new.test.ts:210-235`; synchronous validation uses `expect(() => ...).toThrow(...)` in `packages/cli/src/validation/project-state.test.ts:116-118`.
-
-Inline snapshots are used for stable CLI/report output in `packages/cli/src/commands/help-snapshots.test.ts:114-169` and `packages/cli/src/providers/identity/dispatch-report.test.ts:616-711`.
+This verifies both structured error type and actionable message in `packages/cli/src/engine/edge-cases.test.ts`.
 
 ---
 
-_Testing analysis: 2026-08-19_
+_Testing analysis: 2026-08-30_
