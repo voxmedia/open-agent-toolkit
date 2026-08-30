@@ -1,5 +1,5 @@
 ---
-oat_current_task: implementation-exit-gate
+oat_current_task: post-implement-sequence
 oat_last_commit: c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d
 oat_blockers: []
 associated_issues:
@@ -27,9 +27,9 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -39,8 +39,8 @@ oat_implement_exit_gate:
   reviewed_head: bf240cef2945456d01f26313a34677642ac65f64
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:672736f47d4b858d05f03e8422f3f55fc70eb1c819790c5c0af2d1b538803695'
-  freshness_head: 26ba417c31a19f1d71e21182def22792dd100944
-  freshness_fingerprint: 'sha256:effective-delta-v1:bc607e2f28269e6b62aa409f7176dd12751d24f52bda838f697c9178b691d486'
+  freshness_head: cef12e3c8c9b05457b317b13538303fe89de8eb0
+  freshness_fingerprint: 'sha256:effective-delta-v1:d2c160f07c9cd58e83c997476eff4eadda080b675ddfb98401e0484992b74faf'
   launch_state: result_persisted
   launch_attempt_id: 'tool-pack-cleanup-exit-g1-a1-7a7098ec-b32f-46e7-b973-73bbb0a8b1a9'
   launch_started_at: '2026-08-30T06:03:04Z'
@@ -50,23 +50,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=eff218f5-9e87-41be-891c-79301573b4f8; handoff=receive; source=reviews/final-review-2026-08-30T060811Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md'
   receive_archived_artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/archived/final-review-2026-08-30T060811Z.md'
   receive_event_identity: 'final | code | final-review-2026-08-30T060811Z.md'
   receive_pre_head: d4e6a75732cec91e164565048f821b09c3e04b51
-  receive_commit: null
+  receive_commit: cef12e3c8c9b05457b317b13538303fe89de8eb0
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-30T06:11:00Z'
+  updated_at: '2026-08-30T06:13:00Z'
 oat_docs_updated: true
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T06:11:00Z'
+oat_project_state_updated: '2026-08-30T06:13:00Z'
 oat_generated: false
 ---
 
@@ -78,9 +78,9 @@ oat_generated: false
 
 ## Current Phase
 
-All thirteen implementation tasks are complete, and the third/final narrowed
-review passed with zero findings. The configured lifecycle exit gate is next,
-followed by HiLL approval.
+All thirteen implementation tasks and the final lifecycle review are complete.
+The configured cross-family exit gate passed and was received durably; the
+approval-aware post-implementation sequence is next.
 
 ## Artifacts
 
@@ -120,7 +120,8 @@ followed by HiLL approval.
 - ✓ Narrowed final review resolved all three original findings
 - ✓ Reusable PR/docs summary aligned with the canonical thirteen-task ledger
 - ✓ Third/final narrowed review passed with zero findings
-- ⧗ Resolving the configured lifecycle exit gate
+- ✓ Configured cross-family exit gate passed and was received durably
+- ⧗ Resolving the approval-aware post-implementation sequence
 
 ## Blockers
 
@@ -128,5 +129,5 @@ None.
 
 ## Next Milestone
 
-Resolve and execute the configured lifecycle exit gate before final HiLL
-approval.
+Resolve the post-implementation sequence and recap gate, then request final
+HiLL approval.
