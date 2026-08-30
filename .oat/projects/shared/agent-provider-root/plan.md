@@ -463,18 +463,56 @@ produces an expected tracked correction, inspect it, rerun affected checks, and
 commit `chore(p03-t02): finalize provider-root release proof`. Otherwise let
 `oat-project-implement` record evidence in normal implementation bookkeeping.
 
+### Task p03-t03: (review) Scope provider-sync exemption to paired occurrence
+
+**Requirements:** FR4, NFR1
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Step 1: Add the mixed-line regression case (RED)**
+
+Add a table case containing an executable bare canonical-agent read and a
+legitimate same-role provider-sync description on the same line. Require the
+executable occurrence to remain reported while exempting only the paired
+descriptive occurrence.
+
+**Step 2: Scope the exemption to the paired occurrence (GREEN)**
+
+Change provider-sync example handling so it suppresses only the canonical
+occurrence paired with the exact provider-view description for the same role,
+not every canonical-agent match on the line.
+
+**Step 3: Format and verify**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/validation/skills.test.ts
+```
+
+Expected: the mixed line reports only its executable occurrence and the full
+focused ratchet suite remains green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+git commit -m "fix(p03-t03): preserve executable reads beside sync examples"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed  | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p02    | code     | passed  | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p03    | code     | passed  | 2026-08-30 | reviews/p03-review-2026-08-30T173812Z.md                      | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | pending | -          | -                                                             | -                                        | -          | -                             |
-| spec   | artifact | pending | -          | -                                                             | -                                        | -          | -                             |
-| design | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
-| plan   | artifact | passed  | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
-| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
+| Scope  | Type     | Status      | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | ----------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed      | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p02    | code     | passed      | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p03    | code     | passed      | 2026-08-30 | reviews/p03-review-2026-08-30T173812Z.md                      | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final  | code     | fixes_added | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
+| spec   | artifact | pending     | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | passed      | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
+| plan   | artifact | passed      | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
+| plan   | artifact | passed      | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
@@ -489,9 +527,9 @@ Preserve every existing row and unknown trailing cell.
 
 - Phase 1: 2 tasks - Typed classifier and exact-target fixture contract
 - Phase 2: 4 tasks - Seven live-read migrations and zero agent ratchet
-- Phase 3: 2 tasks - Documentation, release metadata, mutation, and full gates
+- Phase 3: 3 tasks - Documentation, release metadata, mutation, full gates, and the final-review ratchet fix
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
 Ready for code review and merge after all tasks, configured phase reviews, and
 the final review pass.

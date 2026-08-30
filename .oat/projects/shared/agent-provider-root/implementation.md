@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | in_progress | 3     | 2/3       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -163,7 +163,7 @@ oat_generated: false
 
 ## Phase 3: Documentation, Packaging, and Release Proof
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -215,6 +215,17 @@ oat_generated: false
 **Outcome:** Mutation detection, restoration, uncached tests, focused suites, and the full repository gate sequence all passed.
 
 **Verification:** Every planned command exited 0 except the intentionally failing mutation run, which exited 1 with exact evidence before clean restoration.
+
+---
+
+### Task p03-t03: (review) Scope provider-sync exemption to paired occurrence
+
+**Status:** in_progress
+**Commit:** -
+
+**Outcome:** Pending bounded final-review fix.
+
+**Verification:** Pending mixed-line regression and focused ratchet suite.
 
 ---
 
@@ -373,6 +384,7 @@ Chronological log of implementation progress.
 - [x] p02-t04: Activate the zero-executable agent ratchet - `335383130`
 - [x] p03-t01: Document and package the provider-root contract - `af69a8008`
 - [x] p03-t02: Prove mutation detection and complete repository gates - evidence-only, no source commit
+- [ ] p03-t03: Scope provider-sync exemption to paired occurrence
 
 **What changed (high level):**
 
@@ -389,13 +401,21 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Carry the non-blocking Phase 2 same-line provider-example concern into Phase 3 verification and final review.
+- Fix the final-review-confirmed same-line provider-example false negative in p03-t03.
 
 **Blockers:**
 
 - None.
 
 **Session End:** In progress
+
+### Review Received: final
+
+- **Reviewed head:** `2a6141fe8551067b48cc3db6ce49a92d1dad6469`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Disposition:** User selected fix now; M1 is mapped to `p03-t03`.
+- **Artifact:** `reviews/archived/final-review-2026-08-30T175056Z.md`
+- **Next:** Execute the bounded fix and rerun final review.
 
 ---
 
