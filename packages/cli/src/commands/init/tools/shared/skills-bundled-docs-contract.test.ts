@@ -1126,6 +1126,40 @@ describe('skills bundled docs contract', () => {
     );
   });
 
+  it('binds implementation fallback roles independently from the workflows scope', () => {
+    const source = 'oat-project-implement dispatch reference';
+    const content = readFileSync(
+      join(
+        SKILLS_DIR,
+        'oat-project-implement',
+        'references',
+        'dispatch-and-dry-run.md',
+      ),
+      'utf8',
+    );
+
+    expectPortableAgentRootCandidateOrder(content, source);
+    expect(content).toContain(
+      '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
+    );
+    expect(content).toContain(
+      '${REVIEWER_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
+    );
+    expect(content).toMatch(
+      /independently[\s\S]{0,260}oat-phase-implementer[\s\S]{0,260}oat-reviewer/i,
+    );
+    expect(content).toMatch(
+      /exact unsuffixed[\s\S]{0,160}same-scope canonical file[\s\S]{0,180}symlink/i,
+    );
+    expect(content).toMatch(/stop before[\s\S]{0,100}fresh-child fallback/i);
+    expect(content).toContain(
+      'oat tools install workflows --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack workflows --scope <user|project>',
+    );
+  });
+
   it('maps brainstorm sibling recovery to the owning pack', () => {
     const content = readFileSync(
       join(SKILLS_DIR, 'oat-brainstorm', 'SKILL.md'),

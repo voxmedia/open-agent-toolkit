@@ -866,6 +866,25 @@ printf 'artifact-read\\n'`,
     }
   });
 
+  it('keeps implementation fallback instructions subordinate to the accepted target', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(content).toMatch(
+      /native[\s\S]{0,180}(?:variant|agent_type)[\s\S]{0,180}first/i,
+    );
+    expect(content).toMatch(
+      /fresh child[\s\S]{0,180}only[\s\S]{0,180}pre-start native role-selection\s+rejection/i,
+    );
+    expect(content).toMatch(
+      /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+    );
+    expect(content).toMatch(
+      /accepted[\s\S]{0,180}(?:continue|existing handle)[\s\S]{0,240}(?:never|must not|cannot)[\s\S]{0,120}(?:replacement|fallback|fresh child)/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
