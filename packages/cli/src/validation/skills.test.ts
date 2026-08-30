@@ -2522,7 +2522,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2677,7 +2677,7 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.1'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.2'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.1'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.1'],
@@ -3901,7 +3901,7 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.19'],
-      ['oat-project-review-provide', '1.5.1'],
+      ['oat-project-review-provide', '1.5.2'],
       ['oat-project-review-receive', '1.6.1'],
       ['oat-project-review-receive-remote', '1.5.1'],
       ['oat-project-implement', '2.3.0'],
@@ -4978,7 +4978,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.5'],
       ['oat-project-quick-start', '2.3.6'],
       ['oat-project-import-plan', '1.4.10'],
-      ['oat-project-review-provide', '1.5.1'],
+      ['oat-project-review-provide', '1.5.2'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -4994,8 +4994,8 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.3.0'],
-      ['oat-project-review-provide', '1.5.1'],
-      ['oat-project-review-provide-remote', '1.1.0'],
+      ['oat-project-review-provide', '1.5.2'],
+      ['oat-project-review-provide-remote', '1.1.1'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {

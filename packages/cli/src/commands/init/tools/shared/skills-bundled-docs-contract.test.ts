@@ -169,6 +169,12 @@ const PORTABLE_AGENT_SKILLS_ROOT_CANDIDATES = [
   '`<repo-root>/.agents/skills`',
 ] as const;
 
+const PORTABLE_AGENT_ROOT_CANDIDATES = [
+  '`${SKILL_DIR}/../..`',
+  '`${HOME}/.agents`',
+  '`<repo-root>/.agents`',
+] as const;
+
 function listSkillDirs(): string[] {
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -227,6 +233,13 @@ function expectPortableAgentSkillsRootCandidateOrder(
   expect(content, `${source} must not invent a loaded-agent root`).not.toMatch(
     /\$\{(?:SKILL_DIR|AGENT_DIR)\}/,
   );
+}
+
+function expectPortableAgentRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  expectCandidateOrder(content, PORTABLE_AGENT_ROOT_CANDIDATES, source);
 }
 
 function collectViolations(): Violation[] {
@@ -1445,6 +1458,39 @@ describe('skills bundled docs contract', () => {
     );
     expect(collectCrossSkillTargets(content, skill)).toEqual([]);
   });
+
+  it.each([
+    ['oat-project-review-provide', 2],
+    ['oat-project-review-provide-remote', 2],
+  ] as const)(
+    '%s binds canonical reviewer instructions from the workflows scope',
+    (skill, expectedReads) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+      const boundRead =
+        '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md';
+
+      expectPortableAgentRootCandidateOrder(content, skill);
+      expect(content).toMatch(
+        /exact[\s\S]{0,40}unsuffixed[\s\S]{0,20}`agents\/oat-reviewer\.md`/,
+      );
+      expect(content).toMatch(/same-scope canonical file[\s\S]{0,180}symlink/i);
+      expect(content).toMatch(
+        /missing[\s\S]{0,80}broken[\s\S]{0,80}escaping[\s\S]{0,80}copied[\s\S]{0,80}transformed[\s\S]{0,80}suffixed[\s\S]{0,120}noncanonical candidate[\s\S]{0,100}continue/i,
+      );
+      expect(
+        content.match(new RegExp(boundRead.replaceAll('$', '\\$&'), 'g')),
+      ).toHaveLength(expectedReads);
+      expect(content).toMatch(
+        /stop before[\s\S]{0,40}(?:launching|starting)[\s\S]{0,40}fresh-child fallback/i,
+      );
+      expect(content).toContain(
+        'oat tools install workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack workflows --scope <user|project>',
+      );
+    },
+  );
 
   it.each([
     [
