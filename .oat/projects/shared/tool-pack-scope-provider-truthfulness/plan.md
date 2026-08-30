@@ -1481,7 +1481,7 @@ gates exit 0 at the final reviewed head.
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
-| plan   | artifact | pending         | -          | -                                                             | -             | -          | -           |
+| plan   | artifact | received        | 2026-08-30 | reviews/artifact-plan-review-2026-08-30T231629Z.md            | -             | -          | -           |
 
 The design review findings were resolved directly in `design.md`. Thomas
 approved planning without another design re-review, so that event remains
