@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status      | Tasks | Completed |
-| ------------------------------------- | ----------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
-| p03 — Release Integration             | fixes_added | 3     | 2/3       |
+| Phase                                 | Status          | Tasks | Completed |
+| ------------------------------------- | --------------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
+| p03 — Release Integration             | fixes_completed | 3     | 3/3       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** fixes_added
+**Status:** fixes_completed
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
@@ -77,8 +77,8 @@ oat_generated: false
 
 ### Task p03-t03: Remove stale lifecycle roadmap grouping
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `bd48b17bd50d11931a8f0540e02a86453087876f`
 
 ## Orchestration Runs
 
@@ -373,6 +373,28 @@ oat_generated: false
   into `p03-t03`; one-file correction only
 - Fix-loop usage: 1/2 before dispatch; the next review is the third and final
   governance-cap review
+
+#### Dispatch Record: p03 fix round 2
+
+- Request: `dispatch-p03-fix-r2-20260829-01`
+- Continuation of: `dispatch-p03-implementation-20260829-01`
+- Launch state/outcome: accepted / done
+- Exact fix base: `aa4756bbb7adc956a706bcb991b72d6006e805c9`
+- Route: original `oat-phase-implementer-gpt-5-6-sol-high` handle
+- Scope: remaining Important I1 sentence; `p03-t03`; one roadmap file
+- Fix-loop usage: round 2 of 2
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+### Fix Completed: p03 (round 2)
+
+- Append-only commit: `bd48b17bd50d11931a8f0540e02a86453087876f`
+- Finding I1 remainder / task `p03-t03`: fixed
+- Verification: roadmap absence assertion, scoped format, diff check, check,
+  format, docs build, and PJM integrity pass; only four pre-existing layout
+  warnings remain
+- Range and one-file bound verified; worktree clean
+- Fix-loop usage: 2/2; third/final phase review required
 
 <!-- orchestration-runs-end -->
 
