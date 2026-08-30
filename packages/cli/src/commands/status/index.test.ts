@@ -1737,6 +1737,12 @@ describe('createStatusCommand', () => {
               packAsset('.agents/skills/oat-utility', 'outdated', 'project'),
               packAsset('.agents/skills/oat-utility-two', 'newer', 'project'),
               packAsset(
+                '.oat/ideas/backlog.md',
+                'current',
+                'project',
+                'seed-if-missing',
+              ),
+              packAsset(
                 '.oat/templates/state.md',
                 'present',
                 'project',

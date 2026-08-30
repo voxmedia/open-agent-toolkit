@@ -1,4 +1,12 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -42,6 +50,24 @@ async function writeAsset(
       ? `---\nname: ${asset.id}\nversion: 1.0.0\n---\n${content}`
       : content;
   await writeFile(target, fileContent);
+}
+
+async function writeVersionedAsset(
+  root: string,
+  path: string,
+  asset: PackAssetDefinition,
+  version: string | null,
+  content: string,
+): Promise<void> {
+  const target = join(root, path);
+  const frontmatter = `---\nname: ${asset.id}\n${version === null ? '' : `version: ${version}\n`}---\n${content}`;
+  if (asset.kind === 'skill') {
+    await mkdir(target, { recursive: true });
+    await writeFile(join(target, 'SKILL.md'), frontmatter);
+    return;
+  }
+  await mkdir(dirname(target), { recursive: true });
+  await writeFile(target, frontmatter);
 }
 
 async function materializeManagedPack(
@@ -146,6 +172,111 @@ describe('pack inventory', () => {
     ).toMatchObject({ status: 'outdated' });
   });
 
+  it('distinguishes bundled seed defaults from retained overrides', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-project-');
+    const seed = getPackDefinition('ideas').assets.find(
+      ({ kind, source }) => kind === 'seed' && source,
+    )!;
+    await writeAsset(assetsRoot, seed.source!, seed, 'bundled default\n');
+
+    const absent = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      absent.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'missing' });
+
+    await writeAsset(scopeRoot, seed.destination, seed, 'bundled default\n');
+    const identical = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      identical.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'current' });
+
+    const retainedContent = 'owner override\n';
+    await writeFile(join(scopeRoot, seed.destination), retainedContent);
+    const retained = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      retained.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'present' });
+    await expect(
+      readFile(join(scopeRoot, seed.destination), 'utf8'),
+    ).resolves.toBe(retainedContent);
+  });
+
+  it('preserves generation-aware inventory for generated seeds', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-project-');
+    await materializeManagedPack('workflows', 'project', assetsRoot, scopeRoot);
+    await mkdir(join(scopeRoot, '.oat', 'projects', 'local'), {
+      recursive: true,
+    });
+    await mkdir(join(scopeRoot, '.oat', 'projects', 'archived'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects-root'),
+      '.oat/projects/custom\n',
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'config.json'),
+      JSON.stringify({ projects: { root: '.oat/projects/shared' } }),
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects', 'local', '.gitkeep'),
+      '',
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects', 'archived', '.gitkeep'),
+      '',
+    );
+
+    const inventory = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    const generated = new Map(
+      inventory.assets
+        .filter(({ definition }) => definition.generation)
+        .map(({ definition, status }) => [definition.generation, status]),
+    );
+    expect(generated).toMatchObject(
+      new Map([
+        ['projects-root-default', 'present'],
+        ['projects-config-default', 'present'],
+        ['empty-file', 'present'],
+      ]),
+    );
+
+    await writeFile(join(scopeRoot, '.oat', 'config.json'), '{}');
+    const invalidConfig = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      invalidConfig.assets.find(
+        ({ definition }) => definition.generation === 'projects-config-default',
+      ),
+    ).toMatchObject({ status: 'outdated' });
+  });
+
   it('compares skill and agent versions plus static file and tree digests', async () => {
     const assetsRoot = await makeRoot('oat-assets-');
     const scopeRoot = await makeRoot('oat-user-');
@@ -180,6 +311,203 @@ describe('pack inventory', () => {
     });
     expect(
       core.assets.find(({ definition }) => definition.id === docs.id),
+    ).toMatchObject({ status: 'outdated' });
+  });
+
+  it.each(['skill', 'agent'] as const)(
+    'reports same-version %s content drift',
+    async (kind) => {
+      const assetsRoot = await makeRoot('oat-assets-');
+      const scopeRoot = await makeRoot('oat-user-');
+      const asset = getPackDefinition('research').assets.find(
+        (candidate) => candidate.kind === kind,
+      )!;
+      await materializeManagedPack('research', 'user', assetsRoot, scopeRoot);
+      await writeVersionedAsset(
+        scopeRoot,
+        asset.destination,
+        asset,
+        '1.0.0',
+        'locally modified\n',
+      );
+
+      const inventory = await inventoryScopedPack({
+        pack: 'research',
+        scope: 'user',
+        scopeRoot,
+        assetsRoot,
+      });
+      expect(
+        inventory.assets.find(({ definition }) => definition.id === asset.id),
+      ).toMatchObject({
+        status: 'outdated',
+        installedVersion: '1.0.0',
+        bundledVersion: '1.0.0',
+      });
+    },
+  );
+
+  it.each([
+    {
+      label: 'absent installed metadata',
+      installedVersion: null,
+      bundledVersion: '1.0.0',
+      installedContent: 'same\n',
+      bundledContent: 'same\n',
+      status: 'outdated',
+    },
+    {
+      label: 'malformed installed metadata',
+      installedVersion: 'invalid',
+      bundledVersion: '1.0.0',
+      installedContent: 'same\n',
+      bundledContent: 'same\n',
+      status: 'outdated',
+    },
+    {
+      label: 'older installed version',
+      installedVersion: '0.9.0',
+      bundledVersion: '1.0.0',
+      installedContent: 'same\n',
+      bundledContent: 'same\n',
+      status: 'outdated',
+    },
+    {
+      label: 'newer installed version',
+      installedVersion: '1.1.0',
+      bundledVersion: '1.0.0',
+      installedContent: 'locally changed\n',
+      bundledContent: 'same\n',
+      status: 'newer',
+    },
+    {
+      label: 'malformed bundled metadata',
+      installedVersion: '1.0.0',
+      bundledVersion: 'invalid',
+      installedContent: 'same\n',
+      bundledContent: 'same\n',
+      status: 'newer',
+    },
+    {
+      label: 'equal version and canonical content',
+      installedVersion: '1.0.0',
+      bundledVersion: '1.0.0',
+      installedContent: 'same\n',
+      bundledContent: 'same\n',
+      status: 'current',
+    },
+    {
+      label: 'equal version with content drift',
+      installedVersion: '1.0.0',
+      bundledVersion: '1.0.0',
+      installedContent: 'locally changed\n',
+      bundledContent: 'same\n',
+      status: 'outdated',
+    },
+  ])(
+    'preserves version precedence for $label',
+    async ({
+      installedVersion,
+      bundledVersion,
+      installedContent,
+      bundledContent,
+      status,
+    }) => {
+      const assetsRoot = await makeRoot('oat-assets-');
+      const scopeRoot = await makeRoot('oat-user-');
+      const skill = getPackDefinition('research').assets.find(
+        ({ kind }) => kind === 'skill',
+      )!;
+      for (const asset of getPackDefinition('research').assets) {
+        if (asset.source) await writeAsset(assetsRoot, asset.source, asset);
+      }
+      await writeVersionedAsset(
+        assetsRoot,
+        skill.source!,
+        skill,
+        bundledVersion,
+        bundledContent,
+      );
+      await writeVersionedAsset(
+        scopeRoot,
+        skill.destination,
+        skill,
+        installedVersion,
+        installedContent,
+      );
+
+      const inventory = await inventoryScopedPack({
+        pack: 'research',
+        scope: 'user',
+        scopeRoot,
+        assetsRoot,
+      });
+      expect(
+        inventory.assets.find(({ definition }) => definition.id === skill.id),
+      ).toMatchObject({ status, installedVersion, bundledVersion });
+    },
+  );
+
+  it('ignores installed skill files outside the bundled materialization', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    await materializeManagedPack('research', 'user', assetsRoot, scopeRoot);
+    const skill = getPackDefinition('research').assets.find(
+      ({ kind }) => kind === 'skill',
+    )!;
+    await writeFile(join(scopeRoot, skill.destination, 'LOCAL.md'), 'notes\n');
+
+    const inventory = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      inventory.assets.find(({ definition }) => definition.id === skill.id),
+    ).toMatchObject({ status: 'current' });
+  });
+
+  it('ignores materialized script mode normalization but detects content drift', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    await materializeManagedPack('research', 'user', assetsRoot, scopeRoot);
+    const skill = getPackDefinition('research').assets.find(
+      ({ kind }) => kind === 'skill',
+    )!;
+    const bundledScript = join(assetsRoot, skill.source!, 'scripts', 'run.sh');
+    const installedScript = join(
+      scopeRoot,
+      skill.destination,
+      'scripts',
+      'run.sh',
+    );
+    await mkdir(dirname(bundledScript), { recursive: true });
+    await mkdir(dirname(installedScript), { recursive: true });
+    await writeFile(bundledScript, '#!/bin/sh\necho current\n');
+    await writeFile(installedScript, '#!/bin/sh\necho current\n');
+    await chmod(bundledScript, 0o644);
+    await chmod(installedScript, 0o755);
+
+    const current = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      current.assets.find(({ definition }) => definition.id === skill.id),
+    ).toMatchObject({ status: 'current' });
+
+    await writeFile(installedScript, '#!/bin/sh\necho modified\n');
+    const drifted = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      drifted.assets.find(({ definition }) => definition.id === skill.id),
     ).toMatchObject({ status: 'outdated' });
   });
 
