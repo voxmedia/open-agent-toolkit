@@ -1381,7 +1381,7 @@ describe('help output snapshots', () => {
         --cwd <path>                  Override working directory
 
       Commands:
-        core [options]                Install OAT core skills (diagnostics, docs)
+        core                          Install OAT core skills (diagnostics, docs)
         ideas [options]               Install OAT ideas skills, templates, and idea
                                       workflow files
         docs [options]                Install OAT docs workflow skills

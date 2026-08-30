@@ -77,8 +77,10 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 
 - Run `oat init tools` to install/update bundled OAT tool packs.
 - In TTY mode, select which outdated skills to update when prompted.
-- In non-interactive mode, rerun the relevant pack subcommand with `--force` if you want to overwrite outdated installed skills.
-- For pack-level drift rather than a single skill, prefer the scoped command doctor prints: `oat tools update --pack <pack> --scope <scope>`.
+- In non-interactive mode, run the scoped command doctor prints:
+  `oat tools update --pack <pack> --scope <scope>`.
+- Per-pack install commands no longer accept the previously inert `--force`
+  option.
 
 ## `sync` reports an unsafe provider parent
 

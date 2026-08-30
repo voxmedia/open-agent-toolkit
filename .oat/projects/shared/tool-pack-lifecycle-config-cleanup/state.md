@@ -34,7 +34,7 @@ oat_phase_recovery_policy:
         discovered_by: git status --short
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: f2463616f12f5046579184e853ed9d6b0a23c615
-        status: pending
+        status: completed
 oat_docs_updated: null
 oat_pr_status: null
 oat_pr_url: null

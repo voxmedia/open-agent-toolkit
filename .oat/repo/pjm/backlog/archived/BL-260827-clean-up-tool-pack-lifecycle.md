@@ -1,7 +1,7 @@
 ---
 id: BL-260827-clean-up-tool-pack-lifecycle
 title: Clean up tool-pack lifecycle and config contracts
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - lifecycle
 assignee: null
 created: 2026-08-27T22:35:47.168Z
-updated: 2026-08-27T22:35:47.168Z
+updated: '2026-08-30T04:18:21Z'
 associated_issues: []
 external_plans: []
 ---

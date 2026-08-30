@@ -735,8 +735,9 @@ Removal and migration use the symmetric contract: the follow-up sync prunes exac
 User-scope tool packs and explicit PJM adoption changed several defaults and
 exit codes. Nothing here is data-destructive, and legacy config keeps working —
 `tools.<pack>: false` still parses, complete pre-adoption PJM scaffolds are
-grandfathered as `inferred-legacy`, and no CLI flag was removed or renamed. But
-several commands you already run behave differently.
+grandfathered as `inferred-legacy`, and existing installs remain additive. One
+inert per-pack install flag was removed, and several commands you already run
+behave differently.
 
 ### Install scope defaults flipped to user
 
@@ -780,6 +781,26 @@ Scripts that read `tools.<pack> === false` now read `undefined` for a pack that
 is not installed. Test for a truthy value instead. Legacy `false` values that
 already exist in a config file are still read (see
 [Legacy `false` intent](#legacy-false-intent)) — they are just never written.
+
+Direct config writes now enforce the same true-or-absent contract.
+`oat config set tools.<pack> false` exits `1` without changing the config. To
+remove a project-scoped pack and clear its intent, run:
+
+```bash
+oat tools remove --pack <pack> --scope project
+```
+
+Existing legacy `false` values remain readable migration input.
+
+### Per-pack install `--force` was removed
+
+`oat tools install <pack> --force` is now rejected as an unknown option. The
+flag was inert in the unified additive lifecycle. To reconcile installed
+assets, use the scoped update command instead:
+
+```bash
+oat tools update --pack <pack> --scope <scope>
+```
 
 ### Per-pack install `--json` changed shape
 

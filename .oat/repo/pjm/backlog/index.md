@@ -205,7 +205,6 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |
-| BL-260827-clean-up-tool-pack-lifecycle   | Clean up tool-pack lifecycle and config contracts                                                     | open   | medium   | feature | S        |
 | BL-260827-correct-scope-and-adoption     | Correct scope and adoption diagnostics                                                                | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path            | open   | medium   | task    | S        |
 | BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                                          | open   | medium   | task    | S        |
