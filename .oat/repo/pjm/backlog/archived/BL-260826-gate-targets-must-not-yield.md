@@ -1,7 +1,7 @@
 ---
 id: BL-260826-gate-targets-must-not-yield
 title: Gate targets must not yield on background work in headless mode
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.221Z
-updated: 2026-08-30T22:21:34Z
+updated: '2026-08-30T23:11:07Z'
 associated_issues: []
 external_plans: []
 ---

@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-08-30 — BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands — Gate configuration now rejects recognized lifecycle review commands that lack canonical global structured output.
+- 2026-08-30 — BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode — Headless gate children must complete synchronously and clean no-artifact exits now have a distinct terminal diagnosis.
 - 2026-08-30 — BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and config contracts — Closed lifecycle/config consistency gaps with content-aware inventory, explicit adoption reporting, supported config state, and corrected CLI help.
 - 2026-08-28 — BL-260827-make-packaged-skill-references — Make packaged skill references scope-portable — Made packaged sibling-skill references scope-portable and added a recursive syntax-robust regression ratchet.
 - 2026-08-27 — BL-260818-make-the-project-management — Make every OAT tool pack user-scope eligible — Shipped user-scope eligibility, unified lifecycle, safe migration, PJM ownership boundaries, diagnostics, documentation, and release verification for every OAT tool pack; three bounded follow-up projects retain explicitly deferred polish.
