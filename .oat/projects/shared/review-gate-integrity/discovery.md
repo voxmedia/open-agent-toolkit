@@ -437,11 +437,10 @@ opaque. The standalone quick project will validate the smallest safe slice.
   is the baseline and is not duplicated here.
 - [PR #190 — ReviewPlan Stage A compatibility release](https://github.com/voxmedia/open-agent-toolkit/pull/190)
   is the direct compatibility boundary.
-- [`gate-headless-no-yield` — Headless Gate Targets Must Not Yield](../gate-headless-no-yield/)
-  is the bounded quick follow-up.
-- [`gate-structured-output-contract` — Structured Output Contract for Gate
-  Configuration](../gate-structured-output-contract/) is the bounded quick
-  follow-up pending PR #190 disposition.
+- `gate-execution-contract-hardening` is the combined bounded quick follow-up
+  for configured structured output and headless no-yield execution. It owns
+  only the configuration/runtime/integration seam and remains outside this
+  project's broader integrity model.
 - The scope/provider project owns provider role visibility, not review receipts;
   coordination is needed only at the dispatch-provenance seam.
 
