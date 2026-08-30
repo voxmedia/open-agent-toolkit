@@ -50,23 +50,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=eff218f5-9e87-41be-891c-79301573b4f8; handoff=receive; source=reviews/final-review-2026-08-30T060811Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md'
+  receive_archived_artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/archived/final-review-2026-08-30T060811Z.md'
+  receive_event_identity: 'final | code | final-review-2026-08-30T060811Z.md'
+  receive_pre_head: d4e6a75732cec91e164565048f821b09c3e04b51
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-30T06:10:00Z'
+  updated_at: '2026-08-30T06:11:00Z'
 oat_docs_updated: true
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T06:10:00Z'
+oat_project_state_updated: '2026-08-30T06:11:00Z'
 oat_generated: false
 ---
 
