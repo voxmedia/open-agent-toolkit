@@ -581,6 +581,12 @@ oat_generated: false
   changed.
 - Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly.
 
+### Project recap gate: skipped
+
+- Decision: `skip`; source: `interactive`.
+- No recap run path or manifest was created.
+- The terminal recap guard passed with `outcome: null`, as required for a skip.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
