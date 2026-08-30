@@ -1,8 +1,8 @@
 ---
 oat_current_task: p06-t06
-oat_last_commit: b6894769911142213a9071d95e8806a91c5edc09
+oat_last_commit: e620d7bec0dd8be925d64fc9a610a398f4d992b8
 oat_blockers:
-  - The lifecycle docs deduplication must be pushed and green before the root-owned Remote structured Tier 1 retry
+  - Thomas must complete the external consumer-repository dogfood runbook and return evidence before p06-t06 can complete
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-07T17:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T23:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,9 +86,9 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 6 Stage A integration recovery
+**Status:** Phase 6 external repository dogfood handoff
 **Started:** 2026-07-29
-**Last Updated:** 2026-08-07
+**Last Updated:** 2026-08-30
 
 ## Current Phase
 
@@ -213,6 +213,18 @@ passed release dry-run but timed out three process-level broker tests under
 shared runner load. Recovery `p06-t06-r12` applies bounded test-only timeouts;
 the broker file passes 20/20 under `CI=1` with one worker. p06-t06 and p06-t07
 remain unadvanced.
+
+Current-main recovery `p06-t06-r15` merged `origin/main` at
+`5d684ba9746cd91006524eb5a82f18078a3196ef` without rewriting history,
+preserved the combined ReviewPlan and current-main contracts, regenerated owned
+provider/assets/index surfaces, and advanced all five public packages in
+lockstep to 0.2.48 above main's 0.2.47 baseline. The prior detached self-fixture
+dogfood model is retired. Thomas must now use
+`references/external-repository-dogfood-runbook.md` to build/link this
+worktree's CLI from a separate real consumer repository, enable enforce only in
+that consumer, exercise real local/remote/gate/re-review/cap workflows, and
+return evidence for PR #190. No external dogfood has been run by this recovery;
+p06-t06 remains in progress and p06-t07 remains blocked behind it.
 
 ## Artifacts
 
@@ -429,16 +441,22 @@ remain unadvanced.
 - ✓ 0.2.31 follow-up committed and pushed at `b68947699`; release dry-run passes
 - ✓ p06-t06-r14 removes the duplicate lifecycle docs section and `pnpm check`
   passes all 10 tasks locally
-- → Push p06-t06-r14 and require green PR CI before the fresh root-owned Remote
-  structured Tier 1 run
+- ✓ p06-t06-r15 merges current main at `5d684ba9`, preserves combined
+  contracts, regenerates owned surfaces, and advances lockstep packages to
+  0.2.48 above main's 0.2.47 baseline
+- ✓ External consumer-repository dogfood runbook prepared; no detached fixture
+  or external dogfood run was performed in this recovery
+- → Thomas runs the external dogfood and returns evidence for PR #190
 
 ## Blockers
 
-p06-t06 requires the lifecycle docs deduplication to be pushed and green before
-a fresh root-owned Remote structured Tier 1 run at the new HEAD.
+p06-t06 requires Thomas's external consumer-repository dogfood evidence. This
+recovery does not authorize running another repository's workflows or posting
+to PR #190.
 
 ## Next Milestone
 
-Push p06-t06-r14, require green PR checks, refresh the detached enforce fixture,
-and then run a fresh root-owned Remote structured Tier 1 action.
-p06-t06 and p06-t07 remain unadvanced.
+Thomas follows `references/external-repository-dogfood-runbook.md` in a separate
+real consumer repository, returns the required local/remote/gate/re-review/cap
+evidence, and only then may the root reconcile p06-t06 completion. p06-t06 and
+p06-t07 remain unadvanced.

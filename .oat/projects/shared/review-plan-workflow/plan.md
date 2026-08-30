@@ -3592,58 +3592,39 @@ tests, inspect the packed CLI paths, and run `pnpm release:validate`.
 
 - Modify: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
 - Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+- Create: `.oat/projects/shared/review-plan-workflow/references/external-repository-dogfood-runbook.md`
 
 **Step 1: Write check (RED)** Run the focused config/review/gate/skill/bundle
 test matrix and record any failing cell before live dogfood.
 
-**Step 2: Implement (GREEN)** Create an isolated local fixture with
-`DOGFOOD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/oat-review-plan-dogfood.XXXXXX")" && git worktree add --detach "$DOGFOOD_ROOT/repo" HEAD`,
-set `DOGFOOD_PROJECT="$DOGFOOD_ROOT/repo/.oat/projects/shared/review-plan-workflow"`,
-then run
-`pnpm --dir "$DOGFOOD_ROOT/repo" run cli:source -- config set workflow.reviewPlanMode enforce --local`.
-Resolve the fixture value with
-`MODE_JSON="$(pnpm --dir "$DOGFOOD_ROOT/repo" --silent run cli:source -- --json config get workflow.reviewPlanMode)"`,
-and fail unless
-`node -e 'const d=JSON.parse(process.argv[1]); if(d.value!=="enforce" || d.source!=="local") process.exit(1)' "$MODE_JSON"`
-passes.
+**Step 2: Implement (GREEN)** Thomas runs the executable
+`references/external-repository-dogfood-runbook.md` from a separate real
+consumer repository. Build and globally link this worktree's CLI with the
+repository-owned `pnpm run cli:link` script, verify the resolved binary points
+to this worktree and version, and enable
+`workflow.reviewPlanMode=enforce --local` only in the consumer repository.
 
-Before remote rows, push the candidate branch and open its draft release PR:
-`git push -u origin HEAD && STAGE_A_PR_URL="$(gh pr create --draft --title "ReviewPlan Stage A compatibility release" --body "Stage A release candidate; dogfood evidence will be added before ready-for-review.")" && STAGE_A_PR_NUMBER="$(gh pr view "$STAGE_A_PR_URL" --json number --jq .number)"`.
-Obtain the remote skill's explicit posting approval separately for each remote
-row; one approval does not carry to another. Then run this matrix:
+Use real small, medium, and broad implemented scopes to exercise local,
+root-owned direct phase/checkpoint/final, remote structured, gate, re-review,
+and three-cycle cap workflows. Capture the exact run/range/terminal/sink and
+cleanup evidence defined by the runbook, including observation points for
+issues #206 and #207. Do not run dogfood in this repository or a detached
+fixture of it, do not override the review cap to manufacture a pass, and do not
+mark this task complete until Thomas returns the required evidence.
 
-| Rail                               | Exact invocation                                                                                                                                                                                                                 | Fixture and scope                                 | Required sink and terminal result                                                    | Evidence and cleanup                                                                   |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| Local artifact Tier 1              | Invoke `oat-project-review-provide code p06 through=p06-t06` with exact Tier 1 dispatch                                                                                                                                          | `$DOGFOOD_PROJECT`; reviewed HEAD through p06-t06 | Published local review artifact from a `complete` terminal                           | Record run ID, reviewed HEAD, artifact digest, and verdict in `implementation.md`      |
-| Remote structured Tier 1           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with exact Tier 1 dispatch                                                                 | Stage A draft PR; full PR range                   | One posted structured GitHub PR review from a `complete` terminal                    | Record PR review URL and dispatch report; remote skill removes its ephemeral worktree  |
-| Local artifact Tier 3              | Invoke `oat-project-review-provide code p06 through=p06-t06` with an explicit inline/Tier 3 request                                                                                                                              | `$DOGFOOD_PROJECT`; reviewed HEAD through p06-t06 | Published local review artifact from a validated `complete` inline terminal          | Record artifact digest and verdict; retain no untracked fixture edits                  |
-| Remote structured Tier 3           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with an explicit inline/Tier 3 request                                                     | Stage A draft PR; full PR range                   | One posted validated inline GitHub PR review from a `complete` terminal              | Record PR review URL and terminal subtype; remote skill removes its ephemeral worktree |
-| Direct implementation phase review | Invoke the root-owned `oat-project-implement` phase-review contract for `p06` through `p06-t06`                                                                                                                                  | `$DOGFOOD_PROJECT`; p06-t01..p06-t06 commit range | Published local artifact and exact p06 code-review event from a `complete` terminal  | Record artifact digest, event identity, and verdict in `implementation.md`             |
-| Gate review                        | From `$DOGFOOD_ROOT/repo`, run `pnpm run cli:source -- --json gate review --project "$DOGFOOD_PROJECT" --review-type code --review-scope p06 --exit-nonzero-on important '$oat-project-review-provide code p06 through=p06-t06'` | `$DOGFOOD_PROJECT`; p06-t01..p06-t06 commit range | Corroborated `ok`, `receiveEligible: true`, non-null artifact, and non-null handoff  | Record gate run ID, target, handoff, artifact digest, and disposition                  |
-| Checkpoint alias                   | Invoke `oat-project-review-provide code p01-p06` through the implementation checkpoint path                                                                                                                                      | `$DOGFOOD_PROJECT`; contiguous p01-p06 range      | Published local artifact with exact `p01-p06` scope from a `complete` terminal       | Record invocation alias, event identity, reviewed range, and verdict                   |
-| Final alias                        | Invoke `oat-project-review-provide code final` through the implementation final path                                                                                                                                             | `$DOGFOOD_PROJECT`; full implementation range     | Published local artifact with exact `final` scope from a `complete` terminal         | Record invocation alias, event identity, reviewed range, and verdict                   |
-| Injected local `BLOCKED`           | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/local-coordinator.integration.test.ts`                                                                                                                     | Fake accepted local continuation                  | `blocked-incomplete`; no discoverable artifact, actionable verdict, or passing event | Record the blocked-case test name and result                                           |
-| Injected remote `BLOCKED`          | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/project-rail.test.ts`                                                                                                       | Fake accepted remote continuation                 | `blocked-incomplete`; no GitHub post or structured pass                              | Record the blocked-case test name and result                                           |
-| Injected gate `BLOCKED`            | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/gate-hardening.integration.test.ts`                                                                                                                 | Correlated fake gate attempt                      | `status: blocked`, `receiveEligible: false`, null artifact, and null handoff         | Record the gate fixture name and envelope                                              |
-
-Copy the evidence rows into `implementation.md`, then run
-`git worktree remove --force "$DOGFOOD_ROOT/repo" && rm -rf "$DOGFOOD_ROOT"`.
-An actionable-findings gate envelope with `status: blocked` and
-`receiveEligible: true` is not a reviewer `BLOCKED` terminal and does not
-satisfy the injected gate row. Any missing required sink, unexpected sink on an
-injected blocked row, uncorroborated envelope, cleanup failure, or terminal
-outside the declared set blocks release.
-
-**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`.
 
 **Step 4: Verify** Run:
 `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format && pnpm build:docs && pnpm release:validate`
-Expected: every repository/release gate and dogfood cell passes.
+Expected: every repository/release gate passes before handoff. Dogfood remains
+pending until the external consumer-repository runbook returns complete
+evidence for every required workflow.
 
-**Step 5: Commit** `test(p06-t06): record enforced review matrix`; push the
-evidence commit to the existing Stage A draft PR, run
-`gh pr ready "$STAGE_A_PR_NUMBER"`, and stop until its merge is externally
-confirmed.
+**Step 5: Commit** After Thomas completes the external run,
+`test(p06-t06): record external enforce dogfood`. Posting the evidence to PR
+PR #190, changing its readiness, or pushing remains a separate operator-authorized
+action.
 
 #### Recovery p06-t06-r01: Integrate the current Stage A base
 
@@ -4161,6 +4142,42 @@ markdownlint gate.
 
 **Step 3: Commit** `docs(p06-t06): remove duplicate lifecycle section`
 
+#### Recovery p06-t06-r15: Reconcile current main and external dogfood boundary
+
+**Finding:** PR #190 again diverged from current main, and the original
+p06-t06 detached self-fixture matrix no longer matched the operator's dogfood
+model. Thomas will build/link this worktree's CLI from a separate real consumer
+repository and exercise real project review workflows there.
+
+**Recovery files:**
+
+- Merge: current `origin/main` without rewriting history
+- Regenerate: canonical provider views, CLI assets, sync manifest, backlog
+  index, docs index, and public-package version registry with repository tools
+- Create:
+  `.oat/projects/shared/review-plan-workflow/references/external-repository-dogfood-runbook.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/plan.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/state.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Integrate** Preserve ReviewPlan Stage A and current-main provider,
+installed-scope, sibling-skill, synced-project, fail-closed asset, docs, and
+backlog behavior. Keep the current-main lockstep package version as the base,
+then advance all five public package versions together above it.
+
+**Step 2: Regenerate and verify** Use canonical sync, bundle, backlog, docs,
+and package tools; require a clean sync dry-run, focused merged-surface tests,
+skill-bump validation, lockstep versions above main, and applicable workspace,
+release, and docs gates.
+
+**Step 3: Prepare external dogfood** Replace the obsolete detached-fixture
+instructions with the external consumer-repository runbook and align durable
+artifacts. Do not perform or mark p06-t06 dogfood complete in this recovery.
+
+**Step 4: Commit** Use a normal merge commit for main integration, then
+`docs(p06-t06): prepare external repository dogfood` for the runbook and
+bookkeeping.
+
 ### Task p06-t07: Publish Stage A and start the soak
 
 **Files:**
@@ -4319,26 +4336,26 @@ Expected: Stage B package and bundled versions agree.
 and require the Stage B assertions that an unset setting resolves to enforce
 without rewriting config. Record failures before release.
 
-**Step 2: Implement (GREEN)** Reuse the p06-t06 fixture setup. Before adding a
-fixture-local override, create `"$DOGFOOD_ROOT/home"` and resolve with no user
-config:
-`MODE_JSON="$(HOME="$DOGFOOD_ROOT/home" pnpm --dir "$DOGFOOD_ROOT/repo" --silent run cli:source -- --json config get workflow.reviewPlanMode)"`.
-Require
-`node -e 'const d=JSON.parse(process.argv[1]); if(d.value!=="enforce" || d.source!=="default") process.exit(1)' "$MODE_JSON"`
-to pass, proving neither tracked config nor the isolated home overrides the
-Stage B default. Then set and assert a fixture-local enforce override exactly
-as in p06-t06 so live rails cannot be contaminated by an operator's user-level
-legacy setting.
+**Step 2: Implement (GREEN)** Reuse the p06-t06 external consumer-repository
+runbook, not a toolkit fixture. Build/link the Stage B candidate CLI into the
+same real consumer repository and back up its local config. Before adding a
+consumer-local override, require both consumer local/shared config to omit
+`workflow.reviewPlanMode`, resolve with a fresh temporary home, and assert
+`value=enforce` with `source=default`. Then set and assert an explicit
+consumer-local enforce override exactly as in the runbook so live review rails
+cannot be contaminated by an operator's user-level legacy setting.
 
 Push the candidate branch and open its draft release PR before remote rows:
 `git push -u origin HEAD && STAGE_B_PR_URL="$(gh pr create --draft --title "ReviewPlan Stage B enforce-default release" --body "Stage B release candidate; dogfood evidence will be added before ready-for-review.")" && STAGE_B_PR_NUMBER="$(gh pr view "$STAGE_B_PR_URL" --json number --jq .number)"`.
-Obtain separate explicit posting approval for each remote row. Run the p06-t06
-matrix with `$STAGE_B_PR_NUMBER`, the Stage B candidate, the same evidence
-schema, and the same cleanup. Record each result. This task ends at the
-pre-publication merge boundary; do not publish or write post-publication
+Obtain separate explicit posting approval for each remote row. Repeat the
+runbook's real small/medium/broad local, remote, direct/alias, gate, re-review,
+and cap workflows with `$STAGE_B_PR_NUMBER`, the Stage B candidate, the same
+evidence schema, and the same cleanup. Record each result. This task ends at
+the pre-publication merge boundary; do not publish or write post-publication
 records on the release branch.
 
-**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`.
 
 **Step 4: Verify** Run:
 `pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format && pnpm build:docs && pnpm release:validate`
@@ -4440,7 +4457,7 @@ rewriting either historical result as passed.
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 135 tasks**
+Total planned tasks: 135.
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

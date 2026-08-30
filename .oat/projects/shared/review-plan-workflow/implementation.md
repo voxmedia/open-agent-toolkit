@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - p06-t06-r11 must be committed and pushed before PR checks and a fresh Remote structured Tier 1 run
-oat_last_updated: 2026-08-04
+  - Thomas must complete the external consumer-repository dogfood runbook and return evidence before p06-t06 can complete
+oat_last_updated: 2026-08-30
 oat_current_task_id: p06-t06
 oat_generated: false
 ---
@@ -11,7 +11,7 @@ oat_generated: false
 # Implementation: review-plan-workflow
 
 **Started:** 2026-07-29
-**Last Updated:** 2026-08-04
+**Last Updated:** 2026-08-30
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -1634,7 +1634,7 @@ visual measurements.
 
 ### Task p06-t06: Validate and dogfood explicit enforce
 
-**Status:** reviewed_with_medium
+**Status:** dogfood_pending_external
 **Preflight:** The focused config, review, gate, skill, and bundle matrix passed
 741 tests across 11 files.
 **Fixture:** Created a detached fixture at candidate HEAD `5714b61d`; local
@@ -2133,6 +2133,47 @@ docs formatting and markdownlint.
 **Next:** Commit and push p06-t06-r14, require green PR checks, refresh the
 detached enforce fixture, and run a fresh root-owned Remote structured Tier 1
 action. p06-t06 and p06-t07 remain unadvanced.
+
+#### Recovery p06-t06-r15: Reconcile current main and external dogfood boundary
+
+**Status:** recovery implementation complete; dogfood not run
+**Merge commit:** `e620d7bec0dd8be925d64fc9a610a398f4d992b8`
+**Requirement change:** The operator clarified that Thomas will dogfood from a
+separate real consumer repository by building/linking this worktree's CLI and
+running real consumer project workflows. The prior detached toolkit fixture and
+self-review matrix are obsolete and must not be reused.
+
+**Integration outcome:** Merged `origin/main` at
+`5d684ba9746cd91006524eb5a82f18078a3196ef` without rewriting history. Conflict
+resolution preserved ReviewPlan Stage A plus current-main provider-aware
+canonical agent reads, installed-scope and sibling-skill portability, synced
+project pull/push behavior, fail-closed asset behavior/tests, current backlog
+and docs content, and generated-source ownership. Canonical provider views, CLI
+bundled assets, sync manifest, backlog index, docs index, and the public-package
+version registry were regenerated with repository tools. The current-main
+0.2.47 package baseline was retained as the comparison point and all five
+public packages advanced together to 0.2.48.
+
+**Dogfood handoff:** Added
+`references/external-repository-dogfood-runbook.md` with prerequisites,
+worktree CLI build/link/source verification, consumer-local enforce setup,
+real small/medium/broad local/remote/direct/gate/re-review/cap workflows,
+evidence capture, issues #206/#207 observations, pass/fail criteria,
+synced-project pull/push, rollback, and the evidence package for PR #190. This
+recovery did not run another repository's workflows and did not post, push, or
+change PR state.
+
+**Verification:** Focused merged conflict coverage passed 782/782 tests across
+14 files. Skill-bump validation passed for three canonical skills; provider
+sync dry-run reported only `skip`; all five public packages, the generated
+registry, and sync manifest report 0.2.48; and version comparison against
+current main passed. `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+`pnpm lint`, `pnpm format`, `pnpm release:validate`, and `pnpm build:docs` all
+passed before the merge commit.
+
+**Next:** Thomas executes the external consumer-repository runbook and returns
+its evidence. The root then reconciles the results into `implementation.md` and
+the Stage A backlog record. p06-t06 remains incomplete; p06-t07 does not start.
 
 ## Orchestration Runs
 
