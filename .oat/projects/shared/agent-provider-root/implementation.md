@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 4     | 4/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | in_progress | 5     | 4/5       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -163,7 +163,7 @@ oat_generated: false
 
 ## Phase 3: Documentation, Packaging, and Release Proof
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -552,6 +552,16 @@ Chronological log of implementation progress.
 - **Disposition:** Passed; the omitted event is restored and the merged-head Bugbot event advanced to `fixes_completed`.
 - **Artifact:** `reviews/archived/p03-t04-review-2026-08-30T195106Z.md`
 - **Next:** Push the fix and receive the next Bugbot event. The full configured exit-gate rerun was explicitly skipped by the user.
+
+### Remote Review Received: PR #242 latest-event semantics
+
+- **Date:** 2026-08-30
+- **Reviewed head:** `b6fad10859d4d19317289dfb8023dbdcbeb7dfb1`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Disposition:** Converted `M1` to `p03-t05`; no findings were deferred or dismissed.
+- **Artifact:** `reviews/archived/remote-pr-242-review-2026-08-30T195851Z.md`
+- **New tasks:** `p03-t05`
+- **Next:** Resume `oat-project-implement` to restore chronological final-event order while preserving every ledger event.
 
 ### Exit Gate Audit
 

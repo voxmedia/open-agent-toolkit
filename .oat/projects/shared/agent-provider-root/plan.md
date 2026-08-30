@@ -538,6 +538,43 @@ git add .oat/projects/shared/agent-provider-root/plan.md .oat/projects/shared/ag
 git commit -m "fix(p03-t04): restore omitted final review ledger event"
 ```
 
+### Task p03-t05: (review) Preserve latest final review status
+
+**Requirements:** Review-ledger event identity, chronological repair, and latest-event semantics
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-provider-root/plan.md`
+
+**Step 1: Analyze the reader contract**
+
+Confirm that closeout readers select the last `final` + `code` row and that the
+retroactively restored `175056Z` event currently follows later passing final
+events.
+
+**Step 2: Restore chronological event order**
+
+Move only the restored `175056Z` row ahead of the later `181453Z` and
+`182542Z` final events. Preserve every event identity, status, provenance,
+column, and non-final row exactly. Do not duplicate, rewrite, or remove an
+event.
+
+**Step 3: Verify targeted behavior**
+
+Verify exactly one row exists for each of `175056Z`, `181453Z`, and `182542Z`.
+Require the last `final` + `code` row to remain the passing `182542Z` gate
+event. Compare normalized row values before and after to prove the repair
+changes order only.
+
+**Step 4: Verify project commands and commit**
+
+```bash
+pnpm format
+pnpm check
+git add .oat/projects/shared/agent-provider-root/plan.md
+git commit -m "fix(p03-t05): preserve latest final review status"
+```
+
 ## Reviews
 
 | Scope         | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
@@ -555,6 +592,7 @@ git commit -m "fix(p03-t04): restore omitted final review ledger event"
 | remote-pr-242 | code     | fixes_completed | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
 | final         | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
 | p03-t04       | code     | passed          | 2026-08-30 | reviews/archived/p03-t04-review-2026-08-30T195106Z.md         | 13392c5f26098aa2416e9560e53e32ff0e06f0f5 | manual     | -                             |
+| remote-pr-242 | code     | fixes_added     | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T195851Z.md   | b6fad10859d4d19317289dfb8023dbdcbeb7dfb1 | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
@@ -569,9 +607,9 @@ Preserve every existing row and unknown trailing cell.
 
 - Phase 1: 2 tasks - Typed classifier and exact-target fixture contract
 - Phase 2: 4 tasks - Seven live-read migrations and zero agent ratchet
-- Phase 3: 4 tasks - Documentation, release metadata, mutation, full gates, the ratchet fix, and remote-review ledger repair
+- Phase 3: 5 tasks - Documentation, release metadata, mutation, full gates, the ratchet fix, and two remote-review ledger repairs
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
 Ready for code review and merge after all tasks, configured phase reviews, and
 the final review pass.
