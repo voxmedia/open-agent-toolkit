@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 2     | 2/2       |
 | Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | pending   | 2     | 0/2       |
+| Phase 3 | completed | 2     | 2/2       |
 | Phase 4 | pending   | 2     | 0/2       |
 
-**Total:** 5/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -108,18 +108,19 @@ findings.
 
 ## Phase 3: Test-Quality Ratchets
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-08-30 22:46 UTC
+**Completed:** 2026-08-30 22:58 UTC
 
 ### Task p03-t01: Replace tautological manifest and lifecycle assertions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `1152d339606cc58a3a0c37ea7a2329891c03c1bd`
 
 ### Task p03-t02: Make scoped CLI harnesses realistic and exception-safe
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `2c108e71372ff9e7f08741512cc6818523ae300d`
 
 ## Phase 4: Integrated Release Readiness
 
@@ -148,7 +149,7 @@ findings.
 **Schedule:** p01 → p02 → p03 → p04 (sequential)
 **HiLL checkpoint:** p04 only; automatic checkpoint review enabled
 **Retry limit:** 2
-**Status:** p01-p02 passed; continuing at p03-t01
+**Status:** p01-p03 passed; continuing at p04-t01
 
 #### Phase Outcomes
 
@@ -156,6 +157,7 @@ findings.
 | ----- | ------------------ | ------ | -------------- | ---------------------------- |
 | p01   | DONE               | pass   | 1/2            | accepted                     |
 | p02   | DONE_WITH_CONCERNS | pass   | 0/2            | accepted; one phase recovery |
+| p03   | DONE               | pass   | 0/2            | accepted                     |
 
 #### p01 Dispatch and Evidence
 
@@ -206,6 +208,18 @@ findings.
 - Reason: stale standalone-inventory assertions were mechanically aligned with
   complete cross-pack attribution
 
+#### p03 Dispatch and Evidence
+
+- Implementation: `oat-phase-implementer-gpt-5-6-sol-medium`; commits
+  `1152d339` and `2c108e71`.
+- Mutation proof established that the removed plan-literal assertion stayed
+  green after a real installed-file break and that invalid ownership failed at
+  import before the duplicated assertion block could run.
+- Root phase rerun: five declared suites, 179/179.
+- High review: zero findings and pass in
+  `reviews/p03-review-2026-08-30T225845Z.md`.
+- Recovery attempts: 0/10; pending attempt: null.
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
@@ -220,14 +234,13 @@ findings.
 | ----- | ----------------------------------- | ------ | ------ | ---------------------------------------------------- |
 | 1     | PJM phase suite                     | 79     | 0      | Adoption/legacy matrix and canonical completeness    |
 | 2     | Phase plus recovered removal suites | 181    | 0      | Provider, ownership, degradation, rendering, removal |
-| 3     | -                                   | -      | -      | -                                                    |
+| 3     | Test-quality phase suite            | 179    | 0      | Production-reachable assertions and safe globals     |
 | 4     | -                                   | -      | -      | -                                                    |
 
 ## Final Summary (for PR/docs)
 
-In progress. Phases p01-p02 are complete and independently reviewed; p03 is
-next. The broad CLI suite remains non-clean under concurrent load and must be
-proven at the final evidence-grade gate.
+In progress. Phases p01-p03 are complete and independently reviewed; p04 owns
+release readiness and the evidence-grade final gates.
 
 ## References
 
