@@ -145,6 +145,46 @@ asset matrices.
 
 `git commit -m "fix(p01-t02): detect version-equal pack content drift"`
 
+### Task p01-t03: Ignore normalized executable modes in drift checks
+
+**Review source:** `reviews/p01-review-2026-08-30T022309Z.md` (Critical 1)
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
+- Modify: `packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts`
+
+**Step 1: Write tests (RED)**
+
+Cover a same-version bundled skill whose nested script is `0644` in the bundle
+and intentionally normalized to `0755` by materialization. Assert the clean
+installed copy remains current, while a content edit still reports outdated.
+Pin the behavior at both inventory and lifecycle acceptance boundaries.
+
+**Step 2: Implement (GREEN)**
+
+Make versioned-asset content comparison insensitive to the materializer's
+intentional executable-bit normalization while preserving file-type,
+directory, symlink, and content-drift checks.
+
+**Step 3: Format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/tools/shared/pack-inventory.ts packages/cli/src/commands/tools/shared/pack-inventory.test.ts packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts`
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts src/commands/doctor/index.test.ts src/commands/status/index.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/tools/shared/apply-pack-reconcile.test.ts`
+
+Expected: the focused inventory/consumer suite and lifecycle acceptance matrix
+pass with clean normalized modes classified current and content edits outdated.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p01-t03): ignore normalized executable modes in drift checks"`
+
 **Phase 1 Verification:**
 
 Run:
@@ -393,17 +433,17 @@ with captured logs.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| p02    | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| p03    | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -                        |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -                        |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -                        |
-| plan   | artifact | passed          | 2026-08-27 | -                                                           | -             | auto       | -                        |
-| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T230217Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | fixes_added     | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                        |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                        |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T230217Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 
 ## Implementation Complete
 

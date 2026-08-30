@@ -16,44 +16,49 @@ oat_generated: false
 
 | Phase                                 | Status      | Tasks | Completed |
 | ------------------------------------- | ----------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | in_progress | 2     | 0/2       |
-| p02 — Explicit Adoption and CLI State | pending     | 3     | 0/3       |
+| p01 — Content-Accurate Pack Inventory | fixes_added | 3     | 2/3       |
+| p02 — Explicit Adoption and CLI State | in_review   | 3     | 3/3       |
 | p03 — Release Integration             | pending     | 1     | 0/1       |
 
-**Total:** 0/6 tasks completed
+**Total:** 5/7 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
-**Status:** in_progress
+**Status:** fixes_added
 
 ### Task p01-t01: Distinguish seed defaults from retained overrides
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `32097c7efdfdefd743dab46d633a1f7ffb8281af`
 
 ### Task p01-t02: Detect same-version skill and agent drift
+
+**Status:** done
+**Commit:** `717df3056006286d036d0f2d07554a67f3272ea0`
+
+### Task p01-t03: Ignore normalized executable modes in drift checks
 
 **Status:** pending
 **Commit:** -
 
 ## Phase 2: Explicit Adoption and Supported CLI State
 
-**Status:** pending
+**Status:** in_review
 
 ### Task p02-t01: Report exact legacy pack intents adopted
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `5be0ac6fab2d1055ee4fe72b121b8f217cc1d334`
 
 ### Task p02-t02: Reject newly-written false pack intent
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `a16b25a734ed925184bd3db7a4848aae5944a5e0`
 
 ### Task p02-t03: Remove the inert per-pack force option
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `44edd2bc56ecbf542f0f70f26b79cb31e646c69e`
 
 ## Phase 3: Release Integration
 
@@ -132,6 +137,17 @@ oat_generated: false
   immutable
 - Dispatch stamp:
   `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+### Review Received: p01 (round 1)
+
+- Artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Reviewed head: `717df3056006286d036d0f2d07554a67f3272ea0`
+- Reconnaissance: not attempted
+- Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
+- Disposition: convert the Critical finding into `p01-t03`; route one
+  append-only fix commit through the original p01 implementer handle, then
+  re-review the complete phase range.
+- Fix-loop usage: 0/2 before dispatch
 
 <!-- orchestration-runs-end -->
 
