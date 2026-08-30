@@ -1,8 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_blockers:
+  - Current-main plan review retry bound exhausted after the final Important atomicity finding was corrected; implementation has not started.
+oat_last_updated: 2026-08-30
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +11,7 @@ oat_generated: false
 # Implementation: Scope and Adoption Diagnostics
 
 **Started:** Not started
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-30
 
 > `oat_current_task_id` points to the next plan task. No implementation work or
 > verification is complete at this planning-stage initialization.
@@ -26,17 +27,39 @@ oat_generated: false
 
 **Total:** 0/9 tasks completed
 
+## Current-Main Plan Revalidation
+
+**Date:** 2026-08-30
+**Baseline:** `origin/main` at `5d684ba97`; PR #240 `cd07d72e5`; PR #242
+`ce7c3225d`
+
+| Classification        | Tasks                                       |
+| --------------------- | ------------------------------------------- |
+| 1 — unchanged         | p01-t01, p01-t02, p03-t02, p04-t02          |
+| 2 — adapted           | p02-t01, p02-t02, p02-t03, p03-t01, p04-t01 |
+| 3 — already satisfied | none                                        |
+| 4 — transferred tasks | none                                        |
+
+Transferred sub-scope: provider × scope × content-type state, provider
+projection/catalog visibility, collection-directory symlinks, restart guidance,
+`AGENTS.md` behavior, picker truthfulness, and dispatch provenance remain in
+`tool-pack-scope-provider-truthfulness`. This project lands first and exposes
+only a narrow config-aware managed-role materialization input for that project
+to consume or supersede later.
+
+**First executable task:** p01-t01.
+
 ## Phase 1: PJM Migration Adoption Semantics
 
 **Status:** pending
 **Started:** -
 
-### Task p01-t01: Remove pack intent from the migration core contract
+### Task p01-t01: Make the migration core and caller adoption-aware
 
 **Status:** pending
 **Commit:** -
 
-### Task p01-t02: Resolve migration eligibility from PJM adoption
+### Task p01-t02: Expand migration eligibility across adoption and legacy evidence
 
 **Status:** pending
 **Commit:** -
@@ -101,8 +124,9 @@ _No implementation orchestration run has started._
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
+| Task / Review     | Source Artifact | Planned / Documented                                                      | Actual / Accepted                                              | Reason                                                                                      | Source of Truth     | Follow-up                                                        |
+| ----------------- | --------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------- |
+| plan revalidation | plan.md         | Pre-PR-#240 inventory/provider assumptions and parallel p01-p03 execution | Current-main-adapted tasks; sequential diagnostics-first merge | PRs #240/#242 changed shared contracts and the umbrella reserved broader provider semantics | Revalidated plan.md | Umbrella rebases onto the merged diagnostic input/renderer seams |
 
 ## Test Results
 

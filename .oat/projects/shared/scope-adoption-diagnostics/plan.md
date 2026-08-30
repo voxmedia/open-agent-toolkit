@@ -1,12 +1,12 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
-oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers:
+  - Current-main plan review retry bound exhausted after the final Important atomicity finding was corrected; clean re-review or explicit override is pending.
+oat_last_updated: 2026-08-30
 oat_phase: plan
-oat_phase_status: complete
-oat_plan_parallel_groups:
-  - [p01, p02, p03]
+oat_phase_status: blocked
+oat_plan_parallel_groups: []
 oat_phase_review_gate: false
 oat_plan_source: quick
 oat_import_reference: null
@@ -18,77 +18,139 @@ oat_template: false
 
 # Implementation Plan: Scope and Adoption Diagnostics
 
-> Execute this plan using `oat-project-implement`. Phases p01-p03 have disjoint
-> write sets and may run in isolated worktrees; p04 follows their merge.
+> Execute this plan using `oat-project-implement`. Run p01-p04 sequentially in
+> this visible worktree so the diagnostics slice can merge before the broader
+> scope/provider project begins implementation.
 
 **Goal:** Correct the remaining PJM adoption, provider reachability, shared
 ownership, inventory-failure, output, and test-quality defects from the
 user-scope tool-pack project.
 
-**Architecture:** Preserve the canonical PJM adoption resolver and pack
-inventory as the authorities. Thread active provider materialization capability
-into inventory, then keep `doctor` and `status` as renderers of the same model.
+**Architecture:** Preserve the canonical PJM adoption resolver and PR #240's
+content-aware pack inventory as the authorities. Thread one narrow,
+config-aware provider-materialization capability into inventory, then keep
+`doctor` and `status` as renderers of the same diagnostic model. Do not define
+the umbrella project's broader provider/scope/catalog state model here.
 
 **Tech Stack:** TypeScript ESM, Commander, Vitest, pnpm workspaces, Turborepo,
 oxfmt, and Fumadocs Markdown.
 
 **Commit Convention:** `{type}({task-id}): {description}`
 
+## Current-Main Revalidation (2026-08-30)
+
+Revalidated from clean `origin/main` at `5d684ba97` against PR #240
+(`cd07d72e5`), PR #242 (`ce7c3225d`), and the active
+`tool-pack-scope-provider-truthfulness` discovery dossier.
+
+Classification key: **1** still required unchanged; **2** still required with
+current-main adaptation; **3** already satisfied by PR #240/#242; **4**
+transferred to the scope/provider umbrella.
+
+| Task    | Class | Revalidation result                                                                                                                                           |
+| ------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01-t01 | 1     | The migration core still gates on `projectManagementEnabled`; neither PR touched PJM migration.                                                               |
+| p01-t02 | 1     | The public command still reads project-pack intent instead of resolving adoption plus legacy evidence.                                                        |
+| p02-t01 | 2     | Preserve PR #240's content/seed inventory and distinguish native provider materialization from PR #242's loaded → user → project canonical instruction reads. |
+| p02-t02 | 2     | Replace the current per-pack shared-owner post-pass with attribution based on the complete cross-pack inventory/intent set.                                   |
+| p02-t03 | 2     | Adapt to PR #240's current status/doctor report shapes while adding structured inventory availability and collision-free human rendering.                     |
+| p03-t01 | 2     | The quality defect remains; preserve PR #242's bundled-contract reference aggregation while removing or re-scoping unreachable assertions.                    |
+| p03-t02 | 1     | The impossible fixture, joined-scope blind spot, and pre-`try` global mutations remain unchanged.                                                             |
+| p04-t01 | 2     | PRs #240/#242 advanced the release floor to `0.2.47`; choose a fresh version above current `origin/main` only after implementation.                           |
+| p04-t02 | 1     | The focused and eight-step integrated verification remain correct and required on the final current-main implementation.                                      |
+
+No complete task is class 3 or class 4. The transferred work is broader scope
+inside and around p02-t01, not a retained task: provider × scope × content-type
+state, provider projection and runtime catalog visibility, collection-directory
+symlinks, restart guidance, `AGENTS.md` behavior, picker truthfulness, and
+dispatch provenance all remain owned by `tool-pack-scope-provider-truthfulness`.
+
+## Ownership Boundary and Merge Coordination
+
+- This project owns PJM migration adoption semantics, narrow provider-aware
+  user-agent materialization diagnostics, shared-owner attribution,
+  inventory-failure rendering, doctor delimiter safety, and the two targeted
+  test-quality repairs.
+- PR #242's loaded → user → project resolver locates canonical role
+  instructions. It does not prove native provider materialization or runtime
+  catalog visibility and must never be suppressed or redefined by this project.
+- p02-t01 may add only a narrow caller-supplied capability describing whether
+  active config-aware Codex/Cursor adapters materialize the bundled managed
+  role files. It must not add the umbrella's provider state vocabulary,
+  projection model, restart state, catalog probe, or dispatch semantics.
+- `pack-inventory.ts`, its tests, doctor/status, and tool-pack docs are future
+  shared-file conflicts. Merge this diagnostics slice first; the umbrella must
+  rebase onto these renderer and input seams before it begins implementation.
+- Shared-owner and inventory-failure behavior remain this project's ownership.
+  The umbrella may consume or supersede their inputs later but must not
+  duplicate the renderer corrections.
+- Release manifests and PJM backlog indexes are final fan-in surfaces. Do not
+  run a concurrent umbrella release bump or archive this backlog item twice.
+
 ## Parallelism
 
-Phases p01, p02, and p03 are one parallel group. p01 writes only PJM migration
-command/core tests; p02 writes pack inventory, doctor/status, and the scoped
-diagnostic docs; p03 writes acceptance/unit test harnesses only. Their focused
-verification is independent and their source write sets do not overlap. Phase
-p04 is deliberately outside the group because it must select versions above
-the then-current `origin/main` after all shipped changes merge, then run the
-complete repository gate sequence against that integrated tree.
+The implementation is sequential (`oat_plan_parallel_groups: []`). Although
+p01-p03 retain disjoint primary write sets, sequential execution avoids hidden
+phase worktrees, keeps every current-main adaptation visible in this Codex
+worktree, and produces one diagnostics baseline for the umbrella to consume.
+Phase p04 remains last because it must select versions above freshly fetched
+`origin/main` and run the complete repository gate sequence.
 
 ## Phase 1: PJM Migration Adoption Semantics
 
 **Goal:** Remove project-pack intent from migration eligibility and pin the
 canonical four-state adoption behavior.
 
-### Task p01-t01: Remove pack intent from the migration core contract
+### Task p01-t01: Make the migration core and caller adoption-aware
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/pjm/migrate.ts`
 - Modify: `packages/cli/src/commands/pjm/migrate.test.ts`
+- Modify: `packages/cli/src/commands/pjm/index.ts`
+- Modify: `packages/cli/src/commands/pjm/index.test.ts`
 
 **Step 1: Write tests (RED)**
 
-Replace the `projectManagementEnabled` fixture contract with explicit migration
-preconditions. Pin zero writes and an actionable skip reason for states that are
-not migration-eligible while keeping dry-run/apply behavior unchanged for
-eligible repositories.
+Replace the `projectManagementEnabled` fixture contract with an explicit
+adoption input. At the command boundary, assert that adoption is resolved once
+and supplied to the migration core instead of pack intent. Pin zero writes and
+an actionable skip reason for states that are not migration-eligible while
+keeping dry-run/apply behavior unchanged for eligible repositories.
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/migrate.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/migrate.test.ts src/commands/pjm/index.test.ts`
 
 Expected: fail because the core still gates on project pack intent.
 
 **Step 2: Implement (GREEN)**
 
 Remove `projectManagementEnabled` from `PjmMigrationOptions`. Accept the
-canonical adoption decision supplied by the command adapter, preserve
-`already-migrated`, dry-run, apply, and zero-write boundaries, and report
-adoption-oriented recovery text rather than pack-install text.
+canonical adoption decision supplied by the command adapter. In `index.ts`,
+resolve adoption once through
+`resolvePjmAdoption({ projectRoot, repoRoot })`, pass it into the migration
+core, and remove the migration-only `readOatConfig` dependency and stale caller
+field in the same commit. Preserve `already-migrated`, dry-run, apply, and
+zero-write boundaries, and report adoption-oriented recovery text rather than
+pack-install text. Do not yet broaden legacy-source eligibility; p01-t02 owns
+that matrix.
 
 **Step 3: Format**
 
 Run:
-`pnpm exec oxfmt --write packages/cli/src/commands/pjm/migrate.ts packages/cli/src/commands/pjm/migrate.test.ts`
+`pnpm exec oxfmt --write packages/cli/src/commands/pjm/migrate.ts packages/cli/src/commands/pjm/migrate.test.ts packages/cli/src/commands/pjm/index.ts packages/cli/src/commands/pjm/index.test.ts`
 
 **Step 4: Verify**
 
-Run the focused test command again; expected: pass.
+Run the focused test command again, then run `pnpm type-check`; expected: the
+core and its only production caller both pass tests and type checking in this
+commit.
 
 **Step 5: Commit**
 
-`git commit -m "fix(p01-t01): remove pack intent from PJM migration"`
+`git commit -m "fix(p01-t01): make PJM migration adoption-aware"`
 
-### Task p01-t02: Resolve migration eligibility from PJM adoption
+### Task p01-t02: Expand migration eligibility across adoption and legacy evidence
 
 **Files:**
 
@@ -98,6 +160,7 @@ Run the focused test command again; expected: pass.
   `packages/cli/src/commands/pjm/adoption.ts`
 - Modify with any adoption correction:
   `packages/cli/src/commands/pjm/adoption.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
 
 **Step 1: Write tests (RED)**
 
@@ -124,26 +187,29 @@ adoption-independent and read-only.
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/adoption.test.ts src/commands/pjm/migrate.test.ts src/commands/pjm/index.test.ts`
 
-Expected: fail because `index.ts` still reads `config.tools.project-management`.
+Expected: fail because the adoption-aware boundary from p01-t01 does not yet
+inventory legacy evidence or implement the full matrix.
 
 **Step 2: Implement (GREEN)**
 
-Resolve adoption once through `resolvePjmAdoption({ projectRoot, repoRoot })`,
-pass that result into the migration core, and remove the migration-only
-`readOatConfig` dependency. Inventory recognized legacy sources before any
-write and implement the matrix above: adoption state alone neither authorizes
-nor blocks a legacy migration. Keep the four-state decision explicit; do not
-infer adoption from user capability placement or scoped pack intent.
+Inventory recognized legacy sources before any write and expand the
+adoption-aware command/core seam from p01-t01 to implement the matrix above:
+adoption state alone neither authorizes nor blocks a legacy migration. Keep the
+four-state decision explicit; do not infer adoption from user capability
+placement or scoped pack intent. Replace the documented temporary
+`tools.project-management: true` prerequisite and version-specific workaround
+with the adoption-plus-legacy-evidence contract.
 
 **Step 3: Format**
 
 Run:
-`pnpm exec oxfmt --write packages/cli/src/commands/pjm/index.ts packages/cli/src/commands/pjm/index.test.ts packages/cli/src/commands/pjm/adoption.ts packages/cli/src/commands/pjm/adoption.test.ts`
+`pnpm exec oxfmt --write packages/cli/src/commands/pjm/index.ts packages/cli/src/commands/pjm/index.test.ts packages/cli/src/commands/pjm/adoption.ts packages/cli/src/commands/pjm/adoption.test.ts apps/oat-docs/docs/cli-utilities/tool-packs.md`
 
 **Step 4: Verify**
 
 Run the focused test command again; expected: pass with zero-write assertions
-for every non-eligible state.
+for every non-eligible state. Then run `pnpm check`; expected: the updated
+migration documentation and repository checks pass.
 
 **Step 5: Commit**
 
@@ -182,7 +248,9 @@ detected nor configured. Assert the sync-owned config-aware matrix: enabled is
 active, disabled is inactive, unset+detected is active, and unset+undetected is
 inactive. All present managed agents are reported when no active adapter has a
 user-agent extension; only bundled managed role files are excluded when active
-Codex/Cursor materialization supplies them. Verify redacted paths and identical
+Codex/Cursor materialization supplies them. Assert that PR #242's canonical
+loaded → user → project instruction-read availability does not suppress a
+native-materialization diagnostic. Verify redacted paths and identical
 human/JSON affected-agent sets in doctor and status.
 
 Run:
@@ -194,11 +262,14 @@ Expected: fail because `USER_SCOPE_MANAGED_AGENT_FILES` is always excluded.
 
 Resolve adapters through `getConfigAwareAdapters` using the applicable scope's
 resolved sync config (including `resolveUserSyncConfig` for user scope), then
-thread one explicit materialization capability into inventory from both doctor
-and status. Keep inventory deterministic and injectable; do not re-detect
-providers inside inventory and do not expand user-scope sync content types.
-Update diagnostic/detail/docs wording to distinguish Codex/Cursor managed-role
-materialization from providers with no user-agent view.
+thread one explicit, caller-supplied managed-role materialization capability
+into inventory from both doctor and status. Keep inventory deterministic and
+injectable; do not re-detect providers inside inventory and do not expand
+user-scope sync content types. Preserve PR #240's content-aware comparison,
+generated-seed, and retained-override semantics. Update diagnostic/detail/docs
+wording to describe missing native provider materialization without claiming
+that PR #242's canonical instruction reads or runtime catalog visibility are
+absent.
 
 **Step 3: Format**
 
@@ -231,7 +302,8 @@ Cover each ordering of the `docs`/`workflows` shared script owner, including one
 installed owner, both installed owners, a removed owner whose shared asset is
 retained, and neither owner intended. Assert that reports never attribute the
 asset to an unrelated uninstalled pack and never use shared presence as pack
-placement evidence.
+placement evidence. Preserve PR #240's `current` versus retained `present`
+seed semantics in every fixture.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts src/commands/doctor/index.test.ts src/commands/status/index.test.ts`
@@ -240,10 +312,12 @@ Expected: fail on the existing arbitrary non-owner attribution.
 
 **Step 2: Implement (GREEN)**
 
-Use manifest shared-owner identity plus the already-computed inventory/intent
-set to select applicable owners. Emit an observation once with precise owner
-context, or suppress it when no installed/intended owner makes it actionable.
-Preserve the rule that shared assets alone never establish placement.
+Use manifest shared-owner identity plus the complete already-computed
+cross-pack inventory/intent set to select applicable owners. Replace the
+per-pack post-pass rather than trying to repair attribution after rendering.
+Emit an observation once with precise owner context, or suppress it when no
+installed/intended owner makes it actionable. Preserve the rule that shared
+assets alone never establish placement.
 
 **Step 3: Format**
 
@@ -284,10 +358,12 @@ separator.
 
 **Step 2: Implement (GREEN)**
 
-Mirror doctor's bounded inventory guard in `collectPackReport`, extend the
-status pack report with an explicit availability diagnostic, and preserve
-structured JSON. Use a human delimiter that cannot collide with existing
-finding detail while keeping each recovery command copy-pasteable.
+Mirror doctor's bounded inventory guard in `collectPackReport`, extend PR
+#240's current status pack-report shape with an explicit availability
+diagnostic, retain unavailable-scope information, and preserve structured JSON.
+Render human findings and fixes as distinct entries instead of joining them
+with a delimiter that can collide with finding detail; keep every recovery
+command copy-pasteable.
 
 **Step 3: Format**
 
@@ -336,7 +412,9 @@ behavior in the task outcome; do not retain a test that cannot reach RED.
 Remove the constant reconcile-plan assertion and retain the real post-action
 inventory check. Delete or re-scope the module-load invariant block to a
 behavior not already enforced by `validatePackManifest()`, preserving source
-coverage and user-facing lifecycle assertions.
+coverage and user-facing lifecycle assertions. Preserve PR #242's
+`readBundledSkillContract` aggregation of `oat-project-implement` plus its
+reference files.
 
 **Step 3: Format**
 
@@ -438,9 +516,9 @@ strictly greater than current `origin/main`.
 **Step 2: Implement (GREEN)**
 
 Choose one patch version strictly greater than every lockstep public version on
-current `origin/main`, apply it to all five package manifests, and keep the
-four-entry bundled public-package version map in lockstep. Do not assume the
-version that was next when this plan was authored remains available.
+current `origin/main` (the revalidation floor is `0.2.47`), apply it to all five
+package manifests, and keep the four-entry bundled public-package version map
+in lockstep. Do not assume `0.2.48` remains available after the required fetch.
 
 **Step 3: Format**
 
@@ -520,20 +598,28 @@ at the final reviewed head.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                    | -             | -          | -           |
-| p03    | code     | pending | -          | -                                                    | -             | -          | -           |
-| p04    | code     | pending | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                                    | -             | -          | -           |
-| design | artifact | pending | -          | -                                                    | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md` | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01    | code     | pending         | -          | -                                                    | -             | -          | -                             |
+| p02    | code     | pending         | -          | -                                                    | -             | -          | -                             |
+| p03    | code     | pending         | -          | -                                                    | -             | -          | -                             |
+| p04    | code     | pending         | -          | -                                                    | -             | -          | -                             |
+| final  | code     | pending         | -          | -                                                    | -             | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                    | -             | -          | -                             |
+| design | artifact | pending         | -          | -                                                    | -             | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -             | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md` | -             | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-30 | -                                                    | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
+
+The 2026-08-30 current-main review used the initial structured review plus two
+rewrite/re-dispatch retries. The last review found one Important atomicity gap:
+p01-t01 removed a core API field while deferring its caller to p01-t02. The
+task boundary above now updates and type-checks the core and caller together.
+The automatic retry bound was exhausted before a clean re-review, so this row
+remains `fixes_completed`, not `passed`.
 
 ## Implementation Complete
 
@@ -546,15 +632,18 @@ Status progression: `pending` → `received` → `fixes_added` →
 
 **Total: 9 tasks**
 
-Implementation is not started. Completion requires all nine tasks, phase/final
-reviews, and the complete repository gate sequence.
+Implementation is not started. Current-main revalidation retained all nine
+tasks, adapting five of them without expanding into umbrella ownership.
+Completion requires all nine tasks, phase/final reviews, and the complete
+repository gate sequence.
 
 ## References
 
 - Discovery: `discovery.md`
 - Associated backlog item:
   [`BL-260827-correct-scope-and-adoption`](../../../repo/pjm/backlog/items/BL-260827-correct-scope-and-adoption.md)
-- Source follow-up inventory:
-  `../user-scope-tool-packs/implementation.md#known-deferred-work`
-- Source final review:
-  `../user-scope-tool-packs/reviews/final-review-2026-08-27T174707Z.md`
+- Archived source-project summary and follow-up inventory:
+  `../../../repo/reference/project-summaries/20260827-user-scope-tool-packs.md`
+- Revalidation baselines: PR #240 (`cd07d72e5`) and PR #242 (`ce7c3225d`)
+- Coordinated umbrella:
+  `../tool-pack-scope-provider-truthfulness/discovery.md`
