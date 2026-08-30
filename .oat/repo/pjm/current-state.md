@@ -37,13 +37,25 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.46` (`tool-pack-cleanup` branch; pending merge and release) completes
+- CLI `0.2.47` (agent-provider-root, branch pending merge) makes canonical
+  skill-to-agent reads portable without changing provider-native dispatch.
+  Seven live reviewer and implementer reads now bind their workflows dependency
+  locally and resolve exact canonical Markdown through loaded, user, then
+  project roots. Loaded Claude and Cursor base symlinks are eligible only when
+  they resolve to the same-scope canonical file; Cursor variants, provider
+  copies, unsafe links, and Codex TOML remain candidate misses. A shared typed
+  classifier enforces a zero-executable-agent baseline while preserving the
+  historical cross-skill baseline, and exact-target fixtures cover candidate
+  ordering, fail-closed workflows recovery, and independent dependency roots.
+  Mutation, provider-sync, HOME-isolated uncached, release, docs, lint, format,
+  and the full Definition-of-Done gates passed; final lifecycle and configured
+  exit-gate reviews reported zero findings.
+- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240; pending release) completes
   the tool-pack lifecycle/config cleanup with content-aware inventory, exact
   adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
   and removal of the inert per-pack install `--force` option. Compatibility
   guidance now directs operators to scoped update and remove commands. The
-  lifecycle/config backlog item is closed on this branch, but `origin/main`
-  remains at `0.2.45`; `0.2.46` has not been merged or published.
+  lifecycle/config backlog item is closed; `0.2.46` has not yet been published.
 - CLI `0.2.45` (synced-project-scope, merged as PR #227 and released) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
@@ -395,15 +407,13 @@ bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
 
-Portable references have one remaining unenforced direction:
-`BL-260829-unified-agent-provider-root` proposes a single
-`${AGENT_PROVIDER_ROOT}` binding with `/skills` and `/agents` leaves, replacing
-the two parallel candidate lists that already share their user and project
-tiers. It carries real design questions (loaded-tier eligibility given that
-provider agent views are not format-identical to canonical, and whether a
-shared root regresses independent per-dependency binding), so it is scaffolded
-as project `agent-provider-root` with seeded discovery rather than queued as a
-mechanical port.
+The `agent-provider-root` branch closes the remaining unenforced portable-read
+direction with a dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
+exact-canonical-identity rule. After merge, the
+`tool-pack-scope-provider-truthfulness` project can consume that contract for
+canonical fallback provenance while retaining ownership of provider
+materialization, reachability diagnostics, restart visibility, and dispatch
+truthfulness.
 
 The canonical PJM operating files are current, but `oat pjm doctor` still
 reports four pre-existing layout warning classes from older reference

@@ -92,6 +92,25 @@ still fail closed with the owning pack's install or update command. See
 [Writing Skills → Portable sibling reads](../contributing/skills.md#portable-sibling-reads-skills-and-agents)
 for the full contract.
 
+Skills that read a fixed canonical workflows role use a different, local
+`${AGENT_PROVIDER_ROOT}` binding. They try the loaded skill's provider root,
+then `${HOME}/.agents`, then the repository's `.agents` root. The loaded tier
+qualifies only when the exact unsuffixed `agents/<canonical-name>.md` target is
+the same-scope canonical Markdown file or a symlink resolving exactly to it.
+Copies, broken or escaping links, Cursor model/effort variants, and Codex TOML
+roles are misses; resolution continues to the next tier.
+
+That binding only locates canonical source instructions for the one owning
+dependency. It does not select a provider, model, effort, variant, route, or
+native agent. Resolve simultaneous pack dependencies independently. If every
+workflows candidate misses, stop before fallback dispatch and report the
+intended-scope recovery explicitly:
+
+```bash
+oat tools install workflows --scope <user|project>
+oat tools update --pack workflows --scope <user|project>
+```
+
 The packs remain independently installable. If the workflows adapter is
 present without the utility contracts, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical

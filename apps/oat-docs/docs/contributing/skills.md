@@ -51,6 +51,37 @@ Probe each candidate for the exact target and use the first match. If none
 exists, name the missing sibling, give an actionable install or update command,
 and stop that workflow branch instead of improvising the sibling's process.
 
+### Skills bind canonical agent reads through a local provider root
+
+When a skill must read one fixed canonical role instruction, bind a local
+`${AGENT_PROVIDER_ROOT}` for that dependency in this order:
+
+1. Derive `${SKILL_DIR}/../..` from the loaded skill path, but admit it only
+   when the exact unsuffixed `agents/<canonical-name>.md` target is the
+   same-scope canonical Markdown file or a symlink whose real path is exactly
+   that file.
+2. Try the user-scope root at `${HOME}/.agents`.
+3. Fall back to the project-scope root at `<repo-root>/.agents`.
+
+An invalid loaded target is a candidate miss, so resolution continues to the
+user and project roots. Regular provider copies, broken or escaping symlinks,
+transformed content, other role names, model/effort/variant-suffixed files, and
+`.codex/agents/*.toml` are never canonical candidates. Claude and Cursor base
+role symlinks can qualify when they resolve exactly to the same-scope canonical
+file; Cursor materialized variants cannot.
+
+`${AGENT_PROVIDER_ROOT}` is local authored-instruction notation, not a global
+environment variable or a provider-native role selector. It has no authority
+over provider, model, effort, variant, route, or dispatch choice. Resolve every
+owning pack independently, even when multiple role dependencies coexist. If
+all candidates miss for a workflows-owned role, stop before fallback launch
+and report both recovery forms for the intended scope:
+
+```bash
+oat tools install workflows --scope <user|project>
+oat tools update --pack workflows --scope <user|project>
+```
+
 ### Materialized agents resolve in two steps
 
 Canonical agents are materialized into provider-specific views — Codex receives
@@ -88,21 +119,26 @@ dependency.
 
 ### The ratchet allows only exact historical baselines
 
-Do not use a bare `.agents/skills/<sibling>/SKILL.md`, `./.agents/...`, or
-`../.agents/...` path for an executable read in any user-default skill or
-agent. The bundled-docs contract test enforces this over the whole
-manifest-derived surface and reports each violation as exact
-`source -> target` evidence.
+Do not use a bare `.agents/skills/<sibling>/SKILL.md`,
+`.agents/agents/<canonical-name>.md`, dot-relative equivalent, or repeated-parent
+canonical `agents/<canonical-name>.md` hop for an executable read in any
+user-default skill or agent. The bundled-docs contract test enforces this over
+the whole manifest-derived surface and reports each violation as exact
+`source -> target` evidence. Executable agent findings have a zero baseline, so
+every bare canonical-agent read fails the ratchet. Portable
+`${AGENT_PROVIDER_ROOT}/agents/...` reads and legitimate `.claude` or `.cursor`
+provider-view examples are classified as non-findings.
 
-The only exemption is a pinned historical baseline: non-executable evidence
-such as a dogfood transcript or a fixture README, recorded by exact source
-file, target skill, and target path. There is no wildcard, directory-wide, or
-skill-wide allowance, and no temporary migration allowlist — executable debt is
-fixed at the caller instead of being exempted. The same assertions run against
-the bundled CLI copies of both skills and agents, and the sync contract test
-re-checks the roles it materializes for Codex, so a canonical fix must survive
-bundling and Codex sync as well. No test yet gates the generated `.claude` or
-`.cursor` agent views, so regenerate and spot-check those by hand.
+The pinned historical baseline applies only to skill findings: its six exact
+entries are non-executable evidence such as dogfood transcripts or fixture
+READMEs, recorded by source file, target skill, and target path. There is no
+wildcard, directory-wide, or skill-wide allowance, and no temporary migration
+allowlist — executable debt is fixed at the caller instead of being exempted.
+The same assertions run against the bundled CLI copies of both skills and
+agents, and the sync contract test re-checks the roles it materializes for
+Codex, so a canonical fix must survive bundling and Codex sync as well. No test
+yet gates the generated `.claude` or `.cursor` agent views, so regenerate and
+spot-check those by hand.
 
 ## Contract components
 

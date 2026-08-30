@@ -839,6 +839,52 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('keeps canonical reviewer instructions separate from native target selection', () => {
+    const local = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['local review', local],
+      ['remote review', remote],
+    ] as const) {
+      expect(content, `${name} workflows root`).toContain(
+        '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
+      );
+      expect(content, `${name} immutable dispatch axes`).toMatch(
+        /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+      );
+      expect(content, `${name} native first`).toMatch(
+        /native[\s\S]{0,180}(?:variant|agent_type)[\s\S]{0,180}first/i,
+      );
+      expect(content, `${name} rejection-only fallback`).toMatch(
+        /only[\s\S]{0,180}pre-start native role-selection rejection[\s\S]{0,240}fresh/i,
+      );
+    }
+  });
+
+  it('keeps implementation fallback instructions subordinate to the accepted target', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(content).toMatch(
+      /native[\s\S]{0,180}(?:variant|agent_type)[\s\S]{0,180}first/i,
+    );
+    expect(content).toMatch(
+      /fresh child[\s\S]{0,180}only[\s\S]{0,180}pre-start native role-selection\s+rejection/i,
+    );
+    expect(content).toMatch(
+      /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+    );
+    expect(content).toMatch(
+      /accepted[\s\S]{0,180}(?:continue|existing handle)[\s\S]{0,240}(?:never|must not|cannot)[\s\S]{0,120}(?:replacement|fallback|fresh child)/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',

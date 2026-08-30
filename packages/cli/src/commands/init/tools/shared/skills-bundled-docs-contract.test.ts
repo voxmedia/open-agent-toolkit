@@ -1,15 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import {
   existsSync,
+  lstatSync,
   mkdtempSync,
   mkdirSync,
+  realpathSync,
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import type { PackDefinition } from '@commands/tools/shared/pack-manifest';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
@@ -59,6 +62,62 @@ interface CrossSkillTarget {
   targetPath: string;
 }
 
+type PortableAssetTarget =
+  | { kind: 'skill'; name: string }
+  | { kind: 'agent'; name: string };
+
+interface PortableAssetFinding {
+  asset: PortableAssetTarget;
+  target: string;
+  evidence: string;
+}
+
+interface PortableAssetReference extends PortableAssetFinding {
+  file: string;
+}
+
+type AgentCandidateTier = 'loaded' | 'user' | 'project';
+type AgentCandidateOutcome =
+  | 'missing'
+  | 'broken-symlink'
+  | 'escaping-symlink'
+  | 'noncanonical-copy'
+  | 'wrong-target';
+
+interface AgentCandidateAttempt {
+  tier: AgentCandidateTier;
+  candidate: string;
+  outcome: AgentCandidateOutcome;
+}
+
+interface ResolveCanonicalAgentInput {
+  dependency: string;
+  canonicalName: string;
+  skillDir: string;
+  userCanonicalRoot: string;
+  projectCanonicalRoot: string;
+}
+
+type CanonicalAgentResolution =
+  | {
+      status: 'resolved';
+      dependency: string;
+      canonicalName: string;
+      tier: AgentCandidateTier;
+      providerRoot: string;
+      selectedFile: string;
+      canonicalFile: string;
+      validation: 'direct-canonical' | 'exact-canonical-symlink';
+      attempts: AgentCandidateAttempt[];
+    }
+  | {
+      status: 'miss';
+      dependency: string;
+      canonicalName: string;
+      attempts: AgentCandidateAttempt[];
+      recovery: string[];
+    };
+
 // Authored Markdown shipped by one user-default pack asset.
 interface MarkdownAsset {
   kind: 'skill' | 'agent';
@@ -94,8 +153,11 @@ interface MarkdownAsset {
 // deliberately not matched: they are follow-on reads local to a sibling root
 // that an earlier read already bound and validated. The caller-contract
 // assertions below enforce that anchoring requirement instead.
-const CROSS_SKILL_READ =
+const PORTABLE_SKILL_READ =
   /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/skills\/|(?:\.\.\/)+)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g;
+
+const PORTABLE_AGENT_READ =
+  /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/agents\/|(?:\.\.\/)+agents\/)([a-zA-Z0-9_-]+)\.md/g;
 
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
@@ -109,6 +171,12 @@ const PORTABLE_SKILLS_ROOT_CANDIDATES = [
 const PORTABLE_AGENT_SKILLS_ROOT_CANDIDATES = [
   '`${HOME}/.agents/skills`',
   '`<repo-root>/.agents/skills`',
+] as const;
+
+const PORTABLE_AGENT_ROOT_CANDIDATES = [
+  '`${SKILL_DIR}/../..`',
+  '`${HOME}/.agents`',
+  '`<repo-root>/.agents`',
 ] as const;
 
 function listSkillDirs(): string[] {
@@ -169,6 +237,13 @@ function expectPortableAgentSkillsRootCandidateOrder(
   expect(content, `${source} must not invent a loaded-agent root`).not.toMatch(
     /\$\{(?:SKILL_DIR|AGENT_DIR)\}/,
   );
+}
+
+function expectPortableAgentRootCandidateOrder(
+  content: string,
+  source: string,
+): void {
+  expectCandidateOrder(content, PORTABLE_AGENT_ROOT_CANDIDATES, source);
 }
 
 function collectViolations(): Violation[] {
@@ -233,18 +308,280 @@ function crossSkillReferenceKey({
   return `${file}|${targetSkill}|${targetPath}`;
 }
 
+function classifyPortableAssetTargets(
+  markdown: string,
+): PortableAssetFinding[] {
+  const indexed: Array<PortableAssetFinding & { index: number }> = [];
+
+  for (const match of markdown.matchAll(PORTABLE_SKILL_READ)) {
+    const evidence = match[0];
+    indexed.push({
+      asset: { kind: 'skill', name: match[1]! },
+      target: evidence,
+      evidence,
+      index: match.index,
+    });
+  }
+
+  const canonicalAgentNames = new Set(
+    readdirSync(AGENTS_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name.slice(0, -'.md'.length)),
+  );
+  for (const match of markdown.matchAll(PORTABLE_AGENT_READ)) {
+    const name = match[1]!;
+    if (!canonicalAgentNames.has(name)) continue;
+    const lineStart = markdown.lastIndexOf('\n', match.index) + 1;
+    const nextLineBreak = markdown.indexOf('\n', match.index);
+    const lineEnd = nextLineBreak === -1 ? markdown.length : nextLineBreak;
+    const line = markdown.slice(lineStart, lineEnd);
+    const evidence = match[0];
+    const occurrenceStart = match.index - lineStart;
+    if (
+      isProviderAgentSyncOccurrence(
+        line,
+        occurrenceStart,
+        occurrenceStart + evidence.length,
+        name,
+      )
+    ) {
+      continue;
+    }
+    indexed.push({
+      asset: { kind: 'agent', name },
+      target: evidence,
+      evidence,
+      index: match.index,
+    });
+  }
+
+  return indexed
+    .sort((left, right) => left.index - right.index)
+    .map(({ index: _index, ...finding }) => finding);
+}
+
+function isProviderAgentSyncOccurrence(
+  line: string,
+  occurrenceStart: number,
+  occurrenceEnd: number,
+  canonicalName: string,
+): boolean {
+  const before = line.slice(0, occurrenceStart);
+  const after = line.slice(occurrenceEnd);
+
+  // Canonical source followed immediately by its Claude/Cursor sync target.
+  // A directory-only target inherits the canonical occurrence's role; a
+  // target that names a role must name the same one.
+  const syncedProvider = after.match(
+    /^`?\s*\(synced to `?\.(?:claude|cursor)\/agents\/(?:([a-zA-Z0-9_-]+)\.md)?`?\)/i,
+  );
+  if (
+    syncedProvider &&
+    (!syncedProvider[1] || syncedProvider[1] === canonicalName)
+  ) {
+    return true;
+  }
+
+  // Provider view followed immediately by its exact canonical sync target.
+  // Matching the role on both sides keeps an unrelated earlier provider path
+  // from exempting this canonical occurrence.
+  const syncedCanonical = before.match(
+    /\.(?:claude|cursor)\/agents\/([a-zA-Z0-9_-]+)\.md`?\s*\(synced (?:to|from) `?$/i,
+  );
+  return syncedCanonical?.[1] === canonicalName && /^`?\)/.test(after);
+}
+
+function inspectCanonicalAgentCandidate(
+  tier: AgentCandidateTier,
+  providerRoot: string,
+  canonicalRoot: string,
+  canonicalName: string,
+):
+  | {
+      status: 'resolved';
+      selectedFile: string;
+      canonicalFile: string;
+      validation: 'direct-canonical' | 'exact-canonical-symlink';
+    }
+  | { status: 'miss'; attempt: AgentCandidateAttempt } {
+  const selectedFile = join(providerRoot, 'agents', `${canonicalName}.md`);
+  const canonicalFile = join(canonicalRoot, 'agents', `${canonicalName}.md`);
+  let selectedStat;
+
+  try {
+    selectedStat = lstatSync(selectedFile);
+  } catch {
+    return {
+      status: 'miss',
+      attempt: { tier, candidate: selectedFile, outcome: 'missing' },
+    };
+  }
+
+  if (selectedStat.isSymbolicLink()) {
+    let selectedRealpath: string;
+    try {
+      selectedRealpath = realpathSync(selectedFile);
+    } catch {
+      return {
+        status: 'miss',
+        attempt: {
+          tier,
+          candidate: selectedFile,
+          outcome: 'broken-symlink',
+        },
+      };
+    }
+
+    let canonicalRealpath: string;
+    try {
+      if (!lstatSync(canonicalFile).isFile()) {
+        throw new Error('Canonical target is not a regular file');
+      }
+      canonicalRealpath = realpathSync(canonicalFile);
+    } catch {
+      return {
+        status: 'miss',
+        attempt: {
+          tier,
+          candidate: selectedFile,
+          outcome: 'escaping-symlink',
+        },
+      };
+    }
+
+    if (
+      selectedRealpath === canonicalRealpath &&
+      selectedFile !== canonicalFile
+    ) {
+      return {
+        status: 'resolved',
+        selectedFile,
+        canonicalFile,
+        validation: 'exact-canonical-symlink',
+      };
+    }
+
+    return {
+      status: 'miss',
+      attempt: {
+        tier,
+        candidate: selectedFile,
+        outcome: 'escaping-symlink',
+      },
+    };
+  }
+
+  if (!selectedStat.isFile()) {
+    return {
+      status: 'miss',
+      attempt: { tier, candidate: selectedFile, outcome: 'wrong-target' },
+    };
+  }
+
+  if (selectedFile === canonicalFile) {
+    return {
+      status: 'resolved',
+      selectedFile,
+      canonicalFile,
+      validation: 'direct-canonical',
+    };
+  }
+
+  return {
+    status: 'miss',
+    attempt: {
+      tier,
+      candidate: selectedFile,
+      outcome: 'noncanonical-copy',
+    },
+  };
+}
+
+function resolveCanonicalAgentTarget({
+  dependency,
+  canonicalName,
+  skillDir,
+  userCanonicalRoot,
+  projectCanonicalRoot,
+}: ResolveCanonicalAgentInput): CanonicalAgentResolution {
+  const loadedRoot = resolve(skillDir, '..', '..');
+  const loadedCanonicalRoot =
+    basename(loadedRoot) === '.agents'
+      ? loadedRoot
+      : join(dirname(loadedRoot), '.agents');
+  const candidates: Array<{
+    tier: AgentCandidateTier;
+    providerRoot: string;
+    canonicalRoot: string;
+  }> = [
+    {
+      tier: 'loaded',
+      providerRoot: loadedRoot,
+      canonicalRoot: loadedCanonicalRoot,
+    },
+    {
+      tier: 'user',
+      providerRoot: userCanonicalRoot,
+      canonicalRoot: userCanonicalRoot,
+    },
+    {
+      tier: 'project',
+      providerRoot: projectCanonicalRoot,
+      canonicalRoot: projectCanonicalRoot,
+    },
+  ];
+  const attempts: AgentCandidateAttempt[] = [];
+
+  for (const candidate of candidates) {
+    const result = inspectCanonicalAgentCandidate(
+      candidate.tier,
+      candidate.providerRoot,
+      candidate.canonicalRoot,
+      canonicalName,
+    );
+    if (result.status === 'resolved') {
+      return {
+        status: 'resolved',
+        dependency,
+        canonicalName,
+        tier: candidate.tier,
+        providerRoot: candidate.providerRoot,
+        selectedFile: result.selectedFile,
+        canonicalFile: result.canonicalFile,
+        validation: result.validation,
+        attempts,
+      };
+    }
+    attempts.push(result.attempt);
+  }
+
+  return {
+    status: 'miss',
+    dependency,
+    canonicalName,
+    attempts,
+    recovery: [
+      `oat tools install ${dependency} --scope <user|project>`,
+      `oat tools update --pack ${dependency} --scope <user|project>`,
+    ],
+  };
+}
+
 function collectCrossSkillTargets(
   content: string,
   owner: string,
 ): CrossSkillTarget[] {
   const targets = new Map<string, CrossSkillTarget>();
 
-  for (const match of content.matchAll(CROSS_SKILL_READ)) {
-    const targetSkill = match[1]!;
+  for (const finding of classifyPortableAssetTargets(content)) {
+    if (finding.asset.kind !== 'skill') continue;
+    const targetSkill = finding.asset.name;
     // A read that names the authoring asset's own skill travels with the
     // bundle, so it is a local read rather than a cross-skill dependency.
     if (targetSkill === owner) continue;
-    const targetPath = match[2]!;
+    const targetPath = finding.target.slice(
+      finding.target.lastIndexOf(`${targetSkill}/`) + targetSkill.length + 1,
+    );
     targets.set(`${targetSkill}/${targetPath}`, { targetSkill, targetPath });
   }
 
@@ -349,6 +686,33 @@ function collectUserDefaultCrossSkillReferences(): CrossSkillReference[] {
     .sort(compareCrossSkillReferences);
 }
 
+function collectPortableAssetReferences(
+  assets: readonly MarkdownAsset[],
+): PortableAssetReference[] {
+  return assets.flatMap((asset) =>
+    asset.files.flatMap((file) => {
+      const relativeFile = file.slice(REPO_ROOT.length + 1);
+      return classifyPortableAssetTargets(readFileSync(file, 'utf8')).map(
+        (finding) => ({ file: relativeFile, ...finding }),
+      );
+    }),
+  );
+}
+
+function collectUserDefaultPortableAssetReferences(): PortableAssetReference[] {
+  return collectPortableAssetReferences(collectUserDefaultMarkdownAssets());
+}
+
+function collectCanonicalSkillPortableAssetReferences(): PortableAssetReference[] {
+  return collectPortableAssetReferences(
+    listSkillDirs().map((owner) => ({
+      kind: 'skill',
+      owner,
+      files: listAuthoredMarkdown(join(SKILLS_DIR, owner)),
+    })),
+  );
+}
+
 // Non-executable evidence only. Each entry is pinned by source file, target
 // skill, and target path so it can never widen into a wildcard allowance.
 const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
@@ -450,6 +814,148 @@ describe('skills bundled docs contract', () => {
       ),
       'Historical evidence stays limited to dogfood records and test fixtures',
     ).toBe(true);
+  });
+
+  it.each([
+    [
+      'manifest-derived user-default',
+      collectUserDefaultPortableAssetReferences,
+    ],
+    ['every canonical skill', collectCanonicalSkillPortableAssetReferences],
+  ] as const)(
+    'leaves zero executable canonical agent reads in the %s scan',
+    (_scope, collectReferences) => {
+      const agentReferences = collectReferences().filter(
+        ({ asset }) => asset.kind === 'agent',
+      );
+      const detail = agentReferences
+        .map(({ file, target }) => `  ${file} -> ${target}`)
+        .join('\n');
+
+      expect(
+        agentReferences,
+        `Executable canonical agent reads must resolve from a bound provider root:\n${detail}`,
+      ).toEqual([]);
+    },
+  );
+
+  it('keeps skeptic and other provider-view descriptions classified as examples', () => {
+    const exampleLines = listSkillDirs().flatMap((skill) =>
+      listAuthoredMarkdown(join(SKILLS_DIR, skill)).flatMap((file) =>
+        readFileSync(file, 'utf8')
+          .split('\n')
+          .filter((line) => /\.(?:claude|cursor)\/agents\//.test(line))
+          .map((line) => ({
+            file: file.slice(REPO_ROOT.length + 1),
+            line,
+            findings: classifyPortableAssetTargets(line).filter(
+              ({ asset }) => asset.kind === 'agent',
+            ),
+          })),
+      ),
+    );
+    const skepticExamples = exampleLines.filter(({ file }) =>
+      file.endsWith('/skeptic/SKILL.md'),
+    );
+
+    expect(skepticExamples).toHaveLength(2);
+    expect(
+      exampleLines.flatMap(({ file, findings }) =>
+        findings.map(({ target }) => `${file} -> ${target}`),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    [
+      'canonical repo-relative skill',
+      'Read `.agents/skills/oat-dispatch-subagents/SKILL.md`.',
+      [
+        {
+          asset: { kind: 'skill', name: 'oat-dispatch-subagents' },
+          evidence: '.agents/skills/oat-dispatch-subagents/SKILL.md',
+          target: '.agents/skills/oat-dispatch-subagents/SKILL.md',
+        },
+      ],
+    ],
+    [
+      'canonical repo-relative agent',
+      'Read `.agents/agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '.agents/agents/oat-reviewer.md',
+          target: '.agents/agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'dot-relative canonical agent',
+      'Read `./.agents/agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: './.agents/agents/oat-reviewer.md',
+          target: './.agents/agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'repeated-parent canonical agent hop',
+      'Read `../../agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '../../agents/oat-reviewer.md',
+          target: '../../agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'mixed executable read and same-role provider-sync example',
+      'Read `.agents/agents/oat-reviewer.md`; provider `.claude/agents/oat-reviewer.md` (synced to `.agents/agents/oat-reviewer.md`)',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '.agents/agents/oat-reviewer.md',
+          target: '.agents/agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'portable provider root',
+      'Read `${AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'canonical user root',
+      'Read `${HOME}/.agents/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'canonical repository root',
+      'Read `<repo-root>/.agents/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'Claude provider view',
+      'Claude exposes `.claude/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'Cursor provider view',
+      'Cursor exposes `.cursor/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'suffixed provider variant',
+      'Read `.cursor/agents/oat-reviewer-gpt-5-6-sol-medium.md`.',
+      [],
+    ],
+    ['Codex TOML variant', 'Read `.codex/agents/oat-reviewer.toml`.', []],
+    ['unanchored prose', 'The canonical role is agents/oat-reviewer.md.', []],
+  ])('classifies %s portable asset syntax', (_name, content, expected) => {
+    expect(classifyPortableAssetTargets(content as string)).toEqual(expected);
   });
 
   it.each([
@@ -648,6 +1154,19 @@ describe('skills bundled docs contract', () => {
     expect(scanned).not.toContain('skill:create-oat-skill');
   });
 
+  it('proves the manifest-derived user-default surface covers every canonical agent', () => {
+    const canonicalAgents = readdirSync(AGENTS_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name.slice(0, -'.md'.length))
+      .sort();
+    const manifestAgents = collectUserDefaultMarkdownAssets()
+      .filter((asset) => asset.kind === 'agent')
+      .map((asset) => asset.owner)
+      .sort();
+
+    expect(manifestAgents).toEqual(canonicalAgents);
+  });
+
   it('skips only the materialized references/docs subtree', () => {
     const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-authored-markdown-'));
     const materializedDocsDir = join(fixtureRoot, 'references', 'docs');
@@ -718,6 +1237,66 @@ describe('skills bundled docs contract', () => {
       expect(collectBareCrossSkillTargets(content, skill)).toEqual([]);
     },
   );
+
+  it('binds plan artifact-review instructions from the workflows scope', () => {
+    const skill = 'oat-project-plan-writing';
+    const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+    const boundRead = '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md';
+
+    expectPortableAgentRootCandidateOrder(content, skill);
+    expect(
+      content.match(new RegExp(boundRead.replaceAll('$', '\\$&'), 'g')),
+    ).toHaveLength(1);
+    expect(content).toMatch(
+      /stop before[\s\S]{0,80}(?:artifact-review|fresh-child)[\s\S]{0,80}(?:dispatch|fallback)/i,
+    );
+    expect(content).toContain(
+      'oat tools install workflows --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack workflows --scope <user|project>',
+    );
+    expect(content).toMatch(
+      /exact\s+registered[\s\S]{0,240}(?:variant|agent_type)[\s\S]{0,180}first/i,
+    );
+    expect(content).toMatch(
+      /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+    );
+  });
+
+  it('binds implementation fallback roles independently from the workflows scope', () => {
+    const source = 'oat-project-implement dispatch reference';
+    const content = readFileSync(
+      join(
+        SKILLS_DIR,
+        'oat-project-implement',
+        'references',
+        'dispatch-and-dry-run.md',
+      ),
+      'utf8',
+    );
+
+    expectPortableAgentRootCandidateOrder(content, source);
+    expect(content).toContain(
+      '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
+    );
+    expect(content).toContain(
+      '${REVIEWER_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
+    );
+    expect(content).toMatch(
+      /independently[\s\S]{0,260}oat-phase-implementer[\s\S]{0,260}oat-reviewer/i,
+    );
+    expect(content).toMatch(
+      /exact unsuffixed[\s\S]{0,160}same-scope canonical file[\s\S]{0,180}symlink/i,
+    );
+    expect(content).toMatch(/stop before[\s\S]{0,100}fresh-child fallback/i);
+    expect(content).toContain(
+      'oat tools install workflows --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack workflows --scope <user|project>',
+    );
+  });
 
   it('maps brainstorm sibling recovery to the owning pack', () => {
     const content = readFileSync(
@@ -1079,6 +1658,39 @@ describe('skills bundled docs contract', () => {
   });
 
   it.each([
+    ['oat-project-review-provide', 2],
+    ['oat-project-review-provide-remote', 2],
+  ] as const)(
+    '%s binds canonical reviewer instructions from the workflows scope',
+    (skill, expectedReads) => {
+      const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+      const boundRead =
+        '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md';
+
+      expectPortableAgentRootCandidateOrder(content, skill);
+      expect(content).toMatch(
+        /exact[\s\S]{0,40}unsuffixed[\s\S]{0,20}`agents\/oat-reviewer\.md`/,
+      );
+      expect(content).toMatch(/same-scope canonical file[\s\S]{0,180}symlink/i);
+      expect(content).toMatch(
+        /missing[\s\S]{0,80}broken[\s\S]{0,80}escaping[\s\S]{0,80}copied[\s\S]{0,80}transformed[\s\S]{0,80}suffixed[\s\S]{0,120}noncanonical candidate[\s\S]{0,100}continue/i,
+      );
+      expect(
+        content.match(new RegExp(boundRead.replaceAll('$', '\\$&'), 'g')),
+      ).toHaveLength(expectedReads);
+      expect(content).toMatch(
+        /stop before[\s\S]{0,40}(?:launching|starting)[\s\S]{0,40}fresh-child fallback/i,
+      );
+      expect(content).toContain(
+        'oat tools install workflows --scope <user|project>',
+      );
+      expect(content).toContain(
+        'oat tools update --pack workflows --scope <user|project>',
+      );
+    },
+  );
+
+  it.each([
     [
       'oat-phase-implementer',
       [
@@ -1233,5 +1845,328 @@ describe('skills bundled docs contract', () => {
       ]),
     );
     expect(bareReferences).toEqual([]);
+  });
+
+  it('resolves only exact canonical agent targets across provider layouts', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-agent-provider-root-'));
+    const userScope = join(fixtureRoot, 'user');
+    const projectScope = join(fixtureRoot, 'project');
+    const canonicalName = 'oat-reviewer';
+    const canonicalRelative = join('agents', `${canonicalName}.md`);
+
+    try {
+      const userCanonical = join(userScope, '.agents', canonicalRelative);
+      const projectCanonical = join(projectScope, '.agents', canonicalRelative);
+      const canonicalSkillDir = join(
+        userScope,
+        '.agents',
+        'skills',
+        'consumer',
+      );
+      const claudeSkillDir = join(userScope, '.claude', 'skills', 'consumer');
+      const claudeAgent = join(userScope, '.claude', canonicalRelative);
+      const cursorSkillDir = join(userScope, '.cursor', 'skills', 'consumer');
+      const cursorAgent = join(userScope, '.cursor', canonicalRelative);
+
+      mkdirSync(join(userCanonical, '..'), { recursive: true });
+      mkdirSync(join(projectCanonical, '..'), { recursive: true });
+      mkdirSync(canonicalSkillDir, { recursive: true });
+      mkdirSync(join(claudeSkillDir, '..'), { recursive: true });
+      mkdirSync(join(claudeAgent, '..'), { recursive: true });
+      mkdirSync(cursorSkillDir, { recursive: true });
+      mkdirSync(join(cursorAgent, '..'), { recursive: true });
+      writeFileSync(userCanonical, '# User canonical\n');
+      writeFileSync(projectCanonical, '# Project canonical\n');
+      symlinkSync(canonicalSkillDir, claudeSkillDir, 'dir');
+      symlinkSync(userCanonical, claudeAgent);
+      symlinkSync(userCanonical, cursorAgent);
+
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: claudeSkillDir,
+          userCanonicalRoot: join(userScope, '.agents'),
+          projectCanonicalRoot: join(projectScope, '.agents'),
+        }),
+      ).toEqual(
+        expect.objectContaining({
+          status: 'resolved',
+          tier: 'loaded',
+          providerRoot: join(userScope, '.claude'),
+          selectedFile: claudeAgent,
+          canonicalFile: userCanonical,
+          validation: 'exact-canonical-symlink',
+        }),
+      );
+
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: cursorSkillDir,
+          userCanonicalRoot: join(userScope, '.agents'),
+          projectCanonicalRoot: join(projectScope, '.agents'),
+        }),
+      ).toEqual(
+        expect.objectContaining({
+          status: 'resolved',
+          tier: 'loaded',
+          providerRoot: join(userScope, '.cursor'),
+          selectedFile: cursorAgent,
+          canonicalFile: userCanonical,
+          validation: 'exact-canonical-symlink',
+        }),
+      );
+
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: realpathSync(claudeSkillDir),
+          userCanonicalRoot: join(userScope, '.agents'),
+          projectCanonicalRoot: join(projectScope, '.agents'),
+        }),
+      ).toEqual(
+        expect.objectContaining({
+          status: 'resolved',
+          tier: 'loaded',
+          providerRoot: realpathSync(join(userScope, '.agents')),
+          selectedFile: realpathSync(userCanonical),
+          validation: 'direct-canonical',
+        }),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('continues past copies, variants, TOML, and unsafe loaded targets', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-agent-misses-'));
+    const canonicalName = 'oat-reviewer';
+
+    try {
+      const userCanonicalRoot = join(fixtureRoot, 'user', '.agents');
+      const projectCanonicalRoot = join(fixtureRoot, 'project', '.agents');
+      const cursorRoot = join(fixtureRoot, 'loaded', '.cursor');
+      const cursorSkillDir = join(cursorRoot, 'skills', 'consumer');
+      const cursorAgentDir = join(cursorRoot, 'agents');
+      const userCanonical = join(
+        userCanonicalRoot,
+        'agents',
+        `${canonicalName}.md`,
+      );
+
+      mkdirSync(cursorSkillDir, { recursive: true });
+      mkdirSync(cursorAgentDir, { recursive: true });
+      mkdirSync(join(userCanonical, '..'), { recursive: true });
+      writeFileSync(userCanonical, '# Canonical bytes\n');
+      writeFileSync(
+        join(cursorAgentDir, `${canonicalName}.md`),
+        '# Canonical bytes\n',
+      );
+      writeFileSync(
+        join(cursorAgentDir, `${canonicalName}-gpt-5-6-sol-medium.md`),
+        '# Variant\n',
+      );
+      mkdirSync(join(cursorRoot, '..', '.codex', 'agents'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(cursorRoot, '..', '.codex', 'agents', `${canonicalName}.toml`),
+        'developer_instructions = "transformed"\n',
+      );
+
+      const copyMiss = resolveCanonicalAgentTarget({
+        dependency: 'workflows',
+        canonicalName,
+        skillDir: cursorSkillDir,
+        userCanonicalRoot,
+        projectCanonicalRoot,
+      });
+      expect(copyMiss).toEqual(
+        expect.objectContaining({ status: 'resolved', tier: 'user' }),
+      );
+      expect(copyMiss.attempts).toEqual([
+        expect.objectContaining({
+          tier: 'loaded',
+          outcome: 'noncanonical-copy',
+        }),
+      ]);
+
+      const codexRoot = join(fixtureRoot, 'codex', '.codex');
+      const codexSkillDir = join(codexRoot, 'skills', 'consumer');
+      const codexAgentDir = join(codexRoot, 'agents');
+      mkdirSync(codexSkillDir, { recursive: true });
+      mkdirSync(codexAgentDir, { recursive: true });
+      writeFileSync(
+        join(codexAgentDir, `${canonicalName}.md`),
+        '# Transformed Markdown copy\n',
+      );
+      writeFileSync(
+        join(codexAgentDir, `${canonicalName}.toml`),
+        'developer_instructions = "transformed"\n',
+      );
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: codexSkillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }).attempts,
+      ).toEqual([
+        expect.objectContaining({
+          tier: 'loaded',
+          outcome: 'noncanonical-copy',
+        }),
+      ]);
+      rmSync(join(codexAgentDir, `${canonicalName}.md`));
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: codexSkillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }).attempts,
+      ).toEqual([
+        expect.objectContaining({ tier: 'loaded', outcome: 'missing' }),
+      ]);
+
+      rmSync(join(cursorAgentDir, `${canonicalName}.md`));
+      symlinkSync(
+        join(fixtureRoot, 'outside.md'),
+        join(cursorAgentDir, `${canonicalName}.md`),
+      );
+      writeFileSync(join(fixtureRoot, 'outside.md'), '# Outside\n');
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: cursorSkillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }).attempts,
+      ).toEqual([
+        expect.objectContaining({
+          tier: 'loaded',
+          outcome: 'escaping-symlink',
+        }),
+      ]);
+
+      rmSync(join(cursorAgentDir, `${canonicalName}.md`));
+      symlinkSync(
+        join(fixtureRoot, 'missing.md'),
+        join(cursorAgentDir, `${canonicalName}.md`),
+      );
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName,
+          skillDir: cursorSkillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }).attempts,
+      ).toEqual([
+        expect.objectContaining({
+          tier: 'loaded',
+          outcome: 'broken-symlink',
+        }),
+      ]);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('uses loaded then user then project and fails closed per dependency', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-agent-order-'));
+
+    try {
+      const loadedRoot = join(fixtureRoot, 'loaded', '.agents');
+      const skillDir = join(loadedRoot, 'skills', 'consumer');
+      const userCanonicalRoot = join(fixtureRoot, 'user', '.agents');
+      const projectCanonicalRoot = join(fixtureRoot, 'project', '.agents');
+      mkdirSync(skillDir, { recursive: true });
+
+      const writeAgent = (root: string, name: string): string => {
+        const file = join(root, 'agents', `${name}.md`);
+        mkdirSync(join(file, '..'), { recursive: true });
+        writeFileSync(file, `# ${name}\n`);
+        return file;
+      };
+
+      writeAgent(userCanonicalRoot, 'oat-reviewer');
+      writeAgent(projectCanonicalRoot, 'oat-reviewer');
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName: 'oat-reviewer',
+          skillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }),
+      ).toEqual(expect.objectContaining({ status: 'resolved', tier: 'user' }));
+
+      writeAgent(loadedRoot, 'oat-reviewer');
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName: 'oat-reviewer',
+          skillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }),
+      ).toEqual(
+        expect.objectContaining({ status: 'resolved', tier: 'loaded' }),
+      );
+
+      const missing = resolveCanonicalAgentTarget({
+        dependency: 'research',
+        canonicalName: 'skeptical-evaluator',
+        skillDir,
+        userCanonicalRoot,
+        projectCanonicalRoot,
+      });
+      expect(missing).toEqual(
+        expect.objectContaining({
+          status: 'miss',
+          dependency: 'research',
+          recovery: [
+            'oat tools install research --scope <user|project>',
+            'oat tools update --pack research --scope <user|project>',
+          ],
+        }),
+      );
+      expect(missing.attempts.map(({ tier }) => tier)).toEqual([
+        'loaded',
+        'user',
+        'project',
+      ]);
+
+      writeAgent(projectCanonicalRoot, 'skeptical-evaluator');
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'research',
+          canonicalName: 'skeptical-evaluator',
+          skillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }),
+      ).toEqual(
+        expect.objectContaining({ status: 'resolved', tier: 'project' }),
+      );
+      expect(
+        resolveCanonicalAgentTarget({
+          dependency: 'workflows',
+          canonicalName: 'oat-phase-implementer',
+          skillDir,
+          userCanonicalRoot,
+          projectCanonicalRoot,
+        }).status,
+      ).toBe('miss');
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
   });
 });

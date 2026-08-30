@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.5.1
+version: 1.5.2
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -624,6 +624,26 @@ Build the "Review Scope" metadata for the reviewer:
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
+**Canonical reviewer instructions:** Before a direct reviewer-definition read or
+fresh-child fallback, resolve the workflows-owned role locally. Probe candidates
+in this order: `${SKILL_DIR}/../..`, `${HOME}/.agents`, then
+`<repo-root>/.agents`. The loaded candidate is valid only when the exact
+unsuffixed `agents/oat-reviewer.md` is the same-scope canonical file or a
+symlink whose realpath is exactly that canonical file. Treat a missing, broken,
+escaping, copied, transformed, suffixed, or otherwise noncanonical candidate as
+a miss and continue to the next candidate. Bind the first valid root to
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}`; never use ambient discovery.
+
+If every candidate misses, name `oat-reviewer`, stop before launching the
+fresh-child fallback, and report
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` for the intended
+scope. Canonical role instructions cannot change the immutable target,
+provider, model, effort, or variant fields selected by the resolver. Native
+dispatch with the exact resolver-selected role remains first. Only an explicit
+pre-start native role-selection rejection before a reviewer starts unlocks a
+fresh child that preserves those fields.
+
 **Step 6.0: Resolve the managed reviewer target**
 
 Before capability-tier selection, resolve the same reviewer contract used by
@@ -669,7 +689,8 @@ Build the actual provider invocation before reporting the target as enforced:
   explicit host rejection of that exact `agent_type` before any reviewer or
   child starts. Only after that pre-start rejection may the workflow launch a
   fresh Codex child with the resolver target's explicit model, reasoning
-  effort, canonical role instructions from `.agents/agents/oat-reviewer.md`,
+  effort, canonical role instructions from
+  `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`,
   and the same Review Scope payload. If neither exact route is available, use
   only a verified-equivalent inline route or block the review.
 - Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
@@ -912,7 +933,8 @@ If running inline (Tier 3), execute the review and write artifact.
 6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
 7. Write artifact with file:line references and fix guidance
 
-**Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
+**Review artifact template:** (see
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` for full format)
 
 Shared ad-hoc companion reference (non-project mode): the `oat-review-provide`
 review artifact template. Independently probe each required `<name>/SKILL.md`

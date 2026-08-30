@@ -13,7 +13,7 @@ labels:
   - contract
 assignee: null
 created: 2026-08-29T14:36:26.565Z
-updated: 2026-08-29T18:20:00.000Z
+updated: 2026-08-30T18:45:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,6 +21,19 @@ external_plans: []
 ## Description
 
 Skills that read canonical agent definitions still use bare repo-relative paths (`.agents/agents/<name>.md`). These dangle when the owning pack is installed at user scope, which is the same defect class the portable-agent-references project fixed for cross-skill reads — but on a path shape the ratchet does not cover. Proposal: introduce a single portable `${AGENT_PROVIDER_ROOT}` binding resolving to `${HOME}/.agents` then `<repo-root>/.agents`, with `${AGENT_PROVIDER_ROOT}/skills` and `${AGENT_PROVIDER_ROOT}/agents` as leaves, replacing the two parallel candidate lists that already share those roots.
+
+## Implementation Outcome (2026-08-30)
+
+Implemented on project branch `feature/feat/unified-agent-provider-root`, pending
+merge. The approved contract uses a dependency-owned local
+`${AGENT_PROVIDER_ROOT}` with loaded, user, then project candidates. A loaded
+target is eligible only when the exact unsuffixed Markdown file is the direct
+same-scope canonical file or a symlink resolving exactly to it. Seven live
+reads were migrated, provider-native model/effort/variant selection remains
+authoritative, and the shared typed classifier now enforces a zero-executable-
+agent baseline. Mutation, provider-layout, dependency-isolation, sync,
+release, documentation, and full repository gates passed; final lifecycle and
+configured exit-gate reviews reported zero findings.
 
 ## Acceptance Criteria
 
