@@ -527,6 +527,17 @@ oat_generated: false
   change after the reviewed basis.
 - Status: pending launch; configuration snapshot persisted before execution.
 
+### Implementation Exit Gate: generation 1 result persisted
+
+- Run: `eff218f5-9e87-41be-891c-79301573b4f8`
+- Target: `claude-fable-skip-permissions` (different-family gate route).
+- Result: `ok`, exit 0, passed at the Important threshold.
+- Artifact: `reviews/final-review-2026-08-30T060811Z.md`; run, project,
+  invocation, and target provenance corroborated.
+- Findings: 0 Critical, 0 Important, 0 Medium, 3 Minor.
+- Receive: eligible with a non-null correlated handoff; disposition is pending
+  durable review receive.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)

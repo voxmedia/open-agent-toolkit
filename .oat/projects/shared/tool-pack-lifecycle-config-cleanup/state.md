@@ -41,15 +41,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:672736f47d4b858d05f03e8422f3f55fc70eb1c819790c5c0af2d1b538803695'
   freshness_head: 29a8dba929c8ce11220ad4eaef76fb8fe05b7816
   freshness_fingerprint: 'sha256:effective-delta-v1:a5442616df62c25b1d75b6c17cf5fc72b0996862a24a4fdf17b056f6c5ce8075'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'tool-pack-cleanup-exit-g1-a1-7a7098ec-b32f-46e7-b973-73bbb0a8b1a9'
   launch_started_at: '2026-08-30T06:03:04Z'
   launch_result_receipt: '/private/tmp/oat-tool-pack-cleanup/tool-pack-cleanup-exit-g1-a1-7a7098ec-b32f-46e7-b973-73bbb0a8b1a9.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/eff218f5-9e87-41be-891c-79301573b4f8.json'
   gate_run_id: 'eff218f5-9e87-41be-891c-79301573b4f8'
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md'
+  handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=3). Run oat-project-review-receive for .oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md to disposition them before marking the final review row passed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -57,16 +57,16 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-30T06:03:45Z'
+  updated_at: '2026-08-30T06:09:00Z'
 oat_docs_updated: true
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T06:03:45Z'
+oat_project_state_updated: '2026-08-30T06:09:00Z'
 oat_generated: false
 ---
 
