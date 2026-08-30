@@ -468,7 +468,7 @@ commit `chore(p03-t02): finalize provider-root release proof`. Otherwise let
 | Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
 | ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01    | code     | passed  | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p02    | code     | pending | -          | -                                                             | -                                        | -          | -                             |
+| p02    | code     | passed  | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
 | p03    | code     | pending | -          | -                                                             | -                                        | -          | -                             |
 | final  | code     | pending | -          | -                                                             | -                                        | -          | -                             |
 | spec   | artifact | pending | -          | -                                                             | -                                        | -          | -                             |
