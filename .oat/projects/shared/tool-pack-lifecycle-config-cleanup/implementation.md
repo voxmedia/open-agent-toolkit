@@ -568,6 +568,19 @@ oat_generated: false
   adoption remained declared.
 - Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly.
 
+### Post-implementation sequence: document complete
+
+- Step: `document` (configured pre-approval position 2 of 3).
+- Commits: `f371bba8046355800b06f39b2ceeabf578fb6a30` (docs) and
+  `5656ad6397f7ec79929eb320eed9840010de6719` (docs state).
+- Outcome: expanded the tool-pack and troubleshooting pages with same-version
+  content drift, executable-mode normalization, seed override, and exact
+  adoption-reporting contracts; no new page or navigation change.
+- Verification: `pnpm check` and uncached `pnpm build:docs` exit 0. The optional
+  link checker could not start because Playwright Chromium is absent; no links
+  changed.
+- Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)

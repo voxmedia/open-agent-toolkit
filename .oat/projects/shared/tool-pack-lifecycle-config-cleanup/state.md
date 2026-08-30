@@ -66,7 +66,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
@@ -77,7 +77,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T06:29:06Z'
+oat_project_state_updated: '2026-08-30T06:30:00Z'
 oat_generated: false
 ---
 
