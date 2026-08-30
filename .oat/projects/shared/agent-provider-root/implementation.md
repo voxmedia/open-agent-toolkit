@@ -478,6 +478,7 @@ Chronological log of implementation progress.
 - **2026-08-30T18:34:00Z — receive corroborated and gate allowed:** Commit `6660812b2eed33b46f1e45d639a80e8148853153` contains the exact archive move and bound passing ledger row; the archived artifact carries the matching gate run. Receive is complete and the configured gate disposition is `allowed/passed`.
 - **2026-08-30T18:35:00Z — closeout sequence snapshotted:** Captured the shared configured order `preApproval: [summary, document, pr]`, `postApproval: []`, with final phase `p03`. The snapshot is immutable for this closeout.
 - **2026-08-30T18:38:00Z — summary complete:** `oat-project-summary` committed `summary.md` and three deduplicated canonical decision records in `7905d4a03c073c3559d9e051358694ef961f6466`; project-log rollup returned `status: ok` with five structural entries.
+- **2026-08-30T18:42:00Z — document approval boundary:** `oat-project-document` refreshed PJM references in `1bfcfcf11102ba2ce6367acd50799d97e56f53b3` and found one thin-coverage recommendation for the zero-baseline agent-read ratchet in `apps/oat-docs/docs/contributing/skills.md`. Awaiting the user's apply/skip decision; `document` remains incomplete.
 
 ---
 
