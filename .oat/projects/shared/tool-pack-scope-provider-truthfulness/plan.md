@@ -44,7 +44,7 @@ oxfmt/oxlint, Markdown skills, and Fumadocs.
 - [x] Defer HiLL checkpoint confirmation to `oat-project-implement`
 - [x] Evaluated phase boundaries for parallelism; keep execution sequential
 - [ ] User confirmed the plan breakdown
-- [ ] Project dispatch policy selected and persisted
+- [x] Project dispatch policy selected and persisted
 - [ ] Phase gate review choice resolved after plan confirmation
 - [ ] Automatic plan artifact review and configured plan gate passed
 
@@ -64,6 +64,11 @@ oxfmt/oxlint, Markdown skills, and Fumadocs.
 - Sync strategy is configuration-owned. Configured `auto` may select collection
   aliases; explicit configured `symlink` and `copy` remain per-entry. This plan
   does not invent an `oat sync --strategy` flag.
+- Release topology is one integrated PR. No phase ships independently; p01-p07
+  remain sequential commits in that PR, and p07-t04 is the sole lockstep
+  version, backlog-closeout, release-validation, and reviewed-head boundary.
+  Splitting a phase into a separately shipped PR requires revising this plan
+  with a distinct version and gate fan-in for that release.
 - Release manifests, help snapshots, shared docs, skill versions, and backlog
   indexes are final fan-in surfaces.
 
@@ -326,7 +331,11 @@ git commit -m "feat(p02-t04): model additive pack lifecycle outcomes"
 Replace the fixture that pins declared placement. For ideas, utility, research,
 and brainstorm assert labels, explicit user selection, user-only canonical
 apply/auto-sync/completion. Cover additive project/user/both and fail-closed
-inventory unknowns.
+inventory unknowns. For the FR10 / PR #227 regression, exercise aggregate and
+direct installs with config fixtures that seed `projects.defaultScope`,
+`projects.root`, and an unknown future sibling project field. Assert all three
+values remain byte-equivalent after project-only, user-only, and additive
+project+user reconciliation.
 
 **Step 2: Implement (GREEN)**
 
@@ -344,7 +353,9 @@ transaction and PJM independence.
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts src/commands/tools/install/index.test.ts src/commands/tools/shared/auto-sync.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts`
 
-Expected: issue #228 and additive placement cases pass with human/JSON parity.
+Expected: issue #228 and additive placement cases pass with human/JSON parity;
+the explicit FR10 project-config preservation matrix passes without rewriting
+`projects.defaultScope`, `projects.root`, or the future sibling field.
 
 **Step 5: Commit**
 
@@ -660,10 +671,14 @@ first-release limitation instead of claiming FR7 delivery.
 **Step 4: Verify**
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/shared/restart-adviser.test.ts src/providers/shared/registry.test.ts src/commands/sync/index.test.ts src/commands/init/tools/index.test.ts src/commands/status/index.test.ts src/commands/doctor/index.test.ts`
 
-Expected: distinct materialization/visibility/restart states pass; `pnpm check`
-passes docs.
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/shared/restart-adviser.test.ts src/providers/shared/registry.test.ts src/commands/sync/index.test.ts src/commands/init/tools/index.test.ts src/commands/status/index.test.ts src/commands/doctor/index.test.ts
+pnpm check
+```
+
+Expected: distinct materialization/visibility/restart states pass and the docs
+pass repository checks.
 
 **Step 5: Commit**
 
@@ -887,15 +902,19 @@ Redact scope roots and reuse structured reasons.
 **Step 4: Verify**
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/commands/providers/list/list.test.ts src/commands/providers/inspect/inspect.test.ts src/commands/help-snapshots.test.ts`
 
-Expected: apply/dry-run/docs agree; `pnpm check` passes.
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/commands/providers/list/list.test.ts src/commands/providers/inspect/inspect.test.ts src/commands/help-snapshots.test.ts
+pnpm check
+```
+
+Expected: apply/dry-run/docs agree and the docs pass repository checks.
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/sync packages/cli/src/commands/providers apps/oat-docs/docs/provider-sync apps/oat-docs/docs/reference/oat-directory-structure.md
-git commit -m "docs(p04-t05): expose collection alias lifecycle"
+git commit -m "feat(p04-t05): expose collection alias lifecycle"
 ```
 
 **Phase 4 Verification:** Run manifest, filesystem, engine, drift, sync,
@@ -1060,15 +1079,19 @@ independent decisions.
 **Step 4: Verify**
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/project-guidance.test.ts`
 
-Expected: standalone parity passes; `pnpm check` passes docs.
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/workflows/index.test.ts src/commands/init/tools/project-guidance.test.ts
+pnpm check
+```
+
+Expected: standalone parity passes and the docs pass repository checks.
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/init/tools/workflows apps/oat-docs/docs/cli-utilities/bootstrap.md apps/oat-docs/docs/cli-utilities/tool-packs.md
-git commit -m "docs(p05-t04): ship independent project guidance"
+git commit -m "feat(p05-t04): ship independent project guidance"
 ```
 
 **Phase 5 Verification:** AGENTS helper, init, guided setup, standalone
@@ -1481,11 +1504,14 @@ gates exit 0 at the final reviewed head.
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-08-30 | reviews/artifact-plan-review-2026-08-30T231629Z.md            | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -             | -          | -           |
 
 The design review findings were resolved directly in `design.md`. Thomas
 approved planning without another design re-review, so that event remains
 `fixes_completed`, not relabeled `passed`.
+
+The first plan review's five findings were resolved directly in `plan.md`.
+That event remains `fixes_completed` until a clean plan artifact re-review.
 
 Status progression: `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`.

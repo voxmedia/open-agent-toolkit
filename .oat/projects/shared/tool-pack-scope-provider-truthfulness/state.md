@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T23:10:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T23:55:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -99,7 +99,8 @@ oat_project_explainer:
 ## Current Phase
 
 Plan - Seven phases and thirty stable tasks drafted from the approved design;
-awaiting plan confirmation, dispatch policy, review setup, and artifact review.
+managed High is persisted and the first plan-review findings are resolved.
+Awaiting plan confirmation, phase-gate setup, and a clean artifact re-review.
 
 ## Artifacts
 
@@ -122,6 +123,8 @@ awaiting plan confirmation, dispatch policy, review setup, and artifact review.
 - ✓ Artifact review findings resolved directly in design
 - ✓ HiLL design approval complete
 - ✓ Implementation plan drafted and requirement index mapped
+- ✓ Managed High project dispatch policy persisted
+- ✓ First plan artifact-review findings resolved directly in `plan.md`
 - ⧗ Plan confirmation and review readiness
 
 ## Blockers
@@ -130,5 +133,5 @@ None
 
 ## Next Milestone
 
-Confirm the executable plan, select the project dispatch policy and optional
-phase gate, then run the automatic plan artifact review and configured gate.
+Confirm the executable plan, resolve the optional phase gate, then run the
+clean plan artifact re-review and configured gate.
