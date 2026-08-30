@@ -353,6 +353,7 @@ change, advance lockstep packages, and reproduce every CI gate.
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `pnpm-lock.yaml`
+- Modify when needed: `packages/cli/src/commands/help-snapshots.test.ts`
 - Move on completion:
   `.oat/repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md` to
   `.oat/repo/pjm/backlog/archived/`

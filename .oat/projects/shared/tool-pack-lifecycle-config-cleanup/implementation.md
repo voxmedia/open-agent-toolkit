@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status      | Tasks | Completed |
-| ------------------------------------- | ----------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
-| p03 — Release Integration             | in_progress | 1     | 0/1       |
+| Phase                                 | Status    | Tasks | Completed |
+| ------------------------------------- | --------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged    | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged    | 3     | 3/3       |
+| p03 — Release Integration             | in_review | 1     | 1/1       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -62,12 +62,13 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** pending
+**Status:** in_review
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
-**Status:** pending
-**Commit:** -
+**Status:** done_with_recovery
+**Commit:** `f2463616f12f5046579184e853ed9d6b0a23c615`, recovery
+`ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
 
 ## Orchestration Runs
 
@@ -230,7 +231,7 @@ oat_generated: false
 #### Dispatch Record: p03 implementation
 
 - Request: `dispatch-p03-implementation-20260829-01`
-- Launch state/outcome: accepted / `NEEDS_USER`
+- Launch state/outcome: accepted / `DONE_WITH_CONCERNS`
 - Exact base/head: `72f14ce3dde90603ab9b8abbd9e0eaca34bfbb9e`
 - Route: `oat-phase-implementer-gpt-5-6-sol-high`
 - Classification: `consequential`; requested effort `high`
@@ -252,6 +253,43 @@ oat_generated: false
   writes, the scoped remove remedy, and legacy false-value readability
 - Continuation: resume the original p03 handle from the clean post-approval
   bookkeeping head
+
+### Phase Outcome: p03 implementation
+
+- Continuation: `dispatch-p03-docs-approved-20260829-01`
+- Base: `137c2bc6201319f8178b2bd5e3c0dd2b590d9f87`
+- Original task commit: `f2463616f12f5046579184e853ed9d6b0a23c615`
+- Recovery reservation: `2c6f40d10427765c11c9f2cf931fcc277e623620`
+- Final head: `ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
+- Release version: lockstep `0.2.46`, above `origin/main` `0.2.45`
+- Focused verification: 482/482 tests; forced Turbo 0 cached / 10 executed,
+  4,645 package tests
+- Final authoritative gates: check, type-check, test, build, skill bumps,
+  fetch-first version check, release validation, docs build, lint, format, and
+  diff check all exit 0
+- Backlog: item archived and integrity checks pass; PJM doctor retains four
+  pre-existing layout warnings
+- Scope delta: root authorized the one-line `help-snapshots.test.ts` alignment
+  for the already-removed inert `--force` option; plan updated before review
+- Worktree: clean; phase review required
+
+### Recovery Event recovery-p03-20260830T043447Z-01
+
+- Phase/task: p03 / p03-t01
+- Original request: dispatch-p03-implementation-20260829-01
+- Original commit: f2463616f12f5046579184e853ed9d6b0a23c615
+- Defect class: composition
+- Discovered by: `git status --short`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: ae7bbc84e8ca115e3146fc2def4511e5135ac43b
+- Verification: focused 482/482 pass; all relevant phase commands pass before
+  and after the append-only recovery commit
+- Reason: the archive command pre-staged only the rename; explicit staging
+  rejected the missing source path while the shell continued, so the remaining
+  verified diff was committed append-only without rewriting the task commit.
 
 <!-- orchestration-runs-end -->
 
