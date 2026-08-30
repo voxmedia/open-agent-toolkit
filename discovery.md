@@ -27,9 +27,9 @@ evidence before deleting both superseded project directories.
 The combined project owns:
 
 - [`BL-260826-gate-targets-must-not-yield` — Gate targets must not yield on
-  background work in headless mode](../../../repo/pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md)
+  background work in headless mode](../../../repo/pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md)
 - [`BL-260726-validate-structured-output` — Validate structured-output contract
-  in gate skill commands](../../../repo/pjm/backlog/items/BL-260726-validate-structured-output.md)
+  in gate skill commands](../../../repo/pjm/backlog/archived/BL-260726-validate-structured-output.md)
 
 The requested execution contract has three boundaries:
 

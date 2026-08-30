@@ -414,10 +414,8 @@ Track test execution during implementation.
 **Key files / modules:**
 
 - `packages/cli/src/commands/gate/configured-command.ts` - pure configured-command classifier
-- `packages/cli/src/commands/gate/set.ts` - pre-write enforcement and actionable errors
-- `packages/cli/src/commands/gate/review.ts` - headless artifact-missing terminal
-- `packages/cli/src/lib/agent-runner/prompt-builder.ts` - synchronous no-yield contract
-- `packages/cli/src/commands/gate/configured-command.integration.test.ts` - stored-command subprocess proof
+- `packages/cli/src/commands/gate/index.ts` - pre-write enforcement, headless runtime classification, and synchronous no-yield prompt ownership
+- `packages/cli/src/commands/gate/configured-gate.integration.test.ts` - stored-command subprocess proof
 - `.agents/skills/oat-project-*/SKILL.md` - canonical lifecycle gate invocations
 
 **Verification performed:**
@@ -439,4 +437,4 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick mode)
