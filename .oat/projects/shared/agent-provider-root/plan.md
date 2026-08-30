@@ -582,6 +582,7 @@ git commit -m "fix(p03-t05): preserve latest final review status"
 | p01           | code     | passed          | 2026-08-30 | reviews/archived/p01-review-2026-08-30T164420Z.md             | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
 | p02           | code     | passed          | 2026-08-30 | reviews/archived/p02-review-2026-08-30T170942Z.md             | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
 | p03           | code     | passed          | 2026-08-30 | reviews/archived/p03-review-2026-08-30T173812Z.md             | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final         | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
 | final         | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T181453Z.md           | 3240a1bec3e7bcdfe044ace76994502e0a4b666d | auto       | -                             |
 | spec          | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
 | design        | artifact | passed          | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
@@ -590,7 +591,6 @@ git commit -m "fix(p03-t05): preserve latest final review status"
 | final         | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T182542Z.md           | 1d2bcafab6a61ee3fa85bc878ba7efcef7512407 | gate       | cursor-fable-5-high           |
 | remote-pr-242 | code     | passed          | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md   | 71b39d208d959403ae36e1c22eab3bafcf46cbdd | -          | -                             |
 | remote-pr-242 | code     | fixes_completed | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
-| final         | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
 | p03-t04       | code     | passed          | 2026-08-30 | reviews/archived/p03-t04-review-2026-08-30T195106Z.md         | 13392c5f26098aa2416e9560e53e32ff0e06f0f5 | manual     | -                             |
 | remote-pr-242 | code     | fixes_added     | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T195851Z.md   | b6fad10859d4d19317289dfb8023dbdcbeb7dfb1 | -          | -                             |
 
