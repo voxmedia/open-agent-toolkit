@@ -5122,6 +5122,12 @@ describe('oat gate', () => {
     expect(promptModel).toBe('provider-default');
     expect(execute?.stdoutDestination).toBe('stderr');
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
+    expect(invocationPrompt).toContain(
+      'Complete the review, artifact write, and required bookkeeping inline or through a synchronously awaited child before this headless process exits.',
+    );
+    expect(invocationPrompt).toContain(
+      'Do not start background tasks, monitors, or waiters that outlive this turn.',
+    );
     expect(
       runner.calls
         .filter((call) => call.purpose !== 'execute')
