@@ -42,9 +42,9 @@ update behavior.
 - Remove the inert force flag instead of inventing destructive overwrite
   semantics.
 
-The corresponding durable records are indexed under
-[`../decisions/index.md`](../decisions/index.md), including the five
-`DR-260830-*` decisions created for this project.
+The corresponding durable records are indexed at
+`.oat/repo/reference/decisions/index.md`, including the five `DR-260830-*`
+decisions created for this project.
 
 ## Verification and Release State
 
@@ -55,12 +55,23 @@ gate sequence, lint, format, documentation build, release validation, generated
 version parity, PJM integrity, and diff checks.
 
 PR #240 carries lockstep CLI `0.2.46`. At this documentation sync it remained
-open, unmerged, and unpublished; `origin/main` was still `0.2.45`.
+open, unmerged, and unpublished; `origin/main` was still `0.2.45`. GitHub CI,
+release dry run, and Cursor Bugbot were green after merging current
+`origin/main` into the branch.
+
+## Lifecycle Closeout
+
+The user approved the final HiLL checkpoint after the complete review and
+verification chain passed. The project log was synthesized and sealed, the
+active-project pointer was cleared, and the project was archived locally and to
+the configured S3 archive. The optional project retrospective found no new
+repository-process or upstream-product item beyond the already-owned legacy PJM
+cleanup follow-up.
 
 ## Planning Closeout
 
 - Archived completion record:
-  [`BL-260827-clean-up-tool-pack-lifecycle`](../../pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md).
+  `.oat/repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md`.
 - Canonical current-state, roadmap, curated backlog, and completed-ledger prose
   was refreshed against recently merged and released PRs.
 - Public tool-pack and troubleshooting documentation already covers the shipped
@@ -69,9 +80,9 @@ open, unmerged, and unpublished; `origin/main` was still `0.2.45`.
 ## Dedicated Follow-up
 
 Four pre-existing `oat pjm doctor` layout warning classes remain outside this
-project's implementation scope. They are captured as
-[`BL-260830-migrate-the-legacy-pjm`](../../pjm/backlog/items/BL-260830-migrate-the-legacy-pjm.md)
-with a
-[`dedicated-branch kickoff handoff`](../../pjm/handoffs/BL-260830-migrate-the-legacy-pjm.md).
-The follow-up must begin from current `origin/main` after PR #240 merges and
-must reconcile and preserve unique content before deleting any legacy file.
+project's implementation scope. They are captured at
+`.oat/repo/pjm/backlog/items/BL-260830-migrate-the-legacy-pjm.md` with a
+dedicated-branch kickoff handoff at
+`.oat/repo/pjm/handoffs/BL-260830-migrate-the-legacy-pjm.md`. The follow-up must
+begin from current `origin/main` after PR #240 merges and must reconcile and
+preserve unique content before deleting any legacy file.
