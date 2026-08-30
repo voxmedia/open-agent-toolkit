@@ -14,17 +14,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status          | Tasks | Completed |
-| ------------------------------------- | --------------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | fixes_completed | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | passed          | 3     | 3/3       |
-| p03 — Release Integration             | pending         | 1     | 0/1       |
+| Phase                                 | Status  | Tasks | Completed |
+| ------------------------------------- | ------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | passed  | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | passed  | 3     | 3/3       |
+| p03 — Release Integration             | pending | 1     | 0/1       |
 
 **Total:** 6/7 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
-**Status:** fixes_completed
+**Status:** passed
 
 ### Task p01-t01: Distinguish seed defaults from retained overrides
 
@@ -177,7 +177,7 @@ oat_generated: false
 #### Dispatch Record: p01 review round 2
 
 - Request: `dispatch-p01-review-r2-20260829-01`
-- Launch state/outcome: accepted / pending
+- Launch state/outcome: accepted / passed
 - Narrowed range:
   `717df3056006286d036d0f2d07554a67f3272ea0..caea5ebafe10883b39336219a5cb76a188c96358`
 - Prior artifact: `reviews/p01-review-2026-08-30T022309Z.md`
@@ -185,6 +185,21 @@ oat_generated: false
 - Selection: managed reviewer target `gpt-5.6-sol` / `high`; ceiling `high`
 - Dispatch stamp:
   `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+### Review Received: p01 (round 2, narrowed)
+
+- Artifact: `reviews/p01-review-2026-08-30T023404Z.md`
+- Reviewed head: `caea5ebafe10883b39336219a5cb76a188c96358`
+- Range:
+  `717df3056006286d036d0f2d07554a67f3272ea0..caea5ebafe10883b39336219a5cb76a188c96358`
+- Prior artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Reconnaissance: not attempted
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Disposition verification: Critical C1 fixed; append-only parent, mode
+  normalization, real content drift, type/symlink checks, and all 233 focused
+  tests independently verified
+- Verdict: passed; fix-loop count 1
+- Project log: terminal p01 outcome recorded once
 
 ### Review Received: p02 (round 1)
 
