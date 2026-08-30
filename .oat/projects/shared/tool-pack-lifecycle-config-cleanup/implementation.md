@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status | Tasks | Completed |
-| ------------------------------------- | ------ | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
-| p03 — Release Integration             | passed | 3     | 3/3       |
-| p04 — Final Review Fixes              | active | 3     | 0/3       |
+| Phase                                 | Status          | Tasks | Completed |
+| ------------------------------------- | --------------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
+| p03 — Release Integration             | passed          | 3     | 3/3       |
+| p04 — Final Review Fixes              | fixes_completed | 3     | 3/3       |
 
-**Total:** 9/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -83,19 +83,22 @@ oat_generated: false
 
 ## Phase 4: Final Review Fixes
 
-**Status:** active
+**Status:** fixes_completed
 
 ### Task p04-t01: (review) Assert direct-pack JSON adoption output
 
-**Status:** pending
+**Status:** done
+**Commit:** `9ca28186f2f5699fc0b07bc8bd0c8569706e7c67`
 
 ### Task p04-t02: (review) Retarget archived backlog references
 
-**Status:** pending
+**Status:** done
+**Commit:** `8e1f9eba71cc7dc7fff4752aabda859de76b2caf`
 
 ### Task p04-t03: (review) Align final plan closeout
 
-**Status:** pending
+**Status:** done
+**Commit:** `5329c2f6172b847a643e4f434d09d31931931413`
 
 ## Orchestration Runs
 
@@ -452,6 +455,20 @@ oat_generated: false
 - New tasks: `p04-t01`, `p04-t02`, `p04-t03`
 - Review cycle: 1 of 3
 - Next: execute p04 and run a narrowed final re-review before the exit gate.
+
+### Fix Completed: p04
+
+- Commits: `9ca28186f2f5699fc0b07bc8bd0c8569706e7c67`,
+  `8e1f9eba71cc7dc7fff4752aabda859de76b2caf`, and
+  `5329c2f6172b847a643e4f434d09d31931931413`
+- Findings M1, M2, and m1: fixed in three plan-prescribed task commits.
+- Verification: the focused init/tools suite passed 75/75; all three live
+  references resolve to the archived backlog item; the plan reports 12 tasks
+  and the final narrowed re-review boundary; scoped formatting and diff checks
+  passed.
+- Range and task file bounds verified; worktree clean; no recovery attempts.
+- Next: narrowed final re-review before the configured exit gate and HiLL
+  approval.
 
 <!-- orchestration-runs-end -->
 

@@ -68,6 +68,10 @@ Phase p03 stopped cleanly at its required documentation checkpoint before edits;
 
 Phase p03 passed its third and final root review at bd48b17bd50d11931a8f0540e02a86453087876f after two bounded review-fix rounds and one append-only implementation recovery; final review found zero findings.
 
+### 2026-08-30 · structural · oat-phase-implementer · p04
+
+Phase p04 completed three bounded final-review fix tasks in commits 9ca28186f2f5699fc0b07bc8bd0c8569706e7c67, 8e1f9eba71cc7dc7fff4752aabda859de76b2caf, and 5329c2f6172b847a643e4f434d09d31931931413; focused init/tools 75/75, archived-link resolution, 12-task rollup, scoped formatting, and diff checks passed; narrowed final re-review is next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
