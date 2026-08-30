@@ -16,7 +16,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -79,11 +79,11 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/242' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:53:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:55:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: agent-provider-root
 
-**Status:** Implementation exit gate passed
+**Status:** PR open
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation - Final HiLL closeout
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -135,7 +135,8 @@ Implementation - Final HiLL closeout
 - ✓ Documentation sync complete; contributor ratchet coverage updated
 - ✓ Implementation-tail project recap explicitly skipped
 - ✓ Final PR artifact prepared
-- ⧗ Authorized branch push and PR creation in progress
+- ✓ PR created
+- ⧗ Awaiting human review
 - ⧗ Final HiLL closeout
 
 ## Blockers
@@ -144,4 +145,8 @@ None
 
 ## Next Milestone
 
-Create the authorized final PR against `main`
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
