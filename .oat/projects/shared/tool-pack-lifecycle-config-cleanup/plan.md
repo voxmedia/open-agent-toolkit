@@ -662,22 +662,23 @@ report 13 tasks.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | fixes_completed | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                        |
-| p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T023404Z.md                    | caea5ebafe10883b39336219a5cb76a188c96358 | auto       | -                        |
-| p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
-| p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
-| p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
-| p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                        |
-| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T053322Z.md         | b7f761019202cb5bd150c8acf6519ead6795ee3f | auto       | -                        |
-| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T054835Z.md         | de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7 | auto       | -                        |
-| final  | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T055659Z.md         | bf240cef2945456d01f26313a34677642ac65f64 | auto       | -                        |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                        |
-| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T230217Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | fixes_completed | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                             |
+| p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T023404Z.md                    | caea5ebafe10883b39336219a5cb76a188c96358 | auto       | -                             |
+| p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                             |
+| p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                             |
+| p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                             |
+| p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                             |
+| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T053322Z.md         | b7f761019202cb5bd150c8acf6519ead6795ee3f | auto       | -                             |
+| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T054835Z.md         | de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7 | auto       | -                             |
+| final  | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T055659Z.md         | bf240cef2945456d01f26313a34677642ac65f64 | auto       | -                             |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                             |
+| plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T230217Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| final  | code     | received        | 2026-08-30 | reviews/final-review-2026-08-30T060811Z.md                  | b9dcc9c4eb4d02c2ad67d6442ed28118968352ce | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 
