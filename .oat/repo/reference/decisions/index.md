@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status   | Title                                                                           | Legacy |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------- | ------ |
+| DR-260830-dependency-owned-provider      | 2026-08-30 | accepted | Dependency-owned provider roots                                                 | -      |
+| DR-260830-exact-canonical-identity       | 2026-08-30 | accepted | Exact canonical identity for loaded targets                                     | -      |
+| DR-260830-typed-portability-classifier   | 2026-08-30 | accepted | Typed portability classifier                                                    | -      |
 | DR-260828-configurable-synced-default    | 2026-08-28 | accepted | Configurable synced default                                                     | -      |
 | DR-260828-custom-project-refs            | 2026-08-28 | accepted | Custom project refs                                                             | -      |
 | DR-260828-fail-closed-sync-mutations     | 2026-08-28 | accepted | Fail-closed sync mutations                                                      | -      |
