@@ -477,6 +477,7 @@ Chronological log of implementation progress.
 - **2026-08-30T18:29:30Z — receive intent persisted:** Bound run `74cd3cd8-293d-4c20-a4d1-13a30010a1be`, source `reviews/final-review-2026-08-30T182542Z.md`, collision-free archive destination, exact event identity `final|code|final-review-2026-08-30T182542Z.md`, and pre-receive head `e05e31f9b7589a75e76b6f794c506ab3f500f620` before receive.
 - **2026-08-30T18:34:00Z — receive corroborated and gate allowed:** Commit `6660812b2eed33b46f1e45d639a80e8148853153` contains the exact archive move and bound passing ledger row; the archived artifact carries the matching gate run. Receive is complete and the configured gate disposition is `allowed/passed`.
 - **2026-08-30T18:35:00Z — closeout sequence snapshotted:** Captured the shared configured order `preApproval: [summary, document, pr]`, `postApproval: []`, with final phase `p03`. The snapshot is immutable for this closeout.
+- **2026-08-30T18:38:00Z — summary complete:** `oat-project-summary` committed `summary.md` and three deduplicated canonical decision records in `7905d4a03c073c3559d9e051358694ef961f6466`; project-log rollup returned `status: ok` with five structural entries.
 
 ---
 
