@@ -14,17 +14,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status      | Tasks | Completed |
-| ------------------------------------- | ----------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | fixes_added | 3     | 2/3       |
-| p02 — Explicit Adoption and CLI State | passed      | 3     | 3/3       |
-| p03 — Release Integration             | pending     | 1     | 0/1       |
+| Phase                                 | Status          | Tasks | Completed |
+| ------------------------------------- | --------------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | fixes_completed | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | passed          | 3     | 3/3       |
+| p03 — Release Integration             | pending         | 1     | 0/1       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
-**Status:** fixes_added
+**Status:** fixes_completed
 
 ### Task p01-t01: Distinguish seed defaults from retained overrides
 
@@ -38,8 +38,8 @@ oat_generated: false
 
 ### Task p01-t03: Ignore normalized executable modes in drift checks
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `caea5ebafe10883b39336219a5cb76a188c96358`
 
 ## Phase 2: Explicit Adoption and Supported CLI State
 
@@ -153,7 +153,7 @@ oat_generated: false
 
 - Request: `dispatch-p01-fix-r1-20260829-01`
 - Continuation of: `dispatch-p01-2bff47e5-f2a9-4fa4-a706-b97dc6a97806`
-- Launch state/outcome: accepted / pending
+- Launch state/outcome: accepted / done
 - Immutable fix base: `717df3056006286d036d0f2d07554a67f3272ea0`
 - Route: original `oat-phase-implementer-gpt-5-6-sol-medium` handle
 - Scope: Critical C1 from `reviews/p01-review-2026-08-30T022309Z.md`;
@@ -161,6 +161,18 @@ oat_generated: false
 - Fix-loop usage: round 1 of 2
 - Dispatch stamp:
   `Dispatch: scope=p01 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+### Fix Completed: p01 (round 1)
+
+- Continuation: `dispatch-p01-fix-r1-20260829-01`
+- Immutable parent: `717df3056006286d036d0f2d07554a67f3272ea0`
+- Append-only commit: `caea5ebafe10883b39336219a5cb76a188c96358`
+- Finding C1 / task `p01-t03`: fixed
+- Verification: 233 focused tests passed, including all 65 lifecycle
+  acceptance tests; CLI check, type-check, formatting, and diff check passed
+- Range and file bounds: verified; two authorized inventory files changed;
+  worktree clean
+- Fix-loop usage: 1/2; narrowed re-review required
 
 ### Review Received: p02 (round 1)
 
