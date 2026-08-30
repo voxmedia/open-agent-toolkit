@@ -80,6 +80,10 @@ Task p04-t04 completed in c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d; the reusable
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:3 exit=0 status=ok artifact=.oat/projects/shared/tool-pack-lifecycle-config-cleanup/reviews/final-review-2026-08-30T060811Z.md
 
+### 2026-08-30 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/tool-pack-lifecycle-config-cleanup/references/project-retro.md evidence_used=archived-review-markdown,git-history,github-pr-status,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=0 upstream=0 apply=skipped filing=skipped
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
