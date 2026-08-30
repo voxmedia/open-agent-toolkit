@@ -13,6 +13,20 @@ const transcriptIntervalMs = Number(
   process.env.FAKE_GATE_TRANSCRIPT_INTERVAL_MS ?? '0',
 );
 
+if (process.env.FAKE_GATE_INVOCATION_LOG) {
+  await appendFile(
+    process.env.FAKE_GATE_INVOCATION_LOG,
+    `${JSON.stringify({
+      pid: process.pid,
+      headless: process.env.OAT_GATE_HEADLESS ?? null,
+      nonInteractive: process.env.OAT_NON_INTERACTIVE ?? null,
+      runId: process.env.OAT_GATE_RUN_ID ?? null,
+      cliPath: process.env.OAT_GATE_CLI_PATH ?? null,
+      routeReceiptPath: process.env.OAT_GATE_ROUTE_RECEIPT_PATH ?? null,
+    })}\n`,
+  );
+}
+
 function promptValue(key) {
   return prompt.match(new RegExp(`^${key}: (.+)$`, 'm'))?.[1] ?? 'unknown';
 }
