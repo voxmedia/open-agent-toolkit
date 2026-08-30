@@ -280,6 +280,50 @@ describe('oat pjm', () => {
     expect(result.stdout).toContain('# OAT PJM repo-reference migration');
   });
 
+  it('resolves adoption once and supplies it to the migration core', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const repoRoot = join(root, '.oat', 'repo');
+    const adoption = {
+      state: 'declared' as const,
+      repoRoot,
+      recovery: null,
+    };
+    let receivedAdoption: unknown;
+    let resolveCalls = 0;
+
+    const result = await runCli(
+      root,
+      ['--json', 'pjm', 'migrate'],
+      (program) => {
+        program.addCommand(
+          createPjmCommand({
+            resolvePjmAdoption: async () => {
+              resolveCalls += 1;
+              return adoption;
+            },
+            migratePjmRepo: async (options) => {
+              receivedAdoption = options.adoption;
+              return {
+                repoRoot,
+                status: 'dry-run',
+                dryRun: true,
+                actions: [],
+                backlogMappings: [],
+                decisionMappings: [],
+                written: [],
+              };
+            },
+          }),
+        );
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(resolveCalls).toBe(1);
+    expect(receivedAdoption).toEqual(adoption);
+  });
+
   it('preserves JSON error output and exit code 1 when templates are missing', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

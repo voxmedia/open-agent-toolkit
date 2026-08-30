@@ -158,21 +158,28 @@ describe('migratePjmRepo', () => {
     tempDirs.length = 0;
   });
 
-  it('reports a no-op when project-management is disabled', async () => {
+  it('reports a no-op when repository adoption is incomplete', async () => {
     const { assetsRoot, repoRoot, root } = await createWorkspace();
     tempDirs.push(root);
     await seedLegacyPjm(repoRoot);
+    const before = await snapshotTree(repoRoot);
 
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: false,
+      adoption: {
+        state: 'partial-initialization',
+        repoRoot,
+        recovery: 'oat pjm init',
+      },
       apply: true,
     });
 
     expect(result.status).toBe('skipped');
-    expect(result.reason).toBe('project-management pack is disabled');
+    expect(result.reason).toContain('partial-initialization');
+    expect(result.reason).toContain('oat pjm init');
     await expect(pathExists(join(repoRoot, 'pjm'))).resolves.toBe(false);
+    await expect(snapshotTree(repoRoot)).resolves.toEqual(before);
   });
 
   it('dry-runs migration inventory without writing files', async () => {
@@ -183,7 +190,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: false,
     });
 
@@ -231,7 +238,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
@@ -247,7 +254,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
@@ -331,7 +338,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
@@ -388,7 +395,7 @@ describe('migratePjmRepo', () => {
       migratePjmRepo({
         repoRoot,
         assetsRoot,
-        projectManagementEnabled: true,
+        adoption: { state: 'declared', repoRoot, recovery: null },
         apply: true,
       }),
     ).rejects.toThrow(/decision/i);

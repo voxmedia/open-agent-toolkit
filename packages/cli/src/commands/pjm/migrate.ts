@@ -20,6 +20,7 @@ import {
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
+import type { PjmAdoption } from './adoption';
 import { initializeRepoReference } from './init';
 
 export type PjmMigrationActionType =
@@ -62,7 +63,7 @@ export interface PjmMigrationOptions {
   assetsRoot: string;
   templatesRoot?: string;
   home?: string;
-  projectManagementEnabled: boolean;
+  adoption: PjmAdoption;
   apply?: boolean;
 }
 
@@ -471,16 +472,19 @@ function buildEmptyResult(
 export async function migratePjmRepo(
   options: PjmMigrationOptions,
 ): Promise<PjmMigrationResult> {
-  if (!options.projectManagementEnabled) {
+  if (await isAlreadyMigrated(options.repoRoot)) {
+    return buildEmptyResult(options, 'already-migrated');
+  }
+
+  if (
+    options.adoption.state !== 'declared' &&
+    options.adoption.state !== 'inferred-legacy'
+  ) {
     return buildEmptyResult(
       options,
       'skipped',
-      'project-management pack is disabled',
+      `PJM adoption state ${options.adoption.state} is not migration-eligible; ${options.adoption.recovery ?? 'run oat pjm init'}`,
     );
-  }
-
-  if (await isAlreadyMigrated(options.repoRoot)) {
-    return buildEmptyResult(options, 'already-migrated');
   }
 
   const apply = options.apply ?? false;
