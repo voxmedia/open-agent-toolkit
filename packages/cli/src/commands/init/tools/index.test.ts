@@ -1396,6 +1396,24 @@ describe('createInitToolsCommand', () => {
     ).toHaveLength(1);
   });
 
+  it('reports direct project pack adoption in one JSON document', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--json', '--scope', 'project']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({ adoptedPacks: ['docs'] }),
+    );
+  });
+
   it('keeps a direct idempotent JSON result free of adoption fields', async () => {
     configPersistence.readOatConfig.mockResolvedValue({
       version: 1,
