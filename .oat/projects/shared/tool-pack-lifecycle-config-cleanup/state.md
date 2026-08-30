@@ -26,12 +26,47 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 1
       pending_attempt: null
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: bf240cef2945456d01f26313a34677642ac65f64
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:672736f47d4b858d05f03e8422f3f55fc70eb1c819790c5c0af2d1b538803695'
+  freshness_head: 87d014d3cdc1b1e317844eb4c84809055db5e825
+  freshness_fingerprint: 'sha256:effective-delta-v1:21070f2234e65d2d38c771b4a8a94a03f6f3a3ce804e6cda04fa02ce2a0f7080'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-30T06:01:00Z'
 oat_docs_updated: true
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T05:58:16Z'
+oat_project_state_updated: '2026-08-30T06:01:00Z'
 oat_generated: false
 ---
 

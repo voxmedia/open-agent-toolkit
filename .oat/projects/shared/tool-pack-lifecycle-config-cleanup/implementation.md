@@ -516,6 +516,17 @@ oat_generated: false
 - Review cycle: 3 of 3
 - Next: resolve and execute the configured lifecycle exit gate.
 
+### Implementation Exit Gate: generation 1 resolved
+
+- Resolution: configured semantic cross-family final implementation review.
+- Policy: `onFailure=block`, `maxAttempts=2`.
+- Reviewed basis: `bf240cef2945456d01f26313a34677642ac65f64`
+  against `origin/main`; qualified effective-delta fingerprint persisted.
+- Freshness: advanced through final-review receive bookkeeping at
+  `87d014d3cdc1b1e317844eb4c84809055db5e825`; no substantive implementation
+  change after the reviewed basis.
+- Status: pending launch; configuration snapshot persisted before execution.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
