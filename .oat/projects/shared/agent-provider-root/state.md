@@ -79,11 +79,11 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:50:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:53:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -134,7 +134,8 @@ Implementation - Final HiLL closeout
 - ✓ Project summary generated and canonical decisions promoted
 - ✓ Documentation sync complete; contributor ratchet coverage updated
 - ✓ Implementation-tail project recap explicitly skipped
-- ⧗ Configured PR step awaiting separate push/PR authorization
+- ✓ Final PR artifact prepared
+- ⧗ Authorized branch push and PR creation in progress
 - ⧗ Final HiLL closeout
 
 ## Blockers
@@ -143,4 +144,4 @@ None
 
 ## Next Milestone
 
-Run the now-authorized configured PR step
+Create the authorized final PR against `main`
