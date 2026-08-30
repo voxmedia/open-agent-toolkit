@@ -5,208 +5,520 @@ oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups:
+  - [p01, p02]
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
-# Implementation Plan: gate-execution-contract-hardening
+# Implementation Plan: Gate Execution Contract Hardening
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`. Phases p01 and p02 run in
+> isolated parallel worktrees; p03 starts only after both are integrated.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make configured structured gate commands valid before persistence,
+make headless child-without-artifact failures distinct from correlation
+mismatches, and prove the exact configuration-to-envelope path.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** A pure configured-command validator and an independent
+runtime terminal classifier converge in a configuration-driven subprocess
+integration phase. Existing gate configuration storage, child execution,
+correlation, eligibility, and receipt models remain intact.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Node.js 22, TypeScript ESM, Commander, Vitest, pnpm workspaces,
+Turborepo, OAT canonical skills, and the existing fake gate runtime.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `{type}(pNN-tNN): {description}`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+- [x] Confirmed quick workflow and lightweight design
+- [x] Preserved and revalidated both superseded discoveries
+- [x] Deleted both superseded project directories after absorption
+- [x] Evaluated phase-level parallelism and declared p01/p02
+- [ ] Resolve project dispatch policy
+- [ ] Resolve optional cross-runtime Phase gate review
+- [ ] Pass structured plan artifact review
+- [ ] Run configured quick-start exit gate
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+`p01` and `p02` form one parallel group. Phase p01 owns the new configured
+command validator module/tests and the gate-aware skill corpus. Phase p02 owns
+the existing gate runtime module/tests and runner prompt. Their write sets are
+disjoint: p01 does not wire the validator into `index.ts`, and p02 does not
+touch the new validator or lifecycle skill files.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+Phase p03 is sequential after both because it modifies the central gate command
+to consume p01's validator after p02's terminal changes are present, then runs
+the shared configuration-driven integration matrix, docs/release bookkeeping,
+and repository gates.
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+## Phase 1: Configuration Contract Core
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+**Goal:** Define the pure structured-command contract and align every
+gate-aware lifecycle skill with the canonical global option placement.
 
----
+**Write ownership:** New configured-command module/tests and the specifically
+listed canonical lifecycle skill files. Do not edit
+`packages/cli/src/commands/gate/index.ts` or integration fixtures in this
+phase.
 
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add the pure configured-command validator
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Create: `packages/cli/src/commands/gate/configured-command.ts`
+- Create: `packages/cli/src/commands/gate/configured-command.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write focused contract tests**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
+Cover:
+
+- canonical `oat --json gate review ...`;
+- missing, late, repeated, and subcommand-scoped `--json`;
+- unrelated commands and provider-native output flags;
+- quoted prompts containing gate-like text;
+- conservative handling of wrappers/unknown command shapes;
+- byte-for-byte command preservation for valid results.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/configured-command.test.ts
 ```
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+Expected: New cases fail because the validator does not exist.
 
-**Step 2: Implement (GREEN)**
+**Step 2: Implement the pure classifier**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
+Return `not-applicable`, `valid`, or `invalid` without executing or rewriting
+the command. Recognized direct lifecycle gate-review commands accept only the
+canonical `oat --json gate review` path. The invalid message must name the
+structured-output contract and show the canonical form.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt packages/cli/src/commands/gate/configured-command.ts packages/cli/src/commands/gate/configured-command.test.ts
 ```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/configured-command.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+Expected: Focused tests and CLI type checking pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add packages/cli/src/commands/gate/configured-command.ts packages/cli/src/commands/gate/configured-command.test.ts
+git commit -m "feat(p01-t01): validate configured gate review command shape"
 ```
 
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Align gate-aware skill command contracts
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/skills/oat-project-discover/SKILL.md`
+- Modify: `.agents/skills/oat-project-design/SKILL.md`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify only if required by the existing copied-contract fixtures:
+  `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Add corpus regression assertions**
 
-{Test code}
+Assert that gate-aware lifecycle examples requiring a structured result name
+`oat --json gate review --project "$PROJECT_PATH" ...`, require global
+`--json` before `gate review`, prohibit execution-time argv injection, and do
+not add reusable `--target` pins.
 
-**Step 2: Implement (GREEN)**
+Run:
 
-{Implementation code or signatures}
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+```
 
-**Step 3: Refactor**
+Expected: Assertions expose the current inconsistent command examples.
 
-{Optional cleanup}
+**Step 2: Align canonical skills and bump versions**
+
+Update only the structured-command validation/example prose. Increase each
+changed canonical skill's frontmatter `version:` once for the final PR diff.
+Do not change receipt, ReviewPlan, HiLL, dispatch-target, or re-review policy.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt .agents/skills/oat-project-discover/SKILL.md .agents/skills/oat-project-design/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+```
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+pnpm run check:skill-bumps
+pnpm lint
+pnpm format
+```
 
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Expected: Contract tests, skill bumps, skill lint, and formatting pass.
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add .agents/skills/oat-project-discover/SKILL.md .agents/skills/oat-project-design/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+git commit -m "docs(p01-t02): enforce canonical structured gate commands"
 ```
 
----
+## Phase 2: Headless Runtime Diagnosis
 
-## Phase 2: {Phase Name}
+**Goal:** Give a clean accepted child that exits without an artifact its own
+stable terminal status while preserving all existing fail-closed behavior.
 
-### Task p02-t01: {Task Name}
+**Write ownership:** Existing gate runtime module/tests only. Do not edit the
+new configured-command files or canonical lifecycle skills.
 
-{Continue TDD pattern...}
+### Task p02-t01: Add the artifact-missing terminal
 
----
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Add failing outcome tests**
+
+Cover a clean exit with no direct or diagnostic artifact. Require:
+
+- `status: artifact_missing`;
+- `outcome: review_completed_artifact_missing`;
+- exit code 1;
+- `artifactPath: null`;
+- `receiveEligible: false`, `remediable: false`, and `handoff: null`;
+- actionable recovery text;
+- matching project-log finalization;
+- unchanged wrong-run and observed-mismatch status.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+```
+
+Expected: The no-artifact cases still return
+`targeting_correlation_failed`.
+
+**Step 2: Implement cause-specific classification**
+
+Extend the terminal status union and add a focused writer for
+`artifact_missing`. Route only the no-candidate/no-diagnostic clean-exit branch
+to it. Keep duplicate, wrong-run, wrong-project, invocation, and artifact
+validation branches unchanged.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+```
+
+**Step 4: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+Expected: Focused tests and CLI type checking pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+git commit -m "fix(p02-t01): distinguish missing gate artifacts"
+```
+
+### Task p02-t02: Reinforce the runner-owned no-yield prompt
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Add prompt contract coverage**
+
+Assert that the generated gate context explicitly requires the review,
+artifact write, and bookkeeping to complete inline or through a synchronously
+awaited child before the headless process exits. It must forbid background
+tasks, monitors, or waiters that outlive the turn.
+
+**Step 2: Update the context note**
+
+Add the concise no-yield language to the runner-owned prompt without changing
+route selection, timeout, retry, or provider behavior.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+```
+
+**Step 4: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
+```
+
+Expected: Runner and existing canonical no-yield contract tests pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+git commit -m "fix(p02-t02): make headless gate completion synchronous"
+```
+
+## Phase 3: Integrated Gate Execution Contract
+
+**Goal:** Enforce the validator in configuration, prove the exact configured
+command launches headlessly, align public docs/releases, and close both backlog
+items.
+
+**Dependencies:** p01 and p02 must both be integrated first.
+
+### Task p03-t01: Enforce validation before gate config writes
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Consume: `packages/cli/src/commands/gate/configured-command.ts`
+
+**Step 1: Add configuration mutation tests**
+
+For shared, local, and user layers, prove an invalid recognized command exits 1
+and leaves the target config unchanged. Cover human and JSON errors, canonical
+success, unrelated commands, existing dev-build warnings, and exact command
+persistence.
+
+**Step 2: Wire the validator before mutation**
+
+Call the shared validator after basic option parsing and before
+`updateConfigLayer`. Throw the validator's actionable error through the
+existing command error writer. Do not add an override or rewrite argv.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+```
+
+**Step 4: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/configured-command.test.ts src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+Expected: Validator and configuration behavior pass together.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/configured-command.ts packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts
+git commit -m "feat(p03-t01): reject invalid structured gate configuration"
+```
+
+### Task p03-t02: Prove the configured headless execution seam
+
+**Files:**
+
+- Create or modify, choosing the smallest coherent harness:
+  `packages/cli/src/commands/gate/configured-gate.integration.test.ts`
+- Modify if reused:
+  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify:
+  `packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs`
+
+**Step 1: Build a configuration-driven fixture**
+
+Create a temporary executable `oat` shim that invokes the repository source
+CLI, configure a skill gate through public `gate set`, resolve the stored
+command, assert it is unchanged, and execute that exact shell command with
+`PROJECT_PATH` set. Keep stderr diagnostics separate from the one final stdout
+envelope.
+
+**Step 2: Add the three-outcome matrix**
+
+Prove:
+
+1. correlated artifact -> `ok`, corroborated handoff, receive eligible;
+2. clean exit/no artifact -> `artifact_missing`, not receive eligible;
+3. wrong-run artifact -> `targeting_correlation_failed`, not receive eligible.
+
+Also assert the child receives headless environment and no route starts a
+second child.
+
+**Step 3: Format**
+
+```bash
+pnpm exec oxfmt packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/gate-hardening.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
+```
+
+**Step 4: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/configured-gate.integration.test.ts src/commands/gate/gate-hardening.integration.test.ts src/commands/gate/child-process.test.ts src/commands/gate/route.test.ts
+```
+
+Expected: The exact configured-command matrix and existing runtime hardening
+matrix pass.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/gate-hardening.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
+git commit -m "test(p03-t02): prove configured headless gate outcomes"
+```
+
+### Task p03-t03: Complete docs, release, backlog, and verification
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify if needed: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
+- Archive through CLI:
+  `.oat/repo/pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md`
+- Archive through CLI:
+  `.oat/repo/pjm/backlog/items/BL-260726-validate-structured-output.md`
+- Generated by backlog archive:
+  `.oat/repo/pjm/backlog/archived/`, `completed.md`, and `index.md`
+
+**Step 1: Document the public contract**
+
+Explain configuration-time rejection, canonical
+`oat --json gate review --project "$PROJECT_PATH" ...` placement, unchanged
+execution, and the distinct `artifact_missing` versus
+`targeting_correlation_failed` recovery paths.
+
+**Step 2: Apply lockstep release bookkeeping**
+
+Increment all five publishable public package versions together to the next
+patch and refresh the lockfile. Do not change release policy or unrelated
+dependencies.
+
+**Step 3: Close both delivered backlog items atomically**
+
+```bash
+oat backlog archive BL-260826-gate-targets-must-not-yield --summary "Headless gate children must complete synchronously and clean no-artifact exits now have a distinct terminal diagnosis."
+oat backlog archive BL-260726-validate-structured-output --summary "Gate configuration now rejects recognized lifecycle review commands that lack canonical global structured output."
+```
+
+Delete a matching one-shot handoff only if one exists. Do not close unrelated
+review/gate integrity items.
+
+**Step 4: Format**
+
+```bash
+pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
+```
+
+**Step 5: Run the repository Definition of Done in CI order**
+
+For each command, capture the command's own exit code before inspecting or
+filtering its log:
+
+```bash
+pnpm check
+pnpm type-check
+pnpm test
+pnpm build
+pnpm run check:skill-bumps
+git fetch origin main
+pnpm release:check-versions
+pnpm release:validate
+pnpm build:docs
+```
+
+Then run the evidence-grade uncached verification and directly relevant
+standalone suites:
+
+```bash
+task_home=$(mktemp -d)
+env HOME="$task_home" pnpm exec turbo run test --force
+task_exit=$?
+rm -r "$task_home"
+echo "exit=$task_exit"
+test "$task_exit" -eq 0
+pnpm test:smoke
+pnpm test:skills
+pnpm test:release
+pnpm oat:validate-skills
+pnpm lint
+pnpm format
+oat pjm doctor --json
+```
+
+Expected: All CI gates pass, the uncached run reports real execution rather
+than cache replay, skill and release validation pass, and PJM reports no new
+backlog lifecycle drift.
+
+**Step 6: Commit**
+
+```bash
+git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog
+git commit -m "chore(p03-t03): finalize gate execution contract"
+```
 
 ## Reviews
-
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
 | p01    | code     | pending | -    | -        | -             | -          | -           |
 | p02    | code     | pending | -    | -        | -             | -          | -           |
+| p03    | code     | pending | -    | -        | -             | -          | -           |
 | final  | code     | pending | -    | -        | -             | -          | -           |
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
 
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+**Status values:** `pending` → `received` → `fixes_added` →
+`fixes_completed` → `passed`
 
 ## Implementation Complete
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks — pure configured-command contract and canonical skill
+  alignment
+- Phase 2: 2 tasks — cause-specific runtime diagnosis and no-yield prompt
+- Phase 3: 3 tasks — configuration enforcement, end-to-end proof, and release
+  closeout
 
-**Total: {N} tasks**
+**Total: 7 tasks**
 
-Ready for code review and merge.
-
----
+Ready for code review and merge after every task, review, and gate is complete.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Lightweight design: `design.md`
+- Backlog: `BL-260826-gate-targets-must-not-yield`
+- Backlog: `BL-260726-validate-structured-output`
+- Related project boundary: `../review-gate-integrity/`
+- Compatibility boundary: PR #190
