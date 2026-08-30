@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-08-30 — BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics — Corrected PJM migration adoption semantics and made scoped pack diagnostics provider-aware, attributable, and fault-tolerant.
 - 2026-08-30 — BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and config contracts — Closed lifecycle/config consistency gaps with content-aware inventory, explicit adoption reporting, supported config state, and corrected CLI help.
 - 2026-08-28 — BL-260827-make-packaged-skill-references — Make packaged skill references scope-portable — Made packaged sibling-skill references scope-portable and added a recursive syntax-robust regression ratchet.
 - 2026-08-27 — BL-260818-make-the-project-management — Make every OAT tool pack user-scope eligible — Shipped user-scope eligibility, unified lifecycle, safe migration, PJM ownership boundaries, diagnostics, documentation, and release verification for every OAT tool pack; three bounded follow-up projects retain explicitly deferred polish.
