@@ -1,183 +1,176 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-08-19
-oat_source_head_sha: e0408f4676a7b84e4240b4c568b78265f1d5cd0a
-oat_source_main_merge_base_sha: 6f443c0843d75b704168b8ca739b5bcf7f406f07
+oat_generated_at: 2026-08-30
+oat_source_head_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
+oat_source_main_merge_base_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
-<!--
-Vendored from: https://github.com/glittercowboy/get-shit-done
-License: MIT
-Original: agents/gsd-codebase-mapper.md (embedded template)
-Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
--->
-
 # Architecture
 
-**Analysis Date:** 2026-08-19
+**Analysis Date:** 2026-08-30
 
 ## Pattern Overview
 
-**Overall:** TypeScript ESM monorepo with a command-oriented CLI, a provider-adapter synchronization engine, a read-only project control-plane library, and a separately deployable Fumadocs application.
+**Overall:** TypeScript ESM pnpm/Turborepo monorepo with a command-oriented CLI, a canonical-content-to-provider synchronization engine, a read-only project-state library, and a static documentation application. Workspace membership and task entry points are defined in `package.json` and the packages expose independent public package boundaries in `packages/*/package.json`.
 
 **Key Characteristics:**
 
-- `packages/cli/src/index.ts` creates the Commander program, registers command modules, builds command context, and dispatches asynchronous actions.
-- Canonical content under `.agents/` is scanned by `packages/cli/src/engine/scanner.ts`, mapped through provider adapters, converted into a plan by `packages/cli/src/engine/compute-plan.ts`, and applied by `packages/cli/src/engine/execute-plan.ts`.
-- `packages/control-plane/src/project.ts` composes state, artifacts, reviews, and task-progress parsers into project summaries and recommendations without mutating project files.
-- `apps/oat-docs` is a Next/Fumadocs app consuming Markdown through generated Fumadocs sources and shared packages under `packages/docs-*`.
+- The executable CLI creates a Commander program, registers command factories, builds a per-invocation context, and dispatches asynchronous command actions from `packages/cli/src/index.ts`, `packages/cli/src/app/create-program.ts`, `packages/cli/src/app/command-context.ts`, and `packages/cli/src/commands/index.ts`.
+- Provider interoperability is adapter-based: the common `ProviderAdapter` contract describes project and user path mappings, detection, strategy, and optional content transforms in `packages/cli/src/providers/shared/adapter.types.ts`; concrete providers live in `packages/cli/src/providers/{claude,cursor,codex,copilot,gemini}/adapter.ts`.
+- Canonical agent content is scanned from `.agents/{skills,agents,rules}` and materialized into provider-specific views through computed sync plans and a persisted manifest, as implemented by `packages/cli/src/engine/scanner.ts`, `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/engine/execute-plan.ts`, and `packages/cli/src/commands/sync/index.ts`.
+- Project-management state is represented as Markdown artifacts and parsed read-only by `@open-agent-toolkit/control-plane`; `packages/control-plane/src/project.ts` combines `state.md`, `plan.md`, `implementation.md`, and review artifacts before routing to the next workflow skill via `packages/control-plane/src/recommender/router.ts`.
+- Documentation is a separate Next/Fumadocs app that consumes Markdown under `apps/oat-docs/docs`, shared configuration in `packages/docs-config`, transforms in `packages/docs-transforms`, and UI components in `packages/docs-theme`; see `apps/oat-docs/source.config.ts`, `apps/oat-docs/lib/source.ts`, and `apps/oat-docs/app/[[...slug]]/page.tsx`.
 
 ## Layers
 
-**CLI application and command layer:**
+**CLI composition and command layer:**
 
-- Purpose: Parse global options, register subcommands, resolve scope/context, and present text or JSON results.
+- Purpose: Define the `oat` executable, global options, help behavior, command hierarchy, and command-specific actions.
 - Location: `packages/cli/src/index.ts`, `packages/cli/src/app/`, and `packages/cli/src/commands/`.
-- Contains: Commander program setup, `CommandContext`, command factories, command-specific dependency bundles, and UI output.
-- Depends on: CLI engines, configuration, filesystem helpers, provider adapters, and the control-plane package where project state is exposed.
-- Used by: The root `cli` and `cli:source` scripts in `package.json`; the published `oat` binary declared in `packages/cli/package.json`.
+- Contains: Commander program construction, invocation context, UI logging, and command groups including `sync`, `init`, `project`, `docs`, `pjm`, `review`, and `tools` in `packages/cli/src/commands/index.ts`.
+- Depends on: Commander and local aliases such as `@app/*`, `@commands/*`, `@engine/*`, and `@ui/*` configured in `packages/cli/tsconfig.json`.
+- Used by: The publishable CLI binary `oat`, whose `bin` maps to `dist/index.js` in `packages/cli/package.json`; repository source execution runs it through the root `cli` and `cli:source` scripts in `package.json`.
 
-**Canonical asset and synchronization engine:**
+**Domain services and persistence layer:**
 
-- Purpose: Treat `.agents/skills`, `.agents/agents`, and `.agents/rules` as canonical content and synchronize provider views.
-- Location: `packages/cli/src/engine/`, `packages/cli/src/providers/`, `packages/cli/src/manifest/`, and `packages/cli/src/drift/`.
-- Contains: Canonical scanning, sync-plan computation, operation execution, provider path safety, content markers, provider adapters, manifests, and drift/stray detection.
-- Depends on: Scope configuration from `packages/cli/src/config/sync-config.ts`, filesystem operations under `packages/cli/src/fs/`, and provider mapping contracts in `packages/cli/src/providers/shared/adapter.types.ts`.
-- Used by: `packages/cli/src/commands/sync/index.ts`, provider and drift-related commands, and materialization extensions for Codex and Cursor.
+- Purpose: Resolve configuration, paths, manifests, local filesystem operations, validation, release checks, and project records for commands.
+- Location: `packages/cli/src/{config,fs,manifest,projects,validation,release,drift,shared}/`.
+- Contains: Zod-backed shared types in `packages/cli/src/shared/types.ts`, config modules in `packages/cli/src/config/`, and manifest helpers imported by `packages/cli/src/commands/sync/index.ts`.
+- Depends on: Node filesystem/path APIs plus `zod`, `yaml`, `jsonc-parser`, and `@iarna/toml`, declared by `packages/cli/package.json`.
+- Used by: Command factories under `packages/cli/src/commands/` and sync engine modules under `packages/cli/src/engine/`.
 
-**Provider adapter and codec layer:**
+**Synchronization engine:**
 
-- Purpose: Describe provider detection, scope-specific mappings, default strategies, and provider-specific content transforms.
-- Location: `packages/cli/src/providers/claude/`, `packages/cli/src/providers/cursor/`, `packages/cli/src/providers/codex/`, `packages/cli/src/providers/copilot/`, and `packages/cli/src/providers/gemini/`.
-- Contains: `ProviderAdapter` values, project/user `PathMapping[]` declarations, rule transforms, and provider-specific codecs/materializers.
-- Depends on: The shared `ProviderAdapter`/`PathMapping` contract in `packages/cli/src/providers/shared/adapter.types.ts` and canonical agent types in `packages/cli/src/agents/canonical/`.
-- Used by: `packages/cli/src/commands/sync/index.ts` to select active adapters and by `packages/cli/src/engine/compute-plan.ts` to derive provider operations.
+- Purpose: Convert canonical `.agents` entries and provider mappings into safe create, update, remove, detach, or skip operations, then update the sync manifest.
+- Location: `packages/cli/src/engine/`.
+- Contains: canonical scanning in `scanner.ts`, plan derivation and path-safe mapping resolution in `compute-plan.ts`, execution in `execute-plan.ts`, markers in `markers.ts`, and provider-target validation in `provider-path-safety.ts`.
+- Depends on: provider adapter types from `packages/cli/src/providers/shared/adapter.types.ts`, sync configuration, and manifest I/O.
+- Used by: `packages/cli/src/commands/sync/index.ts`, which chooses detected/configured adapters and invokes `computeSyncPlan` then `executeSyncPlan`.
 
-**Control-plane state layer:**
+**Provider adapter and materialization layer:**
 
-- Purpose: Read tracked OAT project artifacts and derive a normalized state/recommendation model.
-- Location: `packages/control-plane/src/project.ts`, `packages/control-plane/src/state/`, `packages/control-plane/src/recommender/`, and `packages/control-plane/src/shared/utils/`.
-- Contains: State frontmatter, artifact, review, and task parsers plus boundary detection and workflow-skill routing.
-- Depends on: YAML/frontmatter parsing and project files such as `state.md`, `plan.md`, `implementation.md`, and `reviews/*.md`.
-- Used by: The public exports in `packages/control-plane/src/index.ts` and CLI project/status commands.
-
-**Documentation configuration, rendering, and site layer:**
-
-- Purpose: Configure Markdown/MDX ingestion, transforms, shared theme components, search, and route rendering.
-- Location: `packages/docs-config/src/`, `packages/docs-transforms/src/`, `packages/docs-theme/src/`, and `apps/oat-docs/`.
-- Contains: Fumadocs/Next configuration factories, remark plugins, React layout/page components, generated source loading, and static search route handling.
-- Depends on: Fumadocs, Next, React, unified/remark, and workspace package exports.
-- Used by: `apps/oat-docs/source.config.ts`, `apps/oat-docs/app/layout.tsx`, `apps/oat-docs/app/[[...slug]]/page.tsx`, and `apps/oat-docs/app/api/search/route.ts`.
-
-## Data Flow
-
-**Provider sync flow:**
-
-1. `packages/cli/src/index.ts` normalizes argv, creates the program, registers commands, and builds a `CommandContext` before command actions.
-2. `packages/cli/src/commands/sync/index.ts` resolves project/user scope roots, loads `.oat/sync/config.json` and `.oat/sync/manifest.json`, scans canonical entries, detects/configures providers, and invokes materialization extensions.
-3. `packages/cli/src/engine/scanner.ts` returns canonical entries; `packages/cli/src/providers/shared/adapter.utils.ts` filters native-read mappings and resolves active provider mappings.
-4. `packages/cli/src/engine/compute-plan.ts` computes create/update/skip/removal operations, applies provider transforms, and validates provider mutation paths.
-5. `packages/cli/src/commands/sync/apply.ts` invokes `packages/cli/src/engine/execute-plan.ts`, then applies provider materialization plans and emits a summary or JSON response.
-6. `packages/cli/src/engine/execute-plan.ts` writes provider views and updates the validated manifest through `packages/cli/src/manifest/manager.ts`.
-
-**Project state flow:**
-
-1. `packages/control-plane/src/project.ts` reads optional `state.md`, `plan.md`, `implementation.md`, and review files concurrently.
-2. `packages/control-plane/src/state/parser.ts`, `artifacts.ts`, `reviews.ts`, and `tasks.ts` normalize frontmatter, artifact status, review rows, and task progress.
-3. `packages/control-plane/src/recommender/router.ts` combines parsed state, boundary tiers, workflow mode, review state, and HiLL checkpoints into a `SkillRecommendation`.
-4. `packages/control-plane/src/index.ts` exposes `getProjectState`, `listProjects`, and `recommendSkill` as the public read-only API.
-
-**Documentation flow:**
-
-1. `apps/oat-docs/source.config.ts` uses `createSourceConfig` from `packages/docs-config/src/source-config.ts` to select `remarkLinks`, `remarkTabs`, `remarkAlert`, and `remarkMermaid`.
-2. `apps/oat-docs/lib/source.ts` converts generated MDX content to a Fumadocs source with `loader`.
-3. `apps/oat-docs/app/[[...slug]]/page.tsx` resolves the requested slug, renders the page body, and returns `notFound()` when absent.
-4. `apps/oat-docs/app/api/search/route.ts` exposes static search generated from the same source; `apps/oat-docs/app/layout.tsx` supplies navigation, providers, branding, and search UI.
-
-**State Management:**
-
-- Synchronization state is persisted per scope in `.oat/sync/config.json` and `.oat/sync/manifest.json`, managed by `packages/cli/src/config/sync-config.ts` and `packages/cli/src/manifest/manager.ts`.
-- Project workflow state is persisted in Markdown frontmatter and headings under `.oat/projects/`, read by `packages/control-plane/src/project.ts`.
-- The docs site derives runtime page/search state from generated Fumadocs content in `apps/oat-docs/lib/source.ts`; no application database or client state store is detected.
-
-## Key Abstractions
-
-**`ProviderAdapter` and `PathMapping`:**
-
-- Purpose: Represent provider detection and canonical-to-provider mappings for project and user scopes.
-- Examples: `packages/cli/src/providers/shared/adapter.types.ts`, `packages/cli/src/providers/claude/paths.ts`, `packages/cli/src/providers/cursor/paths.ts`.
-- Pattern: Adapters declare mappings and detection; shared utilities select mappings while the engine owns planning/execution.
-
-**`SyncPlan` / `Manifest`:**
-
-- Purpose: Separate calculated filesystem operations from applied ownership state.
-- Examples: `packages/cli/src/engine/engine.types.ts`, `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/manifest/manifest.types.ts`.
-- Pattern: Plan entries carry operation, strategy, provider path, reason, and optional rendered content; successful execution updates a Zod-validated manifest.
-
-**`CommandContext`:**
-
-- Purpose: Centralize global CLI options, resolved cwd/home/scope, interactivity, and logger behavior.
-- Examples: `packages/cli/src/app/command-context.ts`, `packages/cli/src/index.ts`.
-- Pattern: Commands obtain context through `buildCommandContext` and use injected dependency interfaces in complex commands such as `packages/cli/src/commands/sync/sync.types.ts`.
-
-**`ProjectState` and `SkillRecommendation`:**
-
-- Purpose: Provide a normalized, read-only control-plane projection of a project and its next workflow skill.
-- Examples: `packages/control-plane/src/types.ts`, `packages/control-plane/src/project.ts`, `packages/control-plane/src/recommender/router.ts`.
-- Pattern: Parsers produce normalized facts; the recommender applies ordered workflow, review, and checkpoint rules.
-
-## Entry Points
-
-**CLI executable:**
-
-- Location: `packages/cli/src/index.ts`.
-- Triggers: The `oat` package binary (`packages/cli/package.json`) or root `pnpm run cli`/`pnpm run cli:source` scripts (`package.json`).
-- Responsibilities: Build/register Commander commands, run pre-action update/mutation guards, parse argv, and convert `CliError` instances to exit codes.
-
-**Command registration:**
-
-- Location: `packages/cli/src/commands/index.ts`.
-- Triggers: `main()` in `packages/cli/src/index.ts`.
-- Responsibilities: Register the backlog, decision, init, sync, project, docs, provider, review, state, tools, and diagnostic command trees.
+- Purpose: Isolate each supported agent provider's directories, format transforms, detection, and default materialization strategy.
+- Location: `packages/cli/src/providers/`.
+- Contains: adapters for Claude, Cursor, Codex, GitHub Copilot, and Gemini; common mapping utilities in `packages/cli/src/providers/shared/adapter.utils.ts`; provider-specific paths in each provider's `paths.ts`; and extension codecs under `packages/cli/src/providers/{codex,cursor}/codec/` imported by `packages/cli/src/commands/sync/index.ts`.
+- Depends on: the provider-neutral contract in `packages/cli/src/providers/shared/adapter.types.ts`.
+- Used by: setup and synchronization command groups, which assemble all five adapter instances in `packages/cli/src/commands/sync/index.ts` and `packages/cli/src/commands/init/index.ts`.
 
 **Control-plane library:**
 
-- Location: `packages/control-plane/src/index.ts`.
-- Triggers: Workspace consumers such as `packages/cli/src/validation/project-state.ts` and CLI project commands.
-- Responsibilities: Export read-only types, project state/listing functions, and recommendation routing.
+- Purpose: Read project filesystem artifacts and compute a structured `ProjectState`, `ProjectSummary`, and next-skill recommendation without mutating project state.
+- Location: `packages/control-plane/src/`.
+- Contains: public exports in `packages/control-plane/src/index.ts`, domain types in `types.ts`, state scanners/parsers under `state/`, and recommendation rules under `recommender/`.
+- Depends on: Markdown/YAML project artifacts and the `yaml` package, declared in `packages/control-plane/package.json`.
+- Used by: the CLI through its workspace dependency on `@open-agent-toolkit/control-plane` in `packages/cli/package.json`.
 
-**Documentation site:**
+**Documentation packages and application:**
+
+- Purpose: Package reusable Fumadocs configuration, MDX/remark transforms, themed React components, and publish the repository docs surface.
+- Location: `packages/docs-config/src/`, `packages/docs-transforms/src/`, `packages/docs-theme/src/`, and `apps/oat-docs/`.
+- Contains: docs configuration factories in `packages/docs-config/src/{next-config,source-config,search-config}.ts`, transforms in `packages/docs-transforms/src/`, theme exports in `packages/docs-theme/src/index.ts`, and Next routes/components in `apps/oat-docs/app/` and `apps/oat-docs/components/`.
+- Depends on: Fumadocs/Next/React packages and shared workspace packages declared in `apps/oat-docs/package.json`.
+- Used by: the `build:docs` root script in `package.json`; the app's `prebuild` generates Fumadocs source and docs index before `next build` in `apps/oat-docs/package.json`.
+
+## Data Flow
+
+**Canonical agent-content synchronization:**
+
+1. A `sync` command action constructs context and resolves project/user scope roots, config, manifest, and canonical `.agents` entries in `packages/cli/src/commands/sync/index.ts`.
+2. `scanCanonical` enumerates directory entries under `.agents/skills`, `.agents/agents`, and `.agents/rules` in `packages/cli/src/engine/scanner.ts`.
+3. The command selects active Claude, Cursor, Codex, Copilot, and Gemini adapters and calls `computeSyncPlan` with adapter mappings, configuration, scope, and manifest in `packages/cli/src/commands/sync/index.ts`.
+4. `computeSyncPlan` resolves copy/symlink behavior, transformed content, safe provider target paths, and removal operations in `packages/cli/src/engine/compute-plan.ts`.
+5. `executeSyncPlan` applies each plan operation, writes copy markers/sentinels where applicable, and saves the updated manifest in `packages/cli/src/engine/execute-plan.ts`.
+
+**Project-state recommendation:**
+
+1. A caller invokes `getProjectState` or `listProjects` exposed by `packages/control-plane/src/index.ts`.
+2. `packages/control-plane/src/project.ts` reads project Markdown files, scans artifacts and review files, and parses frontmatter, review tables, and task progress using modules under `packages/control-plane/src/state/`.
+3. The assembled state is passed to `recommendSkill` in `packages/control-plane/src/recommender/router.ts`, which selects the next OAT workflow skill from phase, artifact status, HiLL gates, reviews, and lifecycle.
+
+**Documentation rendering:**
+
+1. `apps/oat-docs/source.config.ts` requests shared source configuration from `packages/docs-config/src/source-config.ts`, which selects the `./docs` content directory and remark transforms.
+2. Fumadocs generates `apps/oat-docs/.source/server.ts`; `apps/oat-docs/lib/source.ts` wraps it as a Fumadocs loader.
+3. The catch-all page in `apps/oat-docs/app/[[...slug]]/page.tsx` looks up a page, renders its MDX body with theme components from `@open-agent-toolkit/docs-theme`, or delegates a missing page to `notFound()`.
+
+**State Management:**
+
+- CLI synchronization state persists in `.oat/sync/` under each resolved scope, using the manifest and configuration paths constructed in `packages/cli/src/commands/sync/index.ts`.
+- Project workflow state is file-backed in `.oat/projects/` and read by `packages/control-plane/src/project.ts`; the control-plane package is described as read-only in `packages/control-plane/package.json`.
+- The documentation app uses generated Fumadocs source and static export configuration, with `output: 'export'` set by `packages/docs-config/src/next-config.ts`.
+
+## Key Abstractions
+
+**ProviderAdapter and PathMapping:**
+
+- Purpose: Represent a provider's detection and its mappings from canonical content type/directory to provider paths.
+- Examples: `packages/cli/src/providers/shared/adapter.types.ts`, `packages/cli/src/providers/codex/adapter.ts`, and `packages/cli/src/providers/claude/paths.ts`.
+- Pattern: A common interface plus provider-specific data/configuration adapters; mappings can opt into extensions and canonical-content transforms.
+
+**CanonicalEntry and SyncPlan:**
+
+- Purpose: Separate input discovery from calculated filesystem mutations.
+- Examples: `packages/cli/src/engine/scanner.ts`, `packages/cli/src/engine/engine.types.ts`, `packages/cli/src/engine/compute-plan.ts`, and `packages/cli/src/engine/execute-plan.ts`.
+- Pattern: Scan -> plan -> validate -> execute, with the manifest recording managed outputs.
+
+**ProjectState and recommendation router:**
+
+- Purpose: Normalize Markdown project evidence into a typed view and derive the next workflow operation.
+- Examples: `packages/control-plane/src/types.ts`, `packages/control-plane/src/project.ts`, and `packages/control-plane/src/recommender/router.ts`.
+- Pattern: Filesystem parsing and aggregation are separate from recommendation policy.
+
+**Docs configuration factories and transforms:**
+
+- Purpose: Reuse docs-site configuration and MDX rendering behavior outside the app package.
+- Examples: `packages/docs-config/src/next-config.ts`, `packages/docs-config/src/source-config.ts`, `packages/docs-transforms/src/index.ts`, and `packages/docs-theme/src/index.ts`.
+- Pattern: Small publishable packages expose factories/components; `apps/oat-docs` composes them.
+
+## Entry Points
+
+**OAT CLI:**
+
+- Location: `packages/cli/src/index.ts`.
+- Triggers: The published `oat` binary in `packages/cli/package.json` and the source-execution scripts in root `package.json`.
+- Responsibilities: Create the Commander program, register command groups, normalize package-manager argv, set lifecycle hooks, and convert unhandled errors to CLI output/exit codes.
+
+**CLI command registry:**
+
+- Location: `packages/cli/src/commands/index.ts`.
+- Triggers: `main()` in `packages/cli/src/index.ts`.
+- Responsibilities: Add top-level command factories and recursively apply help configuration.
+
+**Documentation app:**
 
 - Location: `apps/oat-docs/app/layout.tsx`, `apps/oat-docs/app/[[...slug]]/page.tsx`, and `apps/oat-docs/app/api/search/route.ts`.
-- Triggers: Next.js dev/build/start scripts in `apps/oat-docs/package.json`.
-- Responsibilities: Render generated MDX pages, shared docs layout/page components, and static search responses.
+- Triggers: Next development/build/start scripts in `apps/oat-docs/package.json`.
+- Responsibilities: Render Fumadocs layout and MDX routes, and serve static search integration.
+
+**Documentation configuration:**
+
+- Location: `apps/oat-docs/source.config.ts` and `apps/oat-docs/next.config.mjs`.
+- Triggers: `fumadocs-mdx` during the `predev` and `prebuild` scripts in `apps/oat-docs/package.json`.
+- Responsibilities: Configure content discovery, remark plugins, and static Next export.
 
 ## Error Handling
 
-**Strategy:** Validate inputs and persisted state at boundaries, use typed `CliError` for user-facing CLI failures, and preserve uncertain provider ownership during sync retirement.
+**Strategy:** CLI errors are typed and rendered at the executable boundary, while expected filesystem absence is handled locally where an optional resource is read.
 
 **Patterns:**
 
-- `packages/cli/src/config/sync-config.ts` and `packages/cli/src/manifest/manager.ts` parse and validate JSON with Zod, converting malformed or unreadable persisted state into actionable `CliError` messages.
-- `packages/cli/src/fs/paths.ts` and `packages/cli/src/engine/provider-path-safety.ts` reject paths outside the resolved scope before provider mutations.
-- `packages/cli/src/engine/compute-plan.ts` classifies obsolete provider entries as `remove` only after verified symlink/copy ownership; otherwise it emits `detach` and preserves the provider path.
-- `packages/cli/src/engine/execute-plan.ts` counts per-operation failures, saves the resulting manifest, and returns applied/failed/skipped counts to the sync command.
-- `packages/control-plane/src/project.ts` treats missing optional project files as empty inputs, while malformed parse values normalize to explicit defaults in `packages/control-plane/src/state/parser.ts`.
-- `packages/cli/src/index.ts` treats update-notifier failures as best effort and maps unknown failures to exit code `2`.
+- `packages/cli/src/index.ts` catches `CliError` separately, logs its message, and assigns the contained exit code; generic `Error` and unknown failures receive exit code 2.
+- `packages/cli/src/engine/scanner.ts` treats missing canonical directories as empty, converts permission errors into `CliError`, and otherwise rethrows unexpected read failures.
+- `packages/control-plane/src/project.ts` treats `ENOENT` as an absent optional project artifact in `readOptionalFile` and rethrows other filesystem errors.
+- `packages/cli/src/engine/execute-plan.ts` counts individual operation failures rather than aborting the complete plan, while retaining manifest persistence at the end of execution.
 
 ## Cross-Cutting Concerns
 
-**Logging:** `packages/cli/src/ui/logger.ts` and `packages/cli/src/ui/output.ts` provide human-readable, JSON, verbose, and spinner-oriented output selected by `CommandContext`.
+**Logging:** CLI logging is constructed from `json` and `verbose` invocation options in `packages/cli/src/app/command-context.ts` and used by the executable error boundary in `packages/cli/src/index.ts`.
 
-**Validation:** Zod schemas in `packages/cli/src/config/sync-config.ts` and `packages/cli/src/manifest/manifest.types.ts` validate persisted sync state; strict TypeScript settings are inherited from `tsconfig.json`.
+**Validation:** Shared content/scope types are defined with Zod in `packages/cli/src/shared/types.ts`; sync target safety is enforced before mutation in `packages/cli/src/engine/provider-path-safety.ts` and invoked by `packages/cli/src/engine/execute-plan.ts`.
 
-**Authentication:** Not detected in the core CLI, control-plane, or docs application; provider detection is filesystem-based in adapters such as `packages/cli/src/providers/claude/adapter.ts`.
-
-**Filesystem safety:** Scope roots and real paths are checked in `packages/cli/src/fs/paths.ts`, and every mutating sync operation is guarded by `packages/cli/src/engine/provider-path-safety.ts`.
-
-**Build/dependency orchestration:** `pnpm-workspace.yaml` defines workspace packages and `turbo.json` defines dependency-ordered build/check/test tasks; publishable package entrypoints are declared in each `packages/*/package.json`.
+**Authentication:** Not detected in the CLI, control-plane, or documentation entry/configuration modules inspected for this analysis (`packages/cli/src/index.ts`, `packages/control-plane/src/index.ts`, and `apps/oat-docs/`).
 
 ---
 
-_Architecture analysis: 2026-08-19_
+_Architecture analysis: 2026-08-30_
