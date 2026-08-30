@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,12 +14,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status | Tasks | Completed |
-| ------------------------------------- | ------ | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
-| p03 — Release Integration             | passed | 3     | 3/3       |
-| p04 — Final Review Fixes              | active | 4     | 4/4       |
+| Phase                                 | Status          | Tasks | Completed |
+| ------------------------------------- | --------------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
+| p03 — Release Integration             | passed          | 3     | 3/3       |
+| p04 — Final Review Fixes              | fixes_completed | 4     | 4/4       |
 
 **Total:** 13/13 tasks completed
 
@@ -102,7 +102,8 @@ oat_generated: false
 
 ### Task p04-t04: (review) Align the reusable implementation summary
 
-**Status:** pending
+**Status:** done
+**Commit:** `c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d`
 
 ## Orchestration Runs
 
@@ -490,6 +491,16 @@ oat_generated: false
 - New task: `p04-t04`
 - Review cycle: 2 of 3
 - Next: execute p04-t04 and run the third/final narrowed re-review.
+
+### Fix Completed: p04 (round 2)
+
+- Commit: `c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d`
+- Finding m1 / task `p04-t04`: fixed; the reusable PR/docs summary now matches
+  the canonical thirteen-task ledger and includes all four p04 closeout fixes.
+- Verification: prescribed summary/ledger search, scoped formatting, and diff
+  checks passed; only the two declared lifecycle artifacts changed.
+- Next: third and final narrowed re-review before the configured exit gate and
+  HiLL approval.
 
 <!-- orchestration-runs-end -->
 

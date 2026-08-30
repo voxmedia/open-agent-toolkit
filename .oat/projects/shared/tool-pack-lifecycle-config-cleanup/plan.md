@@ -671,7 +671,7 @@ report 13 tasks.
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
 | p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                        |
 | final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T053322Z.md         | b7f761019202cb5bd150c8acf6519ead6795ee3f | auto       | -                        |
-| final  | code     | fixes_added     | 2026-08-30 | reviews/archived/final-review-2026-08-30T054835Z.md         | de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7 | auto       | -                        |
+| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T054835Z.md         | de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7 | auto       | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                        |

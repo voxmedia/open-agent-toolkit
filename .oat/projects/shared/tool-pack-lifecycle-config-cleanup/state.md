@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t04
-oat_last_commit: 5329c2f6172b847a643e4f434d09d31931931413
+oat_current_task: p04-final-review-round-3
+oat_last_commit: c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -31,7 +31,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T05:50:08Z'
+oat_project_state_updated: '2026-08-30T05:53:28Z'
 oat_generated: false
 ---
 
@@ -43,9 +43,9 @@ oat_generated: false
 
 ## Current Phase
 
-The narrowed final re-review confirmed all three original findings resolved and
-identified one Minor stale PR/docs summary. That final artifact-alignment fix
-is queued as p04-t04 before the third and final narrowed re-review.
+The final reusable-summary mismatch is fixed in p04-t04, and all thirteen
+implementation tasks are complete. The third and final narrowed re-review is
+next, followed by the configured exit gate and HiLL approval.
 
 ## Artifacts
 
@@ -53,7 +53,7 @@ is queued as p04-t04 before the third and final narrowed re-review.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (complete; 4 phases, 13 tasks after final review round 2)
-- **Implementation:** `implementation.md` (12/13 tasks complete; p04-t04 active)
+- **Implementation:** `implementation.md` (13/13 tasks complete; p04 fixes completed)
 
 ## Progress
 
@@ -83,7 +83,8 @@ is queued as p04-t04 before the third and final narrowed re-review.
 - ✓ Phase p04 completed in three verified task commits
 - ✓ Phase p04 focused suite, archived-link, rollup, formatting, and diff checks passed
 - ✓ Narrowed final review resolved all three original findings
-- ⧗ Aligning the reusable PR/docs summary before the final review cycle
+- ✓ Reusable PR/docs summary aligned with the canonical thirteen-task ledger
+- ⧗ Awaiting the third and final narrowed re-review
 
 ## Blockers
 
@@ -91,5 +92,5 @@ None.
 
 ## Next Milestone
 
-Execute p04-t04 and the third/final narrowed re-review, then execute the
-configured exit gate before final HiLL approval.
+Run the third/final narrowed re-review, then execute the configured exit gate
+before final HiLL approval.
