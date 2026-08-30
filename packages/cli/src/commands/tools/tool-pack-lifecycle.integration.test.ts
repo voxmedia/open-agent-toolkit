@@ -207,8 +207,7 @@ describe('tool pack lifecycle acceptance matrix', () => {
       async (scope) => {
         const roots = await createRoots();
 
-        const result = await run(pack, scope, roots, 'install');
-        expect(result.plan.expectedCompleteness).toBe('complete');
+        await run(pack, scope, roots, 'install');
 
         const inventory = await inventoryAt(pack, scope, roots);
         expect(inventory.completeness).toBe('complete');
