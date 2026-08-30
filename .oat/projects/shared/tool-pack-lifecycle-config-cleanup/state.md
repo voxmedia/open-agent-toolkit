@@ -62,13 +62,13 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-30T15:18:44Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: user
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -77,7 +77,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/240'
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T15:18:44Z'
+oat_project_state_updated: '2026-08-30T15:19:24Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -141,7 +141,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Generated the evidence-grounded project retrospective with no duplicate
   promotion or filing proposals
 - ⧗ Awaiting human review
-- ⧗ Awaiting final HiLL approval
+- ✓ Final HiLL approval received from the user
 
 ## Blockers
 

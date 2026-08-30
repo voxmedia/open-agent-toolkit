@@ -623,6 +623,18 @@ references`).
 - Snapshot invariant: the configured `[summary, document, pr]` pre-approval
   sequence remains complete and final HiLL approval remains pending.
 
+### Final HiLL approval
+
+- Source: explicit user approval in the interactive completion session.
+- Preconditions: final review passed; configured exit gate remained allowed and
+  fresh; `[summary, document, pr]` completed; recap intent remained the
+  terminal interactive `skip`; project retro generated with no unsettled
+  promotion or filing item; local and remote PR checks were green.
+- Transition: `approval: approved`, `approval_source: user`, and sequence
+  `status: post_approval` persisted before any post-approval or completion
+  mutation.
+- Post-approval sequence: empty; sequence completion is the next transition.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
