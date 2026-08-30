@@ -33,9 +33,9 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -56,23 +56,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=74cd3cd8-293d-4c20-a4d1-13a30010a1be; handoff=Run oat-project-review-receive for .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md before treating this gate review as consumed.; source=.oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md; scope=final; type=code; filename=final-review-2026-08-30T182542Z.md'
   receive_source_artifact: .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
   receive_archived_artifact: .oat/projects/shared/agent-provider-root/reviews/archived/final-review-2026-08-30T182542Z.md
   receive_event_identity: 'final|code|final-review-2026-08-30T182542Z.md'
   receive_pre_head: e05e31f9b7589a75e76b6f794c506ab3f500f620
-  receive_commit: null
+  receive_commit: 6660812b2eed33b46f1e45d639a80e8148853153
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-30T18:29:30Z'
+  updated_at: '2026-08-30T18:34:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:32:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:34:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -82,13 +82,13 @@ oat_project_explainer:
 
 # Project State: agent-provider-root
 
-**Status:** Final review passed
+**Status:** Implementation exit gate passed
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation - Exit gate and HiLL closeout
+Implementation - Final HiLL closeout
 
 ## Artifacts
 
@@ -115,7 +115,8 @@ Implementation - Exit gate and HiLL closeout
 - ✓ Final-review fix `p03-t03`
 - ✓ Final lifecycle re-review passed with zero findings
 - ✓ Configured implementation exit gate review received with zero findings
-- ⧗ Exit-gate receive reconciliation
+- ✓ Configured implementation exit gate allowed with durable receive provenance
+- ⧗ Final HiLL closeout
 
 ## Blockers
 
@@ -123,4 +124,4 @@ None
 
 ## Next Milestone
 
-Run the configured implementation exit gate and HiLL closeout
+Run the final HiLL closeout sequence
