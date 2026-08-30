@@ -526,8 +526,7 @@ archived records without changing the recorded requirements or scope.
 pnpm exec oxfmt .oat/projects/synced/gate-execution-contract-hardening/implementation.md .oat/projects/synced/gate-execution-contract-hardening/discovery.md
 test -f .oat/repo/pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md
 test -f .oat/repo/pjm/backlog/archived/BL-260726-validate-structured-output.md
-git diff --check
-git commit -m "docs(p03-t04): repair final lifecycle handoff"
+pnpm run cli -- --json project push .oat/projects/synced/gate-execution-contract-hardening --message "docs(p03-t04): repair final lifecycle handoff"
 ```
 
 ### Task p03-t05: Complete the artifact-missing contract assertion
