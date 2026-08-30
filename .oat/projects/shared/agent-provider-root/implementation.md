@@ -482,6 +482,7 @@ Chronological log of implementation progress.
 - **2026-08-30T18:47:00Z — document complete:** After user approval, `oat-project-document` updated the contributor ratchet guidance in `1d2c791bf90b757feb57db947565c37409f9c50f` and set `oat_docs_updated: complete` in `f2bb14ecb7ff31c719f323b9f97bbbdb4cbe9c92`. Docs format, Markdown lint, and production build passed; the optional link checker could not start because Playwright Chromium is not installed.
 - **2026-08-30T18:49:11Z — project recap skipped:** The user selected skip through the interactive `oat-explainer-kit` intent adapter. The safe persistence script recorded `oat_project_recap: skip/interactive`, and the terminal-outcome guard returned `ok: true` without requiring a manifest.
 - **2026-08-30T18:56:36Z — PR closeout step complete:** With explicit user authorization, `oat-project-pr-final` opened PR [#242](https://github.com/voxmedia/open-agent-toolkit/pull/242) from `feature/feat/unified-agent-provider-root` to `main`, archived residual phase reviews, and pushed metadata commit `2bcefb7bc4151cf8f0cbc95b9754918f7874023c`. The PR is open and unmerged; Cursor Bugbot was still pending at handoff.
+- **2026-08-30T18:58:30Z — awaiting final approval:** All configured pre-approval steps are complete in stored order (`summary`, `document`, `pr`), the project recap intent is terminal `skip`, and the closeout sequence is durably waiting for the final `p03` HiLL decision.
 
 ---
 
