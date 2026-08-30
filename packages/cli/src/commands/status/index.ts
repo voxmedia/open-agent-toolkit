@@ -101,7 +101,7 @@ import {
 } from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
-  getActiveAdapters,
+  getConfigAwareAdapters,
   getSyncMappings,
   type PathMapping,
   type MaterializationPlan,
@@ -190,10 +190,11 @@ interface StatusDependencies {
   ) => Promise<CanonicalEntry[]>;
   scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
-  getActiveAdapters: (
+  getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
     scopeRoot: string,
-  ) => Promise<ProviderAdapter[]>;
+    config: SyncConfig,
+  ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
   getAdoptionSources: (
     adapter: ProviderAdapter,
@@ -320,7 +321,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
       geminiAdapter,
     ];
   },
-  getActiveAdapters,
+  getConfigAwareAdapters,
   getSyncMappings,
   getAdoptionSources,
   detectDrift,
@@ -560,6 +561,7 @@ function shouldReportPjmAdoption(
 async function collectPackReport(
   scopeRoots: Map<ConcreteScope, string>,
   unavailableScopes: ConcreteScope[],
+  userManagedRoleMaterialization: boolean,
   dependencies: StatusDependencies,
 ): Promise<StatusPackReport> {
   const roots: PackPathRoots = {
@@ -575,7 +577,12 @@ async function collectPackReport(
   const assetsRoot = await dependencies.resolveAssetsRoot();
   const inventories = await Promise.all(
     PACK_NAMES.map((pack) =>
-      dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
+      dependencies.inventoryPack({
+        pack,
+        assetsRoot,
+        ...roots,
+        ...(scopeRoots.has('user') ? { userManagedRoleMaterialization } : {}),
+      }),
     ),
   );
   const states = inventories
@@ -635,6 +642,11 @@ function formatPackReport(report: StatusPackReport): string | null {
         }
         for (const diagnostic of scope.diagnostics) {
           lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+          if (diagnostic.paths.length > 0) {
+            lines.push(
+              `    Affected: ${formatPackPaths(diagnostic.paths, {})}`,
+            );
+          }
           if (diagnostic.recovery) {
             lines.push(`    Fix: ${diagnostic.recovery}`);
           }
@@ -645,6 +657,9 @@ function formatPackReport(report: StatusPackReport): string | null {
       }
       for (const diagnostic of state.diagnostics) {
         lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+        if (diagnostic.paths.length > 0) {
+          lines.push(`    Affected: ${formatPackPaths(diagnostic.paths, {})}`);
+        }
         if (diagnostic.recovery) {
           lines.push(`    Fix: ${diagnostic.recovery}`);
         }
@@ -689,9 +704,10 @@ async function collectScopeReports(
       dependencies.resolveUserSyncConfig(userConfigDir),
     ]);
   const adapters = dependencies.getAdapters();
-  const activeAdapters = await dependencies.getActiveAdapters(
+  const { activeAdapters } = await dependencies.getConfigAwareAdapters(
     adapters,
     scopeRoot,
+    scope === 'user' ? userSyncConfig : syncConfig,
   );
   const reports: DriftReport[] = [];
   const strayCandidates: StatusStrayCandidate[] = [];
@@ -973,6 +989,13 @@ async function runStatusCommand(
   const packReport = await collectPackReport(
     scopeRoots,
     unavailableScopes,
+    scopeCollections.some(
+      ({ scope, activeAdapterNames }) =>
+        scope === 'user' &&
+        activeAdapterNames.some(
+          (name) => name === 'codex' || name === 'cursor',
+        ),
+    ),
     dependencies,
   );
 

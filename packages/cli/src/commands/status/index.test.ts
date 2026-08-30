@@ -39,6 +39,7 @@ import type { CursorExtensionPlan } from '@providers/cursor/codec/sync-extension
 import type { ProviderAdapter } from '@providers/shared';
 import {
   getAdoptionSources,
+  getConfigAwareAdapters,
   getSyncMappings,
 } from '@providers/shared/adapter.utils';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -56,6 +57,8 @@ interface TestHarnessOptions {
   codexRoleStrays?: CodexRoleStray[];
   syncConfigKnownStrays?: string[];
   userKnownStrays?: string[];
+  syncConfigProviders?: SyncConfig['providers'];
+  userSyncConfigProviders?: SyncConfig['providers'];
   codexExtensionPlan?: CodexExtensionPlan;
   cursorExtensionPlan?: CursorExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
@@ -193,6 +196,20 @@ function createCopilotAdapter(): ProviderAdapter {
       },
     ],
     detect: async () => true,
+  };
+}
+
+function createDetectedAdapter(
+  name: string,
+  detected: boolean,
+): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'auto',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => detected,
   };
 }
 
@@ -344,10 +361,12 @@ function createHarness(options: TestHarnessOptions = {}): {
   const syncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.syncConfigKnownStrays ?? [],
+    providers: options.syncConfigProviders ?? {},
   };
   const userSyncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.userKnownStrays ?? [],
+    providers: options.userSyncConfigProviders ?? {},
   };
   const detectCodexRoleStrays = vi.fn(
     async () => options.codexRoleStrays ?? [],
@@ -446,9 +465,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanCanonical,
     scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
-    getActiveAdapters: vi.fn(
-      async (activeAdapters: ProviderAdapter[]) => activeAdapters,
-    ),
+    getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
     getSyncMappings: vi.fn(getSyncMappings),
     getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {
@@ -1699,6 +1716,157 @@ describe('createStatusCommand', () => {
   });
 
   describe('managed pack state', () => {
+    it.each([
+      {
+        label: 'Claude-only detection',
+        adapters: [createDetectedAdapter('claude', true)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'Codex configured enabled without detection',
+        adapters: [createDetectedAdapter('codex', false)],
+        providers: { codex: { enabled: true } },
+        expected: true,
+      },
+      {
+        label: 'Codex configured disabled with detection',
+        adapters: [createDetectedAdapter('codex', true)],
+        providers: { codex: { enabled: false } },
+        expected: false,
+      },
+      {
+        label: 'Codex detected with unset config',
+        adapters: [createDetectedAdapter('codex', true)],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'Codex absent with unset config',
+        adapters: [createDetectedAdapter('codex', false)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'Cursor configured enabled without detection',
+        adapters: [createDetectedAdapter('cursor', false)],
+        providers: { cursor: { enabled: true } },
+        expected: true,
+      },
+      {
+        label: 'Cursor configured disabled with detection',
+        adapters: [createDetectedAdapter('cursor', true)],
+        providers: { cursor: { enabled: false } },
+        expected: false,
+      },
+      {
+        label: 'Cursor detected with unset config',
+        adapters: [createDetectedAdapter('cursor', true)],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'Cursor absent with unset config',
+        adapters: [createDetectedAdapter('cursor', false)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'mixed Claude and Cursor detection',
+        adapters: [
+          createDetectedAdapter('claude', true),
+          createDetectedAdapter('cursor', true),
+        ],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'no providers',
+        adapters: [],
+        providers: {},
+        expected: false,
+      },
+    ])(
+      'uses config-aware user managed-role capability for $label',
+      async ({ adapters, providers, expected }) => {
+        const { command, inventoryPack } = createHarness({
+          adapters,
+          userSyncConfigProviders: providers,
+          driftReports: [],
+        });
+
+        await runStatusCommand(command, ['--scope', 'user']);
+
+        expect(inventoryPack).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pack: 'core',
+            userManagedRoleMaterialization: expected,
+          }),
+        );
+      },
+    );
+
+    it('reports the same redacted affected agents in human and JSON output', async () => {
+      const affected = [
+        '/tmp/home/.agents/agents/oat-codebase-mapper.md',
+        '/tmp/home/.agents/agents/skeptical-evaluator.md',
+      ];
+      const inventories = [
+        packInventory('research', [
+          scopedInventory(
+            'research',
+            'user',
+            'complete',
+            [packAsset('.agents/skills/analyze', 'current', 'user')],
+            {
+              diagnostics: [
+                {
+                  code: 'user-agent-unmaterialized',
+                  message:
+                    'Native provider-role materialization is unavailable for the affected user agents; canonical instruction reads are unaffected.',
+                  paths: affected,
+                },
+              ],
+            },
+          ),
+        ]),
+      ];
+      const human = createHarness({
+        driftReports: [],
+        packInventories: inventories,
+      });
+      const json = createHarness({
+        driftReports: [],
+        packInventories: inventories,
+      });
+
+      await runStatusCommand(human.command, ['--scope', 'user']);
+      await runStatusCommand(json.command, ['--scope', 'user', '--json']);
+
+      const humanOutput = human.capture.info.join('\n');
+      const payload = json.capture.jsonPayloads[0] as {
+        packs: {
+          states: Array<{
+            scopes: Array<{
+              diagnostics: Array<{ code: string; paths: string[] }>;
+            }>;
+          }>;
+        };
+      };
+      const jsonAffected = payload.packs.states
+        .flatMap(({ scopes }) => scopes)
+        .flatMap(({ diagnostics }) => diagnostics)
+        .find(({ code }) => code === 'user-agent-unmaterialized')?.paths;
+      expect(jsonAffected).toEqual([
+        '~/.agents/agents/oat-codebase-mapper.md',
+        '~/.agents/agents/skeptical-evaluator.md',
+      ]);
+      for (const path of jsonAffected ?? []) {
+        expect(humanOutput).toContain(path);
+      }
+      expect(humanOutput).not.toContain('/tmp/home/.agents');
+    });
+
     it('reports partial pack completeness with a scoped recovery command', async () => {
       const { capture, command } = createHarness({
         driftReports: [],
@@ -1906,6 +2074,7 @@ describe('createStatusCommand', () => {
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
+        userManagedRoleMaterialization: false,
       });
     });
 
@@ -1926,6 +2095,7 @@ describe('createStatusCommand', () => {
         pack: 'core',
         assetsRoot: '/tmp/assets',
         userRoot: '/tmp/home',
+        userManagedRoleMaterialization: false,
       });
     });
 

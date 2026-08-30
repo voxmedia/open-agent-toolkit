@@ -70,6 +70,7 @@ export interface InventoryScopedPackInput {
   scope: ConcreteScope;
   scopeRoot: string;
   assetsRoot: string;
+  managedRoleMaterialization?: boolean;
 }
 
 export interface InventoryPackInput {
@@ -77,6 +78,7 @@ export interface InventoryPackInput {
   assetsRoot: string;
   projectRoot?: string;
   userRoot?: string;
+  userManagedRoleMaterialization?: boolean;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -316,17 +318,19 @@ function intentDiagnostic(diagnostic: PackIntentDiagnostic): PackDiagnostic {
 }
 
 /**
- * User-scope canonical agents are installed into `~/.agents/agents/` but no
- * provider view is generated for them: `SCOPE_CONTENT_TYPES.user` enumerates
- * skills only, and the sole user-scope agent materialization is the bundled
- * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`). Completeness alone
- * therefore reports such a pack as complete while the declared agent surface is
- * unreachable, so the gap is named here instead of staying silent.
+ * User-scope canonical agents are installed into `~/.agents/agents/`, while
+ * native provider-role materialization is caller-resolved from the active
+ * config-aware adapter set. When that capability is active, only the bundled
+ * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`) is supplied to the
+ * extension. Completeness alone therefore cannot describe native
+ * materialization, so the remaining gap is named here instead of staying
+ * silent. Canonical instruction-read availability is a separate contract.
  */
 function userAgentMaterializationDiagnostics(
   pack: PackName,
   scope: ConcreteScope,
   assets: PackAssetInventory[],
+  managedRoleMaterialization: boolean,
 ): PackDiagnostic[] {
   if (scope !== 'user') return [];
   const bundledRoleFiles = new Set<string>(USER_SCOPE_MANAGED_AGENT_FILES);
@@ -335,13 +339,14 @@ function userAgentMaterializationDiagnostics(
       definition.kind === 'agent' &&
       definition.ownership.user === 'managed' &&
       status !== 'missing' &&
-      !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? ''),
+      (!managedRoleMaterialization ||
+        !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? '')),
   );
   if (unmaterialized.length === 0) return [];
   return [
     {
       code: 'user-agent-unmaterialized',
-      message: `Pack ${pack} installs user-scope canonical agents that no provider view materializes; user-scope agent materialization is limited to the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to make these agents available to providers.`,
+      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to materialize the affected agents.`,
       paths: unmaterialized.map(({ path }) => path),
     },
   ];
@@ -374,7 +379,12 @@ export async function inventoryScopedPack(
   ]);
   const diagnostics = [
     ...intent.diagnostics.map(intentDiagnostic),
-    ...userAgentMaterializationDiagnostics(input.pack, input.scope, assets),
+    ...userAgentMaterializationDiagnostics(
+      input.pack,
+      input.scope,
+      assets,
+      input.managedRoleMaterialization ?? false,
+    ),
   ];
   return {
     pack: input.pack,
@@ -418,6 +428,10 @@ export async function inventoryPack(
               scope,
               scopeRoot,
               assetsRoot: input.assetsRoot,
+              managedRoleMaterialization:
+                scope === 'user'
+                  ? (input.userManagedRoleMaterialization ?? false)
+                  : false,
             }),
           ]
         : [];

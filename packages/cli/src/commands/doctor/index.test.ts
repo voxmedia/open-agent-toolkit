@@ -16,6 +16,7 @@ import type {
   PackCompleteness,
   PackName,
 } from '@commands/tools/shared/types';
+import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type {
@@ -29,6 +30,10 @@ import {
   createDispatchValidationPassContext,
   type DispatchValidationPassOptions,
 } from '@providers/identity/dispatch-validation';
+import {
+  getConfigAwareAdapters,
+  type ProviderAdapter,
+} from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -72,6 +77,8 @@ interface HarnessOptions {
     detected: boolean;
     version: string | null;
   }>;
+  adapters?: ProviderAdapter[];
+  userSyncConfigProviders?: SyncConfig['providers'];
   oatConfig?: OatConfig;
   oatConfigError?: Error;
   oatLocalConfig?: OatLocalConfig;
@@ -171,6 +178,17 @@ function emptyInventory(pack: PackName): PackInventory {
   return packInventory(pack, []);
 }
 
+function detectedAdapter(name: string, detected: boolean): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'auto',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => detected,
+  };
+}
+
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -183,6 +201,22 @@ function createHarness(options: HarnessOptions = {}): {
 } {
   const capture = createLoggerCapture();
   const scope = options.scope ?? 'project';
+  const providers = options.providers ?? [
+    { name: 'claude', detected: true, version: '1.2.3' },
+    { name: 'cursor', detected: false, version: null },
+  ];
+  const adapters =
+    options.adapters ??
+    providers.map(
+      ({ name, detected }): ProviderAdapter => ({
+        name,
+        displayName: name,
+        defaultStrategy: 'auto',
+        projectMappings: [],
+        userMappings: [],
+        detect: async () => detected,
+      }),
+    );
   const defaultPathExists = {
     '/tmp/workspace/.agents/skills': true,
     '/tmp/workspace/.agents/agents': true,
@@ -313,12 +347,7 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     checkSymlinkSupport: vi.fn(async () => options.symlinkSupported ?? true),
     checkProviders: vi.fn(async () => {
-      return (
-        options.providers ?? [
-          { name: 'claude', detected: true, version: '1.2.3' },
-          { name: 'cursor', detected: false, version: null },
-        ]
-      );
+      return providers;
     }),
     readFile: vi.fn(async (path: string) => {
       const content = fileContents[path];
@@ -327,6 +356,12 @@ function createHarness(options: HarnessOptions = {}): {
       }
       return content;
     }),
+    resolveUserSyncConfig: vi.fn(async () => ({
+      ...DEFAULT_SYNC_CONFIG,
+      providers: options.userSyncConfigProviders ?? {},
+    })),
+    getAdapters: () => adapters,
+    getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
     readOatConfig: vi.fn(async () => {
       if (options.oatConfigError) {
         throw options.oatConfigError;
@@ -1697,7 +1732,7 @@ config_file = "agents/${roleName}.toml"
     expect(process.exitCode).toBe(1);
   });
 
-  it('names user-scope agents that reach no provider without demanding a repair', async () => {
+  it('names user-scope agents lacking native materialization without demanding a repair', async () => {
     const { command, capture } = createHarness({
       scope: 'user',
       packInventories: [
@@ -1737,7 +1772,7 @@ config_file = "agents/${roleName}.toml"
     );
     expect(packCheck?.message).not.toContain('/tmp/home/.agents');
     expect(packCheck?.message).toContain(
-      'limited to the bundled managed role files',
+      'canonical instruction reads are unaffected',
     );
     // `oat tools update` cannot repair a scope limitation, so no recovery
     // command is offered and the check itself does not warn.
@@ -1826,6 +1861,57 @@ config_file = "agents/${roleName}.toml"
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    {
+      label: 'Claude only',
+      adapters: [detectedAdapter('claude', true)],
+      providers: {},
+      expected: false,
+    },
+    {
+      label: 'Codex configured enabled but undetected',
+      adapters: [detectedAdapter('codex', false)],
+      providers: { codex: { enabled: true } },
+      expected: true,
+    },
+    {
+      label: 'Codex configured disabled but detected',
+      adapters: [detectedAdapter('codex', true)],
+      providers: { codex: { enabled: false } },
+      expected: false,
+    },
+    {
+      label: 'Cursor detected with unset config',
+      adapters: [detectedAdapter('cursor', true)],
+      providers: {},
+      expected: true,
+    },
+    {
+      label: 'no provider',
+      adapters: [],
+      providers: {},
+      expected: false,
+    },
+  ])(
+    'passes config-aware managed-role capability to inventory for $label',
+    async ({ adapters, providers, expected }) => {
+      const { command, inventoryPack } = createHarness({
+        scope: 'user',
+        adapters,
+        userSyncConfigProviders: providers,
+      });
+
+      await runDoctor(command, { scope: 'user' });
+
+      expect(inventoryPack).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pack: 'core',
+          userManagedRoleMaterialization: expected,
+        }),
+      );
+    },
+  );
+
   it('inventories every manifest pack for the resolved scopes', async () => {
     const { command, inventoryPack } = createHarness({ scope: 'all' });
 
@@ -1838,6 +1924,7 @@ config_file = "agents/${roleName}.toml"
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
+        userManagedRoleMaterialization: false,
       });
     }
   });
@@ -1857,6 +1944,7 @@ config_file = "agents/${roleName}.toml"
       pack: 'core',
       assetsRoot: '/tmp/assets',
       userRoot: '/tmp/home',
+      userManagedRoleMaterialization: false,
     });
     expect(process.exitCode).toBe(1);
   });

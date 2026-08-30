@@ -48,6 +48,7 @@ import {
   type DispatchMatrixCellRef,
   type DispatchMatrixSource,
 } from '@config/dispatch-matrix';
+import type { SyncConfig } from '@config/index';
 import {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
@@ -57,6 +58,7 @@ import {
   readUserConfig,
   type UserConfig,
 } from '@config/oat-config';
+import { resolveUserSyncConfig } from '@config/user-sync-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
@@ -80,6 +82,10 @@ import {
   createDispatchValidationPassContext,
   validateDispatchMatrixRefs,
 } from '@providers/identity/dispatch-validation';
+import {
+  getConfigAwareAdapters,
+  type ProviderAdapter,
+} from '@providers/shared';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -103,6 +109,13 @@ interface DoctorDependencies {
   >;
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
+  resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
+  getAdapters: () => ProviderAdapter[];
+  getConfigAwareAdapters: (
+    adapters: ProviderAdapter[],
+    scopeRoot: string,
+    config: SyncConfig,
+  ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -297,6 +310,15 @@ function createDependencies(): DoctorDependencies {
     checkProviders: checkProvidersDefault,
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
+    resolveUserSyncConfig,
+    getAdapters: () => [
+      claudeAdapter,
+      cursorAdapter,
+      codexAdapter,
+      copilotAdapter,
+      geminiAdapter,
+    ],
+    getConfigAwareAdapters,
     readOatConfig,
     readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
@@ -899,7 +921,7 @@ function collectPackStateFindings(
             pack: inventory.pack,
             scope,
             code: 'user-agent-unmaterialized',
-            detail: `${diagnostic.paths.length} user-scope agent(s) reach no provider; user-scope agent materialization is limited to the bundled managed role files, so install this pack at project scope to use them`,
+            detail: `${diagnostic.paths.length} user-scope agent(s) lack native provider-role materialization; canonical instruction reads are unaffected, and active Codex or Cursor materialization supplies only the bundled managed roles, so install this pack at project scope to materialize the affected agents`,
             paths: diagnostic.paths,
             recovery: null,
           });
@@ -1016,9 +1038,28 @@ async function createPackStateChecks(
   let findings: PackStateFinding[];
   try {
     const assetsRoot = await dependencies.resolveAssetsRoot();
+    const userRoot = scopeRoots.get('user');
+    const userManagedRoleMaterialization = userRoot
+      ? await dependencies
+          .getConfigAwareAdapters(
+            dependencies.getAdapters(),
+            userRoot,
+            await dependencies.resolveUserSyncConfig(join(userRoot, '.oat')),
+          )
+          .then(({ activeAdapters }) =>
+            activeAdapters.some(
+              ({ name }) => name === 'codex' || name === 'cursor',
+            ),
+          )
+      : false;
     const inventories = await Promise.all(
       PACK_NAMES.map((pack) =>
-        dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
+        dependencies.inventoryPack({
+          pack,
+          assetsRoot,
+          ...roots,
+          ...(userRoot ? { userManagedRoleMaterialization } : {}),
+        }),
       ),
     );
     findings = collectPackStateFindings(inventories);

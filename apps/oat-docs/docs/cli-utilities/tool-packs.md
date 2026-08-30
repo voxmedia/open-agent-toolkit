@@ -189,23 +189,30 @@ creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
 `workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
 and the project `.gitkeep` files — are pinned to project scope.
 
-#### User-scope agents reach no provider
+#### User-scope agents have limited native materialization
 
-Canonical **agents** are installed at either scope, but only project scope
-materializes a provider view for them. At user scope the sync pipeline
-enumerates skills only, and the sole user-scope agent materialization is the
-bundled managed role file set (`oat-phase-implementer.md` and
-`oat-reviewer.md`). A pack installed at user scope therefore writes its agents
-to `~/.agents/agents/` where no provider can see them — for example
-`oat tools install workflows --scope user` leaves `oat-codebase-mapper` without
-a provider agent, and `oat tools install research --scope user` does the same
-for `skeptical-evaluator`.
+Canonical **agents** are installed at either scope. At user scope, native
+Codex or Cursor role materialization is active only when that adapter is active
+under the resolved sync config: explicit enablement wins without filesystem
+detection, explicit disablement wins despite detection, and an unset adapter
+follows detection. That native materialization supplies the bundled managed
+role files (`oat-phase-implementer.md` and `oat-reviewer.md`); it does not
+materialize other pack-owned user agents. For example, a user-scope workflows
+install leaves `oat-codebase-mapper` without a native provider role, and a
+user-scope research install does the same for `skeptical-evaluator`. When no
+Codex or Cursor adapter is active, even the bundled managed roles lack native
+materialization.
+
+This diagnostic concerns native provider roles only. Providers may read
+canonical agent instructions through a separate loaded, user, and project
+lookup contract; that read availability does not establish native
+materialization and does not suppress this finding.
 
 `oat status` and `oat doctor` name the affected agents with a
 `user-agent-unmaterialized` finding rather than reporting the pack as complete
 without qualification. Install the pack at **project scope** when you need its
-agents; `oat tools update` cannot repair this, because it is a scope limitation
-rather than drift.
+native provider roles; `oat tools update` cannot repair this, because it is a
+scope limitation rather than drift.
 
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy

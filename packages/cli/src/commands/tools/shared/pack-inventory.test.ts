@@ -536,7 +536,28 @@ describe('pack inventory', () => {
     expect(diagnostic!.message).toContain('oat-phase-implementer.md');
   });
 
-  it('excludes bundled managed role files and project scope from the agent diagnostic', async () => {
+  it('reports every present user agent when no native materialization extension is active', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const userRoot = await makeRoot('oat-user-');
+    await materializeManagedPack('workflows', 'user', assetsRoot, userRoot);
+
+    const inventory = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot: userRoot,
+      assetsRoot,
+    });
+    const diagnostic = inventory.diagnostics.find(
+      ({ code }) => code === 'user-agent-unmaterialized',
+    );
+    expect(diagnostic!.paths).toEqual([
+      join(userRoot, '.agents', 'agents', 'oat-codebase-mapper.md'),
+      join(userRoot, '.agents', 'agents', 'oat-phase-implementer.md'),
+      join(userRoot, '.agents', 'agents', 'oat-reviewer.md'),
+    ]);
+  });
+
+  it('excludes bundled managed roles only when native materialization is active and always excludes project scope', async () => {
     const assetsRoot = await makeRoot('oat-assets-');
     const userRoot = await makeRoot('oat-user-');
     const projectRoot = await makeRoot('oat-project-');
@@ -553,6 +574,7 @@ describe('pack inventory', () => {
       scope: 'user',
       scopeRoot: userRoot,
       assetsRoot,
+      managedRoleMaterialization: true,
     });
     const diagnostic = user.diagnostics.find(
       ({ code }) => code === 'user-agent-unmaterialized',
