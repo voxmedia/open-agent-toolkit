@@ -9,20 +9,20 @@ oat_generated: false
 
 # Implementation: Scope and Adoption Diagnostics
 
-**Started:** Not started
+**Started:** 2026-08-30 21:48 UTC
 **Last Updated:** 2026-08-30
 
-> `oat_current_task_id` points to the next plan task. No implementation work or
-> verification is complete at this planning-stage initialization.
+> `oat_current_task_id` points to the next plan task. Implementation is running
+> sequentially with the managed High dispatch ceiling.
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
-| Phase 2 | pending | 3     | 0/3       |
-| Phase 3 | pending | 2     | 0/2       |
-| Phase 4 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 3     | 0/3       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 2     | 0/2       |
 
 **Total:** 0/9 tasks completed
 
@@ -55,8 +55,8 @@ verdict.
 
 ## Phase 1: PJM Migration Adoption Semantics
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-08-30 21:48 UTC
 
 ### Task p01-t01: Make the migration core and caller adoption-aware
 
@@ -122,7 +122,15 @@ verdict.
 
 <!-- orchestration-runs-start -->
 
-_No implementation orchestration run has started._
+### Run 1 — 2026-08-30 21:48 UTC
+
+**Branch:** `scope-adoption-diagnostics`
+**Tier:** 1
+**Dispatch policy:** managed High ceiling from project state
+**Schedule:** p01 → p02 → p03 → p04 (sequential)
+**HiLL checkpoint:** p04 only; automatic checkpoint review enabled
+**Retry limit:** 2
+**Status:** in progress at p01-t01
 
 <!-- orchestration-runs-end -->
 

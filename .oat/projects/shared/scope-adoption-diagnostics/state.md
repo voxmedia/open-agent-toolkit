@@ -17,8 +17,8 @@ oat_dispatch_policy:
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -26,23 +26,21 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T21:46:50Z'
+oat_project_state_updated: '2026-08-30T21:48:26Z'
 oat_generated: false
 ---
 
 # Project State: Scope and Adoption Diagnostics
 
-**Status:** Ready for implementation
+**Status:** Implementation in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Plan revalidated from current `origin/main` after PRs #240 and #242. The
-retained nine-task diagnostics slice is sequential and remains bounded from the
-scope/provider project. The final automatic review found one Important
-atomicity gap in p01-t01; the plan now fixes it. Thomas explicitly approved
-proceeding after the configured retry bound ended without a clean re-review.
+Implementation started at p01-t01 from the revalidated current-main plan. The
+four phases are sequential, use the managed High dispatch ceiling, and stop at
+the final p04 HiLL checkpoint only.
 
 ## Artifacts
 
@@ -50,7 +48,7 @@ proceeding after the configured retry bound ended without a clean re-review.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 9 tasks)
-- **Implementation:** `implementation.md` (initialized; 0/9 tasks complete)
+- **Implementation:** `implementation.md` (in progress; 0/9 tasks complete)
 
 ## Progress
 
@@ -67,6 +65,8 @@ proceeding after the configured retry bound ended without a clean re-review.
 - ✓ Every task reclassified against PRs #240/#242 and current source
 - ✓ Umbrella-owned provider state/catalog/restart/dispatch work transferred out
 - ✓ Shared-file merge order recorded: diagnostics first, umbrella rebase second
+- ✓ Final-only HiLL checkpoint and automatic checkpoint review resolved from
+  workflow configuration
 
 ## Blockers
 
