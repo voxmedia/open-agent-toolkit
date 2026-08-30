@@ -47,10 +47,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:1357744bea95ceb0c19c4c94ef6ebdeb9532d93e88fa0baf68f6d43ea3fce29b'
   freshness_head: b9e79f493afe005dfed6d790ab115ec005a92cb0
   freshness_fingerprint: 'sha256:effective-delta-v1:ea8d90ae761439496452dc1914be97f5b9aeaca85a7b121fbbbaca48f1dc6a66'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: agent-provider-root-exit-gate-20260830T181908Z-5afa94b8-b594-412f-9055-d7855ac7cbed
+  launch_started_at: '2026-08-30T18:19:08Z'
+  launch_result_receipt: .oat/projects/shared/agent-provider-root/reviews/gate-receipts/agent-provider-root-exit-gate-20260830T181908Z-5afa94b8-b594-412f-9055-d7855ac7cbed.json
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -66,13 +66,13 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-30T18:22:00Z'
+  updated_at: '2026-08-30T18:19:08Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:22:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:19:08.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip

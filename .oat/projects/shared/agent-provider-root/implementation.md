@@ -460,7 +460,8 @@ Chronological log of implementation progress.
 
 ### Exit Gate Audit
 
-- **2026-08-30T18:20:00Z — generation initialized:** Resolved the configured semantic final-review gate once, captured reviewed head `3240a1bec3e7bcdfe044ace76994502e0a4b666d`, base `refs/remotes/origin/main`, and immutable effective-delta fingerprint `sha256:effective-delta-v1:1357744bea95ceb0c19c4c94ef6ebdeb9532d93e88fa0baf68f6d43ea3fce29b`. Launch has not started.
+- **2026-08-30T18:18:37Z — generation initialized:** Resolved the configured semantic final-review gate once, captured reviewed head `3240a1bec3e7bcdfe044ace76994502e0a4b666d`, base `refs/remotes/origin/main`, and immutable effective-delta fingerprint `sha256:effective-delta-v1:1357744bea95ceb0c19c4c94ef6ebdeb9532d93e88fa0baf68f6d43ea3fce29b`. Launch has not started.
+- **2026-08-30T18:19:08Z — launch intent persisted:** Preselected attempt `agent-provider-root-exit-gate-20260830T181908Z-5afa94b8-b594-412f-9055-d7855ac7cbed` and its durable result receipt before executing the configured command.
 
 ---
 
