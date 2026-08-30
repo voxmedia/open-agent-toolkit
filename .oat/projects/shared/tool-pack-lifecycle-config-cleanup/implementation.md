@@ -601,6 +601,28 @@ oat_generated: false
 - Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly and
   completed all configured pre-approval steps.
 
+### Post-implementation documentation refresh after base integration
+
+- Base integration: merged refreshed `origin/main` at `195e495185719c5a5eae25edca3154f0a4b07050`
+  through merge commit `defac8a1242690fd285f04676fe07b0759d922cf` with
+  no conflicts.
+- Version outcome: the five public packages remain at lockstep `0.2.46`, which
+  is still strictly greater than `origin/main` at `0.2.45`; no second bump was
+  required.
+- Documentation outcome: refreshed canonical current-state, roadmap, curated
+  backlog, and completed-ledger records; created the durable project summary;
+  and recorded `BL-260830-migrate-the-legacy-pjm` with a dedicated-branch
+  kickoff handoff. No legacy reference file was deleted or restructured.
+- Commit: `04d54e763` (`docs(tool-pack-lifecycle-config-cleanup): refresh repo
+references`).
+- Verification: the complete CI-order gate sequence passed after the merge
+  with Turbo execution forced for check, type-check, test, build, and docs
+  build; skill-bump, release-version, release-validation, lint, format, PJM
+  integrity, and diff checks also passed. PJM doctor retains exactly the four
+  handed-off pre-existing layout warning classes.
+- Snapshot invariant: the configured `[summary, document, pr]` pre-approval
+  sequence remains complete and final HiLL approval remains pending.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
