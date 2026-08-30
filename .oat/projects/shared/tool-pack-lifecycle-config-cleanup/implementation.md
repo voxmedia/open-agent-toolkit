@@ -558,6 +558,16 @@ oat_generated: false
   by p04-t01.
 - Verdict: gate review passed and received with no remediation task.
 
+### Post-implementation sequence: summary complete
+
+- Step: `summary` (configured pre-approval position 1 of 3).
+- Commit: `4f9baec03b57ec82f5a62693021c5644ec2e19c3`.
+- Outcome: generated a 159-line institutional summary tracking p04-t04 and
+  13/13 tasks; project-log rollup deduplicated its ledger entry.
+- Decisions: five accepted records created through `oat decision new`; PJM
+  adoption remained declared.
+- Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
