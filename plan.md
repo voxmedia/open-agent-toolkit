@@ -403,6 +403,7 @@ git commit -m "test(p03-t02): prove configured headless gate outcomes"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
 - Modify if needed: `pnpm-lock.yaml`
 - Archive through CLI:
   `.oat/repo/pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md`
@@ -448,7 +449,7 @@ review/gate integrity items.
 **Step 5: Format**
 
 ```bash
-pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
+pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
 ```
 
 **Step 6: Run the repository Definition of Done in CI order**
@@ -494,7 +495,7 @@ backlog lifecycle drift.
 **Step 7: Commit**
 
 ```bash
-git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json .oat/repo/pjm/backlog
+git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/repo/pjm/backlog
 # If pnpm actually changed the lockfile, also stage pnpm-lock.yaml.
 git commit -m "chore(p03-t03): finalize gate execution contract"
 ```

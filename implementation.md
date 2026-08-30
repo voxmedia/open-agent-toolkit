@@ -283,9 +283,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                                                          | Actual / Accepted                                                     | Reason                                                                                                                              | Source of Truth                         | Follow-up                                                  |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| p03-t03       | plan.md         | Version and release bookkeeping listed package manifests but omitted their generated bundled version metadata | Include `packages/cli/assets/public-package-versions.json` in p03-t03 | `bundle-assets.sh` deterministically regenerates it from the planned lockstep versions, and release/build gates require it to match | Generated bundle plus package manifests | Plan ownership and commands aligned before the task commit |
 
 ## Test Results
 
