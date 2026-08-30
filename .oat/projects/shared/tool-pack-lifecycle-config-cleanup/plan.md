@@ -568,7 +568,9 @@ Run:
 Run:
 
 ```bash
-! rg -n -F "../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md" .oat/projects/shared/tool-pack-lifecycle-config-cleanup/discovery.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md .oat/projects/shared/tool-pack-scope-provider-truthfulness/discovery.md
+active_backlog_root="../../../repo/pjm/backlog/items"
+active_backlog_name="BL-260827-clean-up-tool-pack-lifecycle.md"
+! rg -n -F "${active_backlog_root}/${active_backlog_name}" .oat/projects/shared/tool-pack-lifecycle-config-cleanup/discovery.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md .oat/projects/shared/tool-pack-scope-provider-truthfulness/discovery.md
 git diff --check
 ```
 
@@ -658,7 +660,7 @@ configured lifecycle exit gate.
 
 - Discovery: `discovery.md`
 - Backlog:
-  `../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md`
+  `../../../repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md`
 - Parent project: `../user-scope-tool-packs/implementation.md`
 - Closeout review that established this follow-up:
   `../user-scope-tool-packs/reviews/final-review-2026-08-27T222249Z.md`

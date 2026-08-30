@@ -13,7 +13,7 @@ oat_generated: false
 Create a bounded follow-up to the completed user-scope tool-pack project for
 the five residual Medium findings identified during final closeout review. This
 project graduates backlog item
-[`BL-260827-clean-up-tool-pack-lifecycle`](../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md).
+[`BL-260827-clean-up-tool-pack-lifecycle`](../../../repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md).
 
 ## Classification
 
