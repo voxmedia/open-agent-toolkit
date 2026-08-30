@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: Tool-Pack Lifecycle and Config Cleanup
 
 **Started:** 2026-08-27
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-29
 
 ## Progress Overview
 
@@ -68,7 +68,44 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-_No implementation run has started._
+### Run 1 — 2026-08-29 (in progress)
+
+- Branch: `tool-pack-cleanup`
+- Base: `70bf5d3812b72a10659f882748e9a80d3ab90aa4`
+- Dispatch policy: managed `high`; provider Codex
+- Schedule: parallel group `[p01, p02]` → `p03`
+- HiLL: final phase `p03`; auto-review enabled
+- Recovery: default limit 10 per phase; used 0
+
+#### Dispatch Record: p01 implementation
+
+- Request: `dispatch-p01-2bff47e5-f2a9-4fa4-a706-b97dc6a97806`
+- Launch state/outcome: accepted / pending
+- Worktree: `.worktrees/oat/tool-pack-lifecycle-config-cleanup/p01`
+- Exact base: `70bf5d3812b72a10659f882748e9a80d3ab90aa4`
+- Route: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Classification: `default-implementation`; requested effort `medium`
+- Selection: candidate `gpt-5.6-sol` / `medium`; ceiling `high`
+- Enforcement: managed policy, selected within cap; no notices
+- Authority: p01 plan scope and its isolated worktree only
+- Recovery/children: limit 10, used 0 / none declared
+- Dispatch stamp:
+  `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+#### Dispatch Record: p02 implementation
+
+- Request: `dispatch-p02-8b24ccf0-e4dc-4e87-9815-3c474b7ae943`
+- Launch state/outcome: accepted / pending
+- Worktree: `.worktrees/oat/tool-pack-lifecycle-config-cleanup/p02`
+- Exact base: `70bf5d3812b72a10659f882748e9a80d3ab90aa4`
+- Route: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Classification: `default-implementation`; requested effort `medium`
+- Selection: candidate `gpt-5.6-sol` / `medium`; ceiling `high`
+- Enforcement: managed policy, selected within cap; no notices
+- Authority: p02 plan scope and its isolated worktree only
+- Recovery/children: limit 10, used 0 / none declared
+- Dispatch stamp:
+  `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
 <!-- orchestration-runs-end -->
 
