@@ -443,6 +443,10 @@ describe('createInitToolsCommand', () => {
     process.exitCode = undefined;
     configPersistence.readOatConfig.mockClear();
     configPersistence.writeOatConfig.mockClear();
+    configPersistence.readOatConfig.mockResolvedValue({
+      version: 1,
+      localPaths: [],
+    });
   });
 
   afterEach(() => {
@@ -1314,6 +1318,68 @@ describe('createInitToolsCommand', () => {
         },
       }),
     );
+  });
+
+  it('reports aggregate project pack adoption in canonical order in one JSON document', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [
+          createScannedTool('analyze', 'research', 'project'),
+          createScannedTool('oat-docs-analyze', 'docs', 'project'),
+        ],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--json', '--scope', 'all']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({ adoptedPacks: ['docs', 'research'] }),
+    );
+    expect(configPersistence.writeOatConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports each adopted pack once for a direct project install', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'project']);
+
+    expect(capture.info).toContain('Adopted project tool pack: docs');
+    expect(
+      capture.info.filter((line) => line === 'Adopted project tool pack: docs'),
+    ).toHaveLength(1);
+  });
+
+  it('keeps a direct idempotent JSON result free of adoption fields', async () => {
+    configPersistence.readOatConfig.mockResolvedValue({
+      version: 1,
+      tools: { docs: true },
+    });
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--json', '--scope', 'project']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('adoptedPacks');
+    expect(capture.info).not.toContain('Adopted project tool pack: docs');
+    expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
   });
 
   it('does not write shared config for a direct user-only brainstorm install', async () => {

@@ -1,37 +1,67 @@
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { buildCommandContext, loggerCapture } = vi.hoisted(() => {
+const {
+  buildCommandContext,
+  loggerCapture,
+  reconcileProjectToolsConfig,
+  updateTools,
+} = vi.hoisted(() => {
   const capture = {
     error: [] as string[],
+    info: [] as string[],
+    jsonPayloads: [] as unknown[],
   };
 
   return {
-    buildCommandContext: vi.fn(() => ({
+    buildCommandContext: vi.fn((options?: { json?: boolean }) => ({
       scope: 'all' as const,
       dryRun: false,
       verbose: false,
-      json: false,
+      json: options?.json ?? false,
       cwd: '/tmp/project',
       home: '/tmp/home',
       interactive: false,
       logger: {
         debug: vi.fn(),
-        info: vi.fn(),
+        info(message: string) {
+          capture.info.push(message);
+        },
         warn: vi.fn(),
         error(message: string) {
           capture.error.push(message);
         },
         success: vi.fn(),
-        json: vi.fn(),
+        json(payload: unknown) {
+          capture.jsonPayloads.push(payload);
+        },
       },
     })),
     loggerCapture: capture,
+    reconcileProjectToolsConfig: vi.fn(async () => ({
+      action: 'unchanged' as const,
+      adoptedPacks: [],
+    })),
+    updateTools: vi.fn(),
   };
 });
 
 vi.mock('@app/command-context', () => ({
   buildCommandContext,
+}));
+
+vi.mock('@commands/tools/shared/project-tools-config', () => ({
+  reconcileProjectToolsConfig,
+}));
+
+vi.mock('@fs/paths', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@fs/paths')>()),
+  resolveProjectRoot: vi.fn(async () => '/tmp/project'),
+}));
+
+vi.mock('./update-tools', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./update-tools')>()),
+  updateTools,
 }));
 
 import {
@@ -61,6 +91,7 @@ function createUpdateDependencies(): UpdateToolsDependencies {
 async function runUpdateCommand(
   command: Command,
   args: string[] = [],
+  globalArgs: string[] = [],
 ): Promise<void> {
   const program = new Command()
     .name('oat')
@@ -72,7 +103,9 @@ async function runUpdateCommand(
   tools.addCommand(command);
   program.addCommand(tools);
 
-  await program.parseAsync(['tools', 'update', ...args], { from: 'user' });
+  await program.parseAsync([...globalArgs, 'tools', 'update', ...args], {
+    from: 'user',
+  });
 }
 
 describe('createToolsUpdateCommand target validation', () => {
@@ -82,6 +115,13 @@ describe('createToolsUpdateCommand target validation', () => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
     loggerCapture.error.length = 0;
+    loggerCapture.info.length = 0;
+    loggerCapture.jsonPayloads.length = 0;
+    reconcileProjectToolsConfig.mockResolvedValue({
+      action: 'unchanged',
+      adoptedPacks: [],
+    });
+    updateTools.mockReset();
   });
 
   afterEach(() => {
@@ -132,6 +172,77 @@ describe('createToolsUpdateCommand target validation', () => {
     expect(dependencies.scanTools).not.toHaveBeenCalled();
     expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
   });
+
+  it('adds ordered project adoption to the existing JSON update document', async () => {
+    const dependencies = createUpdateDependencies();
+    updateTools.mockResolvedValue(
+      createResult({
+        current: [
+          {
+            name: 'oat-docs-analyze',
+            type: 'skill',
+            scope: 'project',
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'docs',
+            status: 'current',
+          },
+        ],
+        plans: [],
+      }),
+    );
+    reconcileProjectToolsConfig.mockResolvedValue({
+      action: 'written',
+      adoptedPacks: ['docs', 'research'],
+    });
+
+    await runUpdateCommand(
+      createToolsUpdateCommand(dependencies),
+      ['--all', '--no-sync'],
+      ['--json'],
+    );
+
+    expect(loggerCapture.jsonPayloads).toHaveLength(1);
+    expect(loggerCapture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({ adoptedPacks: ['docs', 'research'] }),
+    );
+  });
+
+  it('reports each adopted project pack once in human update output', async () => {
+    const dependencies = createUpdateDependencies();
+    updateTools.mockResolvedValue(
+      createResult({
+        current: [
+          {
+            name: 'oat-docs-analyze',
+            type: 'skill',
+            scope: 'project',
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'docs',
+            status: 'current',
+          },
+        ],
+        plans: [],
+      }),
+    );
+    reconcileProjectToolsConfig.mockResolvedValue({
+      action: 'written',
+      adoptedPacks: ['docs'],
+    });
+
+    await runUpdateCommand(createToolsUpdateCommand(dependencies), [
+      '--all',
+      '--no-sync',
+    ]);
+
+    expect(loggerCapture.info).toContain('Adopted project tool pack: docs');
+    expect(
+      loggerCapture.info.filter(
+        (line) => line === 'Adopted project tool pack: docs',
+      ),
+    ).toHaveLength(1);
+  });
 });
 
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
@@ -142,6 +253,7 @@ function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
     notInstalled: [],
     notBundled: [],
     assetRefreshes: [],
+    plans: [],
     ...overrides,
   };
 }
