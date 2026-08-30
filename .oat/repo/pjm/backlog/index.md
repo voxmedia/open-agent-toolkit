@@ -8,6 +8,13 @@
   `0.2.51` release unit: successful synced archival retires active record and
   discovery identity while preserving completed-ref reachability, configured
   durability, legacy migration, and idempotent recovery.
+- Recon integration is intentionally staged behind the standalone
+  `recon-skill` packet contract. `BL-260830-integrate-recon-with-oat` owns
+  first-class discovery and quick-start orchestration at M scope;
+  `BL-260830-integrate-recon-across` separately owns the broader analysis,
+  research, synthesis, and review integration at L scope. Both remain distinct
+  from `BL-260719-add-pinned-recon-agents`, which owns reusable provider-pinned
+  worker roles rather than evidence-packet lifecycle integration.
 - External planning now distinguishes plan readiness from execution readiness:
   well-scoped items remain eligible for dated, current-main-pinned plans while
   hard dependencies keep execution explicitly blocked. The missing
@@ -232,6 +239,8 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task       | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task       |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
+| BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
+| BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature    | M        |
