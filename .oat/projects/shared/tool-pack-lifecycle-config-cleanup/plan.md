@@ -430,6 +430,44 @@ asset after the gates.
 
 `git commit -m "chore(p03-t01): verify lifecycle config cleanup release"`
 
+### Task p03-t02: Align completed lifecycle planning views
+
+**Review source:** `reviews/p03-review-2026-08-30T045227Z.md` (Important 1)
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/index.md`
+- Modify: `.oat/repo/pjm/roadmap.md`
+- Modify: `.oat/repo/pjm/current-state.md`
+
+**Step 1: Correct curated planning state**
+
+Update the human-maintained backlog overview to record the lifecycle/config
+cleanup as closed and identify only genuinely remaining follow-up work. Remove
+the closed item from the roadmap's active `Next` list and current project
+grouping/table/diagram. Refresh current state with an accurate branch-local
+pending-release or completed-state note.
+
+**Step 2: Regenerate and verify**
+
+Run:
+
+```bash
+pnpm run cli -- backlog regenerate-index
+pnpm run cli -- pjm doctor --json
+! rg -n "BL-260827-clean-up-tool-pack-lifecycle" .oat/repo/pjm/backlog/index.md .oat/repo/pjm/roadmap.md
+pnpm exec oxfmt --check .oat/repo/pjm/backlog/index.md .oat/repo/pjm/roadmap.md .oat/repo/pjm/current-state.md
+git diff --check
+```
+
+Expected: generated backlog state remains correct, curated planning views no
+longer present the closed project as active, backlog-integrity checks pass, and
+only the four pre-existing PJM layout warnings remain.
+
+**Step 3: Commit**
+
+`git commit -m "docs(p03-t02): align completed lifecycle planning views"`
+
 **Phase 3 Verification:** All focused tests and eleven repository gates exit 0
 with captured logs.
 
@@ -440,7 +478,7 @@ with captured logs.
 | p01    | code     | fixes_completed | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                        |
 | p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T023404Z.md                    | caea5ebafe10883b39336219a5cb76a188c96358 | auto       | -                        |
 | p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| p03    | code     | fixes_added     | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |

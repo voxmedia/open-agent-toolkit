@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status    | Tasks | Completed |
-| ------------------------------------- | --------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged    | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged    | 3     | 3/3       |
-| p03 — Release Integration             | in_review | 1     | 1/1       |
+| Phase                                 | Status      | Tasks | Completed |
+| ------------------------------------- | ----------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
+| p03 — Release Integration             | fixes_added | 2     | 1/2       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/8 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -62,13 +62,18 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** in_review
+**Status:** fixes_added
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
 **Status:** done_with_recovery
 **Commit:** `f2463616f12f5046579184e853ed9d6b0a23c615`, recovery
 `ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
+
+### Task p03-t02: Align completed lifecycle planning views
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
@@ -290,6 +295,28 @@ oat_generated: false
 - Reason: the archive command pre-staged only the rename; explicit staging
   rejected the missing source path while the shell continued, so the remaining
   verified diff was committed append-only without rewriting the task commit.
+
+#### Dispatch Record: p03 review round 1
+
+- Request: `dispatch-p03-review-20260829-01`
+- Launch state/outcome: accepted / completed
+- Authoritative range:
+  `137c2bc6201319f8178b2bd5e3c0dd2b590d9f87..ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
+- Route: `oat-reviewer-gpt-5-6-sol-high`
+- Selection: managed reviewer target `gpt-5.6-sol` / `high`; ceiling `high`
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+### Review Received: p03 (round 1)
+
+- Artifact: `reviews/p03-review-2026-08-30T045227Z.md`
+- Reviewed head: `ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
+- Reconnaissance: not attempted
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Disposition: convert I1 into bounded task `p03-t02`; align the curated
+  backlog overview, roadmap, and current-state view, regenerate the backlog
+  index, and re-review the append-only fix
+- Fix-loop usage: 0/2 before dispatch
 
 <!-- orchestration-runs-end -->
 
