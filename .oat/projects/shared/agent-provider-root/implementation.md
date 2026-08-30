@@ -476,6 +476,7 @@ Chronological log of implementation progress.
 - **2026-08-30T18:27:00Z — result persisted:** The configured command exited `0`; its single structured envelope is `ok`, `receiveEligible: true`, and corroborates the gate-authored final review at `reviews/final-review-2026-08-30T182542Z.md` for run `74cd3cd8-293d-4c20-a4d1-13a30010a1be`. Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - **2026-08-30T18:29:30Z — receive intent persisted:** Bound run `74cd3cd8-293d-4c20-a4d1-13a30010a1be`, source `reviews/final-review-2026-08-30T182542Z.md`, collision-free archive destination, exact event identity `final|code|final-review-2026-08-30T182542Z.md`, and pre-receive head `e05e31f9b7589a75e76b6f794c506ab3f500f620` before receive.
 - **2026-08-30T18:34:00Z — receive corroborated and gate allowed:** Commit `6660812b2eed33b46f1e45d639a80e8148853153` contains the exact archive move and bound passing ledger row; the archived artifact carries the matching gate run. Receive is complete and the configured gate disposition is `allowed/passed`.
+- **2026-08-30T18:35:00Z — closeout sequence snapshotted:** Captured the shared configured order `preApproval: [summary, document, pr]`, `postApproval: []`, with final phase `p03`. The snapshot is immutable for this closeout.
 
 ---
 
