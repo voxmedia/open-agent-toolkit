@@ -8,7 +8,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import type { PjmAdoptionState } from './adoption';
 import { createPjmCommand } from './index';
+import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 
 interface CliResult {
   stdout: string;
@@ -119,8 +120,11 @@ async function seedLegacySource(root: string): Promise<void> {
 
 async function seedCompleteCurrentLayout(root: string): Promise<void> {
   const repoRoot = join(root, '.oat', 'repo');
-  await mkdir(join(repoRoot, 'pjm'), { recursive: true });
-  await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    const filePath = join(repoRoot, relativePath);
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(filePath, '', 'utf8');
+  }
 }
 
 async function seedPartialCurrentLayout(root: string): Promise<void> {
@@ -460,6 +464,37 @@ describe('oat pjm', () => {
     await expect(
       readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
     ).resolves.toBe('# Legacy current state\n');
+  });
+
+  it('skips a declared but incomplete current layout without writing', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const repoRoot = join(root, '.oat', 'repo');
+    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
+    await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+    const before = await snapshotTree(root);
+
+    const result = await runCli(
+      root,
+      ['--json', 'pjm', 'migrate', '--apply'],
+      (program) => {
+        program.addCommand(
+          createPjmCommand({
+            resolvePjmAdoption: async () => ({
+              state: 'declared',
+              repoRoot,
+              recovery: null,
+            }),
+          }),
+        );
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('skipped');
+    expect(payload.reason).toContain('oat pjm init');
+    await expect(snapshotTree(root)).resolves.toEqual(before);
   });
 
   it('resolves adoption once and supplies it to the migration core', async () => {

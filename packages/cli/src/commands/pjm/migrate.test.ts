@@ -8,12 +8,13 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { runPjmDoctorChecks } from './doctor';
+import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 import { migratePjmRepo } from './migrate';
 
 const TEMPLATE_NAMES = [
@@ -148,6 +149,14 @@ async function seedLegacyPjm(repoRoot: string): Promise<void> {
   );
 }
 
+async function seedCanonicalPjm(repoRoot: string): Promise<void> {
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    const filePath = join(repoRoot, relativePath);
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(filePath, '', 'utf8');
+  }
+}
+
 describe('migratePjmRepo', () => {
   const tempDirs: string[] = [];
 
@@ -232,8 +241,7 @@ describe('migratePjmRepo', () => {
   it('short-circuits already migrated repos', async () => {
     const { assetsRoot, repoRoot, root } = await createWorkspace();
     tempDirs.push(root);
-    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
-    await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+    await seedCanonicalPjm(repoRoot);
 
     const result = await migratePjmRepo({
       repoRoot,

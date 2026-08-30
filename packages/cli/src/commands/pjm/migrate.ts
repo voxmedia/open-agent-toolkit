@@ -21,7 +21,10 @@ import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontm
 import YAML from 'yaml';
 
 import type { PjmAdoption } from './adoption';
-import { initializeRepoReference } from './init';
+import {
+  CANONICAL_REPO_REFERENCE_PATHS,
+  initializeRepoReference,
+} from './init';
 
 export type PjmMigrationActionType =
   | 'move'
@@ -387,21 +390,8 @@ async function hasRecognizedLegacySources(repoRoot: string): Promise<boolean> {
 }
 
 async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
-  const hasPjm = await pathExists(join(repoRoot, 'pjm'));
-  const hasDecisions = await pathExists(
-    join(repoRoot, 'reference', 'decisions'),
-  );
-  if (!hasPjm || !hasDecisions) {
-    return false;
-  }
-
-  for (const legacyPath of [
-    'reference/current-state.md',
-    'reference/roadmap.md',
-    'reference/backlog',
-    'reference/decision-record.md',
-  ]) {
-    if (await pathExists(join(repoRoot, legacyPath))) {
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    if (!(await pathExists(join(repoRoot, relativePath)))) {
       return false;
     }
   }
