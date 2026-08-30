@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Current-main plan review retry bound exhausted after the final Important atomicity finding was corrected; implementation has not started.
+oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -48,6 +47,11 @@ only a narrow config-aware managed-role materialization input for that project
 to consume or supersede later.
 
 **First executable task:** p01-t01.
+
+**Plan gate override:** Thomas explicitly approved implementation on 2026-08-30
+after the final Important atomicity finding was corrected. The review row stays
+`fixes_completed` because the automatic retry bound ended before a clean
+verdict.
 
 ## Phase 1: PJM Migration Adoption Semantics
 

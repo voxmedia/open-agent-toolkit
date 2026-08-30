@@ -1,11 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - Current-main plan review retry bound exhausted after the final Important atomicity finding was corrected; clean re-review or explicit override is pending.
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_phase: plan
-oat_phase_status: blocked
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_phase_review_gate: false
 oat_plan_source: quick
@@ -619,7 +618,9 @@ rewrite/re-dispatch retries. The last review found one Important atomicity gap:
 p01-t01 removed a core API field while deferring its caller to p01-t02. The
 task boundary above now updates and type-checks the core and caller together.
 The automatic retry bound was exhausted before a clean re-review, so this row
-remains `fixes_completed`, not `passed`.
+remains `fixes_completed`, not `passed`. Thomas explicitly approved proceeding
+with the corrected plan on 2026-08-30; that override does not rewrite the
+review result.
 
 ## Implementation Complete
 
