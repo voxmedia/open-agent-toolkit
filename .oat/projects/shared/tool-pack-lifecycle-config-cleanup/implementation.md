@@ -107,6 +107,19 @@ oat_generated: false
 - Dispatch stamp:
   `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
+#### Dispatch Record: p01 review
+
+- Request: `dispatch-p01-review-20260829-01`
+- Launch state/outcome: accepted / pending
+- Authoritative range:
+  `70bf5d3812b72a10659f882748e9a80d3ab90aa4..717df3056006286d036d0f2d07554a67f3272ea0`
+- Route: `oat-reviewer-gpt-5-6-sol-high`
+- Selection: managed reviewer target `gpt-5.6-sol` / `high`; ceiling `high`
+- Artifact destination: root project `reviews/`; implementation worktree remains
+  immutable
+- Dispatch stamp:
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
