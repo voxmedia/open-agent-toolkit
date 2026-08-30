@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status          | Tasks | Completed |
-| ------------------------------------- | --------------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
-| p03 — Release Integration             | passed          | 3     | 3/3       |
-| p04 — Final Review Fixes              | fixes_completed | 3     | 3/3       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
+| p03 — Release Integration             | passed | 3     | 3/3       |
+| p04 — Final Review Fixes              | active | 4     | 3/4       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/13 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -99,6 +99,10 @@ oat_generated: false
 
 **Status:** done
 **Commit:** `5329c2f6172b847a643e4f434d09d31931931413`
+
+### Task p04-t04: (review) Align the reusable implementation summary
+
+**Status:** pending
 
 ## Orchestration Runs
 
@@ -469,6 +473,23 @@ oat_generated: false
 - Range and task file bounds verified; worktree clean; no recovery attempts.
 - Next: narrowed final re-review before the configured exit gate and HiLL
   approval.
+
+### Review Received: final (round 2, narrowed)
+
+- Artifact:
+  `reviews/archived/final-review-2026-08-30T054835Z.md`
+- Reviewed range:
+  `f2f4bcdb3063d2e350a179e05f0a7983d51490ad..de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7`
+- Reviewed head: `de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7`
+- Reconnaissance: not attempted
+- Findings: 0 Critical, 0 Important, 0 Medium, 1 Minor
+- Prior findings M1, M2, and m1: resolved
+- Disposition map:
+  - m1 → `p04-t04` (converted): align the reusable PR/docs summary with the
+    canonical task ledger and include the p04 closeout fixes.
+- New task: `p04-t04`
+- Review cycle: 2 of 3
+- Next: execute p04-t04 and run the third/final narrowed re-review.
 
 <!-- orchestration-runs-end -->
 

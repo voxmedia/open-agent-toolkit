@@ -618,8 +618,47 @@ the current lifecycle boundary.
 
 `git commit -m "docs(p04-t03): align final plan closeout"`
 
+### Task p04-t04: (review) Align the reusable implementation summary
+
+**Review source:**
+`reviews/archived/final-review-2026-08-30T054835Z.md` (Minor 1)
+
+**Files:**
+
+- Modify: `.oat/projects/shared/tool-pack-lifecycle-config-cleanup/implementation.md`
+- Modify: `.oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md`
+
+**Step 1: Correct the downstream handoff summary**
+
+Update the `Final Summary (for PR/docs)` to use the canonical thirteen-task
+total after this review-generated task. Include the p04 direct-pack JSON
+coverage, archived-link repairs, plan closeout alignment, and this final
+summary-alignment task. Keep the plan's Phase 4 rollup and total synchronized.
+
+**Step 2: Format**
+
+Run:
+`pnpm exec oxfmt --write .oat/projects/shared/tool-pack-lifecycle-config-cleanup/implementation.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md`
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+rg -n "implementation-complete across thirteen|p04|13/13|Phase 4: 4 tasks|Total: 13 tasks" .oat/projects/shared/tool-pack-lifecycle-config-cleanup/implementation.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md
+git diff --check
+```
+
+Expected: the canonical progress ledger, plan rollup, and reusable PR/docs
+summary all report the same thirteen-task closeout.
+
+**Step 4: Commit**
+
+`git commit -m "docs(p04-t04): align reusable implementation summary"`
+
 **Phase 4 Verification:** The focused init/tools suite passes, all live backlog
-links resolve to the archived item, and the lifecycle plan reports 12 tasks.
+links resolve to the archived item, and the lifecycle artifacts consistently
+report 13 tasks.
 
 ## Reviews
 
@@ -632,6 +671,7 @@ links resolve to the archived item, and the lifecycle plan reports 12 tasks.
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
 | p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                        |
 | final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T053322Z.md         | b7f761019202cb5bd150c8acf6519ead6795ee3f | auto       | -                        |
+| final  | code     | fixes_added     | 2026-08-30 | reviews/archived/final-review-2026-08-30T054835Z.md         | de61b880bfd4aa4f9fbfd1d019ed41326d0f78a7 | auto       | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                        |
@@ -648,13 +688,13 @@ links resolve to the archived item, and the lifecycle plan reports 12 tasks.
   state.
 - Phase 3: 3 tasks — release integration, versions, docs, complete gates, and
   aligned PJM planning views.
-- Phase 4: 3 tasks — final-review test coverage, traceability, and lifecycle
+- Phase 4: 4 tasks — final-review test coverage, traceability, and lifecycle
   plan alignment.
 
-**Total: 12 tasks**
+**Total: 13 tasks**
 
-Phase 4 implementation is complete. Ready for final narrowed re-review, then
-the configured lifecycle exit gate and HiLL approval.
+Ready to execute the final summary-alignment task before the third and final
+narrowed re-review, configured lifecycle exit gate, and HiLL approval.
 
 ## References
 
