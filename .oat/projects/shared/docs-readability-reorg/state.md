@@ -18,6 +18,10 @@ oat_project_created: '2026-04-03T00:57:05.914Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-04-03T20:27:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-08-30T02:33:38.626Z'
 ---
 
 # Project State: docs-readability-reorg

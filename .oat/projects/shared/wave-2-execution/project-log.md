@@ -72,6 +72,6 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 Lifecycle sealed for wave-2-execution: PR #217 open; exit gate generation 2 passed (cursor-gpt-5-6-sol-xhigh, run 17dc551d); project recap built-durable; completion tail deferred to program close.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Overall verdict: PR #217 shipped and merged after the final gate passed, and the project recap is durable. The closeout-ordering lesson was recorded as a general observation for the repository ledger; the completion tail remained intentionally deferred to program close.

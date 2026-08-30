@@ -123,3 +123,19 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 ### 2026-08-26 · general · feedback · closeout ordering
 
 Observation: wave-2 archived its backlog item before summary.md existed, contradicting the wrapper plan's strictly ordered Implementation Complete checklist (synthesis + summary roll-up before archival). Impact: a final-review Medium and a recorded deviation; no data loss. Recommendation: generate summary.md immediately after the orchestration-log synthesis and before oat backlog archive; add this to the wave skill's closeout sequence wording.
+
+### 2026-08-26 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=targeting_correlation_failed
+
+### 2026-08-26 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=targeting_correlation_failed
+
+### 2026-08-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-08-26T222108Z.md
+
+### 2026-08-26 · structural · oat-project-complete · seal
+
+Lifecycle sealed for wave-2-execution: PR #217 open; exit gate generation 2 passed (cursor-gpt-5-6-sol-xhigh, run 17dc551d); project recap built-durable; completion tail deferred to program close.

@@ -182,3 +182,11 @@ Observation: a compound cd into a phase worktree persisted across orchestrator s
 ### 2026-08-26 · general · friction · deterministic smoke tier in linked worktrees
 
 Observation: the exit-gate reviewer's pnpm test failed once in tools/smoke/deterministic (git worktree add collided in the shared git dir), passed on isolated rerun, and leaked run-scoped smoke-automated worktrees and branches. Impact: root cleanup of the leaked refs; no wave code involved. Recommendation: the deterministic tier should namespace or clean its worktrees on failure and tolerate concurrent runs in linked worktrees.
+
+### 2026-08-26 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-08-26T16:37:51Z; project-log roll-up status: ok (rollup ledgerOutcome appended at summary step). Archive tail (oat project archive + S3 + active-pointer clear) deferred to program close per autonomous wave policy.
+
+### 2026-08-26 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-1-execution/reviews/final-review-2026-08-26T185206Z.md
