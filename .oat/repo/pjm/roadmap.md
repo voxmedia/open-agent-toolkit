@@ -180,9 +180,9 @@ flowchart TD
 ```
 
 The intended implementation shape is therefore four substantial tracks plus
-four bounded companions: (1) the agent-root contract, (2) the scope/provider
+three bounded companions: (1) the agent-root contract, (2) the scope/provider
 truth umbrella, (3) the review-plan workflow, and (4) review/gate integrity;
-the diagnostics, lifecycle-cleanup, headless, and structured-output projects
-are the bounded companions. The first two substantial tracks are sequential at
+the diagnostics, headless, and structured-output projects are the bounded
+companions. The first two substantial tracks are sequential at
 implementation time but can overlap during discovery/design; the bounded
 companions can proceed in parallel when they do not touch shared artifacts.
