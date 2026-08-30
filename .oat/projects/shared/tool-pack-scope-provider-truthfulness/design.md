@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_generated: false
@@ -197,6 +197,11 @@ type ProviderCatalogRefreshPolicy =
       };
     }
   | { state: 'unknown'; reason: string };
+
+type ProviderVisibilityEvidenceSource =
+  | 'provider-policy'
+  | 'runtime-catalog-probe'
+  | 'not-reported';
 
 interface ProviderContentCapability {
   scope: ConcreteScope;
@@ -452,7 +457,7 @@ interface ProviderReachabilityEvidence {
   >;
   visibility: EvidenceFact<
     ProviderVisibilityState,
-    'provider-policy' | 'runtime-catalog-probe' | 'not-reported'
+    ProviderVisibilityEvidenceSource
   >;
   recovery: readonly RecoveryAction[];
 }
@@ -467,7 +472,7 @@ function adviseProviderRefresh(input: {
   policy: ProviderCatalogRefreshPolicy;
   materialization: ProviderMaterializationState;
   observation?: ProviderCatalogObservation;
-}): EvidenceFact<ProviderVisibilityState, string>;
+}): EvidenceFact<ProviderVisibilityState, ProviderVisibilityEvidenceSource>;
 ```
 
 **Dependencies:** Scanner, core sync planner/executor, extension plans, manifest,
@@ -484,6 +489,9 @@ and provider registration.
   advice; recovery targets the actual missing layer.
 - Runtime catalog observations are valid only for the current command/session
   and are not persisted as current truth.
+- `not-reported` means an available evidence channel returned no visibility
+  value. `unknown` means no available observation or sourced provider policy
+  can establish the visibility state.
 - Claude user agents are projected through its declared `.claude/agents`
   mapping. Codex and Cursor managed roles remain extension-owned. Other
   provider rows must be proven by focused adapter tests before being marked
@@ -542,9 +550,10 @@ manifest manager, drift detector, and sync executor.
 - Exact identity is stricter than PR #240 skill comparison: provider-only
   entries, type differences, broken links, and target mismatch all defeat
   collection adoption.
-- Existing user-created exact aliases are untracked but left in place when a
-  provider is disabled. OAT-created unchanged aliases may be removed as links
-  only; their targets are never removed.
+- When a provider is disabled, an `adopted-exact` collection record is removed
+  from the manifest while its user-created on-disk alias is left untouched.
+  OAT-created unchanged aliases may be removed as links only; their targets
+  are never removed.
 - Real-directory conversion is excluded from the first release. Adding it
   later requires a separate destructive-operation design and approval, not a
   hidden extension of `auto`.
@@ -731,6 +740,32 @@ interface RecoveryAction {
   command?: string;
   message: string;
 }
+
+type PackEvidenceDiagnosticCode =
+  | 'inventory-unavailable'
+  | 'declared-only'
+  | 'partial-placement'
+  | 'duplicate-placement'
+  | 'provider-inactive'
+  | 'provider-unsupported'
+  | 'provider-materialization-missing'
+  | 'provider-materialization-failed'
+  | 'visibility-unknown'
+  | 'refresh-required'
+  | 'restart-required';
+
+interface PackEvidenceDiagnostic {
+  code: PackEvidenceDiagnosticCode;
+  severity: 'info' | 'warning' | 'error';
+  pack: PackName;
+  scope?: ConcreteScope;
+  provider?: string;
+  contentKind?: ManagedContentKind;
+  affectedAssets: readonly string[];
+  source: string;
+  detail: string;
+  recovery: readonly RecoveryAction[];
+}
 ```
 
 **Validation Rules:**
@@ -739,6 +774,9 @@ interface RecoveryAction {
 - `unknown` and `not-reported` require a reason and may not carry a recovery
   that claims success.
 - Commands and paths are redacted before serialization.
+- Diagnostic codes identify the failed evidence layer. They never collapse an
+  unavailable inventory, unsupported provider, failed materialization, or
+  unknown visibility state into one generic unavailable result.
 
 **Storage:** Pack and provider evidence is transient and reconstructed per
 command. Only established config, manifests, and dispatch journals persist.
@@ -791,6 +829,42 @@ evidence for inherited canonical entries.
 **Schema:**
 
 ```typescript
+interface CollectionPathIdentity {
+  device: string;
+  inode: string;
+  type: 'directory' | 'symlink';
+  modifiedAtNanoseconds: string;
+}
+
+type CollectionIdentityProof =
+  | {
+      status: 'absent';
+      canonicalDirectory: CollectionPathIdentity;
+      providerParent: CollectionPathIdentity;
+      checkedAt: string;
+    }
+  | {
+      status: 'exact-link';
+      providerLink: CollectionPathIdentity;
+      canonicalDirectory: CollectionPathIdentity;
+      linkTextKind: 'relative' | 'absolute';
+      resolvedTarget: string;
+      entrySetDigest: string;
+      checkedAt: string;
+    }
+  | {
+      status: 'ineligible';
+      reason:
+        | 'real-directory'
+        | 'broken-link'
+        | 'foreign-target'
+        | 'divergent-entries'
+        | 'unsafe-ancestry'
+        | 'identity-unavailable';
+      observedIdentity?: CollectionPathIdentity;
+      checkedAt: string;
+    };
+
 interface ManifestV2 {
   version: 2;
   oatVersion: string;
@@ -825,6 +899,12 @@ interface ManifestCollectionEntry {
 
 **Validation Rules:**
 
+- `exact-link` requires the provider link to resolve to the same canonical
+  directory identity and entry-set digest represented by the plan. Paths in
+  the proof are normalized scope-relative identities, not absolute home paths.
+- Proofs are transient preflight evidence. Apply rechecks the captured
+  provider-parent, provider-link, and canonical-directory identities before
+  mutation; any mismatch invalidates the plan without retry or removal.
 - A `collection` entry references exactly one matching collection record.
 - Collection provider/content and directory ancestry match every inherited
   entry.
@@ -871,6 +951,37 @@ canonical-role and runtime facts that its neutral schema does not own.
 **Schema:**
 
 ```typescript
+type OatDispatchEvidenceEvent =
+  | {
+      kind: 'canonical-role-resolution';
+      requestId: string;
+      source: 'canonical-role-resolver';
+      evidence: CanonicalRoleEvidence;
+    }
+  | {
+      kind: 'pre-start-rejection-attestation';
+      requestId: string;
+      source: 'provider-wrapper';
+      expectedLaunchStatus: 'blocked-before-start';
+      rejection: {
+        code: string;
+        rejectedAt: string;
+        provesNoChildStarted: true;
+      };
+    }
+  | {
+      kind: 'fallback-link';
+      requestId: string;
+      source: 'provider-wrapper';
+      evidence: CanonicalFallbackEvidence & { status: 'fallback-dispatch' };
+    }
+  | {
+      kind: 'runtime-observation';
+      requestId: string;
+      source: 'runtime-observer';
+      observation: RuntimeObservation;
+    };
+
 type CanonicalRoleEvidence =
   | {
       status: 'resolved';
@@ -930,6 +1041,13 @@ type RuntimeObservation =
 
 **Validation Rules:**
 
+- Each event names exactly one existing generic request ID and a fixed allowed
+  source. Pre-start rejection requires the generic record already to carry
+  `launch_status: blocked-before-start`; it cannot mutate or reconstruct that
+  field from namespaced evidence.
+- Fallback links require matching trigger/fallback request IDs, resolved
+  canonical role evidence, preserved configured controls, and no earlier
+  fallback for the trigger. Runtime events accept metadata only.
 - Generic request IDs are stable and unique. A fallback is a fresh canonical
   generic dispatch record linked to the rejected native record by both request
   IDs; it is not a second attempt array inside the original record.
@@ -953,6 +1071,13 @@ type RuntimeObservation =
 
 **Storage:** One atomically written canonical generic record per request under
 the optional project `dispatch/` directory. Old projects require no migration.
+
+Planning and implementation define the smaller supporting types
+`RedactedPath`, `CandidateMiss`, `ExactTargetRef`,
+`ProviderActivationEvidence`, `ProviderCatalogObservation`, and the TypeScript
+representation of the canonical `GenericDispatchRecord` directly from the
+constraints and existing generic record schema cited above; they may not
+weaken or rename those contracts.
 
 ## API Design
 
@@ -1420,6 +1545,11 @@ human/JSON agree.
 - Add per-asset materialization evidence to core and extension results.
 - Materialize supported managed roles, including Claude user roles.
 - Add user provider configuration support and provider inspection fields.
+- Establish versioned catalog-refresh provenance for registered providers from
+  an official contract, reproducible local validation, or repository decision.
+  At least one supported provider must receive a sourced non-`unknown` policy
+  before FR7 is considered delivered; otherwise return to HiLL review and
+  record the first-release limitation instead of shipping vacuous advice.
 - Add restart/refresh adviser and documentation.
 
 **Verification:** Provider/scope/content cross-product tests pass; missing,
@@ -1600,8 +1730,8 @@ tooling are sufficient.
 
 - Specification: `spec.md`
 - Discovery: `discovery.md`
-- Laptop finalized predecessor plan:
-  `/Users/thomas.stang/orca/workspaces/open-agent-toolkit/scope-adoption-diagnostics/.oat/projects/shared/scope-adoption-diagnostics/plan.md`
+- Laptop-clone sibling project
+  `scope-adoption-diagnostics/.oat/projects/shared/scope-adoption-diagnostics/plan.md`
   (explicitly approved; implementation initialized at observed head
   `25c28dbd1`; final landed SHA still pending)
 - `BL-260829-make-tool-pack-scope-selection`

@@ -166,13 +166,13 @@ git commit -m "feat(p01-t02): {description}"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                    | -             | -          | -           |
-| design | artifact | received | 2026-08-30 | reviews/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                             | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
+| design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -188,6 +188,10 @@ cell; never truncate a widened row back to five columns.
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review run and recorded as passing (no Critical/Important)
+
+The 2026-08-30 design review findings were resolved directly in `design.md`.
+Thomas approved proceeding to planning without another design re-review, so
+the event remains `fixes_completed` rather than being relabeled `passed`.
 
 ---
 
