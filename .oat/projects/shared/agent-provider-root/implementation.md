@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-29
+oat_last_updated: 2026-08-30
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: agent-provider-root
 
-**Started:** 2026-08-29
-**Last Updated:** 2026-08-29
+**Started:** 2026-08-30
+**Last Updated:** 2026-08-30
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,82 +26,79 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 4     | 0/4       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/8 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Portable Agent Contract and Ratchet Foundation
 
 **Status:** in_progress
-**Started:** 2026-08-29
+**Started:** 2026-08-30
 
-### Phase Summary (fill when phase is complete)
+### Task p01-t01: Generalize the portable asset classifier
 
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Status:** in_progress
+**Commit:** -
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add exact canonical-target resolution fixtures
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Migrate Live Canonical Role Reads
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Migrate project review role reads
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Migrate plan artifact-review instructions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t03: Migrate implementation fallback roles
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t04: Activate the zero-executable agent ratchet
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation, Packaging, and Release Proof
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document and package the provider-root contract
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Prove mutation detection and complete repository gates
 
 **Status:** pending
 **Commit:** -
@@ -128,38 +125,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-08-29
+### 2026-08-30
 
-**Session Start:** {time}
+**Session Start:** 16:30 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Generalize the portable asset classifier - in progress
+- [ ] p01-t02: Add exact canonical-target resolution fixtures - pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Implementation tracking initialized from the approved eight-task plan.
+- Managed High dispatch and final-phase HiLL policy resolved before source work.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Execute all three phases sequentially because they share the portability contract and release surfaces.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- None.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-08-29
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** In progress
 
 ---
 
@@ -177,8 +167,9 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
+| p03   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 

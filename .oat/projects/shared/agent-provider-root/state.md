@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 10689de0719ae1269c9f3144620c40dceb4ae296
+oat_current_task: p01-t01
+oat_last_commit: e36d589afb57d2a09d1354f2adf6c694153e9648
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -12,11 +12,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -72,7 +72,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T16:24:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T16:30:40.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -82,13 +82,13 @@ oat_project_explainer:
 
 # Project State: agent-provider-root
 
-**Status:** Plan complete
+**Status:** Implementation in progress
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Planning - Ready for implementation
+Implementation - Phase 1
 
 ## Artifacts
 
@@ -96,7 +96,7 @@ Planning - Ready for implementation
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
@@ -104,9 +104,8 @@ Planning - Ready for implementation
 - ✓ Specification complete
 - ✓ Design complete and independently reviewed
 - ✓ Plan approved with managed High dispatch policy
-- ✓ Plan artifact review and cross-family gate passed
-- ✓ Review findings received and resolved in the plan
-- ⧗ Awaiting implementation
+- ✓ Final-phase HiLL checkpoint and automatic lifecycle review configured
+- ⧗ Phase 1: Portable Agent Contract and Ratchet Foundation
 
 ## Blockers
 
@@ -114,4 +113,4 @@ None
 
 ## Next Milestone
 
-Start execution with `oat-project-implement`
+Complete p01-t01 and p01-t02, then run the independent phase review
