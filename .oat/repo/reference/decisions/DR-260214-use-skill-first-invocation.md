@@ -13,8 +13,8 @@ legacy_id: ADR-005
 - **Drivers:** Reduce cross-client confusion and workflow drift. Slash-style invocations (`/oat:*`) are not guaranteed across hosts, while skill names (`oat-*`) are the canonical workflow contract.
 - **Related:**
   - `.oat/templates/plan.md`
-  - `.oat/repo/reference/legacy-pjm/roadmap.md`
-  - `.oat/repo/reference/legacy-pjm/backlog/index.md`
+  - `.oat/repo/pjm/roadmap.md`
+  - `.oat/repo/pjm/backlog/index.md`
 
 #### Context
 

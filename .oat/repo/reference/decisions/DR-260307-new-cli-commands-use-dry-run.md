@@ -13,7 +13,7 @@ legacy_id: ADR-014
 - **Drivers:** Existing `--apply` convention (dry-run by default) is unintuitive — users expect commands to do what they ask. New `oat tools` commands adopted `--dry-run` (mutate by default) as the better UX pattern, but flipping all existing commands in the same PR would increase scope and risk.
 - **Related:**
   - `.oat/projects/shared/oat-tools-command-group/discovery.md` (Question 3, Deferred Ideas)
-  - `.oat/repo/reference/legacy-pjm/backlog/index.md`
+  - `.oat/repo/pjm/backlog/index.md`
 
 #### Context
 

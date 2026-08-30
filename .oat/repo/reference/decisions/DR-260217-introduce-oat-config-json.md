@@ -15,7 +15,7 @@ legacy_id: ADR-010
 - **Related:**
   - `.oat/repo/reference/external-plans/2026-02-17-oat-worktree-bootstrap-and-config-consolidation.md`
   - `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
-  - `.oat/repo/reference/legacy-pjm/backlog/index.md`
+  - `.oat/repo/pjm/backlog/index.md`
   - `.oat/sync/config.json`
 
 #### Context

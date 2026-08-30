@@ -40,16 +40,16 @@ copying their content here. -->
 - CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
   `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
   pointer correctness to `oat instructions validate`. The repository's 23
-  legacy ADRs are now file-per-record decisions, old operating/backlog
-  generations are preserved under `reference/legacy-pjm/` with explicit
-  non-active dispositions, and the durable program recap moved byte-for-byte
-  under `reference/explainers/`. Wave recap callers now target that canonical
-  destination, preventing the old top-level layout from recurring. The 74
-  obsolete `.cursor/skills` mirrors were also removed: portable skills remain
-  canonical in native-read `.agents/skills`, while `.cursor/skills` stays
-  reserved for genuinely Cursor-only packages. The source PJM doctor reports
-  declared adoption with every check passing, and project provider status is
-  clean with zero drift, missing entries, or strays.
+  legacy ADRs are now file-per-record decisions, 18 residual legacy backlog
+  records have canonical `BL-260830-*` identities, and shipped, absorbed, or
+  obsolete residue is recorded in completed history instead of a parallel
+  backlog tree. The durable program recap moved byte-for-byte under
+  `reference/explainers/`, and wave recap callers now target that canonical
+  destination. The 74 obsolete `.cursor/skills` mirrors were also removed:
+  portable skills remain canonical in native-read `.agents/skills`, while
+  `.cursor/skills` stays reserved for genuinely Cursor-only packages. The
+  source PJM doctor reports declared adoption with every check passing, and
+  project provider status is clean with zero drift, missing entries, or strays.
 - CLI `0.2.47` (agent-provider-root, merged as PR #242 and released) makes canonical
   skill-to-agent reads portable without changing provider-native dispatch.
   Seven live reviewer and implementer reads now bind their workflows dependency
@@ -427,9 +427,10 @@ dispatch truthfulness. Revalidate that project against PRs #227, #240, and
 #242 before advancing from discovery to design.
 
 The legacy PJM reference-layout migration is complete: all four warning classes
-are cleared, source doctor is clean, and preservation evidence is recorded in
-`reference/legacy-pjm/`. Thirteen concrete legacy backlog gaps remain explicit
-promotion candidates rather than silently becoming active work. The verifying
-11-issue triage ledger similarly records proposed issue/backlog dispositions
-without mutating GitHub or creating issue-derived backlog items before
-consolidated approval.
+are cleared, source doctor is clean, 13 actionable residual records are active
+canonical backlog items, and five product-direction records are canonical
+`needs-discussion` ideas. Six shipped, absorbed, or obsolete records were folded
+into completed history. No parallel legacy PJM tree remains. The verifying
+11-issue triage ledger records proposed GitHub dispositions without mutating
+issue state; its #205 recommendation now points to the promoted canonical
+discovery-policy item.

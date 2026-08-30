@@ -33,10 +33,11 @@ The project-management pack already installs `oat-pjm-*` skills and template sou
 
 `oat pjm init` is the canonical instantiate step for the project-management repo-reference surface:
 
-- At the time of this decision, the command created the now-preserved
-  `.oat/repo/reference/legacy-pjm/current-state.md`, `roadmap.md`, and
-  `backlog/` surfaces plus the monolithic decision record that was later
-  migrated into `.oat/repo/reference/decisions/`.
+- At the time of this decision, the command created flat current-state,
+  roadmap, backlog, and monolithic decision surfaces under `reference/`.
+  Migration later moved active operating records to `.oat/repo/pjm/`,
+  converted residual backlog work into canonical file-backed items, and split
+  decisions into `.oat/repo/reference/decisions/`.
 - Flat reference docs resolve from repo-local `.oat/templates/` first, then bundled CLI assets.
 - Template frontmatter is stripped from instantiated docs.
 - Existing files are never overwritten; reruns report created/skipped paths.

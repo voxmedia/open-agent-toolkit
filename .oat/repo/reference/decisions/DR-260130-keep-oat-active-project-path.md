@@ -12,7 +12,7 @@ legacy_id: ADR-001
 - **Status:** accepted
 - **Drivers:** Avoid breaking existing skills that assume `.oat/active-project` contains a full path; keep dogfood v1 stable while we iterate on projects-root and multi-project workflows.
 - **Related:**
-  - `.oat/repo/reference/legacy-pjm/roadmap.md`
+  - `.oat/repo/pjm/roadmap.md`
   - `.oat/projects-root`
 
 #### Context

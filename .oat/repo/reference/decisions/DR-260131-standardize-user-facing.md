@@ -13,7 +13,7 @@ legacy_id: ADR-002
 - **Drivers:** Reduce “silent work” confusion during dogfooding; make long-running skills feel alive; align with GSD-style UX without adding noise.
 - **Related:**
   - `.oat/repo/archive/workflow-user-feedback.md`
-  - `.oat/repo/reference/legacy-pjm/current-state.md`
+  - `.oat/repo/pjm/current-state.md`
 
 #### Decision
 

@@ -20,7 +20,8 @@ reached main.
 
 Excluded: GitHub issue mutations, implementation, unrelated backlog
 reprioritization, and external-plan generation. Proposed issue-derived backlog
-changes remain unapproved and are not applied by this cleanup PR.
+changes remain unapproved except #205's approved promotion through the reviewed
+legacy-backlog conversion; no GitHub state is changed by this cleanup PR.
 
 ## Evidence baseline
 
@@ -29,7 +30,7 @@ changes remain unapproved and are not applied by this cleanup PR.
 - GitHub authentication and live issue/PR reads succeeded on 2026-08-30.
 - Relevant merged PRs: #225, #227, #231, #240, and #242.
 - PR #190 remains open, draft, and conflicting.
-- Active and archived canonical backlog records plus the legacy backlog snapshot
+- Active and archived canonical backlog records plus pre-migration Git history
   were searched before proposing new coverage.
 
 ## Disposition ledger
@@ -91,18 +92,19 @@ changes remain unapproved and are not applied by this cleanup PR.
 - Evidence: .agents/skills/oat-project-discover/SKILL.md:120 blocks without an
   index and line 180 hardcodes staleness thresholds.
   packages/cli/src/config/oat-config.ts:216 has no discovery prerequisite
-  policy. Legacy bl-b5af already owns configurable staleness thresholds but not
-  the full documentation-aware requirement.
-- Existing coverage: Legacy bl-b5af is partial historical coverage, not a
-  canonical active PJM item.
+  policy. Canonical `BL-260830-make-documentation-aware` broadens legacy
+  `bl-b5af` from threshold configuration into the full documentation-aware
+  requirement.
+- Existing coverage: `BL-260830-make-documentation-aware` is canonical active
+  coverage for the verified issue.
 - Proposed GitHub action: Keep open; add tracked-in-backlog after an approved
   promoted item merges.
-- Backlog action: Promote and broaden bl-b5af into one canonical item covering
-  configurable, documentation-aware discovery prerequisites and mapper/tests.
+- Backlog action: Track implementation and eventual issue linkage through
+  `BL-260830-make-documentation-aware`.
 - Priority and size rationale: medium / feature / M. The current workaround is
   available but wasteful; the fix crosses config, discovery policy, mapper
   evidence, and contract tests.
-- Approval: Pending.
+- Approval: Approved for canonical backlog promotion; GitHub disposition remains pending.
 - Post-merge result: Pending.
 
 ### GH-206 — Make review continuation ranges self-validating
@@ -315,14 +317,14 @@ changes remain unapproved and are not applied by this cleanup PR.
 
 ## Open concerns
 
-1. Exact issue-derived backlog mutations and post-merge GitHub actions require
-   consolidated user approval before application.
+1. Post-merge GitHub issue actions still require a live-state recheck; this PR
+   does not mutate labels, comments, or issue state.
 2. PR #190 must be reconciled before treating ReviewPlan as complete coverage
    for #206 or implementing overlapping gate/review work.
 3. The active scope/provider and diagnostics worktrees overlap on inventory and
    diagnostics surfaces and require explicit file partitioning or serialization.
-4. Historical legacy backlog candidates remain non-active until individually
-   revalidated and promoted.
+4. Canonical `needs-discussion` ideas are intentionally excluded from
+   implementation planning until their product decisions are resolved.
 
 ## Resume instructions
 

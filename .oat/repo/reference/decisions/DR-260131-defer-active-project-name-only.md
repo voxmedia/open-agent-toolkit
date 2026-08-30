@@ -12,8 +12,8 @@ legacy_id: ADR-004
 - **Status:** accepted
 - **Drivers:** Avoid cross-skill coordination risk while we start the CLI; keep dogfood stable; let the CLI become the canonical interface for project creation/selection.
 - **Related:**
-  - `.oat/repo/reference/legacy-pjm/roadmap.md`
-  - `.oat/repo/reference/legacy-pjm/current-state.md`
+  - `.oat/repo/pjm/roadmap.md`
+  - `.oat/repo/pjm/current-state.md`
   - `oat state refresh` CLI command (reads both formats)
 
 #### Decision

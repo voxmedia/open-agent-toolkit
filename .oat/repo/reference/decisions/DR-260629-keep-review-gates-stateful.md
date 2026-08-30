@@ -14,7 +14,7 @@ legacy_id: ADR-023
 - **Related:**
   - `.oat/projects/shared/workflow-gate-improvements/`
   - `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
-  - `.oat/repo/reference/legacy-pjm/backlog/items/gate-same-target-execution.md`
+  - `.oat/repo/pjm/backlog/items/BL-260830-re-evaluate-same-target-gate.md`
 
 #### Context
 

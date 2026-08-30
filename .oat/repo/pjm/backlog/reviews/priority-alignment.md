@@ -87,6 +87,25 @@ gate-headless-no-yield and gate-structured-output-contract are existing bounded
 projects. Improve their backlog links or estimates when needed, but do not
 create replacement projects or external plans.
 
+### Promoted legacy residuals
+
+The legacy tree has been retired. Eighteen reviewed records now have canonical
+`BL-260830-*` identities:
+
+- Ready for bounded `oat-repo-improve` verification and planning when unowned:
+  quick-mode resume routing, config unset, live brainstorm dogfood, live
+  project-split dogfood, persisted instruction-sync strategy, strict YAML skill
+  validation, remote respond/summarize skills, and the provide-remote helper
+  CLI wiring.
+- Revalidate scope or dependency before plan generation: per-CLAUDE adoption
+  opt-out (soft-depends on persisted strategy), residual CLI P2/P3 cleanup,
+  documentation-aware discovery policy from #205, and control-plane-backed
+  plan/implementation reads.
+- Exclude from implementation planning while labeled `needs-discussion`:
+  bounded durable-reference reads, generic Jira refinement ownership,
+  listProjects fast-path approval, dependency-intelligence ownership,
+  same-target gate execution, and OAT memory-subsystem ownership.
+
 ## Shared-file coordination
 
 - This cleanup PR owns .oat/repo/pjm/, legacy .oat/repo/reference/ layout
@@ -102,5 +121,6 @@ create replacement projects or external plans.
 
 | Date       | Update                                                                                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.    |
 | 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items. |
 | 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                  |

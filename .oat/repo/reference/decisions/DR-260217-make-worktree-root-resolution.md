@@ -15,7 +15,7 @@ legacy_id: ADR-011
 - **Related:**
   - `.agents/skills/oat-worktree-bootstrap/SKILL.md`
   - `.oat/config.json`
-  - `.oat/repo/reference/legacy-pjm/current-state.md`
+  - `.oat/repo/pjm/current-state.md`
 
 #### Context
 

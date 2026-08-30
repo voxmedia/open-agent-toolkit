@@ -13,7 +13,7 @@ legacy_id: ADR-022
 - **Drivers:** Cross-provider review gates need a reliable V1 that works from Codex, Claude, and Cursor without making OAT parse model/effort semantics or depend on undocumented active-model signals.
 - **Related:**
   - `.oat/projects/shared/workflow-end-triggers/`
-  - `.oat/repo/reference/legacy-pjm/backlog/items/gate-same-target-execution.md`
+  - `.oat/repo/pjm/backlog/items/BL-260830-re-evaluate-same-target-gate.md`
   - `packages/cli/src/commands/gate/index.ts`
   - `packages/cli/src/config/oat-config.ts`
 

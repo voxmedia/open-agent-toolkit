@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD013 -->
 
 **Date:** 2026-08-29 (America/Chicago)
-**Scope:** All 55 active records under `.oat/repo/pjm/backlog/items/`
+**Scope:** Original review of 55 active records under `.oat/repo/pjm/backlog/items/`
 **Roadmap:** `.oat/repo/pjm/roadmap.md` (included after the interactive
 scope prompt selected the recommended inclusive option)
 **Codebase baseline:** HEAD `3ca99ba0` (tag `v0.2.38`); `origin/main`
@@ -15,7 +15,9 @@ authorization to change item priorities or execute the proposed work.
 
 ## 2026-08-30 current-state addendum
 
-The canonical active set is again **55 records**. PR #240 shipped and archived
+The canonical active set is now **72 records** after 18 reviewed legacy records
+received canonical identities; 13 are actionable and five are explicitly
+`needs-discussion`. PR #240 shipped and archived
 `BL-260827-clean-up-tool-pack-lifecycle`; PR #242 shipped and archived
 `BL-260829-unified-agent-provider-root`; and PR #240 added
 `BL-260830-migrate-the-legacy-pjm`, which this cleanup branch completed
@@ -35,6 +37,9 @@ their active-state language is superseded as follows:
   candidates; do not replace them with external plans.
 - The structured-output item now carries estimate M, and the headless item has
   concrete acceptance criteria derived from its existing discovery artifact.
+- Eighteen legacy records were promoted into the canonical backlog. Five carry
+  `needs-discussion` and must not enter implementation planning until their
+  product decisions are resolved.
 - Future `oat-repo-improve` passes should target only unowned, well-scoped items
   that do not need deeper discovery.
 
