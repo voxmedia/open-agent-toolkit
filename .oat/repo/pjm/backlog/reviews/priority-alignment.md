@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD013 -->
 
 **Date:** 2026-08-30 (America/Chicago)
-**Status:** Active — Post-PR #242 alignment. The provider-root contract shipped;
+**Status:** Active — Post-PR #244 alignment. The provider-root contract shipped;
 the scope/provider umbrella and scope-adoption diagnostics are active in
 separate worktrees; ReviewPlan remains an existing project; and the two bounded
 gate projects remain independent launch candidates.
@@ -44,6 +44,31 @@ scope/provider umbrella, not an active lane.
 - The headless and structured-output projects remain independent probes. They
   support review/gate integrity without taking ownership of its lifecycle model.
 
+## External-plan readiness
+
+Plan readiness and execution readiness are separate decisions. A coherent,
+well-scoped backlog item may receive an external plan even when execution is
+blocked by an unshipped hard dependency. Dependency state alone is not a reason
+to exclude an item from the next `oat-repo-improve` pass.
+
+For every dependency-aware external plan:
+
+- reverse-link the source backlog item and plan;
+- link related backlog items, projects, pull requests, and external plans by
+  stable ID, title, repository path, or URL;
+- classify each dependency as hard or soft;
+- mark execution `BLOCKED` for unsatisfied hard dependencies and name the exact
+  state that unblocks execution;
+- use a dated filename and record the exact current `origin/main` commit; and
+- revalidate before import or execution when the freshness window expires,
+  `origin/main` advances, cited surfaces change, backlog or issue intent
+  changes, or a dependency lands after planning.
+
+[BL-260830-distinguish-external-plan](../items/BL-260830-distinguish-external-plan.md)
+owns the missing `oat-repo-improve` skill and plan-template enforcement. Until
+that item ships, apply this section as the operator rule for candidate
+selection and plan review.
+
 ## Recommended concurrent stack
 
 These lanes are peers except where the dependencies above say otherwise:
@@ -54,9 +79,10 @@ These lanes are peers except where the dependencies above say otherwise:
 3. Reconcile the existing ReviewPlan project and PR #190.
 4. Launch the existing headless and structured-output projects when capacity
    allows.
-5. Use oat-repo-improve only for remaining well-scoped backlog items that do
-   not already belong to one of these projects and do not require deeper
-   discovery.
+5. Use oat-repo-improve for remaining well-scoped backlog items that do not
+   already belong to one of these projects and do not require deeper discovery.
+   Include plan-ready items whose execution is dependency-blocked, with the
+   dependency and revalidation controls above.
 
 ## Priority clusters
 
@@ -97,10 +123,14 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
   project-split dogfood, persisted instruction-sync strategy, strict YAML skill
   validation, remote respond/summarize skills, and the provide-remote helper
   CLI wiring.
-- Revalidate scope or dependency before plan generation: per-CLAUDE adoption
-  opt-out (soft-depends on persisted strategy), residual CLI P2/P3 cleanup,
-  documentation-aware discovery policy from #205, and control-plane-backed
-  plan/implementation reads.
+- Plan now when scope is coherent, even if execution is dependency-blocked:
+  per-CLAUDE adoption opt-out (soft-depends on persisted strategy) and the
+  documentation-aware discovery policy from #205. Record dependency links,
+  readiness state, named unblock conditions, and revalidation triggers.
+- Revalidate scope before plan generation where the work itself may have
+  drifted: residual CLI P2/P3 cleanup and control-plane-backed
+  plan/implementation reads. Unshipped dependencies alone do not make these
+  items plan-ineligible.
 - Exclude from implementation planning while labeled `needs-discussion`:
   bounded durable-reference reads, generic Jira refinement ownership,
   listProjects fast-path approval, dependency-intelligence ownership,
@@ -108,7 +138,7 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 
 ## Shared-file coordination
 
-- This cleanup PR owns .oat/repo/pjm/, legacy .oat/repo/reference/ layout
+- PR #244 owns the completed `.oat/repo/pjm/` and legacy reference-layout
   migration, removal of obsolete native-read Cursor skill mirrors, and the
   verifying issue-triage record.
 - Active implementation projects own their project artifacts and implementation
@@ -121,6 +151,7 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 
 | Date       | Update                                                                                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                              |
 | 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.    |
 | 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items. |
 | 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                  |

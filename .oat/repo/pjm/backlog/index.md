@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- External planning now distinguishes plan readiness from execution readiness:
+  well-scoped items remain eligible for dated, current-main-pinned plans while
+  hard dependencies keep execution explicitly blocked. The missing
+  `oat-repo-improve` skill and template enforcement is tracked in
+  `BL-260830-distinguish-external-plan`.
 - `BL-260830-migrate-the-legacy-pjm` completed the repository's administrative
   reference-layout cleanup: all 23 legacy decisions were migrated, 13 residual
   work records and five product-decision records received canonical backlog
@@ -191,6 +196,7 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260830-clarify-quick-mode-resume      | Clarify quick-mode resume routing from oat-project-plan                                               | open   | high     | feature    | S        |
+| BL-260830-distinguish-external-plan      | Distinguish external-plan readiness from execution readiness                                          | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
 | BL-260826-gate-targets-must-not-yield    | Gate targets must not yield on background work in headless mode                                       | open   | high     | task       | M        |
