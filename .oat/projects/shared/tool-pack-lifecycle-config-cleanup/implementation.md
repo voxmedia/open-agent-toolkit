@@ -19,9 +19,9 @@ oat_generated: false
 | p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
 | p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
 | p03 — Release Integration             | passed | 3     | 3/3       |
-| p04 — Final Review Fixes              | active | 4     | 3/4       |
+| p04 — Final Review Fixes              | active | 4     | 4/4       |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -495,7 +495,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-Tool-pack lifecycle/config cleanup is implementation-complete across nine
+Tool-pack lifecycle/config cleanup is implementation-complete across thirteen
 tasks. Inventory now distinguishes bundled seed defaults from retained
 overrides and detects same-version skill/agent content drift without treating
 intentional executable-bit normalization as drift. Project config adoption is
@@ -508,6 +508,11 @@ archives the completed backlog item, and aligns the curated backlog, roadmap,
 and current-state views. Main implementation surfaces are the CLI inventory,
 config/install/update commands and tests, public package manifests/assets, two
 docs pages, and PJM planning artifacts.
+
+Phase 4 adds direct-pack JSON adoption coverage, repairs all three live links
+to the archived backlog item, aligns the plan closeout at four phases and
+thirteen tasks, and brings this reusable implementation summary into agreement
+with that canonical ledger.
 
 Verification includes 495 merged focused tests, 482 release-focused tests,
 an evidence-grade forced Turbo run with 0 cached / 10 executed and 4,645 package
