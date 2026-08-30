@@ -436,7 +436,7 @@ with captured logs.
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
 | p01    | code     | fixes_added     | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                        |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |

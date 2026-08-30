@@ -17,7 +17,7 @@ oat_generated: false
 | Phase                                 | Status      | Tasks | Completed |
 | ------------------------------------- | ----------- | ----- | --------- |
 | p01 — Content-Accurate Pack Inventory | fixes_added | 3     | 2/3       |
-| p02 — Explicit Adoption and CLI State | in_review   | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | passed      | 3     | 3/3       |
 | p03 — Release Integration             | pending     | 1     | 0/1       |
 
 **Total:** 5/7 tasks completed
@@ -43,7 +43,7 @@ oat_generated: false
 
 ## Phase 2: Explicit Adoption and Supported CLI State
 
-**Status:** in_review
+**Status:** passed
 
 ### Task p02-t01: Report exact legacy pack intents adopted
 
@@ -161,6 +161,18 @@ oat_generated: false
 - Fix-loop usage: round 1 of 2
 - Dispatch stamp:
   `Dispatch: scope=p01 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
+### Review Received: p02 (round 1)
+
+- Artifact: `reviews/p02-review-2026-08-30T022702Z.md`
+- Reviewed head: `44edd2bc56ecbf542f0f70f26b79cb31e646c69e`
+- Reconnaissance: attempted; orchestration evidence validated in the artifact
+- Findings: 0 Critical, 0 Important, 1 Medium, 0 Minor
+- Verdict: passed at the blocking threshold; fix-loop count 0
+- Deferred Medium: add a newly adopted direct-pack JSON boundary assertion
+  that pins one-document output and `adoptedPacks`; runtime behavior was
+  independently verified and no defect was observed.
+- Project log: terminal p02 outcome and reviewer orchestration recorded once
 
 <!-- orchestration-runs-end -->
 
