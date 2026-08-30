@@ -204,6 +204,7 @@ interface OutdatedSkillRecord {
 interface InitToolsRunMetadata {
   affectedScopes: ConcreteScope[];
   appliedScopes: ConcreteScope[];
+  adoptedPacks: ToolPack[];
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -701,14 +702,20 @@ function reportSuccess(
   context: CommandContext,
   packs: PackScopeInfo[],
   syncScopes: ConcreteScope[],
+  adoptedPacks: ToolPack[],
 ): void {
   if (context.json) {
     context.logger.json({
       status: 'ok',
       installedPacks: packs,
       syncScopes,
+      ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
     });
     return;
+  }
+
+  for (const pack of adoptedPacks) {
+    context.logger.info(`Adopted project tool pack: ${pack}`);
   }
 
   context.logger.info(
@@ -869,7 +876,11 @@ export async function runInitTools(
       selectedPacks.push('project-management');
     }
     if (selectedPacks.length === 0) {
-      lastRunInitToolsMetadata = { affectedScopes: [], appliedScopes: [] };
+      lastRunInitToolsMetadata = {
+        affectedScopes: [],
+        appliedScopes: [],
+        adoptedPacks: [],
+      };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
       }
@@ -1294,11 +1305,25 @@ export async function runInitTools(
         packScopeInfo.flatMap(({ scope }) => scopesForEndState(scope)),
       ),
     ];
+    const adoptedPacks =
+      projectRoot && appliedScopes.includes('project')
+        ? (
+            await reconcileProjectToolsConfig(
+              {
+                repoRoot: projectRoot,
+                cwd: context.cwd,
+                home: context.home,
+              },
+              dependencies,
+            )
+          ).adoptedPacks
+        : [];
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
       appliedScopes,
+      adoptedPacks,
     };
-    reportSuccess(context, packScopeInfo, affectedScopesList);
+    reportSuccess(context, packScopeInfo, affectedScopesList, adoptedPacks);
     process.exitCode = 0;
     return selectedPacks;
   } catch (error) {
@@ -1388,7 +1413,7 @@ function createReconciledPackCommand(
   const base = new Command(pack).description(descriptions[pack]);
   const packCommand = pack === 'core' ? base : withScopeOption(base);
   return packCommand
-    .option('--force', 'Reconcile managed assets to bundled content')
+    .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
@@ -1446,14 +1471,31 @@ function createReconciledPackCommand(
         // project-management and decisions AGENTS sections are written by the
         // explicit adoption action (`oat pjm init`), never by pack placement.
 
+        const adoptedPacks = scopes.includes('project')
+          ? (
+              await reconcileProjectToolsConfig(
+                {
+                  repoRoot: await dependencies.resolveProjectRoot(context.cwd),
+                  cwd: context.cwd,
+                  home: context.home,
+                },
+                dependencies,
+              )
+            ).adoptedPacks
+          : [];
+
         if (context.json) {
           context.logger.json({
             status: 'ok',
             pack,
             scopes,
             results,
+            ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
           });
         } else {
+          for (const adoptedPack of adoptedPacks) {
+            context.logger.info(`Adopted project tool pack: ${adoptedPack}`);
+          }
           context.logger.info(`Installed ${pack} tool pack.`);
           for (const result of results) {
             context.logger.info(`Scope: ${result.request.scope}`);
@@ -1560,10 +1602,12 @@ export function createInitToolsCommand(
           scanTools: dependencies.scanTools,
         }),
       ];
-  for (const packCommand of packCommands) {
-    packCommand.hook('postAction', async (_thisCommand, actionCommand) => {
-      await reconcileAfterInstall(actionCommand);
-    });
+  if (!dependencies.reconcilePacks) {
+    for (const packCommand of packCommands) {
+      packCommand.hook('postAction', async (_thisCommand, actionCommand) => {
+        await reconcileAfterInstall(actionCommand);
+      });
+    }
   }
 
   const command = new Command('tools').description(
@@ -1585,7 +1629,6 @@ export function createInitToolsCommand(
       actionCommand,
       canonicalPathsForPacks(selectedPacks),
     );
-    await reconcileAfterInstall(actionCommand);
   });
 
   return command;
