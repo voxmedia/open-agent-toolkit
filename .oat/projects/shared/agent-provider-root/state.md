@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: null
+oat_last_commit: 78b8ac3d6bd75f4a090e58a0a6730f99504931c6
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -80,25 +80,25 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T14:46:15.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T15:03:21.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: agent-provider-root
 
-**Status:** Design — draft assembled
+**Status:** Design complete
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Design - Resolving the portable agent-reference contract before planning
+Design - Ready for implementation planning
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (draft)
+- **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -108,7 +108,8 @@ Design - Resolving the portable agent-reference contract before planning
 - ✓ Specification confirmed
 - ✓ Design sections collaboratively approved
 - ✓ Design draft assembled and self-reviewed
-- ⧗ Independent artifact review pending
+- ✓ Independent artifact review passed and received
+- ⧗ Awaiting implementation plan
 
 ## Blockers
 
@@ -116,4 +117,4 @@ None
 
 ## Next Milestone
 
-Pass the configured artifact-review gate, then mark design complete
+Create the implementation plan with `oat-project-plan`
