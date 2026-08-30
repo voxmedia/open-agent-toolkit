@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-design
 oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_generated: false
@@ -8,17 +8,17 @@ oat_generated: false
 
 # Discovery: Tool-Pack Scope, Provider Reachability, and Dispatch Truthfulness
 
-> Discovery status: initial, non-exhaustive starting point. This artifact is
-> intentionally not a complete specification. Revalidate it in a fresh thread
-> and worktree against current main, including landed PRs #227, #240, and #242,
-> before approving design, changing workflow mode, or generating a plan.
+> Discovery revalidated on 2026-08-30 against clean `origin/main` at
+> `5d684ba9746cd91006524eb5a82f18078a3196ef`, authoritative GitHub state, the
+> merged PR #227/#240/#242 code and tests, current backlog records, and archived
+> project summaries. The repository knowledge index predates those merges and
+> was used only for orientation.
 
-> Boundary update after PR #242: the completed `agent-provider-root` project
-> owns portable canonical-agent reads and the loaded -> user -> project
-> resolution contract. This project owns canonical installation, provider
+> Boundary update after PR #242: canonical skill-to-agent reads are shipped and
+> the completed `agent-provider-root` project is archived. This project consumes
+> that contract while retaining ownership of canonical installation, provider
 > materialization, catalog visibility, restart notices, picker truth, and
-> dispatch-state reporting. The relationship and affected files must be
-> revalidated before implementation.
+> dispatch-state reporting.
 
 ## Phase Guardrails (Discovery)
 
@@ -52,12 +52,19 @@ guidance, and tool-pack lifecycle/configuration edges:
   config contracts](../../../repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md)
 - [`BL-260829-unified-agent-provider-root` — Unified AGENT_PROVIDER_ROOT binding
   for portable skill and agent references](../../../repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md)
-- [`agent-provider-root` completion summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
-  — landed PR #242 and owns canonical skill-to-agent reference resolution.
+- [`agent-provider-root` summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
+  — completed dependency establishing canonical skill-to-agent reference
+  resolution; the historical project is archived.
 
-PR #227, PR #240, and PR #242 are present on current main. Their shipped
-contracts are the local baseline for further discovery; the completed project
-summaries replace the removed active-project directories as durable context.
+The umbrella owns one shared state vocabulary and end-to-end integration. Its
+bounded child workstreams retain narrower ownership: directory-symlink adoption
+(`BL-260724`), managed project `AGENTS.md` guidance (`BL-260828`), restart and
+refresh diagnosis (owned directly by this umbrella), and dispatch provenance.
+Configured selection, pre-start rejection, canonical fallback identity, and
+fallback labeling stay in the umbrella; sanitized post-launch runtime
+observation remains `BL-260826` and cannot authorize replacement or fallback.
+These are currently backlog/design children inside one implementation project;
+they are not yet formal OAT child projects.
 
 ## Problem Statement
 
@@ -86,21 +93,31 @@ divergence is detected.
 
 ## Evidence and Current Baseline
 
-This is a verified starting map from the current checkout, not an exhaustive
-implementation inventory:
+This is a verified starting map from `origin/main` after PR #242, not an
+exhaustive implementation inventory:
 
 - `packages/cli/src/commands/tools/shared/pack-manifest.ts` defines pack
   assets, allowed scopes, ownership, and canonical/provider destinations.
-- `packages/cli/src/commands/tools/shared/pack-inventory.ts:33-80` reports
-  scoped assets and pack placement as `project`, `user`, `both`, or
-  `unavailable`. Lines `318-348` use the fixed
-  `USER_SCOPE_MANAGED_AGENT_FILES` set for the user-agent diagnostic; lines
-  `350-462` derive scoped inventory, placement, and duplicate/shared-owner
-  diagnostics.
-- `pack-inventory.ts:99-300` compares same-version skills and agents by content
-  as well as version, compares static assets by digest, and preserves generated
-  or seed-if-missing semantics while validating managed paths. That is
-  canonical installation evidence, not proof of provider visibility.
+- `packages/cli/src/commands/tools/shared/pack-inventory.ts:33-75` models
+  canonical intent, asset status, completeness, placement, and diagnostics. It
+  does not model provider projection, runtime catalog visibility, restart
+  state, or dispatch provenance.
+- `pack-inventory.ts:99-183` now treats equal-version skill/agent content drift
+  as `outdated`, compares the bundled skill tree without treating local extra
+  files or normalized executable modes as drift, and validates source and
+  installed paths. `pack-inventory.ts:237-299` distinguishes generated and
+  source-backed seed state. These PR #240 contracts are accepted baseline, not
+  work to redesign here.
+- `pack-inventory.ts:302-312` defines completeness from managed-asset presence;
+  `pack-inventory.ts:389-462` still treats either enabled intent or non-shared
+  managed-asset presence as placement evidence and refuses to infer provider
+  precedence from duplicate scope. Intent, health, placement, and reachability
+  therefore remain distinct design inputs.
+- `pack-inventory.ts:318-348` explicitly reports installed user agents omitted
+  from provider materialization, proving canonical completeness can coexist
+  with provider unreachability. The diagnostic still depends on the fixed
+  `USER_SCOPE_MANAGED_AGENT_FILES` exception, so it is a compatibility seam,
+  not the provider capability matrix or a runtime visibility probe.
 - `packages/cli/src/commands/sync/index.ts:276-380` resolves concrete scopes,
   config-aware active adapters, canonical entries, and user-scope
   materialization extensions. Lines `386-418` emit non-interactive provider
@@ -123,15 +140,25 @@ implementation inventory:
   coverage for placement truth, reachability, directory adoption/divergence,
   restart requirements, and native-dispatch provenance.
 
-### Landed PR #227 baseline
+### Verified merged baselines
 
-PR #227 added a `synced` project-artifact scope, project-scope commands,
-project-config defaults, pack inventory/reconciliation, migration, and
-project-review skill behavior while preserving existing `config.projects` on
-tool-pack install/reconcile. It is not the same axis as tool-pack installation
-scope (`project` versus `user`). This project must prevent “synced project
-artifact” scope from being conflated with “user-scope tool pack” or provider
-visibility.
+- PR #227 merged as `a3ac2a01982c02e8690d5016912917b7bf3307b7` on
+  2026-08-29. It adds the `shared | local | synced` project-artifact axis, with
+  `synced` as the effective default, and preserves sibling `projects` config
+  fields during writes. That axis is not tool-pack `project | user` scope and
+  proves nothing about provider reachability or dispatch.
+- PR #240 merged as `cd07d72e51eaa3c50660612186a54550067d20e5` on
+  2026-08-30. It completes lifecycle/config cleanup, content-aware inventory,
+  same-version drift detection, seed classification, exact adoption reporting,
+  unsupported false-intent rejection, and removal of inert per-pack `--force`.
+  This project extends the post-#240 model; it does not reopen those contracts.
+- PR #242 merged as `ce7c3225da52508a123849cdd549f449651a5770`
+  on 2026-08-30. It establishes dependency-owned canonical-agent roots,
+  `loaded -> user -> project` candidate order, exact unsuffixed same-scope
+  canonical Markdown identity, and fail-closed recovery. Provider-native role,
+  model, effort, variant, and route selection remain authoritative; canonical
+  role files are eligible only for direct reads or fallback after an explicit
+  pre-start native-role rejection.
 
 ## Clarifying Questions
 
@@ -224,23 +251,24 @@ direction.
 
 ### Chosen Direction
 
-**Approach:** Approach 1, subject to fresh revalidation.
+**Approach:** Approach 1, confirmed by bounded revalidation.
 
 **Rationale:** These are mismatches between intent, canonical content,
 projection, runtime catalog state, and native dispatch. A shared vocabulary
 with provider-specific adapters gives every surface one state model.
 
-**User validated:** Directionally yes through the project-grouping discussion;
-formal discovery approval is intentionally not recorded.
+**User validated:** Directionally yes through the project-grouping discussion
+and the 2026-08-30 request to complete bounded revalidation before design.
 
 ## Options Considered
 
-### Option A: Fixed special-role allowlist versus provider capability declaration
+### Option A: Extend the fixed special-role diagnostic versus provider capability declaration
 
-The fixed `USER_SCOPE_MANAGED_AGENT_FILES` behavior is a useful compatibility
-signal but cannot remain the authority for reachability. A capability
-declaration can expose missing Claude roles, support the full matrix, and make
-intentional provider limitations distinct from failed materialization.
+PR #240 made the fixed `USER_SCOPE_MANAGED_AGENT_FILES` behavior an explicit
+compatibility diagnostic, but it cannot become the authority for reachability.
+A capability declaration can expose missing Claude roles, support the full
+matrix, and make intentional provider limitations distinct from failed
+materialization.
 
 **Provisional choice:** capability declaration, pending schema design.
 
@@ -279,9 +307,17 @@ automatic restart is provider-specific and an unexpected process mutation.
    model/effort controls, and authorization basis.
 8. Init and standalone workflow installation announce the distinction between
    user-scope assets and project-level OAT guidance and ask whether to add it.
-9. PR #227 is a landed baseline, but its project-artifact `synced`
-   scope must not leak into tool-pack project/user scope.
-10. This discovery is non-exhaustive and must be revalidated before design.
+9. PR #227's merged project-artifact `synced` scope must not leak into
+   tool-pack project/user scope; tool-pack writes preserve the full `projects`
+   configuration object.
+10. PR #240's lifecycle, seed, content-drift, and adoption contracts are
+    completed baseline. This project extends their state model rather than
+    duplicating or weakening them.
+11. PR #242's dependency-owned canonical-role contract is authoritative for
+    fallback instructions. This project adds reachability and dispatch
+    provenance around it without changing native provider selection.
+12. The umbrella and four named child workstreams share one state vocabulary;
+    each child retains its established mutation and evidence boundary.
 
 ## Constraints
 
@@ -295,15 +331,9 @@ automatic restart is provider-specific and an unexpected process mutation.
 - Maintain managed-root containment and home-path redaction guarantees.
 - Shipped CLI, provider adapters, bundled skills/agents, and docs require the
   repository’s lockstep package-version/release validation.
-- The active `scope-adoption-diagnostics` project and the completed
-  `tool-pack-lifecycle-config-cleanup` slice contain narrower ownership; this
-  project must preserve their shipped or diagnostics-first contracts and avoid
-  duplicate implementation.
-- Merge `scope-adoption-diagnostics` first. This project must rebase before
-  touching `pack-inventory.ts`, doctor/status, or tool-pack docs, preserve that
-  slice's PJM migration, shared-owner, inventory-failure, delimiter, and
-  test-quality fixes, and treat its provider input as a narrow compatibility
-  seam rather than the final provider × scope × content-type state model.
+- Existing `scope-adoption-diagnostics` remains a narrower diagnostic project;
+  completed `tool-pack-lifecycle-config-cleanup` and `agent-provider-root`
+  projects are archived dependencies, not active siblings.
 
 ## Success Criteria
 
@@ -325,12 +355,20 @@ automatic restart is provider-specific and an unexpected process mutation.
   disabled/detected, enabled/undetected, alias, divergent, missing-role,
   restart-required, native-reject, and generic-fallback cases.
 - Behavior remains compatible with PR #227's config preservation and project
-  scope without overwriting `config.projects` data, PR #240's content-aware
-  inventory/lifecycle contracts, and PR #242's canonical-agent resolution.
+  scope without overwriting `config.projects` data.
+- Existing PR #240 inventory behavior remains stable: equal-version drift,
+  seeded overrides, executable normalization, and lifecycle/config choices keep
+  their accepted semantics while new provider facts remain separately visible.
+- Canonical fallback reads obey PR #242's exact identity, per-dependency root,
+  and native-first selection contract.
 
 ## Out of Scope
 
-- Implementing PR #227’s synced-project-scope feature itself.
+- Implementing PR #227's synced-project-scope feature itself.
+- Reopening PR #240's completed lifecycle/config, seed classification,
+  same-version drift, adoption-reporting, or per-pack `--force` decisions.
+- Replacing PR #242's shipped canonical-agent resolver contract or changing
+  provider-native model, effort, variant, and route selection.
 - Automatically restarting provider applications or changing authentication.
 - Replacing provider-native catalogs with a universal OAT runtime catalog.
 - Rewriting all existing quick projects into this project.
@@ -344,8 +382,8 @@ automatic restart is provider-specific and an unexpected process mutation.
 - Provider-specific automatic reload integrations where a stable API exists.
 - A persisted catalog handshake proving that a running provider reloaded a
   synced directory.
-- Consolidating superseded discovery notes after the diagnostics slice merges
-  and this project rebases onto it.
+- Consolidating the remaining scope/adoption diagnostic project after its plan
+  is compared with this accepted design.
 
 ## Open Questions
 
@@ -360,8 +398,9 @@ automatic restart is provider-specific and an unexpected process mutation.
   agents, project-scope agents, directory aliases, and runtime catalog probes?
 - **Claude:** What counts as a managed Claude role, where does its missing-role
   diagnostic appear, and how is intentional lack distinguished from failure?
-- **Canonical evidence:** Should version equality be supplemented by content
-  digest for versioned skills/agents so same-version drift is visible?
+- **Canonical health versus placement:** How does the new layered state expose
+  `current`, `outdated`, `newer`, `partial`, and declared-only state without
+  changing PR #240's accepted inventory semantics?
 - **Shared owners:** How do assets shared by multiple packs affect placement,
   adoption, removal, and duplicate-scope warnings?
 - **Scope selection:** How are defaults, repeated selections, existing
@@ -378,8 +417,9 @@ automatic restart is provider-specific and an unexpected process mutation.
   existing edits preserved, and what if AGENTS.md is a symlink or absent?
 - **Init/install sequencing:** Is the guidance question once per invocation,
   repository, or only when a workflow pack is present?
-- **PR #227 boundary:** Which `projects.defaultScope` and config-preservation
-  paths can affect tool-pack install/reconcile, and what tests prevent leakage?
+- **PR #227 boundary:** Which tests prove tool-pack install/reconcile preserve
+  `projects.defaultScope`, `projects.root`, and future sibling fields while
+  keeping project-artifact and pack scope axes separate?
 - **Dispatch fallback:** What exact pre-start rejection qualifies for fallback,
   and how are post-acceptance failures prevented from becoming replacements?
 - **Restart versus dispatch:** Can a stale provider catalog cause native-role
@@ -391,11 +431,13 @@ automatic restart is provider-specific and an unexpected process mutation.
 
 ## Assumptions
 
-- PRs #227, #240, and #242 are authoritative current-main dependencies for
-  synced-project scope, lifecycle/inventory semantics, and canonical-agent
-  reads respectively.
-- The issue-#228 transcript is accurate as an incident report, but current
-  behavior claims still require source/test verification after revalidation.
+- PR #227's shipped synced-project-scope artifacts are authoritative only for
+  the adjacent project-artifact axis.
+- PR #240's current inventory semantics and PR #242's canonical-agent contract
+  remain stable dependencies during this design.
+- The issue-#228 transcript is accurate as an incident report; the exact
+  interactive incident was not reproduced during this bounded source/PR
+  revalidation.
 - Provider adapters can expose enough evidence to distinguish projection from
   runtime catalog visibility.
 - Existing provider directories may contain unmanaged content and are valuable.
@@ -421,8 +463,7 @@ automatic restart is provider-specific and an unexpected process mutation.
   - **Impact:** High
   - **Mitigation Ideas:** Keep projection, visibility, and unknown states
     distinct.
-- **PR config regression:** Tool-pack writes overwrite PR #227 project config
-  or regress PR #240's lifecycle/inventory preservation contracts.
+- **PR config regression:** Tool-pack writes overwrite PR #227 project config.
   - **Likelihood:** Medium
   - **Impact:** High
   - **Mitigation Ideas:** Add preservation tests around install, reconcile,
@@ -439,20 +480,18 @@ automatic restart is provider-specific and an unexpected process mutation.
 - [`review-plan-workflow` — ReviewPlan-first reviewer workflow](../review-plan-workflow/)
   remains the ReviewPlan QA baseline and is not duplicated here.
 - [`scope-adoption-diagnostics` — Scope and Adoption Diagnostics](../scope-adoption-diagnostics/)
-  is the diagnostics-first quick slice. It owns PJM migration semantics,
-  provider-aware user-agent diagnostics, shared-owner attribution,
-  inventory-failure/delimiter rendering, and targeted test quality. Merge it
-  before this project implements shared provider-state surfaces, then rebase
-  and consume or supersede its narrow provider capability input without
-  duplicating its renderers.
-- [`tool-pack-lifecycle-config-cleanup` completion summary](../../../repo/reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
-  records the shipped PR #240 lifecycle, config, and content-aware inventory
-  contracts this project must preserve.
+  is a narrower quick project to compare and reconcile.
+- [`tool-pack-lifecycle-config-cleanup` summary](../../../repo/reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
+  is the completed PR #240 baseline; its historical project is archived.
+- [`agent-provider-root` summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
+  is the completed PR #242 canonical-role dependency; its historical project
+  is archived.
 - [PR #227 — add synced project scope](https://github.com/voxmedia/open-agent-toolkit/pull/227)
-  is landed current-main work and the authority for the adjacent synced-project
-  scope.
+  is the merged adjacent project-scope baseline.
+- [PR #240 — clean up tool-pack lifecycle and config handling](https://github.com/voxmedia/open-agent-toolkit/pull/240)
+  is the merged inventory/lifecycle baseline.
 - [PR #242 — make canonical agent reads provider-aware](https://github.com/voxmedia/open-agent-toolkit/pull/242)
-  is landed current-main work and the authority for canonical-agent reads.
+  is the merged canonical-role resolution baseline.
 
 ## References
 
@@ -460,8 +499,9 @@ automatic restart is provider-specific and an unexpected process mutation.
 - [PR #227 — add synced project scope](https://github.com/voxmedia/open-agent-toolkit/pull/227)
 - [PR #240 — clean up tool-pack lifecycle and config handling](https://github.com/voxmedia/open-agent-toolkit/pull/240)
 - [PR #242 — make canonical agent reads provider-aware](https://github.com/voxmedia/open-agent-toolkit/pull/242)
-- [Tool-Pack Lifecycle and Config Cleanup completion summary](../../../repo/reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
-- [Agent Provider Root completion summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
+- `../../../repo/reference/decisions/DR-260830-dependency-owned-provider.md`
+- `../../../repo/reference/decisions/DR-260830-exact-canonical-identity.md`
+- `../../../repo/reference/decisions/DR-260830-typed-portability-classifier.md`
 - `packages/cli/src/commands/tools/shared/pack-inventory.ts`
 - `packages/cli/src/commands/tools/shared/pack-manifest.ts`
 - `packages/cli/src/commands/sync/index.ts`
@@ -471,12 +511,8 @@ automatic restart is provider-specific and an unexpected process mutation.
 
 ## Next Steps
 
-1. Rebase onto the diagnostics-first slice after it merges, preserving its PJM
-   migration, provider-aware diagnostic seam, shared-owner attribution,
-   inventory-failure rendering, delimiter, and targeted test-quality fixes.
-2. Revalidate source and tests against landed PRs #227, #240, and #242 plus the
-   merged diagnostics slice before assigning final implementation files.
-3. Resolve the state vocabulary, provider matrix, directory-adoption safety,
-   AGENTS.md ownership, restart, and fallback questions with the user.
-4. Complete discovery only after revalidation; then use `oat-project-design`
-   for the formal specification and design.
+1. Confirm the umbrella/child convergence boundary and approve discovery.
+2. Use `oat-project-design` to formalize the shared state vocabulary and the
+   child contracts for directory symlinks, `AGENTS.md`, restart guidance, and
+   dispatch/runtime provenance.
+3. Keep implementation planning gated on the design HiLL checkpoint.
