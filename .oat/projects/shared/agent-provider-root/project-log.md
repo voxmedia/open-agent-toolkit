@@ -40,6 +40,10 @@ Structural entries:
 
 Entries are chronological and append-only.
 
+### 2026-08-30 · structural · oat gate review · plan
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/agent-provider-root/reviews/artifact-plan-review-2026-08-30T160834Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
