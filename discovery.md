@@ -119,11 +119,11 @@ conflict, so produce a focused lightweight design before planning.
 the old backlog proposed, or rejected with an actionable error under the new
 end-to-end contract?
 
-**A:** Pending lightweight-design confirmation.
+**A:** Reject the configuration with an actionable error.
 
-**Decision:** Do not silently carry forward the old warning-only choice. The
-combined brief's canonical placement and actionable-error language is the
-current decision input.
+**Decision:** The combined brief supersedes the old warning-only choice.
+Recognized lifecycle gate commands must use canonical
+`oat --json gate review`; invalid recognized commands are not persisted.
 
 ## Solution Space
 
@@ -160,8 +160,8 @@ migration project well beyond the two backlog items.
 contracts and deterministic tests while preserving current gate envelopes and
 provider-neutral launch behavior.
 
-**User validated:** Yes for the combined three-boundary project and lightweight
-design; exact configuration failure policy remains the focused design decision.
+**User validated:** Yes, including rejection of invalid recognized lifecycle
+gate commands.
 
 ## Key Decisions
 
@@ -230,8 +230,6 @@ design; exact configuration failure policy remains the focused design decision.
 
 ## Open Questions
 
-- **Configuration policy:** Reject a recognized invalid command or persist it
-  with a warning?
 - **Wrapper boundary:** Which simple prefixes can be recognized without a full
   shell parser, and which remain unknown/unvalidated?
 - **Terminal vocabulary:** Choose the stable status/outcome names for a clean
@@ -286,7 +284,5 @@ design; exact configuration failure policy remains the focused design decision.
 
 ## Next Steps
 
-1. Confirm the configuration-time failure policy in lightweight design.
-2. Complete the focused design and generate the three-phase quick plan.
-3. Delete the superseded project directories after this discovery is durable.
-4. Continue through implementation and integration verification.
+1. Complete the focused design and generate the three-phase quick plan.
+2. Continue through implementation and integration verification.
