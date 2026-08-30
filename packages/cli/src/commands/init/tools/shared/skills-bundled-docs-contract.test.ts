@@ -59,6 +59,16 @@ interface CrossSkillTarget {
   targetPath: string;
 }
 
+type PortableAssetTarget =
+  | { kind: 'skill'; name: string }
+  | { kind: 'agent'; name: string };
+
+interface PortableAssetFinding {
+  asset: PortableAssetTarget;
+  target: string;
+  evidence: string;
+}
+
 // Authored Markdown shipped by one user-default pack asset.
 interface MarkdownAsset {
   kind: 'skill' | 'agent';
@@ -94,8 +104,11 @@ interface MarkdownAsset {
 // deliberately not matched: they are follow-on reads local to a sibling root
 // that an earlier read already bound and validated. The caller-contract
 // assertions below enforce that anchoring requirement instead.
-const CROSS_SKILL_READ =
+const PORTABLE_SKILL_READ =
   /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/skills\/|(?:\.\.\/)+)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g;
+
+const PORTABLE_AGENT_READ =
+  /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/agents\/|(?:\.\.\/)+agents\/)([a-zA-Z0-9_-]+)\.md/g;
 
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
@@ -233,18 +246,58 @@ function crossSkillReferenceKey({
   return `${file}|${targetSkill}|${targetPath}`;
 }
 
+function classifyPortableAssetTargets(
+  markdown: string,
+): PortableAssetFinding[] {
+  const indexed: Array<PortableAssetFinding & { index: number }> = [];
+
+  for (const match of markdown.matchAll(PORTABLE_SKILL_READ)) {
+    const evidence = match[0];
+    indexed.push({
+      asset: { kind: 'skill', name: match[1]! },
+      target: evidence,
+      evidence,
+      index: match.index,
+    });
+  }
+
+  const canonicalAgentNames = new Set(
+    readdirSync(AGENTS_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name.slice(0, -'.md'.length)),
+  );
+  for (const match of markdown.matchAll(PORTABLE_AGENT_READ)) {
+    const name = match[1]!;
+    if (!canonicalAgentNames.has(name)) continue;
+    const evidence = match[0];
+    indexed.push({
+      asset: { kind: 'agent', name },
+      target: evidence,
+      evidence,
+      index: match.index,
+    });
+  }
+
+  return indexed
+    .sort((left, right) => left.index - right.index)
+    .map(({ index: _index, ...finding }) => finding);
+}
+
 function collectCrossSkillTargets(
   content: string,
   owner: string,
 ): CrossSkillTarget[] {
   const targets = new Map<string, CrossSkillTarget>();
 
-  for (const match of content.matchAll(CROSS_SKILL_READ)) {
-    const targetSkill = match[1]!;
+  for (const finding of classifyPortableAssetTargets(content)) {
+    if (finding.asset.kind !== 'skill') continue;
+    const targetSkill = finding.asset.name;
     // A read that names the authoring asset's own skill travels with the
     // bundle, so it is a local read rather than a cross-skill dependency.
     if (targetSkill === owner) continue;
-    const targetPath = match[2]!;
+    const targetPath = finding.target.slice(
+      finding.target.lastIndexOf(`${targetSkill}/`) + targetSkill.length + 1,
+    );
     targets.set(`${targetSkill}/${targetPath}`, { targetSkill, targetPath });
   }
 
@@ -454,6 +507,87 @@ describe('skills bundled docs contract', () => {
 
   it.each([
     [
+      'canonical repo-relative skill',
+      'Read `.agents/skills/oat-dispatch-subagents/SKILL.md`.',
+      [
+        {
+          asset: { kind: 'skill', name: 'oat-dispatch-subagents' },
+          evidence: '.agents/skills/oat-dispatch-subagents/SKILL.md',
+          target: '.agents/skills/oat-dispatch-subagents/SKILL.md',
+        },
+      ],
+    ],
+    [
+      'canonical repo-relative agent',
+      'Read `.agents/agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '.agents/agents/oat-reviewer.md',
+          target: '.agents/agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'dot-relative canonical agent',
+      'Read `./.agents/agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: './.agents/agents/oat-reviewer.md',
+          target: './.agents/agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'repeated-parent canonical agent hop',
+      'Read `../../agents/oat-reviewer.md`.',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '../../agents/oat-reviewer.md',
+          target: '../../agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'portable provider root',
+      'Read `${AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'canonical user root',
+      'Read `${HOME}/.agents/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'canonical repository root',
+      'Read `<repo-root>/.agents/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'Claude provider view',
+      'Claude exposes `.claude/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'Cursor provider view',
+      'Cursor exposes `.cursor/agents/oat-reviewer.md`.',
+      [],
+    ],
+    [
+      'suffixed provider variant',
+      'Read `.cursor/agents/oat-reviewer-gpt-5-6-sol-medium.md`.',
+      [],
+    ],
+    ['Codex TOML variant', 'Read `.codex/agents/oat-reviewer.toml`.', []],
+    ['unanchored prose', 'The canonical role is agents/oat-reviewer.md.', []],
+  ])('classifies %s portable asset syntax', (_name, content, expected) => {
+    expect(classifyPortableAssetTargets(content as string)).toEqual(expected);
+  });
+
+  it.each([
+    [
       'backticked SKILL.md',
       'Read `.agents/skills/sibling/SKILL.md`.',
       [{ targetSkill: 'sibling', targetPath: 'SKILL.md' }],
@@ -646,6 +780,19 @@ describe('skills bundled docs contract', () => {
     // Skills that ship in no user-default pack stay outside the rule.
     expect(scanned).not.toContain('skill:codex-skill');
     expect(scanned).not.toContain('skill:create-oat-skill');
+  });
+
+  it('proves the manifest-derived user-default surface covers every canonical agent', () => {
+    const canonicalAgents = readdirSync(AGENTS_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => entry.name.slice(0, -'.md'.length))
+      .sort();
+    const manifestAgents = collectUserDefaultMarkdownAssets()
+      .filter((asset) => asset.kind === 'agent')
+      .map((asset) => asset.owner)
+      .sort();
+
+    expect(manifestAgents).toEqual(canonicalAgents);
   });
 
   it('skips only the materialized references/docs subtree', () => {

@@ -5139,37 +5139,6 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('keeps every canonical agent free of executable bare sibling reads', async () => {
-    const repoRoot = join(process.cwd(), '..', '..');
-    const agentsRoot = join(repoRoot, '.agents', 'agents');
-    const agentFiles = (await readdir(agentsRoot, { withFileTypes: true }))
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-      .map((entry) => entry.name)
-      .sort();
-
-    expect(agentFiles.length).toBeGreaterThan(0);
-
-    const offenders: string[] = [];
-    for (const name of agentFiles) {
-      const content = await readRepoFile(`.agents/agents/${name}`);
-      const bare = [
-        ...content.matchAll(
-          /(?:(?:\.\.?\/)?\.agents\/skills\/|(?<![/a-zA-Z0-9_.-])\.\.\/)([a-zA-Z0-9_-]+)\/(SKILL\.md|references(?:\/[a-zA-Z0-9_.-]+)*\/?)/g,
-        ),
-      ];
-      for (const match of bare) {
-        offenders.push(`.agents/agents/${name} -> ${match[1]}/${match[2]}`);
-      }
-    }
-
-    // There is no per-agent exemption: the phase implementer is held to the
-    // same portable contract as every other user-default agent.
-    expect(
-      offenders,
-      `Canonical agents must bind installed roots:\n${offenders.join('\n')}`,
-    ).toEqual([]);
-  });
-
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
