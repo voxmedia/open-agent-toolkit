@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 3     | 2/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 3     | 3/3       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -163,7 +163,7 @@ oat_generated: false
 
 ## Phase 3: Documentation, Packaging, and Release Proof
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -220,12 +220,12 @@ oat_generated: false
 
 ### Task p03-t03: (review) Scope provider-sync exemption to paired occurrence
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 3240a1bec3e7bcdfe044ace76994502e0a4b666d
 
-**Outcome:** Pending bounded final-review fix.
+**Outcome:** Provider-sync descriptions now exempt only their paired same-role canonical occurrence, preserving executable bare reads on the same line as findings.
 
-**Verification:** Pending mixed-line regression and focused ratchet suite.
+**Verification:** The new regression failed before the fix; formatting and the post-commit focused suite passed with 241/241 tests.
 
 ---
 
@@ -384,7 +384,7 @@ Chronological log of implementation progress.
 - [x] p02-t04: Activate the zero-executable agent ratchet - `335383130`
 - [x] p03-t01: Document and package the provider-root contract - `af69a8008`
 - [x] p03-t02: Prove mutation detection and complete repository gates - evidence-only, no source commit
-- [ ] p03-t03: Scope provider-sync exemption to paired occurrence
+- [x] p03-t03: Scope provider-sync exemption to paired occurrence - `3240a1bec`
 
 **What changed (high level):**
 
@@ -401,7 +401,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Fix the final-review-confirmed same-line provider-example false negative in p03-t03.
+- Rerun final review over the bounded p03-t03 fix.
 
 **Blockers:**
 

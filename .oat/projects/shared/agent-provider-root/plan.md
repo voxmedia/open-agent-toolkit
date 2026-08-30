@@ -503,16 +503,16 @@ git commit -m "fix(p03-t03): preserve executable reads beside sync examples"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | ----------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed      | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p02    | code     | passed      | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p03    | code     | passed      | 2026-08-30 | reviews/p03-review-2026-08-30T173812Z.md                      | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | fixes_added | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
-| spec   | artifact | pending     | -          | -                                                             | -                                        | -          | -                             |
-| design | artifact | passed      | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
-| plan   | artifact | passed      | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
-| plan   | artifact | passed      | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T173812Z.md                      | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final  | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | passed          | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
+| plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
