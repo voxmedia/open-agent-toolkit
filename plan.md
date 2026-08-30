@@ -40,8 +40,8 @@ Turborepo, OAT canonical skills, and the existing fake gate runtime.
 - [x] Preserved and revalidated both superseded discoveries
 - [x] Deleted both superseded project directories after absorption
 - [x] Evaluated phase-level parallelism and declared p01/p02
-- [ ] Resolve project dispatch policy
-- [ ] Resolve optional cross-runtime Phase gate review
+- [x] Resolve project dispatch policy: High
+- [x] Resolve optional cross-runtime Phase gate review: disabled
 - [ ] Pass structured plan artifact review
 - [ ] Run configured quick-start exit gate
 
