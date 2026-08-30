@@ -66,18 +66,18 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete
-oat_pr_status: ready
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/240'
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T13:34:46Z'
+oat_project_state_updated: '2026-08-30T13:36:59Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -93,10 +93,7 @@ oat_project_recap:
 
 ## Current Phase
 
-All thirteen implementation tasks and the final lifecycle review are complete.
-The configured cross-family exit gate passed and was received durably. Summary
-and documentation are complete, the project recap was skipped interactively,
-and the configured PR step is next.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -137,7 +134,10 @@ and the configured PR step is next.
 - ✓ Reusable PR/docs summary aligned with the canonical thirteen-task ledger
 - ✓ Third/final narrowed review passed with zero findings
 - ✓ Configured cross-family exit gate passed and was received durably
-- ⧗ Resolving the approval-aware post-implementation sequence
+- ✓ Project recap skipped interactively with a passing terminal guard
+- ✓ PR created
+- ⧗ Awaiting human review
+- ⧗ Awaiting final HiLL approval
 
 ## Blockers
 
@@ -145,5 +145,8 @@ None.
 
 ## Next Milestone
 
-Resolve the post-implementation sequence and recap gate, then request final
-HiLL approval.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.

@@ -587,6 +587,20 @@ oat_generated: false
 - No recap run path or manifest was created.
 - The terminal recap guard passed with `outcome: null`, as required for a skip.
 
+### Post-implementation sequence: PR complete
+
+- Step: `pr` (configured pre-approval position 3 of 3).
+- PR: [#240](https://github.com/voxmedia/open-agent-toolkit/pull/240),
+  `tool-pack-cleanup` into `main`.
+- Outcome: archived six residual active phase-review artifacts, repaired their
+  references, wrote the local final PR artifact, pushed the branch, and opened
+  the GitHub PR.
+- Verification: refreshed `origin/main`; release version checks, skill version
+  checks, type-check, lint, and format passed during publication. GitHub CI,
+  release dry run, and Cursor Bugbot started asynchronously.
+- Snapshot invariant: preserved `[summary, document, pr]` / `[]` exactly and
+  completed all configured pre-approval steps.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
