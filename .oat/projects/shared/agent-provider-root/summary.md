@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_generated: true
-oat_summary_last_task: p03-t03
+oat_summary_last_task: p03-t05
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -25,6 +25,7 @@ This project established a portable, provider-aware contract for direct canonica
 - Activated a zero-executable-agent ratchet across both canonical scan scopes while preserving the historical six-entry cross-skill baseline byte-for-byte.
 - Documented the canonical/provider boundary and prepared the five public packages plus synchronized release metadata at lockstep version `0.2.47`. No provider view, user-owned provider directory, provider configuration, or dispatch policy was changed.
 - Proved the contract with a real-tree mutation failure and byte-exact restoration, 4,525 HOME-isolated uncached CLI tests, focused skill/release suites, lint and format, and the complete eight-gate Definition of Done. The final lifecycle review and configured Fable High exit-gate review both passed with zero findings.
+- Repaired the append-complete final-review ledger after two Bugbot findings: the omitted initial event was restored, then placed chronologically so last-event readers still resolve the later passing gate event. Both bounded fixes passed independent review, and PR CI, release dry-run, and Bugbot checks were green on the final head.
 
 ## Key Decisions
 
@@ -36,6 +37,7 @@ This project established a portable, provider-aware contract for direct canonica
 ## Notable Challenges
 
 - Final review found that a line-wide provider-sync example exemption could hide an executable bare read placed on the same line. Task `p03-t03` narrowed the exemption to the paired descriptive occurrence; its red/green regression and the 241-test focused suite passed, and bounded re-review reported zero findings.
+- Remote review exposed a bookkeeping invariant that was not explicit in the first ledger repair: preserving every event is insufficient when consumers use the last matching event as current state. Tasks `p03-t04` and `p03-t05` restored both event completeness and chronological latest-event semantics without changing product code.
 - Evidence-grade verification required distinguishing cached success from real execution. The final proof used an isolated `HOME`, forced uncached Turborepo execution, direct exit codes, and a mutation test that restored the exact original bytes before the clean rerun.
 
 ## Tradeoffs Made
@@ -53,6 +55,7 @@ This project established a portable, provider-aware contract for direct canonica
 ## Follow-up Items
 
 - Continue discovery for `tool-pack-scope-provider-truthfulness` using this project as the canonical role-file resolution dependency. Do not move its provider materialization or scope-selection responsibilities into this contract.
+- The full configured exit gate was not rerun after the two bookkeeping-only Bugbot fixes by explicit operator choice. Their bounded reviews and final PR checks passed, while the preserved gate freshness record remained stale at completion.
 
 ## Associated Issues
 
