@@ -44,6 +44,22 @@ describe('validateConfiguredGateCommand', () => {
   });
 
   it.each([
+    'oat --cwd \'\' gate review --project "$PROJECT_PATH"',
+    'oat --cwd "" gate review --project "$PROJECT_PATH"',
+    'oat --cwd \'\' --json gate review --project "$PROJECT_PATH"',
+    'oat --cwd "" --json gate review --project "$PROJECT_PATH"',
+    'oat --json --cwd \'\' gate review --project "$PROJECT_PATH"',
+    'oat --json --cwd "" gate review --project "$PROJECT_PATH"',
+  ])('preserves empty quoted --cwd values while validating: %s', (command) => {
+    expect(validateConfiguredGateCommand(command)).toEqual({
+      kind: 'invalid',
+      command: 'gate-review',
+      message:
+        'Configured oat gate review commands must use the structured-output contract `oat --json gate review ...`.',
+    });
+  });
+
+  it.each([
     'codex exec --json "Review the configured oat gate review contract"',
     'claude -p "oat gate review --json"',
     'oat gate status --json',
@@ -79,6 +95,17 @@ describe('validateConfiguredGateCommand', () => {
     ).toEqual({
       kind: 'valid',
       command: 'gate-review',
+    });
+  });
+
+  it.each([
+    "oat '' gate review",
+    'oat "" gate review',
+    "oat --json '' gate review",
+    'oat --json "" gate review',
+  ])('keeps empty command-position tokens conservative: %s', (command) => {
+    expect(validateConfiguredGateCommand(command)).toEqual({
+      kind: 'not-applicable',
     });
   });
 });

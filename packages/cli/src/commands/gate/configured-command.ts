@@ -9,6 +9,7 @@ const INVALID_GATE_REVIEW_COMMAND_MESSAGE =
 function tokenizeCommand(command: string): string[] | null {
   const tokens: string[] = [];
   let token = '';
+  let tokenStarted = false;
   let quote: '"' | "'" | null = null;
   let escaped = false;
 
@@ -20,6 +21,7 @@ function tokenizeCommand(command: string): string[] | null {
         return null;
       }
       token += character;
+      tokenStarted = true;
       escaped = false;
       continue;
     }
@@ -47,6 +49,7 @@ function tokenizeCommand(command: string): string[] | null {
 
     if (character === '"' || character === "'") {
       quote = character;
+      tokenStarted = true;
       continue;
     }
 
@@ -55,9 +58,10 @@ function tokenizeCommand(command: string): string[] | null {
     }
 
     if (/\s/.test(character)) {
-      if (token) {
+      if (tokenStarted) {
         tokens.push(token);
         token = '';
+        tokenStarted = false;
       }
       continue;
     }
@@ -70,12 +74,13 @@ function tokenizeCommand(command: string): string[] | null {
     }
 
     token += character;
+    tokenStarted = true;
   }
 
   if (escaped || quote) {
     return null;
   }
-  if (token) {
+  if (tokenStarted) {
     tokens.push(token);
   }
   return tokens;
@@ -106,7 +111,7 @@ function isDirectGateReview(tokens: readonly string[]): boolean {
     }
 
     if (token === '--cwd') {
-      if (!tokens[index + 1]) {
+      if (tokens[index + 1] === undefined) {
         return false;
       }
       index += 2;
