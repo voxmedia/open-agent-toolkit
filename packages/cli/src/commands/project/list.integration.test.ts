@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createProgram } from '@app/create-program';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from '../index';
@@ -24,8 +25,9 @@ async function writeStateFile(
   repoRoot: string,
   projectName: string,
   frontmatter: Record<string, string>,
+  scope = 'shared',
 ): Promise<void> {
-  const projectRoot = join(repoRoot, '.oat', 'projects', 'shared', projectName);
+  const projectRoot = join(repoRoot, '.oat', 'projects', scope, projectName);
   await mkdir(projectRoot, { recursive: true });
   const fields = Object.entries(frontmatter)
     .map(([key, value]) => `${key}: ${value}`)
@@ -145,5 +147,179 @@ describe('oat project list coordination integration', () => {
     expect(activeProjects).not.toContain('platform-split');
     expect(decompositions).toContain('## Decompositions');
     expect(decompositions).toContain('platform-split');
+  });
+
+  it('lists materialized and recorded-absent projects across all scopes', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await writeStateFile(root, 'shared-project', {
+      oat_phase: 'plan',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+    });
+    await writeStateFile(
+      root,
+      'local-project',
+      {
+        oat_phase: 'discovery',
+        oat_phase_status: 'in_progress',
+        oat_workflow_mode: 'quick',
+      },
+      'local',
+    );
+    await writeStateFile(
+      root,
+      'synced-present',
+      {
+        oat_phase: 'implement',
+        oat_phase_status: 'in_progress',
+        oat_workflow_mode: 'spec-driven',
+      },
+      'synced',
+    );
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', 'synced-absent.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'synced-absent',
+        scope: 'synced',
+        ref: 'refs/oat/projects/synced-absent',
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-08-27T00:00:00.000Z',
+        completedAt: null,
+      })}\n`,
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', 'malformed.json'),
+      '{ malformed\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.oat', 'projects', 'synced', 'synced-present.json'),
+      '{ malformed materialized record\n',
+      'utf8',
+    );
+
+    const result = await runCli(root, ['project', 'list', '--json']);
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout) as {
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(payload.projects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'shared-project', scope: 'shared' }),
+        expect.objectContaining({ name: 'local-project', scope: 'local' }),
+        expect.objectContaining({
+          name: 'synced-present',
+          scope: 'synced',
+          kind: 'materialized',
+          recordError: expect.stringContaining(
+            'Restore this exact record from a trusted Git revision',
+          ),
+          recommendation: {
+            skill: 'none',
+            reason: 'restore invalid record from a trusted Git revision',
+          },
+        }),
+        expect.objectContaining({
+          name: 'synced-absent',
+          kind: 'recorded-absent',
+          checkout: 'absent',
+          phase: null,
+        }),
+        expect.objectContaining({
+          name: 'malformed',
+          kind: 'recorded-invalid',
+          checkout: 'invalid',
+          phase: null,
+          recordError: expect.stringContaining(
+            'Restore this exact record from a trusted Git revision',
+          ),
+          recommendation: {
+            skill: 'none',
+            reason: 'restore invalid record from a trusted Git revision',
+          },
+        }),
+      ]),
+    );
+    expect(
+      payload.projects.filter((row) => row.name === 'synced-present'),
+    ).toHaveLength(1);
+
+    const humanResult = await runCli(root, ['project', 'list']);
+    expect(humanResult.exitCode).toBe(0);
+    expect(humanResult.stdout).toContain('synced-absent');
+    expect(humanResult.stdout).toContain('malformed');
+    expect(humanResult.stdout).toContain('restore record from Git');
+    expect(humanResult.stdout.match(/synced-present/g)).toHaveLength(1);
+    expect(
+      humanResult.stdout
+        .split('\n')
+        .find((line) => line.includes('synced-present')),
+    ).toMatch(/none\s+restore record from Git/);
+    expect(humanResult.stderr).toContain(
+      'Skipping invalid synced project record .oat/projects/synced/malformed.json:',
+    );
+    expect(humanResult.stderr).toContain(
+      'Restore this exact record from a trusted Git revision before retrying.',
+    );
+
+    const filtered = await runCli(root, [
+      'project',
+      'list',
+      '--scope',
+      'local',
+      '--json',
+    ]);
+    const filteredPayload = JSON.parse(filtered.stdout) as {
+      projects: Array<{ scope: string }>;
+    };
+    expect(filteredPayload.projects.every((row) => row.scope === 'local')).toBe(
+      true,
+    );
+  });
+
+  it('lists unadopted remote refs only when --remote is requested', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    const created = await runCli(fixture.cloneA, [
+      'project',
+      'new',
+      'remote-only',
+      '--no-dashboard',
+      '--json',
+    ]);
+    expect(created.exitCode).toBe(0);
+
+    const withoutRemote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--json',
+    ]);
+    expect(withoutRemote.stdout).not.toContain('remote-only');
+
+    const remote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--remote',
+      '--json',
+    ]);
+    expect(remote.exitCode).toBe(0);
+    const payload = JSON.parse(remote.stdout) as {
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(payload.projects).toContainEqual(
+      expect.objectContaining({
+        kind: 'remote',
+        name: 'remote-only',
+        scope: 'synced',
+        origin: 'remote',
+        checkout: 'absent',
+        ref: 'refs/oat/projects/remote-only',
+        phase: null,
+      }),
+    );
   });
 });

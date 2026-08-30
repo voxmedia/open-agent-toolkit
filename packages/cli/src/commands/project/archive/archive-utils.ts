@@ -3,6 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   lstat,
   readFile,
+  readdir,
   realpath,
   rename,
   rm,
@@ -20,6 +21,25 @@ import {
 } from 'node:path';
 import { promisify } from 'node:util';
 
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import {
+  readSyncedRecord,
+  type SyncedProjectRecord,
+  writeSyncedRecord,
+} from '@commands/project/sync/record';
+import {
+  buildSyncTarget,
+  commitRecordChange,
+  preflightSyncedCheckout,
+  removeSyncedCheckout,
+} from '@commands/project/sync/ref-sync';
+import {
+  canonicalizePath,
+  type ProjectScope,
+  resolveProjectScope,
+  resolveScopeRoot,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 import {
   copyDirectory,
@@ -100,6 +120,7 @@ export interface ArchiveProjectOnCompletionOptions {
    * semantics as `awsProfile`.
    */
   awsRegion?: string | null;
+  commit?: boolean;
 }
 
 export interface ResolvePrimaryRepoRootDependencies {
@@ -112,6 +133,8 @@ export interface ResolveArchiveProjectTargetOptions {
   repoRoot: string;
   projectsRoot: string;
   projectName: string;
+  archiveSnapshot?: string;
+  archiveScope?: ProjectScope;
 }
 
 export interface ResolveArchiveProjectTargetDependencies extends ResolvePrimaryRepoRootDependencies {
@@ -144,6 +167,12 @@ interface ArchiveProjectOnCompletionDependencies
   fileExists?: typeof fileExists;
   renamePath?: typeof rename;
   timestamp?: () => string;
+  gitRunner?: GitRunner;
+  readSyncedRecord?: typeof readSyncedRecord;
+  writeSyncedRecord?: typeof writeSyncedRecord;
+  preflightSyncedCheckout?: typeof preflightSyncedCheckout;
+  removeSyncedCheckout?: typeof removeSyncedCheckout;
+  commitRecordChange?: typeof commitRecordChange;
 }
 
 export interface ArchiveProjectRecapExportV1 {
@@ -155,12 +184,21 @@ export interface ArchiveProjectRecapExportV1 {
   };
 }
 
+interface AttemptProjectRecapExport {
+  export: ArchiveProjectRecapExportV1;
+  createdByAttempt: boolean;
+}
+
 export interface ArchiveProjectOnCompletionResult {
   archivePath: string;
   s3Path: string | null;
+  /** Absolute filesystem path; normalize only when rendering repository links. */
   summaryExportFile: string | null;
   projectRecapExport: ArchiveProjectRecapExportV1 | null;
   warnings: string[];
+  lifecycleCommit: string | null;
+  recapExportPaths: string[];
+  snapshotId: string;
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
@@ -174,6 +212,46 @@ export const S3_ARCHIVE_SYNC_EXCLUDES = ['reviews/*', 'pr/*'];
 export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
+  scope: ProjectScope;
+  sourceRefSha?: string;
+}
+
+export interface ExactArchiveProjectRoot {
+  canonicalProjectPath: string;
+  projectScope: ProjectScope;
+}
+
+export function assertExactArchiveProjectRoot(
+  options: Pick<
+    ArchiveProjectOnCompletionOptions,
+    'repoRoot' | 'projectsRoot' | 'projectPath' | 'projectName'
+  >,
+): ExactArchiveProjectRoot {
+  const projectScope = resolveProjectScope(
+    options.projectPath,
+    resolveScopeRoot(options.repoRoot, options.projectsRoot, 'shared'),
+    options.repoRoot,
+  );
+  if (!projectScope) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
+      1,
+    );
+  }
+  const scopeRoot = canonicalizePath(
+    resolveScopeRoot(options.repoRoot, options.projectsRoot, projectScope),
+  );
+  const projectPath = canonicalizePath(options.projectPath);
+  if (
+    dirname(projectPath) !== scopeRoot ||
+    basename(projectPath) !== options.projectName
+  ) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` must identify the exact direct child \`${options.projectName}\` of the configured ${projectScope} project root; refusing to archive a descendant or mismatched project.`,
+      1,
+    );
+  }
+  return { canonicalProjectPath: projectPath, projectScope };
 }
 
 function normalizeS3Uri(s3Uri: string): string {
@@ -483,6 +561,78 @@ async function resolveUniqueArchivePath(
   return `${archivePath}-${suffix}`;
 }
 
+async function archiveMatchesSnapshot(
+  archivePath: string,
+  projectName: string,
+  snapshotName: string,
+  archiveScope: ProjectScope,
+  dependencies: ResolveArchiveProjectTargetDependencies,
+): Promise<boolean> {
+  const directoryExists = dependencies.dirExists ?? dirExists;
+  if (!(await directoryExists(archivePath))) {
+    return false;
+  }
+  try {
+    const metadata = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ) as unknown;
+    return (
+      isRecord(metadata) &&
+      metadata.projectName === projectName &&
+      metadata.snapshotName === snapshotName &&
+      metadata.scope === archiveScope
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function resolvePersistedArchivePath(
+  archiveBasePath: string,
+  projectName: string,
+  snapshotName: string,
+  archiveScope: ProjectScope,
+  dependencies: ResolveArchiveProjectTargetDependencies,
+): Promise<string> {
+  const archiveRoot = dirname(archiveBasePath);
+  const candidates = [archiveBasePath];
+  try {
+    const entries = await readdir(archiveRoot, { withFileTypes: true });
+    candidates.push(
+      ...entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(archiveRoot, entry.name))
+        .filter((candidate) => candidate !== archiveBasePath)
+        .sort(),
+    );
+  } catch {
+    // The archive root can be absent before the first successful copy.
+  }
+  const matches: string[] = [];
+  for (const candidate of candidates) {
+    if (
+      await archiveMatchesSnapshot(
+        candidate,
+        projectName,
+        snapshotName,
+        archiveScope,
+        dependencies,
+      )
+    ) {
+      matches.push(candidate);
+    }
+  }
+  if (matches.length > 1) {
+    throw new CliError(
+      `Persisted archive snapshot \`${snapshotName}\` resolves to multiple local archives; refusing an ambiguous retry.`,
+    );
+  }
+  return matches[0] ?? join(archiveRoot, snapshotName);
+}
+
 function buildLocalOnlyArchiveWarning(
   projectName: string,
   archiveProjectPath: string,
@@ -542,10 +692,26 @@ export async function resolveArchiveProjectTarget(
     archiveRepoRoot,
     archiveProjectPath,
   );
-  const archivePath = await resolveUniqueArchivePath(archiveBasePath, {
-    dirExists: dependencies.dirExists,
-    timestamp: dependencies.timestamp,
-  });
+  let archivePath: string;
+  if (options.archiveSnapshot) {
+    if (!options.archiveScope) {
+      throw new CliError(
+        `Persisted archive snapshot \`${options.archiveSnapshot}\` is missing its originating project scope; refusing an unscoped retry.`,
+      );
+    }
+    archivePath = await resolvePersistedArchivePath(
+      archiveBasePath,
+      options.projectName,
+      options.archiveSnapshot,
+      options.archiveScope,
+      dependencies,
+    );
+  } else {
+    archivePath = await resolveUniqueArchivePath(archiveBasePath, {
+      dirExists: dependencies.dirExists,
+      timestamp: dependencies.timestamp,
+    });
+  }
 
   return {
     archiveProjectPath,
@@ -577,6 +743,36 @@ async function writeArchiveSnapshotMetadata(
   );
 }
 
+async function verifyArchiveSnapshotMetadata(
+  archivePath: string,
+  expected: ArchiveSnapshotMetadata,
+): Promise<void> {
+  let actual: unknown;
+  try {
+    actual = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    );
+  } catch {
+    throw new CliError(
+      `Existing archive \`${archivePath}\` cannot be verified for retry; restore or remove it before retrying.`,
+    );
+  }
+  if (
+    !isRecord(actual) ||
+    actual.projectName !== expected.projectName ||
+    actual.snapshotName !== expected.snapshotName ||
+    actual.scope !== expected.scope ||
+    actual.sourceRefSha !== expected.sourceRefSha
+  ) {
+    throw new CliError(
+      `Existing archive \`${archivePath}\` does not match persisted snapshot \`${expected.snapshotName}\`; refusing to overwrite it.`,
+    );
+  }
+}
+
 async function exportProjectSummary(
   archivePath: string,
   snapshotName: string,
@@ -592,6 +788,18 @@ async function exportProjectSummary(
 
   const summaryTarget = join(repoRoot, summaryExportPath, `${snapshotName}.md`);
   const copySummary = dependencies.copySingleFile ?? copySingleFile;
+  if (await pathExists(summaryTarget)) {
+    const [sourceContents, targetContents] = await Promise.all([
+      readFile(summarySource),
+      readFile(summaryTarget),
+    ]);
+    if (!sourceContents.equals(targetContents)) {
+      throw new CliError(
+        `Existing summary export \`${summaryTarget}\` does not match persisted snapshot \`${snapshotName}\`; refusing to overwrite it.`,
+      );
+    }
+    return summaryTarget;
+  }
   await copySummary(summarySource, summaryTarget);
   return summaryTarget;
 }
@@ -1206,7 +1414,7 @@ async function exportSelectedProjectRecap(
   options: ArchiveProjectOnCompletionOptions,
   snapshotName: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
-): Promise<ArchiveProjectRecapExportV1 | null> {
+): Promise<AttemptProjectRecapExport | null> {
   const selectedRun = options.projectRecapRun?.trim();
   if (!selectedRun) {
     return null;
@@ -1232,9 +1440,60 @@ async function exportSelectedProjectRecap(
     snapshotName,
   );
   if (await pathExists(exportRoot)) {
-    throw new CliError(
-      `Project recap export destination \`${exportRoot}\` already exists; refusing to overwrite it.`,
+    let exportedManifestContents: string;
+    try {
+      exportedManifestContents = await readFile(
+        join(exportRoot, 'manifest.json'),
+        'utf8',
+      );
+    } catch {
+      throw new CliError(
+        `Project recap export destination \`${exportRoot}\` already exists and cannot be verified for retry.`,
+      );
+    }
+    if (exportedManifestContents !== sourceManifestContents) {
+      throw new CliError(
+        `Existing project recap export \`${exportRoot}\` does not match persisted snapshot \`${snapshotName}\`.`,
+      );
+    }
+    const exportedManifest = await parseProjectRecapManifest(
+      exportedManifestContents,
     );
+    const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
+      exportRoot,
+      exportedManifest,
+    );
+    await verifyProjectRecapTerminalEvidence(
+      exportRoot,
+      exportedManifest,
+      sourceTerminalEvidence ?? undefined,
+    );
+    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
+      ReturnType<typeof loadExplainerPackageCoverage>
+    > &
+      ExactRunPackageCoverage;
+    try {
+      await exactCoverage.enforceRunPackageInventory(
+        exportRoot,
+        exportedManifest,
+        { includeTerminalEvidence: sourceTerminalEvidence !== null },
+      );
+    } catch {
+      throw new CliError(
+        `Existing project recap export \`${exportRoot}\` has invalid content.`,
+      );
+    }
+    return {
+      export: {
+        sourceRunRoot,
+        exportRoot,
+        manifest: {
+          relativePath: 'manifest.json',
+          verifiedArtifactCount,
+        },
+      },
+      createdByAttempt: false,
+    };
   }
 
   const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
@@ -1291,12 +1550,15 @@ async function exportSelectedProjectRecap(
     await renamePath(temporaryRoot, exportRoot);
 
     return {
-      sourceRunRoot,
-      exportRoot,
-      manifest: {
-        relativePath: 'manifest.json',
-        verifiedArtifactCount,
+      export: {
+        sourceRunRoot,
+        exportRoot,
+        manifest: {
+          relativePath: 'manifest.json',
+          verifiedArtifactCount,
+        },
       },
+      createdByAttempt: true,
     };
   } catch (error) {
     await removePath(temporaryRoot, { recursive: true, force: true });
@@ -1318,33 +1580,185 @@ export async function archiveProjectOnCompletion(
   const execFile = dependencies.execFile ?? execFileAsync;
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
   const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
+  const syncedRoot = resolveScopeRoot(
+    options.repoRoot,
+    options.projectsRoot,
+    'synced',
+  );
+  const recordPath = syncedRecordPath(syncedRoot, options.projectName);
+  const readRecord = dependencies.readSyncedRecord ?? readSyncedRecord;
+  const writeRecord = dependencies.writeSyncedRecord ?? writeSyncedRecord;
+  const { canonicalProjectPath, projectScope } =
+    assertExactArchiveProjectRoot(options);
+  const isSynced = projectScope === 'synced';
+  const record = isSynced ? await readRecord(recordPath) : null;
+  const syncTarget = isSynced
+    ? buildSyncTarget(
+        options.repoRoot,
+        options.projectsRoot,
+        options.projectName,
+      )
+    : null;
+  const git = dependencies.gitRunner ?? defaultGitRunner;
+  let activeRecord: SyncedProjectRecord | null = record;
+  let sourceRefSha: string | undefined;
+
+  if (syncTarget) {
+    if (!activeRecord) {
+      throw new CliError(
+        `Synced project ${options.projectName} is missing its discovery record; restore the record or run oat project pull ${options.projectName} from a clean checkout to adopt the project before archiving.`,
+        2,
+      );
+    }
+    const preflight = await (
+      dependencies.preflightSyncedCheckout ?? preflightSyncedCheckout
+    )(syncTarget, git);
+    if (
+      preflight.status !== 'clean' &&
+      !(preflight.status === 'absent' && activeRecord.status === 'complete')
+    ) {
+      const recoveryCommand =
+        preflight.status === 'absent'
+          ? `oat project pull ${options.projectName}`
+          : `oat project push ${options.projectName}`;
+      throw new CliError(
+        `Synced project ${options.projectName} is ${preflight.status}; run ${recoveryCommand} before archiving.`,
+        1,
+      );
+    }
+    sourceRefSha =
+      preflight.sha ??
+      (await git.run(['rev-parse', syncTarget.ref], { cwd: options.repoRoot }))
+        .stdout;
+    if (!/^[0-9a-f]{40}$/.test(sourceRefSha)) {
+      throw new CliError(
+        `Unable to bind archive retry identity for ${options.projectName} to ${syncTarget.ref}.`,
+        2,
+      );
+    }
+    if (
+      activeRecord.archiveSourceRefSha &&
+      activeRecord.archiveSourceRefSha !== sourceRefSha
+    ) {
+      throw new CliError(
+        `Archive retry for ${options.projectName} is bound to source ref ${activeRecord.archiveSourceRefSha}, but ${syncTarget.ref} is now ${sourceRefSha}. Restore the retained ref to the recorded commit to finish this archive transaction, or preserve the existing snapshot and start a separately reviewed recovery; refusing to accept stale archive content.`,
+        1,
+      );
+    }
+  }
+
   const archiveTarget = await resolveArchiveProjectTarget(
     {
       repoRoot: options.repoRoot,
       projectsRoot: options.projectsRoot,
       projectName: options.projectName,
+      ...(activeRecord?.archiveSnapshot
+        ? {
+            archiveSnapshot: activeRecord.archiveSnapshot,
+            archiveScope: projectScope,
+          }
+        : {}),
     },
     dependencies,
   );
   assertDurableArchiveProjectTarget(archiveTarget);
+  // Reassert the identity immediately before the first durable mutation. The
+  // archive transaction must never bind a descendant source to a sibling
+  // record/ref that merely shares its basename.
+  if (
+    assertExactArchiveProjectRoot(options).canonicalProjectPath !==
+    canonicalProjectPath
+  ) {
+    throw new CliError(
+      `Project path \`${options.projectPath}\` changed identity during archive preflight; refusing to mutate archive state.`,
+      1,
+    );
+  }
+  if (
+    syncTarget &&
+    canonicalProjectPath !== canonicalizePath(syncTarget.projectPath)
+  ) {
+    throw new CliError(
+      `Synced archive identity for ${options.projectName} does not match its canonical checkout, record, and ref.`,
+      1,
+    );
+  }
   const archivePath = archiveTarget.archivePath;
-  const projectRecapExport = await exportSelectedProjectRecap(
-    options,
-    snapshotName,
+  const exportIdentity = syncTarget
+    ? (activeRecord?.archiveSnapshot ?? snapshotName)
+    : snapshotName;
+  const snapshotId = syncTarget ? exportIdentity : basename(archivePath);
+
+  const shouldPersistArchiveSnapshot = Boolean(
+    syncTarget &&
+    activeRecord &&
+    (!activeRecord.archiveSnapshot || !activeRecord.archiveSourceRefSha),
+  );
+  if (shouldPersistArchiveSnapshot && activeRecord) {
+    activeRecord = {
+      ...activeRecord,
+      archiveSnapshot: exportIdentity,
+      archiveSourceRefSha: sourceRefSha,
+    };
+    await writeRecord(recordPath, activeRecord);
+  }
+
+  const archiveExists = await (dependencies.dirExists ?? dirExists)(
+    archivePath,
+  );
+  if (archiveExists) {
+    await verifyArchiveSnapshotMetadata(archivePath, {
+      projectName: options.projectName,
+      snapshotName: exportIdentity,
+      scope: projectScope,
+      ...(sourceRefSha ? { sourceRefSha } : {}),
+    });
+  }
+  const projectSourcePath = (await pathExists(options.projectPath))
+    ? options.projectPath
+    : archivePath;
+  const attemptedProjectRecapExport = await exportSelectedProjectRecap(
+    { ...options, projectPath: projectSourcePath },
+    exportIdentity,
     dependencies,
   );
+  const projectRecapExport = attemptedProjectRecapExport?.export ?? null;
+
+  if (!archiveExists) {
+    try {
+      await makeDir(dirname(archivePath));
+      await copyProjectDirectory(
+        options.projectPath,
+        archivePath,
+        (_sourcePath, relativePath) =>
+          relativePath !== 'reviews' &&
+          (!syncTarget || relativePath !== '.git'),
+      );
+      await writeArchiveSnapshotMetadata(archivePath, {
+        projectName: options.projectName,
+        snapshotName: exportIdentity,
+        scope: projectScope,
+        ...(sourceRefSha ? { sourceRefSha } : {}),
+      });
+    } catch (error) {
+      await removePath(archivePath, { recursive: true, force: true });
+      if (attemptedProjectRecapExport?.createdByAttempt) {
+        await removePath(attemptedProjectRecapExport.export.exportRoot, {
+          recursive: true,
+          force: true,
+        });
+      }
+      throw error;
+    }
+  }
 
   try {
-    await makeDir(dirname(archivePath));
-    await copyProjectDirectory(options.projectPath, archivePath);
-    await writeArchiveSnapshotMetadata(archivePath, {
-      projectName: options.projectName,
-      snapshotName,
-    });
-    await removePath(options.projectPath, { recursive: true, force: true });
+    if (!syncTarget) {
+      await removePath(options.projectPath, { recursive: true, force: true });
+    }
   } catch (error) {
-    if (projectRecapExport) {
-      await removePath(projectRecapExport.exportRoot, {
+    if (attemptedProjectRecapExport?.createdByAttempt) {
+      await removePath(attemptedProjectRecapExport.export.exportRoot, {
         recursive: true,
         force: true,
       });
@@ -1359,13 +1773,25 @@ export async function archiveProjectOnCompletion(
     try {
       summaryExportFile = await exportProjectSummary(
         archivePath,
-        snapshotName,
+        exportIdentity,
         options.summaryExportPath,
         options.repoRoot,
         dependencies,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      if (syncTarget) {
+        if (attemptedProjectRecapExport?.createdByAttempt) {
+          await removePath(attemptedProjectRecapExport.export.exportRoot, {
+            recursive: true,
+            force: true,
+          });
+        }
+        throw new CliError(
+          `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
+          1,
+        );
+      }
       warnings.push(
         `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
       );
@@ -1397,7 +1823,7 @@ export async function archiveProjectOnCompletion(
       s3Path = buildProjectArchiveS3Uri(
         options.s3Uri,
         remoteRepoRoot,
-        snapshotName,
+        exportIdentity,
       );
 
       try {
@@ -1420,13 +1846,176 @@ export async function archiveProjectOnCompletion(
     }
   }
 
+  let lifecycleCommit: string | null = null;
+  let recapExportPaths: string[] = [];
+  if (syncTarget) {
+    if (!activeRecord) {
+      throw new CliError(
+        `Synced project ${options.projectName} is missing its discovery record.`,
+        2,
+      );
+    }
+    if (projectRecapExport) {
+      recapExportPaths = (
+        await listArchiveExportFiles(projectRecapExport.exportRoot)
+      ).filter(
+        (filePath) =>
+          basename(filePath) !== 'manifest.json' &&
+          basename(filePath) !== 'build-record.json',
+      );
+    }
+    activeRecord = {
+      ...activeRecord,
+      status: 'complete',
+      completedAt: activeRecord.completedAt ?? timestamp,
+    };
+    await writeRecord(recordPath, activeRecord);
+    if (options.commit !== false) {
+      const pathspecs = [
+        recordPath,
+        ...(summaryExportFile ? [summaryExportFile] : []),
+        ...recapExportPaths,
+      ];
+      const committed = await (
+        dependencies.commitRecordChange ?? commitRecordChange
+      )(
+        options.repoRoot,
+        pathspecs,
+        `chore(oat): complete synced project ${options.projectName}`,
+        git,
+        {
+          summaryExportPath: options.summaryExportPath,
+          projectRoots: syncTarget,
+          recapExportRoot: projectRecapExport?.exportRoot,
+        },
+      );
+      lifecycleCommit =
+        committed?.sha ??
+        (await recoverSyncedLifecycleCommit(
+          options.repoRoot,
+          pathspecs,
+          activeRecord,
+          `chore(oat): complete synced project ${options.projectName}`,
+          git,
+        ));
+    }
+    const removed = await (
+      dependencies.removeSyncedCheckout ?? removeSyncedCheckout
+    )(syncTarget, git);
+    if (removed.status !== 'removed' && removed.status !== 'absent') {
+      throw new CliError(
+        `Synced checkout became ${removed.status} during archive; run oat project push ${options.projectName} and retry.`,
+        1,
+      );
+    }
+  }
+
   return {
     archivePath,
     s3Path,
     summaryExportFile,
     projectRecapExport,
     warnings,
+    lifecycleCommit,
+    recapExportPaths,
+    snapshotId,
   };
+}
+
+async function recoverSyncedLifecycleCommit(
+  repoRoot: string,
+  pathspecs: string[],
+  record: SyncedProjectRecord,
+  expectedSubject: string,
+  git: GitRunner,
+): Promise<string> {
+  const [recordPathspec] = pathspecs;
+  if (!recordPathspec) {
+    throw new CliError(
+      `Unable to recover the prior lifecycle commit for ${record.slug}: no lifecycle paths were supplied.`,
+      2,
+    );
+  }
+  const recordPath = relative(resolve(repoRoot), resolve(recordPathspec))
+    .split(sep)
+    .join('/');
+  const normalizedPathspecs = pathspecs
+    .map((pathspec) => relative(resolve(repoRoot), resolve(pathspec)))
+    .map((pathspec) => pathspec.split(sep).join('/'))
+    .sort();
+  const candidate = (
+    await git.run(['log', '-1', '--format=%H', '--', recordPath], {
+      cwd: repoRoot,
+    })
+  ).stdout;
+  if (!/^[0-9a-f]{40}$/.test(candidate)) {
+    throw new CliError(
+      `Unable to recover the prior lifecycle commit for ${record.slug}.`,
+      2,
+    );
+  }
+
+  const subject = (
+    await git.run(['show', '-s', '--format=%s', candidate], { cwd: repoRoot })
+  ).stdout;
+  const ancestor = await git.run(
+    ['merge-base', '--is-ancestor', candidate, 'HEAD'],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  const changedPaths = (
+    await git.run(
+      ['diff-tree', '--no-commit-id', '--name-only', '-r', candidate],
+      { cwd: repoRoot },
+    )
+  ).stdout
+    .split('\n')
+    .filter(Boolean)
+    .sort();
+  const contentsMatch = await git.run(
+    ['diff', '--quiet', candidate, '--', ...normalizedPathspecs],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  const committedRecord = await git.run(
+    ['show', `${candidate}:${recordPath}`],
+    { cwd: repoRoot },
+  );
+  let parsedRecord: unknown;
+  try {
+    parsedRecord = JSON.parse(committedRecord.stdout);
+  } catch {
+    parsedRecord = null;
+  }
+
+  if (
+    subject !== expectedSubject ||
+    ancestor.code !== 0 ||
+    contentsMatch.code !== 0 ||
+    JSON.stringify(changedPaths) !== JSON.stringify(normalizedPathspecs) ||
+    JSON.stringify(parsedRecord) !== JSON.stringify(record)
+  ) {
+    throw new CliError(
+      `Unable to recover lifecycle commit ${candidate} for ${record.slug}: subject, path set, contents, or branch relationship did not match the completed archive transaction.`,
+      2,
+    );
+  }
+
+  return candidate;
+}
+
+async function listArchiveExportFiles(
+  root: string,
+  current = root,
+): Promise<string[]> {
+  const entries = await readdir(current, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = join(current, entry.name);
+      return entry.isDirectory()
+        ? listArchiveExportFiles(root, entryPath)
+        : [entryPath];
+    }),
+  );
+  return files.flat().sort();
 }
 
 export async function ensureS3ArchiveAccess(

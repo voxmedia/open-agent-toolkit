@@ -7,10 +7,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   normalizeToPosixPath,
+  resolveManagedScopeRoots,
   resolveProjectRoot,
   resolveScopeRoot,
   toPosixPath,
   validatePathWithinScope,
+  validateManagedPath,
   validateRealPathWithinScope,
 } from './paths';
 
@@ -103,6 +105,58 @@ describe('fs/paths', () => {
       realScopeRoot: await realpath(scopeRoot),
       realPath: await realpath(realProject),
     });
+  });
+
+  it('supports symlinked managed roots and fresh nested destinations', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-managed-scope-'));
+    const externalAgents = await mkdtemp(join(tmpdir(), 'oat-managed-agents-'));
+    tempDirs.push(scopeRoot, externalAgents);
+    await symlink(externalAgents, join(scopeRoot, '.agents'), 'dir');
+    await mkdir(join(externalAgents, 'skills'), { recursive: true });
+
+    const roots = await resolveManagedScopeRoots(scopeRoot);
+    await expect(
+      validateManagedPath(
+        join(scopeRoot, '.agents', 'skills', 'new-skill'),
+        roots['.agents'],
+      ),
+    ).resolves.toEqual({
+      realManagedRoot: await realpath(externalAgents),
+      realPath: join(await realpath(externalAgents), 'skills', 'new-skill'),
+    });
+    await expect(
+      validateManagedPath(
+        join(scopeRoot, '.oat', 'templates', 'new-template.md'),
+        roots['.oat'],
+      ),
+    ).resolves.toEqual({
+      realManagedRoot: join(await realpath(scopeRoot), '.oat'),
+      realPath: join(
+        await realpath(scopeRoot),
+        '.oat',
+        'templates',
+        'new-template.md',
+      ),
+    });
+  });
+
+  it('rejects nested managed-path symlink escapes with recovery details', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-managed-scope-'));
+    const outsideRoot = await mkdtemp(join(tmpdir(), 'oat-managed-outside-'));
+    tempDirs.push(scopeRoot, outsideRoot);
+    await mkdir(join(scopeRoot, '.agents'), { recursive: true });
+    await symlink(outsideRoot, join(scopeRoot, '.agents', 'skills'), 'dir');
+    const candidate = join(scopeRoot, '.agents', 'skills', 'oat-brainstorm');
+    const roots = await resolveManagedScopeRoots(scopeRoot);
+
+    await expect(
+      validateManagedPath(candidate, roots['.agents']),
+    ).rejects.toThrow(
+      new RegExp(
+        `managed path.*${candidate.replaceAll('/', '\\/')}.*repoint`,
+        'i',
+      ),
+    );
   });
 
   it('toPosixPath converts windows separators to posix separators', () => {

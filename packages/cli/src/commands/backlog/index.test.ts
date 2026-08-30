@@ -16,6 +16,7 @@ function createHarness(): {
   archiveBacklogItem: ReturnType<typeof vi.fn>;
   pathExists: ReturnType<typeof vi.fn>;
   resolveAssetsRoot: ReturnType<typeof vi.fn>;
+  resolvePjmAdoption: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -43,6 +44,11 @@ function createHarness(): {
     async (_cwd: string) => '/tmp/workspace/repo',
   );
   const resolveAssetsRoot = vi.fn(async () => '/tmp/assets');
+  const resolvePjmAdoption = vi.fn(async () => ({
+    state: 'declared' as const,
+    repoRoot: '/tmp/workspace/repo/.oat/repo',
+    recovery: null,
+  }));
 
   const command = createBacklogCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -60,6 +66,7 @@ function createHarness(): {
     archiveBacklogItem,
     pathExists,
     resolveAssetsRoot,
+    resolvePjmAdoption,
     resolveProjectRoot,
   });
 
@@ -71,6 +78,7 @@ function createHarness(): {
     archiveBacklogItem,
     pathExists,
     resolveAssetsRoot,
+    resolvePjmAdoption,
     resolveProjectRoot,
   };
 }
@@ -123,6 +131,25 @@ describe('createBacklogCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('fails before backlog initialization when the repository has not adopted PJM', async () => {
+    const { command, capture, initializeBacklog, resolvePjmAdoption } =
+      createHarness();
+    resolvePjmAdoption.mockResolvedValueOnce({
+      state: 'none',
+      repoRoot: '/tmp/workspace/repo/.oat/repo',
+      recovery: 'oat pjm init',
+    });
+
+    await runCommand(command, 'init', ['--json']);
+
+    expect(initializeBacklog).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('oat pjm init'),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('uses the configured backlog root override relative to cwd', async () => {
     const { command, capture, initializeBacklog, resolveProjectRoot } =
       createHarness();
@@ -134,7 +161,7 @@ describe('createBacklogCommand', () => {
       ['--backlog-root', 'custom/backlog'],
     );
 
-    expect(resolveProjectRoot).not.toHaveBeenCalled();
+    expect(resolveProjectRoot).toHaveBeenCalledWith('/tmp/override-workspace');
     expect(initializeBacklog).toHaveBeenCalledWith(
       '/tmp/override-workspace/custom/backlog',
     );
@@ -226,6 +253,7 @@ describe('createBacklogCommand', () => {
       backlogRoot: '/tmp/workspace/custom/backlog',
       assetsRoot: '/tmp/assets',
       templatesRoot: '/tmp/workspace/repo/.oat/templates',
+      home: '/tmp/home',
       title: 'Streaming Cache Layer',
       priority: 'high',
       scope: 'feature',

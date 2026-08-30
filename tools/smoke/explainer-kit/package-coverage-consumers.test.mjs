@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { test } from 'node:test';
+import { after, before, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { promisify } from 'node:util';
 
 import { createBrowserProbeSession } from '../../../.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs';
 import { runExplainer } from '../../../.agents/skills/explainer-kit/scripts/run.mjs';
 import { planTrackedRunFinalization } from '../../../.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs';
 
+const execFileAsync = promisify(execFile);
 const REPO_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -17,7 +21,89 @@ const REPO_ROOT = resolve(
 );
 const CORE_ROOT = join(REPO_ROOT, '.agents', 'skills', 'explainer-kit');
 const CLI_DIST_ROOT = join(REPO_ROOT, 'packages', 'cli', 'dist');
+const SHARED_ASSETS_ROOT = join(REPO_ROOT, 'packages', 'cli', 'assets');
+const BUNDLE_SCRIPT = join(
+  REPO_ROOT,
+  'packages',
+  'cli',
+  'scripts',
+  'bundle-assets.sh',
+);
 const NOW = '2026-07-28T20:00:00.000Z';
+
+// The built CLI consumers below resolve bundled assets at call time. Reading
+// the shared packages/cli/assets root would couple this file to any concurrent
+// rebuild republishing that directory, so the file bundles once into a private
+// temporary root and points OAT_ASSETS_DIR at it for the whole file.
+let isolatedAssetsRoot = null;
+let capturedAssetsRoot = null;
+let previousAssetsDir;
+let previousAssetsDirWasSet = false;
+
+before(async () => {
+  previousAssetsDir = process.env.OAT_ASSETS_DIR;
+  previousAssetsDirWasSet = 'OAT_ASSETS_DIR' in process.env;
+  isolatedAssetsRoot = await mkdtemp(
+    join(tmpdir(), 'explainer-coverage-assets-'),
+  );
+  capturedAssetsRoot = isolatedAssetsRoot;
+
+  try {
+    await execFileAsync('bash', [BUNDLE_SCRIPT], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, OAT_ASSETS_DIR: isolatedAssetsRoot },
+      maxBuffer: 32 * 1024 * 1024,
+    });
+  } catch (error) {
+    await releaseIsolatedAssets();
+    throw error;
+  }
+
+  process.env.OAT_ASSETS_DIR = isolatedAssetsRoot;
+});
+
+after(releaseIsolatedAssets);
+
+// Registered after the release hook, so it observes the post-cleanup state and
+// is the regression guard for environment restoration and temp-root removal:
+// without it, dropping the release hook or its unset branch fails silently.
+after(() => {
+  assert.equal('OAT_ASSETS_DIR' in process.env, previousAssetsDirWasSet);
+  if (previousAssetsDirWasSet) {
+    assert.equal(process.env.OAT_ASSETS_DIR, previousAssetsDir);
+  }
+
+  if (capturedAssetsRoot) {
+    assert.equal(existsSync(capturedAssetsRoot), false);
+  }
+});
+
+async function releaseIsolatedAssets() {
+  if (previousAssetsDirWasSet) {
+    process.env.OAT_ASSETS_DIR = previousAssetsDir;
+  } else {
+    delete process.env.OAT_ASSETS_DIR;
+  }
+
+  const root = isolatedAssetsRoot;
+  isolatedAssetsRoot = null;
+  if (root) {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+test('built CLI asset resolution reads the private bundle, not the shared root', async () => {
+  assert.notEqual(isolatedAssetsRoot, null);
+  // Compared as paths rather than via realpath: this file must not depend on
+  // the shared assets root existing at any point during the run.
+  assert.notEqual(resolve(isolatedAssetsRoot), SHARED_ASSETS_ROOT);
+
+  const { resolveAssetsRoot } = await importDist('fs/assets.js');
+  const resolvedRoot = await resolveAssetsRoot();
+
+  assert.equal(resolvedRoot, resolve(isolatedAssetsRoot));
+  assert.notEqual(resolvedRoot, SHARED_ASSETS_ROOT);
+});
 
 test('core and CLI consume the same bundled canonical backlink contract', async () => {
   const core = await import(
@@ -96,9 +182,10 @@ test('one untouched core package passes finalizer, archive, and push coverage', 
   );
   assert.equal(finalization.status, 'ready');
 
-  const { verifySelectedProjectRecapForArchive } = await importDist(
-    'commands/project/archive/archive-utils.js',
-  );
+  const {
+    assertExactArchiveProjectRoot,
+    verifySelectedProjectRecapForArchive,
+  } = await importDist('commands/project/archive/archive-utils.js');
   const selectedRun = join('explainers', 'coverage-smoke');
   await verifySelectedProjectRecapForArchive(projectPath, selectedRun);
 
@@ -136,6 +223,7 @@ test('one untouched core package passes finalizer, archive, and push coverage', 
         primaryRepoRootAvailable: true,
         localOnlyWarning: null,
       }),
+      assertExactArchiveProjectRoot,
       verifySelectedProjectRecapForArchive,
       archiveProjectOnCompletion: async () => {
         archived += 1;

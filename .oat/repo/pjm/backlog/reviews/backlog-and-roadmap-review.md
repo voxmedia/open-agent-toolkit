@@ -2,520 +2,865 @@
 
 <!-- markdownlint-disable MD013 -->
 
-**Date:** 2026-08-19 (America/Chicago)
-**Scope:** All 44 active records under `.oat/repo/pjm/backlog/items/`
-**Roadmap:** `.oat/repo/pjm/roadmap.md` (included after the interactive prompt
-returned no selection; this review uses the recommended inclusive scope)
-**Codebase baseline:** `origin/main` at `6f443c0843d75b704168b8ca739b5bcf7f406f07`
-**Purpose:** Prioritize by value and effort, surface dependencies, and recommend
-an execution sequence
+**Date:** 2026-08-29 (America/Chicago)
+**Scope:** All 55 active records under `.oat/repo/pjm/backlog/items/`
+**Roadmap:** `.oat/repo/pjm/roadmap.md` (included after the interactive
+scope prompt selected the recommended inclusive option)
+**Codebase baseline:** HEAD `3ca99ba0` (tag `v0.2.38`); `origin/main`
+`8cc1b382` (PR #226)
+**Purpose:** Reconcile the active backlog with current repository evidence,
+triage value against effort, expose dependencies and ownership lanes, and
+recommend a practical sequence. This document is a living review, not an
+authorization to change item priorities or execute the proposed work.
 
-> No priority-alignment companion existed when this review was written. The
-> optional collaborative walkthrough can create
-> [`priority-alignment.md`](./priority-alignment.md) after the operator confirms
-> capacity, calendar constraints, and a kickoff stack.
+## Adoption and preflight
 
----
+`oat pjm doctor --json` completed the canonical-file and backlog-specific
+checks with adoption state `inferred-legacy`. The command returned a warning
+exit status because of pre-existing repository-layout warnings (unknown
+top-level PJM entries, a legacy monolith, loose reference files, and duplicate
+active files under reference); those warnings did not block this review.
 
-## 1. Executive Summary
+The preflight confirms the current backlog is being read from the canonical
+item directory and that the review output belongs at
+`.oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md`. No item
+priority, status, estimate, roadmap entry, or `priority-alignment.md` row was
+changed by this review.
 
-The backlog contains **44 active items** across three broad themes:
+## 1. Executive summary
 
-| Theme                                              | Count | Key observation                                                                                                                 |
-| -------------------------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------- |
-| Review, gate, and lifecycle integrity              |    15 | The highest-value work is a sequence of narrow reliability foundations, not one large review rewrite.                           |
-| Orchestration, sync, skills, and wave tooling      |    16 | Several quick contract fixes are ready; the broker, pinned-agent, and wave-CLI initiatives lack an urgent consumer.             |
-| Docs, Explainer Kit, release, and test reliability |    13 | Four small release/test fixes are ready in parallel; protected publication and additional visual workflows should remain gated. |
+The original review snapshot covered **55 records**: 30 tasks and 25 features.
+The post-PR #231 delta below brings the current active set to 56 records. The
+original recorded priority distribution was 2 urgent, 16 high, 30 medium, and
+7 low.
+The review classifies the records into 1 Quick Win, 16 Strategic, 23 Fill-in,
+and 15 Avoid / Defer candidates.
 
-### Quadrant distribution
+| Theme                                              | Count | Triage conclusion                                                                                                                    |
+| -------------------------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Review, gate, lifecycle, and dispatch integrity    |    20 | Complete the ReviewPlan and gate-provenance foundation before adding more broad review machinery.                                    |
+| Tool packs, providers, skills, and distribution    |    14 | The scope/provider/dispatch truthfulness problem is now the most consequential active product gap.                                   |
+| Docs, release, Explainer Kit, and test reliability |    21 | Several small fixes are independently useful; browser, publication, and broad authoring work should remain demand- or trigger-gated. |
 
-| Quadrant      | Count | Interpretation                                                                            |
-| ------------- | ----: | ----------------------------------------------------------------------------------------- |
-| Quick Win     |     4 | High value and low effort; start immediately in independent lanes.                        |
-| Strategic     |    11 | High value with medium or high effort; sequence around the receipt/lifecycle foundations. |
-| Fill-in       |    14 | Useful bounded maintenance; schedule around the strategic lanes.                          |
-| Avoid / Defer |    15 | Obsolete, externally blocked, demand-gated, or too costly for current value.              |
+### Recommended order of attention
 
-### Top-line recommendations
+1. **Finish [BL-260729-implement-reviewplan-first — Implement
+   ReviewPlan-first reviewer workflow](../items/BL-260729-implement-reviewplan-first.md).**
+   PR #190 is still open, draft, and dirty, so this is the current capacity
+   constraint and should be reconciled with the project state before starting
+   another large review initiative.
+2. **Make [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope,
+   provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
+   the next urgent product lane.** It consolidates the newly observed
+   project-plus-user scope picker error, user-scope agent invisibility,
+   provider-aware diagnostics, folder-level symlink preference, restart
+   guidance, and native-role fallback provenance. It should consume the
+   boundaries from [BL-260827-correct-scope-and-adoption — Correct scope and
+   adoption diagnostics](../items/BL-260827-correct-scope-and-adoption.md) and
+   [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
+   config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md), not
+   be treated as an isolated picker-only fix.
+3. **Sequence [BL-260820-bind-each-gate-review — Bind each gate review
+   disposition to its exact received ledger event](../items/BL-260820-bind-each-gate-review.md)
+   before [BL-260820-emit-source-qualified — Emit source-qualified provenance
+   envelopes for review and gate receipts](../items/BL-260820-emit-source-qualified.md)
+   and [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for
+   bookkeeping-only review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md).**
+   The first item establishes an honest event identity; provenance then makes
+   the distinction observable; only then should bookkeeping-only fixes be
+   recognized as non-blocking to progress.
 
-1. Finish **`BL-260729-implement-reviewplan-first` — Implement ReviewPlan-first
-   reviewer workflow** through draft PR #190. Reconcile the dirty merge state,
-   refresh dogfood evidence and checks, and compare the Stage A result with the
-   full backlog acceptance criteria before closing or narrowing the record.
-2. In the second available lane, start **`BL-260718-warn-when-oat-sync-uses` —
-   Warn when oat sync uses a different producing CLI version**. The current sync
-   path detects version skew but silently restamps it; this work does not overlap
-   the ReviewPlan PR.
-3. Queue **`BL-260820-bind-each-gate-review` — Bind each gate review disposition
-   to its exact received ledger event** immediately after PR #190 is reconciled.
-   It closes the silent multi-round ledger ambiguity from GitHub issue #194 and
-   should build on, rather than conflict with, the in-flight review changes.
+### Immediate conclusion
 
-### Session triage provenance
+The backlog is large enough that organization is more valuable than adding
+another undifferentiated priority list. The high-value path has three
+interlocking foundations:
 
-These markers distinguish records created or newly linked during this session
-from the backlog that existed before the review.
+- a truthful scope/provider/content-type model for installation, sync, and
+  dispatch;
+- an honest review-event and receipt model that does not burn cycles on ledger
+  corrections; and
+- a finished ReviewPlan implementation that makes broad review work bounded.
 
-| Marker                             | Backlog item                                                                                                                               | Session action                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| **NEW — skills corpus**            | **`BL-260819-repair-verified-bundled-skill` — Repair verified bundled skill contract drift**                                               | Created from four verified bundled-skill contract mismatches.                          |
-| **NEW — skills corpus**            | **`BL-260819-refresh-codex-skill-model` — Refresh codex-skill model routing and repository-check policy**                                  | Created from verified stale model-routing and overly broad bypass guidance.            |
-| **NEW — skills corpus**            | **`BL-260819-classify-canonical-skills-by` — Classify canonical skills by distribution, lifecycle, and tenant scope**                      | Created from the verified canonical-versus-bundled inventory ambiguity.                |
-| **NEW — GitHub #194**              | **`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its exact received ledger event**                               | Created and linked to the open issue.                                                  |
-| **NEW — GitHub #201**              | **`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness against the current head**                                 | Created and linked to the open issue.                                                  |
-| **NEW — GitHub #202**              | **`BL-260820-emit-source-qualified` — Emit source-qualified provenance envelopes for review and gate receipts**                            | Created and linked to the open issue.                                                  |
-| **EXISTING — linked #197**         | **`BL-260711-add-activity-aware-gate` — Add activity-aware gate timeouts**                                                                 | Existing record confirmed as the owner of the issue's remaining adaptive-timeout work. |
-| **EXISTING — linked/refined #200** | **`BL-260818-distinguish-operator-directed` — Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap** | Existing record linked and narrowed to bounded, finding-scoped authorization.          |
+The roadmap previously under-represented that path, while several closed items
+and stale project states made the repository look less current than it is. The
+post-PR #231 addendum below records the new items and this operator-approved
+pass updates the roadmap/project relationships accordingly.
 
----
+## 1A. Post-PR #231 sequencing delta
 
-## 2. Item Catalog
+PR #231 merged at `d493f55e` and added two active backlog records. The prior
+55-row review snapshot remains useful for its existing ratings, but the current
+active set is now 56 records because the archived portability item is no longer
+active and these two records are now present:
 
-### Rating key
+| Ref | Backlog item                                                                                                            | Value / effort | Quadrant  | Sequencing disposition                                                                                                                                                                                                                                      |
+| --- | ----------------------------------------------------------------------------------------------------------------------- | -------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B56 | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** | high / high    | Strategic | Keep separate from the urgent scope/provider umbrella. Promote to spec-driven; resolve tier, representation, and independent-binding questions before implementation. Its contract is a coordination prerequisite for canonical fallback provenance in B55. |
+| B57 | **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**                 | high / medium  | Strategic | Keep distinct from B05. It prevents stale ledger findings; B05 remains the urgent no-re-review safety net for bookkeeping findings that still occur. Serialize their shared review-surface implementation.                                                  |
 
-| Rating     | Value                                                                  | Effort                                       |
-| ---------- | ---------------------------------------------------------------------- | -------------------------------------------- |
-| **High**   | Unblocks other work, affects a daily workflow, or protects a milestone | More than 3 days or broad/cross-cutting work |
-| **Medium** | Improves consistency, quality, or a bounded operational path           | 1–3 days with moderate complexity            |
-| **Low**    | Narrow, speculative, obsolete, or demand-gated                         | Less than 1 day and isolated                 |
+PR #231's `BL-260829-unified-agent-provider-root` (Unified AGENT_PROVIDER_ROOT
+binding for portable skill and agent references) is not a duplicate of B55
+(`BL-260829-make-tool-pack-scope-selection` — Make tool-pack scope, provider
+reachability, and dispatch state truthful). B56 owns canonical skill-to-agent
+reference resolution and its ratchet; B55 owns canonical installation,
+provider materialization, picker truth, provider visibility, restart notices,
+and native/fallback state. The projects should share a boundary decision and
+fixture, but their implementations should not be merged into one unbounded
+patch. The new provider-root project was scaffolded as quick mode, but its L
+estimate and unresolved architecture questions justify spec-driven promotion.
 
-Quadrants are derived as follows: high-value/low-effort is **Quick Win**;
-high-value work above low effort is **Strategic**; bounded medium-value work is
-**Fill-in**; low-value, externally blocked, or medium-value/high-effort work is
-**Avoid / Defer**.
+PR #231's `BL-260829-order-phase-bookkeeping-before` (Order phase bookkeeping
+before per-phase review dispatch) is complementary to B05, not duplicative. It
+should land first where possible, while B05 remains necessary for other
+ledger-only findings and for any residual lifecycle path.
 
-| Item                                                                                                                                       | Session provenance             | Current priority | Value | Effort | Quadrant      | Rationale; dependencies and impact                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ---------------- | ----- | ------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`BL-260706-front-load-recurring-gate` — Front-load recurring gate-finding classes into implementer briefs**                              | —                              | Medium           | M     | H      | Avoid / Defer | Valuable only after a stable finding taxonomy; requires a new ledger, dispatch injection, final sweep, and promotion policy. Soft dependency D6; blocks no current delivery.                                                         |
-| **`BL-260708-verify-cursor-gpt-5-6-subagent` — Verify Cursor GPT-5.6 subagent model slugs**                                                | —                              | Medium           | L     | L      | Fill-in       | The 2026-08-08 recheck is overdue, but work is externally blocked until Cursor exposes Task evidence. Soft dependency D5; blocks only trustworthy Cursor GPT-5.6 subagent pins.                                                      |
-| **`BL-260711-add-activity-aware-gate` — Add activity-aware gate timeouts**                                                                 | Existing — linked #197         | High             | H     | M      | Strategic     | Hard budgets and liveness diagnostics shipped, but adaptive idle-kill, early artifact creation, and distinct outcomes remain. Paired in D2; blocks reliable long-running gates.                                                      |
-| **`BL-260711-add-root-owned-dispatch-broker` — Add root-owned dispatch broker for exact OAT subagent launches**                            | —                              | High             | M     | H      | Avoid / Defer | Phase-direct fallback works; the broker is justified only by a concrete three-tier consumer and fresh host support. Soft dependency D8; blocks only exact coordinator-to-worker topology.                                            |
-| **`BL-260711-skip-re-review-for-bookkeeping` — Skip re-review for bookkeeping-only review findings**                                       | —                              | High             | H     | M      | Strategic     | Classification exists but intentionally does not skip reviews. Soft dependency D6; blocks reviewer-capacity savings and faster deterministic bookkeeping remediation.                                                                |
-| **`BL-260712-per-project-override` — Per-project override to disable configured external gates**                                           | —                              | Medium           | M     | M      | Fill-in       | A useful scoped exception, but not a current reliability blocker. Soft dependency D7; enables project-local control without mutating shared configuration.                                                                           |
-| **`BL-260713-root-agent-judgment-logging` — Root-agent judgment logging responsibility for project log**                                   | —                              | Medium           | M     | L      | Fill-in       | The CLI contract exists; root workflow guidance still records structural events rather than judgment signals. No hard dependency; improves retro evidence.                                                                           |
-| **`BL-260714-executable-backstops` — Executable backstops for contract claims — authoring guidance**                                       | —                              | Medium           | M     | L      | Fill-in       | Generalizes proven contract-test precedents into authoring guidance. No hard dependency; prevents prose-only invariant drift.                                                                                                        |
-| **`BL-260718-add-generated-runbook` — Add generated-runbook verification command pass**                                                    | —                              | Medium           | M     | H      | Avoid / Defer | Needs discovery for a structured command source and safety model before executing generated prose. Blocks no listed item.                                                                                                            |
-| **`BL-260718-add-oat-wave-lifecycle-cli` — Add oat wave lifecycle CLI command family**                                                     | —                              | High             | M     | H      | Avoid / Defer | Existing skills own the lifecycle and no second consumer has triggered a stable CLI contract. Hard dependency D4; blocks only CLI-native wave management.                                                                            |
-| **`BL-260718-document-execution-program` — Document execution-program artifact as stable OAT contract**                                    | —                              | Medium           | L     | M      | Avoid / Defer | Current docs deliberately keep the artifact descriptive. Requires a concrete second consumer; dependency D4.                                                                                                                         |
-| **`BL-260718-fix-oat-docs-generate-index` — Fix oat docs generate-index cwd-relative defaults in monorepos**                               | —                              | Medium           | M     | M      | Fill-in       | The CLI still resolves defaults from the current directory; repo scripts work around it explicitly. No hard dependency; acceptance criteria and size need normalization.                                                             |
-| **`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews against budget and recursive dispatch**                          | —                              | High             | H     | M      | Strategic     | Recursion prevention shipped, but large-surface budget reliability remains. Paired in D2; blocks dependable plan and whole-range gates.                                                                                              |
-| **`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for lifecycle steps that name skills**                             | —                              | High             | H     | L      | Quick Win     | Current closeout text names skills without uniformly requiring a fresh load. Soft dependency D3; prevents silent workflow-step omission.                                                                                             |
-| **`BL-260718-rewrite-worktree-bootstrap` — Rewrite worktree bootstrap-group as tested TypeScript command**                                 | —                              | Medium           | L     | M      | Avoid / Defer | The shipped Bash helper works and a rewrite should wait for the wave CLI trigger. Soft dependency D4; blocks no current workflow.                                                                                                    |
-| **`BL-260718-support-fumadocs-in-oat-docs` — Support Fumadocs in oat docs nav sync (currently MkDocs-only)**                               | —                              | Medium           | L     | L      | Avoid / Defer | The goal is obsolete because Fumadocs intentionally uses index generation rather than MkDocs nav sync. Close or rewrite as a narrow wrong-command diagnostic; criteria and size are missing.                                         |
-| **`BL-260718-warn-when-oat-sync-uses` — Warn when oat sync uses a different producing CLI version**                                        | —                              | High             | H     | L      | Quick Win     | Sync already detects and restamps producer skew but emits no warning. No hard dependency; prevents recurring stale-tool diagnosis.                                                                                                   |
-| **`BL-260719-add-pinned-recon-agents` — Add pinned recon agents for reusable orchestration**                                               | —                              | Medium           | M     | H      | Avoid / Defer | Reviewer-local reconnaissance exists; reusable pinned roles need a generic materialization contract and demonstrated consumers. Soft dependency D8.                                                                                  |
-| **`BL-260719-evaluate-broader-final-gate` — Evaluate broader final-gate freshness policy after narrow optimization**                       | —                              | Low              | L     | M      | Avoid / Defer | This is an evidence-gated decision checkpoint, not delivery work. Dependency D1 now overlaps the stronger closeout-freshness record; consider folding it there.                                                                      |
-| **`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto companion skill for autonomous closeouts**                     | —                              | High             | H     | M      | Strategic     | The companion is still absent and safe autonomous closeout needs it, but literal acceptance placeholders must be resolved first. Hard dependency D3.                                                                                 |
-| **`BL-260724-support-provider-directory` — Support provider directory symlinks as full collection sync**                                   | —                              | Medium           | M     | H      | Avoid / Defer | Current ancestry safety deliberately rejects provider symlinks; safe adoption is cross-cutting and existing non-alias installs work. Blocks only alias-based collections.                                                            |
-| **`BL-260725-classify-general-sync-owned` — Classify general sync-owned dirt in project-start preflight**                                  | —                              | Low              | L     | H      | Avoid / Defer | The item's own design found prompting safest beyond the already-shipped manifest-only case. Archive as `wont_do` unless a new repeated incident exists.                                                                              |
-| **`BL-260726-validate-cursor-pin-effort` — Validate Cursor pin effort rungs at sync time**                                                 | —                              | Medium           | M     | M      | Fill-in       | Current materialization validates syntax, not real family/rung support. Dependency D5; protects against silent wrong-model fallback once authoritative data exists.                                                                  |
-| **`BL-260726-validate-structured-output` — Validate structured-output contract in gate skill commands**                                    | —                              | Medium           | M     | L      | Fill-in       | Missing `--json` is still accepted and fails later in consumers. Soft dependency D7; proposed size S should be confirmed.                                                                                                            |
-| **`BL-260727-make-explainer-run-durability` — Make explainer run durability survive ephemeral environments**                               | —                              | High             | H     | H      | Strategic     | Current finalization reports `built-not-durable` but cannot make ephemeral output survive. Requires a persistence policy; blocks safe cloud/autonomous recap delivery.                                                               |
-| **`BL-260728-additional-visual-workflows` — Additional visual workflows**                                                                  | —                              | Low              | L     | H      | Avoid / Defer | Golden recovery is complete and no demand evidence justifies another broad workflow expansion. Blocks nothing.                                                                                                                       |
-| **`BL-260729-implement-reviewplan-first` — Implement ReviewPlan-first reviewer workflow**                                                  | In flight — draft PR #190      | High             | H     | H      | Strategic     | Stage A is implemented in draft PR #190; its last checks passed, but GitHub reports a dirty merge state. Finish/reconcile it before overlapping review-skill changes, then compare the shipped slice with the full backlog criteria. |
-| **`BL-260806-fail-closed-when-configured` — Fail closed when configured closeout snapshot is absent**                                      | —                              | High             | H     | M      | Strategic     | Existing routing handles an incomplete snapshot, not the configured-plus-absent invariant. Hard dependency D3; blocks safe autonomous completion.                                                                                    |
-| **`BL-260817-decide-and-pin-the-system` — Decide and pin the system-Chromium requirement introduced by test:skills on the merge path**     | —                              | Medium           | M     | L      | Fill-in       | CI has no browser provisioning policy. Hard dependency D9; blocks the RC end-to-end CI item and needs acceptance cleanup.                                                                                                            |
-| **`BL-260817-detect-branch-behind-published` — Detect branch-behind-published-main package versions in CI**                                | —                              | Medium           | H     | L      | Quick Win     | Release validation compares with the merge base but not current published main. No hard dependency; prevents long-lived branch version collisions.                                                                                   |
-| **`BL-260817-drop-explainer-kit-publish` — Drop explainer-kit publish-request/v1 in a future minor**                                       | —                              | Medium           | L     | M      | Avoid / Defer | V2 is current, but removal is correctly gated on an external wrapper and a future minor. Blocks only legacy cleanup; acceptance needs normalization.                                                                                 |
-| **`BL-260817-let-resolveassetsroot-honor` — Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic**               | —                              | Medium           | H     | L      | Quick Win     | Bundling honors the isolated assets root while readers still use the shared path. No hard dependency; removes a real parallel-smoke race after criteria cleanup.                                                                     |
-| **`BL-260817-run-the-rc-explainer-end` — Run the RC explainer end-to-end test in CI with a provisioned browser**                           | —                              | Medium           | H     | M      | Strategic     | The integration test is skipped without its repo variable and CI provisions no browser. Hard dependency D9; supplies real release proof after criteria cleanup.                                                                      |
-| **`BL-260817-verify-protected-mode-public` — Verify protected-mode public URLs with an authenticated end-to-end GET**                      | —                              | Medium           | M     | H      | Avoid / Defer | Adds host-bound credential handling to a path that currently discloses, rather than overclaims, verification. Requires security design; criteria need normalization.                                                                 |
-| **`BL-260818-bound-the-smoke-cleanup` — Bound the smoke cleanup SIGTERM harness with a timeout**                                           | —                              | Medium           | M     | L      | Fill-in       | The harness can wait indefinitely after SIGTERM. No hard dependency; prevents suite wedges, but its duplicate placeholder criteria must be removed.                                                                                  |
-| **`BL-260818-distinguish-operator-directed` — Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap** | Existing — linked/refined #200 | Medium           | M     | M      | Fill-in       | Current receive flow has no bounded finding-scoped authorization record. Soft dependency D7; preserves the cap while allowing explicit continuation.                                                                                 |
-| **`BL-260818-extend-guarded-prose-contract` — Extend guarded-prose contract tests to docs-app mirrors**                                    | —                              | Medium           | M     | L      | Fill-in       | Current guard covers only the canonical skill reference, not the docs mirror. No hard dependency; duplicate placeholder criteria must be removed.                                                                                    |
-| **`BL-260818-require-repo-wide-call-site` — Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance**   | —                              | Medium           | M     | L      | Fill-in       | Current scope rules lack a repo-wide call-site and widen-or-stop obligation. No hard dependency; duplicate placeholder criteria must be removed.                                                                                     |
-| **`BL-260819-classify-canonical-skills-by` — Classify canonical skills by distribution, lifecycle, and tenant scope**                      | New — skills corpus            | Medium           | M     | H      | Avoid / Defer | The inventory ambiguity is real, but resolving lifecycle, distribution, and tenant policy across 79 canonical directories is broad. Soft dependency D10; plan after immediate contract fixes.                                        |
-| **`BL-260819-refresh-codex-skill-model` — Refresh codex-skill model routing and repository-check policy**                                  | New — skills corpus            | Medium           | M     | L      | Fill-in       | The repo-only skill hard-codes compatibility-era models and a blanket bypass. No hard dependency; a bounded correctness and safety fix.                                                                                              |
-| **`BL-260819-repair-verified-bundled-skill` — Repair verified bundled skill contract drift**                                               | New — skills corpus            | Medium           | M     | M      | Fill-in       | All four mismatches remain reproducible; grouping them avoids repeated release bumps. No hard dependency; schedule as one release-shaped batch.                                                                                      |
-| **`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its exact received ledger event**                               | New — GitHub #194              | High             | H     | M      | Strategic     | Current handoff lacks immutable event identity across repeated rounds. Dependency D1; blocks trustworthy consumption and later receipt reconciliation.                                                                               |
-| **`BL-260820-emit-source-qualified` — Emit source-qualified provenance envelopes for review and gate receipts**                            | New — GitHub #202              | High             | H     | M      | Strategic     | Useful fields exist in separate outputs, but no common source-qualified receipt schema exists. Dependency D1; blocks integrated freshness and corroboration.                                                                         |
-| **`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness against the current head**                                 | New — GitHub #201              | High             | H     | H      | Strategic     | Existing review freshness is narrower than integrated PR, CI, bot, gate, and approval freshness. Hard dependency D1; blocks proof that terminal evidence covers current head.                                                        |
+## 2. Evidence and freshness findings
 
-### Readiness defects found during cataloging
+### Repository and GitHub baseline
 
-- **11 active records** retain literal `{Outcome 1}` / `{Outcome 2}`
-  placeholders; three of those also duplicate the `## Acceptance Criteria`
-  heading. They can be prioritized, but should not enter implementation until
-  their substantive criteria are normalized.
-- **Three active records** have no `scope_estimate`: the docs index default,
-  Fumadocs nav-sync, and structured gate-output validation records. This review
-  estimates them as M, L, and L effort respectively; the backlog metadata
-  should be confirmed before kickoff.
-- `oat pjm doctor` reports **`BL-260817-let-resolveassetsroot-honor` — Let
-  resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic** as
-  completed because its ID appears in another item's completion summary. The
-  record is not complete; this is a detector false positive, not an archive
-  instruction.
+- `origin/main` was fetched before the review and is at PR #226, which merged
+  the packaged sibling-skill reference portability fix.
+- PR #190, **ReviewPlan Stage A compatibility release**, remains open, draft,
+  and dirty. The associated project state still says discovery is in progress,
+  so its external and local lifecycle records need reconciliation.
+- PR #217, **warn on manifest/CLI version skew before any mutation**, merged
+  on 2026-08-26.
+- PR #219, **honor OAT_ASSETS_DIR and isolate package-coverage smoke assets**,
+  merged on 2026-08-27.
+- PR #222, **route codex-skill through provider guidance and make repo-check
+  bypass conditional**, merged on 2026-08-27.
+- PR #226, **make packaged sibling-skill references portable**, merged on
+  2026-08-28.
 
----
+The backlog and several project files still contain pre-merge descriptions,
+open/implementation states, or roadmap references for that work. This is
+evidence for reconciliation, not evidence that the corresponding code is
+missing.
 
-## 3. Dependency Graph
+### Active-record quality
+
+- **19** active records still contain placeholder acceptance text such as
+  `{Outcome 1}` or `{Outcome 2}`. These should be normalized before relying
+  on acceptance criteria for automated planning.
+- **3** active records have no recorded `scope_estimate`: [BL-260718-fix-oat-docs-generate-index
+  — Fix oat docs generate-index cwd-relative defaults in monorepos](../items/BL-260718-fix-oat-docs-generate-index.md),
+  [BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in oat docs nav
+  sync (currently MkDocs-only)](../items/BL-260718-support-fumadocs-in-oat-docs.md),
+  and [BL-260726-validate-structured-output — Validate structured-output
+  contract in gate skill commands](../items/BL-260726-validate-structured-output.md).
+- **2** active records contain duplicate `## Acceptance Criteria` headings:
+  [BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract
+  tests to docs-app mirrors](../items/BL-260818-extend-guarded-prose-contract.md)
+  and [BL-260818-require-repo-wide-call-site — Require repo-wide call-site
+  sweeps for cross-cutting options in acceptance criteria](../items/BL-260818-require-repo-wide-call-site.md).
+- The older living review was dated 2026-08-19, claimed 44 active records, and
+  omitted 16 currently active records while retaining several closed or
+  otherwise stale references. This review replaces that stale coverage.
+
+### Scope/provider evidence
+
+The issue #228 transcript and its linked comment provide a concrete repro:
+all four answers that were presented as “User scope” for ideas, utility,
+research, and brainstorm landed as **project + user**, and the picker displayed
+`(installed: project + user)` before any project installation had occurred.
+The same investigation found that a user-scope manifest can project skills
+without projecting agents, while the provider catalog can still lack managed
+roles. That creates a gap between canonical installation, provider visibility,
+and dispatch availability.
+
+The current implementation seams explain why this needs a cross-cutting item:
+
+- init/install inventory derives placement from declared or realized scope and
+  uses that state in picker annotations;
+- the shared content-type model permits user-scope skills but not user-scope
+  agents;
+- plan computation skips user-scope agent entries;
+- Claude advertises an agents directory mapping, but generic user sync cannot
+  materialize those agent roles;
+- managed-role exceptions can hide missing Claude roles from diagnostics; and
+- dispatch guidance distinguishes native role selection from a generic child
+  supplied with role instructions, but the resulting records do not preserve
+  enough provenance to make that distinction durable.
+
+This is why “the pack is installed” and “the active provider can use the
+pack” must become separate reported states.
+
+### Roadmap evidence
+
+The roadmap has **22 unique backlog references**: 20 still active and 2 now
+closed. Therefore **35 active items are roadmap orphans**. The two stale
+roadmap references are [BL-260718-remove-post-w6-reviews-row — Remove post-W6
+reviews-row restore watch](../items/../archived/BL-260718-remove-post-w6-reviews-row.md)
+and [BL-260817-let-resolveassetsroot-honor — Let resolveAssetsRoot honor
+OAT_ASSETS_DIR and make smoke asset reads hermetic](../items/../archived/BL-260817-let-resolveassetsroot-honor.md).
+
+The roadmap is useful as a directional grouping, but it is not currently a
+complete active-backlog index. The proposed alignment in section 7 is
+deliberately advisory until a separate roadmap-edit decision.
+
+## 3. Review method
+
+Each active record was read from its canonical item file. The table below
+preserves the current priority and recorded estimate, then adds a review
+value, a review effort, a quadrant, and a concrete rationale.
+
+- **Value** measures user impact, correctness, risk reduction, and leverage.
+- **Review effort** is the expected implementation/reconciliation cost for
+  sequencing, not a replacement for the record's estimate. Missing source
+  estimates are marked `missing` and receive a provisional review effort.
+- **Quick Win** means high value and low effort.
+- **Strategic** means high value with medium or high effort.
+- **Fill-in** means useful but bounded or lower-leverage work that can run in an
+  available lane.
+- **Avoid / Defer** means low current value, trigger-gated work, unresolved
+  overlap, or high effort without a current consumer. It does not mean the
+  idea is permanently rejected.
+
+## 4. Active-item catalog and triage
+
+The B-numbers are local review references only. Every B-number maps to the
+full backlog ID and title in this table; compact B-numbers are used only in
+the dependency graph and lane shorthand below.
+
+| Ref | Backlog item                                                                                                                | Current priority / recorded estimate | Review value / effort | Quadrant      | Rationale and dependencies                                                                                                                                                                                                                                           |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B01 | **BL-260706-front-load-recurring-gate — Front-load recurring gate-finding classes into implementer briefs**                 | medium / L                           | medium / high         | Avoid / Defer | Valuable once recurring findings are stable, but broad and dependent on the ReviewPlan and honest receipt foundations; defer until B26, B37, and B38 have settled the evidence contract.                                                                             |
+| B02 | **BL-260708-verify-cursor-gpt-5-6-subagent — Verify Cursor GPT-5.6 subagent model slugs**                                   | medium / S                           | low / low             | Fill-in       | A small compatibility check with value only for Cursor users; schedule when Cursor model routing is otherwise active and pair with B22.                                                                                                                              |
+| B03 | **BL-260711-add-activity-aware-gate — Add activity-aware gate timeouts**                                                    | high / M                             | high / medium         | Strategic     | Reduces false timeout conclusions in active gate work; sequence after B26's bounded review contract and coordinate with B13 and B43.                                                                                                                                 |
+| B04 | **BL-260711-add-root-owned-dispatch-broker — Add root-owned dispatch broker for exact OAT subagent launches**               | high / M                             | medium / high         | Avoid / Defer | The exact-launch goal matters, but a new broker overlaps native-role discovery, provider reachability, and existing dispatch constraints; wait for B44 and B55 to establish the real failure boundary.                                                               |
+| B05 | **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**                          | urgent / L                           | high / high           | Strategic     | Highest-priority review-efficiency fix: ledger corrections should be repaired without triggering another quality review; depends on B37's event binding and B38's provenance classification.                                                                         |
+| B06 | **BL-260712-per-project-override — Per-project override to disable configured external gates**                              | medium / M                           | medium / medium       | Fill-in       | Useful operator control with bounded scope; validate the structured-output and gate-command contract in B23 before expanding override behavior.                                                                                                                      |
+| B07 | **BL-260713-root-agent-judgment-logging — Root-agent judgment logging responsibility for project log**                      | medium / S                           | medium / low          | Fill-in       | Low-cost clarity for who records judgments; implement alongside the B26 artifact contract rather than as a standalone logging convention.                                                                                                                            |
+| B08 | **BL-260714-executable-backstops — Executable backstops for contract claims — authoring guidance**                          | medium / S                           | medium / low          | Fill-in       | Practical authoring improvement with independent value; pair with B33 and B34 so prose claims have executable coverage and repo-wide call-site evidence.                                                                                                             |
+| B09 | **BL-260718-add-generated-runbook — Add generated-runbook verification command pass**                                       | medium / M                           | medium / high         | Avoid / Defer | Useful only when a concrete runbook consumer exists; do not add another generated artifact until current project and roadmap state is reconciled.                                                                                                                    |
+| B10 | **BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command family**                                        | high / L                             | medium / high         | Avoid / Defer | A large surface with an unclear second consumer; first clarify the stable execution-program contract in B11 and the trigger for the wave lifecycle.                                                                                                                  |
+| B11 | **BL-260718-document-execution-program — Document execution-program artifact as stable OAT contract**                       | medium / M                           | low / medium          | Avoid / Defer | Documentation can help, but current demand is weaker than the scope/provider and receipt gaps; resolve whether B10 still has a live consumer before investing.                                                                                                       |
+| B12 | **BL-260718-fix-oat-docs-generate-index — Fix oat docs generate-index cwd-relative defaults in monorepos**                  | medium / missing                     | medium / medium       | Fill-in       | A bounded docs CLI correctness fix; the missing source estimate should be normalized, then it can run independently of the larger lanes.                                                                                                                             |
+| B13 | **BL-260718-harden-full-surface-gate — Harden full-surface gate reviews against budget and recursive dispatch**             | high / M                             | high / medium         | Strategic     | High leverage for review cost and recursion safety; make B43's headless no-yield behavior and B26's ReviewPlan constraints prerequisites.                                                                                                                            |
+| B14 | **BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for lifecycle steps that name skills**                | high / S                             | high / low            | Quick Win     | Clear, bounded workflow-integrity improvement; start immediately and use it to reduce future runs that claim a skill was followed without loading it.                                                                                                                |
+| B15 | **BL-260718-rewrite-worktree-bootstrap — Rewrite worktree bootstrap-group as tested TypeScript command**                    | medium / M                           | low / medium          | Avoid / Defer | A broad rewrite with no immediate relationship to the highest-risk findings; revisit after B10/B11 establish a live wave-workflow consumer.                                                                                                                          |
+| B16 | **BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in oat docs nav sync (currently MkDocs-only)**                  | medium / missing                     | low / medium          | Avoid / Defer | The repository already has a Fumadocs docs app, but the backlog item has no estimate and its demand/contract is unclear; resolve or archive the obsolete framing before implementation.                                                                              |
+| B17 | **BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable orchestration**                                  | medium / M                           | medium / high         | Avoid / Defer | Reusable pinned agents could help, but current provider catalog visibility is itself unreliable; wait for B44 and B55 so the new roles would be discoverable and truthful.                                                                                           |
+| B18 | **BL-260719-evaluate-broader-final-gate — Evaluate broader final-gate freshness policy after narrow optimization**          | low / M                              | low / medium          | Avoid / Defer | Explicitly post-optimization and therefore not a current starting point; revisit after B37–B39 and B26 produce evidence about remaining freshness failures.                                                                                                          |
+| B19 | **BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto companion skill for autonomous closeouts**        | high / M                             | high / medium         | Strategic     | Useful for autonomous closeout reliability, but it must consume the fail-closed snapshot contract in B27 and the receipt freshness evidence in B39.                                                                                                                  |
+| B20 | **BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**                      | high / M                             | high / high           | Strategic     | Directly addresses folder-level symlink preference and lower git churn; coordinate its provider directory semantics with B55 rather than implementing per-provider exceptions.                                                                                       |
+| B21 | **BL-260725-classify-general-sync-owned — Classify general sync-owned dirt in project-start preflight**                     | low / M                              | low / high            | Avoid / Defer | Useful diagnosis but overlaps B47 and the new B55 scope model; merge its surviving cases into those items rather than maintaining a separate high-cost lane.                                                                                                         |
+| B22 | **BL-260726-validate-cursor-pin-effort — Validate Cursor pin effort rungs at sync time**                                    | medium / S                           | medium / medium       | Fill-in       | A focused provider validation; depend on B02's model-slug evidence and keep it separate from general provider reachability.                                                                                                                                          |
+| B23 | **BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands**                       | medium / missing                     | medium / low          | Fill-in       | Small contract hardening with direct gate value; normalize the missing estimate and use it as a prerequisite for B06 and related gate automation.                                                                                                                    |
+| B24 | **BL-260727-make-explainer-run-durability — Make explainer run durability survive ephemeral environments**                  | high / M                             | high / high           | Strategic     | Meaningful reliability work, but it is an independent protected lane; retain high priority and schedule after the currently merged asset-root fixes are reconciled.                                                                                                  |
+| B25 | **BL-260728-additional-visual-workflows — Additional visual workflows**                                                     | low / L                              | low / high            | Avoid / Defer | Demand-gated capability expansion; defer until a specific workflow and consumer justify the large effort.                                                                                                                                                            |
+| B26 | **BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**                                     | high / L                             | high / high           | Strategic     | Current execution bottleneck: PR #190 is open/draft/dirty and the project state is stale; finish or explicitly re-scope before launching another broad review effort.                                                                                                |
+| B27 | **BL-260806-fail-closed-when-configured — Fail closed when configured closeout snapshot is absent**                         | high / M                             | high / medium         | Strategic     | Important autonomous closeout safety boundary; complete before B19 and coordinate its durable snapshot with B39.                                                                                                                                                     |
+| B28 | **BL-260817-decide-and-pin-the-system — Decide and pin the system-Chromium requirement introduced by test:skills**          | medium / S                           | medium / low          | Fill-in       | A small decision that unlocks or rejects browser CI work; resolve before B30 rather than letting browser assumptions remain implicit.                                                                                                                                |
+| B29 | **BL-260817-drop-explainer-kit-publish — Drop explainer-kit publish-request/v1 in a future minor**                          | medium / S                           | low / medium          | Avoid / Defer | A future breaking-contract cleanup; defer to a release window with explicit consumer confirmation.                                                                                                                                                                   |
+| B30 | **BL-260817-run-the-rc-explainer-end — Run the RC explainer end-to-end test in CI with a provisioned browser**              | medium / M                           | medium / medium       | Fill-in       | Valuable release evidence once B28 pins the browser requirement and provisioning is available; do not treat local browser availability as CI proof.                                                                                                                  |
+| B31 | **BL-260817-verify-protected-mode-public — Verify protected-mode public URLs with an authenticated end-to-end GET**         | medium / M                           | medium / high         | Avoid / Defer | High setup cost and environment dependence; trigger only when protected-mode publication is on the release path.                                                                                                                                                     |
+| B32 | **BL-260818-distinguish-operator-directed — Distinguish operator-directed review rounds from failed fix cycles in the**     | medium / M                           | medium / medium       | Fill-in       | Improves lifecycle truthfulness and pairs naturally with B37/B38; keep scope narrow so it does not become another ReviewPlan redesign.                                                                                                                               |
+| B33 | **BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract tests to docs-app mirrors**                       | medium / S                           | medium / low          | Fill-in       | Bounded test coverage with immediate value; first remove the duplicate acceptance heading and then pair with B34.                                                                                                                                                    |
+| B34 | **BL-260818-require-repo-wide-call-site — Require repo-wide call-site sweeps for cross-cutting options in**                 | medium / S                           | medium / low          | Fill-in       | Low-cost guard against partial option changes; useful as a reusable review/backstop rule and should align with B08 and B53.                                                                                                                                          |
+| B35 | **BL-260819-classify-canonical-skills-by — Classify canonical skills by distribution, lifecycle, and tenant scope**         | medium / M                           | medium / high         | Avoid / Defer | Taxonomy is useful for long-term governance, but the immediate provider/scope defect needs a concrete matrix first; defer broad classification until B55 exposes the required dimensions.                                                                            |
+| B36 | **BL-260819-repair-verified-bundled-skill — Repair verified bundled skill contract drift**                                  | medium / M                           | medium / medium       | Fill-in       | A bounded release-quality batch; verify residual drift after merged PR #226 and coordinate with B50 before opening overlapping fixes.                                                                                                                                |
+| B37 | **BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**                  | high / M                             | high / medium         | Strategic     | Foundational event identity for honest gate state; sequence immediately after or alongside B26 and before B38/B05.                                                                                                                                                   |
+| B38 | **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**               | high / M                             | high / medium         | Strategic     | Makes provider, source, fallback, and receipt origin inspectable; depends on B37 and enables B39, B05, and B32.                                                                                                                                                      |
+| B39 | **BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head**                    | high / L                             | high / high           | Strategic     | High-value closeout integrity, but it needs the event/provenance model from B37/B38; use merged PR evidence to avoid re-reviewing unchanged history.                                                                                                                 |
+| B40 | **BL-260826-decide-whether-test-only-paths — Decide whether test-only paths under packages/cli/src count as publishable**   | low / S                              | low / low             | Avoid / Defer | A useful release-policy decision but not a current critical path; resolve when a package-coverage change makes the ambiguity operational.                                                                                                                            |
+| B41 | **BL-260826-deterministic-smoke-tier-leaks — Deterministic smoke tier leaks worktrees on interrupted runs**                 | medium / S                           | medium / low          | Fill-in       | Focused reliability fix with a clear failure mode; good independent quick maintenance once the smoke harness is available.                                                                                                                                           |
+| B42 | **BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the dispatch-ceiling resolver**                     | low / XS                             | low / low             | Fill-in       | Small observability improvement; pair with B44 and B38 so a stamp carries meaningful native/fallback provenance rather than just another opaque field.                                                                                                               |
+| B43 | **BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode**                 | high / M                             | high / medium         | Strategic     | Direct headless correctness boundary; make it a prerequisite for B13 and a verification point in B26.                                                                                                                                                                |
+| B44 | **BL-260826-populate-native-subagent — Populate native subagent runtime identity from provider transcript metadata**        | high / M                             | high / medium         | Strategic     | Addresses the current native-role/fallback ambiguity; coordinate with B55's provider visibility and preserve exact fallback provenance.                                                                                                                              |
+| B45 | **BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps outside sync**                                   | medium / S                           | medium / low          | Fill-in       | Small integrity warning with direct operator value; merged version-skew behavior should be checked before extending it.                                                                                                                                              |
+| B46 | **BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and config contracts**                              | medium / S                           | medium / low          | Fill-in       | Useful baseline cleanup for declared versus installed state; complete the boundary audit before B55 consumes its state model.                                                                                                                                        |
+| B47 | **BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics**                                           | medium / M                           | high / medium         | Strategic     | Existing diagnostic foundation, but it must expand from canonical installation to provider visibility and content-type reachability under B55.                                                                                                                       |
+| B48 | **BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles**                    | medium / S                           | medium / low          | Fill-in       | Focused release safety fix; pair with B51 and verify that merged PR #219 did not already close the same acceptance surface.                                                                                                                                          |
+| B49 | **BL-260827-harden-the-codex-skill-below-floor — Harden the codex-skill below-floor guard against paraphrase and anaphora** | low / XS                             | low / low             | Fill-in       | Narrow contract hardening; schedule opportunistically with the skill test lane and do not let it block provider-scope work.                                                                                                                                          |
+| B50 | **BL-260827-make-packaged-skill-references — Make packaged skill references scope-portable**                                | medium / M                           | medium / medium       | Fill-in       | PR #226 merged this area; first verify the active item and project state against `origin/main`, then close/archive or record only residual work.                                                                                                                     |
+| B51 | **BL-260827-override-aware-remedy-text — Override-aware remedy text in assets-root fail-closed errors**                     | low / XS                             | low / low             | Fill-in       | Small polish after B48's fail-closed behavior is settled; do not create a separate broad release lane for it.                                                                                                                                                        |
+| B52 | **BL-260827-refresh-provider-codex-md — Refresh provider-codex.md for the ultra effort tier, the GPT-5.4**                  | medium / S                           | medium / low          | Fill-in       | Documentation/configuration refresh with bounded value; align it with the live provider reference and B55's provider matrix.                                                                                                                                         |
+| B53 | **BL-260827-span-based-prose-guards — Span-based prose guards, anchored probe records, and a shared probe**                 | medium / S                           | medium / low          | Fill-in       | Useful contract-test infrastructure; pair with B34 and B08, but keep the probes bounded and independently diagnosable.                                                                                                                                               |
+| B54 | **BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**  | high / M                             | high / medium         | Strategic     | Directly addresses the init/install expectation that project-level AGENTS.md guidance is missing; coordinate its notice/question behavior with B55 and preserve user choice at user scope.                                                                           |
+| B55 | **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**     | urgent / L                           | high / high           | Strategic     | New highest-leverage product item: fix scope picker truthfulness, prefer collection symlinks until divergence, expose provider/content-type gaps, explain restart needs, and record native-role rejection versus generic fallback.                                   |
+| B56 | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**     | high / L                             | high / high           | Strategic     | New post-PR #231 contract project; needs spec/design because loaded-tier eligibility, canonical representation, dependency isolation, and ratchet ownership remain architectural questions. Coordinate with B55; do not duplicate its provider-materialization work. |
+| B57 | **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**                     | high / M                             | high / medium         | Strategic     | New post-PR #231 prevention item; removes stale implementation/state findings before review dispatch. Sequence before B05 where files overlap, but retain B05 as the no-re-review safety net.                                                                        |
+
+## 5. Dependency map
+
+The arrows below are sequencing hypotheses for implementation and reconciliation.
+They are not claims that the current code enforces these dependencies.
 
 ```text
-Legend:  ──▶  hard dependency (must complete first)
-         - -▶  soft dependency (beneficial sequencing)
+B26 ──▶ B37 ──▶ B38 ──▶ B39
+ │       │       ├─ -▶ B05
+ │       │       └─ -▶ B32
+ ├─ - -▶ B03 ──▶ B13
+ └─ - -▶ B43 ──▶ B13
+B44 ──▶ B42
 
-D1  BL-260820-bind-each-gate-review
-      - -▶ BL-260820-emit-source-qualified
-      ──▶ BL-260820-track-pr-closeout-evidence
-    BL-260820-emit-source-qualified
-      ──▶ BL-260820-track-pr-closeout-evidence
+B46 ──▶ B47 ──▶ B55
+B20 ── - - - - -▶ B55
+B54 ── - - - - -▶ B55
+B35 ── - - - - -▶ B55
+B55 ──▶ B44
+B56 ── - - - - -▶ B55
+B57 ──▶ B05
 
-D2  BL-260711-add-activity-aware-gate
-      - -▶ BL-260718-harden-full-surface-gate
-      - -▶ BL-260729-implement-reviewplan-first
-
-D3  BL-260806-fail-closed-when-configured
-      ──▶ BL-260720-add-oat-project-complete-auto
-    BL-260718-mandatory-skill-load-clause
-      - -▶ BL-260720-add-oat-project-complete-auto
-
-D4  BL-260718-document-execution-program
-      ──▶ BL-260718-add-oat-wave-lifecycle-cli
-    BL-260718-rewrite-worktree-bootstrap
-      - -▶ BL-260718-add-oat-wave-lifecycle-cli
-
-D5  BL-260708-verify-cursor-gpt-5-6-subagent
-      - -▶ BL-260726-validate-cursor-pin-effort
-
-D6  BL-260729-implement-reviewplan-first
-      - -▶ BL-260706-front-load-recurring-gate
-      - -▶ BL-260711-skip-re-review-for-bookkeeping
-
-D7  BL-260726-validate-structured-output
-      - -▶ BL-260712-per-project-override
-    BL-260820-bind-each-gate-review
-      - -▶ BL-260818-distinguish-operator-directed
-
-D8  BL-260719-add-pinned-recon-agents
-      - -▶ BL-260711-add-root-owned-dispatch-broker
-
-D9  BL-260817-decide-and-pin-the-system
-      ──▶ BL-260817-run-the-rc-explainer-end
-
-D10 BL-260819-classify-canonical-skills-by
-      - -▶ future catalog and provider-sync policy work
-
-Independent active items:
-BL-260713-root-agent-judgment-logging
-BL-260714-executable-backstops
-BL-260718-add-generated-runbook
-BL-260718-fix-oat-docs-generate-index
-BL-260718-support-fumadocs-in-oat-docs
-BL-260718-warn-when-oat-sync-uses
-BL-260719-evaluate-broader-final-gate
-BL-260724-support-provider-directory
-BL-260725-classify-general-sync-owned
-BL-260727-make-explainer-run-durability
-BL-260728-additional-visual-workflows
-BL-260817-detect-branch-behind-published
-BL-260817-drop-explainer-kit-publish
-BL-260817-let-resolveassetsroot-honor
-BL-260817-verify-protected-mode-public
-BL-260818-bound-the-smoke-cleanup
-BL-260818-extend-guarded-prose-contract
-BL-260818-require-repo-wide-call-site
-BL-260819-refresh-codex-skill-model
-BL-260819-repair-verified-bundled-skill
+B27 ──▶ B19
+B23 ──▶ B06
+B02 ──▶ B22
+B28 ──▶ B30
+B11 ──▶ B10 ──▶ B15
+B33 ──▶ B53 ──▶ B34
+B48 ──▶ B51
+B50 ──▶ B36
 ```
 
-### ID legend
+Key interpretation:
 
-| ID                                       | Title                                                                                      |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
-| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                          |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                 |
-| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                           |
-| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                             |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                        |
-| BL-260712-per-project-override           | Per-project override to disable configured external gates                                  |
-| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                 |
-| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                              |
-| BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                            |
-| BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                  |
-| BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                 |
-| BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                             |
-| BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                     |
-| BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                           |
-| BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                              |
-| BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                              |
-| BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                                  |
-| BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                         |
-| BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                     |
-| BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                     |
-| BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                |
-| BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                |
-| BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                              |
-| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                 |
-| BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                               |
-| BL-260728-additional-visual-workflows    | Additional visual workflows                                                                |
-| BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                               |
-| BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                    |
-| BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path |
-| BL-260817-detect-branch-behind-published | Detect branch-behind-published-main package versions in CI                                 |
-| BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                    |
-| BL-260817-let-resolveassetsroot-honor    | Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic             |
-| BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                      |
-| BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                     |
-| BL-260818-bound-the-smoke-cleanup        | Bound the smoke cleanup SIGTERM harness with a timeout                                     |
-| BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap |
-| BL-260818-extend-guarded-prose-contract  | Extend guarded-prose contract tests to docs-app mirrors                                    |
-| BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance |
-| BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                     |
-| BL-260819-refresh-codex-skill-model      | Refresh codex-skill model routing and repository-check policy                              |
-| BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                               |
-| BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                       |
-| BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                    |
-| BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                              |
+- B26, B37, B38, and B39 form the review-integrity spine. B05 should not
+  trigger another quality round for a finding that is only a ledger repair.
+- B46, B47, B20, B54, and B55 are one scope/provider adoption cluster.
+  B55 is the user-visible umbrella; B47 supplies diagnostics, B20 supplies
+  collection-level provider projection, B46 supplies lifecycle semantics, and
+  B54 supplies project-level guidance.
+- B44 and B42 are the dispatch-observability branch. A generic child with role
+  instructions is a fallback, not a native managed-role success; B38 should
+  carry that distinction into receipts.
+- B56 is a canonical-reference contract dependency for the fallback portion of
+  B55, not a provider-materialization task. B57 prevents one recurring source
+  of B05 findings; it does not make B05 unnecessary.
+- B10/B11/B15 and B28/B30 are separate trigger-gated clusters and should not
+  compete with the two urgent foundations.
 
----
+## 6. Parallel lanes
 
-## 4. Parallel Lanes
+These are ownership-oriented lanes, not commitments. A lane can be staffed
+only when its prerequisites and current consumer are clear.
 
-### Lane A: Lifecycle and review correctness
+### Lane A — Review, gate, lifecycle, and dispatch integrity
 
-Start with exact review-event binding and configured-closeout enforcement. Run
-the gate-execution pair beside them, then add the common receipt envelope before
-attempting integrated head freshness.
+Contains [BL-260706-front-load-recurring-gate — Front-load recurring gate-finding
+classes into implementer briefs](../items/BL-260706-front-load-recurring-gate.md),
+[BL-260711-add-activity-aware-gate — Add activity-aware gate timeouts](../items/BL-260711-add-activity-aware-gate.md),
+[BL-260711-add-root-owned-dispatch-broker — Add root-owned dispatch broker for
+exact OAT subagent launches](../items/BL-260711-add-root-owned-dispatch-broker.md),
+[BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only
+review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md),
+[BL-260712-per-project-override — Per-project override to disable configured
+external gates](../items/BL-260712-per-project-override.md),
+[BL-260713-root-agent-judgment-logging — Root-agent judgment logging
+responsibility for project log](../items/BL-260713-root-agent-judgment-logging.md),
+[BL-260718-harden-full-surface-gate — Harden full-surface gate reviews against
+budget and recursive dispatch](../items/BL-260718-harden-full-surface-gate.md),
+[BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for
+lifecycle steps that name skills](../items/BL-260718-mandatory-skill-load-clause.md),
+[BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable
+orchestration](../items/BL-260719-add-pinned-recon-agents.md),
+[BL-260719-evaluate-broader-final-gate — Evaluate broader final-gate freshness
+policy after narrow optimization](../items/BL-260719-evaluate-broader-final-gate.md),
+[BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto
+companion skill for autonomous closeouts](../items/BL-260720-add-oat-project-complete-auto.md),
+[BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer
+workflow](../items/BL-260729-implement-reviewplan-first.md),
+[BL-260806-fail-closed-when-configured — Fail closed when configured closeout
+snapshot is absent](../items/BL-260806-fail-closed-when-configured.md),
+[BL-260818-distinguish-operator-directed — Distinguish operator-directed review
+rounds from failed fix cycles in the](../items/BL-260818-distinguish-operator-directed.md),
+[BL-260820-bind-each-gate-review — Bind each gate review disposition to its
+exact received ledger event](../items/BL-260820-bind-each-gate-review.md),
+[BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes
+for review and gate receipts](../items/BL-260820-emit-source-qualified.md),
+[BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness
+against the current head](../items/BL-260820-track-pr-closeout-evidence.md),
+[BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the
+dispatch-ceiling resolver](../items/BL-260826-emit-the-dispatch-stamp-from.md),
+[BL-260826-gate-targets-must-not-yield — Gate targets must not yield on
+background work in headless mode](../items/BL-260826-gate-targets-must-not-yield.md),
+and [BL-260826-populate-native-subagent — Populate native subagent runtime
+identity from provider transcript metadata](../items/BL-260826-populate-native-subagent.md).
 
-**Items:** **`BL-260820-bind-each-gate-review` — Bind each gate review
-disposition to its exact received ledger event**; **`BL-260806-fail-closed-when-configured`
-— Fail closed when configured closeout snapshot is absent**;
-**`BL-260711-add-activity-aware-gate` — Add activity-aware gate timeouts**;
-**`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews
-against budget and recursive dispatch**; **`BL-260820-emit-source-qualified` —
-Emit source-qualified provenance envelopes for review and gate receipts**; and
-**`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness
-against the current head**.
+Also include [BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping
+before per-phase review dispatch](../items/BL-260829-order-phase-bookkeeping-before.md)
+in this lane, sequenced before B05 where shared review files overlap.
 
-**Total estimated effort:** High. **Cross-lane dependency:** none; release bumps
-may conflict with Lane B skill edits.
+Guardrail: finish the ReviewPlan and event identity before expanding dispatch
+architecture. B14 is independently ready; B05 is strategically urgent but
+should consume the event classification rather than guess at it.
 
-### Lane B: Skill and sync contracts
+### Lane B — Tool packs, providers, skills, and distribution
 
-Land the small guidance and warning changes first, batch the four verified skill
-repairs into one release, then decide whether the broad skill-classification
-contract warrants a dedicated project.
+Contains [BL-260708-verify-cursor-gpt-5-6-subagent — Verify Cursor GPT-5.6
+subagent model slugs](../items/BL-260708-verify-cursor-gpt-5-6-subagent.md),
+[BL-260724-support-provider-directory — Support provider directory symlinks as
+full collection sync](../items/BL-260724-support-provider-directory.md),
+[BL-260725-classify-general-sync-owned — Classify general sync-owned dirt in
+project-start preflight](../items/BL-260725-classify-general-sync-owned.md),
+[BL-260726-validate-cursor-pin-effort — Validate Cursor pin effort rungs at
+sync time](../items/BL-260726-validate-cursor-pin-effort.md),
+[BL-260819-classify-canonical-skills-by — Classify canonical skills by
+distribution, lifecycle, and tenant scope](../items/BL-260819-classify-canonical-skills-by.md),
+[BL-260819-repair-verified-bundled-skill — Repair verified bundled skill
+contract drift](../items/BL-260819-repair-verified-bundled-skill.md),
+[BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps
+outside sync](../items/BL-260826-warn-on-silent-oatversion.md),
+[BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
+config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md),
+[BL-260827-correct-scope-and-adoption — Correct scope and adoption
+diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
+[BL-260827-make-packaged-skill-references — Make packaged skill references
+scope-portable](../items/BL-260827-make-packaged-skill-references.md),
+[BL-260827-refresh-provider-codex-md — Refresh provider-codex.md for the ultra
+effort tier, the GPT-5.4](../items/BL-260827-refresh-provider-codex-md.md),
+[BL-260827-span-based-prose-guards — Span-based prose guards, anchored probe
+records, and a shared probe](../items/BL-260827-span-based-prose-guards.md),
+[BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
+prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md),
+and [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider
+reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md).
 
-**Items:** **`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load
-clause for lifecycle steps that name skills**; **`BL-260718-warn-when-oat-sync-uses`
-— Warn when oat sync uses a different producing CLI version**;
-**`BL-260819-refresh-codex-skill-model` — Refresh codex-skill model routing and
-repository-check policy**; **`BL-260819-repair-verified-bundled-skill` — Repair
-verified bundled skill contract drift**; and **`BL-260819-classify-canonical-skills-by`
-— Classify canonical skills by distribution, lifecycle, and tenant scope**.
+The portable-reference sublane is [BL-260829-unified-agent-provider-root —
+Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md).
+It is spec-driven and should complete its contract/design decision before B55
+implements canonical fallback integration. B56 and B55 may perform discovery in
+parallel, but their implementation changes should be serialized around the
+shared agent/ratchet files.
 
-**Total estimated effort:** High. **Cross-lane dependency:** serialize PRs that
-touch the same canonical skills or lockstep public-package versions.
+Guardrail: treat canonical installation, provider projection, provider
+visibility, and dispatch eligibility as separate states. Prefer a whole
+skills-directory symlink while source and destination collections are aligned;
+fall back to per-file links only after a real divergence is detected and
+reported.
 
-### Lane C: Release, smoke, and Explainer reliability
+### Lane C — Release, assets, smoke, and Explainer Kit
 
-The branch-version check, hermetic asset reader, smoke timeout, and browser
-policy are independent quick maintenance. The browser decision unlocks the RC
-end-to-end job; run durability is a separate strategic project.
+Contains [BL-260727-make-explainer-run-durability — Make explainer run
+durability survive ephemeral environments](../items/BL-260727-make-explainer-run-durability.md),
+[BL-260728-additional-visual-workflows — Additional visual workflows](../items/BL-260728-additional-visual-workflows.md),
+[BL-260817-decide-and-pin-the-system — Decide and pin the system-Chromium
+requirement introduced by test:skills](../items/BL-260817-decide-and-pin-the-system.md),
+[BL-260817-drop-explainer-kit-publish — Drop explainer-kit
+publish-request/v1 in a future minor](../items/BL-260817-drop-explainer-kit-publish.md),
+[BL-260817-run-the-rc-explainer-end — Run the RC explainer end-to-end test in
+CI with a provisioned browser](../items/BL-260817-run-the-rc-explainer-end.md),
+[BL-260817-verify-protected-mode-public — Verify protected-mode public URLs
+with an authenticated end-to-end GET](../items/BL-260817-verify-protected-mode-public.md),
+[BL-260826-decide-whether-test-only-paths — Decide whether test-only paths under
+packages/cli/src count as publishable](../items/BL-260826-decide-whether-test-only-paths.md),
+[BL-260826-deterministic-smoke-tier-leaks — Deterministic smoke tier leaks
+worktrees on interrupted runs](../items/BL-260826-deterministic-smoke-tier-leaks.md),
+[BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only
+OAT_ASSETS_DIR bundles](../items/BL-260827-fail-closed-on-partial-or.md),
+and [BL-260827-override-aware-remedy-text — Override-aware remedy text in
+assets-root fail-closed errors](../items/BL-260827-override-aware-remedy-text.md).
 
-**Items:** **`BL-260817-detect-branch-behind-published` — Detect
-branch-behind-published-main package versions in CI**;
-**`BL-260817-let-resolveassetsroot-honor` — Let resolveAssetsRoot honor
-OAT_ASSETS_DIR and make smoke asset reads hermetic**;
-**`BL-260818-bound-the-smoke-cleanup` — Bound the smoke cleanup SIGTERM harness
-with a timeout**; **`BL-260817-decide-and-pin-the-system` — Decide and pin the
-system-Chromium requirement introduced by test:skills on the merge path**;
-**`BL-260817-run-the-rc-explainer-end` — Run the RC explainer end-to-end test in
-CI with a provisioned browser**; and **`BL-260727-make-explainer-run-durability`
-— Make explainer run durability survive ephemeral environments**.
+Guardrail: keep browser/protected-public work trigger-gated and verify merged
+asset-root work before reopening duplicate scope.
 
-**Total estimated effort:** High. **Cross-lane dependency:** none.
+### Lane D — Docs, wave authoring, and contract maintenance
 
-### Lane D: Workflow and documentation maintenance
+Contains [BL-260714-executable-backstops — Executable backstops for contract
+claims — authoring guidance](../items/BL-260714-executable-backstops.md),
+[BL-260718-add-generated-runbook — Add generated-runbook verification command
+pass](../items/BL-260718-add-generated-runbook.md),
+[BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command
+family](../items/BL-260718-add-oat-wave-lifecycle-cli.md),
+[BL-260718-document-execution-program — Document execution-program artifact as
+stable OAT contract](../items/BL-260718-document-execution-program.md),
+[BL-260718-fix-oat-docs-generate-index — Fix oat docs generate-index
+cwd-relative defaults in monorepos](../items/BL-260718-fix-oat-docs-generate-index.md),
+[BL-260718-rewrite-worktree-bootstrap — Rewrite worktree bootstrap-group as
+tested TypeScript command](../items/BL-260718-rewrite-worktree-bootstrap.md),
+[BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in oat docs nav
+sync (currently MkDocs-only)](../items/BL-260718-support-fumadocs-in-oat-docs.md),
+[BL-260726-validate-structured-output — Validate structured-output contract in
+gate skill commands](../items/BL-260726-validate-structured-output.md),
+[BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract tests
+to docs-app mirrors](../items/BL-260818-extend-guarded-prose-contract.md),
+[BL-260818-require-repo-wide-call-site — Require repo-wide call-site sweeps
+for cross-cutting options in](../items/BL-260818-require-repo-wide-call-site.md),
+and [BL-260827-harden-the-codex-skill-below — Harden the codex-skill below-floor
+guard against paraphrase and anaphora](../items/BL-260827-harden-the-codex-skill-below.md).
 
-Use remaining capacity for bounded guidance/docs fixes. Keep the wave CLI,
-dispatch broker, ReviewPlan redesign, protected publication, and visual
-expansion outside the kickoff set until their explicit triggers are met.
+Guardrail: normalize placeholders and duplicate headings before using these
+records as machine-readable plan inputs. Keep B10/B11/B15 trigger-gated as a
+cluster.
 
-**Items:** **`BL-260713-root-agent-judgment-logging` — Root-agent judgment
-logging responsibility for project log**; **`BL-260714-executable-backstops` —
-Executable backstops for contract claims — authoring guidance**;
-**`BL-260818-require-repo-wide-call-site` — Require repo-wide call-site sweeps
-for cross-cutting options in phase-implementer guidance**;
-**`BL-260718-fix-oat-docs-generate-index` — Fix oat docs generate-index
-cwd-relative defaults in monorepos**; and **`BL-260818-extend-guarded-prose-contract`
-— Extend guarded-prose contract tests to docs-app mirrors**.
+## 7. Recommended waves
 
-**Total estimated effort:** Medium. **Cross-lane dependency:** batch overlapping
-skill version bumps with Lane B where practical.
+These waves are a proposed order, not a silent roadmap mutation.
 
----
+### Finish and reconcile first
 
-## 5. Recommended Execution Order
+- Finish or explicitly re-scope [BL-260729-implement-reviewplan-first —
+  Implement ReviewPlan-first reviewer workflow](../items/BL-260729-implement-reviewplan-first.md)
+  against PR #190.
+- Reconcile merged PR #226 with [BL-260827-make-packaged-skill-references —
+  Make packaged skill references scope-portable](../items/BL-260827-make-packaged-skill-references.md);
+  close/archive the item if no residual acceptance work remains.
+- Reconcile project states for merged PRs #217, #219, #222, and #226 before
+  using them as active capacity.
+- Reconcile merged PR #231: keep B56 as a separate spec-driven project, link
+  it to B55 as the canonical fallback-reference boundary, and record B57 as
+  the prevention companion to B05.
 
-### Finishing / in flight
+### Wave 0 — Backlog hygiene and boundary checks
 
-| Order | Item                                                                                      | Effort | Next action                                                                                                                                                                          |
-| ----- | ----------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| F1    | **`BL-260729-implement-reviewplan-first` — Implement ReviewPlan-first reviewer workflow** | High   | Finish draft PR #190: reconcile its dirty merge state, refresh Stage A dogfood evidence and checks, then determine whether the full backlog record closes or retains residual scope. |
+- Normalize the 19 placeholder acceptance sections and add estimates to
+  [BL-260718-fix-oat-docs-generate-index — Fix oat docs generate-index
+  cwd-relative defaults in monorepos](../items/BL-260718-fix-oat-docs-generate-index.md),
+  [BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in oat docs nav
+  sync (currently MkDocs-only)](../items/BL-260718-support-fumadocs-in-oat-docs.md),
+  and [BL-260726-validate-structured-output — Validate structured-output
+  contract in gate skill commands](../items/BL-260726-validate-structured-output.md).
+- Remove the duplicate acceptance headings in [BL-260818-extend-guarded-prose
+  contract — Extend guarded-prose contract tests to docs-app mirrors](../items/BL-260818-extend-guarded-prose-contract.md)
+  and [BL-260818-require-repo-wide-call-site — Require repo-wide call-site
+  sweeps for cross-cutting options in](../items/BL-260818-require-repo-wide-call-site.md).
+- Decide whether [BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in
+  oat docs nav sync (currently MkDocs-only)](../items/BL-260718-support-fumadocs-in-oat-docs.md)
+  and [BL-260725-classify-general-sync-owned — Classify general sync-owned
+  dirt in project-start preflight](../items/BL-260725-classify-general-sync-owned.md)
+  remain standalone items or should be merged into the owning contracts.
+- Remove the two closed roadmap references for [BL-260718-remove-post-W6-reviews-row
+  — Remove post-W6 reviews-row restore watch](../archived/BL-260718-remove-post-w6-reviews-row.md)
+  and [BL-260817-let-resolveassetsroot-honor — Let resolveAssetsRoot honor
+  OAT_ASSETS_DIR and make smoke asset reads hermetic](../archived/BL-260817-let-resolveassetsroot-honor.md)
+  in a separate roadmap edit.
 
-Assumed capacity is two parallel lanes. Until PR #190 lands, start only work
-that does not overlap its review and project-implementation skill surfaces.
+### Wave 1 — Truthful scope and review foundations
 
-### Wave 0: Backlog hygiene and decisions
+First complete the contract/design pass for [BL-260829-unified-agent-provider-root
+— Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md).
+Then start [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope,
+provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
+with the existing diagnostics and lifecycle boundaries:
 
-| Order | Item                                                                                                                   | Action                                                                                                                 |
-| ----- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0a    | **`BL-260718-support-fumadocs-in-oat-docs` — Support Fumadocs in oat docs nav sync (currently MkDocs-only)**           | Close as obsolete or rewrite to a narrow Fumadocs wrong-command diagnostic.                                            |
-| 0b    | **`BL-260725-classify-general-sync-owned` — Classify general sync-owned dirt in project-start preflight**              | Archive as `wont_do` unless a fresh incident contradicts its own conservative conclusion.                              |
-| 0c    | **`BL-260708-verify-cursor-gpt-5-6-subagent` — Verify Cursor GPT-5.6 subagent model slugs**                            | Perform one conditional recheck only if Cursor now exposes qualifying Task evidence; otherwise set a new trigger date. |
-| 0d    | **`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto companion skill for autonomous closeouts** | Replace literal acceptance placeholders before scheduling.                                                             |
+- [BL-260827-correct-scope-and-adoption — Correct scope and adoption
+  diagnostics](../items/BL-260827-correct-scope-and-adoption.md)
+- [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
+  config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md)
+- [BL-260724-support-provider-directory — Support provider directory symlinks
+  as full collection sync](../items/BL-260724-support-provider-directory.md)
+- [BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
+  prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md)
 
-Also normalize the other ten placeholder-bearing records and the three missing
-size estimates as one backlog-maintenance pass.
+In parallel, start the bounded [BL-260718-mandatory-skill-load-clause —
+Mandatory skill-load clause for lifecycle steps that name skills](../items/BL-260718-mandatory-skill-load-clause.md),
+[BL-260820-bind-each-gate-review — Bind each gate review disposition to its
+exact received ledger event](../items/BL-260820-bind-each-gate-review.md),
+[BL-260826-gate-targets-must-not-yield — Gate targets must not yield on
+background work in headless mode](../items/BL-260826-gate-targets-must-not-yield.md),
+and [BL-260826-populate-native-subagent — Populate native subagent runtime
+identity from provider transcript metadata](../items/BL-260826-populate-native-subagent.md)
+work where capacity allows.
 
-### Wave 1: Immediate integrity and reliability
+Within the review lane, sequence [BL-260829-order-phase-bookkeeping-before —
+Order phase bookkeeping before per-phase review dispatch](../items/BL-260829-order-phase-bookkeeping-before.md)
+before [BL-260711-skip-re-review-for-bookkeeping — Skip re-review for
+bookkeeping-only review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md)
+where shared review files would otherwise conflict.
 
-| Order | Item                                                                                                                                                                                           | Effort          | Rationale                                                                          |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------- |
-| 1a    | **`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for lifecycle steps that name skills**                                                                                 | Low             | Highest-confidence workflow-integrity quick win.                                   |
-| 1b    | **`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its exact received ledger event**                                                                                   | Medium          | Removes silent multi-round lifecycle ambiguity.                                    |
-| 1c    | **`BL-260806-fail-closed-when-configured` — Fail closed when configured closeout snapshot is absent**                                                                                          | Medium          | Establishes the invariant required by safe autonomous completion.                  |
-| 1d    | **`BL-260711-add-activity-aware-gate` — Add activity-aware gate timeouts** + **`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews against budget and recursive dispatch** | Medium + Medium | Share gate-execution context and address the remaining reliability scope together. |
-| 1e    | **`BL-260718-warn-when-oat-sync-uses` — Warn when oat sync uses a different producing CLI version**                                                                                            | Low             | Turns silent stale-producer skew into an actionable diagnosis.                     |
-| 1f    | **`BL-260817-detect-branch-behind-published` — Detect branch-behind-published-main package versions in CI**                                                                                    | Low             | Prevents predictable release-version collisions.                                   |
-| 1g    | **`BL-260817-let-resolveassetsroot-honor` — Let resolveAssetsRoot honor OAT_ASSETS_DIR and make smoke asset reads hermetic**                                                                   | Low             | Closes a real parallel test race.                                                  |
+### Wave 2 — Receipts, no-re-review policy, and closeout
 
-**Parallelism:** 1a/1e, 1b/1c, the 1d gate pair, and 1f/1g are four
-independent implementation tracks. Serialize overlapping release bumps.
+After B37 has a stable event identity, sequence [BL-260820-emit-source-qualified
+— Emit source-qualified provenance envelopes for review and gate receipts](../items/BL-260820-emit-source-qualified.md),
+[BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only
+review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md),
+[BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness
+against the current head](../items/BL-260820-track-pr-closeout-evidence.md),
+and [BL-260806-fail-closed-when-configured — Fail closed when configured
+closeout snapshot is absent](../items/BL-260806-fail-closed-when-configured.md).
+Then complete [BL-260720-add-oat-project-complete-auto — Add
+oat-project-complete-auto companion skill for autonomous closeouts](../items/BL-260720-add-oat-project-complete-auto.md),
+and apply [BL-260711-add-activity-aware-gate — Add activity-aware gate
+timeouts](../items/BL-260711-add-activity-aware-gate.md) and
+[BL-260718-harden-full-surface-gate — Harden full-surface gate reviews against
+budget and recursive dispatch](../items/BL-260718-harden-full-surface-gate.md)
+using the now-observable evidence.
 
-### Wave 2: Receipt and autonomous-closeout foundations
+### Wave 3 — Independent reliability and contract maintenance
 
-| Order | Item                                                                                                                                                                                                     | Effort       | Rationale                                                                         |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------- |
-| 2a    | **`BL-260820-emit-source-qualified` — Emit source-qualified provenance envelopes for review and gate receipts**                                                                                          | Medium       | Creates the shared evidence contract required by integrated freshness.            |
-| 2b    | **`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto companion skill for autonomous closeouts**                                                                                   | Medium       | Safe after configured-plus-absent fail-closed behavior and criteria cleanup.      |
-| 2c    | **`BL-260819-repair-verified-bundled-skill` — Repair verified bundled skill contract drift** + **`BL-260819-refresh-codex-skill-model` — Refresh codex-skill model routing and repository-check policy** | Medium + Low | One release-shaped skills pass, with the repo-only Codex fix kept scope-distinct. |
-| 2d    | **`BL-260817-decide-and-pin-the-system` — Decide and pin the system-Chromium requirement introduced by test:skills on the merge path**                                                                   | Low          | Unlocks CI browser work.                                                          |
-| 2e    | **`BL-260727-make-explainer-run-durability` — Make explainer run durability survive ephemeral environments**                                                                                             | High         | Strategic, independent durability project.                                        |
+Use spare capacity for [BL-260826-deterministic-smoke-tier-leaks —
+Deterministic smoke tier leaks worktrees on interrupted runs](../items/BL-260826-deterministic-smoke-tier-leaks.md),
+[BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only
+OAT_ASSETS_DIR bundles](../items/BL-260827-fail-closed-on-partial-or.md),
+[BL-260827-override-aware-remedy-text — Override-aware remedy text in
+assets-root fail-closed errors](../items/BL-260827-override-aware-remedy-text.md),
+[BL-260726-validate-structured-output — Validate structured-output contract in
+gate skill commands](../items/BL-260726-validate-structured-output.md),
+[BL-260708-verify-cursor-gpt-5-6-subagent — Verify Cursor GPT-5.6 subagent
+model slugs](../items/BL-260708-verify-cursor-gpt-5-6-subagent.md),
+[BL-260726-validate-cursor-pin-effort — Validate Cursor pin effort rungs at
+sync time](../items/BL-260726-validate-cursor-pin-effort.md),
+[BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the
+dispatch-ceiling resolver](../items/BL-260826-emit-the-dispatch-stamp-from.md),
+[BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps
+outside sync](../items/BL-260826-warn-on-silent-oatversion.md),
+[BL-260827-harden-the-codex-skill-below — Harden the codex-skill below-floor
+guard against paraphrase and anaphora](../items/BL-260827-harden-the-codex-skill-below.md),
+[BL-260827-refresh-provider-codex-md — Refresh provider-codex.md for the ultra
+effort tier, the GPT-5.4](../items/BL-260827-refresh-provider-codex-md.md),
+[BL-260827-span-based-prose-guards — Span-based prose guards, anchored probe
+records, and a shared probe](../items/BL-260827-span-based-prose-guards.md),
+[BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract tests
+to docs-app mirrors](../items/BL-260818-extend-guarded-prose-contract.md),
+and [BL-260818-require-repo-wide-call-site — Require repo-wide call-site
+sweeps for cross-cutting options in](../items/BL-260818-require-repo-wide-call-site.md).
 
-**Parallelism:** receipt schema, completion companion, skills repair, browser
-policy, and durability can proceed in separate worktrees; shared package-version
-files make merge order explicit.
+The browser and publication sublane begins only after [BL-260817-decide-and-pin
+the-system — Decide and pin the system-Chromium requirement introduced by
+test:skills](../items/BL-260817-decide-and-pin-the-system.md) resolves the
+system requirement; then [BL-260817-run-the-rc-explainer-end — Run the RC
+explainer end-to-end test in CI with a provisioned browser](../items/BL-260817-run-the-rc-explainer-end.md)
+can be considered.
 
-### Wave 3: Policy and maintenance
+### Wave 4 — Trigger-gated expansion
 
-| Order | Item                                                                                                                                                                                                                                                                                                                                                     | Effort       | Rationale                                                                                            |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 3a    | **`BL-260711-skip-re-review-for-bookkeeping` — Skip re-review for bookkeeping-only review findings**                                                                                                                                                                                                                                                     | Medium       | Use the stabilized event/receipt taxonomy rather than inventing another one.                         |
-| 3b    | **`BL-260818-distinguish-operator-directed` — Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap**                                                                                                                                                                                                               | Medium       | Add bounded finding-scoped authorization after exact event consumption is stable.                    |
-| 3c    | **`BL-260726-validate-structured-output` — Validate structured-output contract in gate skill commands** + **`BL-260712-per-project-override` — Per-project override to disable configured external gates**                                                                                                                                               | Low + Medium | Improve gate configuration before adding scoped overrides.                                           |
-| 3d    | **`BL-260817-run-the-rc-explainer-end` — Run the RC explainer end-to-end test in CI with a provisioned browser**                                                                                                                                                                                                                                         | Medium       | Follows the Wave 2 browser decision.                                                                 |
-| 3e    | **`BL-260713-root-agent-judgment-logging` — Root-agent judgment logging responsibility for project log**; **`BL-260714-executable-backstops` — Executable backstops for contract claims — authoring guidance**; **`BL-260818-require-repo-wide-call-site` — Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance** | Low each     | Bounded workflow-authoring improvements that can share one release window if scopes do not conflict. |
-| 3f    | **`BL-260718-fix-oat-docs-generate-index` — Fix oat docs generate-index cwd-relative defaults in monorepos** + **`BL-260818-extend-guarded-prose-contract` — Extend guarded-prose contract tests to docs-app mirrors**                                                                                                                                   | Medium + Low | Independent docs/tooling maintenance.                                                                |
+Keep these behind a concrete consumer, release trigger, or capacity decision:
 
-### Wave 4: Dedicated strategic projects
+- [BL-260711-add-root-owned-dispatch-broker — Add root-owned dispatch broker
+  for exact OAT subagent launches](../items/BL-260711-add-root-owned-dispatch-broker.md)
+- [BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable
+  orchestration](../items/BL-260719-add-pinned-recon-agents.md)
+- [BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command
+  family](../items/BL-260718-add-oat-wave-lifecycle-cli.md)
+- [BL-260718-document-execution-program — Document execution-program artifact
+  as stable OAT contract](../items/BL-260718-document-execution-program.md)
+- [BL-260718-rewrite-worktree-bootstrap — Rewrite worktree bootstrap-group as
+  tested TypeScript command](../items/BL-260718-rewrite-worktree-bootstrap.md)
+- [BL-260718-add-generated-runbook — Add generated-runbook verification command
+  pass](../items/BL-260718-add-generated-runbook.md)
+- [BL-260727-make-explainer-run-durability — Make explainer run durability
+  survive ephemeral environments](../items/BL-260727-make-explainer-run-durability.md)
+- [BL-260728-additional-visual-workflows — Additional visual workflows](../items/BL-260728-additional-visual-workflows.md)
+- [BL-260817-drop-explainer-kit-publish — Drop explainer-kit publish-request/v1 in
+  a future minor](../items/BL-260817-drop-explainer-kit-publish.md)
+- [BL-260817-verify-protected-mode-public — Verify protected-mode public URLs
+  with an authenticated end-to-end GET](../items/BL-260817-verify-protected-mode-public.md)
+- [BL-260719-evaluate-broader-final-gate — Evaluate broader final-gate
+  freshness policy after narrow optimization](../items/BL-260719-evaluate-broader-final-gate.md)
+- [BL-260706-front-load-recurring-gate — Front-load recurring gate-finding
+  classes into implementer briefs](../items/BL-260706-front-load-recurring-gate.md)
 
-| Order | Item                                                                                                                  | Effort | Rationale                                                                                                      |
-| ----- | --------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
-| 4a    | **`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness against the current head**            | High   | Implement after the source-qualified receipt contract; absorb or resolve the older broad-freshness evaluation. |
-| 4b    | **`BL-260819-classify-canonical-skills-by` — Classify canonical skills by distribution, lifecycle, and tenant scope** | High   | Needs explicit policy design before catalog and sync changes.                                                  |
+## 8. Roadmap alignment
 
-### Deferred
+This section records the alignment applied to `.oat/repo/pjm/roadmap.md` in the
+same operator-approved pass.
 
-| Item                                                                                                                  | Re-entry condition                                                                              |
-| --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **`BL-260706-front-load-recurring-gate` — Front-load recurring gate-finding classes into implementer briefs**         | Stable finding taxonomy plus evidence that recurring-invariant promotion is worth a new ledger. |
-| **`BL-260711-add-root-owned-dispatch-broker` — Add root-owned dispatch broker for exact OAT subagent launches**       | Concrete three-tier consumer and fresh host support evidence.                                   |
-| **`BL-260718-add-generated-runbook` — Add generated-runbook verification command pass**                               | Safe structured command source and bounded execution design.                                    |
-| **`BL-260718-add-oat-wave-lifecycle-cli` — Add oat wave lifecycle CLI command family**                                | Second consumer and stable execution-program contract.                                          |
-| **`BL-260718-document-execution-program` — Document execution-program artifact as stable OAT contract**               | Concrete second consumer.                                                                       |
-| **`BL-260718-rewrite-worktree-bootstrap` — Rewrite worktree bootstrap-group as tested TypeScript command**            | Wave CLI initiative becomes active.                                                             |
-| **`BL-260719-add-pinned-recon-agents` — Add pinned recon agents for reusable orchestration**                          | Demonstrated non-review consumers and generic materialization contract.                         |
-| **`BL-260719-evaluate-broader-final-gate` — Evaluate broader final-gate freshness policy after narrow optimization**  | Usage evidence not already subsumed by current-head closeout work.                              |
-| **`BL-260724-support-provider-directory` — Support provider directory symlinks as full collection sync**              | Demand justifies the cross-cutting safety work.                                                 |
-| **`BL-260726-validate-cursor-pin-effort` — Validate Cursor pin effort rungs at sync time**                            | Authoritative Cursor Task/rung evidence.                                                        |
-| **`BL-260728-additional-visual-workflows` — Additional visual workflows**                                             | Observed user demand after golden recovery.                                                     |
-| **`BL-260817-drop-explainer-kit-publish` — Drop explainer-kit publish-request/v1 in a future minor**                  | External wrapper confirms V2 and a suitable minor release is scheduled.                         |
-| **`BL-260817-verify-protected-mode-public` — Verify protected-mode public URLs with an authenticated end-to-end GET** | Host-bound authentication design and security review.                                           |
+### Current roadmap “Now” candidates
 
----
+Retain [BL-260711-add-activity-aware-gate — Add activity-aware gate
+timeouts](../items/BL-260711-add-activity-aware-gate.md) as a credible active
+item, but make its trigger and relationship to B26/B43 explicit. Add
+[BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer
+workflow](../items/BL-260729-implement-reviewplan-first.md) because PR #190 is
+the current capacity constraint, and add [BL-260829-make-tool-pack-scope-selection
+— Make tool-pack scope, provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
+because the issue #228 evidence shows an active user-facing correctness gap.
+Also keep [BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT
+binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md)
+in Now for its spec/design phase, while implementation remains coordinated with
+the scope/provider lane.
 
-## 6. Roadmap Alignment
+### Current roadmap “Next” candidates
 
-The roadmap names 20 backlog IDs: **19 are still active, one is archived, and
-25 active backlog items are not represented**. Most orphans are correctly
-standalone maintenance, but six high-priority strategic records now deserve
-roadmap placement.
+The existing next grouping contains [BL-260827-make-packaged-skill-references
+— Make packaged skill references scope-portable](../items/BL-260827-make-packaged-skill-references.md),
+[BL-260827-correct-scope-and-adoption — Correct scope and adoption
+diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
+[BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
+config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md),
+[BL-260806-fail-closed-when-configured — Fail closed when configured closeout
+snapshot is absent](../items/BL-260806-fail-closed-when-configured.md),
+[BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for
+lifecycle steps that name skills](../items/BL-260718-mandatory-skill-load-clause.md),
+[BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command
+family](../items/BL-260718-add-oat-wave-lifecycle-cli.md),
+[BL-260718-document-execution-program — Document execution-program artifact as
+stable OAT contract](../items/BL-260718-document-execution-program.md),
+[BL-260718-rewrite-worktree-bootstrap — Rewrite worktree bootstrap-group as
+tested TypeScript command](../items/BL-260718-rewrite-worktree-bootstrap.md),
+[BL-260817-run-the-rc-explainer-end — Run the RC explainer end-to-end test in
+CI with a provisioned browser](../items/BL-260817-run-the-rc-explainer-end.md),
+[BL-260817-decide-and-pin-the-system — Decide and pin the system-Chromium
+requirement introduced by test:skills](../items/BL-260817-decide-and-pin-the-system.md),
+[BL-260817-drop-explainer-kit-publish — Drop explainer-kit
+publish-request/v1 in a future minor](../items/BL-260817-drop-explainer-kit-publish.md),
+[BL-260817-verify-protected-mode-public — Verify protected-mode public URLs
+with an authenticated end-to-end GET](../items/BL-260817-verify-protected-mode-public.md),
+[BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only
+review findings](../items/BL-260711-skip-re-review-for-bookkeeping.md),
+and [BL-260712-per-project-override — Per-project override to disable
+configured external gates](../items/BL-260712-per-project-override.md).
 
-### How active backlog maps to roadmap horizons
+Promote [BL-260820-bind-each-gate-review — Bind each gate review disposition to
+its exact received ledger event](../items/BL-260820-bind-each-gate-review.md),
+[BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes
+for review and gate receipts](../items/BL-260820-emit-source-qualified.md),
+[BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
+prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md),
+and [BL-260724-support-provider-directory — Support provider directory symlinks
+as full collection sync](../items/BL-260724-support-provider-directory.md) into
+the same next grouping if B55 is accepted as the owning umbrella.
+Add [BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before
+per-phase review dispatch](../items/BL-260829-order-phase-bookkeeping-before.md)
+to the review-foundation grouping immediately before B05.
 
-| Roadmap horizon | Assessment                          | Backlog items and recommendation                                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Now             | Partially stale                     | Keep **`BL-260711-add-activity-aware-gate` — Add activity-aware gate timeouts**. Move **`BL-260711-add-root-owned-dispatch-broker` — Add root-owned dispatch broker for exact OAT subagent launches** out of Now until a concrete consumer appears. **`BL-260708-verify-cursor-gpt-5-6-subagent` — Verify Cursor GPT-5.6 subagent model slugs** is overdue but externally blocked; change it from active commitment to a trigger-based recheck. |
-| Next            | Broadly aligned, with one stale row | **`BL-260806-fail-closed-when-configured` — Fail closed when configured closeout snapshot is absent**, **`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for lifecycle steps that name skills**, **`BL-260711-skip-re-review-for-bookkeeping` — Skip re-review for bookkeeping-only review findings**, and the release quick wins remain credible. The grouped wave initiative should retain its explicit trigger.        |
-| Later           | Aligned                             | **`BL-260706-front-load-recurring-gate` — Front-load recurring gate-finding classes into implementer briefs**, **`BL-260719-add-pinned-recon-agents` — Add pinned recon agents for reusable orchestration**, and **`BL-260728-additional-visual-workflows` — Additional visual workflows** are correctly directional.                                                                                                                           |
+### Current roadmap “Later” candidates
 
-### Roadmap gaps and stale references
+Keep [BL-260706-front-load-recurring-gate — Front-load recurring gate-finding
+classes into implementer briefs](../items/BL-260706-front-load-recurring-gate.md),
+[BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable
+orchestration](../items/BL-260719-add-pinned-recon-agents.md), and
+[BL-260728-additional-visual-workflows — Additional visual workflows](../items/BL-260728-additional-visual-workflows.md)
+later until their prerequisites or consumers are real.
 
-| Finding                                                                                                                                                            | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`BL-260718-remove-post-w6-reviews-row` — Remove post-W6 reviews-row restore watch** remains in the Next wave-workflow group even though it closed on 2026-07-20. | Remove the stale roadmap reference.                                                                                                                                                                                                                                                                                                                                                                             |
-| No live roadmap initiative lacks a backlog record.                                                                                                                 | No new item is required solely for roadmap coverage.                                                                                                                                                                                                                                                                                                                                                            |
-| The roadmap does not reflect the newly accepted lifecycle reliability work.                                                                                        | Add **`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its exact received ledger event**, **`BL-260820-emit-source-qualified` — Emit source-qualified provenance envelopes for review and gate receipts**, and **`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness against the current head** in dependency order.                                          |
-| Three other high-priority orphans are operationally material.                                                                                                      | Add **`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews against budget and recursive dispatch**, **`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto companion skill for autonomous closeouts**, and **`BL-260727-make-explainer-run-durability` — Make explainer run durability survive ephemeral environments** after their readiness conditions are addressed. |
+### Roadmap orphans
 
-### Orphans: active backlog items not on the roadmap
+The following active records are not represented in the current roadmap and
+should be added only after their lane and trigger are accepted:
 
-| Recommendation                                      | Backlog items                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Add to Now/Next after readiness cleanup             | **`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews against budget and recursive dispatch**; **`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto companion skill for autonomous closeouts**; **`BL-260727-make-explainer-run-durability` — Make explainer run durability survive ephemeral environments**; **`BL-260820-bind-each-gate-review` — Bind each gate review disposition to its exact received ledger event**; **`BL-260820-emit-source-qualified` — Emit source-qualified provenance envelopes for review and gate receipts**; **`BL-260820-track-pr-closeout-evidence` — Track PR-closeout evidence freshness against the current head**.                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Keep as standalone maintenance                      | **`BL-260713-root-agent-judgment-logging` — Root-agent judgment logging responsibility for project log**; **`BL-260714-executable-backstops` — Executable backstops for contract claims — authoring guidance**; **`BL-260718-fix-oat-docs-generate-index` — Fix oat docs generate-index cwd-relative defaults in monorepos**; **`BL-260718-warn-when-oat-sync-uses` — Warn when oat sync uses a different producing CLI version**; **`BL-260726-validate-structured-output` — Validate structured-output contract in gate skill commands**; **`BL-260818-bound-the-smoke-cleanup` — Bound the smoke cleanup SIGTERM harness with a timeout**; **`BL-260818-extend-guarded-prose-contract` — Extend guarded-prose contract tests to docs-app mirrors**; **`BL-260818-require-repo-wide-call-site` — Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance**; **`BL-260819-refresh-codex-skill-model` — Refresh codex-skill model routing and repository-check policy**; **`BL-260819-repair-verified-bundled-skill` — Repair verified bundled skill contract drift**. |
-| Add to Now as in-flight                             | **`BL-260729-implement-reviewplan-first` — Implement ReviewPlan-first reviewer workflow**; finish draft PR #190 and reconcile Stage A with the full backlog criteria.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Add only if promoted to a committed initiative      | **`BL-260718-add-generated-runbook` — Add generated-runbook verification command pass**; **`BL-260724-support-provider-directory` — Support provider directory symlinks as full collection sync**; **`BL-260726-validate-cursor-pin-effort` — Validate Cursor pin effort rungs at sync time**; **`BL-260818-distinguish-operator-directed` — Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap**; **`BL-260819-classify-canonical-skills-by` — Classify canonical skills by distribution, lifecycle, and tenant scope**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Merge, rewrite, or archive before roadmap placement | **`BL-260718-support-fumadocs-in-oat-docs` — Support Fumadocs in oat docs nav sync (currently MkDocs-only)**; **`BL-260719-evaluate-broader-final-gate` — Evaluate broader final-gate freshness policy after narrow optimization**; **`BL-260725-classify-general-sync-owned` — Classify general sync-owned dirt in project-start preflight**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+- Add to the scope/provider and review-foundation groups:
+  [BL-260713-root-agent-judgment-logging — Root-agent judgment logging
+  responsibility for project log](../items/BL-260713-root-agent-judgment-logging.md),
+  [BL-260718-harden-full-surface-gate — Harden full-surface gate reviews
+  against budget and recursive dispatch](../items/BL-260718-harden-full-surface-gate.md),
+  [BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness
+  against the current head](../items/BL-260820-track-pr-closeout-evidence.md),
+  [BL-260826-gate-targets-must-not-yield — Gate targets must not yield on
+  background work in headless mode](../items/BL-260826-gate-targets-must-not-yield.md),
+  [BL-260826-populate-native-subagent — Populate native subagent runtime
+  identity from provider transcript metadata](../items/BL-260826-populate-native-subagent.md),
+  [BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
+  prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md),
+  and [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope,
+  provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md).
+- Keep as standalone bounded maintenance:
+  [BL-260726-validate-cursor-pin-effort — Validate Cursor pin effort rungs at
+  sync time](../items/BL-260726-validate-cursor-pin-effort.md),
+  [BL-260726-validate-structured-output — Validate structured-output contract
+  in gate skill commands](../items/BL-260726-validate-structured-output.md),
+  [BL-260826-deterministic-smoke-tier-leaks — Deterministic smoke tier leaks
+  worktrees on interrupted runs](../items/BL-260826-deterministic-smoke-tier-leaks.md),
+  [BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the
+  dispatch-ceiling resolver](../items/BL-260826-emit-the-dispatch-stamp-from.md),
+  [BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps
+  outside sync](../items/BL-260826-warn-on-silent-oatversion.md),
+  [BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only
+  OAT_ASSETS_DIR bundles](../items/BL-260827-fail-closed-on-partial-or.md),
+  [BL-260827-override-aware-remedy-text — Override-aware remedy text in
+  assets-root fail-closed errors](../items/BL-260827-override-aware-remedy-text.md),
+  and [BL-260827-span-based-prose-guards — Span-based prose guards, anchored
+  probe records, and a shared probe](../items/BL-260827-span-based-prose-guards.md).
+- Promote only when a consumer is confirmed:
+  [BL-260711-add-root-owned-dispatch-broker — Add root-owned dispatch broker
+  for exact OAT subagent launches](../items/BL-260711-add-root-owned-dispatch-broker.md),
+  [BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable
+  orchestration](../items/BL-260719-add-pinned-recon-agents.md),
+  [BL-260819-classify-canonical-skills-by — Classify canonical skills by
+  distribution, lifecycle, and tenant scope](../items/BL-260819-classify-canonical-skills-by.md),
+  [BL-260727-make-explainer-run-durability — Make explainer run durability
+  survive ephemeral environments](../items/BL-260727-make-explainer-run-durability.md),
+  and [BL-260718-add-generated-runbook — Add generated-runbook verification
+  command pass](../items/BL-260718-add-generated-runbook.md).
+- Merge, rewrite, or archive after owner confirmation:
+  [BL-260725-classify-general-sync-owned — Classify general sync-owned dirt in
+  project-start preflight](../items/BL-260725-classify-general-sync-owned.md),
+  [BL-260718-support-fumadocs-in-oat-docs — Support Fumadocs in oat docs nav
+  sync (currently MkDocs-only)](../items/BL-260718-support-fumadocs-in-oat-docs.md),
+  [BL-260718-fix-oat-docs-generate-index — Fix oat docs generate-index
+  cwd-relative defaults in monorepos](../items/BL-260718-fix-oat-docs-generate-index.md),
+  and [BL-260827-make-packaged-skill-references — Make packaged skill
+  references scope-portable](../items/BL-260827-make-packaged-skill-references.md)
+  after verifying PR #226.
 
----
+The orphan list is intentionally not a second priority system. It records
+where roadmap coverage is incomplete so the operator can decide whether to
+promote, group, merge, or leave an item outside the roadmap.
 
-## 7. Observations & Recommendations
+## 9. Risks and sequencing constraints
 
-### Strategic observations
+1. **Declared intent can be mistaken for physical placement.** Picker labels
+   must distinguish declared scope, installed scope, projected scope, and
+   provider-visible scope.
+2. **Provider mappings can overpromise.** A path mapping alone does not prove
+   that the provider can consume every content type at that scope.
+3. **Hidden managed roles create false health.** Diagnostics must report
+   missing Claude roles rather than treating bundled-role exceptions as
+   proof of availability.
+4. **Folder-level symlinks have a real divergence boundary.** They should be
+   preferred while canonical and provider collections are aligned, but sync
+   must detect and explain a stray or user-owned destination entry before
+   falling back to per-file links.
+5. **Native-role fallback can be misreported as success.** A generic child
+   supplied with the canonical role instructions is behaviorally useful but
+   is not evidence that the provider accepted the requested native role.
+6. **Review bookkeeping can consume the quality budget.** Ledger-only
+   corrections should be repaired and recorded without launching a new review
+   cycle; B37/B38/B05 must make this classification durable.
+7. **Merged code and stale projects can cause duplicate implementation.**
+   Reconcile PR #217, #219, #222, and #226 before dispatching their associated
+   backlog projects again.
+8. **Lockstep release gates remain relevant.** Any implementation that changes
+   CLI behavior, bundled assets, skills, agents, templates, scripts, or docs
+   must follow the repository's package-version and release-validation rules.
 
-1. The backlog is large but not unhealthy: **15 of 44 items are intentionally
-   deferred**, and most have sensible re-entry triggers. The problem is that
-   active-file status does not distinguish committed work from parked options.
-2. **`BL-260729-implement-reviewplan-first` — Implement ReviewPlan-first
-   reviewer workflow** is already in flight through draft PR #190, so finishing
-   and reconciling it outranks starting another overlapping review project.
-3. The newest GitHub conversions form one dependency chain rather than three
-   parallel projects: exact event binding, then common receipt provenance, then
-   integrated closeout freshness.
-4. The three skills-corpus records are not equal in urgency. The Codex guidance
-   refresh is a bounded safety fix, the four verified mismatches are a release
-   batch, and the catalog classification is policy-heavy discovery.
-5. A backlog-maintenance pass will create more execution value than starting a
-   twelfth project: normalize 11 placeholder criteria, set three estimates,
-   remove one stale roadmap row, and decide two obsolete/deferred records.
-6. Operator capacity is scope-weighted rather than lane-count-based: ReviewPlan
-   completion and OAT plugin discovery are the two large in-flight commitments.
-   Until one clears, prioritize recently encountered S/M defects and avoid new
-   large feature starts.
+## 10. Quick wins and explicit deferrals
 
-### Risks
+### Good independent quick wins
 
-| Risk                                                                                   | Mitigation                                                                                                |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Large strategic records start before their narrower foundations and duplicate schemas. | Follow D1–D3 and require the receipt/event contracts to be reused.                                        |
-| Placeholder acceptance criteria permit scope drift during implementation.              | Complete Wave 0 before generating kickoff handoffs for affected items.                                    |
-| Multiple skill changes collide on version bumps and lockstep public-package files.     | Sequence those PRs or intentionally batch compatible changes into one release-shaped project.             |
-| Roadmap “Now” overstates externally blocked or fallback-covered work.                  | Move broker work to conditional Later and make the Cursor probe trigger-based.                            |
-| The PJM doctor false-positive could archive a still-open asset-race item.              | Treat completion-log IDs as record keys only in the canonical entry field, not anywhere in summary prose. |
+- [BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for
+  lifecycle steps that name skills](../items/BL-260718-mandatory-skill-load-clause.md)
+- [BL-260826-deterministic-smoke-tier-leaks — Deterministic smoke tier leaks
+  worktrees on interrupted runs](../items/BL-260826-deterministic-smoke-tier-leaks.md)
+- [BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only
+  OAT_ASSETS_DIR bundles](../items/BL-260827-fail-closed-on-partial-or.md)
+- [BL-260827-override-aware-remedy-text — Override-aware remedy text in
+  assets-root fail-closed errors](../items/BL-260827-override-aware-remedy-text.md)
+- [BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps
+  outside sync](../items/BL-260826-warn-on-silent-oatversion.md)
 
-### Quick wins to tackle immediately
+These should not be allowed to displace the urgent B55 scope/provider item or
+the B26/B37 review-integrity spine if capacity is constrained.
 
-1. **`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for
-   lifecycle steps that name skills** (Low effort; workflow-integrity guard).
-2. **`BL-260718-warn-when-oat-sync-uses` — Warn when oat sync uses a different
-   producing CLI version** (Low effort; recurring stale-tool diagnosis).
-3. **`BL-260817-detect-branch-behind-published` — Detect
-   branch-behind-published-main package versions in CI** (Low effort; release
-   collision prevention).
-4. **`BL-260817-let-resolveassetsroot-honor` — Let resolveAssetsRoot honor
-   OAT_ASSETS_DIR and make smoke asset reads hermetic** (Low effort after
-   criteria cleanup; real parallel-test race).
+### Explicitly defer or trigger-gate
+
+Keep [BL-260711-add-root-owned-dispatch-broker — Add root-owned dispatch broker
+for exact OAT subagent launches](../items/BL-260711-add-root-owned-dispatch-broker.md),
+[BL-260719-add-pinned-recon-agents — Add pinned recon agents for reusable
+orchestration](../items/BL-260719-add-pinned-recon-agents.md),
+[BL-260719-evaluate-broader-final-gate — Evaluate broader final-gate freshness
+policy after narrow optimization](../items/BL-260719-evaluate-broader-final-gate.md),
+[BL-260718-add-generated-runbook — Add generated-runbook verification command
+pass](../items/BL-260718-add-generated-runbook.md),
+[BL-260718-add-oat-wave-lifecycle-cli — Add oat wave lifecycle CLI command
+family](../items/BL-260718-add-oat-wave-lifecycle-cli.md),
+[BL-260728-additional-visual-workflows — Additional visual workflows](../items/BL-260728-additional-visual-workflows.md),
+and [BL-260817-verify-protected-mode-public — Verify protected-mode public URLs
+with an authenticated end-to-end GET](../items/BL-260817-verify-protected-mode-public.md)
+behind a concrete consumer, trigger, or release decision.
+
+## 11. Follow-up decisions
+
+This review is complete and does not silently modify the companion
+priority-alignment review. The next optional step is a collaborative
+walkthrough of `.oat/repo/pjm/backlog/reviews/priority-alignment.md` to decide:
+
+- whether [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope,
+  provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
+  becomes the top active implementation item after PR #190;
+- whether [BL-260724-support-provider-directory — Support provider directory
+  symlinks as full collection sync](../items/BL-260724-support-provider-directory.md),
+  [BL-260827-correct-scope-and-adoption — Correct scope and adoption
+  diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
+  [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
+  config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md), and
+  [BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
+  prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md)
+  should be represented as one initiative or a sequenced set;
+- whether the B26/B37/B38/B05 review spine should run in parallel with B55 or
+  remain strictly serialized; and
+- whether any roadmap orphan should be promoted, merged, or deliberately left
+  outside roadmap grouping.
+
+Only after that walkthrough should an external implementation-plan artifact be
+generated from this review.

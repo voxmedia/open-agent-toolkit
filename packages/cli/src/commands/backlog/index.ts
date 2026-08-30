@@ -2,7 +2,9 @@ import { access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { resolvePjmAdoption } from '@commands/pjm/adoption';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -44,6 +46,7 @@ interface BacklogCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
+  resolvePjmAdoption: typeof resolvePjmAdoption;
   initializeBacklog: typeof initializeBacklog;
   regenerateBacklogIndex: typeof regenerateBacklogIndex;
   createBacklogItem: typeof createBacklogItem;
@@ -73,6 +76,7 @@ const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveAssetsRoot,
+  resolvePjmAdoption,
   initializeBacklog,
   regenerateBacklogIndex,
   createBacklogItem,
@@ -84,13 +88,44 @@ async function resolveBacklogRoot(
   context: CommandContext,
   configuredRoot?: string,
   dependencies: BacklogCommandDependencies = DEFAULT_DEPENDENCIES,
+  resolvedProjectRoot?: string,
 ): Promise<string> {
   if (configuredRoot) {
     return resolve(context.cwd, configuredRoot);
   }
 
-  const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+  const projectRoot =
+    resolvedProjectRoot ?? (await dependencies.resolveProjectRoot(context.cwd));
   return resolve(projectRoot, '.oat', 'repo', 'pjm', 'backlog');
+}
+
+async function requireRepositoryPjm(
+  context: CommandContext,
+  dependencies: BacklogCommandDependencies,
+): Promise<string> {
+  const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+  const repoRoot = resolve(projectRoot, '.oat', 'repo');
+  const adoption = await dependencies.resolvePjmAdoption({
+    projectRoot,
+    repoRoot,
+  });
+  if (adoption.state !== 'declared' && adoption.state !== 'inferred-legacy') {
+    throw new CliError(
+      `PJM is not initialized for repository ${repoRoot}. Run \`oat pjm init\` before writing PJM state.`,
+      1,
+    );
+  }
+  return projectRoot;
+}
+
+function reportError(context: CommandContext, error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error);
+  if (context.json) {
+    context.logger.json({ status: 'error', message });
+  } else {
+    context.logger.error(message);
+  }
+  process.exitCode = 1;
 }
 
 export function createBacklogCommand(
@@ -118,19 +153,25 @@ export function createBacklogCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const backlogRoot = await resolveBacklogRoot(
-        context,
-        options.backlogRoot,
-        dependencies,
-      );
-      await dependencies.initializeBacklog(backlogRoot);
+      try {
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
+        const backlogRoot = await resolveBacklogRoot(
+          context,
+          options.backlogRoot,
+          dependencies,
+          projectRoot,
+        );
+        await dependencies.initializeBacklog(backlogRoot);
 
-      if (context.json) {
-        context.logger.json({ status: 'ok', backlogRoot });
-      } else {
-        context.logger.info(`Initialized backlog scaffold at ${backlogRoot}`);
+        if (context.json) {
+          context.logger.json({ status: 'ok', backlogRoot });
+        } else {
+          context.logger.info(`Initialized backlog scaffold at ${backlogRoot}`);
+        }
+        process.exitCode = 0;
+      } catch (error) {
+        reportError(context, error);
       }
-      process.exitCode = 0;
     });
 
   cmd
@@ -156,17 +197,19 @@ export function createBacklogCommand(
         readGlobalOptions(command),
       );
       try {
-        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
         const backlogRoot = await resolveBacklogRoot(
           context,
           options.backlogRoot,
           dependencies,
+          projectRoot,
         );
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const result = await dependencies.createBacklogItem({
           backlogRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          home: context.home,
           title,
           priority: options.priority,
           scope: options.scope,
@@ -212,23 +255,34 @@ export function createBacklogCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const backlogRoot = await resolveBacklogRoot(
-        context,
-        options.backlogRoot,
-        dependencies,
-      );
-      const { itemCount, warnings } =
-        await dependencies.regenerateBacklogIndex(backlogRoot);
+      try {
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
+        const backlogRoot = await resolveBacklogRoot(
+          context,
+          options.backlogRoot,
+          dependencies,
+          projectRoot,
+        );
+        const { itemCount, warnings } =
+          await dependencies.regenerateBacklogIndex(backlogRoot);
 
-      if (context.json) {
-        context.logger.json({ status: 'ok', backlogRoot, itemCount, warnings });
-      } else {
-        for (const warning of warnings) {
-          context.logger.warn(warning);
+        if (context.json) {
+          context.logger.json({
+            status: 'ok',
+            backlogRoot,
+            itemCount,
+            warnings,
+          });
+        } else {
+          for (const warning of warnings) {
+            context.logger.warn(warning);
+          }
+          context.logger.info(`Regenerated backlog index at ${backlogRoot}`);
         }
-        context.logger.info(`Regenerated backlog index at ${backlogRoot}`);
+        process.exitCode = 0;
+      } catch (error) {
+        reportError(context, error);
       }
-      process.exitCode = 0;
     });
 
   cmd
@@ -247,13 +301,14 @@ export function createBacklogCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const backlogRoot = await resolveBacklogRoot(
-        context,
-        options.backlogRoot,
-        dependencies,
-      );
-
       try {
+        const projectRoot = await requireRepositoryPjm(context, dependencies);
+        const backlogRoot = await resolveBacklogRoot(
+          context,
+          options.backlogRoot,
+          dependencies,
+          projectRoot,
+        );
         const result = await dependencies.archiveBacklogItem(backlogRoot, id, {
           wontDo: options.wontDo,
           summary: options.summary,
@@ -288,7 +343,7 @@ export function createBacklogCommand(
           process.exitCode = error.exitCode;
           return;
         }
-        throw error;
+        reportError(context, error);
       }
     });
 

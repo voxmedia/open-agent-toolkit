@@ -76,7 +76,17 @@ Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `def
 
 Common keys in `.oat/config.json`:
 
-- `projects.root` — where tracked projects live
+- `projects.root` — shared-scope project root. Relative values resolve from the
+  repository root; absolute values remain absolute. OAT derives the `local`
+  and `synced` roots as sibling directories named `local` and `synced` under
+  this root's parent, so a custom value relocates all three scope roots as one
+  layout. Synced project creation requires the derived `synced` root to resolve
+  inside the repository; an external absolute root remains usable for `shared`
+  and `local` projects but is rejected before any synced checkout, ref, record,
+  active pointer, or Git index mutation.
+- `projects.defaultScope` — scope used by project creation when `--scope` is
+  omitted (`synced` by default). `OAT_PROJECTS_DEFAULT_SCOPE` overrides the
+  configured value for the current process.
 - `worktrees.root` — where OAT-managed worktrees live
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
@@ -87,41 +97,64 @@ Common keys in `.oat/config.json`:
 - `archive.wrapUpExportPath` — optional tracked destination for `oat-wrap-up` reports; when unset, the skill falls back to `.oat/repo/reference/wrap-ups`
 - `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
-- `tools.<pack>` — project-scoped installation state for a bundled tool pack after lifecycle reconciliation
+- `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
+- `pjm.initialized` / `pjm.schemaVersion` — explicit repository PJM adoption written by `oat pjm init`
 - `workflow.reviewPlanMode` — plan-first review compatibility mode (`legacy` or
   `enforce`)
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
 
-Tool-pack state example:
+Tool-pack intent example:
 
 ```bash
 oat config get tools.project-management
 oat config set tools.project-management true
 ```
 
-The `tools.*` group is a shared project installation snapshot, not an
-effective project-plus-user capability signal. `oat tools install`, `oat tools
-update`, and `oat tools remove` reconcile it from project-scoped canonical
-assets only. When project state is non-empty, reconciliation writes the complete
-eight-pack boolean map. When no project packs remain, it removes the group while
-preserving unrelated shared keys. User-only assets are ignored.
+`tools.*` records **declared intent per scope**, not effective project-plus-user
+capability. Project intent lives in `.oat/config.json`; user intent lives in the
+same key shape under `~/.oat/config.json`. `oat tools install`, `oat tools
+update`, `oat tools remove`, and `oat tools migrate` write only the scope they
+changed.
 
-Use `oat config get tools.<pack>` to inspect project installation state.
+Intent is true-or-absent. Installing writes `true`; removing deletes the key.
+OAT never writes `false`, never infers one pack's key from another's, and never
+writes a full eight-pack map. A legacy `false` left over from an older release
+is diagnosed as a `legacy-false-conflict` rather than honored as an opt-out.
+
+Use `oat config get tools.<pack>` to inspect declared intent.
 `oat config set tools.<pack> ...` remains available as a shared override, but a
-later lifecycle reconciliation may replace the manual value with the canonical
-project snapshot.
+later lifecycle mutation for that scope may replace the manual value.
+
+Declared intent is not the same as installed inventory. Use `oat tools list`,
+`oat tools info <name>`, `oat status`, or `oat doctor` to see what is actually
+present, what is missing, and which scoped command repairs it.
 
 Use `oat tools has <pack>` for current effective availability. It checks project
 and user scopes by default; add `--scope project` or `--scope user` to isolate a
-scope, and use the global `--json` flag for the `{ pack, available, scopes }`
-result:
+scope. Availability is complete-only — a partially installed pack reports
+`false`. The global `--json` flag returns `pack`, `available`, `scopes`,
+`unavailableScopes`, per-scope `completeness`, and the `missing` managed assets:
 
 ```bash
 oat tools has project-management
 oat tools has project-management --scope user
 oat --json tools has project-management
 ```
+
+Repository PJM adoption example:
+
+```bash
+oat config get pjm.initialized
+oat pjm doctor --json
+```
+
+`pjm.initialized` is written by `oat pjm init` after the canonical scaffold is
+verified. It is the authoritative repository adoption marker: PJM, backlog, and
+decision mutations fail closed without it, and `oat doctor` keys its `pjm:*`
+checks on adoption state rather than on `tools.project-management`. See
+[Install vs. initialize](tool-packs.md#install-vs-initialize) for the full state
+table and template precedence.
 
 ### Explainer configuration
 
@@ -199,6 +232,26 @@ project settings. Neither has a config key.
 | `EXPLAINER_KIT_SUPPRESS_ROOT_DIVERGENCE_WARNING` | Silences the advisory warning when the S3 key prefix and public path differ | off     |
 
 Both accept `1`, `true` or `on`.
+
+### Bundled assets root (`OAT_ASSETS_DIR`)
+
+The CLI reads its bundled skills, agents, templates, and scripts from the
+packaged `assets/` directory next to the installed CLI. Setting a non-empty
+`OAT_ASSETS_DIR` makes `resolveAssetsRoot` read that directory instead:
+
+- The value is trimmed; unset, empty, or whitespace-only values keep the
+  packaged default. A relative value is resolved against the process working
+  directory.
+- The override is validated exactly like the packaged root and fails closed:
+  the path must be a directory containing bundle metadata whose version matches
+  the running CLI (`OAT_VERSION`). A missing, malformed, or version-mismatched
+  override is an error — the CLI never silently falls back to packaged assets.
+- Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
+  while `OAT_ASSETS_DIR` points at the target directory (the script already
+  honors the variable as its destination).
+
+This is primarily a test-isolation and packaging seam; day-to-day use of the CLI
+does not need it.
 
 `EXPLAINER_KIT_ALLOW_PRIVATE_PUBLIC_ROOT` disables an anti-SSRF control. Public
 verification issues an outbound GET against whatever `publicBaseUrl` names, so

@@ -135,11 +135,8 @@ export async function installWorkflows(
   for (const script of WORKFLOW_SCRIPTS) {
     const source = join(options.assetsRoot, 'scripts', script);
     const destination = join(options.targetRoot, '.oat', 'scripts', script);
-    const sourceExists = await fileExists(source);
-
-    if (!sourceExists) {
-      result.skippedScripts.push(script);
-      continue;
+    if (!(await fileExists(source))) {
+      throw new Error(`Required workflow script source is missing: ${source}`);
     }
 
     const copyStatus = await copyFileWithStatus(source, destination, force);
@@ -172,7 +169,7 @@ export async function installWorkflows(
   if (!config.projects?.root?.trim()) {
     await writeOatConfig(options.targetRoot, {
       ...config,
-      projects: { root: '.oat/projects/shared' },
+      projects: { ...config.projects, root: '.oat/projects/shared' },
     });
     result.projectsRootConfigInitialized = true;
   }

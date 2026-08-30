@@ -9,6 +9,15 @@ Use this page to choose the OAT path that matches what you are actually trying t
 
 This page is intentionally lightweight. It is not the full command manual. Once you choose a path, continue into the owning section for the deeper operational detail.
 
+## Prerequisites
+
+- Node.js 22.17 or newer
+- Git 2.31 or newer
+
+OAT does not run an up-front Git version check. Git compatibility is evaluated
+best-effort by each command, and a missing or unsupported Git operation exits as
+a system error.
+
 ## Choose a Path
 
 ### Provider Sync

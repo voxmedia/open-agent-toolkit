@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.8.0
+version: 1.8.2
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -66,6 +66,10 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    that commit can fail silently; the ORCHESTRATOR commits the gate artifact on
    the reviewer's behalf. Keep the tree clean around either path (both consumers:
    stoa waves 2–3; Orc W1–W4).
+   Before persisting a gate artifact, resolve the wrapper project's scope with
+   `oat project scope "$PROJECT_PATH" --format value` and fail closed. A synced
+   wrapper uses `oat project push`; other scopes retain the existing gate-artifact
+   branch commit.
 4. **Pre-declare CUMULATIVE churn in every brief:** declarations cover everything
    landed since each source plan's AUTHORED COMMIT (drift checks compare against
    that commit, not the group base), naming files + rough regions. Zero false
@@ -234,6 +238,31 @@ carry the stored verification records required by the fix-disposition contract b
 `passed` is the only
 terminal state for gate rows (Orc operator-audit S8).
 
+Persist the gate artifact and its dispositions through the wrapper project's
+scope-aware bookkeeping route:
+
+```bash
+PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+if [ -z "$PROJECT_PATH" ]; then
+  echo "oat: no active wrapper project; refusing wave gate bookkeeping" >&2
+  exit 1
+fi
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing wave gate bookkeeping" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  PROJECT_OUTPUT_PATHS=()
+  while IFS= read -r output_path; do
+    PROJECT_OUTPUT_PATHS+=("$output_path")
+  done < <(git diff --name-only -- "$PROJECT_PATH")
+  [ "${#PROJECT_OUTPUT_PATHS[@]}" -gt 0 ] || exit 1
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git diff --cached --quiet -- "${PROJECT_OUTPUT_PATHS[@]}" ||
+    git commit --only -m "chore(oat): record wave plan gate" -- "${PROJECT_OUTPUT_PATHS[@]}"
+fi
+```
+
 ### Step 5: Execute via `oat-project-implement`
 
 The lifecycle skill owns execution. This skill contributes the templates it uses:
@@ -326,7 +355,10 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   `.oat/config.json` keys remain present; this check originated with
   `BL-260715-investigate-oat-config-json` in the source program's repo. Update
   canonical sections in place, the run-entry table, review rows, and state;
-  remove worktrees + branches after merge.
+  remove worktrees + branches after merge. Wrapper-project artifact bookkeeping
+  at this boundary uses the same fail-closed scope guard and `oat project push`
+  when the wrapper is synced; code merge commits remain on the integration
+  branch unchanged.
 
 ### Step 6: Closeout
 

@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-add-backlog-item
-version: 1.3.1
+version: 1.4.0
 description: Use when the user requests or confirms adding a new repo backlog item — e.g. "add a backlog item for X", "capture that as backlog", "track that follow-up", "file a backlog ticket", or confirms a previously offered backlog capture. Do NOT auto-invoke when a follow-up is mentioned. Creates the item file in the file-per-item backlog structure, regenerates the index, and prompts for curated overview updates.
 disable-model-invocation: false
 user-invocable: true
@@ -34,6 +34,19 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[4/4] Updating curated overview guidance…`
 
 ## Process
+
+### Step 0: Verify Repository PJM Adoption
+
+Run the read-only preflight before any file write:
+
+```bash
+oat pjm doctor --json
+```
+
+Inspect the exact `adoption.state` field. Continue only for `declared` or
+`inferred-legacy`. For `none` or `partial-initialization`, stop before writing
+and tell the user to run `oat pjm init`. Global project-management tool
+availability is capability evidence only; it is never repository adoption.
 
 ### Step 1: Resolve Inputs
 

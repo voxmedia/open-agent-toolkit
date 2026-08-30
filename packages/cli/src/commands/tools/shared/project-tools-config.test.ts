@@ -7,17 +7,6 @@ import {
 } from './project-tools-config';
 import type { PackName, ToolInfo } from './types';
 
-const ALL_PACKS: PackName[] = [
-  'core',
-  'ideas',
-  'docs',
-  'workflows',
-  'utility',
-  'project-management',
-  'research',
-  'brainstorm',
-];
-
 function createTool(pack: PackName, scope: 'project' | 'user'): ToolInfo {
   return {
     name: `oat-${pack}`,
@@ -57,7 +46,7 @@ describe('reconcileProjectToolsConfig', () => {
 
     await expect(
       reconcileProjectToolsConfig(reconcileOptions, dependencies),
-    ).resolves.toBe('unchanged');
+    ).resolves.toEqual({ action: 'unchanged', adoptedPacks: [] });
 
     expect(dependencies.scanTools).toHaveBeenCalledWith({
       scope: 'project',
@@ -67,71 +56,74 @@ describe('reconcileProjectToolsConfig', () => {
     expect(dependencies.writeOatConfig).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['project-only', [createTool('docs', 'project')]],
-    [
-      'both-scope effective state',
-      [createTool('docs', 'project'), createTool('docs', 'user')],
-    ],
-  ])('writes deterministic project state for %s', async (_name, tools) => {
-    const dependencies = createDependencies({ projectTools: tools });
+  it('backfills only physically discovered project intent', async () => {
+    const dependencies = createDependencies({
+      projectTools: [createTool('docs', 'project')],
+    });
 
     await expect(
       reconcileProjectToolsConfig(reconcileOptions, dependencies),
-    ).resolves.toBe('written');
+    ).resolves.toEqual({ action: 'written', adoptedPacks: ['docs'] });
 
     expect(dependencies.writeOatConfig).toHaveBeenCalledWith('/repo', {
       version: 1,
-      tools: Object.fromEntries(
-        ALL_PACKS.map((pack) => [pack, pack === 'docs']),
-      ),
+      tools: { docs: true },
     });
   });
 
-  it('removes the final project pack even when a user copy remains', async () => {
+  it('does not clear declared intent when physical assets are missing', async () => {
     const dependencies = createDependencies({
       config: {
         version: 1,
-        tools: Object.fromEntries(
-          ALL_PACKS.map((pack) => [pack, pack === 'docs']),
-        ),
+        tools: { docs: true },
       },
     });
 
     await expect(
       reconcileProjectToolsConfig(reconcileOptions, dependencies),
-    ).resolves.toBe('written');
-
-    expect(dependencies.writeOatConfig).toHaveBeenCalledWith('/repo', {
-      version: 1,
-    });
+    ).resolves.toEqual({ action: 'unchanged', adoptedPacks: [] });
+    expect(dependencies.writeOatConfig).not.toHaveBeenCalled();
   });
 
-  it('clears stale union flags while preserving unrelated shared config', async () => {
+  it('adds inferred legacy intent while preserving declared and unrelated config', async () => {
     const dependencies = createDependencies({
       config: {
         version: 1,
         documentation: { root: 'docs' },
-        tools: { docs: true, workflows: true },
+        tools: { workflows: true },
       },
-      projectTools: [createTool('workflows', 'project')],
+      projectTools: [createTool('docs', 'project')],
     });
 
-    await reconcileProjectToolsConfig(reconcileOptions, dependencies);
+    await expect(
+      reconcileProjectToolsConfig(reconcileOptions, dependencies),
+    ).resolves.toEqual({ action: 'written', adoptedPacks: ['docs'] });
 
     expect(dependencies.writeOatConfig).toHaveBeenCalledWith('/repo', {
       version: 1,
       documentation: { root: 'docs' },
-      tools: Object.fromEntries(
-        ALL_PACKS.map((pack) => [pack, pack === 'workflows']),
-      ),
+      tools: { workflows: true, docs: true },
+    });
+  });
+
+  it('replaces a legacy false snapshot only when physical assets exist', async () => {
+    const dependencies = createDependencies({
+      config: { version: 1, tools: { docs: false, ideas: false } },
+      projectTools: [createTool('docs', 'project')],
+    });
+
+    await expect(
+      reconcileProjectToolsConfig(reconcileOptions, dependencies),
+    ).resolves.toEqual({ action: 'written', adoptedPacks: ['docs'] });
+
+    expect(dependencies.writeOatConfig).toHaveBeenCalledWith('/repo', {
+      version: 1,
+      tools: { docs: true, ideas: false },
     });
   });
 
   it('suppresses an unchanged deterministic tools write', async () => {
-    const tools = Object.fromEntries(
-      ALL_PACKS.map((pack) => [pack, pack === 'docs']),
-    );
+    const tools = { docs: true };
     const dependencies = createDependencies({
       config: { version: 1, tools },
       projectTools: [createTool('docs', 'project')],
@@ -139,7 +131,51 @@ describe('reconcileProjectToolsConfig', () => {
 
     await expect(
       reconcileProjectToolsConfig(reconcileOptions, dependencies),
-    ).resolves.toBe('unchanged');
+    ).resolves.toEqual({ action: 'unchanged', adoptedPacks: [] });
     expect(dependencies.writeOatConfig).not.toHaveBeenCalled();
+  });
+
+  it('returns several newly adopted packs once in canonical order', async () => {
+    const dependencies = createDependencies({
+      config: { version: 1, tools: { workflows: true } },
+      projectTools: [
+        createTool('research', 'project'),
+        createTool('docs', 'project'),
+        createTool('docs', 'project'),
+        createTool('workflows', 'project'),
+      ],
+    });
+
+    await expect(
+      reconcileProjectToolsConfig(reconcileOptions, dependencies),
+    ).resolves.toEqual({
+      action: 'written',
+      adoptedPacks: ['docs', 'research'],
+    });
+    expect(dependencies.writeOatConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores custom tools and is idempotent after adopting project packs', async () => {
+    let config: OatConfig = { version: 1 };
+    const dependencies = createDependencies({
+      projectTools: [
+        createTool('docs', 'project'),
+        createTool('custom', 'project'),
+      ],
+    });
+    dependencies.readOatConfig = vi.fn(async () => config);
+    dependencies.writeOatConfig.mockImplementation(
+      async (_repoRoot: string, nextConfig: OatConfig) => {
+        config = nextConfig;
+      },
+    );
+
+    await expect(
+      reconcileProjectToolsConfig(reconcileOptions, dependencies),
+    ).resolves.toEqual({ action: 'written', adoptedPacks: ['docs'] });
+    await expect(
+      reconcileProjectToolsConfig(reconcileOptions, dependencies),
+    ).resolves.toEqual({ action: 'unchanged', adoptedPacks: [] });
+    expect(dependencies.writeOatConfig).toHaveBeenCalledTimes(1);
   });
 });

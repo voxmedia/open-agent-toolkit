@@ -10,6 +10,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { installDocs } from '@commands/init/tools/docs/install-docs';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -150,7 +152,52 @@ describe('installWorkflows', () => {
       stat(join(targetRoot, '.oat', 'config.json')),
     ).rejects.toThrow();
     await expect(stat(join(targetRoot, '.oat', 'projects'))).rejects.toThrow();
+    await expect(
+      inventoryScopedPack({
+        pack: 'workflows',
+        scope: 'user',
+        scopeRoot: targetRoot,
+        assetsRoot,
+      }),
+    ).resolves.toMatchObject({ completeness: 'complete' });
   });
+
+  it.each(['docs-first', 'workflows-first'] as const)(
+    'retains the shared tracking script when installed %s',
+    async (order) => {
+      const root = await makeTempDir();
+      const assetsRoot = join(root, 'assets');
+      const targetRoot = join(root, 'home');
+      await seedAssets(assetsRoot);
+
+      if (order === 'docs-first') {
+        const docs = await installDocs({ assetsRoot, targetRoot, skills: [] });
+        const workflows = await installWorkflows({
+          assetsRoot,
+          targetRoot,
+          scope: 'user',
+        });
+        expect(docs.copiedScripts).toEqual(['resolve-tracking.sh']);
+        expect(workflows.skippedScripts).toContain('resolve-tracking.sh');
+      } else {
+        const workflows = await installWorkflows({
+          assetsRoot,
+          targetRoot,
+          scope: 'user',
+        });
+        const docs = await installDocs({ assetsRoot, targetRoot, skills: [] });
+        expect(workflows.copiedScripts).toContain('resolve-tracking.sh');
+        expect(docs.skippedScripts).toEqual(['resolve-tracking.sh']);
+      }
+
+      await expect(
+        readFile(
+          join(targetRoot, '.oat', 'scripts', 'resolve-tracking.sh'),
+          'utf8',
+        ),
+      ).resolves.toBe('#!/bin/sh\necho seeded\n');
+    },
+  );
 
   it('makes mode-normalized scripts inside installed skills executable', async () => {
     const root = await makeTempDir();
@@ -237,6 +284,28 @@ describe('installWorkflows', () => {
     await expect(
       readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
     ).resolves.toContain('.oat/projects/custom-config');
+  });
+
+  it('preserves defaultScope while backfilling the projects root', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await mkdir(join(targetRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(targetRoot, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'local' } })}\n`,
+      'utf8',
+    );
+
+    await installWorkflows({ assetsRoot, targetRoot });
+
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('"defaultScope": "local"');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('"root": ".oat/projects/shared"');
   });
 
   it('scaffolds projects directories with .gitkeep files on fresh install', async () => {
@@ -328,16 +397,15 @@ describe('installWorkflows', () => {
     expect(second.projectsDirsScaffolded).toBe(false);
   });
 
-  it('gracefully skips missing source scripts', async () => {
+  it('fails forward when a required source script is missing', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
     await seedAssets(assetsRoot, false);
 
-    const result = await installWorkflows({ assetsRoot, targetRoot });
-
-    expect(result.copiedScripts).toEqual([]);
-    expect(result.skippedScripts).toHaveLength(3);
+    await expect(installWorkflows({ assetsRoot, targetRoot })).rejects.toThrow(
+      /required workflow script source is missing/i,
+    );
   });
 
   it('skips all items on idempotent re-run', async () => {
@@ -379,11 +447,12 @@ describe('installWorkflows', () => {
       force: true,
     });
 
-    expect(result.updatedSkills).toHaveLength(WORKFLOW_SKILLS.length);
+    expect(result.updatedSkills).toEqual(['oat-project-new']);
+    expect(result.skippedSkills).toHaveLength(WORKFLOW_SKILLS.length - 1);
     expect(result.outdatedSkills).toEqual([]);
-    expect(result.updatedAgents).toHaveLength(WORKFLOW_AGENTS.length);
-    expect(result.updatedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
-    expect(result.updatedScripts).toHaveLength(3);
+    expect(result.updatedAgents).toEqual([]);
+    expect(result.updatedTemplates).toEqual([]);
+    expect(result.updatedScripts).toEqual([]);
   });
 
   it('tracks outdated skills without overwriting when not forced', async () => {

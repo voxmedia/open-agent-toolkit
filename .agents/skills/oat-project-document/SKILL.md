@@ -1,11 +1,11 @@
 ---
 name: oat-project-document
-version: 1.6.2
+version: 1.8.1
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 ---
 
 # Project Documentation Sync
@@ -159,20 +159,38 @@ Store resolved values for use in later steps. Do not write auto-detected values 
 
 ### Step 1: Check for PJM Infrastructure
 
-Check whether the project-management tool pack is effectively available:
+Check capability availability, then separately inspect repository adoption:
 
 ```bash
 PJM_INSTALLED=$(oat tools has project-management 2>/dev/null || echo "false")
+PJM_ADOPTION_STATE=""
+if [ "$PJM_INSTALLED" = "true" ]; then
+  PJM_ADOPTION_STATE=$(oat pjm doctor --json 2>/dev/null | jq -r '.adoption.state // ""')
+fi
 ```
 
-**If `PJM_INSTALLED` is `true`:**
+`PJM_INSTALLED=true` means the capability is available; it does not mean this
+repository adopted PJM.
+
+**If `PJM_ADOPTION_STATE` is `declared` or `inferred-legacy`:**
 
 - Invoke `oat-pjm-update-repo-reference` automatically before proceeding.
 - Do not ask whether to run the repo reference update during project-document.
 - **If invocation succeeds:** Log that repo reference docs were refreshed and continue to Step 2. The reference surfaces will already be current when the documentation scan reads them in Step 4a.4.
 - **If invocation fails:** Warn the user that the repo reference update failed, but continue with the documentation sync — a PJM failure should not block documentation updates.
 
+**If `PJM_ADOPTION_STATE` is `none` or `partial-initialization`:** Do not invoke
+any PJM writer. Warn that repository adoption is absent/incomplete, recommend
+`oat pjm init`, and proceed with documentation-only work.
+
 **If `PJM_INSTALLED` is not `true`:** Skip silently and proceed to Step 2.
+
+**If `PJM_INSTALLED` is `true` but `PJM_ADOPTION_STATE` is empty or holds any
+value other than the four documented states (`declared`, `inferred-legacy`,
+`none`, `partial-initialization`):** Treat adoption as unverified. Do not invoke
+any PJM writer, and do not fall through to the `declared` branch. Report that
+adoption could not be determined — the usual causes are `jq` missing from
+`PATH` or `oat pjm doctor` failing — and proceed with documentation-only work.
 
 ### Step 2: Read Project Artifacts
 
@@ -506,8 +524,14 @@ Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 - If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 8d) so the user knows which updates failed and why.
 
 ```bash
-git add "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore({project-name}): mark docs updated" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"
+fi
 ```
 
 **8c. Handle edge cases:**

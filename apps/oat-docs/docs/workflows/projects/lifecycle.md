@@ -18,7 +18,7 @@ OAT lifecycle order:
 7. Summary (`oat-project-summary`) — generates `summary.md` as institutional memory; `oat-project-pr-final` and `oat-project-complete` auto-refresh it when missing or stale
 8. PR (`oat-project-pr-progress` / `oat-project-pr-final`) — sets `pr_open` status
 9. Revision loop (`oat-project-revise`) — optional; accepts post-PR feedback
-10. Documentation sync (`oat-project-document`) — optional; reads project artifacts and code evidence to identify docs needing updates, checks for missing coverage of newly shipped capability areas, checks effective project-management availability with `oat tools has project-management`, and auto-runs `oat-pjm-update-repo-reference` before scanning docs when the pack is available
+10. Documentation sync (`oat-project-document`) — optional; reads project artifacts and code evidence to identify docs needing updates, checks for missing coverage of newly shipped capability areas, and auto-runs `oat-pjm-update-repo-reference` before scanning docs only when the PJM capability is available **and** this repository has adopted PJM
 11. Complete (`oat-project-complete`)
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
@@ -63,20 +63,30 @@ from missing state.
 After implementation closeout finishes:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
-2. **Documentation** (`oat-project-document`) — optional sync of project docs; checks effective project-management availability with `oat tools has project-management` to decide whether repo-reference refresh should run before docs analysis, and should recommend new docs pages/directories when the shipped work introduces a capability area that the docs app does not already cover
+2. **Documentation** (`oat-project-document`) — optional sync of project docs; decides whether repo-reference refresh should run before docs analysis using two independent checks, and should recommend new docs pages/directories when the shipped work introduces a capability area that the docs app does not already cover
 3. **PR** (`oat-project-pr-final`) — creates PR description (auto-refreshes `summary.md` first when needed, then uses it as source), sets `oat_phase_status: pr_open`, and tracks actual PR existence with `oat_pr_status` / `oat_pr_url`
 4. **Revision loop** (`oat-project-revise`) — accepts post-PR feedback:
    - Inline feedback creates `p-revN` revision phases with `prevN-tNN` task IDs
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and always archives the project locally
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
 
 ### Completion archive behavior
 
-On completion, OAT now treats archive handling as part of the closeout lifecycle:
+On completion, OAT treats archive handling as an explicit closeout choice:
 
-- Local archive is always written to `.oat/projects/archived/<project>/`.
+- When archiving is selected, the local archive is written to `.oat/projects/archived/<project>/`.
+- When archiving is disabled or declined, durable projects remain at their
+  active path. Synced completion still finalizes and pushes the project ref,
+  commits the discovery record as `complete`, retains the checkout and ref, and
+  attests a selected recap against the project-ref history.
+- For a synced project, closeout first finalizes the project artifacts and
+  pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
+  fully pushed checkout; copies it without the `.git` pointer or `reviews/`;
+  marks the tracked record complete; commits the record and configured durable
+  exports on the parent branch; removes the nested checkout; and retains the
+  ref. This order keeps SHA-pinned PR links valid after completion.
 - If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
 - If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
@@ -164,7 +174,7 @@ summary, documentation, PR, or project completion.
 
 ### Retrospective completion safety net
 
-Before an interactive completion archives the project,
+Before an interactive completion closes the project,
 `oat-project-complete` checks for
 `{PROJECT_PATH}/references/project-retro.md`. If the artifact is missing, it
 offers to generate one before completion. If the artifact exists, completion
@@ -315,6 +325,10 @@ Capture lane progression:
 ## Operational rules
 
 - Keep `state.md`, `plan.md`, and `implementation.md` synchronized.
+- For a synced project, publish lifecycle artifact writes with
+  `oat project push`; do not stage `.oat/projects/synced/<project>/` on the
+  parent branch.
+- On arrival, run `oat project pull` before reading a synced project's state.
 - Stop at configured HiLL checkpoints.
 - Do not move lifecycle forward when required review gates are unresolved.
 - Project entry skills (`oat-project-new`, `oat-project-quick-start`, and `oat-project-import-plan`) surface inherited dirty git state before scaffolding. If the dirty list includes `.oat/sync/manifest.json`, `.claude/`, `.cursor/`, or `.codex/`, the skill calls out that those paths are typically sync output and offers Commit now, Proceed anyway, or Abort.
@@ -330,6 +344,25 @@ See the [Workflow preferences section in the Configuration guide](../../cli-util
 - Active project state is stored in `.oat/config.local.json` (`activeProject`, repo-relative path).
 - Projects root is stored in `.oat/config.json` (`projects.root`) and can be read via `oat config get projects.root`.
 - Workflow skills prefer `oat config get activeProject` / `oat config get projects.root` rather than reading pointer files directly.
+
+## Capability availability versus repository adoption
+
+Lifecycle skills that touch repository project-management state make two
+separate checks, and both must hold before any PJM write:
+
+1. **Capability availability** — `oat tools has project-management` answers
+   whether the PJM skills and templates are installed and complete at project or
+   user scope. Since packs default to user scope, this is usually satisfied by a
+   user-scope install with no repository footprint.
+2. **Repository adoption** — `oat pjm doctor --json` answers whether _this_
+   repository adopted PJM. Branch on its `adoption.state` field: `declared` and
+   `inferred-legacy` allow repository PJM writes; `partial-initialization` and
+   `none` stop with `oat pjm init` as the recovery.
+
+Pack presence is never treated as evidence of repository adoption. A skill that
+finds the capability available but the repository unadopted reports the
+actionable `oat pjm init` stop instead of scaffolding implicitly. See
+[Install vs. initialize](../../cli-utilities/tool-packs.md#install-vs-initialize).
 
 ## Brainstorming integration with the project lifecycle
 

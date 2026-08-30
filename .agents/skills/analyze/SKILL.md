@@ -1,6 +1,6 @@
 ---
 name: analyze
-version: 0.1.0
+version: 0.1.1
 description: Multi-angle analysis of existing artifacts, codebases, documents, or systems. Examines what you have from six analysis angles and produces structured findings with prioritized recommendations.
 argument-hint: 'target [--context path]'
 user-invocable: true
@@ -258,10 +258,18 @@ Then ask the user via `AskUserQuestion` (Claude Code), structured user-input too
 
 `[10/10] Writing artifact…`
 
-Write the structured analysis artifact using:
+Write the structured analysis artifact using the `deep-research` schema
+references. Independently probe each required `<name>/SKILL.md` in order:
+`${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first match for `deep-research` to its
+own `${RESEARCH_SKILLS_ROOT}`; never ambient discovery. On a miss, name the
+skill, stop before writing the artifact instead of inventing a schema, and give
+its intended-scope recovery command:
+`oat tools install research --scope <user|project>` or
+`oat tools update --pack research --scope <user|project>`.
 
-- Base schema structure (Executive Summary, Methodology, Findings, Sources & References) from `../deep-research/references/schema-base.md`
-- Analysis extended schema sections (Per-Angle Findings, Cross-Angle Synthesis, Prioritized Recommendations) from `../deep-research/references/schema-analysis.md`
+- Base schema structure (Executive Summary, Methodology, Findings, Sources & References) from `${RESEARCH_SKILLS_ROOT}/deep-research/references/schema-base.md`
+- Analysis extended schema sections (Per-Angle Findings, Cross-Angle Synthesis, Prioritized Recommendations) from `${RESEARCH_SKILLS_ROOT}/deep-research/references/schema-analysis.md`
 
 Artifact frontmatter contract:
 

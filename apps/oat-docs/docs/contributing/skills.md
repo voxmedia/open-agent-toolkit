@@ -24,6 +24,122 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Define a pre-work capability and authorization gate for skills that delegate to subagents, workers, or reviewers.
 - Keep output obligations explicit so downstream skills and users know what changed.
 
+## Portable sibling reads (skills and agents)
+
+Executable instructions must not assume the asset is running from a repository
+checkout. The rule is not skill-specific: it applies to every Markdown asset
+shipped by a pack whose `defaultScope` is `user`, which today means both
+canonical skills under `.agents/skills` and canonical agents under
+`.agents/agents`. The scanned surface is derived from `PACK_MANIFEST` rather
+than a hand-maintained list, so adding a skill or agent to a user-default pack
+puts it under the contract automatically.
+
+The contract covers a cross-asset read of a sibling `SKILL.md` and of any file
+or directory at or below a sibling's `references/`.
+
+### Loaded skills resolve in three steps
+
+Before a skill or one of its operational reference files reads a sibling,
+resolve a `${SKILLS_ROOT}` in this order:
+
+1. Derive `${SKILL_DIR}/..` from the directory containing the currently loaded
+   `SKILL.md`, when the provider exposes that path.
+2. Try the user-scope root at `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
+
+Probe each candidate for the exact target and use the first match. If none
+exists, name the missing sibling, give an actionable install or update command,
+and stop that workflow branch instead of improvising the sibling's process.
+
+### Skills bind canonical agent reads through a local provider root
+
+When a skill must read one fixed canonical role instruction, bind a local
+`${AGENT_PROVIDER_ROOT}` for that dependency in this order:
+
+1. Derive `${SKILL_DIR}/../..` from the loaded skill path, but admit it only
+   when the exact unsuffixed `agents/<canonical-name>.md` target is the
+   same-scope canonical Markdown file or a symlink whose real path is exactly
+   that file.
+2. Try the user-scope root at `${HOME}/.agents`.
+3. Fall back to the project-scope root at `<repo-root>/.agents`.
+
+An invalid loaded target is a candidate miss, so resolution continues to the
+user and project roots. Regular provider copies, broken or escaping symlinks,
+transformed content, other role names, model/effort/variant-suffixed files, and
+`.codex/agents/*.toml` are never canonical candidates. Claude and Cursor base
+role symlinks can qualify when they resolve exactly to the same-scope canonical
+file; Cursor materialized variants cannot.
+
+`${AGENT_PROVIDER_ROOT}` is local authored-instruction notation, not a global
+environment variable or a provider-native role selector. It has no authority
+over provider, model, effort, variant, route, or dispatch choice. Resolve every
+owning pack independently, even when multiple role dependencies coexist. If
+all candidates miss for a workflows-owned role, stop before fallback launch
+and report both recovery forms for the intended scope:
+
+```bash
+oat tools install workflows --scope <user|project>
+oat tools update --pack workflows --scope <user|project>
+```
+
+### Materialized agents resolve in two steps
+
+Canonical agents are materialized into provider-specific views — Codex receives
+agent content as developer instructions, while Claude and Cursor use distinct
+provider directories. No stable loaded-agent source path exists across those
+providers, so an agent must not invent a `${SKILL_DIR}`-style loaded-agent
+candidate. Agents resolve installed scope only:
+
+1. Try the user-scope root at `${HOME}/.agents/skills`.
+2. Fall back to the project-scope root at `<repo-root>/.agents/skills`.
+
+User scope comes first because the packs that own these dependencies default
+there; project scope remains a real fallback for project installations.
+
+### Bind every dependency independently
+
+When a caller needs multiple siblings, resolve and bind each one to its own
+root variable. Do not freeze a single `${SKILLS_ROOT}` and assume every
+dependency is installed there: a workflows adapter may be at project scope
+while its utility contracts are at user scope. Validate the exact target file
+before acting on it, and never substitute ambient discovery for a bound root.
+
+Follow-on reads inside an already-bound sibling root — for example a second
+reference file under a root that an earlier read established and validated —
+are local reads rather than new cross-asset reads. They are only acceptable
+when the anchoring read comes first.
+
+### Fail closed with pack-specific recovery
+
+A missing-sibling recovery must name the missing target, its owning pack, and
+the intended scope, using `oat tools install <pack> --scope <user|project>` or
+`oat tools update --pack <pack> --scope <user|project>` as appropriate. Do not
+degrade to a partially guided path, and do not continue past the missing
+dependency.
+
+### The ratchet allows only exact historical baselines
+
+Do not use a bare `.agents/skills/<sibling>/SKILL.md`,
+`.agents/agents/<canonical-name>.md`, dot-relative equivalent, or repeated-parent
+canonical `agents/<canonical-name>.md` hop for an executable read in any
+user-default skill or agent. The bundled-docs contract test enforces this over
+the whole manifest-derived surface and reports each violation as exact
+`source -> target` evidence. Executable agent findings have a zero baseline, so
+every bare canonical-agent read fails the ratchet. Portable
+`${AGENT_PROVIDER_ROOT}/agents/...` reads and legitimate `.claude` or `.cursor`
+provider-view examples are classified as non-findings.
+
+The pinned historical baseline applies only to skill findings: its six exact
+entries are non-executable evidence such as dogfood transcripts or fixture
+READMEs, recorded by source file, target skill, and target path. There is no
+wildcard, directory-wide, or skill-wide allowance, and no temporary migration
+allowlist — executable debt is fixed at the caller instead of being exempted.
+The same assertions run against the bundled CLI copies of both skills and
+agents, and the sync contract test re-checks the roles it materializes for
+Codex, so a canonical fix must survive bundling and Codex sync as well. No test
+yet gates the generated `.claude` or `.cursor` agent views, so regenerate and
+spot-check those by hand.
+
 ## Contract components
 
 - Mode assertion (purpose, blocked/allowed activities)
@@ -120,6 +236,8 @@ dispatch contract owns capability and authorization checks, live catalog
 evidence, authorized routes, launch acceptance, recovery, and the neutral
 dispatch record. Keep model/effort/reasoning/service-tier axes explicit and do
 not collapse the selection and mechanics references into one provider matrix.
+Before each launch, disclose the resolved dependency sources and effective
+runtime target; never present a bundled recommendation as the selected target.
 
 Keep project lifecycle policy out of that general layer. A lifecycle caller
 loads `oat-project-dispatch-subagents` to resolve project, phase/task, gate,

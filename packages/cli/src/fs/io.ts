@@ -30,21 +30,32 @@ export async function dirExists(path: string): Promise<boolean> {
 }
 
 export type LinkStrategy = 'symlink' | 'copy';
+export type CopyDirectoryFilter = (
+  sourcePath: string,
+  relativePath: string,
+) => boolean | Promise<boolean>;
 
 export async function ensureDir(dirPath: string): Promise<void> {
   await mkdir(dirPath, { recursive: true });
 }
 
-export async function copyDirectory(src: string, dest: string): Promise<void> {
+export async function copyDirectory(
+  src: string,
+  dest: string,
+  filter?: CopyDirectoryFilter,
+  sourceRoot = src,
+): Promise<void> {
   await ensureDir(dest);
   const entries = await readdir(src, { withFileTypes: true });
 
   for (const entry of entries) {
     const sourcePath = join(src, entry.name);
     const destPath = join(dest, entry.name);
+    const relativePath = relative(sourceRoot, sourcePath);
+    if (filter && !(await filter(sourcePath, relativePath))) continue;
 
     if (entry.isDirectory()) {
-      await copyDirectory(sourcePath, destPath);
+      await copyDirectory(sourcePath, destPath, filter, sourceRoot);
       continue;
     }
 

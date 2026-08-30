@@ -76,7 +76,18 @@ continues immediately, this can be written back together with the final
    - Only when recovery finds zero matches, run the complete judgment append
      invocation exactly once:
 
+     Define `parse_synced_push_receipt` once before applying records:
+
      ```bash
+     parse_synced_push_receipt() {
+       node -e '
+     let value;
+     try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+     if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+     process.stdout.write(value.sha);
+     ' "$1"
+     }
+
      oat project log append --project "$PROJECT_PATH" \
        --type feedback \
        --scope project \
@@ -84,9 +95,24 @@ continues immediately, this can be written back together with the final
        --body "$CORRECTION_BODY"
      ```
 
-   - Commit the project-log append without retro writeback. Verify the commit
-     contains the normalized project-log path and exact correction body.
-     Capture its full 40-character SHA and exact generated heading.
+   - Commit the project-log append without retro writeback using the scope
+     guard below. Verify the commit contains the normalized project-log path
+     and exact correction body. Capture its full 40-character SHA and exact
+     generated heading.
+
+     ```bash
+     PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+     # fail closed: never fall back to branch bookkeeping when scope resolution fails
+     if [ "$PROJECT_SCOPE" = "synced" ]; then
+       CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+       CORRECTION_COMMIT=$(parse_synced_push_receipt "$CORRECTION_PUSH") || { printf '%s\n' "$CORRECTION_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
+     else
+       git add "$PROJECT_PATH/project-log.md"
+       git commit -m "chore(oat): apply retro correction $RP_ID"
+       CORRECTION_COMMIT=$(git rev-parse HEAD)
+     fi
+     ```
+
    - In a later retro-only writeback commit, set the RP status and
      `Applied-ref`. The reference names the full 40-character correction commit
      plus the exact generated heading, serialized as
@@ -194,11 +220,68 @@ Compute `oat_retro_promotions` exactly:
 - Use one reviewed batch when the items are inseparable edits to the same
   canonical surface.
 - Include the target edit and its artifact status writeback in the same commit
-  whenever possible. The project-log correction route is the explicit
-  exception: its correction commit must precede the later retro-only writeback
-  commit so `Applied-ref` can name an already durable correction.
+  for shared and local projects whenever possible. Synced projects and the
+  project-log correction route are explicit two-commit transactions: the
+  repository target commit must precede the retro-only project-ref writeback
+  commit so `Applied-ref` can name an already durable target.
 - Before each commit, format touched files, run surface-relevant checks, and
   verify the item still has the expected pre-apply status.
+- Before applying a non-project-log item, build `RETRO_TARGET_PATHS` from the
+  exact repository files owned by that proposal. A docs, agent-instruction, or
+  rule item lists every exact edited canonical file. A decision item lists the
+  exact generated or verified decision record and includes the managed decision
+  index only when this application changed it. Never stage a target directory.
+- Fail if any owned target or the retro artifact was staged before this item,
+  then snapshot unrelated staged state with
+  `UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)`. After every
+  commit, require `git diff --cached --binary` to remain byte-for-byte equal to
+  that snapshot.
+- Persist each target and retro writeback under this fail-closed scope guard:
+
+  ```bash
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+  # fail closed: never fall back to branch bookkeeping when scope resolution fails
+  for OWNED_PATH in "${RETRO_TARGET_PATHS[@]}" "$PROJECT_PATH/references/project-retro.md"; do
+    git diff --cached --quiet -- "$OWNED_PATH" || { echo "oat: owned retro path was already staged: $OWNED_PATH" >&2; exit 1; }
+  done
+  UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)
+
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    # RETRO_TARGET_PATHS contains exact ordinary-doc, agent-instruction, rule,
+    # or decision-record paths; include the managed decision index only when changed.
+    git add -- "${RETRO_TARGET_PATHS[@]}"
+    git commit --only -m "chore(oat): apply retro target $RP_ID" -- "${RETRO_TARGET_PATHS[@]}"
+    RETRO_TARGET_COMMIT=$(git rev-parse HEAD) || exit 1
+    RETRO_TARGET_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$RETRO_TARGET_COMMIT") || exit 1
+    # Require RETRO_TARGET_COMMIT_PATHS to equal the complete normalized
+    # RETRO_TARGET_PATHS set exactly. Missing or additional paths stop writeback.
+    APPLIED_REF="$RETRO_TARGET_COMMIT :: ${RETRO_TARGET_PATHS[*]}"
+
+    # Only now write Status: applied, Applied-ref: $APPLIED_REF, the cleared
+    # disposition note, promotions, and Current State into project-retro.md.
+    RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record retro application $RP_ID" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+    RETRO_WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
+  else
+    # Write back the artifact before this commit, then preserve the single-commit
+    # shared/local route with only the exact target and retro paths.
+    APPLIED_REF="${RETRO_TARGET_PATHS[*]}"
+    RETRO_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}" "$PROJECT_PATH/references/project-retro.md")
+    git add -- "${RETRO_COMMIT_PATHS[@]}"
+    git commit --only -m "chore(oat): apply retro item $RP_ID" -- "${RETRO_COMMIT_PATHS[@]}"
+    RETRO_TARGET_COMMIT=$(git rev-parse HEAD) || exit 1
+  fi
+
+  UNRELATED_STAGED_PATCH_AFTER=$(git diff --cached --binary)
+  [ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ] || { echo "oat: unrelated staged state changed during retro application" >&2; exit 1; }
+  ```
+
+  The shown writeback comments are ordered operations, not permission to edit
+  fields before the synced target receipt exists. Format and verify every exact
+  repository target before `git add`. For a newly created decision, verify the
+  reported record and managed index before the parent commit. For an existing
+  matching decision, recover its existing durable commit and exact path receipt
+  rather than creating or recommitting it; if durability cannot be proven, stop.
+
 - On re-run, rescan the artifact and process only remaining
   `proposed | approved` apply-items. Never repeat an `applied` item.
 
@@ -210,3 +293,16 @@ rule, and decision items. A matching side effect plus missing writeback is an
 interrupted success, not permission to apply twice. A partial, divergent, or
 unverifiable target requires direction; never overwrite or claim it
 automatically.
+
+For synced projects, classify interruption recovery at the two-commit boundary:
+
+| Interruption point                                    | Required recovery                                                                                                                                                                                                                            |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Before the parent target commit                       | The repository target is not durable. Leave the RP item unsettled, restore or finish only its exact target paths, rerun formatting and verification, then create the parent target commit. Do not write back or push the retro artifact yet. |
+| Between the parent target commit and project-ref push | Verify the durable parent commit contains exactly the complete target-path set and represents the proposal. Recover `Applied-ref` from its full SHA and paths, do not reapply the target, then write back and push the retro artifact.       |
+| After both commits                                    | Verify both the exact parent target receipt and the project-ref writeback receipt. Treat a matching `Status: applied` and `Applied-ref` as complete and skip the item; repair only a missing idempotent writeback from the two receipts.     |
+
+If the parent target commit succeeds but retro writeback or project-ref push
+fails, preserve that immutable parent commit, leave the artifact unsettled, and
+retry only writeback from the recovered receipt. Any partial, extra-path,
+divergent, or ambiguous receipt requires direction without another commit.

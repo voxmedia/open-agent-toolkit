@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.18
+version: 1.2.20
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -25,20 +25,41 @@ This is a sub-phase indicator; the calling skill owns the top-level banner.
 
 ## Shared Subagent Dispatch Contract
 
-Before every artifact self-review dispatch, read and follow
-`.agents/skills/oat-project-dispatch-subagents/SKILL.md`, which then requires
-`.agents/skills/oat-dispatch-subagents/SKILL.md`. This explicit two-skill load
-is mandatory; do not rely on ambient skill discovery. Planning self-review
+Before every artifact self-review dispatch, resolve `${SKILLS_ROOT}` for each
+required sibling skill in this order:
+
+1. Derive it from the directory containing this loaded `SKILL.md`:
+   `${SKILL_DIR}/..`. If the provider exposes the loaded skill path, treat its
+   directory as `${SKILL_DIR}`.
+2. Otherwise try the user-scope root first: `${HOME}/.agents/skills`.
+3. Fall back to the project-scope root: `<repo-root>/.agents/skills`.
+
+Probe each candidate for `<name>/SKILL.md` and treat the first match as
+`${SKILLS_ROOT}`. If no candidate resolves, tell the user which required
+dispatch skill is not installed. For `oat-project-dispatch-subagents`, run
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` at its intended
+scope. For `oat-dispatch-subagents` or `subagent-orchestration`, run
+`oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>` at its intended scope.
+Stop before the artifact self-review dispatch. Do not fall back to ambient skill
+discovery.
+
+Resolve, read, and follow
+`${SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`, then resolve and read
+`${SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`. Both reads are mandatory and
+must remain in this order. Planning self-review
 inherits the planning parent by default. The shared contracts own any
 catalog-aware exception, launch acceptance boundary, and dispatch record; this
 skill continues to own plan readiness and review disposition.
 
 Read
-`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+`${SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`
+(resolve `${SKILLS_ROOT}` for `subagent-orchestration` first).
 After resolving the review provider, read exactly one active-provider selection
-reference from `.agents/skills/subagent-orchestration/references/` and the
+reference from `${SKILLS_ROOT}/subagent-orchestration/references/` and the
 matching mechanics reference from
-`.agents/skills/oat-dispatch-subagents/references/` (`provider-cursor.md`,
+`${SKILLS_ROOT}/oat-dispatch-subagents/references/` (`provider-cursor.md`,
 `provider-codex.md`, or `provider-claude.md`). Do not merge provider guidance
 or mechanics.
 
@@ -176,6 +197,25 @@ for an exception. A `## Dispatch Profile` row alone cannot authorize reviewer
 lowering; only a separate reviewed contract may define a bounded lower
 candidate exception.
 
+Before the artifact-review exception can read canonical reviewer instructions,
+resolve the workflows-owned role locally. Probe candidates in this order:
+`${SKILL_DIR}/../..`, `${HOME}/.agents`, then `<repo-root>/.agents`. The loaded
+candidate is valid only when the exact unsuffixed `agents/oat-reviewer.md` is
+the same-scope canonical file or a symlink whose realpath is exactly that
+canonical file. Treat a missing, broken, escaping, copied, transformed,
+suffixed, or otherwise noncanonical candidate as a miss and continue to the
+next candidate. Bind the first valid root to
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}`; never use ambient discovery.
+
+If every candidate misses, name `oat-reviewer`, stop before the artifact-review
+fresh-child fallback dispatch, and report
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` for the intended
+scope. Canonical role instructions cannot change the immutable target,
+provider, model, effort, or variant fields selected by the resolver. The exact
+registered native reviewer variant remains first; only an explicit pre-start
+native role-selection rejection before a child starts unlocks the fresh child.
+
 For the exception route, bind every concrete managed reviewer target to the
 actual provider invocation before probing generic reviewer availability or
 selecting execution mechanics. A concrete managed Codex target takes precedence
@@ -186,10 +226,11 @@ over generic tier availability.
   reviewer variant as native `agent_type`. Only a recorded actual pre-start
   native role-selection rejection permits a fresh Codex child with the resolver
   target's explicit model, reasoning effort, and canonical role instructions
-  from `.agents/agents/oat-reviewer.md`. A separately pre-selected CLI route is
-  allowed only when native dispatch cannot express the complete target and no
-  child has started. If another route cannot preserve the target, use only a
-  verified-equivalent inline route or block the review.
+  from `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`. A separately
+  pre-selected CLI route is allowed only when native dispatch cannot express
+  the complete target and no child has started. If another route cannot
+  preserve the target, use only a verified-equivalent inline route or block the
+  review.
 - Claude: require a non-empty `providers.claude.dispatchArgs.model` and put
   that exact value in the actual provider invocation as its `model` argument.
 - Cursor: require a non-empty `providers.cursor.dispatchArgs.variant` and

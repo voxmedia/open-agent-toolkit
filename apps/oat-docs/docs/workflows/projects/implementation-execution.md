@@ -426,6 +426,28 @@ For a plan-declared parallel group, the root:
 Containment, ownership, base, or fixture-readiness failure in smoke mode aborts
 the run. It never authorizes replacement or sequential degradation.
 
+## Synced projects in worktrees
+
+A tracked `.oat/projects/synced/<project>.json` record lets every repository
+worktree discover the same synced project without putting its artifacts on the
+feature branch. On arrival, project skills run `oat project pull` before they
+read state. Pull fetches the exact `refs/oat/projects/<project>` ref and, when
+needed, materializes a fresh nested checkout at
+`.oat/projects/synced/<project>/`.
+
+Each parent worktree gets an independent detached nested checkout. Those
+checkouts do not share an index or working tree; they reconcile artifact
+history through the project ref on `origin`. If a pull or push encounters an
+overlapping change, resolve the files in the nested checkout and run
+`oat project pull --continue`. Use `oat project pull --abort` to restore the
+pre-pull state instead.
+
+`oat local sync` skips these nested repositories, so local-path hydration does
+not copy or overwrite synced artifact checkouts. Removing a parent worktree
+also needs no special nested-checkout cleanup: the ignored nested worktree does
+not prevent parent removal, and the next `oat project pull` prunes stale Git
+worktree registrations before materializing or updating the current checkout.
+
 ## Codex Depth
 
 Default execution needs the root-to-phase-agent depth. `agents.max_depth >= 2`

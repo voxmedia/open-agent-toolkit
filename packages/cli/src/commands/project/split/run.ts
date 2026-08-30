@@ -6,11 +6,19 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import { pushSynced as defaultPushSynced } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  resolveProjectScope,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { confirmAction } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { generateStateDashboard } from '@commands/state/generate';
 import { readOatLocalConfig } from '@config/oat-config';
+import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
@@ -47,6 +55,8 @@ interface RunSplitDependencies {
   refreshDashboard: (options: { repoRoot: string }) => Promise<void>;
   confirmAction: typeof confirmAction;
   processEnv: NodeJS.ProcessEnv;
+  gitRunner: GitRunner;
+  pushSynced: typeof defaultPushSynced;
 }
 
 const DEFAULT_DEPENDENCIES: RunSplitDependencies = {
@@ -62,6 +72,8 @@ const DEFAULT_DEPENDENCIES: RunSplitDependencies = {
   },
   confirmAction,
   processEnv: process.env,
+  gitRunner: defaultGitRunner,
+  pushSynced: defaultPushSynced,
 };
 
 async function exists(
@@ -205,7 +217,10 @@ async function runFreshSplit(
   document: SplitPlanDocument,
   repoRoot: string,
   projectsRoot: string,
-  dependencies: Pick<RunSplitDependencies, 'readdir'>,
+  dependencies: Pick<
+    RunSplitDependencies,
+    'readdir' | 'gitRunner' | 'pushSynced' | 'processEnv'
+  >,
   options: { allowExistingParent?: boolean } = {},
 ): Promise<void> {
   const slugs = await existingProjectSlugs(
@@ -218,15 +233,37 @@ async function runFreshSplit(
   }
   const validation = validateChildPlan(document.plan, slugs);
   if (!validation.ok) {
-    throw new Error(
+    throw new CliError(
       `Split plan validation failed: ${validation.errors
         .map((error) => error.message)
         .join('; ')}`,
+      1,
     );
   }
-  await writeCoordinationParent(document, { repoRoot, projectsRoot });
-  await seedChildren(document.plan, { repoRoot, projectsRoot });
-  await finalizeSplit(document.plan, { repoRoot, projectsRoot });
+  const localConfig = await readOatLocalConfig(repoRoot);
+  const scope = localConfig.activeProject
+    ? resolveProjectScope(localConfig.activeProject, projectsRoot, repoRoot)
+    : null;
+  const inheritedScope: ProjectScope = scope ?? 'shared';
+  const absoluteScopeRoot =
+    inheritedScope === 'shared'
+      ? isAbsolute(projectsRoot)
+        ? projectsRoot
+        : join(repoRoot, projectsRoot)
+      : resolveScopeRoot(repoRoot, projectsRoot, inheritedScope);
+  const scopeRoot = toRepoRelativeProjectPath(repoRoot, absoluteScopeRoot);
+  const splitContext = {
+    repoRoot,
+    projectsRoot,
+    scope: inheritedScope,
+    scopeRoot,
+    env: dependencies.processEnv,
+    gitRunner: dependencies.gitRunner,
+    pushSynced: dependencies.pushSynced,
+  };
+  await writeCoordinationParent(document, splitContext);
+  await seedChildren(document.plan, splitContext);
+  await finalizeSplit(document.plan, splitContext);
 }
 
 export function createProjectSplitRunCommand(
@@ -260,10 +297,11 @@ export function createProjectSplitRunCommand(
         const parsed: unknown = JSON.parse(raw);
         const documentShape = validateSplitPlanDocumentShape(parsed);
         if (!documentShape.ok) {
-          throw new Error(
+          throw new CliError(
             `Invalid SplitPlanDocument: ${documentShape.errors
               .map((error) => error.message)
               .join('; ')}`,
+            1,
           );
         }
         const document = documentShape.document;
@@ -285,7 +323,19 @@ export function createProjectSplitRunCommand(
           return;
         }
 
-        const parentPath = join(projectsRoot, document.plan.parentSlug)
+        const localConfig = await readOatLocalConfig(repoRoot);
+        const activeScope = localConfig.activeProject
+          ? resolveProjectScope(
+              localConfig.activeProject,
+              projectsRoot,
+              repoRoot,
+            )
+          : null;
+        const parentRoot =
+          activeScope && activeScope !== 'shared'
+            ? resolveScopeRoot(repoRoot, projectsRoot, activeScope)
+            : projectsRoot;
+        const parentPath = join(parentRoot, document.plan.parentSlug)
           .split('\\')
           .join('/');
         const absoluteParentPath = isAbsolute(parentPath)
@@ -366,7 +416,12 @@ export function createProjectSplitRunCommand(
               throw new SplitResumeError('Split resume cancelled.');
             }
           }
-          await continueSplitResume(partial, { repoRoot, projectsRoot });
+          await continueSplitResume(partial, {
+            repoRoot,
+            projectsRoot,
+            gitRunner: dependencies.gitRunner,
+            pushSynced: dependencies.pushSynced,
+          });
         } else {
           await runFreshSplit(document, repoRoot, projectsRoot, dependencies);
         }
@@ -388,7 +443,7 @@ export function createProjectSplitRunCommand(
           process.exitCode = 1;
           return;
         }
-        process.exitCode = 1;
+        process.exitCode = error instanceof CliError ? error.exitCode : 2;
       }
     });
 }

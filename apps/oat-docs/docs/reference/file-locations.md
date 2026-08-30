@@ -11,9 +11,9 @@ For detailed `.oat/` tree semantics, see:
 
 ## Canonical agent assets
 
-- Skills: `.agents/skills/`
-- Agents/subagents: `.agents/agents/`
-- Rules: `.agents/rules/`
+- Skills: `.agents/skills/` (project) and `~/.agents/skills/` (user)
+- Agents/subagents: `.agents/agents/` (project) and `~/.agents/agents/` (user)
+- Rules: `.agents/rules/` (project only)
 - Cursor reads project skills directly from `.agents/skills/` and user skills
   directly from `~/.agents/skills/`. `.cursor/skills/` remains a Cursor-only
   extension and adoption surface, not generated output.
@@ -23,12 +23,37 @@ For detailed `.oat/` tree semantics, see:
   still sync to `.github/agents/` and `~/.copilot/agents/`, and project rules
   still sync to `.github/instructions/`.
 
+## Managed tool-pack assets by scope
+
+Every reusable tool pack defaults to user scope on a fresh install, so both
+columns are ordinary states.
+
+| Asset kind        | Project scope              | User scope                   |
+| ----------------- | -------------------------- | ---------------------------- |
+| Pack skills       | `.agents/skills/<name>/`   | `~/.agents/skills/<name>/`   |
+| Pack agents       | `.agents/agents/<name>.md` | `~/.agents/agents/<name>.md` |
+| Pack templates    | `.oat/templates/<name>`    | `~/.oat/templates/<name>`    |
+| Pack scripts      | `.oat/scripts/<name>`      | `~/.oat/scripts/<name>`      |
+| Bundled docs tree | not applicable             | `~/.oat/docs/`               |
+
+Project-scope templates under `.oat/templates/` are owner overrides that OAT
+seeds once and never rewrites; the managed default lives at user scope and in
+the bundle. PJM templates resolve repository → user → bundle.
+
+Pack intent is stored per scope:
+
+- Project intent: `tools.<pack>: true` in `.oat/config.json`
+- User intent: `tools.<pack>: true` in `~/.oat/config.json`
+- Repository PJM adoption: `pjm.initialized` and `pjm.schemaVersion` in `.oat/config.json`
+
 ## OAT runtime/state
 
 - Repo runtime config (non-sync settings): `.oat/config.json`
 - Local runtime config (per-developer state): `.oat/config.local.json`
 - Active idea: `activeIdea` in `.oat/config.local.json` (repo) or `~/.oat/config.json` (user)
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
+- Default project scope: `projects.defaultScope` in `.oat/config.json`
+  (`synced` by default; override with `OAT_PROJECTS_DEFAULT_SCOPE`)
 - Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, `archive.wrapUpExportPath`, `archive.awsProfile`, and `archive.awsRegion` in `.oat/config.json`
 - Workflow gate config: `workflow.gates.skills` and `workflow.gates.execTargets` in `.oat/config.json`, `.oat/config.local.json`, or `~/.oat/config.json` (manage via `oat gate`)
 - Project sync manifest/config: `.oat/sync/`
@@ -52,7 +77,8 @@ Config ownership note:
 
 ## OAT workflow
 
-- Templates: `.oat/templates/`
+- Templates: `.oat/templates/` (repo overrides) and `~/.oat/templates/` (managed defaults)
+- Shared scripts: `.oat/scripts/` and `~/.oat/scripts/`
 - Runtime sync state: `.oat/sync/`
 - Repo knowledge: `.oat/repo/knowledge/`
 - Active PJM operational layer: `.oat/repo/pjm/` (`current-state.md`, `roadmap.md`, `backlog/`)
@@ -63,8 +89,18 @@ Config ownership note:
 ## Project artifact trees
 
 - Shared: `.oat/projects/shared/<project>/`
+- Synced checkout: `.oat/projects/synced/<project>/` (gitignored nested
+  worktree)
+- Synced record: `.oat/projects/synced/<project>.json` (tracked on the parent
+  branch)
+- Synced ref: `refs/oat/projects/<project>` on `origin`
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
+
+The OAT-managed block in the repository root `.gitattributes` marks shared
+project artifacts as generated for repository hosting UIs. `oat init` and
+`oat tools update` own that block; preserve non-OAT entries outside its markers
+and do not hand-edit the managed entry.
 
 Archive sync surfaces:
 
@@ -72,7 +108,12 @@ Archive sync surfaces:
 - Remote archive base: `archive.s3Uri` in `.oat/config.json`
 - Archive sync command: `oat repo archive sync` or `oat repo archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
-- Summary export target: `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when configured
+- Summary export target:
+  `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when
+  configured. The archive report returns this absolute filesystem path, while
+  `oat project links --durable-summary` normalizes a contained path to a
+  repository-relative code span. It does not invent a GitHub-style URL for
+  non-GitHub remotes.
 - Wrap-up export target: `<repo>/<archive.wrapUpExportPath>/YYYY-MM-DD-wrap-up-<label>.md` when configured; otherwise `oat-wrap-up` falls back to `<repo>/.oat/repo/reference/wrap-ups/`
 
 ## Ideas — project level (gitignored)

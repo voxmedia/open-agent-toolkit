@@ -1,6 +1,6 @@
 ---
 name: oat-repo-knowledge-index
-version: 1.2.0
+version: 1.3.0
 description: Use when onboarding OAT to a repository or when knowledge artifacts are stale. Generates or refreshes the codebase knowledge index using parallel mapper agents.
 disable-model-invocation: true
 user-invocable: true
@@ -675,11 +675,14 @@ Generated from commit: {MERGE_BASE_SHA}"
 Record the knowledge index run in the shared tracking manifest:
 
 ```bash
-ROOT_TARGET=$(bash .oat/scripts/resolve-tracking.sh root)
+# Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
+SCOPE_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+TRACKING_SCRIPT="$SCOPE_ROOT/.oat/scripts/resolve-tracking.sh"
+ROOT_TARGET=$(bash "$TRACKING_SCRIPT" root)
 ROOT_HASH=$(echo "$ROOT_TARGET" | jq -r '.commitHash')
 ROOT_BRANCH=$(echo "$ROOT_TARGET" | jq -r '.baseBranch')
 
-bash .oat/scripts/resolve-tracking.sh \
+bash "$TRACKING_SCRIPT" \
   write knowledgeIndex "$ROOT_HASH" "$ROOT_BRANCH" full \
   --artifact-path ".oat/repo/knowledge/"
 ```

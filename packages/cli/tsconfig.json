@@ -16,6 +16,7 @@
       "@ui/*": ["./src/ui/*"],
       "@config/*": ["./src/config/*"],
       "@shared/*": ["./src/shared/*"],
+      "@test-support/*": ["./src/__tests__/*"],
       "@fs/*": ["./src/fs/*"],
       "@errors/*": ["./src/errors/*"],
       "@app/*": ["./src/app/*"],
@@ -25,5 +26,5 @@
   },
   "files": ["src/review/types.test.ts"],
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/__tests__/**"]
 }

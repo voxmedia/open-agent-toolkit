@@ -1,3 +1,12 @@
+/**
+ * Shared CLI command-test helpers.
+ *
+ * Fake-cwd isolation: suites that set `cwd` to a nonexistent path such as
+ * `/tmp/workspace` must inject every init/doctor dependency that writes the
+ * filesystem or spawns git. At minimum, mock `applyOatCoreGitattributes` and
+ * `checkSyncedProjects`. Leaving those on production implementations produces
+ * CI-only `ENOENT` / `spawn git ENOENT` failures.
+ */
 import type { CliLogger } from '@ui/logger';
 
 export interface LoggerCapture {

@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { initializeDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
+import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
@@ -114,12 +115,33 @@ describe('initializeRepoReference', () => {
         access(join(repoRoot, relativePath)),
       ).resolves.toBeUndefined();
     }
+    await expect(readOatConfig(root)).resolves.toMatchObject({
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
     await expect(
       access(join(repoRoot, 'reference', 'decision-record.md')),
     ).rejects.toThrow();
     await expect(
       access(join(repoRoot, 'reference', 'backlog')),
     ).rejects.toThrow();
+  });
+
+  it('writes the adoption-owned repository AGENTS sections at the project root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+
+    await initializeRepoReference({ assetsRoot, repoRoot });
+
+    // Pack placement must not write these; adoption must.
+    const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+    expect(rootGuidance).toContain('<!-- OAT project-management -->');
+    expect(rootGuidance).toContain('### Project Management');
+    expect(rootGuidance).toContain('<!-- OAT decisions -->');
+    expect(rootGuidance).toContain('### Decision Records');
+    expect(rootGuidance).not.toContain('oat decision init');
   });
 
   it('emits the human README and the pjm handoffs README', async () => {
@@ -213,10 +235,18 @@ describe('initializeRepoReference', () => {
     await seedTemplates(join(assetsRoot, 'templates'));
 
     await initializeRepoReference({ assetsRoot, repoRoot });
+    await writeOatConfig(root, {
+      ...(await readOatConfig(root)),
+      git: { defaultBranch: 'trunk' },
+    });
     const second = await initializeRepoReference({ assetsRoot, repoRoot });
 
     expect(second.created).toEqual([]);
     expect(second.skipped).toEqual(EXPECTED_FILES);
+    await expect(readOatConfig(root)).resolves.toMatchObject({
+      git: { defaultBranch: 'trunk' },
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
   });
 
   it('composes with an existing standalone decision scaffold', async () => {
@@ -257,6 +287,11 @@ describe('initializeRepoReference', () => {
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
     const repoRoot = join(root, 'repo');
+    // Inject an empty home so the user tier (`<home>/.oat/templates`) cannot
+    // answer first; without it, a machine with `oat tools install --scope user`
+    // resolves from the real `~/.oat/templates` and never reaches the bundle.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
     await seedTemplates(join(assetsRoot, 'templates'));
     await seedTemplate(
       templatesRoot,
@@ -264,7 +299,12 @@ describe('initializeRepoReference', () => {
       '# Local Current State\n',
     );
 
-    await initializeRepoReference({ assetsRoot, repoRoot, templatesRoot });
+    await initializeRepoReference({
+      assetsRoot,
+      repoRoot,
+      templatesRoot,
+      home,
+    });
 
     await expect(
       readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
@@ -272,6 +312,26 @@ describe('initializeRepoReference', () => {
     await expect(
       readFile(join(repoRoot, 'pjm', 'roadmap.md'), 'utf8'),
     ).resolves.toContain('# roadmap.md');
+  });
+
+  it('uses user-managed defaults when repository overrides are absent', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, '.oat', 'repo');
+    const home = join(root, 'home');
+    await seedTemplates(join(assetsRoot, 'templates'));
+    await seedTemplate(
+      join(home, '.oat', 'templates'),
+      'current-state.md',
+      '# User Current State\n',
+    );
+
+    await initializeRepoReference({ assetsRoot, repoRoot, home });
+
+    await expect(
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
+    ).resolves.toContain('# User Current State');
   });
 
   it('strips template frontmatter from instantiated docs and AGENTS guides', async () => {
@@ -301,16 +361,22 @@ describe('initializeRepoReference', () => {
     const assetsRoot = join(root, 'assets');
     const templatesRoot = join(root, '.oat', 'templates');
     const repoRoot = join(root, 'repo');
+    // All three tiers must miss for the error to surface, so the user tier
+    // (`<home>/.oat/templates`) needs an empty injected home; on a machine with
+    // `oat tools install --scope user` the real `~/.oat/templates` supplies it.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
     await seedTemplate(join(assetsRoot, 'templates'), 'current-state.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'roadmap.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'repo-agents.md');
     await seedTemplate(join(assetsRoot, 'templates'), 'pjm-agents.md');
 
     await expect(
-      initializeRepoReference({ assetsRoot, repoRoot, templatesRoot }),
+      initializeRepoReference({ assetsRoot, repoRoot, templatesRoot, home }),
     ).rejects.toThrow(
-      'Template reference-agents.md was not found in repo-local templates or bundled assets.',
+      'Template reference-agents.md was not found in repository, user, or bundled PJM templates.',
     );
+    await expect(readOatConfig(root)).resolves.not.toHaveProperty('pjm');
   });
 });
 

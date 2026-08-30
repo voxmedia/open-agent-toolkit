@@ -16,6 +16,7 @@ import {
 } from '@commands/decision/regenerate-index';
 import { describe, expect, it } from 'vitest';
 
+import { PACK_MANIFEST } from '../../../tools/shared/pack-manifest';
 import { CORE_SKILLS } from '../core/install-core';
 import { DOCS_SKILLS } from '../docs/install-docs';
 import { IDEA_SKILLS } from '../ideas/install-ideas';
@@ -35,6 +36,9 @@ type BundleInventory = {
   skills: string[];
   agents: string[];
   templateFiles: string[];
+  templateDirectories: string[];
+  oatScripts: string[];
+  docsRoot: string;
   publicVersionPackages: string[];
 };
 
@@ -221,6 +225,36 @@ describe('bundle asset inventory consistency', () => {
     ).toEqual([]);
   });
 
+  it('packages project-management skill-local references', () => {
+    const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-pjm-assets-'));
+    try {
+      execFileSync('bash', [getBundleScriptPath()], {
+        env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+        stdio: 'pipe',
+      });
+
+      for (const name of [
+        'backlog-review-template.md',
+        'priority-alignment-template.md',
+      ]) {
+        expect(
+          existsSync(
+            join(
+              assetsRoot,
+              'skills',
+              'oat-pjm-review-backlog',
+              'references',
+              name,
+            ),
+          ),
+          name,
+        ).toBe(true);
+      }
+    } finally {
+      rmSync(assetsRoot, { recursive: true, force: true });
+    }
+  });
+
   it('bundles every research skill', () => {
     const missing = RESEARCH_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
@@ -310,6 +344,108 @@ describe('bundle asset inventory consistency', () => {
       orphans,
       `Bundled but not in any pack: ${orphans.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('maps every bundled managed asset into the canonical manifest', () => {
+    const inventory = readBundleInventory();
+    const sources = new Set(
+      PACK_MANIFEST.flatMap(({ assets }) =>
+        assets.flatMap(({ source }) => (source ? [source] : [])),
+      ),
+    );
+
+    for (const skill of inventory.skills) {
+      expect(sources, `manifest skill ${skill}`).toContain(`skills/${skill}`);
+    }
+    for (const agent of inventory.agents) {
+      expect(sources, `manifest agent ${agent}`).toContain(`agents/${agent}`);
+    }
+    for (const template of inventory.templateFiles) {
+      expect(sources, `manifest template ${template}`).toContain(
+        `templates/${template}`,
+      );
+    }
+    for (const template of inventory.templateDirectories) {
+      const prefix = `templates/${template}`;
+      expect(
+        [...sources].some(
+          (source) => source === prefix || source.startsWith(`${prefix}/`),
+        ),
+        `manifest template directory ${template}`,
+      ).toBe(true);
+    }
+    for (const script of inventory.oatScripts) {
+      expect(sources, `manifest script ${script}`).toContain(
+        `scripts/${script}`,
+      );
+    }
+    expect(sources).toContain(inventory.docsRoot.replace('apps/oat-docs/', ''));
+  });
+
+  it('resolves every manifest asset source to a bundled asset', () => {
+    const inventory = readBundleInventory();
+    const bundledDocsRoot = inventory.docsRoot.replace('apps/oat-docs/', '');
+    const unresolved: string[] = [];
+
+    for (const { name, assets } of PACK_MANIFEST) {
+      for (const asset of assets) {
+        if (!asset.source) {
+          // Generated seeds have no bundled source by design.
+          expect(asset.generation, `${name}/${asset.id}`).toBeDefined();
+          continue;
+        }
+        const [kind, ...rest] = asset.source.split('/');
+        const name_ = rest.join('/');
+        const resolved =
+          (kind === 'skills' && inventory.skills.includes(name_)) ||
+          (kind === 'agents' && inventory.agents.includes(name_)) ||
+          (kind === 'scripts' && inventory.oatScripts.includes(name_)) ||
+          (kind === 'templates' &&
+            (inventory.templateFiles.includes(name_) ||
+              inventory.templateDirectories.some(
+                (directory) =>
+                  name_ === directory || name_.startsWith(`${directory}/`),
+              ))) ||
+          asset.source === bundledDocsRoot;
+        if (!resolved) unresolved.push(`${name}/${asset.id} → ${asset.source}`);
+      }
+    }
+
+    expect(
+      unresolved,
+      `Manifest assets without a bundled source: ${unresolved.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('declares a usable default scope and ownership for every manifest pack', () => {
+    for (const { name, allowedScopes, defaultScope, assets } of PACK_MANIFEST) {
+      expect(allowedScopes.length, `${name} allowed scopes`).toBeGreaterThan(0);
+      expect(allowedScopes, `${name} default scope`).toContain(defaultScope);
+
+      for (const asset of assets) {
+        expect(
+          asset.scopes.length,
+          `${name}/${asset.id} scopes`,
+        ).toBeGreaterThan(0);
+        // Every declared scope has explicit ownership, and no ownership entry
+        // exists for a scope the asset does not apply to.
+        for (const scope of asset.scopes) {
+          expect(allowedScopes, `${name}/${asset.id} scope ${scope}`).toContain(
+            scope,
+          );
+          expect(
+            asset.ownership[scope],
+            `${name}/${asset.id} ownership ${scope}`,
+          ).toBeDefined();
+        }
+        for (const scope of Object.keys(asset.ownership)) {
+          expect(
+            asset.scopes,
+            `${name}/${asset.id} stray ownership ${scope}`,
+          ).toContain(scope);
+        }
+      }
+    }
   });
 
   it('covers every user-facing workflow lifecycle skill in the workflow pack', () => {

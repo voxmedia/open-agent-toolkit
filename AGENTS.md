@@ -17,7 +17,7 @@
 
 ### Essential Commands
 
-- `pnpm check` - Lint and format checks per package, plus markdownlint over `apps/oat-docs/docs`
+- `pnpm check` - Lint and format checks per package, markdownlint over `apps/oat-docs/docs`, and `oat:validate-skills`
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
 - `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
@@ -27,9 +27,11 @@
 
 `pnpm check` and the `pnpm lint`/`pnpm format` pair overlap, but neither
 contains the other, so passing one does not predict the other. Only `pnpm check`
-runs markdownlint over the docs app, which is what catches docs violations such
-as a fenced code block with no language or a skipped heading level. Only
-`pnpm lint` and `pnpm format` reach `tools/smoke` and `.agents/skills/**/*.md`.
+runs markdownlint over the docs app and validates canonical OAT skill structure
+through `oat:validate-skills`. Markdownlint catches docs violations such as a
+fenced code block with no language or a skipped heading level. Only `pnpm lint`
+and `pnpm format` apply their respective lint/format coverage to `tools/smoke`
+and `.agents/skills/**/*.md`; skill validation does not replace either check.
 
 ### Definition of Done
 
@@ -54,6 +56,24 @@ Capture each gate's exit code explicitly (for example
 `pnpm <gate> > gate.log 2>&1; echo "exit=$?"`); never derive success from a
 pipeline whose final stage is a pager or filter — `pnpm <gate> | tail && echo OK`
 reports `tail`'s exit status and prints OK even when the gate fails.
+
+A passing gate is not proof the gate ran. Turborepo replays cached results by
+default, so a green `pnpm check` or `pnpm test` frequently executes nothing —
+look for `cache hit, replaying logs` or `>>> FULL TURBO` in the output. Note
+that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
+the last command of the chained root script, where it lands harmlessly or
+errors. For evidence-grade verification run
+`HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
+and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, and
+`pnpm oat:validate-skills` separately when they matter. Two independent agent
+sessions reported cache replays as genuine passing runs on 2026-08-29.
+
+The isolated `HOME` above is not incidental. A maintainer who has run
+`oat tools install --scope user` has `~/.oat/templates/`, which participates in
+the repository → user → bundle template resolution order. Tests that exercise
+the bundle tier without injecting `home` will resolve against the maintainer's
+real templates and fail locally while passing in CI. PR #229 fixed the three
+known instances; the class recurs whenever a new test exercises that tier.
 
 CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
@@ -201,3 +221,27 @@ The repository's documentation site lives in `apps/oat-docs`.
 
 Prose adapted from external projects is tracked in the repo-root `NOTICES.md`.
 When borrowing from an external source, add an entry there.
+
+<!-- OAT project-management -->
+
+### Project Management
+
+- Installed project-management tools provide capability; they do not prove that this repository adopted PJM.
+- Run `oat pjm doctor --json` and inspect `adoption.state` before any PJM write.
+- Repository planning and durable context live under `.oat/repo/`.
+- Consult it when prioritizing or planning work, checking the backlog, starting or closing tracked work, or looking for established repository context.
+- Start with `.oat/repo/AGENTS.md`; it routes to `pjm/` for active state and `reference/` for durable records.
+- If adoption is absent or partial, stop and initialize it with `oat pjm init`.
+<!-- END OAT project-management -->
+
+<!-- OAT decisions -->
+
+### Decision Records
+
+- Durable repository decisions live under `.oat/repo/reference/decisions/`; read `.oat/repo/reference/decisions/AGENTS.md` before working with them.
+- Before finalizing a durable repository decision, review `.oat/repo/reference/decisions/index.md` and any relevant records.
+- When the user asks to record a durable decision or confirms a proposed capture, use `oat-pjm-decision` when that skill is installed; otherwise use `oat decision new`.
+- Do not hand-edit the generated decision index; run `oat decision regenerate-index` after record changes or to resolve index conflicts.
+- Run `oat pjm doctor --json` and inspect `adoption.state` before any decision write.
+- If the decision surface is missing, repository adoption is absent or partial; stop and initialize it with `oat pjm init`.
+<!-- END OAT decisions -->

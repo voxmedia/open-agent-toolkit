@@ -94,7 +94,7 @@ Pass `--context`, `--decision`, and `--consequences` together when creating a re
 
 The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate-index` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
 
-`oat decision init` is the lightweight standalone setup path. It does not require the `project-management` tool pack and does not create current state, roadmap, or backlog artifacts. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
+`oat decision init` is the lightweight standalone setup path. It does not require the `project-management` tool pack and does not create current state, roadmap, or backlog artifacts. It is also not an alternate adoption path for the broader PJM surface: repository PJM mutations still require `oat pjm init`, and `oat decision` mutations fail closed with that recovery when the repository has not adopted PJM. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
 
 ## `oat local ...`
 
@@ -165,7 +165,7 @@ Archive lifecycle settings live here as shared repo config:
 
 `archive.awsProfile` and `archive.awsRegion` are forwarded as `AWS_PROFILE` / `AWS_REGION` env vars into every `aws` spawn that runs during `oat-project-complete` and `oat repo archive sync`, and they override any values already set in the parent shell — the repo's archive-scoped declaration wins so users don't have to remember to unset `AWS_PROFILE` per shell. The per-invocation `oat repo archive sync --profile <profile>` and `--region <region>` flags then override the config for a single run, giving precedence `flag > config > shell env`. When neither flag nor config is set, the parent shell's `AWS_PROFILE` / `AWS_REGION` pass through unchanged. Raw access keys (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) remain a shell-environment concern — there is no config plumbing for them.
 
-Tool-pack installation state also lives here as shared repo config:
+Project-scope tool-pack intent also lives here as shared repo config:
 
 - `tools.core`
 - `tools.brainstorm`
@@ -176,19 +176,33 @@ Tool-pack installation state also lives here as shared repo config:
 - `tools.utility`
 - `tools.workflows`
 
-This complete eight-pack map is the shared project installation snapshot.
-Lifecycle reconciliation derives it only from project-scoped canonical assets;
-user-only packs do not set these keys. Use `oat config get tools.<pack>` to
-inspect repository installation state.
+These keys record **project-scope intent only**, and only for packs actually
+installed at project scope. Intent is true-or-absent: a lifecycle mutation
+writes `true` for the scope it changed and deletes the key on removal. It never
+writes `false`, never derives one pack's key from another's, and never writes
+the full eight-pack map. A user-scope install records the same shape under
+`~/.oat/config.json` instead. Use `oat config get tools.<pack>` to inspect
+declared project intent.
+
+Declared intent is not the same as what is installed. Use `oat tools list`,
+`oat tools info <name>`, `oat status`, or `oat doctor` to see observed
+inventory — placement, completeness, missing managed assets, and drift.
 
 For workflow routing or troubleshooting that needs current effective
 availability, run `oat tools has <pack>`. It checks project plus user scope by
-default; use `--scope project` or `--scope user` to isolate one scope. The
-global `--json` flag returns the matching scopes with the boolean result.
+default; use `--scope project` or `--scope user` to isolate one scope. A scope
+counts only when the pack is **complete** there. The global `--json` flag
+returns the matching scopes plus per-scope completeness and the missing assets
+behind a `false`.
 
-PJM diagnostics intentionally use project configuration where repository setup
-is the question. Disabled or unset repos report PJM as skipped instead of
-treating absent `.oat/repo/pjm/` files as drift.
+Repository PJM adoption is tracked separately from pack intent, under
+`pjm.initialized` and `pjm.schemaVersion` in `.oat/config.json`. PJM
+diagnostics key on that adoption state, not on `tools.project-management`, so a
+repository whose PJM capability lives at user scope is still diagnosed
+correctly. A repository that never adopted PJM reports adoption state `none`
+with `oat pjm init` as the recovery instead of treating absent
+`.oat/repo/pjm/` files as drift. See
+[Install vs. initialize](tool-packs.md#install-vs-initialize).
 
 Workflow automation preferences are also visible through `oat config` and can be set at local, shared, or user scope. Notable review-loop keys:
 

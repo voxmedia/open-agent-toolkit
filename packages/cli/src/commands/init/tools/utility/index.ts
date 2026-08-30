@@ -15,6 +15,7 @@ import {
   canonicalSkillPaths,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -59,7 +60,9 @@ const DEFAULT_DEPENDENCIES: InitToolsUtilityDependencies = {
 };
 
 function resolveScope(context: CommandContext): UtilityScope {
-  return context.scope === 'user' ? 'user' : 'project';
+  return context.scope === 'project' || context.scope === 'user'
+    ? context.scope
+    : getPackDefinition('utility').defaultScope;
 }
 
 function expandUtilitySelection(selectedSkills: string[]): string[] {

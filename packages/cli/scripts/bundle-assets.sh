@@ -10,13 +10,14 @@ MIGRATION_PROMPT_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get migrationPromp
 DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get dispatchMatrix)"
 
 # The bundle is published into ASSETS by rename rather than rebuilt in place.
-# `resolveAssetsRoot` in the CLI reads the shared assets directory directly and
-# honours no override, so an in-place `rm -rf` + repopulate leaves that
-# directory absent or half-written for the whole duration of the copy. Any
-# concurrent reader — notably the smoke suite, which runs many files in
-# parallel against this one shared path — can observe the gap and fail with
-# "Bundled asset metadata not found". Staging first narrows that window to the
-# two renames below, and leaves the previous bundle intact if the build fails.
+# `resolveAssetsRoot` in the CLI honours a non-empty OAT_ASSETS_DIR, but every
+# DEFAULT consumer still reads the shared assets directory, so an in-place
+# `rm -rf` + repopulate leaves that directory absent or half-written for the
+# whole duration of the copy. Any concurrent default reader — notably the parts
+# of the smoke suite that have not opted out by pointing OAT_ASSETS_DIR at a
+# private bundle — can observe the gap and fail with "Bundled asset metadata
+# not found". Staging first narrows that window to the two renames below, and
+# leaves the previous bundle intact if the build fails.
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
@@ -109,9 +110,11 @@ fi
 while IFS= read -r script; do
   [ -n "${script}" ] || continue
   SOURCE_SCRIPT="${REPO_ROOT}/.oat/scripts/${script}"
-  if [ -f "${SOURCE_SCRIPT}" ]; then
-    cp "${SOURCE_SCRIPT}" "${STAGING}/scripts/"
+  if [ ! -f "${SOURCE_SCRIPT}" ]; then
+    echo "Required bundle script source is missing: ${SOURCE_SCRIPT}" >&2
+    exit 1
   fi
+  cp "${SOURCE_SCRIPT}" "${STAGING}/scripts/"
 done < <(node "${INVENTORY}" --list oatScripts)
 
 if [ -f "${MIGRATION_PROMPT_SOURCE}" ]; then

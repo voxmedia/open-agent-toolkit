@@ -69,16 +69,31 @@ task.
 
 Nested dispatch is optional and justified only by a clear benefit such as
 read-only reconnaissance, independent analysis lanes, safely isolated fanout,
-or genuinely specialized implementation. Before any optional child launch,
-read and follow:
+or genuinely specialized implementation.
 
-1. `.agents/skills/oat-project-dispatch-subagents/SKILL.md`;
-2. `.agents/skills/oat-dispatch-subagents/SKILL.md`; and
-3. `.agents/skills/subagent-orchestration/references/model-selection-principles.md`;
+This agent is materialized into provider-specific views, so no portable
+loaded-agent root exists. Resolve every required sibling skill from installed
+scope instead: independently probe each required `<name>/SKILL.md` in order,
+`${HOME}/.agents/skills` then `<repo-root>/.agents/skills`. Bind each first
+match to its own root: `${PROJECT_DISPATCH_SKILLS_ROOT}` for
+`oat-project-dispatch-subagents`, `${DISPATCH_SKILLS_ROOT}` for
+`oat-dispatch-subagents`, and `${ORCHESTRATION_SKILLS_ROOT}` for
+`subagent-orchestration`; never ambient discovery. On a miss, name the skill,
+stop the optional launch and implement the task directly, and give its
+intended-scope recovery command:
+
+- `oat-project-dispatch-subagents`: `oat tools install workflows --scope <user|project>` or `oat tools update --pack workflows --scope <user|project>`.
+- `oat-dispatch-subagents` or `subagent-orchestration`: `oat tools install utility --scope <user|project>` or `oat tools update --pack utility --scope <user|project>`.
+
+Before any optional child launch, read and follow:
+
+1. `${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`;
+2. `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`; and
+3. `${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`;
 4. read exactly one active-provider selection reference from
-   `.agents/skills/subagent-orchestration/references/`; and
+   `${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/`; and
 5. read the matching mechanics reference from
-   `.agents/skills/oat-dispatch-subagents/references/`.
+   `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/`.
 
 Every optional launch must have a bounded objective, explicit read/write
 authority, exact target at or below the phase ceiling, verification/output
@@ -114,6 +129,16 @@ Artifact hygiene contract: Before finishing or committing, format every file you
 After formatting, run the repository's applicable gate set over the produced
 diff, explicitly including artifact writes. This supplements rather than
 replaces every task and phase verification command below.
+
+## Synced-Scope Bookkeeping
+
+Artifact and recovery-ledger bookkeeping commits must first resolve scope with
+`oat project scope "$PROJECT_PATH" --format value`. A `synced` project uses
+`oat project push` with the original bookkeeping message; other scopes keep the
+existing scoped `git add` and `git commit` commands. Scope resolution fails
+closed. A nonzero project-push exit stops bookkeeping until the reported
+recovery is resolved and the push is retried. Planned code task commits such as
+`feat(pNN-tNN)` are unchanged.
 
 ## Prevention and Post-Commit Recovery
 

@@ -44,7 +44,7 @@ const DEFAULT_DEPENDENCIES: ResolveEffectiveConfigDependencies = {
 };
 
 const DEFAULT_SHARED_CONFIG = {
-  projects: { root: '.oat/projects/shared' },
+  projects: { root: '.oat/projects/shared', defaultScope: 'synced' },
   worktrees: { root: '.worktrees' },
   git: { defaultBranch: 'main' },
   archive: {
@@ -147,6 +147,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
 
 const ENV_OVERRIDE_MAP = {
   'projects.root': 'OAT_PROJECTS_ROOT',
+  'projects.defaultScope': 'OAT_PROJECTS_DEFAULT_SCOPE',
   'worktrees.root': 'OAT_WORKTREES_ROOT',
 } as const satisfies Record<string, string>;
 

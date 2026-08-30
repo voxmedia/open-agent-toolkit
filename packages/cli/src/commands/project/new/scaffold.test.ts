@@ -1,9 +1,25 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
+import { createProjectOpenCommand } from '@commands/project/open/index';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import { createSyncedProject } from '@commands/project/sync/ref-sync';
+import { createSyncedFixture } from '@test-support/synced-fixture';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
@@ -28,10 +44,13 @@ const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
 function scaffoldProject(
   options: ScaffoldProjectOptions,
 ): Promise<ScaffoldProjectResult> {
-  return scaffoldProjectImpl({
-    home: join(options.repoRoot, '.test-home'),
-    ...options,
-  });
+  return scaffoldProjectImpl(
+    {
+      home: join(options.repoRoot, '.test-home'),
+      ...options,
+    },
+    { resolveDefaultScope: async () => 'shared' },
+  );
 }
 
 function initGitRepo(root: string): void {
@@ -79,6 +98,31 @@ async function createRepoRoot(): Promise<string> {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-scaffold-'));
   await seedTemplates(repoRoot);
   return repoRoot;
+}
+
+async function installSyncedWorktreeRejectingHooks(
+  repoRoot: string,
+  hookNames: string[],
+): Promise<void> {
+  const hooksDir = execFileSync(
+    'git',
+    ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  ).trim();
+  await mkdir(hooksDir, { recursive: true });
+  const hook = [
+    '#!/bin/sh',
+    'case "$(git rev-parse --show-toplevel)" in',
+    '  */.oat/projects/synced/*) exit 97 ;;',
+    'esac',
+    'exit 0',
+    '',
+  ].join('\n');
+  await Promise.all(
+    hookNames.map((hookName) =>
+      writeFile(join(hooksDir, hookName), hook, { mode: 0o755 }),
+    ),
+  );
 }
 
 async function setProjectLogConfig(
@@ -141,6 +185,7 @@ describe('scaffoldProject', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -198,6 +243,854 @@ describe('scaffoldProject', () => {
     });
 
     expect(result.projectPath).toBe('.oat/projects/shared/my_project');
+  });
+
+  it.each([
+    ['shared', 'local'],
+    ['shared', 'synced'],
+    ['local', 'shared'],
+    ['local', 'synced'],
+    ['synced', 'shared'],
+    ['synced', 'local'],
+  ] as const)(
+    'rejects creating a %s project when the slug exists in %s scope',
+    async (targetScope, existingScope) => {
+      const repoRoot = await createRepoRoot();
+      tempDirs.push(repoRoot);
+      const slug = `${targetScope}-${existingScope}-collision`;
+      await mkdir(join(repoRoot, '.oat', 'projects', existingScope, slug), {
+        recursive: true,
+      });
+
+      await expect(
+        scaffoldProject({
+          repoRoot,
+          projectName: slug,
+          scope: targetScope,
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(new RegExp(`already exists in ${existingScope} scope`));
+      await expect(
+        stat(join(repoRoot, '.oat', 'projects', targetScope, slug)),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    },
+  );
+
+  it('uses configured custom roots when checking cross-scope collisions', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    const env = { OAT_PROJECTS_ROOT: '.oat/projects/team' };
+    await mkdir(join(repoRoot, '.oat/projects/team/custom-collision'), {
+      recursive: true,
+    });
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'custom-collision',
+        scope: 'local',
+        env,
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/already exists in shared scope/);
+  });
+
+  it.each(['shared', 'local'] as const)(
+    'rejects a %s project when only the synced remote ref exists',
+    async (targetScope) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      const slug = `remote-only-${targetScope}`;
+      const remoteCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim();
+      execFileSync(
+        'git',
+        ['update-ref', `refs/oat/projects/${slug}`, remoteCommit],
+        { cwd: fixture.originDir, stdio: 'ignore' },
+      );
+
+      await expect(
+        scaffoldProjectImpl({
+          repoRoot: fixture.cloneA,
+          projectName: slug,
+          scope: targetScope,
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(/already exists in synced scope/);
+    },
+  );
+
+  it.each(['shared', 'local'] as const)(
+    'creates a %s project with a warning when origin is unreachable',
+    async (targetScope) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      await seedTemplates(fixture.cloneA);
+      execFileSync(
+        'git',
+        ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+        { cwd: fixture.cloneA },
+      );
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = await scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: `offline-${targetScope}`,
+        scope: targetScope,
+        refreshDashboard: false,
+        setActive: false,
+      });
+
+      expect(result.scope).toBe(targetScope);
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `unable to verify remote synced project collision for offline-${targetScope}`,
+        ),
+      );
+      error.mockRestore();
+    },
+  );
+
+  it('still rejects a local synced ref while origin is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const slug = 'offline-local-ref-collision';
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    }).trim();
+    execFileSync('git', ['update-ref', `refs/oat/projects/${slug}`, head], {
+      cwd: fixture.cloneA,
+    });
+    execFileSync(
+      'git',
+      ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+      { cwd: fixture.cloneA },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'shared',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/already exists in synced scope/);
+  });
+
+  it('keeps synced project creation fail-closed when origin is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    await seedTemplates(fixture.cloneA);
+    execFileSync(
+      'git',
+      ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+      { cwd: fixture.cloneA },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: 'offline-synced',
+        scope: 'synced',
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/git ls-remote synced ref failed/);
+    await expect(
+      stat(join(fixture.cloneA, '.oat/projects/synced/offline-synced')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('scaffolds local projects without creating a branch commit', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+    await writeFile(join(repoRoot, 'README.md'), '# fixture\n', 'utf8');
+    execFileSync('git', ['add', 'README.md'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'initial'], { cwd: repoRoot });
+    const before = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = await scaffoldProjectImpl({
+      repoRoot,
+      projectName: 'local-project',
+      scope: 'local',
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.scope).toBe('local');
+    expect(result.projectPath).toBe('.oat/projects/local/local-project');
+    expect(result.committed).toBe(false);
+    expect(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(before);
+  });
+
+  it('publishes a synced scaffold without running inherited synced-worktree hooks', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    await installSyncedWorktreeRejectingHooks(fixture.cloneA, [
+      'post-checkout',
+      'pre-commit',
+      'pre-push',
+    ]);
+
+    const result = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'synced-project',
+      scope: 'synced',
+      commit: true,
+      refreshDashboard: false,
+      setActive: true,
+      nowUtc: '2026-08-27T00:00:00.000Z',
+    });
+
+    expect(result).toMatchObject({
+      scope: 'synced',
+      projectPath: '.oat/projects/synced/synced-project',
+      ref: 'refs/oat/projects/synced-project',
+      committed: true,
+      commitStatus: 'committed',
+    });
+    expect(result.sha).toMatch(/^[0-9a-f]{40}$/);
+    expect(
+      execFileSync(
+        'git',
+        [
+          'ls-tree',
+          '--name-only',
+          'HEAD',
+          '.oat/projects/synced/synced-project.json',
+        ],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      ).trim(),
+    ).toBe('.oat/projects/synced/synced-project.json');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+    expect(
+      execFileSync(
+        'git',
+        ['show', 'refs/oat/projects/synced-project:state.md'],
+        { cwd: fixture.originDir, encoding: 'utf8' },
+      ),
+    ).toContain('oat_workflow_mode: spec-driven');
+  });
+
+  it('adds exactly one synced checkout ignore rule when repairing gitignore', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    execFileSync('git', ['rm', '-q', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'test: remove gitignore'], {
+      cwd: fixture.cloneA,
+    });
+
+    await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'single-ignore-rule',
+      scope: 'synced',
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    const gitignore = await readFile(
+      join(fixture.cloneA, '.gitignore'),
+      'utf8',
+    );
+    expect(
+      gitignore
+        .split('\n')
+        .filter((line) => line === '.oat/projects/synced/*/'),
+    ).toHaveLength(1);
+    expect(gitignore).not.toContain('/.oat/projects/synced/*/');
+  });
+
+  it.each(['staged', 'unstaged'] as const)(
+    'refuses to repair a custom synced-root rule over %s .gitignore edits',
+    async (dirtyState) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      const gitignorePath = join(fixture.cloneA, '.gitignore');
+      const dirtyContent = `${await readFile(gitignorePath, 'utf8')}# user edit\n`;
+      await writeFile(gitignorePath, dirtyContent, 'utf8');
+      if (dirtyState === 'staged') {
+        execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+      }
+
+      await expect(
+        scaffoldProjectImpl({
+          repoRoot: fixture.cloneA,
+          projectName: `dirty-${dirtyState}`,
+          scope: 'synced',
+          env: { OAT_PROJECTS_ROOT: '.oat/custom/shared' },
+          refreshDashboard: false,
+          setActive: false,
+        }),
+      ).rejects.toThrow(/\.gitignore has staged or unstaged changes/);
+      await expect(readFile(gitignorePath, 'utf8')).resolves.toBe(dirtyContent);
+      expect(
+        execFileSync('git', ['show-ref'], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).not.toContain(`refs/oat/projects/dirty-${dirtyState}`);
+    },
+  );
+
+  it('uses canonical filesystem paths with an absolute in-repo projects root in every scope', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const absoluteSharedRoot = join(
+      fixture.cloneA,
+      '.oat',
+      'absolute-projects',
+      'shared',
+    );
+    const env = { OAT_PROJECTS_ROOT: absoluteSharedRoot };
+    const gitignorePath = join(fixture.cloneA, '.gitignore');
+    const existingGitignore = await readFile(gitignorePath, 'utf8');
+    await writeFile(
+      gitignorePath,
+      existingGitignore.replace(
+        '# END OAT core',
+        [
+          '/.oat/absolute-projects/local/**',
+          '/.oat/absolute-projects/synced/*/',
+          '/.oat/absolute-projects/archived/**',
+          '# END OAT core',
+        ].join('\n'),
+      ),
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'configure absolute roots'], {
+      cwd: fixture.cloneA,
+    });
+
+    const shared = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-shared',
+      scope: 'shared',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+    const local = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-local',
+      scope: 'local',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+    const synced = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'absolute-synced',
+      scope: 'synced',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(shared.projectPath).toBe(
+      '.oat/absolute-projects/shared/absolute-shared',
+    );
+    expect(local.projectPath).toBe(
+      '.oat/absolute-projects/local/absolute-local',
+    );
+    expect(synced.projectPath).toBe(
+      '.oat/absolute-projects/synced/absolute-synced',
+    );
+    for (const path of [
+      shared.projectPath,
+      local.projectPath,
+      synced.projectPath,
+    ]) {
+      await expect(
+        readFile(join(fixture.cloneA, path, 'state.md'), 'utf8'),
+      ).resolves.toContain('oat_workflow_mode: spec-driven');
+      expect(
+        (await stat(join(fixture.cloneA, path, 'reviews'))).isDirectory(),
+      ).toBe(true);
+      expect((await stat(join(fixture.cloneA, path, 'pr'))).isDirectory()).toBe(
+        true,
+      );
+    }
+    const remoteFiles = execFileSync(
+      'git',
+      ['ls-tree', '-r', '--name-only', 'refs/oat/projects/absolute-synced'],
+      { cwd: fixture.originDir, encoding: 'utf8' },
+    ).trim();
+    expect(remoteFiles).toContain('state.md');
+    expect(remoteFiles).toContain('implementation.md');
+    expect(
+      execFileSync(
+        'git',
+        ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+        { cwd: fixture.cloneA, encoding: 'utf8' },
+      )
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual(['.oat/absolute-projects/synced/absolute-synced.json']);
+    const managedGitignore = await readFile(gitignorePath, 'utf8');
+    expect(
+      managedGitignore.split('/.oat/absolute-projects/synced/*/'),
+    ).toHaveLength(2);
+    expect(
+      managedGitignore.indexOf('/.oat/absolute-projects/synced/*/'),
+    ).toBeGreaterThan(managedGitignore.indexOf('# OAT core'));
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('canonicalizes a symlinked absolute projects root before committing the record', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const repoAlias = join(fixture.rootDir, 'clone-alias');
+    await symlink(fixture.cloneA, repoAlias, 'dir');
+    const env = {
+      OAT_PROJECTS_ROOT: join(repoAlias, '.oat', 'symlinked', 'shared'),
+    };
+    const gitignorePath = join(fixture.cloneA, '.gitignore');
+    await writeFile(
+      gitignorePath,
+      `${await readFile(gitignorePath, 'utf8')}/.oat/symlinked/synced/*/\n`,
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'configure symlinked root'], {
+      cwd: fixture.cloneA,
+    });
+
+    const result = await scaffoldProjectImpl({
+      repoRoot: fixture.cloneA,
+      projectName: 'symlinked-root',
+      scope: 'synced',
+      env,
+      commit: true,
+      refreshDashboard: false,
+      setActive: false,
+    });
+
+    expect(result.projectPath).toBe('.oat/symlinked/synced/symlinked-root');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/symlinked/synced/symlinked-root.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('symlinked-root');
+  });
+
+  it('rejects an external synced root before any filesystem or Git mutation', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const externalRoot = await mkdtemp(join(tmpdir(), 'oat-external-root-'));
+    tempDirs.push(externalRoot);
+    const externalSharedRoot = join(externalRoot, 'shared');
+    const slug = 'external-synced';
+    const headBefore = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    }).trim();
+    const statusBefore = execFileSync('git', ['status', '--porcelain=v1'], {
+      cwd: fixture.cloneA,
+      encoding: 'utf8',
+    });
+    const worktreesBefore = execFileSync(
+      'git',
+      ['worktree', 'list', '--porcelain'],
+      { cwd: fixture.cloneA, encoding: 'utf8' },
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: slug,
+        scope: 'synced',
+        env: { OAT_PROJECTS_ROOT: externalSharedRoot },
+        commit: true,
+        refreshDashboard: false,
+      }),
+    ).rejects.toThrow('outside repository');
+
+    await expect(access(join(externalRoot, 'synced', slug))).rejects.toThrow();
+    await expect(
+      access(join(externalRoot, 'synced', `${slug}.json`)),
+    ).rejects.toThrow();
+    expect(
+      (
+        await defaultGitRunner.run(
+          ['show-ref', '--verify', `refs/oat/projects/${slug}`],
+          { cwd: fixture.cloneA, allowFailure: true },
+        )
+      ).code,
+    ).not.toBe(0);
+    expect(
+      execFileSync(
+        'git',
+        ['ls-remote', 'origin', `refs/oat/projects/${slug}`],
+        {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        },
+      ).trim(),
+    ).toBe('');
+    expect(
+      execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(headBefore);
+    expect(
+      execFileSync('git', ['status', '--porcelain=v1'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toBe(statusBefore);
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).toBe(worktreesBefore);
+    await expect(
+      readFile(join(fixture.cloneA, '.oat', 'config.local.json'), 'utf8'),
+    ).rejects.toThrow();
+  });
+
+  it('rolls back invocation-owned worktree/ref and a self-healed gitignore on render failure', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    execFileSync('git', ['rm', '-q', '.gitignore'], { cwd: fixture.cloneA });
+    execFileSync('git', ['commit', '-q', '-m', 'remove gitignore'], {
+      cwd: fixture.cloneA,
+    });
+    const home = await mkdtemp(join(tmpdir(), 'oat-bad-template-'));
+    tempDirs.push(home);
+    await writeMarkerTemplate(
+      join(home, '.oat', 'templates'),
+      'state.md',
+      '{OAT_UNRESOLVED}',
+    );
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot: fixture.cloneA,
+        projectName: 'render-failure',
+        scope: 'synced',
+        home,
+        refreshDashboard: false,
+        setActive: false,
+      }),
+    ).rejects.toThrow(/unresolved OAT placeholder/i);
+
+    await expect(
+      readFile(join(fixture.cloneA, '.gitignore'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/render-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).not.toContain('render-failure');
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+  });
+
+  it('rolls back an invocation-owned worktree/ref after a template write failure', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'write-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          createSyncedProject: async (target, runner) => {
+            await createSyncedProject(target, runner);
+            await mkdir(join(target.projectPath, 'state.md'));
+          },
+        },
+      ),
+    ).rejects.toThrow();
+
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/write-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+  });
+
+  it('rolls back invocation-owned local resources when the first push is rejected', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'push-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          pushSynced: async () => ({
+            status: 'rejected',
+            sha: 'a'.repeat(40),
+          }),
+        },
+      ),
+    ).rejects.toThrow(/rejected/);
+
+    expect(() =>
+      execFileSync(
+        'git',
+        ['show-ref', '--verify', '--quiet', 'refs/oat/projects/push-failure'],
+        { cwd: fixture.cloneA, stdio: 'ignore' },
+      ),
+    ).toThrow();
+  });
+
+  it('rolls back an attempt-owned published checkout when record writing fails', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'record-write-failure',
+          scope: 'synced',
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          writeSyncedRecord: async () => {
+            throw new Error('record disk failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /attempt-owned ref, checkout, and record were rolled back/i,
+    );
+
+    expect(() =>
+      execFileSync(
+        'git',
+        [
+          'show-ref',
+          '--verify',
+          '--quiet',
+          'refs/oat/projects/record-write-failure',
+        ],
+        { cwd: fixture.originDir, stdio: 'ignore' },
+      ),
+    ).toThrow();
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).not.toContain('record-write-failure');
+  });
+
+  it('rolls back attempt-owned state when the parent record commit fails', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'record-commit-failure',
+          scope: 'synced',
+          commit: true,
+          refreshDashboard: false,
+          setActive: false,
+        },
+        {
+          commitRecordChange: async () => {
+            throw new Error('parent commit failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /attempt-owned ref, checkout, and record were rolled back/i,
+    );
+
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/projects/synced/record-commit-failure.json'),
+        'utf8',
+      ),
+    ).rejects.toThrow();
+    expect(
+      execFileSync('git', ['worktree', 'list', '--porcelain'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }),
+    ).not.toContain('record-commit-failure');
+  });
+
+  it('preserves published state and recovers an active-pointer failure through project open', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const duplicateSharedRoot = join(
+      fixture.cloneA,
+      '.oat/projects/shared/pointer-failure',
+    );
+    await mkdir(duplicateSharedRoot, { recursive: true });
+    await writeFile(
+      join(duplicateSharedRoot, 'state.md'),
+      '---\noat_phase: plan\noat_phase_status: complete\noat_lifecycle: active\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      scaffoldProjectImpl(
+        {
+          repoRoot: fixture.cloneA,
+          projectName: 'pointer-failure',
+          scope: 'synced',
+          force: true,
+          refreshDashboard: false,
+          setActive: true,
+        },
+        {
+          setActiveProject: async () => {
+            throw new Error('pointer disk failure');
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /oat project open '\.oat\/projects\/synced\/pointer-failure'.*do not rerun project creation/i,
+    );
+
+    expect(
+      execFileSync('git', ['rev-parse', 'refs/oat/projects/pointer-failure'], {
+        cwd: fixture.originDir,
+        encoding: 'utf8',
+      }).trim(),
+    ).toMatch(/^[0-9a-f]{40}$/);
+    await expect(
+      readFile(
+        join(fixture.cloneA, '.oat/projects/synced/pointer-failure.json'),
+        'utf8',
+      ),
+    ).resolves.toContain('pointer-failure');
+
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    const capture = createLoggerCapture();
+    const open = createProjectOpenCommand({
+      buildCommandContext: (options: GlobalOptions): CommandContext => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: options.json ?? false,
+        cwd: fixture.cloneA,
+        home: '/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveProjectRoot: async () => fixture.cloneA,
+      generateStateDashboard: async () => ({
+        dashboardPath: join(fixture.cloneA, '.oat/state.md'),
+        projectName: 'pointer-failure',
+        projectStatus: 'active',
+        stalenessStatus: 'fresh',
+        recommendedStep: '',
+        recommendedReason: '',
+      }),
+    });
+    const program = new Command().name('oat').exitOverride();
+    const project = new Command('project');
+    project.addCommand(open);
+    program.addCommand(project);
+
+    await program.parseAsync(
+      ['project', 'open', '.oat/projects/synced/pointer-failure'],
+      { from: 'user' },
+    );
+
+    const config = JSON.parse(
+      await readFile(join(fixture.cloneA, '.oat/config.local.json'), 'utf8'),
+    ) as { activeProject: string };
+    expect(config.activeProject).toBe('.oat/projects/synced/pointer-failure');
+    expect(process.exitCode).toBe(0);
+    process.exitCode = previousExitCode;
+  });
+
+  it('rejects synced scaffolding without origin before creating state', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    initGitRepo(repoRoot);
+
+    await expect(
+      scaffoldProjectImpl({
+        repoRoot,
+        projectName: 'no-origin',
+        scope: 'synced',
+        refreshDashboard: false,
+      }),
+    ).rejects.toThrow('--scope local');
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'synced', 'no-origin', 'state.md'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('uses a user template before a differing repo template', async () => {

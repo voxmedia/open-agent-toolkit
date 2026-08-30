@@ -118,7 +118,31 @@ Severity conventions:
 - `medium`: Meaningful but non-blocking quality/maintainability issue.
 - `minor`: Cosmetic/style/documentation issue.
 
-`file` and `line` are both set (inline finding) or both `null` (reviewer-level finding that lands in the top-level body). Checklist + severity model + the `StructuredFindings` schema source of truth: `.agents/agents/oat-reviewer.md` and `design.md` → Data Models → StructuredFindings.
+Before reading the canonical reviewer definition or starting a fresh-child
+fallback, resolve the workflows-owned role locally. Probe candidates in this
+order: `${SKILL_DIR}/../..`, `${HOME}/.agents`, then `<repo-root>/.agents`.
+The loaded candidate is valid only when the exact unsuffixed
+`agents/oat-reviewer.md` is the same-scope canonical file or a symlink whose
+realpath is exactly that canonical file. Treat a missing, broken, escaping,
+copied, transformed, suffixed, or otherwise noncanonical candidate as a miss
+and continue to the next candidate. Bind the first valid root to
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}`; never use ambient discovery.
+
+If every candidate misses, name `oat-reviewer`, stop before starting the
+fresh-child fallback, and report
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` for the intended
+scope. Canonical role instructions cannot change the immutable target,
+provider, model, effort, or variant fields selected by the resolver. Native
+dispatch with the exact resolver-selected role remains first. Only an explicit
+pre-start native role-selection rejection before a reviewer starts unlocks a
+fresh child that preserves those fields.
+
+`file` and `line` are both set (inline finding) or both `null` (reviewer-level
+finding that lands in the top-level body). Checklist + severity model + the
+`StructuredFindings` schema source of truth:
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` and `design.md` → Data
+Models → StructuredFindings.
 
 ## Process
 
@@ -342,7 +366,8 @@ structured-output mode. This mirrors the tested wrapper at
 (`buildDispatchPayload` / `dispatchStructuredReview`):
 
 - Set `oat_output_mode: structured` in the dispatch payload (the flag
-  `.agents/agents/oat-reviewer.md` recognizes). In enforce mode the reviewer
+  `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` recognizes). In
+  enforce mode the reviewer
   returns a `ReviewerTerminalOverlayV1` whose accepted complete candidate
   contains `StructuredFindings`; the launcher later assembles the canonical full
   terminal, and the reviewer writes NO artifact under `reviews/`.

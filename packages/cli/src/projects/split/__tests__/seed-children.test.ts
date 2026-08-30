@@ -1,8 +1,10 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { createSyncedFixture } from '@test-support/synced-fixture';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
 import type { ChildPlan } from '../child-plan';
@@ -70,6 +72,7 @@ describe('seedChildren', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -157,6 +160,36 @@ describe('seedChildren', () => {
       expect(planFrontmatter['oat_template']).toBe(true);
       expect(planFrontmatter['oat_plan_source']).toBe('quick');
       expect(planFrontmatter['oat_status']).not.toBe('complete');
+    }
+  });
+
+  it('seeds shared children while an existing origin is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    await seedTemplates(fixture.cloneA);
+    execFileSync(
+      'git',
+      ['remote', 'set-url', 'origin', join(fixture.rootDir, 'missing.git')],
+      { cwd: fixture.cloneA },
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await seedChildren(plan, { repoRoot: fixture.cloneA, scope: 'shared' });
+
+    for (const child of plan.children) {
+      expect(
+        await readFile(
+          join(
+            fixture.cloneA,
+            '.oat',
+            'projects',
+            'shared',
+            child.slug,
+            'state.md',
+          ),
+          'utf8',
+        ),
+      ).toContain(`oat_parent: ${plan.parentSlug}`);
     }
   });
 });

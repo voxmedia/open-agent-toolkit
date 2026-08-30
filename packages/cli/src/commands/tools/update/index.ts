@@ -3,6 +3,7 @@ import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
+import { applyOatCoreGitattributes } from '@commands/init/gitattributes';
 import { applyOatCoreGitignore } from '@commands/init/gitignore';
 import {
   copyDirWithStatus,
@@ -17,6 +18,8 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
@@ -45,6 +48,9 @@ const defaultDependencies: UpdateToolsDependencies = {
   fileExists,
   chmod,
   applyOatCoreGitignore,
+  applyOatCoreGitattributes,
+  inventoryScopedPack,
+  reconcilePacks: reconcilePackLifecycles,
 };
 
 export function buildSyncSubprocessArgs(
@@ -135,31 +141,44 @@ export function createToolsUpdateCommand(
       );
       const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
 
-      if (
-        !dryRun &&
-        shouldBackfillWorkflowGitignore(result) &&
-        dependencies.applyOatCoreGitignore
-      ) {
+      if (!dryRun && shouldBackfillWorkflowGitignore(result)) {
         const repoRoot = await resolveProjectRoot(context.cwd);
-        const gitignoreResult =
-          await dependencies.applyOatCoreGitignore(repoRoot);
-        if (gitignoreResult.action !== 'no-change') {
-          const verb =
-            gitignoreResult.action === 'created' ? 'Created' : 'Updated';
-          logger.info(
-            `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
-          );
+        if (dependencies.applyOatCoreGitignore) {
+          const gitignoreResult =
+            await dependencies.applyOatCoreGitignore(repoRoot);
+          if (gitignoreResult.action !== 'no-change') {
+            const verb =
+              gitignoreResult.action === 'created' ? 'Created' : 'Updated';
+            logger.info(
+              `${verb} .gitignore OAT core section (${gitignoreResult.entries.length} entries).`,
+            );
+          }
+          if (gitignoreResult.stateDashboardIndexAction === 'untracked') {
+            logger.info(
+              'Untracked generated dashboard from git index: .oat/state.md.',
+            );
+          }
         }
-        if (gitignoreResult.stateDashboardIndexAction === 'untracked') {
-          logger.info(
-            'Untracked generated dashboard from git index: .oat/state.md.',
-          );
+        if (dependencies.applyOatCoreGitattributes) {
+          const gitattributesResult =
+            await dependencies.applyOatCoreGitattributes(repoRoot);
+          if (gitattributesResult.action !== 'no-change') {
+            const verb =
+              gitattributesResult.action === 'created' ? 'Created' : 'Updated';
+            logger.info(
+              `${verb} .gitattributes OAT core section (${gitattributesResult.entries.length} entries).`,
+            );
+          }
         }
       }
 
       // Refresh ~/.oat/docs/ when the core pack is explicitly updated or
       // reconciled through --all (D3 requirement).
-      if (shouldRefreshCoreDocs(target, result) && assetsRoot) {
+      if (
+        !dependencies.reconcilePacks &&
+        shouldRefreshCoreDocs(target, result) &&
+        assetsRoot
+      ) {
         const userRoot = await dependencies.resolveScopeRoot(
           'user',
           context.cwd,
@@ -170,26 +189,44 @@ export function createToolsUpdateCommand(
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
       }
 
-      if (assetsRoot && result.notInstalled.length === 0) {
+      const changedProjectScope =
+        [...result.updated, ...result.current, ...result.newer].some(
+          ({ scope }) => scope === 'project',
+        ) ||
+        result.assetRefreshes.some(({ scope }) => scope === 'project') ||
+        result.plans.some(({ scope }) => scope === 'project');
+      let adoptedPacks: PackName[] = [];
+      if (
+        assetsRoot &&
+        result.notInstalled.length === 0 &&
+        changedProjectScope
+      ) {
         const repoRoot = await resolveProjectRoot(context.cwd);
-        await reconcileProjectToolsConfig(
-          {
-            repoRoot,
-            cwd: context.cwd,
-            home: context.home,
-          },
-          {
-            resolveAssetsRoot: dependencies.resolveAssetsRoot,
-            scanTools: dependencies.scanTools,
-            readOatConfig,
-            writeOatConfig,
-          },
-        );
+        adoptedPacks = (
+          await reconcileProjectToolsConfig(
+            {
+              repoRoot,
+              cwd: context.cwd,
+              home: context.home,
+            },
+            {
+              resolveAssetsRoot: dependencies.resolveAssetsRoot,
+              scanTools: dependencies.scanTools,
+              readOatConfig,
+              writeOatConfig,
+            },
+          )
+        ).adoptedPacks;
       }
 
       if (result.notInstalled.length > 0) {
         if (context.json) {
-          logger.json({ target: describeTarget(target), dryRun, result });
+          logger.json({
+            target: describeTarget(target),
+            dryRun,
+            result,
+            ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+          });
         } else {
           logger.error(`Tool '${result.notInstalled[0]}' not found.`);
         }
@@ -198,20 +235,42 @@ export function createToolsUpdateCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
-      if (result.updated.length > 0 && !dryRun && opts.sync !== false) {
-        const affectedScopes = [...new Set(result.updated.map((t) => t.scope))];
-        await autoSync(
-          affectedScopes,
-          context.cwd,
-          context.home,
-          logger,
-          syncDependencies,
-        );
+      if (!dryRun && opts.sync !== false) {
+        for (const scope of scopes) {
+          const installedCanonicalPaths = [
+            ...new Set(
+              result.plans
+                .filter((plan) => plan.scope === scope)
+                .flatMap((plan) => plan.changedCanonicalPaths),
+            ),
+          ];
+          const updatedAtScope = result.updated.some(
+            (tool) => tool.scope === scope,
+          );
+          if (!updatedAtScope && installedCanonicalPaths.length === 0) continue;
+          await autoSync(
+            [scope],
+            context.cwd,
+            context.home,
+            logger,
+            syncDependencies,
+            { installedCanonicalPaths },
+          );
+        }
       }
 
       if (context.json) {
-        logger.json({ target: describeTarget(target), dryRun, result });
+        logger.json({
+          target: describeTarget(target),
+          dryRun,
+          result,
+          ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+        });
         return;
+      }
+
+      for (const pack of adoptedPacks) {
+        logger.info(`Adopted project tool pack: ${pack}`);
       }
 
       if (result.updated.length > 0) {
@@ -242,6 +301,12 @@ export function createToolsUpdateCommand(
         );
       }
 
+      if (dryRun) {
+        for (const plan of result.plans) {
+          logger.info(JSON.stringify(plan, null, 2));
+        }
+      }
+
       if (result.updated.length === 0 && result.assetRefreshes.length === 0) {
         logger.info('No tools to update.');
       }
@@ -254,8 +319,13 @@ export function createToolsUpdateCommand(
  * core .gitignore section even when their workflow pack is already current.
  */
 export function shouldBackfillWorkflowGitignore(result: UpdateResult): boolean {
-  return [...result.updated, ...result.current, ...result.newer].some(
-    (tool) => tool.scope === 'project' && tool.pack === 'workflows',
+  return (
+    [...result.updated, ...result.current, ...result.newer].some(
+      (tool) => tool.scope === 'project' && tool.pack === 'workflows',
+    ) ||
+    result.plans?.some(
+      (plan) => plan.scope === 'project' && plan.pack === 'workflows',
+    ) === true
   );
 }
 

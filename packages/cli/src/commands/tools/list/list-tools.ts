@@ -1,5 +1,12 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
+import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
+import {
+  inventoryPack,
+  type InventoryPackInput,
+  type PackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
 
@@ -11,10 +18,12 @@ export interface ListToolsDependencies {
     home: string,
   ) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
+  inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
 }
 
 export interface ListToolsResult {
   tools: ToolInfo[];
+  packs: PackInventory[];
 }
 
 export async function runListTools(
@@ -25,6 +34,7 @@ export async function runListTools(
   const scopes = resolveConcreteScopes(context.scope);
   const assetsRoot = await dependencies.resolveAssetsRoot();
   const allTools: ToolInfo[] = [];
+  const roots: Partial<Record<'project' | 'user', string>> = {};
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(
@@ -38,16 +48,33 @@ export async function runListTools(
       assetsRoot,
     });
     allTools.push(...tools);
+    roots[scope] = scopeRoot;
   }
+  const inspectPack = dependencies.inventoryPack ?? inventoryPack;
+  const packs = await Promise.all(
+    PACK_MANIFEST.map(({ name }) =>
+      inspectPack({
+        pack: name,
+        assetsRoot,
+        projectRoot: roots.project,
+        userRoot: roots.user,
+      }),
+    ),
+  );
 
   if (context.json) {
-    logger.json({ tools: allTools });
-    return { tools: allTools };
+    logger.json({ tools: allTools, packs });
+    return { tools: allTools, packs };
   }
 
   if (allTools.length === 0) {
     logger.info('No tools installed.');
-    return { tools: allTools };
+    logger.info('Pack inventory:');
+    for (const pack of packs) {
+      logger.info(`${pack.pack}: ${pack.placement}`);
+      for (const line of formatPackInventoryDetails(pack)) logger.info(line);
+    }
+    return { tools: allTools, packs };
   }
 
   logger.info('Installed tools:\n');
@@ -84,7 +111,21 @@ export async function runListTools(
     );
   }
 
-  return { tools: allTools };
+  logger.info('\nPack inventory:');
+  for (const pack of packs) {
+    const states = pack.scopes
+      .map(
+        ({ scope, completeness, intent }) =>
+          `${scope}=${completeness} (${intent.source})`,
+      )
+      .join(', ');
+    logger.info(
+      `${pack.pack.padEnd(20)} ${pack.placement.padEnd(11)} ${states || 'not inspected'}`,
+    );
+    for (const line of formatPackInventoryDetails(pack)) logger.info(line);
+  }
+
+  return { tools: allTools, packs };
 }
 
 function formatRow(

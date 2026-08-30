@@ -62,11 +62,13 @@
     - [Implementation Execution](workflows/projects/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
     - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
     - [Orchestration Model](workflows/projects/orchestration-model.md) — Root-owned phase execution, optional nested work, independent reviews, and provider-neutral dispatch in OAT projects.
+    - [Picking Up Projects](workflows/projects/picking-up-projects.md) — Continue a synced OAT project on another machine or from another user through its dedicated Git ref.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.
     - [Programmatic Execution](workflows/projects/programmatic-execution.md) — How OAT launches agents through provider CLI/headless surfaces — per-harness execution shapes, cross-runtime gate exec targets, credential isolation, and the launcher-owned evidence they share.
     - [Repository PR Comment Analysis](workflows/projects/repo-analysis.md) — Repository-level PR comment analysis commands for collecting and triaging review feedback.
     - [Project Retrospectives](workflows/projects/retro.md) — Generate evidence-grounded project retrospectives, apply repo improvements, and file tracker feedback.
     - [Review Flavors](workflows/projects/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.
+    - [Reviewing OAT PRs](workflows/projects/reviewing-oat-prs.md) — Understand synced-project records, SHA-pinned artifact links, and the reviewer-facing PR experience.
     - [Reviews](workflows/projects/reviews.md) — Review request/receive loop, status progression, severity policy, and quality gates.
     - [Project Splitting](workflows/projects/splitting.md) — How OAT splits broad discoveries or brainstorms into a coordination parent and focused child projects.
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.

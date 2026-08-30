@@ -88,6 +88,34 @@ describe('oat-config', () => {
     });
   });
 
+  it('preserves projects.defaultScope without projects.root', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1, projects: { defaultScope: 'local' } }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      projects: { defaultScope: 'local' },
+    });
+  });
+
+  it('rejects an invalid projects.defaultScope', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+      message: `Invalid projects.defaultScope in ${join(repoRoot, '.oat', 'config.json')}: "remote". Expected one of: shared, local, synced. Repair it with oat config set projects.defaultScope <shared|local|synced>.`,
+      exitCode: 2,
+    });
+  });
+
   it('accepts trailing commas in shared, local, and user config files', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
@@ -271,6 +299,20 @@ describe('oat-config', () => {
         'project-management': true,
         workflows: true,
       },
+    });
+  });
+
+  it('reads and writes PJM adoption config round-trip', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      pjm: { initialized: true, schemaVersion: 1 },
     });
   });
 
@@ -632,6 +674,21 @@ describe('oat-config', () => {
       );
       await expect(readUserConfig(userConfigDir)).resolves.toEqual({
         version: 1,
+      });
+    });
+
+    it('normalizes and round-trips user-scoped tool intent', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-tools-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        tools: { workflows: true, research: false },
+      });
+
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+        tools: { workflows: true, research: false },
       });
     });
 

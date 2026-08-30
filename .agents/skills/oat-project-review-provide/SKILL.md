@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.4.2
+version: 1.5.3
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -109,9 +109,20 @@ OAT stores active project context in `.oat/config.local.json` (`activeProject`, 
 
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
-PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null || echo ".oat/projects/shared")}"
-PROJECTS_ROOT="${PROJECTS_ROOT%/}"
+if [ -n "$PROJECT_PATH" ]; then
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing project arrival" >&2; exit 1; }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    PROJECT_SLUG=$(basename "$PROJECT_PATH")
+    if [ -f "$PROJECT_PATH.json" ] || git ls-remote --exit-code origin "refs/oat/projects/$PROJECT_SLUG" >/dev/null 2>&1; then
+      oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+    fi
+  fi
+fi
 ```
+
+The pull runs before directory and `state.md` validation. This materializes an
+absent synced checkout when its discovery record or remote ref exists, adopting
+the remote ref when the current branch does not yet have a record.
 
 Validation rules:
 
@@ -261,6 +272,18 @@ Before gathering review context, inspect the core project artifacts:
 - `"$PROJECT_PATH/implementation.md"`
 - `"$PROJECT_PATH/state.md"`
 - `.oat/state.md` is generated dashboard state; ignore it for committed artifact baseline checks.
+
+Resolve the project scope before the baseline check. For `synced`, inspect the
+nested checkout directly so ignored files cannot hide pending bookkeeping:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md
+else
+  git status --porcelain -- "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+fi
+```
 
 If any of those files are untracked or modified only because the previous workflow step did not finish its bookkeeping commit:
 
@@ -604,6 +627,26 @@ Build the "Review Scope" metadata for the reviewer:
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
+**Canonical reviewer instructions:** Before a direct reviewer-definition read or
+fresh-child fallback, resolve the workflows-owned role locally. Probe candidates
+in this order: `${SKILL_DIR}/../..`, `${HOME}/.agents`, then
+`<repo-root>/.agents`. The loaded candidate is valid only when the exact
+unsuffixed `agents/oat-reviewer.md` is the same-scope canonical file or a
+symlink whose realpath is exactly that canonical file. Treat a missing, broken,
+escaping, copied, transformed, suffixed, or otherwise noncanonical candidate as
+a miss and continue to the next candidate. Bind the first valid root to
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}`; never use ambient discovery.
+
+If every candidate misses, name `oat-reviewer`, stop before launching the
+fresh-child fallback, and report
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` for the intended
+scope. Canonical role instructions cannot change the immutable target,
+provider, model, effort, or variant fields selected by the resolver. Native
+dispatch with the exact resolver-selected role remains first. Only an explicit
+pre-start native role-selection rejection before a reviewer starts unlocks a
+fresh child that preserves those fields.
+
 **Step 6.0: Resolve the managed reviewer target**
 
 Before capability-tier selection, resolve the same reviewer contract used by
@@ -649,7 +692,8 @@ Build the actual provider invocation before reporting the target as enforced:
   explicit host rejection of that exact `agent_type` before any reviewer or
   child starts. Only after that pre-start rejection may the workflow launch a
   fresh Codex child with the resolver target's explicit model, reasoning
-  effort, canonical role instructions from `.agents/agents/oat-reviewer.md`,
+  effort, canonical role instructions from
+  `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md`,
   and the same Review Scope payload. If neither exact route is available, use
   only a verified-equivalent inline route or block the review.
 - Claude requires a non-empty `providers.claude.dispatchArgs.model`; the actual
@@ -1058,11 +1102,21 @@ private run and draft after terminal translation.
 6. For final scope: explicitly disposition deferred Medium ledger items (fix now vs accept defer)
 7. Write artifact with file:line references and fix guidance
 
-**Review artifact template:** (see `.agents/agents/oat-reviewer.md` for full format)
+**Review artifact template:** (see
+`${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` for full format)
 
-Shared ad-hoc companion reference (non-project mode):
+Shared ad-hoc companion reference (non-project mode): the `oat-review-provide`
+review artifact template. Independently probe each required `<name>/SKILL.md`
+in order: `${SKILL_DIR}/..` from this loaded skill, `${HOME}/.agents/skills`,
+then `<repo-root>/.agents/skills`. Bind the first match for
+`oat-review-provide` to its own `${REVIEW_PROVIDE_SKILLS_ROOT}`; never ambient
+discovery. On a miss, name the skill, continue with the project template below
+without substituting an improvised companion format, and report its
+intended-scope recovery command:
+`oat tools install utility --scope <user|project>` or
+`oat tools update --pack utility --scope <user|project>`.
 
-- `.agents/skills/oat-review-provide/references/review-artifact-template.md`
+- `${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md`
 
 ```markdown
 ---
@@ -1158,7 +1212,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
-```
+````
 
 ### Step 8.5: Validate Review Orchestration and Append Root Log
 
@@ -1255,6 +1309,21 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 - Warn that uncommitted review bookkeeping can desync workflow routing/restart behavior
 - In the summary, clearly state: "bookkeeping not committed (user-approved defer)"
 
+Otherwise commit with the fail-closed scope guard:
+
+```bash
+ACTIVE_REVIEW_PATH="$PROJECT_PATH/reviews/$REVIEW_FILENAME"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore(oat): record {scope} review artifact" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$ACTIVE_REVIEW_PATH"
+  [ -f "$PROJECT_PATH/plan.md" ] && git add "$PROJECT_PATH/plan.md"
+  git diff --cached --quiet || git commit -m "chore(oat): record {scope} review artifact"
+fi
+````
+
 ### Step 10: Output Summary
 
 **If subagent used (Tier 1):**
@@ -1312,4 +1381,7 @@ Next: Run the oat-project-review-receive skill to convert findings into plan tas
 - Review artifact + plan bookkeeping committed atomically on the correct branch (or explicitly deferred with user approval)
 - For final scope, deferred findings ledger included in reviewer context
 - User guided to next step (`oat-project-review-receive`)
+
+```
+
 ```

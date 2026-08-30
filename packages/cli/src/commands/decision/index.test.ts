@@ -17,6 +17,7 @@ function createHarness(): {
   migrateDecisionRecords: ReturnType<typeof vi.fn>;
   regenerateDecisionIndex: ReturnType<typeof vi.fn>;
   resolveAssetsRoot: ReturnType<typeof vi.fn>;
+  resolvePjmAdoption: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -56,6 +57,11 @@ function createHarness(): {
     async (_cwd: string) => '/tmp/workspace/repo',
   );
   const resolveAssetsRoot = vi.fn(async () => '/tmp/assets');
+  const resolvePjmAdoption = vi.fn(async () => ({
+    state: 'declared' as const,
+    repoRoot: '/tmp/workspace/repo/.oat/repo',
+    recovery: null,
+  }));
 
   const command = createDecisionCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -74,6 +80,7 @@ function createHarness(): {
     migrateDecisionRecords,
     regenerateDecisionIndex,
     resolveAssetsRoot,
+    resolvePjmAdoption,
     resolveProjectRoot,
   });
 
@@ -86,6 +93,7 @@ function createHarness(): {
     migrateDecisionRecords,
     regenerateDecisionIndex,
     resolveAssetsRoot,
+    resolvePjmAdoption,
     resolveProjectRoot,
   };
 }
@@ -153,6 +161,25 @@ describe('createDecisionCommand', () => {
       },
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('fails before decision initialization when the repository has not adopted PJM', async () => {
+    const { command, capture, initializeDecisionRecords, resolvePjmAdoption } =
+      createHarness();
+    resolvePjmAdoption.mockResolvedValueOnce({
+      state: 'partial-initialization',
+      repoRoot: '/tmp/workspace/repo/.oat/repo',
+      recovery: 'oat pjm init',
+    });
+
+    await runCommand(command, 'init', ['--json']);
+
+    expect(initializeDecisionRecords).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('oat pjm init'),
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('reports a decision init failure when AGENTS guidance cannot be written', async () => {
@@ -224,6 +251,7 @@ describe('createDecisionCommand', () => {
       decisionsRoot: '/tmp/workspace/repo/.oat/repo/reference/decisions',
       assetsRoot: '/tmp/assets',
       templatesRoot: '/tmp/workspace/repo/.oat/templates',
+      home: '/tmp/home',
       title: 'Adopt PJM Split',
       status: 'accepted',
       context: 'Shared monoliths collide.',

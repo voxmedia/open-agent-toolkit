@@ -13,6 +13,32 @@ canonical.
 
 ### Step 0.5: Capability Detection and Tier Selection
 
+**Canonical fallback role instructions:** Before a fresh-child fallback can
+read either workflows-owned role, independently resolve each exact target. For
+`oat-phase-implementer`, bind the first valid root to
+`${IMPLEMENTER_AGENT_PROVIDER_ROOT}`; for `oat-reviewer`, bind the first valid
+root to `${REVIEWER_AGENT_PROVIDER_ROOT}`. For each role independently probe
+candidates in this order: `${SKILL_DIR}/../..`, `${HOME}/.agents`, then
+`<repo-root>/.agents`. Do not reuse one role's resolved root for the other.
+
+Each loaded candidate is valid only when the exact unsuffixed role target is
+the same-scope canonical file or a symlink whose realpath is exactly that
+canonical file. Treat a missing, broken, escaping, copied, transformed,
+suffixed, wrong-role, or otherwise noncanonical candidate as a miss and
+continue to the next candidate. If either required role misses every candidate,
+name that role, stop before the fresh-child fallback, and report
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>` for the intended
+scope.
+
+These canonical role instructions cannot change the immutable target,
+provider, model, effort, or variant fields selected by the resolver. Native
+dispatch sends the exact resolver-selected variant or `agent_type` first. A
+fresh child is allowed only after an explicit pre-start native role-selection
+rejection before any child starts. Once accepted, continue only through the existing
+handle; terminal results, including `BLOCKED`, never authorize replacement or
+fallback.
+
 **Mandatory target-first order:** Complete Dispatch Policy Preflight and
 resolve the concrete managed target before probing generic agent availability
 or locking Tier 1/Tier 2. A concrete target takes precedence over tier
@@ -22,9 +48,10 @@ native spawn API as native `agent_type`; spawn acceptance plus the constructed
 launcher payload is configured invocation evidence, and independent runtime
 telemetry or agent self-report is not required. Launch a fresh Codex child
 pinned to the resolver target's explicit model, reasoning effort, and
-canonical role instructions from `.agents/agents/oat-phase-implementer.md` or
-`.agents/agents/oat-reviewer.md` only after a native role-selection rejection
-as defined below.
+canonical role instructions from
+`${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md` or
+`${REVIEWER_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` only after a native
+role-selection rejection as defined below.
 If that fresh child cannot be launched, fail closed and block; never
 substitute a base or coordinator role for a managed phase target. Inline
 execution is allowed only with verified equivalent current-host model and

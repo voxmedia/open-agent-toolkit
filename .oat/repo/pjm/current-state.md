@@ -29,12 +29,87 @@ copying their content here. -->
 - [Project Log](../../../apps/oat-docs/docs/cli-utilities/project-log.md)
   defines append-only project observations, validated CLI mutations, and
   roll-up-before-archive behavior.
+- [Tool-pack lifecycle/config cleanup summary](../reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
+  records the shipped contracts, decisions, verification, and the isolated PJM
+  layout-cleanup follow-up for PR #240.
 
 ## What's Implemented
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
+- CLI `0.2.47` (agent-provider-root, branch pending merge) makes canonical
+  skill-to-agent reads portable without changing provider-native dispatch.
+  Seven live reviewer and implementer reads now bind their workflows dependency
+  locally and resolve exact canonical Markdown through loaded, user, then
+  project roots. Loaded Claude and Cursor base symlinks are eligible only when
+  they resolve to the same-scope canonical file; Cursor variants, provider
+  copies, unsafe links, and Codex TOML remain candidate misses. A shared typed
+  classifier enforces a zero-executable-agent baseline while preserving the
+  historical cross-skill baseline, and exact-target fixtures cover candidate
+  ordering, fail-closed workflows recovery, and independent dependency roots.
+  Mutation, provider-sync, HOME-isolated uncached, release, docs, lint, format,
+  and the full Definition-of-Done gates passed; final lifecycle and configured
+  exit-gate reviews reported zero findings.
+- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240; pending release) completes
+  the tool-pack lifecycle/config cleanup with content-aware inventory, exact
+  adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
+  and removal of the inert per-pack install `--force` option. Compatibility
+  guidance now directs operators to scoped update and remove commands. The
+  lifecycle/config backlog item is closed; `0.2.46` has not yet been published.
+- CLI `0.2.45` (synced-project-scope, merged as PR #227 and released) adds a Git-native
+  `synced` project scope that keeps lifecycle artifacts off feature branches
+  while publishing them to retained `refs/oat/projects/<slug>` histories.
+  New projects default to the configurable synced scope; explicit `shared` and
+  `local` behavior remains available. Scope-aware creation, push/pull, remote
+  discovery and adoption, coordination pulls, migration, pruning, archive,
+  diagnostics, and open/pause flows are integrated across the CLI and lifecycle
+  skills. Small tracked discovery records and SHA-pinned PR links preserve
+  reviewer access without exposing machine-only artifacts, with canonical
+  identity checks, exact parent-path allowlists, non-forced publication, and
+  resumable completion receipts protecting every cross-repository mutation.
+- CLI `0.2.41` (portable-agent-references, merged as PR #231) generalizes
+  portable references from the identified cross-skill reads to the entire
+  user-default asset surface. A manifest-driven ratchet derives skill _and_
+  agent assets from `PACK_MANIFEST` and classifies cross-skill `SKILL.md` reads
+  plus file- and directory-form targets at or below `references/`, across
+  backticked, plain, Markdown-link, `./`, `../`, and repeated-parent spellings.
+  All nine canonical callers now resolve through installed roots: six skills use
+  loaded → user → project, and three agents use user → project, because no
+  provider exposes a stable loaded-agent source directory. The
+  `oat-phase-implementer` bare-path exemption is replaced by the same positive
+  assertions its consumers use, and a temporary migration inventory of 21 exact
+  entries was drained to zero, leaving only the six pre-existing non-executable
+  historical entries. This closes the residual agent-surface and
+  cross-skill `references/*.md` deferral recorded against `0.2.39`. Mutation
+  testing twice confirmed the ratchet is live; the full CI gate list passed
+  uncached and HOME-isolated. One direction remains unenforced and is tracked as
+  `BL-260829-unified-agent-provider-root`: skills reading canonical _agent_
+  definitions still use bare `.agents/agents/<name>.md` paths, a path shape the
+  matcher structurally cannot see.
+- CLI `0.2.39` (portable-skill-references, merged as PR #226) makes the
+  identified packaged sibling-skill reads portable across loaded, user, and
+  project scopes. Idea, implementation, plan-writing, and brainstorm handoff
+  surfaces now fail closed with pack-specific install/update recovery; the
+  implementation dispatcher resolves workflow and utility dependencies
+  independently so mixed-scope installs remain valid. A recursive authored-
+  Markdown ratchet rejects new bare sibling `SKILL.md` reads while retaining
+  only exact historical evidence. The complete repository gate sequence and
+  refreshed Fable exit gate passed. Closed
+  `BL-260827-make-packaged-skill-references`; residual agent surfaces and
+  cross-skill `references/*.md` coverage remain deferred to a later portability
+  follow-up.
+- CLI `0.2.37` makes every OAT tool pack user-scope eligible through one
+  intent-aware install/update/remove/migrate lifecycle while keeping curated
+  PJM state and adoption repository-owned. Inventory, status, and doctor now
+  distinguish intent from placement and ownership; migration is preview-first,
+  verifies the destination before removing managed sources, supports rollback,
+  and preserves shared assets and repository customizations. Provider sync
+  keeps user scope skills-only where required and reports unmaterialized agents
+  explicitly. All eleven repository gates and a zero-finding final closeout
+  review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
+  diagnostics remain as an implementation-ready follow-up, while the
+  lifecycle/config cleanup is complete on the pending-release `0.2.46` branch.
+- CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently
   bypass it), C0/C1 control characters and backslashes are rejected in both
@@ -48,8 +123,17 @@ copying their content here. -->
   (`check:skill-bumps`, `release:check-versions`) run locally and in CI, and
   `AGENTS.md`'s Definition of Done now mirrors CI's gate list exactly. Asset
   bundling publishes by atomic staged rename. Delivered through six final
-  review rounds and five bounded fix batches; deferred residue lives in six
-  `BL-260817-*` backlog items.
+  review rounds and five bounded fix batches; four `BL-260817-*` follow-ups
+  remain after the `0.2.33` and `0.2.35` releases closed the branch-behind-main
+  and reader-side asset-isolation defects.
+- CLI `0.2.35` closes the hermetic-assets defect from the 2026-08-19 defect wave
+  program (wave 3 wrapper project `wave-3-execution`): `resolveAssetsRoot`
+  honors a non-empty `OAT_ASSETS_DIR` with the unchanged fail-closed bundle
+  validation (missing, malformed, or version-mismatched overrides error out
+  instead of falling back), the package-coverage smoke consumer reads a private
+  per-file bundle and asserts its own environment restoration and cleanup, and
+  the CLI unit suite neutralizes an ambient override at the vitest env seam.
+  Closed `BL-260817-let-resolveassetsroot-honor`.
 - CLI `0.2.34` closes the sync version-skew defect from the 2026-08-19 defect
   wave program (wave 2 wrapper project `wave-2-execution`): `oat sync` now
   compares each scope manifest's `oatVersion` with the invoking CLI before the
@@ -322,3 +406,18 @@ judgment logging for project observations, and avoiding redundant
 bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
+
+The `agent-provider-root` branch closes the remaining unenforced portable-read
+direction with a dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
+exact-canonical-identity rule. After merge, the
+`tool-pack-scope-provider-truthfulness` project can consume that contract for
+canonical fallback provenance while retaining ownership of provider
+materialization, reachability diagnostics, restart visibility, and dispatch
+truthfulness.
+
+The canonical PJM operating files are current, but `oat pjm doctor` still
+reports four pre-existing layout warning classes from older reference
+generations. `BL-260830-migrate-the-legacy-pjm` (Migrate the legacy PJM
+reference layout) and its kickoff handoff isolate the lossless reconciliation
+and cleanup in a dedicated branch after PR #240 merges; this branch does not
+delete or restructure the legacy material.

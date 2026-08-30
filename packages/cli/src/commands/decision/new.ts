@@ -1,6 +1,10 @@
-import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import {
+  resolvePjmTemplate,
+  type PjmTemplateTier,
+} from '@commands/pjm/template-source';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
@@ -14,6 +18,7 @@ export interface CreateDecisionRecordOptions {
   decisionsRoot: string;
   assetsRoot: string;
   templatesRoot?: string;
+  home?: string;
   title: string;
   status?: string;
   context?: string;
@@ -26,6 +31,8 @@ export interface CreateDecisionRecordResult {
   id: string;
   decisionsRoot: string;
   filePath: string;
+  templatePath: string;
+  templateTier: PjmTemplateTier;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -44,48 +51,6 @@ async function pathExists(path: string): Promise<boolean> {
 
     return false;
   }
-}
-
-async function readIfExists(path: string): Promise<string | null> {
-  try {
-    return await readFile(path, 'utf8');
-  } catch (error) {
-    const code =
-      error && typeof error === 'object' && 'code' in error
-        ? String(error.code)
-        : null;
-
-    if (code !== 'ENOENT') {
-      throw error;
-    }
-
-    return null;
-  }
-}
-
-async function resolveDecisionTemplate(
-  assetsRoot: string,
-  templatesRoot?: string,
-): Promise<string> {
-  if (templatesRoot) {
-    const localTemplate = await readIfExists(
-      join(templatesRoot, 'decision.md'),
-    );
-    if (localTemplate !== null) {
-      return localTemplate;
-    }
-  }
-
-  const bundledTemplate = await readIfExists(
-    join(assetsRoot, 'templates', 'decision.md'),
-  );
-  if (bundledTemplate !== null) {
-    return bundledTemplate;
-  }
-
-  throw new Error(
-    'Template decision.md was not found in repo-local templates or bundled assets.',
-  );
 }
 
 function normalizeCreatedAt(createdAt: string): {
@@ -166,11 +131,13 @@ export async function createDecisionRecord(
     );
   }
 
-  const template = await resolveDecisionTemplate(
-    options.assetsRoot,
-    options.templatesRoot,
-  );
-  const content = renderDecisionRecord(template, {
+  const template = await resolvePjmTemplate({
+    name: 'decision.md',
+    assetsRoot: options.assetsRoot,
+    templatesRoot: options.templatesRoot,
+    home: options.home,
+  });
+  const content = renderDecisionRecord(template.content, {
     id,
     title: options.title,
     date: createdAt.date,
@@ -199,5 +166,7 @@ export async function createDecisionRecord(
     id,
     decisionsRoot: options.decisionsRoot,
     filePath,
+    templatePath: template.path,
+    templateTier: template.tier,
   };
 }

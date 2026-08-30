@@ -144,7 +144,8 @@ describe('help output snapshots', () => {
         pjm               Manage project-management repo reference docs
         project           Manage OAT project workflows
         state             OAT repo state commands
-        tools             Manage OAT tool packs (install, update, remove, list)
+        tools             Manage OAT tool packs (install, update, migrate, remove,
+                          list)
         internal          Internal OAT maintenance commands
         help [command]    display help for command
       "
@@ -805,7 +806,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>  Limit execution scope (choices: "project", "user", "all",
                          default: "all")
-        --pack <pack>    Skill pack to remove (ideas|docs|workflows|utility|research)
+        --pack <pack>    Skill pack to remove
+                         (core|ideas|docs|workflows|utility|project-management|research|brainstorm)
         --dry-run        Preview removal without applying
         -h, --help       display help for command
 
@@ -1120,10 +1122,16 @@ describe('help output snapshots', () => {
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
+        links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
         log                                          Manage the append-only project observation log
+        migrate [options] <project-path>             Migrate a shared OAT project to synced scope
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
+        prune [options] [project-path|slug]          Permanently remove a synced project and its ref
+        push [options] [project-path|slug]           Commit and publish a synced OAT project
+        pull [options] [project-path|slug]           Materialize or update a synced OAT project
+        scope [options] [project-path]               Report the scope of an OAT project
         set-mode <mode>                              [deprecated] No-op. Execution mode is no longer selectable.
         split                                        Evaluate, validate, and run oat-project-split payloads
         status [options]                             Show the current OAT project state
@@ -1238,7 +1246,9 @@ describe('help output snapshots', () => {
       Options:
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
                             default: "spec-driven")
-        --force             Non-destructive scaffold; create missing files only
+        --scope <scope>     Project scope (choices: "shared", "local", "synced")
+        --force             Allow a duplicate slug in another scope; scaffold remains
+                            non-destructive
         --no-set-active     Do not update active project in local config
         --no-dashboard      Do not refresh .oat/state.md after scaffold
         --no-commit         Do not git-commit the scaffolded project directory
@@ -1311,7 +1321,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat tools [options] [command]
 
-      Manage OAT tool packs (install, update, remove, list)
+      Manage OAT tool packs (install, update, migrate, remove, list)
 
       Options:
         -h, --help               display help for command
@@ -1328,6 +1338,7 @@ describe('help output snapshots', () => {
         info [options] <name>    Show details for an installed tool
         has [options] <pack>     Check whether a bundled tool pack is available
         update [options] [name]  Update installed tools to bundled versions
+        migrate [options]        Move an installed tool pack between scopes safely
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, docs,
                                  workflows, utility, project-management, research,
@@ -1409,7 +1420,7 @@ describe('help output snapshots', () => {
         --cwd <path>                  Override working directory
 
       Commands:
-        core [options]                Install OAT core skills (diagnostics, docs)
+        core                          Install OAT core skills (diagnostics, docs)
         ideas [options]               Install OAT ideas skills, templates, and idea
                                       workflow files
         docs [options]                Install OAT docs workflow skills

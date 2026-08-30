@@ -7,6 +7,7 @@ export interface AutoSyncDependencies {
     cwd: string;
     home: string;
     installedCanonicalPaths?: string[];
+    removedCanonicalPaths?: string[];
   }) => Promise<void>;
 }
 
@@ -16,13 +17,18 @@ export interface AutoSyncResult {
   error: string | null;
 }
 
+export interface AutoSyncOptions {
+  installedCanonicalPaths?: string[];
+  removedCanonicalPaths?: string[];
+}
+
 export async function autoSync(
   scopes: ConcreteScope[],
   cwd: string,
   home: string,
   logger: CliLogger,
   dependencies: AutoSyncDependencies,
-  options?: { installedCanonicalPaths?: string[] },
+  options?: AutoSyncOptions,
 ): Promise<AutoSyncResult> {
   if (scopes.length === 0) {
     return { synced: false, scopes: [], error: null };
@@ -35,6 +41,7 @@ export async function autoSync(
         cwd,
         home,
         installedCanonicalPaths: options?.installedCanonicalPaths,
+        removedCanonicalPaths: options?.removedCanonicalPaths,
       });
     }
     logger.info('Auto-sync completed.');

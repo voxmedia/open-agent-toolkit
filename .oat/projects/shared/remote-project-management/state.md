@@ -13,19 +13,19 @@ oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-05-28T00:00:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:31:12.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** On hold (discovery paused)
+**Status:** Discovery revalidation in progress
 **Started:** 2026-03-15
-**Last Updated:** 2026-05-28
+**Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Discovery — paused. Reference handover captured in `reference/linear-integration-discovery-handover.md`; resume when prioritized.
+Discovery — active. Revalidating the earlier handover against GitHub Issues, Linear, and Jira Cloud research and a multi-provider binding model.
 
 ## Artifacts
 
@@ -39,7 +39,9 @@ Discovery — paused. Reference handover captured in `reference/linear-integrati
 
 - ✓ Discovery started
 - ✓ Linear integration handover reference added (`reference/linear-integration-discovery-handover.md`)
-- ⧗ On hold — summary/revision prerequisites shipped on `main`
+- ✓ GitHub Issues, Linear, and Jira provider dossiers added under `reference/`
+- ✓ Local-first, multi-provider working model captured directionally in `discovery.md`
+- ⧗ Resolving normalized fields, binding semantics, receipts, concurrency, and approval policy
 
 ## Blockers
 
@@ -47,4 +49,4 @@ None (intentionally paused)
 
 ## Next Milestone
 
-Resume discovery using the handover reference; complete open questions and move to specification phase
+Complete the remaining discovery questions, review the resulting field and binding policies with the user, and request explicit discovery HiLL approval before specification

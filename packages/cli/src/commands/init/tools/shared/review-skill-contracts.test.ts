@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -29,6 +30,41 @@ function readRepoFile(relativePath: string): string {
     ...references,
     content.slice(successIndex),
   ].join('\n\n');
+}
+
+function executeFinalProjectPushGuard(
+  content: string,
+  projectScope: string,
+  shouldArchive: string,
+  projectRefCommit: string,
+): string {
+  const step = content.slice(
+    content.indexOf('#### Step 8.6: Render Final Synced Project Links'),
+    content.indexOf('#### Step 8.7: Non-Archive Synced Completion Transaction'),
+  );
+  const guard = [...step.matchAll(/if \[\[ ([\s\S]*?) \]\]; then/g)]
+    .map((match) => match[1])
+    .find(
+      (candidate) =>
+        candidate.includes('PROJECT_SCOPE') &&
+        candidate.includes('PROJECT_REF_COMMIT'),
+    );
+  if (!guard) {
+    throw new Error('Missing final project push guard in Step 8.6.');
+  }
+
+  return execFileSync(
+    '/bin/bash',
+    [
+      '-c',
+      `PROJECT_SCOPE="$1"\nSHOULD_ARCHIVE="$2"\nPROJECT_REF_COMMIT="$3"\nif [[ ${guard} ]]; then\n  printf push\nelse\n  printf skip\nfi`,
+      'completion-final-project-push-guard',
+      projectScope,
+      shouldArchive,
+      projectRefCommit,
+    ],
+    { encoding: 'utf8' },
+  );
 }
 
 function actionableResolverInvocations(content: string): string[] {
@@ -384,7 +420,7 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.2');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -498,6 +534,54 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'When no explicit kickoff explainer request exists, do not persist a project-explainer intent record.',
     );
+  });
+
+  it('halts autonomous project work when the synced arrival pull fails', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const arrivalStart = content.indexOf(
+      'if [ -n "$PROJECT_PATH" ]; then',
+      content.indexOf('Before reading artifacts for an existing project'),
+    );
+    const arrivalEnd = content.indexOf('\n```', arrivalStart);
+    const arrivalBlock = content.slice(arrivalStart, arrivalEnd);
+    const pullGuard =
+      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before autonomous work continues" >&2; exit 1; }';
+
+    expect(arrivalBlock).toContain(pullGuard);
+    expect(content.indexOf(pullGuard)).toBeLessThan(
+      content.indexOf('### Step 1: Detect the Persisted Entry State'),
+    );
+
+    const runArrival = (pullStatus: string) =>
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `oat() {
+  if [[ "$1 $2" == "project scope" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project pull" ]]; then
+    [[ "$pullStatus" == "success" ]]
+  fi
+}
+${arrivalBlock}
+printf 'artifact-read\\n'`,
+          'autonomous-arrival',
+        ],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PROJECT_PATH: '/tmp/synced-project',
+            pullStatus,
+          },
+        },
+      );
+
+    expect(runArrival('success')).toContain('artifact-read');
+    expect(() => runArrival('conflict')).toThrow();
   });
 
   it('runs one non-blocking implementation-tail recap before final HiLL approval', () => {
@@ -709,6 +793,34 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('materializes synced projects before implementation and review validation', () => {
+    const implement = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewProvide = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['project implement', implement],
+      ['project review provide', reviewProvide],
+    ] as const) {
+      expect(content, `${name} pulls before validation`).toContain(
+        'The pull runs before directory and `state.md` validation.',
+      );
+      expect(content, `${name} supports an absent synced checkout`).toContain(
+        'This materializes an\nabsent synced checkout when its discovery record or remote ref exists',
+      );
+      expect(content, `${name} runs the adopting pull`).toContain(
+        'oat project pull "$PROJECT_PATH"',
+      );
+    }
+
+    expect(reviewProvide).toContain(
+      'git -C "$PROJECT_PATH" status --porcelain -- discovery.md spec.md design.md plan.md implementation.md state.md',
+    );
+  });
+
   it('pins oat-project-summary project-log graduation and roll-up ordering', () => {
     const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
     const graduationIndex = content.indexOf(
@@ -764,9 +876,13 @@ describe('review skill contracts', () => {
     expect(content).toContain('PROJECT_LOG_LEDGER_APPENDED="false"');
     expect(content).toContain('oat config get workflow.projectLogLedgerPath');
     expect(commitStep).toContain('PROJECT_LOG_PROMOTION_APPENDED');
-    expect(commitStep).toContain('git add "$PROJECT_PATH/project-log.md"');
+    expect(commitStep).toContain(
+      'PROJECT_OUTPUT_PATHS+=("$PROJECT_PATH/project-log.md")',
+    );
     expect(commitStep).toContain('PROJECT_LOG_LEDGER_APPENDED');
-    expect(commitStep).toContain('git add "$PROJECT_LOG_LEDGER_PATH"');
+    expect(commitStep).toContain(
+      'PARENT_OUTPUT_PATHS+=("$PROJECT_LOG_LEDGER_PATH")',
+    );
   });
 
   it('requires workflow skills to use canonical dispatch policy choices', () => {
@@ -908,7 +1024,7 @@ describe('review skill contracts', () => {
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);
@@ -1045,6 +1161,52 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('keeps canonical reviewer instructions separate from native target selection', () => {
+    const local = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['local review', local],
+      ['remote review', remote],
+    ] as const) {
+      expect(content, `${name} workflows root`).toContain(
+        '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
+      );
+      expect(content, `${name} immutable dispatch axes`).toMatch(
+        /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+      );
+      expect(content, `${name} native first`).toMatch(
+        /native[\s\S]{0,180}(?:variant|agent_type)[\s\S]{0,180}first/i,
+      );
+      expect(content, `${name} rejection-only fallback`).toMatch(
+        /only[\s\S]{0,180}pre-start native role-selection rejection[\s\S]{0,240}fresh/i,
+      );
+    }
+  });
+
+  it('keeps implementation fallback instructions subordinate to the accepted target', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(content).toMatch(
+      /native[\s\S]{0,180}(?:variant|agent_type)[\s\S]{0,180}first/i,
+    );
+    expect(content).toMatch(
+      /fresh child[\s\S]{0,180}only[\s\S]{0,180}pre-start native role-selection\s+rejection/i,
+    );
+    expect(content).toMatch(
+      /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+    );
+    expect(content).toMatch(
+      /accepted[\s\S]{0,180}(?:continue|existing handle)[\s\S]{0,240}(?:never|must not|cannot)[\s\S]{0,120}(?:replacement|fallback|fresh child)/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
@@ -1134,13 +1296,68 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pulls synced completion projects before artifact reads and fails closed', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const scopeIndex = content.indexOf(
+      'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)',
+    );
+    const pullIndex = content.indexOf(
+      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+    );
+    const stateReadIndex = content.indexOf(
+      'Before asking the batched questions, read `oat_pr_status`',
+    );
+
+    expect(scopeIndex).toBeGreaterThanOrEqual(0);
+    expect(pullIndex).toBeGreaterThan(scopeIndex);
+    expect(stateReadIndex).toBeGreaterThan(pullIndex);
+
+    const arrivalBlock = content.slice(
+      scopeIndex,
+      content.indexOf('PROJECT_RETAINED_REF=""', scopeIndex),
+    );
+    const runArrival = (pullStatus: string) =>
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `oat() {
+  if [[ "$1 $2" == "project scope" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project pull" ]]; then
+    [[ "$pullStatus" == "success" ]]
+  fi
+}
+${arrivalBlock}
+printf 'artifact-read\\n'`,
+          'completion-arrival',
+        ],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PROJECT_PATH: '/tmp/synced-project',
+            pullStatus,
+          },
+        },
+      );
+
+    expect(runArrival('success')).toContain('artifact-read');
+    expect(() => runArrival('conflict')).toThrow();
+  });
+
   it('integrates interactive completion recap and retro policy before lifecycle mutation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.5');
+    expect(content).toContain(
+      'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
+    );
     expect(content).toContain(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
     );
@@ -1231,7 +1448,7 @@ describe('review skill contracts', () => {
     );
 
     expect(content).toContain(
-      'For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
+      'For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
     );
     expect(content).toContain(
       'A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence.',
@@ -1318,7 +1535,7 @@ describe('review skill contracts', () => {
     expect(step10Index).toBeGreaterThan(step8Index);
 
     expect(content).toContain(
-      '**Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**',
+      '**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**',
     );
     expect(content).toContain(
       'Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).',
@@ -1342,6 +1559,303 @@ describe('review skill contracts', () => {
       'Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.',
     );
   });
+
+  it.each([
+    ['configured archive decline', 'workflow.archiveOnComplete=false'],
+    [
+      'interactive archive decline',
+      'the interactive archive answer is `false`',
+    ],
+  ])(
+    'completes synced projects without archiving after %s',
+    (_scenario, archiveDecision) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+
+      expect(normalizedContent).toContain(archiveDecision);
+      expect(normalizedContent).toContain(
+        '### Step 8.7: Non-Archive Synced Completion Transaction',
+      );
+      expect(normalizedContent).toContain(
+        'Mark the discovery record `complete` with `completedAt` using a structured JSON write',
+      );
+      expect(normalizedContent).toMatch(
+        /commit only `SYNCED_RECORD_PATH` on the parent branch/i,
+      );
+      expect(normalizedContent).toContain(
+        'The retained project ref remains the artifact authority after non-archive completion.',
+      );
+      expect(normalizedContent).toMatch(
+        /On retry,[\s\S]*?already-complete record[\s\S]*?final artifact push receipt/,
+      );
+    },
+  );
+
+  it.each([
+    ['archive enabled', 'true', '', 'skip'],
+    ['configured archive decline', 'false', '', 'push'],
+    ['interactive archive decline', 'false', '', 'push'],
+    ['final receipt already captured', 'false', 'a'.repeat(40), 'skip'],
+  ])(
+    'executes the final synced project push guard for %s',
+    (_scenario, shouldArchive, projectRefCommit, expected) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+
+      expect(
+        executeFinalProjectPushGuard(
+          content,
+          'synced',
+          shouldArchive,
+          projectRefCommit,
+        ),
+      ).toBe(expected);
+    },
+  );
+
+  it('recovers exact non-archive recap receipts through the executable completion surface', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const retryRouterIndex = content.indexOf(
+      'COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT"',
+    );
+    const retryDecoderIndex = content.indexOf(
+      'COMPLETION_RETRY_FIELDS=$(node "$COMPLETION_RETRY_FIELDS_SCRIPT"',
+    );
+    const retryRouteReadIndex = content.indexOf(
+      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE _",
+    );
+    const recoveryBranchIndex = content.indexOf(
+      'if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]',
+    );
+    const recoveryFieldReadIndex = content.indexOf(
+      "IFS=$'\\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT",
+    );
+    const finalLinksIndex = content.indexOf(
+      '#### Step 8.6: Render Final Synced Project Links',
+    );
+
+    expect(normalizedContent).toContain(
+      '`scripts/recover-completion-receipts.mjs#resolveCompletionArchiveDecision`',
+    );
+    expect(normalizedContent).toContain(
+      'For a local project, pass the explicit `localNonArchive=true` decision without asking the archive question.',
+    );
+    expect(content).toContain(
+      'ARCHIVE_DECISION_ARGS+=(--local-nonarchive true)',
+    );
+    expect(content).toContain(
+      'EXPECTED_ARCHIVE_DECISION_SOURCE="local-default"',
+    );
+    expect(content).toContain(
+      'COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"',
+    );
+    expect(content).toContain(
+      'COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"',
+    );
+    expect(content).toContain(
+      'COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"',
+    );
+    expect(content).toContain(
+      'ARCHIVE_DECISION_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
+    );
+    expect(content).not.toContain('--detect-candidate true');
+    expect(retryRouterIndex).toBeGreaterThan(-1);
+    expect(retryDecoderIndex).toBeGreaterThan(retryRouterIndex);
+    expect(retryRouteReadIndex).toBeGreaterThan(retryDecoderIndex);
+    expect(recoveryBranchIndex).toBeGreaterThan(retryRouteReadIndex);
+    expect(recoveryFieldReadIndex).toBeGreaterThan(recoveryBranchIndex);
+    expect(retryRouterIndex).toBeLessThan(
+      content.indexOf('PROJECT_LOG_CHECK=$(oat project log check'),
+    );
+    expect(normalizedContent).toContain(
+      'This is the one executable routing surface; do not recreate candidate detection and recovery as separate shell branches',
+    );
+    expect(normalizedContent).toContain(
+      'The executable transaction matrix must use this same router for all configured and interactive interruption rows.',
+    );
+    expect(normalizedContent).toContain(
+      'Jump directly to Step 7.5 and skip every mutation in Steps 3.7 through 7.',
+    );
+    expect(normalizedContent).toContain(
+      'When it is `route: "pin-source"`, the executable has validated the already-published pin-source tree and PR artifact',
+    );
+    expect(normalizedContent).toContain(
+      'jump directly to Step 8.6, and skip Steps 3.7 through 7, including a duplicate pin-source push.',
+    );
+    expect(finalLinksIndex).toBeGreaterThan(
+      content.indexOf('#### Step 7.5: Publish Synced Project Pin Source'),
+    );
+    expect(normalizedContent).toContain(
+      'single-parent pin-source → final-artifact → optional evidence ordering',
+    );
+    expect(normalizedContent).toContain(
+      'exactly the two supplied recap record paths in an evidence commit',
+    );
+    expect(normalizedContent).toContain(
+      'the one allowed unpublished-evidence state',
+    );
+    expect(normalizedContent).toContain(
+      'Do not fall through to a new pin-source publication after a partial or contradictory candidate.',
+    );
+    expect(normalizedContent).toContain(
+      'receipt SHA exactly equal to `EVIDENCE_COMMIT`',
+    );
+    expect(content).toContain('"$COMPLETION_RETRY_FIELDS" != "normal"');
+    expect(content).not.toContain('["normal", "-", "-", "-", "false", "-"]');
+    expect(content).toContain(
+      'PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
+    );
+    expect(content).toContain(
+      'test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1',
+    );
+    expect(normalizedContent).toContain(
+      'When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records again.',
+    );
+    expect(content).toContain(
+      'git commit --only -m "chore(oat): attest final project recap" --',
+    );
+    expect(content).toContain('git -C "$ACTIVE_PROJECT_PATH" commit --only');
+    expect(content).toContain(
+      'test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"',
+    );
+  });
+
+  it('chains and validates fresh non-archive lifecycle receipts', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const step10 = content.slice(
+      content.indexOf('### Step 10: Commit + Push Bookkeeping (Required)'),
+      content.indexOf('### Step 10.5: Re-attest Final Project Recap'),
+    );
+
+    expect(step10).toMatch(
+      /git commit --only "\$SYNCED_RECORD_PATH"[\s\S]*?&&\s+LIFECYCLE_COMMIT=\$\(git rev-parse HEAD\) &&\s+node "\$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT"[\s\S]*?\|\| exit 1/,
+    );
+    expect(step10).toMatch(
+      /ancestor[\s\S]*?changes exactly `SYNCED_RECORD_PATH`[\s\S]*?byte-identical complete record/,
+    );
+    expect(step10).toMatch(
+      /a\s+failed commit or hook must not reuse the prior `HEAD` as a receipt/i,
+    );
+  });
+
+  it.each([
+    ['without a selected recap', 'SELECTED_PROJECT_RECAP_RUN is empty'],
+    ['with a selected recap', 'SELECTED_PROJECT_RECAP_RUN is non-empty'],
+  ])(
+    'uses the correct non-archive synced receipts %s',
+    (_scenario, recapState) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+
+      expect(normalizedContent).toContain(recapState);
+      expect(normalizedContent).toContain(
+        'Capture the exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`.',
+      );
+      expect(normalizedContent).toContain(
+        'Capture that exact SHA as `PROJECT_REF_COMMIT`.',
+      );
+      expect(normalizedContent).toContain(
+        'Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`, as the active recap artifact commit.',
+      );
+      expect(normalizedContent).toContain(
+        'The non-archive recap evidence commit must be the immediate child of `PROJECT_REF_COMMIT` in the project checkout.',
+      );
+      expect(normalizedContent).toMatch(
+        /publish the evidence commit with `oat project push`, retaining the custom ref and checkout\./i,
+      );
+      expect(normalizedContent).toMatch(
+        /Snapshot unrelated staged state[\s\S]*?verify[\s\S]*?byte-for-byte unchanged/,
+      );
+    },
+  );
+
+  it.each([
+    [
+      'configured decline without a recap',
+      'workflow.archiveOnComplete=false',
+      'SELECTED_PROJECT_RECAP_RUN is empty',
+    ],
+    [
+      'configured decline with a recap',
+      'workflow.archiveOnComplete=false',
+      'SELECTED_PROJECT_RECAP_RUN is non-empty',
+    ],
+    [
+      'interactive decline without a recap',
+      'the interactive archive answer is `false`',
+      'SELECTED_PROJECT_RECAP_RUN is empty',
+    ],
+    [
+      'interactive decline with a recap',
+      'the interactive archive answer is `false`',
+      'SELECTED_PROJECT_RECAP_RUN is non-empty',
+    ],
+  ])(
+    'publishes an initially absent late PR artifact after %s',
+    (_scenario, archiveDecision, recapState) => {
+      const content = readRepoFile(
+        '.agents/skills/oat-project-complete/SKILL.md',
+      );
+      const normalizedContent = content.replace(/\s+/g, ' ');
+      const stepFiveIndex = content.indexOf(
+        '### Step 5: Set Lifecycle Complete',
+      );
+      const stepSevenIndex = content.indexOf(
+        '### Step 7: Generate PR Description',
+      );
+      const writeArtifactIndex = content.indexOf(
+        '**Write PR description artifact**',
+        stepSevenIndex,
+      );
+      const finalPublicationIndex = content.indexOf(
+        '#### Step 7.5: Publish Synced Project Pin Source',
+      );
+      const pinSourcePushIndex = content.indexOf(
+        'PROJECT_PUSH_OUTPUT=$(oat project push "$PROJECT_PATH"',
+      );
+      const finalLinksIndex = content.indexOf(
+        '#### Step 8.6: Render Final Synced Project Links',
+      );
+      const finalArtifactPushIndex = content.indexOf(
+        'FINAL_PROJECT_PUSH_OUTPUT=$(oat project push',
+      );
+      const nonArchiveTransactionIndex = content.indexOf(
+        '### Step 8.7: Non-Archive Synced Completion Transaction',
+      );
+
+      expect(normalizedContent).toContain(archiveDecision);
+      expect(normalizedContent).toContain(recapState);
+      expect(normalizedContent).toContain(
+        'When no PR description artifact exists, write it before the final synced project-ref publication, regardless of archive or recap selection.',
+      );
+      expect(normalizedContent).toContain(
+        'Keep it separate from the final non-archive artifact receipt',
+      );
+      expect(normalizedContent).toContain(
+        'render this block in the active PR-description artifact before the push whose receipt becomes `PROJECT_REF_COMMIT`.',
+      );
+      expect(finalPublicationIndex).toBeGreaterThan(writeArtifactIndex);
+      expect(pinSourcePushIndex).toBeGreaterThan(finalPublicationIndex);
+      expect(finalLinksIndex).toBeGreaterThan(pinSourcePushIndex);
+      expect(finalArtifactPushIndex).toBeGreaterThan(finalLinksIndex);
+      expect(nonArchiveTransactionIndex).toBeGreaterThan(
+        finalArtifactPushIndex,
+      );
+      expect(content.slice(stepFiveIndex, stepSevenIndex)).not.toContain(
+        'PROJECT_PUSH_OUTPUT=$(oat project push',
+      );
+    },
+  );
 
   it('defines runtime-safe summary handling during pr-final and completion', () => {
     const prFinalPath = repoFilePath(
@@ -1429,11 +1943,251 @@ describe('review skill contracts', () => {
       '### Step 11.5: Sync Open-PR Description on GitHub (Conditional)',
     );
     expect(content).toContain(
-      '**Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**',
+      '`SHOULD_ARCHIVE="true"` or `PROJECT_SCOPE="synced"`',
+    );
+    expect(content).toContain(
+      '`git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the',
+    );
+    expect(content).toContain(
+      'canonical links block is owned by\n`PROJECT_LINKS_PIN_COMMIT`',
     );
     expect(content).toContain('gh pr edit "$PR_REF" --body-file "$TMP_BODY"');
     expect(content).toContain(
       'If `gh pr edit` fails (e.g. PR was merged between Step 2 and now',
+    );
+  });
+
+  it('always publishes final synced links for new and existing completion PRs', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-complete/SKILL.md'),
+      'utf8',
+    );
+
+    const finalLinksIndex = content.indexOf(
+      '#### Step 8.6: Render Final Synced Project Links',
+    );
+    const newPrIndex = content.indexOf('### Step 11: Open PR in GitHub');
+    const existingPrIndex = content.indexOf(
+      '### Step 11.5: Sync Open-PR Description on GitHub',
+    );
+
+    expect(finalLinksIndex).toBeGreaterThanOrEqual(0);
+    expect(newPrIndex).toBeGreaterThan(finalLinksIndex);
+    expect(existingPrIndex).toBeGreaterThan(newPrIndex);
+    expect(content).toMatch(
+      /required even when no project recap was selected and\s+`summaryExportFile` is null/,
+    );
+    expect(content).toContain(
+      'FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)',
+    );
+    expect(content).toContain(
+      'FINAL_LINK_ARGS+=(--durable-summary "$SUMMARY_EXPORT_RELATIVE")',
+    );
+    expect(content).toMatch(
+      /WAS_PR_OPEN_AT_START="false"[\s\S]*?Step 11 creates the new PR[\s\S]*?WAS_PR_OPEN_AT_START="true"[\s\S]*?Step 11\.5 updates the already-open PR/,
+    );
+    expect(content).toContain(
+      'Neither path depends on `projectRecapExport` or a configured',
+    );
+    expect(content).toContain('`archive.summaryExportPath`.');
+  });
+
+  it('routes absent-checkout synced and local-only projects through all-scope selection', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-next/SKILL.md'),
+      'utf8',
+    );
+
+    expect(content).toContain(
+      'PROJECT_LIST_JSON=$(oat project list --json) || exit 1',
+    );
+    expect(content).not.toContain('ls -d "$PROJECTS_ROOT"/*/');
+    expect(content).toMatch(
+      /structured `projects` array[\s\S]*?local-only[\s\S]*?synced records whose detached checkout is absent/,
+    );
+    expect(content).toMatch(
+      /`projects` array is empty[\s\S]*?oat-project-new[\s\S]*?STOP/,
+    );
+    expect(content).toMatch(
+      /`projects` array is non-empty[\s\S]*?scope[\s\S]*?checkout[\s\S]*?invoke `oat-project-open`/,
+    );
+    expect(content).toMatch(
+      /absent-checkout synced record and a local-only project both take\s+this selection route/,
+    );
+  });
+
+  it('persists both dirty brainstorm fold-back choices by project scope', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-brainstorm/SKILL.md'),
+      'utf8',
+    );
+    const dirtySection = content.slice(
+      content.indexOf('**Step 4 — If the artifact is dirty**'),
+      content.indexOf('**Step 5 — Handoff prompt.**'),
+    );
+
+    const currentPushIndex = dirtySection.indexOf('CURRENT_ARTIFACT_PUSH=');
+    const secondPushIndex = dirtySection.indexOf('FOLD_BACK_PUSH=');
+    expect(currentPushIndex).toBeGreaterThanOrEqual(0);
+    expect(secondPushIndex).toBeGreaterThan(currentPushIndex);
+    expect(dirtySection).toContain(
+      'CURRENT_ARTIFACT_COMMIT_SHA=$(parse_synced_push_receipt "$CURRENT_ARTIFACT_PUSH")',
+    );
+    expect(dirtySection).toContain('MIXED_FOLD_BACK_PUSH=$(oat project push');
+    expect(dirtySection).toContain(
+      'FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH")',
+    );
+    expect(dirtySection.match(/git commit --only/g)).toHaveLength(3);
+    expect(dirtySection).toContain(
+      'A synced dirty branch never runs parent\n  `git add` for the project artifact.',
+    );
+  });
+
+  it('checks the full synced checkout before choosing clean brainstorm fold-back', () => {
+    const content = readRepoFile('.agents/skills/oat-brainstorm/SKILL.md');
+    const preflight = content.slice(
+      content.indexOf(
+        'PROJECT_SCOPE=$(oat project scope "$ACTIVE_PROJECT" --format value)',
+        content.indexOf('**Step 2 — Preflight `git status` check.**'),
+      ),
+      content.indexOf('```', content.indexOf('else\n  git status --porcelain')),
+    );
+
+    expect(preflight).toContain('git -C "$ACTIVE_PROJECT" status --porcelain');
+    expect(preflight).not.toContain(
+      'git -C "$ACTIVE_PROJECT" status --porcelain -- "$(basename "$ARTIFACT_PATH")"',
+    );
+    const routingHarness = `EVENTS=""
+oat() {
+  if [[ "$1 $2 $3 $4" == "project scope $ACTIVE_PROJECT --format" ]]; then
+    printf synced
+  elif [[ "$1 $2" == "project push" ]]; then
+    EVENTS="\${EVENTS}push,"
+  fi
+}
+git() {
+  if [[ "$#" -eq 4 ]]; then
+    printf ' M unrelated-project-file.md\\n'
+  fi
+}
+handle_dirty_checkout() {
+  EVENTS="\${EVENTS}dirty-handler,"
+}
+STATUS_OUTPUT=$(${preflight})
+if [[ -n "$STATUS_OUTPUT" ]]; then
+  handle_dirty_checkout
+  if [[ "$DIRTY_HANDLER_CHOICE" == "include" ]]; then
+    oat project push "$ACTIVE_PROJECT"
+  fi
+else
+  oat project push "$ACTIVE_PROJECT"
+fi
+printf '%s\\n' "$EVENTS"`;
+    const executeRoutingHarness = (dirtyHandlerChoice: string) =>
+      execFileSync(
+        '/bin/bash',
+        ['-c', routingHarness, 'brainstorm-fold-back-routing'],
+        {
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            ACTIVE_PROJECT: '/tmp/synced-project',
+            ARTIFACT_PATH: '/tmp/synced-project/design.md',
+            DIRTY_HANDLER_CHOICE: dirtyHandlerChoice,
+          },
+        },
+      ).trim();
+
+    expect(executeRoutingHarness('')).toBe('dirty-handler,');
+    expect(executeRoutingHarness('include')).toBe('dirty-handler,push,');
+  });
+
+  it('commits new synced summary decisions durably without consuming unrelated staged state', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-summary/SKILL.md'),
+      'utf8',
+    );
+    const promotionStep = content.slice(
+      content.indexOf('### Step 7: Promote Key Decisions'),
+      content.indexOf('### Step 8: Commit'),
+    );
+    const commitStep = content.slice(
+      content.indexOf('### Step 8: Commit'),
+      content.indexOf('### Step 9: Output Summary'),
+    );
+
+    expect(content).toContain(
+      'UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)',
+    );
+    expect(promotionStep).toContain('DECISION_CREATE=$(oat decision new');
+    expect(promotionStep).toContain('--consequences "<consequences>" --json)');
+    expect(promotionStep).toContain(
+      'PROMOTED_DECISION_PATHS+=("$DECISION_RECORD_PATH")',
+    );
+    expect(commitStep).toContain(
+      'PARENT_COMMIT_MESSAGE="docs: promote summary decisions for {project-name}"',
+    );
+    expect(commitStep).toContain(
+      'git commit --only -m "$PARENT_COMMIT_MESSAGE" -- "${PARENT_OUTPUT_PATHS[@]}"',
+    );
+    expect(commitStep).toContain(
+      'PARENT_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$PARENT_DURABILITY_COMMIT")',
+    );
+    expect(
+      commitStep.indexOf('PARENT_DURABILITY_COMMIT=$(git rev-parse HEAD)'),
+    ).toBeLessThan(commitStep.indexOf('SUMMARY_PUSH=$(oat project push'));
+    expect(commitStep).toContain(
+      '[ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ]',
+    );
+    expect(commitStep).not.toContain('git add .oat/repo/reference/decisions/');
+  });
+
+  it('commits synced retro targets before writeback with recoverable receipts', () => {
+    const content = readFileSync(
+      repoFilePath(
+        '.agents/skills/oat-project-retro/references/apply-procedure.md',
+      ),
+      'utf8',
+    );
+    const transaction = content.slice(
+      content.indexOf('## Commit and Resume Strategy'),
+    );
+
+    expect(transaction).toMatch(
+      /docs, agent-instruction, or\s+rule item lists every exact edited canonical file/,
+    );
+    expect(transaction).toMatch(
+      /decision item lists the\s+exact generated or verified decision record[\s\S]*?managed decision\s+index only when this application changed it/,
+    );
+    expect(transaction).toContain(
+      'UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)',
+    );
+    expect(transaction).toContain(
+      'git commit --only -m "chore(oat): apply retro target $RP_ID" -- "${RETRO_TARGET_PATHS[@]}"',
+    );
+    expect(transaction).toContain(
+      'RETRO_TARGET_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$RETRO_TARGET_COMMIT")',
+    );
+    expect(transaction).toContain(
+      'APPLIED_REF="$RETRO_TARGET_COMMIT :: ${RETRO_TARGET_PATHS[*]}"',
+    );
+    expect(
+      transaction.indexOf('RETRO_TARGET_COMMIT=$(git rev-parse HEAD)'),
+    ).toBeLessThan(transaction.indexOf('RETRO_PUSH=$(oat project push'));
+    expect(transaction).toContain(
+      'RETRO_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}" "$PROJECT_PATH/references/project-retro.md")',
+    );
+    expect(transaction).toContain(
+      '[ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ]',
+    );
+    expect(transaction).toMatch(
+      /Before the parent target commit[\s\S]*?Do not write back or push/,
+    );
+    expect(transaction).toMatch(
+      /Between the parent target commit and project-ref push[\s\S]*?Recover `Applied-ref`/,
+    );
+    expect(transaction).toMatch(
+      /After both commits[\s\S]*?project-ref writeback receipt/,
     );
   });
 });

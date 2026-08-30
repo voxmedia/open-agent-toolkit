@@ -6,6 +6,11 @@
  * validates that it stays in sync with these lists.
  */
 
+import {
+  getPackMemberNames,
+  PACK_MANIFEST,
+} from '../../../tools/shared/pack-manifest';
+
 // ── Pack metadata ──────────────────────────────────────────────────
 //
 // PackMetadata generalizes per-pack installer behavior that previously
@@ -25,12 +30,9 @@ export interface PackMetadata {
   defaultScope: 'user' | 'project';
 }
 
-export const PACK_METADATA: Record<string, PackMetadata> = {
-  // Existing user-eligible packs (ideas, docs, utility, research) are
-  // intentionally absent — absence falls back to 'project', preserving
-  // current behavior. New packs that want user-default scope add an entry.
-  brainstorm: { name: 'brainstorm', defaultScope: 'user' },
-};
+export const PACK_METADATA: Record<string, PackMetadata> = Object.fromEntries(
+  PACK_MANIFEST.map(({ name, defaultScope }) => [name, { name, defaultScope }]),
+);
 
 export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
   return PACK_METADATA[packName]?.defaultScope ?? 'project';
@@ -38,147 +40,55 @@ export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
 
 // ── Workflow pack ──────────────────────────────────────────────────
 
-export const WORKFLOW_SKILLS = [
-  'oat-cursor-cloud-projects',
-  'oat-explainer-kit',
-  'oat-project-autonomous',
-  'oat-project-capture',
-  'oat-project-clear-active',
-  'oat-project-complete',
-  'oat-project-design',
-  'oat-project-dispatch-subagents',
-  'oat-project-discover',
-  'oat-project-document',
-  'oat-project-implement',
-  'oat-project-import-plan',
-  'oat-project-new',
-  'oat-project-next',
-  'oat-project-open',
-  'oat-project-plan',
-  'oat-project-plan-writing',
-  'oat-project-pr-final',
-  'oat-project-pr-progress',
-  'oat-project-progress',
-  'oat-project-promote-spec-driven',
-  'oat-project-quick-start',
-  'oat-project-reconcile',
-  'oat-project-retro',
-  'oat-project-retro-file',
-  'oat-project-revise',
-  'oat-project-review-provide',
-  'oat-project-review-provide-remote',
-  'oat-project-review-receive',
-  'oat-project-review-receive-remote',
-  'oat-project-spec',
-  'oat-project-split',
-  'oat-project-summary',
-  'oat-repo-knowledge-index',
-  'oat-worktree-bootstrap',
-  'oat-worktree-bootstrap-auto',
-  'oat-wave-execute',
-  'oat-wave-program',
-  'oat-wrap-up',
-] as const;
+export const WORKFLOW_SKILLS = getPackMemberNames('workflows', 'skill');
 
-export const WORKFLOW_AGENTS = [
-  'oat-codebase-mapper.md',
-  'oat-phase-implementer.md',
-  'oat-reviewer.md',
-] as const;
+export const WORKFLOW_AGENTS = getPackMemberNames('workflows', 'agent');
 
-export const WORKFLOW_TEMPLATES = [
-  'state.md',
-  'discovery.md',
-  'spec.md',
-  'design.md',
-  'plan.md',
-  'implementation.md',
-  'summary.md',
-  'project-log.md',
-  'project-retro.md',
-] as const;
+export const WORKFLOW_TEMPLATES = getPackMemberNames('workflows', 'template');
 
-export const WORKFLOW_SCRIPTS = [
-  'generate-oat-state.sh',
-  'generate-thin-index.sh',
-  'resolve-tracking.sh',
-] as const;
+export const WORKFLOW_SCRIPTS = getPackMemberNames('workflows', 'script');
 
 // ── Ideas pack ─────────────────────────────────────────────────────
 
-export const IDEA_SKILLS = [
-  'oat-idea-new',
-  'oat-idea-ideate',
-  'oat-idea-summarize',
-  'oat-idea-scratchpad',
-] as const;
+export const IDEA_SKILLS = getPackMemberNames('ideas', 'skill');
 
 // ── Core pack (always user-level) ─────────────────────────────────
 
-export const CORE_SKILLS = ['oat-docs', 'oat-doctor'] as const;
+export const CORE_SKILLS = getPackMemberNames('core', 'skill');
 
 // ── Docs pack ─────────────────────────────────────────────────────
 
-export const DOCS_SKILLS = [
-  'authoring-docs',
-  'oat-agent-instructions-analyze',
-  'oat-agent-instructions-apply',
-  'oat-docs-analyze',
-  'oat-docs-apply',
-  'oat-docs-authoring',
-  'oat-docs-bootstrap',
-] as const;
+export const DOCS_SKILLS = getPackMemberNames('docs', 'skill');
 
-export const DOCS_SCRIPTS = ['resolve-tracking.sh'] as const;
+export const DOCS_SCRIPTS = getPackMemberNames('docs', 'script');
 
 // ── Utility pack ───────────────────────────────────────────────────
 
-export const UTILITY_SKILLS = [
-  'create-agnostic-skill',
-  'explainer-kit',
-  'oat-dispatch-subagents',
-  'subagent-orchestration',
-  'oat-repo-improve',
-  'oat-repo-maintainability-review',
-  'oat-review-provide',
-  'oat-review-provide-remote',
-  'oat-review-receive',
-  'oat-review-receive-remote',
-] as const;
+export const UTILITY_SKILLS = getPackMemberNames('utility', 'skill');
 
 // ── Project management pack ───────────────────────────────────────
 
-export const PROJECT_MANAGEMENT_SKILLS = [
-  'oat-pjm-add-backlog-item',
-  'oat-pjm-decision',
-  'oat-pjm-update-repo-reference',
-  'oat-pjm-review-backlog',
-] as const;
+export const PROJECT_MANAGEMENT_SKILLS = getPackMemberNames(
+  'project-management',
+  'skill',
+);
 
-export const PROJECT_MANAGEMENT_TEMPLATES = [
-  'backlog-item.md',
-  'roadmap.md',
-  'current-state.md',
-  'decision.md',
-  'repo-agents.md',
-  'pjm-agents.md',
-  'reference-agents.md',
-] as const;
+export const PROJECT_MANAGEMENT_TEMPLATES = getPackMemberNames(
+  'project-management',
+  'template',
+);
 
-export const PROJECT_MANAGEMENT_SCRIPTS = [] as const;
+export const PROJECT_MANAGEMENT_SCRIPTS = getPackMemberNames(
+  'project-management',
+  'script',
+);
 
 // ── Brainstorm pack ───────────────────────────────────────────────
 
-export const BRAINSTORM_SKILLS = ['oat-brainstorm'] as const;
+export const BRAINSTORM_SKILLS = getPackMemberNames('brainstorm', 'skill');
 
 // ── Research pack ─────────────────────────────────────────────────
 
-export const RESEARCH_SKILLS = [
-  'analyze',
-  'compare',
-  'deep-research',
-  'skeptic',
-  'synthesize',
-] as const;
+export const RESEARCH_SKILLS = getPackMemberNames('research', 'skill');
 
-export const RESEARCH_AGENTS = ['skeptical-evaluator.md'] as const;
+export const RESEARCH_AGENTS = getPackMemberNames('research', 'agent');

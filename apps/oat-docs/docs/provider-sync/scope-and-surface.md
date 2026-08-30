@@ -17,6 +17,7 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 - Cursor's `.cursor/skills` and `~/.cursor/skills` directories are provider-local extension and adoption surfaces, not managed output directories.
 - Copilot's legacy `.github/skills` and `~/.copilot/skills` directories are adoption sources, not managed output directories. Copilot agents and project rules still use `.github/agents`, `~/.copilot/agents`, and `.github/instructions` provider views.
 - Manifest tracking: `.oat/sync/manifest.json` (project) and `~/.oat/sync/manifest.json` (user)
+- Canonical skills and agents installed by OAT tool packs exist at both scopes: `.agents/skills`, `.agents/agents` for project scope, and `~/.agents/skills`, `~/.agents/agents` for user scope. Every reusable pack defaults to user scope on a fresh install, so user-scope canonical content is the common case rather than the exception.
 
 Rules are currently project-scoped canonical content. Unlike skills and agents, synced rule files for Claude, Cursor, and Copilot are rendered copies with provider-specific frontmatter and filename extensions.
 
@@ -30,6 +31,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Obsolete managed mappings are deleted only when their provider paths are verified clean; changed or unverified paths are preserved and detached from manifest ownership
 - Canonical `.agents/agents` is source of truth for subagents; provider views are derived
 - Canonical `.agents/rules` is source of truth for rules; provider rule files are derived rendered copies
+- Each scope syncs independently. When the same canonical asset exists at both project and user scope, OAT reports the duplication with both paths and versions and does **not** infer which copy a provider executes; resolve it explicitly with `oat tools migrate`
+- Pack removal and migration drive a symmetric removal sync: the exact canonical paths that were removed are pruned from provider views in that scope only, and only after the canonical source is confirmed absent
 
 ## Implemented command surface
 
@@ -43,7 +46,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 ## Adjacent CLI commands (commonly used with provider interop)
 
 - `oat init` (bootstrap canonical structure and sync config) — see `../cli-utilities/bootstrap.md`
-- `oat tools ...` (install/update/remove/list/inspect tools) — see `../cli-utilities/tool-packs.md`
+- `oat tools ...` (install/update/remove/migrate/list/inspect tools) — see `../cli-utilities/tool-packs.md`
 - `oat doctor` (environment + skill-version diagnostics) — see `../reference/cli-reference.md`
 
 ## Provider enablement model

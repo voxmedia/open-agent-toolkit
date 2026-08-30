@@ -210,6 +210,111 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('gets projects.defaultScope with source attribution', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { root: '.oat/projects/shared', defaultScope: 'shared' } })}\n`,
+      'utf8',
+    );
+
+    const plain = createHarness({ cwd: root });
+    await runCommand(plain.command, ['get', 'projects.defaultScope']);
+    expect(plain.capture.info[0]).toBe('shared');
+
+    const json = createHarness({ cwd: root });
+    await runCommand(
+      json.command,
+      ['get', 'projects.defaultScope'],
+      ['--json'],
+    );
+    expect(json.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'projects.defaultScope',
+      value: 'shared',
+      source: 'shared',
+    });
+  });
+
+  it('sets projects.defaultScope only to a supported scope', async () => {
+    const root = await createRepoRoot();
+    const valid = createHarness({ cwd: root });
+    await runCommand(valid.command, ['set', 'projects.defaultScope', 'local']);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { defaultScope: 'local' },
+    });
+
+    const invalid = createHarness({ cwd: root });
+    await runCommand(invalid.command, ['set', 'projects.defaultScope', 'foo']);
+    expect(process.exitCode).toBe(1);
+    expect(invalid.capture.error[0]).toContain(
+      'expected one of shared | local | synced',
+    );
+  });
+
+  it('repairs an invalid on-disk projects.defaultScope value', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { root: '.oat/projects/team', defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'projects.defaultScope', 'local']);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { root: '.oat/projects/team', defaultScope: 'local' },
+    });
+  });
+
+  it('repairs only projects.defaultScope when projects.root is absent', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'projects.defaultScope', 'synced']);
+
+    expect(process.exitCode).toBe(0);
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      projects: { defaultScope: 'synced' },
+    });
+  });
+
+  it('reports the file, key, and repair command for an invalid default scope', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'remote' } })}\n`,
+      'utf8',
+    );
+    const { capture, command } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'projects.defaultScope']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error[0]).toContain(
+      `Invalid projects.defaultScope in ${join(root, '.oat', 'config.json')}`,
+    );
+    expect(capture.error[0]).toContain(
+      'oat config set projects.defaultScope <shared|local|synced>',
+    );
+  });
+
   it('sets local config keys in config.local.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
@@ -419,23 +524,55 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('sets tools.project-management to false in config.json', async () => {
+  it('rejects writing false pack intent without changing config.json', async () => {
     const root = await createRepoRoot();
+    const originalConfig = {
+      version: 1,
+      tools: { 'project-management': true },
+    };
     await writeFile(
       join(root, '.oat', 'config.json'),
-      `${JSON.stringify({ version: 1, tools: { 'project-management': true } })}\n`,
+      `${JSON.stringify(originalConfig)}\n`,
       'utf8',
     );
-    const { command } = createHarness({ cwd: root });
+    const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, ['set', 'tools.project-management', 'false']);
 
     const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
-    expect(JSON.parse(raw)).toEqual({
-      version: 1,
-      tools: { 'project-management': false },
-    });
+    expect(JSON.parse(raw)).toEqual(originalConfig);
+    expect(capture.error[0]).toContain(
+      'oat tools remove --pack project-management',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps legacy false pack intent readable without rewriting it', async () => {
+    const root = await createRepoRoot();
+    const configPath = join(root, '.oat', 'config.json');
+    const rawConfig = `${JSON.stringify({ version: 1, tools: { docs: false } })}\n`;
+    await writeFile(configPath, rawConfig, 'utf8');
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.docs']);
+
+    expect(capture.info[0]).toBe('false');
+    expect(await readFile(configPath, 'utf8')).toBe(rawConfig);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects unknown pack intent keys before creating config.json', async () => {
+    const root = await createRepoRoot();
+    const configPath = join(root, '.oat', 'config.json');
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'tools.unknown', 'false']);
+
+    expect(capture.error[0]).toContain('Unknown config key: tools.unknown');
+    await expect(readFile(configPath, 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('gets tools.brainstorm default false when not set', async () => {
@@ -1038,6 +1175,26 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('projects.root');
       expect(capture.error[0]).toContain('user');
     });
+
+    it.each(['--local', '--user'])(
+      'set projects.defaultScope %s is rejected',
+      async (surface) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const { command, capture } = createHarness({ cwd: root, home });
+
+        await runCommand(command, [
+          'set',
+          'projects.defaultScope',
+          'shared',
+          surface,
+        ]);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain('projects.defaultScope');
+        expect(capture.error[0]).toContain(surface.slice(2));
+      },
+    );
 
     it('set activeProject --shared is rejected as invalid surface', async () => {
       const root = await createRepoRoot();

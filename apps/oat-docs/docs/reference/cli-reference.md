@@ -12,7 +12,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 ## Contents
 
 - [CLI Bootstrap](../cli-utilities/bootstrap.md) - Bootstrap a repo with `oat init`, guided setup, and initial provider adoption.
-- [Tool Packs](../cli-utilities/tool-packs.md) - Install, update, inspect, and remove bundled OAT skills and agents.
+- [Tool Packs](../cli-utilities/tool-packs.md) - Install, update, inspect, migrate, and remove bundled OAT skills and agents at project or user scope.
 - [Config and Local State](../cli-utilities/config-and-local-state.md) - Config, backlog, local paths, diagnostics, and related utility commands.
 - [Workflow Gates](../cli-utilities/workflow-gates.md) - Per-skill final commands, review gates, and cross-runtime prompt dispatch.
 - [Docs Tooling Commands](../docs-tooling/commands.md) - Docs app scaffolding, migration, index generation, and nav sync.
@@ -41,8 +41,8 @@ The first practical expansion path is to keep improving the existing owners: [Do
 | Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                          |
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `oat init`                                      | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.                                                                                                                                        | [CLI Bootstrap](../cli-utilities/bootstrap.md)                                     |
-| `oat tools ...`                                 | Install, inspect, update, and remove bundled OAT tool packs and assets.                                                                                                                                                    | [Tool Packs](../cli-utilities/tool-packs.md)                                       |
-| `oat pjm ...`                                   | Initialize the two-layer repo-reference surface (`init`), run enabled-pack reference diagnostics (`doctor`), and migrate legacy layouts to `pjm/` + `reference/` (`migrate`) after installing the project-management pack. | [Install vs. initialize](../cli-utilities/tool-packs.md#install-vs-initialize)     |
+| `oat tools ...`                                 | Install, inspect, update, remove, and migrate bundled OAT tool packs and assets across project and user scope.                                                                                                             | [Tool Packs](../cli-utilities/tool-packs.md)                                       |
+| `oat pjm ...`                                   | Adopt PJM for a repository and record it (`init`), run read-only adoption and reference diagnostics (`doctor`), and migrate legacy layouts to `pjm/` + `reference/` (`migrate`). Adoption is separate from pack placement. | [Install vs. initialize](../cli-utilities/tool-packs.md#install-vs-initialize)     |
 | `oat decision ...`                              | Create, index, and migrate file-per-record repo decisions under `reference/decisions/` (`init`, `new`, `regenerate-index`, `migrate`).                                                                                     | [Config and Local State](../cli-utilities/config-and-local-state.md#oat-decision-) |
 | `oat backlog ...` / `oat local ...`             | File-backed backlog helpers, local path sync, and local-only operational support.                                                                                                                                          | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
 | `oat config ...` / `oat instructions ...`       | Config discovery, source-aware config dumps, supported mutations, and instruction-integrity helpers.                                                                                                                       | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
@@ -56,6 +56,63 @@ The first practical expansion path is to keep improving the existing owners: [Do
 
 Notable commands introduced in the current CLI surface:
 
+- `oat project new <slug> --scope shared|local|synced [--force]` - create a
+  project in an explicit scope. Without `--scope`, creation uses
+  `projects.defaultScope`, which defaults to `synced`. Project slugs are
+  unique across all scopes by default, including recorded or remotely
+  published synced projects. `--force` deliberately permits a duplicate; use
+  an explicit project path with `project open` or `project pause` whenever a
+  slug is ambiguous across scopes.
+- `oat project scope [project] --format value|json` - resolve a project's
+  storage scope without inspecting its path manually.
+- `oat project push [project] [--message <message>]` - commit pending synced
+  artifacts, reconcile with the exact project ref on `origin`, publish it, and
+  refresh an open PR's artifact-links block. Use `--no-refresh-pr` to skip the
+  PR edit. With `--json`, success returns `status` (`pushed` or `up-to-date`),
+  the full project-ref `sha`, the retained `ref`, and optional `prRefresh`;
+  conflict and rejected outcomes return their corresponding `status` and exit
+  nonzero.
+- `oat project pull [project] [--no-commit]` - fetch and materialize or update a synced
+  checkout. Resolve a rebase conflict and run `pull --continue`, or use
+  `pull --abort` to return to the pre-pull state. Coordination children are
+  pulled by default; `--no-children` limits the operation to the selected
+  project. When pull adopts a remote project with no local discovery record,
+  `--no-commit` leaves the new record uncommitted for the caller to persist.
+  With `--json`, the receipt includes `status`, `sha`, and `ref`, plus
+  `conflicts` when applicable and per-child results when coordination children
+  were requested.
+- `oat project links [project] --format markdown|json` - render SHA-pinned
+  links for the linkable artifacts on the project ref. On GitHub origins the
+  artifacts become full-SHA blob links; other hosts degrade to the retained ref
+  and short SHA without guessing a web URL. `--durable-summary <path>` accepts
+  only a path contained in the repository, normalizes it repository-relative,
+  and renders it as a code span rather than a guessed remote link.
+- `oat project pause [project]` - persist the pause state and clear the active
+  project pointer. If synced publication is declined or fails after the pause
+  commit is created, that clean commit is retained; address the publication
+  failure and rerun `pause` to publish it.
+- `oat project prune [project] [--force] [--no-commit]` - remove every
+  checkout, the local and remote project refs, and the tracked record. When the
+  project is omitted, the active project is used. This is the explicit
+  destructive operation; `--force` may discard dirty or unpushed artifacts,
+  while `--no-commit` leaves the parent-record deletion for a library caller to
+  commit. If remote deletion succeeds but local checkout removal fails, the
+  local ref, record, and checkouts are retained. Resolve the reported local
+  obstruction and retry `prune --force`; do not run `project push`, which would
+  republish the deleted remote ref.
+- `oat project migrate <path> --to synced [--no-commit]` - migrate an existing
+  shared project to synced storage while preserving its artifacts and
+  retargeting the active project pointer. `--no-commit` leaves the parent
+  record and source-tree transition uncommitted for a library caller.
+- `oat project list --scope shared|local|synced` - filter tracked projects by
+  scope. Add `--remote` to discover project refs that do not yet have a local
+  record or checkout, and `--include-coordination` to include coordination
+  parents. A malformed discovery record with no materialized checkout appears
+  as a `recorded-invalid` row. When the checkout is materialized, its existing
+  row instead carries the restore hint and `recordError` parse diagnostic in
+  `--json` output.
+- `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
+- `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project. **Stable contract for skills:** the JSON output is a typed read interface for OAT skills; the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`. Removing or renaming any of `project.{name, path, phase, phaseStatus, workflowMode, docsUpdated, lastCommit, prStatus, prUrl}` is a breaking change and will fail the contract test.
 - `oat project status --field <path>` - print one arbitrary dot-path field from the same status payload, e.g. `project.workflowMode` or `project.timestamps.stateUpdated`. Missing/null fields print `null`; object and array fields print compact JSON.
@@ -64,7 +121,7 @@ Notable commands introduced in the current CLI surface:
 - `oat review latest --json` - find the newest review artifact by `oat_generated_at`, scanning the active or specified project's `reviews/` and `reviews/archived/` directories plus ad-hoc review locations. Same-time candidates use target priority, then lifecycle recency (`final` > higher phase/task > lower phase/task). The JSON contract returns `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`, with `null` values when no review exists. Archived project reviews remain discoverable as history but return `actionable: false`.
 - `oat project list --json` - summary state for tracked projects under the configured projects root
 - `oat project complete-state <project-path>` - apply the canonical completed-state mutation to a project's `state.md`; used by `oat-project-complete` during lifecycle closeout
-- `oat project archive [project-path] [--project-recap-run <project-relative-path>]` - archive a tracked project through the same local move, summary export, and optional S3 upload path used by completion. When omitted, the project path falls back to the active project. The optional recap path must identify a `project-recap` run inside the project's `explainers/` directory. Archive stages the selected complete package into `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies every manifest-declared immutable file byte, then atomically installs the export before deleting the active project. Existing destinations, incomplete legacy hash coverage, stale bytes, path escapes, and recipe mismatches fail without removing the active project.
+- `oat project archive [project-path] [--project-recap-run <project-relative-path>] [--no-commit]` - archive a tracked project through the same local move, summary export, and optional S3 upload path used by completion. When omitted, the project path falls back to the active project. The optional recap path must identify a `project-recap` run inside the project's `explainers/` directory. Archive stages the selected complete package into `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies every manifest-declared immutable file byte, then atomically installs the export before deleting the active project. Existing destinations, incomplete legacy hash coverage, stale bytes, path escapes, and recipe mismatches fail without removing the active project. `--no-commit` is a manual/library-only option: for a synced project it still removes the checkout but deliberately omits the lifecycle commit receipt. Never pass it through `oat-project-complete`, which requires that receipt.
 - `oat repo archive sync [project-name]` - hydrate archived project snapshots from the configured repo-scoped S3 archive into `.oat/projects/archived/`. The old `oat project archive sync` path remains as a deprecated shim.
 - `oat project validate-plan --project-path <path>` - validates `oat_plan_parallel_groups` metadata in `plan.md`; exits non-zero on invalid. See [Implementation Execution](../workflows/projects/implementation-execution.md#parallel-phase-groups).
 - `oat project log append|check|synthesize|rollup` - manage the optional append-only project observation log: append validated judgment or structural entries, inspect grammar and synthesis status, complete end-of-run synthesis, and roll observations into `summary.md` plus the configured repository ledger. See [Project Log](../cli-utilities/project-log.md).

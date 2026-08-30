@@ -40,16 +40,27 @@ function readPhaseBookkeepingBlock(): string {
 }
 
 function instantiate(block: string): string {
-  return (
-    block
-      .split('\n')
-      // `oat state refresh` writes a gitignored dashboard and is not on the
-      // staging path under test.
-      .filter((line) => !line.startsWith('oat state refresh'))
-      .join('\n')
-      .replaceAll('{PROJECT_PATH}', PROJECT_PATH)
-      .replace('{pNN} {pass|fail}', 'p01 pass')
-  );
+  const sharedScopeStub = [
+    'oat() {',
+    '  if [ "$1" = "project" ] && [ "$2" = "scope" ]; then',
+    '    printf "shared\\n"',
+    '    return 0',
+    '  fi',
+    '  printf "unexpected oat invocation: %s\\n" "$*" >&2',
+    '  return 127',
+    '}',
+  ].join('\n');
+
+  const instantiatedBlock = block
+    .split('\n')
+    // `oat state refresh` writes a gitignored dashboard and is not on the
+    // staging path under test.
+    .filter((line) => !line.startsWith('oat state refresh'))
+    .join('\n')
+    .replaceAll('{PROJECT_PATH}', PROJECT_PATH)
+    .replace('{pNN} {pass|fail}', 'p01 pass');
+
+  return `${sharedScopeStub}\n${instantiatedBlock}`;
 }
 
 function git(cwd: string, ...args: string[]): string {

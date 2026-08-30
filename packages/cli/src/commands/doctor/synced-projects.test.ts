@@ -1,0 +1,484 @@
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncedRecord,
+  writeSyncedRecord,
+} from '@commands/project/sync/record';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { checkSyncedProjects, syncedRecordSlug } from './synced-projects';
+
+describe('checkSyncedProjects', () => {
+  const roots: string[] = [];
+  afterEach(async () => {
+    await Promise.all(
+      roots.map((root) => rm(root, { recursive: true, force: true })),
+    );
+  });
+
+  async function createRoot(): Promise<string> {
+    const value = await mkdtemp(join(tmpdir(), 'oat-doctor-synced-'));
+    roots.push(value);
+    return value;
+  }
+
+  function gitRunner(
+    overrides: Partial<
+      Record<string, { code: number; stdout: string; stderr: string }>
+    > = {},
+  ): GitRunner {
+    return {
+      run: vi.fn(async (args) => {
+        const key = args.slice(0, 2).join(' ');
+        return overrides[key] ?? { code: 0, stdout: '', stderr: '' };
+      }),
+    };
+  }
+
+  it.each([
+    ['/repo/.oat/projects/synced/demo.json', 'demo'],
+    ['C:\\repo\\.oat\\projects\\synced\\windows-demo.json', 'windows-demo'],
+  ])('extracts a portable slug from %s', (recordPath, expected) => {
+    expect(syncedRecordSlug(recordPath)).toBe(expected);
+  });
+
+  it('returns one pass when no synced projects exist', async () => {
+    const repoRoot = await createRoot();
+    await expect(
+      checkSyncedProjects(repoRoot, { git: gitRunner() }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        status: 'pass',
+        name: 'project:synced_projects',
+      }),
+    ]);
+  });
+
+  it('diagnoses synced projects when defaultScope is invalid', async () => {
+    const repoRoot = await createRoot();
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        projects: { root: '.oat/team-projects', defaultScope: 'remote' },
+      })}\n`,
+    );
+
+    await expect(
+      checkSyncedProjects(repoRoot, { git: gitRunner() }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        status: 'pass',
+        name: 'project:synced_projects',
+      }),
+    ]);
+  });
+
+  it('warns about a missing ignore rule before the first synced record', async () => {
+    const repoRoot = await createRoot();
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'check-ignore --quiet': { code: 1, stdout: '', stderr: '' },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_gitignore',
+        status: 'warn',
+        fix: 'Run `oat tools update`.',
+      }),
+    );
+  });
+
+  it('offers the editor discovery hint before the first synced record', async () => {
+    const repoRoot = await createRoot();
+    await mkdir(join(repoRoot, '.vscode'), { recursive: true });
+
+    const checks = await checkSyncedProjects(repoRoot, { git: gitRunner() });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_editor_hint',
+        status: 'pass',
+        message: expect.stringContaining('git.scanRepositories'),
+      }),
+    );
+  });
+
+  it('warns when a record exists but its checkout is absent', async () => {
+    const repoRoot = await createRoot();
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+    const checks = await checkSyncedProjects(repoRoot, { git: gitRunner() });
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        status: 'warn',
+        message: expect.stringContaining('checkout is absent'),
+        fix: expect.stringContaining('oat project pull demo'),
+      }),
+    );
+  });
+
+  it('uses a directory probe for an absent synced checkout', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    await writeFile(
+      join(repoRoot, '.gitignore'),
+      '.oat/projects/synced/*/\n',
+      'utf8',
+    );
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({ name: 'project:synced_gitignore' }),
+    );
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        status: 'warn',
+        message: expect.stringContaining('checkout is absent'),
+      }),
+    );
+  });
+
+  it('fails unknown record schemas and branch-tracked synced artifacts', async () => {
+    const repoRoot = await createRoot();
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await mkdir(syncedRoot, { recursive: true });
+    await writeFile(
+      join(syncedRoot, 'future.json'),
+      JSON.stringify({ schemaVersion: 2, slug: 'future' }),
+      'utf8',
+    );
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'ls-files --': {
+          code: 0,
+          stdout: '.oat/projects/synced/future/state.md',
+          stderr: '',
+        },
+      }),
+    });
+    expect(checks.filter((check) => check.status === 'fail')).toHaveLength(2);
+    expect(checks.map((check) => check.fix).join('\n')).toContain('Upgrade');
+    expect(checks.map((check) => check.fix).join('\n')).toContain(
+      'git rm --cached',
+    );
+  });
+
+  it('detects a real branch-tracked file below the synced root', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const leakedPath = '.oat/projects/synced/leaked/state.md';
+    await mkdir(join(repoRoot, '.oat/projects/synced/leaked'), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, leakedPath), '# leaked\n', 'utf8');
+    execFileSync('git', ['add', '-f', leakedPath], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'test: leak synced artifact'], {
+      cwd: repoRoot,
+    });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining(leakedPath),
+      }),
+    );
+  });
+
+  it('allows a real branch-tracked discovery record at the synced root', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+    execFileSync('git', ['add', '-f', '.oat/projects/synced/demo.json'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['commit', '-q', '-m', 'test: add discovery record'], {
+      cwd: repoRoot,
+    });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+      }),
+    );
+  });
+
+  it('detects an index-retained synced artifact when the working-tree root is absent', async () => {
+    const repoRoot = await createRoot();
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.email', 'doctor@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['config', 'user.name', 'Doctor Fixture'], {
+      cwd: repoRoot,
+    });
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    const leakedPath = '.oat/projects/synced/index-only/state.md';
+    await mkdir(join(repoRoot, '.oat/projects/synced/index-only'), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, leakedPath), '# index-only leak\n', 'utf8');
+    execFileSync('git', ['add', '-f', leakedPath], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-q', '-m', 'test: index-only leak'], {
+      cwd: repoRoot,
+    });
+    await rm(syncedRoot, { recursive: true });
+
+    expect(
+      execFileSync('git', ['ls-files', '--', '.oat/projects/synced'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe(leakedPath);
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: defaultGitRunner,
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining(leakedPath),
+      }),
+    );
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_projects',
+        message: 'No synced projects found.',
+      }),
+    );
+  });
+
+  it('reports unexpected git ls-files failures explicitly', async () => {
+    const repoRoot = await createRoot();
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'ls-files --': {
+          code: 128,
+          stdout: '',
+          stderr: 'fatal: index file corrupt',
+        },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_tracked_artifacts',
+        status: 'fail',
+        message: expect.stringContaining('fatal: index file corrupt'),
+      }),
+    );
+  });
+
+  it('warns for dirty and divergent checkouts but treats offline remote checks as notes', async () => {
+    const repoRoot = await createRoot();
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    const record = buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z'));
+    await writeSyncedRecord(join(syncedRoot, 'demo.json'), record);
+    await mkdir(join(syncedRoot, 'demo'), { recursive: true });
+    const divergent = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'status --porcelain': { code: 0, stdout: ' M state.md', stderr: '' },
+        'show-ref --hash': { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+        'ls-remote origin': {
+          code: 0,
+          stdout: `${'b'.repeat(40)}\t${record.ref}`,
+          stderr: '',
+        },
+      }),
+    });
+    expect(divergent.filter((check) => check.status === 'warn')).toHaveLength(
+      2,
+    );
+
+    const offline = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'show-ref --hash': { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+        'ls-remote origin': { code: 128, stdout: '', stderr: 'offline' },
+      }),
+    });
+    expect(offline.some((check) => check.message.includes('offline'))).toBe(
+      true,
+    );
+    expect(
+      offline.find((check) => check.message.includes('offline'))?.status,
+    ).toBe('pass');
+  });
+
+  it('reports a local ref-query failure without misclassifying divergence', async () => {
+    const repoRoot = await createRoot();
+    const syncedRoot = join(repoRoot, '.oat/projects/synced');
+    await writeSyncedRecord(
+      join(syncedRoot, 'demo.json'),
+      buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+    );
+    await mkdir(join(syncedRoot, 'demo'), { recursive: true });
+
+    const checks = await checkSyncedProjects(repoRoot, {
+      git: gitRunner({
+        'show-ref --hash': {
+          code: 128,
+          stdout: '',
+          stderr: 'fatal: local ref database is corrupt',
+        },
+        'ls-remote origin': {
+          code: 0,
+          stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+          stderr: '',
+        },
+      }),
+    });
+
+    expect(checks).toContainEqual(
+      expect.objectContaining({
+        name: 'project:synced_demo_local_ref',
+        status: 'pass',
+        message: expect.stringContaining(
+          'fatal: local ref database is corrupt',
+        ),
+      }),
+    );
+    expect(checks).not.toContainEqual(
+      expect.objectContaining({ name: 'project:synced_demo_ref_sync' }),
+    );
+  });
+
+  it.each([
+    {
+      relation: 'local-only',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: { code: 0, stdout: '', stderr: '' },
+      expectedStatus: 'warn',
+      expectedMessage: 'exists locally but is absent from origin',
+    },
+    {
+      relation: 'remote-only',
+      local: { code: 1, stdout: '', stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: 'warn',
+      expectedMessage: 'is absent locally but exists on origin',
+    },
+    {
+      relation: 'unequal-present',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'b'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: 'warn',
+      expectedMessage: 'differs from origin',
+    },
+    {
+      relation: 'equal-present',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: {
+        code: 0,
+        stdout: `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+        stderr: '',
+      },
+      expectedStatus: null,
+      expectedMessage: null,
+    },
+    {
+      relation: 'offline',
+      local: { code: 0, stdout: 'a'.repeat(40), stderr: '' },
+      remote: { code: 128, stdout: '', stderr: 'offline' },
+      expectedStatus: 'pass',
+      expectedMessage: 'offline',
+    },
+  ] as const)(
+    'classifies $relation synced refs',
+    async ({ local, remote, expectedStatus, expectedMessage }) => {
+      const repoRoot = await createRoot();
+      const syncedRoot = join(repoRoot, '.oat/projects/synced');
+      await writeSyncedRecord(
+        join(syncedRoot, 'demo.json'),
+        buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+      );
+      await mkdir(join(syncedRoot, 'demo'), { recursive: true });
+
+      const checks = await checkSyncedProjects(repoRoot, {
+        git: gitRunner({
+          'show-ref --hash': local,
+          'ls-remote origin': remote,
+        }),
+      });
+      const refCheck = checks.find(
+        (candidate) =>
+          candidate.name === 'project:synced_demo_ref_sync' ||
+          candidate.name === 'project:synced_demo_remote_ref',
+      );
+
+      if (expectedStatus === null) {
+        expect(refCheck).toBeUndefined();
+      } else {
+        expect(refCheck).toMatchObject({
+          status: expectedStatus,
+          message: expect.stringContaining(expectedMessage!),
+        });
+      }
+    },
+  );
+});

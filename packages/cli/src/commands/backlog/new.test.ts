@@ -1,4 +1,11 @@
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -160,11 +167,17 @@ describe('createBacklogItem', () => {
   it('falls back to the actual bundled template when the repo template is absent', async () => {
     const { root, backlogRoot } = await createTempRoot();
     const missingTemplatesRoot = join(root, 'missing-templates');
+    // Inject an empty home so the user tier (`<home>/.oat/templates`) cannot
+    // answer first; without it, a machine with `oat tools install --scope user`
+    // resolves from the real `~/.oat/templates` and never reaches the bundle.
+    const home = join(root, 'home');
+    await mkdir(home, { recursive: true });
 
     const result = await createBacklogItem({
       backlogRoot,
       assetsRoot: BUNDLED_ASSETS_ROOT,
       templatesRoot: missingTemplatesRoot,
+      home,
       title: 'Bundled Fallback',
       createdAt: CREATED_AT,
     });
@@ -175,6 +188,30 @@ describe('createBacklogItem', () => {
     const content = await readFile(result.filePath, 'utf8');
     expect(content).toContain('## Acceptance Criteria');
     expect(content).not.toContain('oat_template');
+  });
+
+  it('uses an explicitly injected user template before the bundle', async () => {
+    const { root, backlogRoot } = await createTempRoot();
+    const home = join(root, 'home');
+    const userTemplate = join(home, '.oat', 'templates', 'backlog-item.md');
+    await mkdir(join(home, '.oat', 'templates'), { recursive: true });
+    await writeFile(
+      userTemplate,
+      '# User backlog\n\n## Description\n\n{Describe the problem, request, or capability tracked by this backlog item.}\n',
+      'utf8',
+    );
+
+    const result = await createBacklogItem({
+      backlogRoot,
+      assetsRoot: BUNDLED_ASSETS_ROOT,
+      templatesRoot: join(root, 'missing-repo-templates'),
+      home,
+      title: 'User Default',
+      createdAt: CREATED_AT,
+    });
+
+    expect(result.templatePath).toBe(userTemplate);
+    expect(result.templateTier).toBe('user');
   });
 
   it('round-trips YAML-significant values and preserves literal body content', async () => {

@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { lstat, readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { CliError } from '@errors/cli-error';
 import { atomicWriteJson, dirExists, fileExists } from '@fs/io';
 import { normalizeToPosixPath, validateRealPathWithinScope } from '@fs/paths';
 
@@ -42,6 +43,11 @@ export interface OatDocumentationConfig {
 
 export interface OatGitConfig {
   defaultBranch?: string;
+}
+
+export interface OatProjectsConfig {
+  root?: string;
+  defaultScope?: 'shared' | 'local' | 'synced';
 }
 
 export interface OatArchiveConfig {
@@ -908,14 +914,64 @@ export type OatToolsConfig = Partial<
   >
 >;
 
+export interface OatPjmConfig {
+  initialized?: boolean;
+  schemaVersion?: number;
+}
+
+const VALID_TOOL_PACKS = [
+  'core',
+  'ideas',
+  'docs',
+  'workflows',
+  'utility',
+  'project-management',
+  'research',
+  'brainstorm',
+] as const satisfies readonly (keyof OatToolsConfig)[];
+
+function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const tools: OatToolsConfig = {};
+  for (const pack of VALID_TOOL_PACKS) {
+    if (typeof value[pack] === 'boolean') {
+      tools[pack] = value[pack];
+    }
+  }
+  return Object.keys(tools).length > 0 ? tools : undefined;
+}
+
+function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const pjm: OatPjmConfig = {};
+  if (typeof value.initialized === 'boolean') {
+    pjm.initialized = value.initialized;
+  }
+  if (
+    typeof value.schemaVersion === 'number' &&
+    Number.isInteger(value.schemaVersion) &&
+    value.schemaVersion > 0
+  ) {
+    pjm.schemaVersion = value.schemaVersion;
+  }
+  return Object.keys(pjm).length > 0 ? pjm : undefined;
+}
+
 export interface OatConfig {
   version: number;
   worktrees?: { root: string };
-  projects?: { root: string };
+  projects?: OatProjectsConfig;
   git?: OatGitConfig;
   archive?: OatArchiveConfig;
   explainers?: OatExplainersConfig;
   tools?: OatToolsConfig;
+  pjm?: OatPjmConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
   autoReviewAtCheckpoints?: boolean;
@@ -935,6 +991,7 @@ export interface UserConfig {
   version: number;
   activeIdea?: string | null;
   updateNotifications?: boolean;
+  tools?: OatToolsConfig;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
 }
@@ -1039,7 +1096,10 @@ async function normalizeReadableProjectPath(
   }
 }
 
-function normalizeOatConfig(parsed: unknown): OatConfig {
+function normalizeOatConfig(
+  parsed: unknown,
+  configPath = '.oat/config.json',
+): OatConfig {
   const next: OatConfig = { ...DEFAULT_OAT_CONFIG };
   if (!isRecord(parsed)) {
     return next;
@@ -1053,12 +1113,30 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.worktrees = { root: parsed.worktrees.root.trim() };
   }
 
-  if (
-    isRecord(parsed.projects) &&
-    typeof parsed.projects.root === 'string' &&
-    parsed.projects.root.trim()
-  ) {
-    next.projects = { root: parsed.projects.root.trim() };
+  if (isRecord(parsed.projects)) {
+    const root =
+      typeof parsed.projects.root === 'string' && parsed.projects.root.trim()
+        ? parsed.projects.root.trim()
+        : undefined;
+    const rawDefaultScope = parsed.projects.defaultScope;
+    const defaultScope =
+      rawDefaultScope === 'shared' ||
+      rawDefaultScope === 'local' ||
+      rawDefaultScope === 'synced'
+        ? rawDefaultScope
+        : undefined;
+    if (rawDefaultScope !== undefined && defaultScope === undefined) {
+      throw new CliError(
+        `Invalid projects.defaultScope in ${configPath}: "${String(rawDefaultScope)}". Expected one of: shared, local, synced. Repair it with oat config set projects.defaultScope <shared|local|synced>.`,
+        2,
+      );
+    }
+    if (root || defaultScope) {
+      next.projects = {
+        ...(root ? { root } : {}),
+        ...(defaultScope ? { defaultScope } : {}),
+      };
+    }
   }
 
   if (isRecord(parsed.git)) {
@@ -1119,28 +1197,14 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     next.explainers = explainers;
   }
 
-  if (isRecord(parsed.tools)) {
-    const validPacks = [
-      'core',
-      'ideas',
-      'docs',
-      'workflows',
-      'utility',
-      'project-management',
-      'research',
-      'brainstorm',
-    ] as const;
-    const tools: OatToolsConfig = {};
+  const tools = normalizeToolsConfig(parsed.tools);
+  if (tools) {
+    next.tools = tools;
+  }
 
-    for (const pack of validPacks) {
-      if (typeof parsed.tools[pack] === 'boolean') {
-        tools[pack] = parsed.tools[pack];
-      }
-    }
-
-    if (Object.keys(tools).length > 0) {
-      next.tools = tools;
-    }
+  const pjm = normalizePjmConfig(parsed.pjm);
+  if (pjm) {
+    next.pjm = pjm;
   }
 
   if (isRecord(parsed.documentation)) {
@@ -1254,7 +1318,30 @@ export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatConfig(parseJsonConfig(raw, configPath));
+    return normalizeOatConfig(parseJsonConfig(raw, configPath), configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+export async function readOatConfigForDefaultScopeRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.projects)) {
+      const { defaultScope: _invalidDefaultScope, ...projects } =
+        parsed.projects;
+      return normalizeOatConfig({ ...parsed, projects }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_OAT_CONFIG };
@@ -1296,7 +1383,7 @@ export async function writeOatConfig(
   config: OatConfig,
 ): Promise<void> {
   const configPath = getConfigPath(repoRoot);
-  const normalized = normalizeOatConfig(config);
+  const normalized = normalizeOatConfig(config, configPath);
   await atomicWriteJson(configPath, normalized);
 }
 
@@ -1416,6 +1503,7 @@ const USER_CONFIG_OWNED_KEYS = new Set([
   'version',
   'activeIdea',
   'updateNotifications',
+  'tools',
   'workflow',
   'knownStrays',
 ]);
@@ -1435,6 +1523,11 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
 
   if (typeof parsed.updateNotifications === 'boolean') {
     next.updateNotifications = parsed.updateNotifications;
+  }
+
+  const tools = normalizeToolsConfig(parsed.tools);
+  if (tools) {
+    next.tools = tools;
   }
 
   const explainers = normalizeExplainersConfig(parsed.explainers, 'user');

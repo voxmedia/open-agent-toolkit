@@ -1,61 +1,52 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { PACK_METADATA, resolvePackDefaultScope } from './skill-manifest';
+import { PACK_MANIFEST } from '../../../tools/shared/pack-manifest';
+import {
+  BRAINSTORM_SKILLS,
+  CORE_SKILLS,
+  DOCS_SKILLS,
+  IDEA_SKILLS,
+  PACK_METADATA,
+  PROJECT_MANAGEMENT_SKILLS,
+  RESEARCH_SKILLS,
+  resolvePackDefaultScope,
+  UTILITY_SKILLS,
+  WORKFLOW_SKILLS,
+} from './skill-manifest';
 
 describe('resolvePackDefaultScope', () => {
-  const originalEntries = Object.keys(PACK_METADATA);
-
-  afterEach(() => {
-    // Remove any test-only fixture entries added during a test, while
-    // preserving real entries that ship with the manifest.
-    for (const key of Object.keys(PACK_METADATA)) {
-      if (!originalEntries.includes(key)) {
-        delete PACK_METADATA[key];
-      }
+  it('derives user defaults for every canonical pack', () => {
+    for (const pack of PACK_MANIFEST) {
+      expect(resolvePackDefaultScope(pack.name)).toBe('user');
     }
-  });
-
-  it("returns 'project' when pack name is absent from metadata", () => {
-    expect(resolvePackDefaultScope('definitely-not-a-pack')).toBe('project');
-  });
-
-  it("returns the configured 'user' defaultScope when present", () => {
-    PACK_METADATA['fixture-user-pack'] = {
-      name: 'fixture-user-pack',
-      defaultScope: 'user',
-    };
-    expect(resolvePackDefaultScope('fixture-user-pack')).toBe('user');
-  });
-
-  it("returns the configured 'project' defaultScope when present", () => {
-    PACK_METADATA['fixture-project-pack'] = {
-      name: 'fixture-project-pack',
-      defaultScope: 'project',
-    };
-    expect(resolvePackDefaultScope('fixture-project-pack')).toBe('project');
-  });
-
-  it("falls back to 'project' for absent pack names even when other entries exist", () => {
-    PACK_METADATA['fixture-user-pack'] = {
-      name: 'fixture-user-pack',
-      defaultScope: 'user',
-    };
-    expect(resolvePackDefaultScope('some-other-pack')).toBe('project');
   });
 });
 
-describe('PACK_METADATA', () => {
-  it('contains only the registered opt-in entries', () => {
-    // The mechanism is established in p01; pack registrations land in p02
-    // and onward. Each opt-in must be paired with installer behavior wiring
-    // in the same PR. This guards against accidental opt-ins.
-    expect(Object.keys(PACK_METADATA).sort()).toEqual(['brainstorm']);
+describe('legacy manifest compatibility views', () => {
+  it('derives metadata from the canonical manifest', () => {
+    expect(Object.keys(PACK_METADATA).sort()).toEqual(
+      PACK_MANIFEST.map(({ name }) => name).sort(),
+    );
   });
 
-  it('registers brainstorm with defaultScope=user', () => {
-    expect(PACK_METADATA.brainstorm).toEqual({
-      name: 'brainstorm',
-      defaultScope: 'user',
-    });
+  it('derives every legacy skill list from manifest assets', () => {
+    const views = {
+      core: CORE_SKILLS,
+      ideas: IDEA_SKILLS,
+      docs: DOCS_SKILLS,
+      workflows: WORKFLOW_SKILLS,
+      utility: UTILITY_SKILLS,
+      'project-management': PROJECT_MANAGEMENT_SKILLS,
+      research: RESEARCH_SKILLS,
+      brainstorm: BRAINSTORM_SKILLS,
+    };
+
+    for (const pack of PACK_MANIFEST) {
+      expect(views[pack.name]).toEqual(
+        pack.assets
+          .filter(({ kind }) => kind === 'skill')
+          .map(({ source }) => source!.replace('skills/', '')),
+      );
+    }
   });
 });

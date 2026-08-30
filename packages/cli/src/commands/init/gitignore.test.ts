@@ -4,9 +4,14 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { defaultGitRunner } from '@commands/project/sync/git';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { applyOatCoreGitignore } from './gitignore';
+import {
+  applyOatCoreGitignore,
+  ensureScopedRootGitignore,
+  isSyncedRuleApplied,
+} from './gitignore';
 
 const tempDirs: string[] = [];
 
@@ -104,6 +109,54 @@ describe('applyOatCoreGitignore', () => {
     expect(content).toContain('.oat/projects/local/**');
   });
 
+  it('upgrades the prior core section with the synced directory-only rule', async () => {
+    const root = await makeTempDir();
+    await writeFile(
+      join(root, '.gitignore'),
+      [
+        '# OAT core',
+        '.oat/config.local.json',
+        '.oat/state.md',
+        '.oat/projects/local/**',
+        '.oat/projects/archived/**',
+        '!.oat/projects/local/.gitkeep',
+        '!.oat/projects/archived/.gitkeep',
+        '# END OAT core',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    const updated = await applyOatCoreGitignore(root);
+    const repeated = await applyOatCoreGitignore(root);
+
+    expect(updated.action).toBe('updated');
+    expect(updated.entries).toContain('.oat/projects/synced/*/');
+    expect(repeated.action).toBe('no-change');
+  });
+
+  it('ignores synced project directories but not sibling record files', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    await applyOatCoreGitignore(root);
+
+    expect(
+      execFileSync(
+        'git',
+        ['check-ignore', '--no-index', '.oat/projects/synced/x/'],
+        { cwd: root, stdio: 'ignore' },
+      ),
+    ).toBeNull();
+    expect(() =>
+      execFileSync(
+        'git',
+        ['check-ignore', '--no-index', '.oat/projects/synced/x.json'],
+        { cwd: root, stdio: 'ignore' },
+      ),
+    ).toThrow();
+    await expect(isSyncedRuleApplied(root)).resolves.toBe(true);
+  });
+
   it('coexists with OAT local paths section', async () => {
     const root = await makeTempDir();
     const existing = [
@@ -125,5 +178,136 @@ describe('applyOatCoreGitignore', () => {
     expect(content).toContain('# OAT core');
     expect(content).toContain('# OAT local paths');
     expect(content).toContain('.oat/ideas/');
+  });
+
+  it.each([
+    ['local', '/.oat/custom/local/**'],
+    ['synced', '/.oat/custom/synced/*/'],
+  ] as const)(
+    'manages a custom %s root rule idempotently inside the core block',
+    async (scope, expectedRule) => {
+      const root = await makeTempDir();
+      execFileSync('git', ['init', '-q'], { cwd: root });
+      const scopeRoot = join(root, '.oat', 'custom', scope);
+
+      const first = await ensureScopedRootGitignore(
+        root,
+        scopeRoot,
+        scope,
+        defaultGitRunner,
+      );
+      const repeated = await ensureScopedRootGitignore(
+        root,
+        scopeRoot,
+        scope,
+        defaultGitRunner,
+      );
+
+      expect(first.changed).toBe(true);
+      expect(repeated.changed).toBe(false);
+      const content = await readFile(join(root, '.gitignore'), 'utf8');
+      expect(content.split(expectedRule)).toHaveLength(2);
+      expect(content.indexOf(expectedRule)).toBeGreaterThan(
+        content.indexOf('# OAT core'),
+      );
+      expect(content.indexOf(expectedRule)).toBeLessThan(
+        content.indexOf('# END OAT core'),
+      );
+      if (scope === 'synced') {
+        expect(content).toContain('/.oat/custom/archived/**');
+      }
+    },
+  );
+
+  it('moves a legacy custom rule into the managed core block', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const legacyRule = '/.oat/custom/synced/*/';
+    await writeFile(join(root, '.gitignore'), `${legacyRule}\n`, 'utf8');
+    execFileSync('git', ['add', '.gitignore'], { cwd: root });
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=OAT Test',
+        '-c',
+        'user.email=oat@example.com',
+        'commit',
+        '-q',
+        '-m',
+        'seed legacy gitignore',
+      ],
+      { cwd: root },
+    );
+
+    await ensureScopedRootGitignore(
+      root,
+      join(root, '.oat', 'custom', 'synced'),
+      'synced',
+      defaultGitRunner,
+    );
+
+    const content = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(content.split(legacyRule)).toHaveLength(2);
+    expect(content.indexOf(legacyRule)).toBeGreaterThan(
+      content.indexOf('# OAT core'),
+    );
+    expect(content.indexOf(legacyRule)).toBeLessThan(
+      content.indexOf('# END OAT core'),
+    );
+  });
+
+  it('repairs an unterminated managed block once and preserves user rules on reapplication', async () => {
+    const root = await makeTempDir();
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    const userRule = 'keep-user-rule';
+    await writeFile(
+      join(root, '.gitignore'),
+      [
+        '# OAT core',
+        userRule,
+        '/.oat/custom/synced/*/',
+        '/.oat/custom/archived/**',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    execFileSync('git', ['add', '.gitignore'], { cwd: root });
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=OAT Test',
+        '-c',
+        'user.email=oat@example.com',
+        'commit',
+        '-q',
+        '-m',
+        'seed malformed gitignore',
+      ],
+      { cwd: root },
+    );
+
+    const result = await ensureScopedRootGitignore(
+      root,
+      join(root, '.oat', 'custom', 'synced'),
+      'synced',
+      defaultGitRunner,
+    );
+
+    expect(result.changed).toBe(true);
+    const repaired = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(repaired.split('# OAT core')).toHaveLength(2);
+    expect(repaired).toContain('# END OAT core');
+    expect(repaired.indexOf(userRule)).toBeGreaterThan(
+      repaired.indexOf('# END OAT core'),
+    );
+
+    const repeated = await applyOatCoreGitignore(root);
+    const reapplied = await readFile(join(root, '.gitignore'), 'utf8');
+    expect(repeated.action).toBe('no-change');
+    expect(reapplied).toBe(repaired);
+    expect(reapplied).toContain(userRule);
+    expect(reapplied.split('# OAT core')).toHaveLength(2);
   });
 });
