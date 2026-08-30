@@ -56,6 +56,10 @@ Phase p02 passed after four verified task commits and independent review; review
 
 Phase p03 passed after one source commit plus one planned evidence-only task and independent review; review artifact: reviews/p03-review-2026-08-30T173812Z.md; all Definition-of-Done gates passed; fix loops: 0.
 
+### 2026-08-30 · structural · oat gate review · final
+
+target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
