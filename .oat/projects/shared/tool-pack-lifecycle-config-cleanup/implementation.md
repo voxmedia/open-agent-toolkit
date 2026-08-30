@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status          | Tasks | Completed |
-| ------------------------------------- | --------------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
-| p03 — Release Integration             | fixes_completed | 2     | 2/2       |
+| Phase                                 | Status      | Tasks | Completed |
+| ------------------------------------- | ----------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
+| p03 — Release Integration             | fixes_added | 3     | 2/3       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/9 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** fixes_completed
+**Status:** fixes_added
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
@@ -74,6 +74,11 @@ oat_generated: false
 
 **Status:** done
 **Commit:** `5e84048324b90f75247757d842a76cc21d0ab8f3`
+
+### Task p03-t03: Remove stale lifecycle roadmap grouping
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
@@ -343,6 +348,31 @@ oat_generated: false
   pre-existing layout warnings
 - Range and four-file bounds verified; worktree clean
 - Fix-loop usage: 1/2; narrowed re-review required
+
+#### Dispatch Record: p03 review round 2
+
+- Request: `dispatch-p03-review-r2-20260829-01`
+- Launch state/outcome: accepted / completed
+- Narrowed range:
+  `3352eaff8ae38ff1cd2fc876c78233f02d6a1cba..5e84048324b90f75247757d842a76cc21d0ab8f3`
+- Prior artifact: `reviews/p03-review-2026-08-30T045227Z.md`
+- Route: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+### Review Received: p03 (round 2, narrowed)
+
+- Artifact: `reviews/p03-review-2026-08-30T050726Z.md`
+- Reviewed head: `5e84048324b90f75247757d842a76cc21d0ab8f3`
+- Reconnaissance: not attempted
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Disposition verification: prior I1 partially fixed; generated/curated
+  backlog, active roadmap list/table/diagram, current state, and surviving item
+  linkage pass
+- Remaining disposition: convert the single stale roadmap grouping sentence
+  into `p03-t03`; one-file correction only
+- Fix-loop usage: 1/2 before dispatch; the next review is the third and final
+  governance-cap review
 
 <!-- orchestration-runs-end -->
 

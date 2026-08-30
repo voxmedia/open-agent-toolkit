@@ -469,6 +469,37 @@ only the four pre-existing PJM layout warnings remain.
 
 `git commit -m "docs(p03-t02): align completed lifecycle planning views"`
 
+### Task p03-t03: Remove stale lifecycle roadmap grouping
+
+**Review source:** `reviews/p03-review-2026-08-30T050726Z.md` (Important 1)
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/roadmap.md`
+
+**Step 1: Correct the remaining narrative**
+
+Update the current grouping summary to describe three active bounded
+companions and list only diagnostics, headless, and structured-output work.
+Do not present completed lifecycle cleanup as a current parallel lane.
+
+**Step 2: Verify**
+
+Run:
+
+```bash
+! rg -n "lifecycle-cleanup" .oat/repo/pjm/roadmap.md
+pnpm exec oxfmt --check .oat/repo/pjm/roadmap.md
+git diff --check
+```
+
+Expected: the stale current-grouping claim is absent and the one-file diff is
+formatted.
+
+**Step 3: Commit**
+
+`git commit -m "docs(p03-t03): remove stale lifecycle roadmap grouping"`
+
 **Phase 3 Verification:** All focused tests and eleven repository gates exit 0
 with captured logs.
 
@@ -480,6 +511,7 @@ with captured logs.
 | p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T023404Z.md                    | caea5ebafe10883b39336219a5cb76a188c96358 | auto       | -                        |
 | p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
+| p03    | code     | fixes_added     | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
