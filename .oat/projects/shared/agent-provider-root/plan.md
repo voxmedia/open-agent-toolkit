@@ -592,7 +592,8 @@ git commit -m "fix(p03-t05): preserve latest final review status"
 | remote-pr-242 | code     | passed          | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md   | 71b39d208d959403ae36e1c22eab3bafcf46cbdd | -          | -                             |
 | remote-pr-242 | code     | fixes_completed | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
 | p03-t04       | code     | passed          | 2026-08-30 | reviews/archived/p03-t04-review-2026-08-30T195106Z.md         | 13392c5f26098aa2416e9560e53e32ff0e06f0f5 | manual     | -                             |
-| remote-pr-242 | code     | fixes_added     | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T195851Z.md   | b6fad10859d4d19317289dfb8023dbdcbeb7dfb1 | -          | -                             |
+| remote-pr-242 | code     | fixes_completed | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T195851Z.md   | b6fad10859d4d19317289dfb8023dbdcbeb7dfb1 | -          | -                             |
+| p03-t05       | code     | passed          | 2026-08-30 | reviews/archived/p03-t05-review-2026-08-30T200737Z.md         | 4ec42a9228973a9003fc559cbca5bc97ee2b4f9e | manual     | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.

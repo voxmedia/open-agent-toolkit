@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 5     | 4/5       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 5     | 5/5       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -163,7 +163,7 @@ oat_generated: false
 
 ## Phase 3: Documentation, Packaging, and Release Proof
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -238,6 +238,17 @@ oat_generated: false
 **Outcome:** Restored the distinct `175056Z` final-review event without changing any pre-existing review cell values or conflating the later passing re-review and gate events.
 
 **Verification:** Formatting and `pnpm check` exited 0; normalized before/after review-row comparison exited 0; the `175056Z`, `181453Z`, and `182542Z` review rows each occur exactly once; independent bounded review passed with zero findings.
+
+---
+
+### Task p03-t05: (review) Preserve latest final review status
+
+**Status:** completed
+**Commit:** 4ec42a9228973a9003fc559cbca5bc97ee2b4f9e
+
+**Outcome:** Moved the restored `175056Z` event to chronological position so last-event readers continue to resolve the passing `182542Z` gate review.
+
+**Verification:** The Reviews row multiset remained identical; each named final artifact occurs once; the last `final | code` row is `passed` with the `182542Z` gate provenance; targeted reader-contract tests and independent bounded review passed.
 
 ---
 
@@ -451,6 +462,48 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - The user explicitly skipped a full configured exit-gate rerun for this bookkeeping-only fix; the persisted gate remains stale and lifecycle completion remains in progress.
 - Push the fix and receive the next Bugbot event for PR #242 when available.
 
+### Run 6 — 2026-08-30T20:01:00Z
+
+- Branch: `feature/feat/unified-agent-provider-root`
+- Tier: 1 — native subagents available without authorization
+- Policy: managed High
+- Phase counts: passed=1, failed=0, stopped=0
+
+#### p03-t05 fix dispatch
+
+- Request: `agent-provider-root-p03-t05-fix-20260830`
+- Continuation of: `agent-provider-root-p03-20260830T1712Z`
+- Launch: accepted; outcome `DONE`
+- Base/head: `be3d540f7a8b03b9b6a02fa1b5bae4ac72ef8e3f..4ec42a9228973a9003fc559cbca5bc97ee2b4f9e`
+- Task commit: `4ec42a9228973a9003fc559cbca5bc97ee2b4f9e`
+- Selection reason: `native-catalog`
+- Candidates: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery attempts: 0/10; optional nested dispatches: none
+- Dispatch: scope=p03-t05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### p03-t05 review dispatch
+
+- Request: `agent-provider-root-p03-t05-review-20260830T2007Z`
+- Launch: accepted; outcome `PASS`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Artifact: `reviews/archived/p03-t05-review-2026-08-30T200737Z.md`
+- Reconnaissance: not-attempted
+- Selection reason: `native-catalog`
+- Candidates: `oat-reviewer-gpt-5-6-sol-high`
+- Fix iterations: 0
+- Dispatch: scope=p03-t05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task commits | Review | Fix iterations |
+| ----- | ------- | ------------ | ------ | -------------- |
+| p03   | passed  | 1            | passed | 0              |
+
+#### Outstanding Items
+
+- The user explicitly skipped a full configured exit-gate rerun; the persisted gate remains stale and lifecycle completion remains in progress.
+- The third remote-review receive cycle is complete. Do not ingest a fourth automated remote-review cycle without explicit override.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -473,6 +526,7 @@ Chronological log of implementation progress.
 - [x] p03-t02: Prove mutation detection and complete repository gates - evidence-only, no source commit
 - [x] p03-t03: Scope provider-sync exemption to paired occurrence - `3240a1bec`
 - [x] p03-t04: Restore omitted final review ledger event - `13392c5f2`
+- [x] p03-t05: Preserve latest final review status - `4ec42a922`
 
 **What changed (high level):**
 
@@ -489,7 +543,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Push `p03-t04` and receive the next Bugbot event for PR #242.
+- Push `p03-t05` and verify PR #242 checks.
+- The third remote-review receive cycle is complete; do not ingest a fourth automated cycle without explicit override.
 - The user explicitly skipped a full configured exit-gate rerun for this bookkeeping-only fix; rerun `oat-project-implement` if lifecycle-complete gate freshness is later required.
 
 **Blockers:**
@@ -563,6 +618,15 @@ Chronological log of implementation progress.
 - **New tasks:** `p03-t05`
 - **Next:** Resume `oat-project-implement` to restore chronological final-event order while preserving every ledger event.
 
+### Review Received: p03-t05
+
+- **Date:** 2026-08-30
+- **Reviewed head:** `4ec42a9228973a9003fc559cbca5bc97ee2b4f9e`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Disposition:** Passed; the last `final | code` event is again the passing `182542Z` gate review.
+- **Artifact:** `reviews/archived/p03-t05-review-2026-08-30T200737Z.md`
+- **Next:** Push the fix and verify PR checks. The full configured exit-gate rerun remains explicitly skipped.
+
 ### Exit Gate Audit
 
 - **2026-08-30T18:18:37Z — generation initialized:** Resolved the configured semantic final-review gate once, captured reviewed head `3240a1bec3e7bcdfe044ace76994502e0a4b666d`, base `refs/remotes/origin/main`, and immutable effective-delta fingerprint `sha256:effective-delta-v1:1357744bea95ceb0c19c4c94ef6ebdeb9532d93e88fa0baf68f6d43ea3fce29b`. Launch has not started.
@@ -611,6 +675,7 @@ Track test execution during implementation.
 - Seven portable canonical role reads with independent dependency roots and pack-aware recovery.
 - Zero-executable-agent ratchet, provider-root documentation, and lockstep `0.2.47` release metadata.
 - Append-complete review-ledger history for the initial final review, bounded fix, passing re-review, and configured gate event.
+- Chronological final-event ordering that preserves last-event reader semantics.
 
 **Behavioral changes (user-facing):**
 
@@ -629,7 +694,7 @@ Track test execution during implementation.
 
 **Design deltas (if any):**
 
-- None. The final review's same-line provider-example concern was fixed in `p03-t03`, and the later review-ledger omission was repaired in `p03-t04`; both bounded re-reviews passed with zero findings.
+- None. The final review's same-line provider-example concern was fixed in `p03-t03`; the later review-ledger omission and ordering defect were repaired in `p03-t04` and `p03-t05`; all bounded re-reviews passed with zero findings.
 
 ## References
 
