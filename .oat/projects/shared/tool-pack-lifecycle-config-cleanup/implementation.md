@@ -242,12 +242,16 @@ oat_generated: false
 ### Documentation Checkpoint: p03
 
 - Worktree remained clean; no task work or release fetch began
-- Approval requested for substantive compatibility wording in
+- User approved substantive compatibility wording in
   `apps/oat-docs/docs/cli-utilities/tool-packs.md`
-- Scope-expansion approval requested for the stale `--force` remedy in
+- User approved the bounded scope expansion for the stale `--force` remedy in
   `apps/oat-docs/docs/reference/troubleshooting.md`
 - Navigation and generated-index work: not applicable
-- Continuation must resume the original p03 handle after the user decision
+- Authorized content: document rejection of the inert per-pack `--force`
+  option, the supported scoped update command, rejected false pack-intent
+  writes, the scoped remove remedy, and legacy false-value readability
+- Continuation: resume the original p03 handle from the clean post-approval
+  bookkeeping head
 
 <!-- orchestration-runs-end -->
 

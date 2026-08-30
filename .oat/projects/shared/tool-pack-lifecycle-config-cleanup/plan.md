@@ -345,6 +345,7 @@ change, advance lockstep packages, and reproduce every CI gate.
 **Files:**
 
 - Modify when needed: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+- Modify when needed: `apps/oat-docs/docs/reference/troubleshooting.md`
 - Modify: `packages/cli/package.json`
 - Modify: `packages/control-plane/package.json`
 - Modify: `packages/docs-config/package.json`
