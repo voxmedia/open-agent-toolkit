@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/artifact-plan-review-2026-08-30T222802Z.md
 
+### 2026-08-30 · structural · oat-project-implement · p01-p02
+
+Parallel fan-in merged p01 then p02 in plan order; both root reviews passed and the combined 478-test suite plus CLI type-check passed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

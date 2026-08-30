@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -26,104 +26,119 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 0/2       |
-| Phase 2 | pending     | 2     | 0/2       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 3     | 0/3       |
 
-**Total:** 0/7 tasks completed
+**Total:** 4/7 tasks completed
 
 ---
 
 ## Phase 1: Configuration Contract Core
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-30
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added a pure, conservative classifier for configured direct `oat gate review`
+  commands that requires canonical global `--json` placement.
+- Aligned all five gate-aware lifecycle skills on the canonical command form.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/gate/configured-command.ts` - configured-command contract
+- `.agents/skills/oat-project-*/SKILL.md` - canonical gate command guidance
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused validator and skill-contract suites, CLI type-check, check,
+  lint, format, and skill-bump validation
+- Result: pass; final focused review suite contained 223 passing tests
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Two bounded review-fix commits closed `--cwd`, shell-newline/backtick, and
+  empty-token parser gaps without changing the conservative wrapper boundary.
 
 ### Task p01-t01: Add the pure configured-command validator
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 9f29e674789734befcf67799e7b0dae953203450
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Direct lifecycle gate-review commands can now be classified as valid,
+  invalid with an actionable canonical form, or conservatively not applicable.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/gate/configured-command.ts` - pure classifier
+- `packages/cli/src/commands/gate/configured-command.test.ts` - contract matrix
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused validator tests and CLI type-check
+- Result: pass
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Review fixes: `ecaf95d5718330bb41334e538426c78702e216dc` and
+  `4b247ec29df914dc66f96ee134b538a6a81985d7`.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Initial review found supported-global-option and shell-shape gaps; two bounded
+  iterations added exact regression coverage and passed the decision review.
 
 ---
 
 ### Task p01-t02: Align gate-aware skill command contracts
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 30142390c692a352026d10610c420203a11c0231
 
-**Notes:**
-
-- {Notes will be added during implementation}
+**Outcome:** Five lifecycle skills now use `oat --json gate review` and each
+changed skill carries its required single version bump.
 
 ---
 
 ## Phase 2: Headless Runtime Diagnosis
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-08-30
 
 ### Task p02-t01: Add the artifact-missing terminal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 286da58affbfd48a832109fc40a9e16da9436feb
+
+**Outcome:** Clean child completion without an artifact now returns the
+fail-closed `artifact_missing` / `review_completed_artifact_missing` terminal,
+while correlation mismatches retain their existing diagnosis.
 
 ---
 
 ### Task p02-t02: Reinforce the runner-owned no-yield prompt
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 76966f7fb2db9726b263d661be8f6805db5fab57
+
+**Outcome:** The runner prompt explicitly requires inline or synchronously
+awaited headless completion and forbids background tasks, monitors, or waiters.
 
 ---
 
 ## Phase 3: Integrated Gate Execution Contract
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-08-30
 
 ### Task p03-t01: Enforce validation before gate config writes
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -154,6 +169,30 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-08-30T23:02:43Z
+
+**Branch:** `gate-execution-contract-hardening`
+**Tier:** Tier 1 subagents
+**Policy:** High
+**Schedule entry:** parallel group `[p01, p02]`
+
+| Phase | Outcome | Task Commits           | Review                                                     | Fix Iterations             | Worktree                                          |
+| ----- | ------- | ---------------------- | ---------------------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| p01   | passed  | `9f29e674`, `30142390` | final clean review `code-p01-review-2026-08-30T225810Z.md` | 2 (`ecaf95d5`, `4b247ec2`) | `gate-execution-contract-hardening-worktrees/p01` |
+| p02   | passed  | `286da58a`, `76966f7f` | clean review `code-p02-review-2026-08-30T224353Z.md`       | 0                          | `gate-execution-contract-hardening-worktrees/p02` |
+
+**Dispatch notes:**
+
+- `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-terra effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-terra-high`
+- `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Both reviews used `oat-reviewer-gpt-5-6-sol-high`; reconnaissance was
+  `not-attempted`, so no Review Orchestration record was required.
+
+**Fan-in:** p01 then p02 merged in plan order. The combined branch passed 478
+focused tests and CLI type-check.
+
+**Outstanding items:** p03 integration and closeout tasks.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -182,34 +221,53 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+### Phase Reviews: p01 and p02
+
+**p01:** The first review found one Important and one Medium parser gap. Two
+bounded same-target fix iterations resolved supported `--cwd` parsing,
+shell-newline/backtick conservatism, and empty quoted argv preservation. The
+decision review passed with zero findings.
+
+**p02:** The first review passed with zero findings at every severity.
+
+**Artifacts:**
+
+- `reviews/archived/code-p01-review-2026-08-30T225810Z.md`
+- `reviews/archived/code-p02-review-2026-08-30T224353Z.md`
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
 
 ### 2026-08-30
 
-**Session Start:** {time}
+**Session Start:** 22:35 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: configured-command validator - `9f29e674`
+- [x] p01-t02: canonical lifecycle skill commands - `30142390`
+- [x] p02-t01: artifact-missing terminal - `286da58a`
+- [x] p02-t02: synchronous no-yield prompt - `76966f7f`
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Configuration and runtime contract cores implemented, reviewed, and merged.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Preserved conservative wrapper handling; only recognized direct lifecycle
+  commands are validated and rejected.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- p03 must prove the exact configured-command subprocess seam.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
+**Session End:** in progress
 
 ---
 
@@ -233,11 +291,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
+| Phase | Tests Run                                                               | Passed      | Failed | Coverage                                 |
+| ----- | ----------------------------------------------------------------------- | ----------- | ------ | ---------------------------------------- |
+| 1     | Validator + skill contracts; type-check; check/lint/format; skill bumps | 223 focused | 0      | Contract matrix and five skill consumers |
+| 2     | Gate runtime + review-skill contracts; type-check; lint/format          | 255 focused | 0      | Artifact-missing and no-yield branches   |
+| 3     | -                                                                       | -           | -      | -                                        |
 
 ## Final Summary (for PR/docs)
 

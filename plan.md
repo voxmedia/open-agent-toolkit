@@ -501,15 +501,15 @@ git commit -m "chore(p03-t03): finalize gate execution contract"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target                   |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01    | code     | pending | -          | -                                                           | -             | -          | -                             |
-| p02    | code     | pending | -          | -                                                           | -             | -          | -                             |
-| p03    | code     | pending | -          | -                                                           | -             | -          | -                             |
-| final  | code     | pending | -          | -                                                           | -             | -          | -                             |
-| spec   | artifact | pending | -          | -                                                           | -             | -          | -                             |
-| design | artifact | pending | -          | -                                                           | -             | -          | -                             |
-| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -             | gate       | claude-fable-skip-permissions |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed  | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
+| p02    | code     | passed  | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
+| p03    | code     | pending | -          | -                                                           | -                                        | -          | -                             |
+| final  | code     | pending | -          | -                                                           | -                                        | -          | -                             |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
+| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
