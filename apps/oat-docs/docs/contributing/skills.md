@@ -119,21 +119,26 @@ dependency.
 
 ### The ratchet allows only exact historical baselines
 
-Do not use a bare `.agents/skills/<sibling>/SKILL.md`, `./.agents/...`, or
-`../.agents/...` path for an executable read in any user-default skill or
-agent. The bundled-docs contract test enforces this over the whole
-manifest-derived surface and reports each violation as exact
-`source -> target` evidence.
+Do not use a bare `.agents/skills/<sibling>/SKILL.md`,
+`.agents/agents/<canonical-name>.md`, dot-relative equivalent, or repeated-parent
+canonical `agents/<canonical-name>.md` hop for an executable read in any
+user-default skill or agent. The bundled-docs contract test enforces this over
+the whole manifest-derived surface and reports each violation as exact
+`source -> target` evidence. Executable agent findings have a zero baseline, so
+every bare canonical-agent read fails the ratchet. Portable
+`${AGENT_PROVIDER_ROOT}/agents/...` reads and legitimate `.claude` or `.cursor`
+provider-view examples are classified as non-findings.
 
-The only exemption is a pinned historical baseline: non-executable evidence
-such as a dogfood transcript or a fixture README, recorded by exact source
-file, target skill, and target path. There is no wildcard, directory-wide, or
-skill-wide allowance, and no temporary migration allowlist — executable debt is
-fixed at the caller instead of being exempted. The same assertions run against
-the bundled CLI copies of both skills and agents, and the sync contract test
-re-checks the roles it materializes for Codex, so a canonical fix must survive
-bundling and Codex sync as well. No test yet gates the generated `.claude` or
-`.cursor` agent views, so regenerate and spot-check those by hand.
+The pinned historical baseline applies only to skill findings: its six exact
+entries are non-executable evidence such as dogfood transcripts or fixture
+READMEs, recorded by source file, target skill, and target path. There is no
+wildcard, directory-wide, or skill-wide allowance, and no temporary migration
+allowlist — executable debt is fixed at the caller instead of being exempted.
+The same assertions run against the bundled CLI copies of both skills and
+agents, and the sync contract test re-checks the roles it materializes for
+Codex, so a canonical fix must survive bundling and Codex sync as well. No test
+yet gates the generated `.claude` or `.cursor` agent views, so regenerate and
+spot-check those by hand.
 
 ## Contract components
 
