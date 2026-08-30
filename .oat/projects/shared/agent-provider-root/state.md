@@ -56,23 +56,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=74cd3cd8-293d-4c20-a4d1-13a30010a1be; handoff=Run oat-project-review-receive for .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md before treating this gate review as consumed.; source=.oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md; scope=final; type=code; filename=final-review-2026-08-30T182542Z.md'
+  receive_source_artifact: .oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
+  receive_archived_artifact: .oat/projects/shared/agent-provider-root/reviews/archived/final-review-2026-08-30T182542Z.md
+  receive_event_identity: 'final|code|final-review-2026-08-30T182542Z.md'
+  receive_pre_head: e05e31f9b7589a75e76b6f794c506ab3f500f620
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-30T18:27:00Z'
+  updated_at: '2026-08-30T18:29:30Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:27:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:29:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip

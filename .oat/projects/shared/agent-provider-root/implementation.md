@@ -464,6 +464,7 @@ Chronological log of implementation progress.
 - **2026-08-30T18:19:08Z — launch intent persisted:** Preselected attempt `agent-provider-root-exit-gate-20260830T181908Z-5afa94b8-b594-412f-9055-d7855ac7cbed` and its durable result receipt before executing the configured command.
 - **2026-08-30T18:21:30Z — launch accepted:** Correlated the single gate marker and run ID `74cd3cd8-293d-4c20-a4d1-13a30010a1be`; the configured reviewer target is `cursor-fable-5-high` and the run remains active.
 - **2026-08-30T18:27:00Z — result persisted:** The configured command exited `0`; its single structured envelope is `ok`, `receiveEligible: true`, and corroborates the gate-authored final review at `reviews/final-review-2026-08-30T182542Z.md` for run `74cd3cd8-293d-4c20-a4d1-13a30010a1be`. Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- **2026-08-30T18:29:30Z — receive intent persisted:** Bound run `74cd3cd8-293d-4c20-a4d1-13a30010a1be`, source `reviews/final-review-2026-08-30T182542Z.md`, collision-free archive destination, exact event identity `final|code|final-review-2026-08-30T182542Z.md`, and pre-receive head `e05e31f9b7589a75e76b6f794c506ab3f500f620` before receive.
 
 ---
 
