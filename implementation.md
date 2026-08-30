@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 5     | 3/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 5     | 5/5       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
 ## Phase 1: Configuration Contract Core
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -170,19 +170,38 @@ owned backlog items are archived and the complete repository DoD passed.
 
 ### Task p03-t04: Repair final lifecycle handoff references
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Project receipt:** 07d42cfb0e93be3860f279820b410652373cf2e6
 
-**Outcome:** Pending.
+**Outcome:** The final handoff now names the shipped gate owner and configured
+integration test, marks the quick-mode spec N/A, and links both backlog records
+at their archived paths.
+
+**Files changed:**
+
+- `.oat/projects/synced/gate-execution-contract-hardening/implementation.md`
+- `.oat/projects/synced/gate-execution-contract-hardening/discovery.md`
+
+**Verification:** Formatting, both archived-record existence checks, project
+scope resolution, and the validated synced-project push all passed.
 
 ---
 
 ### Task p03-t05: Complete the artifact-missing contract assertion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 659547363032fd9f41eefadc947bb0496fe7457f
 
-**Outcome:** Pending.
+**Outcome:** The complete public gate-result contract now asserts
+`artifact_missing`, receive ineligibility, no same-run receive/remediation, and
+a new run only after synchronous artifact production is fixed.
+
+**Files changed:**
+
+- `packages/cli/src/validation/skills.test.ts`
+
+**Verification:** The focused 190-test contract suite, skill-version-bump gate,
+and repository check passed before and after the source commit.
 
 ---
 
@@ -312,6 +331,8 @@ severity. The reviewed head was
 
 **New tasks added:** p03-t04, p03-t05
 
+**Status:** `fixes_completed` (awaiting final re-review)
+
 **Finding dispositions:**
 
 - M1 (`artifact_alignment_required`, Minor scope): align the final summary's
@@ -321,8 +342,8 @@ severity. The reviewed head was
 - m1 (`artifact_alignment_required`, Negligible scope): repair the two
   discovery links after their planned backlog archival in p03-t04.
 
-**Next:** Execute the two bounded fixes, mark this review `fixes_completed`,
-then run a final re-review to reach `passed`.
+**Next:** Run a final re-review; do not advance this event to `passed` until
+that independent review accepts the corrected source and artifacts.
 
 ---
 
@@ -341,6 +362,8 @@ Chronological log of implementation progress.
 - [x] p03-t01: reject invalid configured commands before writes - `a8a1b77d`
 - [x] p03-t02: configured headless subprocess seam - `5dfaa596`
 - [x] p03-t03: docs, release, backlog, and full verification - `7bba63b3`
+- [x] p03-t04: final lifecycle handoff references - project receipt `07d42cfb`
+- [x] p03-t05: artifact-missing contract assertion - `65954736`
 
 **What changed (high level):**
 
@@ -389,6 +412,7 @@ Track test execution during implementation.
 | 1     | Validator + skill contracts; type-check; check/lint/format; skill bumps | 223 focused                        | 0      | Contract matrix and five skill consumers     |
 | 2     | Gate runtime + review-skill contracts; type-check; lint/format          | 255 focused                        | 0      | Artifact-missing and no-yield branches       |
 | 3     | Full DoD plus forced uncached Turbo; integration and review suites      | 10 Turbo tasks plus focused suites | 0      | Configuration-to-runtime seam, docs, release |
+| 3 fix | Public contract regression suite; skill bumps; repository check         | 190 focused                        | 0      | Final-review handoff and recovery contract   |
 
 ## Final Summary (for PR/docs)
 
