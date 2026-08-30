@@ -149,6 +149,19 @@ oat_generated: false
   re-review the complete phase range.
 - Fix-loop usage: 0/2 before dispatch
 
+#### Dispatch Record: p01 fix round 1
+
+- Request: `dispatch-p01-fix-r1-20260829-01`
+- Continuation of: `dispatch-p01-2bff47e5-f2a9-4fa4-a706-b97dc6a97806`
+- Launch state/outcome: accepted / pending
+- Immutable fix base: `717df3056006286d036d0f2d07554a67f3272ea0`
+- Route: original `oat-phase-implementer-gpt-5-6-sol-medium` handle
+- Scope: Critical C1 from `reviews/p01-review-2026-08-30T022309Z.md`;
+  `p01-t03`; one append-only commit; three authorized files
+- Fix-loop usage: round 1 of 2
+- Dispatch stamp:
+  `Dispatch: scope=p01 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
