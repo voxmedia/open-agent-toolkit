@@ -1,7 +1,8 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 80f8216fd0b1d705087798ae4aa0bd6608cd45a7
-oat_blockers: []
+oat_blockers:
+  - p03 documentation compatibility wording and troubleshooting scope require user approval
 associated_issues:
   - type: backlog
     ref: BL-260827-clean-up-tool-pack-lifecycle
@@ -26,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T04:09:09Z'
+oat_project_state_updated: '2026-08-30T04:12:39Z'
 oat_generated: false
 ---
 
@@ -39,8 +40,8 @@ oat_generated: false
 ## Current Phase
 
 Both plan-declared parallel phases passed root review and merged in plan order.
-The merged 495-test focused surface is green. Phase p03 release integration is
-next, including its documentation approval gate and full definition of done.
+The merged 495-test focused surface is green. Phase p03 stopped cleanly before
+edits at its required documentation approval checkpoint.
 
 ## Artifacts
 
@@ -68,9 +69,11 @@ next, including its documentation approval gate and full definition of done.
 
 ## Blockers
 
-None.
+- User approval is required for compatibility wording in `tool-packs.md` and a
+  bounded scope expansion to correct stale `--force` guidance in
+  `reference/troubleshooting.md`.
 
 ## Next Milestone
 
-Run p03 release integration, obtain approval for any substantive documentation
-delta, then execute every CI-equivalent gate in order.
+After the documentation decision, resume the original p03 implementer handle,
+then run release integration and every CI-equivalent gate in order.

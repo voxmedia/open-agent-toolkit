@@ -60,6 +60,10 @@ Phase p01 passed narrowed root re-review with zero findings after one bounded fi
 
 Parallel group p01/p02 merged in plan order at cfc8585d0cc11a2e01af36cdef895fd8794c9485 and 80f8216fd0b1d705087798ae4aa0bd6608cd45a7; combined fan-in verification passed 495 tests; both isolated worktrees were removed after clean merges.
 
+### 2026-08-30 · structural · oat-project-implement · p03-docs-approval
+
+Phase p03 stopped cleanly at its required documentation checkpoint before edits; approval is required for tool-packs.md compatibility wording and a bounded troubleshooting.md scope expansion.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
