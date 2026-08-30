@@ -678,7 +678,7 @@ report 13 tasks.
 | plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                             |
 | plan   | artifact | fixes_completed | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T225534Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan   | artifact | passed          | 2026-08-27 | reviews/archived/artifact-plan-review-2026-08-27T230217Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| final  | code     | received        | 2026-08-30 | reviews/final-review-2026-08-30T060811Z.md                  | b9dcc9c4eb4d02c2ad67d6442ed28118968352ce | gate       | claude-fable-skip-permissions |
+| final  | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T060811Z.md         | b9dcc9c4eb4d02c2ad67d6442ed28118968352ce | gate       | claude-fable-skip-permissions |
 
 ## Implementation Complete
 

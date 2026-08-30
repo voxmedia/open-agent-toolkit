@@ -538,6 +538,26 @@ oat_generated: false
 - Receive: eligible with a non-null correlated handoff; disposition is pending
   durable review receive.
 
+### Review Received: final (configured gate, generation 1)
+
+- Artifact: `reviews/archived/final-review-2026-08-30T060811Z.md`
+- Run: `eff218f5-9e87-41be-891c-79301573b4f8`; invocation `gate`; target
+  `claude-fable-skip-permissions`.
+- Findings: 0 Critical, 0 Important, 0 Medium, 3 Minor; gate passed at the
+  Important threshold.
+- Judgment-sweep dispositions:
+  - m1, unreachable `adoptedPacks` spread: rejected as non-behavioral uniform
+    serializer composition; changing shipped code after the passed gate would
+    add churn without a contract improvement.
+  - m2, explicit `.allowUnknownOption(false)`: accepted as intentional
+    registration-site documentation of the removed `--force` rejection
+    contract; Commander's matching default does not make it incorrect.
+  - m3, stale state body date: addressed in this receive bookkeeping change;
+    canonical frontmatter and body now agree on 2026-08-30.
+- Deferred Medium ledger: empty; the earlier p02 boundary finding is resolved
+  by p04-t01.
+- Verdict: gate review passed and received with no remediation task.
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
