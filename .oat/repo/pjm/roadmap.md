@@ -16,7 +16,7 @@ and title so this map remains readable without a board lookup.
 - **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts** — Build adaptive idle-kill and early-artifact semantics on the shipped scope-aware hard budgets, transcript liveness evidence, and correlated timeout recovery.
 - **BL-260729-implement-reviewplan-first: Implement ReviewPlan-first reviewer workflow** — Finish QA/dogfood and reconcile draft PR #190 before opening another broad review implementation lane. Project: review-plan-workflow.
 - **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** — Highest-priority review-efficiency safety net; repair ledger-only findings without spending another quality-review cycle. Project: review-gate-integrity.
-- **BL-260829-unified-agent-provider-root: Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** — Promote the newly merged PR #231 follow-up to spec-driven design; resolve tier, representation, and dependency-isolation questions before implementation. Project: agent-provider-root.
+- **BL-260829-unified-agent-provider-root: Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** — Implementation and all repository/review gates are complete on the project branch; keep active until merge, then archive the backlog item. Project: agent-provider-root.
 
 ## Next (Planned)
 
@@ -60,11 +60,10 @@ parallel implementation lanes.
 
 1. Finish/dogfood **BL-260729-implement-reviewplan-first** (Implement
    ReviewPlan-first reviewer workflow) and reconcile PR #190 with current main.
-2. In parallel, complete the spec/design gate for **BL-260829-unified-agent-provider-root**
-   (Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references).
-   Do not start its implementation as a quick patch: its tier and
-   representation questions are architectural.
-3. Implement the portable agent-root contract, then let
+2. Merge **BL-260829-unified-agent-provider-root** (Unified AGENT_PROVIDER_ROOT
+   binding for portable skill and agent references) after final HiLL and PR
+   review; its implementation and repository gates are complete.
+3. Let
    **BL-260829-make-tool-pack-scope-selection** (Make tool-pack scope, provider
    reachability, and dispatch state truthful) consume that contract for
    canonical fallback provenance. The scope/provider project may continue

@@ -4,19 +4,14 @@
 
 ## Curated Overview
 
-- Portable references now have a second chapter. The
-  `portable-agent-references` project (successor to
-  `BL-260827-make-packaged-skill-references`) generalized the ratchet across the
-  whole user-default skill _and_ agent surface and drained live debt to zero,
-  but its final review surfaced one direction it does not cover:
-  `BL-260829-unified-agent-provider-root`. Skills reading canonical agent
-  definitions still use bare `.agents/agents/<name>.md` paths, which the ratchet
-  cannot see at all. Deferral was judged acceptable — nothing breaks while
-  `.agents/agents/` exists at project scope — but the failure is silent, fires
-  only after a dispatch rejection, and nothing prevents new instances. It
-  carries real design questions (loaded-tier eligibility, and whether a shared
-  root regresses independent per-dependency binding), so it is sized L and
-  wants a design pass rather than a patch.
+- Portable references now cover canonical skill-to-agent reads on the
+  `agent-provider-root` branch. `BL-260829-unified-agent-provider-root` defines
+  a dependency-owned local `${AGENT_PROVIDER_ROOT}`, admits loaded targets only
+  through exact same-scope canonical identity, migrates seven live reads, and
+  adds a zero-executable-agent ratchet with mutation proof. Provider-native
+  model, effort, and variant dispatch remain unchanged. Implementation and all
+  repository/review gates are complete; the item remains open only until the
+  branch merges.
 - The first of three user-scope tool-pack closeout follow-ups is closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
   links and their ratchet in PR #226. The two remaining bounded features stay
