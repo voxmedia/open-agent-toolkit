@@ -229,6 +229,7 @@ type ReviewGateTerminalStatus =
   | 'ok'
   | 'blocked'
   | 'review_failed'
+  | 'artifact_missing'
   | 'targeting_correlation_failed'
   | 'artifact_validation_failed';
 interface ReviewGateProjectLogFinalization {
@@ -2668,6 +2669,45 @@ function writeReviewGateArtifactValidationFailure(
   context.logger.error(payload.recovery);
 }
 
+function writeReviewGateArtifactMissing(
+  context: CommandContext,
+  payload: {
+    runId: string;
+    target: string;
+    project: string;
+    projectResolutionSource: ReviewProjectResolutionSource;
+    gateInvocation: GateInvocationMetadata;
+    dispatchReport: DispatchReportV1;
+  },
+): void {
+  const message = `Review target ${payload.target} completed without producing the required correlated review artifact.`;
+  const recovery =
+    'Fix the accepted headless target so it can write and finalize the review artifact before the process exits, then start a new gate run.';
+  if (context.json) {
+    context.logger.json({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      runId: payload.runId,
+      target: payload.target,
+      project: payload.project,
+      projectResolutionSource: payload.projectResolutionSource,
+      artifactPath: null,
+      generatedAt: null,
+      gateInvocation: payload.gateInvocation,
+      dispatchReport: payload.dispatchReport,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message,
+      recovery,
+    });
+    return;
+  }
+
+  context.logger.error(message);
+  context.logger.error(recovery);
+}
+
 function writeReviewGateTargetingFailure(
   context: CommandContext,
   payload: {
@@ -3388,6 +3428,25 @@ async function runReviewGate(
     const producedArtifact = artifactResolution.artifact;
     if (!producedArtifact) {
       const diagnosticArtifact = artifactResolution.diagnosticArtifact;
+      if (
+        !diagnosticArtifact &&
+        artifactResolution.matchingArtifactPaths.length === 0
+      ) {
+        if (projectLogFinalization) {
+          projectLogFinalization.status = 'artifact_missing';
+          projectLogFinalization.exitCode = 1;
+        }
+        writeReviewGateArtifactMissing(context, {
+          runId,
+          target: selected.id,
+          project: projectPath,
+          projectResolutionSource: reviewProject.source,
+          gateInvocation,
+          dispatchReport,
+        });
+        process.exitCode = 1;
+        return;
+      }
       const message =
         artifactResolution.matchingArtifactPaths.length > 1
           ? `Multiple direct review artifacts carried gate run ID ${runId}.`

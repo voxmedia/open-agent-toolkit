@@ -4606,6 +4606,35 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('classifies a clean review target without an artifact as artifact missing', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      artifactPath: null,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message: expect.stringContaining(
+        'completed without producing the required correlated review artifact',
+      ),
+      recovery: expect.stringMatching(
+        /write and finalize the review artifact before the process exits.*new gate run/i,
+      ),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it.each([
     {
       outcome: 'success',
@@ -4643,9 +4672,9 @@ describe('oat gate', () => {
       expectedCounts: false,
     },
     {
-      outcome: 'targeting-correlation failure',
+      outcome: 'artifact-missing failure',
       childExitCode: 0,
-      expectedStatus: 'targeting_correlation_failed',
+      expectedStatus: 'artifact_missing',
       expectedExitCode: 1,
       expectedArtifact: false,
       expectedCounts: false,
@@ -7801,8 +7830,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
@@ -7830,8 +7859,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
