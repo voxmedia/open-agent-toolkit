@@ -140,6 +140,12 @@ Two independent facts describe a pack:
   release manifest declares for that pack and scope, its presence, and its
   version or content digest.
 
+Versioned skills and agents must match on both version metadata and canonical
+content. A same-version content change is therefore reported as outdated rather
+than current. Content comparison ignores the executable-bit normalization OAT
+intentionally applies while materializing managed scripts, but still detects
+file content, entry-type, and symlink-target changes.
+
 Commands report both. `oat tools list` and `oat tools info` show placement,
 intent source, and completeness. `oat status` and `oat doctor` report drift
 between intent and inventory with a scoped recovery command.
@@ -182,11 +188,12 @@ without qualification. Install the pack at **project scope** when you need its
 agents; `oat tools update` cannot repair this, because it is a scope limitation
 rather than drift.
 
-Repository templates under `.oat/templates/` are **owner overrides**. Once a
-project-scope template exists, OAT will not rewrite it: the managed default now
-lives at user scope and in the bundle. Delete the repository copy to resume
-managed-default behavior. `oat status` and `oat doctor` report retained
-overrides so the divergence is visible rather than silent.
+Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
+compares a source-backed seed with its bundled default: a byte-equivalent copy
+is reported as current, while an edited copy is retained and reported as a
+`retained-override`. OAT will not rewrite the retained copy. Delete a repository
+template only when you intentionally want the bundled default seeded again;
+never delete edited mutable seed content merely to clear the diagnostic.
 
 ### Evolving pack membership
 
@@ -454,8 +461,15 @@ Key behavior:
 - Every pack's fresh-install default is user scope (`defaultScope` in the release manifest); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes or creates a second copy at the other one. This applies to the per-pack subcommands too: a bare `oat tools install docs` in a repository where `docs` is already at project scope stays at project scope, and only an explicit `--scope` overrides that
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
 - Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
-- Tracks installed vs bundled skill versions and reports outdated skills
+- Tracks installed versus bundled skill and agent versions and canonical
+  content, reporting same-version content drift as outdated while ignoring
+  expected executable-bit normalization
 - Writes pack intent into the config file for the scope you installed into: a project install sets `tools.<pack>: true` in `.oat/config.json`, and a user install sets it in `~/.oat/config.json`. A user-only install never writes repository config
+- When a project install discovers existing project-scoped packs whose intent
+  is missing, it writes those exact intents in canonical pack order. Human
+  output prints `Adopted project tool pack: <pack>` once per adopted pack;
+  JSON output adds `adoptedPacks` only when the list is non-empty. This is pack
+  intent reconciliation, not repository PJM adoption
 - A user-only install needs no Git repository and performs no repository writes
 - Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md` **only for project-scope runs of the aggregate `oat tools install`**. The per-pack subcommands (`oat tools install workflows`, `oat tools install docs`, and the rest) never write `AGENTS.md`, at either scope
 - Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack no longer upserts a managed `OAT project-management` section; `oat pjm init` writes that repository guidance when the repository actually adopts PJM
@@ -474,12 +488,17 @@ Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - With no target, exits without mutation and suggests the explicit bulk command `oat tools update --all`; invalid packs and conflicting targets keep their own targeted diagnostics
-- Compares installed versions against bundled versions and copies updated assets
+- Compares installed versions and canonical content against bundled assets and
+  copies updates; equal version metadata does not hide content drift
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to the **current** release membership in the scopes where it is installed, adding newly bundled skills, agents, templates, and scripts
 - A pack whose managed assets are all missing but whose intent is still declared is repaired from intent rather than skipped
 - Managed template and script companions are refreshed at **user** scope. A project-scope repository template is an owner override and is left alone
 - Non-versioned assets are compared by content digest, so an identical refresh is a no-op instead of a rewrite
 - Update persists inferred legacy intent only after a successful explicit mutation, so a read never rewrites your config
+- A successful project-scope update reports the exact newly adopted legacy pack
+  intents in canonical order. Human output uses
+  `Adopted project tool pack: <pack>`; JSON output adds the optional
+  `adoptedPacks` array only when at least one intent was written
 - `--scope all` outside a Git repository completes the user-scope work instead of failing. Unlike `oat status` and `oat doctor`, update skips project scope silently and does not name it in the result; an explicitly requested `--scope project` outside a repository is still a hard failure
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
@@ -735,8 +754,9 @@ Removal and migration use the symmetric contract: the follow-up sync prunes exac
 User-scope tool packs and explicit PJM adoption changed several defaults and
 exit codes. Nothing here is data-destructive, and legacy config keeps working —
 `tools.<pack>: false` still parses, complete pre-adoption PJM scaffolds are
-grandfathered as `inferred-legacy`, and no CLI flag was removed or renamed. But
-several commands you already run behave differently.
+grandfathered as `inferred-legacy`, and existing installs remain additive. One
+inert per-pack install flag was removed, and several commands you already run
+behave differently.
 
 ### Install scope defaults flipped to user
 
@@ -781,6 +801,26 @@ is not installed. Test for a truthy value instead. Legacy `false` values that
 already exist in a config file are still read (see
 [Legacy `false` intent](#legacy-false-intent)) — they are just never written.
 
+Direct config writes now enforce the same true-or-absent contract.
+`oat config set tools.<pack> false` exits `1` without changing the config. To
+remove a project-scoped pack and clear its intent, run:
+
+```bash
+oat tools remove --pack <pack> --scope project
+```
+
+Existing legacy `false` values remain readable migration input.
+
+### Per-pack install `--force` was removed
+
+`oat tools install <pack> --force` is now rejected as an unknown option. The
+flag was inert in the unified additive lifecycle. To reconcile installed
+assets, use the scoped update command instead:
+
+```bash
+oat tools update --pack <pack> --scope <scope>
+```
+
 ### Per-pack install `--json` changed shape
 
 The per-pack subcommands (`oat tools install docs`, `oat tools install
@@ -802,6 +842,12 @@ above. The previous single-scope payload's `scope`, `targetRoot`, `assetsRoot`,
 `selectedSkills`, and `result` fields are **gone**, not renamed. A script
 keying on them reads `undefined` rather than failing. Read `scopes` for the
 scopes acted on, and `results[].request.scopeRoot` for the target root of each.
+
+When a project-scope aggregate install, direct pack install, or update adopts
+missing legacy pack intents, the same single payload also contains
+`"adoptedPacks": ["docs", "workflows"]`. The field is omitted when nothing was
+adopted, and entries follow the manifest's canonical pack order. Human output
+reports the same set as one `Adopted project tool pack: <pack>` line per pack.
 
 ### Other behavior changes worth knowing
 

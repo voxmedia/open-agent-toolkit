@@ -29,12 +29,22 @@ copying their content here. -->
 - [Project Log](../../../apps/oat-docs/docs/cli-utilities/project-log.md)
   defines append-only project observations, validated CLI mutations, and
   roll-up-before-archive behavior.
+- [Tool-pack lifecycle/config cleanup summary](../reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
+  records the shipped contracts, decisions, verification, and the isolated PJM
+  layout-cleanup follow-up for PR #240.
 
 ## What's Implemented
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.45` (synced-project-scope, PR #227 integrated branch) adds a Git-native
+- CLI `0.2.46` (`tool-pack-cleanup` branch; pending merge and release) completes
+  the tool-pack lifecycle/config cleanup with content-aware inventory, exact
+  adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
+  and removal of the inert per-pack install `--force` option. Compatibility
+  guidance now directs operators to scoped update and remove commands. The
+  lifecycle/config backlog item is closed on this branch, but `origin/main`
+  remains at `0.2.45`; `0.2.46` has not been merged or published.
+- CLI `0.2.45` (synced-project-scope, merged as PR #227 and released) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
   New projects default to the configurable synced scope; explicit `shared` and
@@ -85,9 +95,9 @@ copying their content here. -->
   keeps user scope skills-only where required and reports unmaterialized agents
   explicitly. All eleven repository gates and a zero-finding final closeout
   review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
-  diagnostics and lifecycle/config polish remain as implementation-ready
-  follow-up projects.
-- CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
+  diagnostics remain as an implementation-ready follow-up, while the
+  lifecycle/config cleanup is complete on the pending-release `0.2.46` branch.
+- CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently
   bypass it), C0/C1 control characters and backslashes are rejected in both
@@ -101,8 +111,9 @@ copying their content here. -->
   (`check:skill-bumps`, `release:check-versions`) run locally and in CI, and
   `AGENTS.md`'s Definition of Done now mirrors CI's gate list exactly. Asset
   bundling publishes by atomic staged rename. Delivered through six final
-  review rounds and five bounded fix batches; deferred residue lives in six
-  `BL-260817-*` backlog items.
+  review rounds and five bounded fix batches; four `BL-260817-*` follow-ups
+  remain after the `0.2.33` and `0.2.35` releases closed the branch-behind-main
+  and reader-side asset-isolation defects.
 - CLI `0.2.35` closes the hermetic-assets defect from the 2026-08-19 defect wave
   program (wave 3 wrapper project `wave-3-execution`): `resolveAssetsRoot`
   honors a non-empty `OAT_ASSETS_DIR` with the unchanged fail-closed bundle
@@ -393,3 +404,10 @@ provider agent views are not format-identical to canonical, and whether a
 shared root regresses independent per-dependency binding), so it is scaffolded
 as project `agent-provider-root` with seeded discovery rather than queued as a
 mechanical port.
+
+The canonical PJM operating files are current, but `oat pjm doctor` still
+reports four pre-existing layout warning classes from older reference
+generations. `BL-260830-migrate-the-legacy-pjm` (Migrate the legacy PJM
+reference layout) and its kickoff handoff isolate the lossless reconciliation
+and cleanup in a dedicated branch after PR #240 merges; this branch does not
+delete or restructure the legacy material.

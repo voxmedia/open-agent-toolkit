@@ -6,6 +6,7 @@ import type {
   SelectChoice,
 } from '@commands/shared/shared.prompts';
 import type { PackLifecycleRequest } from '@commands/tools/shared/pack-lifecycle';
+import { createToolsUpdateCommand } from '@commands/tools/update';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -443,6 +444,10 @@ describe('createInitToolsCommand', () => {
     process.exitCode = undefined;
     configPersistence.readOatConfig.mockClear();
     configPersistence.writeOatConfig.mockClear();
+    configPersistence.readOatConfig.mockResolvedValue({
+      version: 1,
+      localPaths: [],
+    });
   });
 
   afterEach(() => {
@@ -460,6 +465,41 @@ describe('createInitToolsCommand', () => {
     expect(subcommands).toContain('utility');
     expect(subcommands).toContain('research');
     expect(subcommands).toContain('brainstorm');
+  });
+
+  it('does not advertise force for any individual pack command', () => {
+    const { command } = createHarness({ useLifecycle: true });
+
+    for (const packCommand of command.commands) {
+      expect(packCommand.helpInformation()).not.toContain('--force');
+    }
+  });
+
+  it('rejects force for an individual pack install', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+    command.commands.forEach((packCommand) => packCommand.exitOverride());
+
+    await expect(
+      runCommand(command, ['docs', '--force'], ['--scope', 'project']),
+    ).rejects.toMatchObject({ code: 'commander.unknownOption' });
+    expect(reconcilePacks).not.toHaveBeenCalled();
+  });
+
+  it('retains the supported top-level update options', () => {
+    const updateCommand = createToolsUpdateCommand();
+    const optionFlags = updateCommand.options.map(({ flags }) => flags);
+
+    expect(optionFlags).toEqual(
+      expect.arrayContaining([
+        '--pack <pack>',
+        '--all',
+        '--dry-run',
+        '--no-sync',
+      ]),
+    );
   });
 
   it('bare oat init tools in interactive mode shows grouped pack list', async () => {
@@ -1314,6 +1354,86 @@ describe('createInitToolsCommand', () => {
         },
       }),
     );
+  });
+
+  it('reports aggregate project pack adoption in canonical order in one JSON document', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [
+          createScannedTool('analyze', 'research', 'project'),
+          createScannedTool('oat-docs-analyze', 'docs', 'project'),
+        ],
+        user: [],
+      },
+    });
+
+    await runCommand(command, [], ['--json', '--scope', 'all']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({ adoptedPacks: ['docs', 'research'] }),
+    );
+    expect(configPersistence.writeOatConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports each adopted pack once for a direct project install', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--scope', 'project']);
+
+    expect(capture.info).toContain('Adopted project tool pack: docs');
+    expect(
+      capture.info.filter((line) => line === 'Adopted project tool pack: docs'),
+    ).toHaveLength(1);
+  });
+
+  it('reports direct project pack adoption in one JSON document', async () => {
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--json', '--scope', 'project']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toEqual(
+      expect.objectContaining({ adoptedPacks: ['docs'] }),
+    );
+  });
+
+  it('keeps a direct idempotent JSON result free of adoption fields', async () => {
+    configPersistence.readOatConfig.mockResolvedValue({
+      version: 1,
+      tools: { docs: true },
+    });
+    const { command, capture } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: {
+        project: [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+        user: [],
+      },
+    });
+
+    await runCommand(command, ['docs'], ['--json', '--scope', 'project']);
+
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('adoptedPacks');
+    expect(capture.info).not.toContain('Adopted project tool pack: docs');
+    expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
   });
 
   it('does not write shared config for a direct user-only brainstorm install', async () => {

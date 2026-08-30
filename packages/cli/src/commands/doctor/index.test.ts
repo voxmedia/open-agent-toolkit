@@ -1629,6 +1629,12 @@ config_file = "agents/${roleName}.toml"
           scopedInventory('workflows', 'project', 'complete', [
             packAsset('.agents/skills/oat-project-new', 'newer', 'project'),
             packAsset(
+              '.oat/ideas/backlog.md',
+              'current',
+              'project',
+              'seed-if-missing',
+            ),
+            packAsset(
               '.oat/templates/state.md',
               'present',
               'project',
@@ -1643,6 +1649,7 @@ config_file = "agents/${roleName}.toml"
 
     expect(capture.info[0]).toContain('workflows [newer]');
     expect(capture.info[0]).toContain('workflows [retained-override]');
+    expect(capture.info[0]).toContain('1 owner-owned override(s) retained');
     expect(capture.info[0]).not.toContain(
       'oat tools update --pack workflows --scope project',
     );

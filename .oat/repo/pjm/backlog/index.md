@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- `BL-260830-migrate-the-legacy-pjm` isolates the repository's four known PJM
+  layout warning classes from PR #240. Its dedicated-branch handoff requires a
+  lossless decision dry run, duplicate-content reconciliation, and explicit
+  preservation checks before any legacy file is removed.
 - Portable references now have a second chapter. The
   `portable-agent-references` project (successor to
   `BL-260827-make-packaged-skill-references`) generalized the ratchet across the
@@ -17,12 +21,12 @@
   carries real design questions (loaded-tier eligibility, and whether a shared
   root regresses independent per-dependency binding), so it is sized L and
   wants a design pass rather than a patch.
-- The first of three user-scope tool-pack closeout follow-ups is closed:
+- Two of three user-scope tool-pack closeout follow-ups are closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
-  links and their ratchet in PR #226. The two remaining bounded features stay
-  separate: `BL-260827-correct-scope-and-adoption` owns PJM adoption and
-  diagnostic correctness edges, while `BL-260827-clean-up-tool-pack-lifecycle`
-  owns lifecycle/config consistency findings.
+  links and their ratchet in PR #226, and the lifecycle/config cleanup is
+  complete on this branch with CLI `0.2.46` pending merge and release. The only
+  remaining bounded feature is `BL-260827-correct-scope-and-adoption`, which
+  owns PJM adoption and diagnostic correctness edges.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
@@ -53,12 +57,12 @@
   distribution, lifecycle, and tenant scope) prevents canonical-directory
   counts from being mistaken for the public bundle. The audit refuted the
   reported MIT/shadcn provenance concern, so no licensing item was added.
-- Explainer publication hardening (explainer-improvements-v2, CLI `0.2.31`
-  pending merge) closed a credential-bearing publication-root bypass with
-  version-agnostic gates and made protected-mode publication durably
-  verifiable; the six `BL-260817-*` items carry its deliberate residue (v1
-  removal, authenticated protected-mode verification, CI browser and
-  version-drift decisions, reader-side assets override).
+- Explainer publication hardening (explainer-improvements-v2, merged as PR #196
+  and released in CLI `0.2.31`) closed a credential-bearing publication-root
+  bypass with version-agnostic gates and made protected-mode publication
+  durably verifiable. Four `BL-260817-*` items carry its remaining deliberate
+  residue: v1 removal, authenticated protected-mode verification, and the CI
+  browser provisioning decisions.
   `BL-260712-serialize-cli-asset-bundling` closed: bundling now publishes by
   atomic staged rename.
 - Project retrospectives now ship in CLI `0.2.30` as a post-approval-only
@@ -138,7 +142,7 @@
   `BL-260713-root-agent-judgment-logging` remains the planned fast-follow:
   root-agent role guidance takes over judgment-entry logging while subagents
   report observations to the root.
-- Build reliability: the 2026-07-12 concurrent-bundling race class (five incidents, one silent bundle corruption) is closed — `BL-260712-serialize-cli-asset-bundling` shipped atomic staged-rename publishing in explainer-improvements-v2. The residual reader-side rename window is `BL-260817-let-resolveassetsroot-honor`.
+- Build reliability: the 2026-07-12 concurrent-bundling race class (five incidents, one silent bundle corruption) is closed — `BL-260712-serialize-cli-asset-bundling` shipped atomic staged-rename publishing in explainer-improvements-v2. CLI `0.2.35` subsequently closed the residual reader-side rename window through `BL-260817-let-resolveassetsroot-honor`.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
 - Review lifecycle bookkeeping now preserves distinct append-ordered events,
   advances them monotonically by artifact identity, and routes from the latest
@@ -205,7 +209,6 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |
-| BL-260827-clean-up-tool-pack-lifecycle   | Clean up tool-pack lifecycle and config contracts                                                     | open   | medium   | feature | S        |
 | BL-260827-correct-scope-and-adoption     | Correct scope and adoption diagnostics                                                                | open   | medium   | feature | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path            | open   | medium   | task    | S        |
 | BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                                          | open   | medium   | task    | S        |
@@ -217,6 +220,7 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature | L        |
+| BL-260830-migrate-the-legacy-pjm         | Migrate the legacy PJM reference layout                                                               | open   | medium   | task    | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                                          | open   | medium   | task    | M        |

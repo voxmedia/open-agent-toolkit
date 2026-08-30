@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                           | Legacy |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------- | ------ |
+| DR-260830-keep-legacy-false-values       | 2026-08-30 | accepted | Keep legacy false values readable but unwritable                                | -      |
+| DR-260830-normalize-executable-modes     | 2026-08-30 | accepted | Normalize executable modes before drift comparison                              | -      |
+| DR-260830-remove-the-inert-per-pack      | 2026-08-30 | accepted | Remove the inert per-pack force option                                          | -      |
+| DR-260830-report-the-exact-adopted-pack  | 2026-08-30 | accepted | Report the exact adopted pack intents                                           | -      |
+| DR-260830-use-content-digests            | 2026-08-30 | accepted | Use content digests as inventory authority                                      | -      |
 | DR-260828-configurable-synced-default    | 2026-08-28 | accepted | Configurable synced default                                                     | -      |
 | DR-260828-custom-project-refs            | 2026-08-28 | accepted | Custom project refs                                                             | -      |
 | DR-260828-fail-closed-sync-mutations     | 2026-08-28 | accepted | Fail-closed sync mutations                                                      | -      |
