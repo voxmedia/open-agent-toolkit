@@ -176,7 +176,7 @@ oat_generated: false
 
 ### Review Received: p01 (round 1)
 
-- Artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Artifact: `reviews/archived/p01-review-2026-08-30T022309Z.md`
 - Reviewed head: `717df3056006286d036d0f2d07554a67f3272ea0`
 - Reconnaissance: not attempted
 - Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
@@ -192,7 +192,7 @@ oat_generated: false
 - Launch state/outcome: accepted / done
 - Immutable fix base: `717df3056006286d036d0f2d07554a67f3272ea0`
 - Route: original `oat-phase-implementer-gpt-5-6-sol-medium` handle
-- Scope: Critical C1 from `reviews/p01-review-2026-08-30T022309Z.md`;
+- Scope: Critical C1 from `reviews/archived/p01-review-2026-08-30T022309Z.md`;
   `p01-t03`; one append-only commit; three authorized files
 - Fix-loop usage: round 1 of 2
 - Dispatch stamp:
@@ -216,7 +216,7 @@ oat_generated: false
 - Launch state/outcome: accepted / passed
 - Narrowed range:
   `717df3056006286d036d0f2d07554a67f3272ea0..caea5ebafe10883b39336219a5cb76a188c96358`
-- Prior artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Prior artifact: `reviews/archived/p01-review-2026-08-30T022309Z.md`
 - Route: `oat-reviewer-gpt-5-6-sol-high`
 - Selection: managed reviewer target `gpt-5.6-sol` / `high`; ceiling `high`
 - Dispatch stamp:
@@ -224,11 +224,11 @@ oat_generated: false
 
 ### Review Received: p01 (round 2, narrowed)
 
-- Artifact: `reviews/p01-review-2026-08-30T023404Z.md`
+- Artifact: `reviews/archived/p01-review-2026-08-30T023404Z.md`
 - Reviewed head: `caea5ebafe10883b39336219a5cb76a188c96358`
 - Range:
   `717df3056006286d036d0f2d07554a67f3272ea0..caea5ebafe10883b39336219a5cb76a188c96358`
-- Prior artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Prior artifact: `reviews/archived/p01-review-2026-08-30T022309Z.md`
 - Reconnaissance: not attempted
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Disposition verification: Critical C1 fixed; append-only parent, mode
@@ -239,7 +239,7 @@ oat_generated: false
 
 ### Review Received: p02 (round 1)
 
-- Artifact: `reviews/p02-review-2026-08-30T022702Z.md`
+- Artifact: `reviews/archived/p02-review-2026-08-30T022702Z.md`
 - Reviewed head: `44edd2bc56ecbf542f0f70f26b79cb31e646c69e`
 - Reconnaissance: attempted; orchestration evidence validated in the artifact
 - Findings: 0 Critical, 0 Important, 1 Medium, 0 Minor
@@ -339,7 +339,7 @@ oat_generated: false
 
 ### Review Received: p03 (round 1)
 
-- Artifact: `reviews/p03-review-2026-08-30T045227Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-30T045227Z.md`
 - Reviewed head: `ae7bbc84e8ca115e3146fc2def4511e5135ac43b`
 - Reconnaissance: not attempted
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
@@ -355,7 +355,7 @@ oat_generated: false
 - Launch state/outcome: accepted / done
 - Exact fix base: `3352eaff8ae38ff1cd2fc876c78233f02d6a1cba`
 - Route: original `oat-phase-implementer-gpt-5-6-sol-high` handle
-- Scope: Important I1 from `reviews/p03-review-2026-08-30T045227Z.md`;
+- Scope: Important I1 from `reviews/archived/p03-review-2026-08-30T045227Z.md`;
   `p03-t02`; four authorized planning files
 - Fix-loop usage: round 1 of 2
 - Dispatch stamp:
@@ -380,14 +380,14 @@ oat_generated: false
 - Launch state/outcome: accepted / completed
 - Narrowed range:
   `3352eaff8ae38ff1cd2fc876c78233f02d6a1cba..5e84048324b90f75247757d842a76cc21d0ab8f3`
-- Prior artifact: `reviews/p03-review-2026-08-30T045227Z.md`
+- Prior artifact: `reviews/archived/p03-review-2026-08-30T045227Z.md`
 - Route: `oat-reviewer-gpt-5-6-sol-high`
 - Dispatch stamp:
   `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Review Received: p03 (round 2, narrowed)
 
-- Artifact: `reviews/p03-review-2026-08-30T050726Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-30T050726Z.md`
 - Reviewed head: `5e84048324b90f75247757d842a76cc21d0ab8f3`
 - Reconnaissance: not attempted
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
@@ -427,14 +427,14 @@ oat_generated: false
 - Launch state/outcome: accepted / passed
 - Narrowed range:
   `aa4756bbb7adc956a706bcb991b72d6006e805c9..bd48b17bd50d11931a8f0540e02a86453087876f`
-- Prior artifact: `reviews/p03-review-2026-08-30T050726Z.md`
+- Prior artifact: `reviews/archived/p03-review-2026-08-30T050726Z.md`
 - Route: `oat-reviewer-gpt-5-6-sol-high`
 - Dispatch stamp:
   `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 
 ### Review Received: p03 (round 3, final narrowed)
 
-- Artifact: `reviews/p03-review-2026-08-30T051631Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-30T051631Z.md`
 - Reviewed head: `bd48b17bd50d11931a8f0540e02a86453087876f`
 - Reconnaissance: not attempted
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor

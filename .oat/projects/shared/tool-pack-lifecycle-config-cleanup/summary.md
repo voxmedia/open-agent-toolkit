@@ -128,7 +128,7 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 ### 2026-08-30 · structural · oat-project-implement · p02
 
-Phase p02 passed root review with 0 Critical, 0 Important, 1 deferred Medium, and 0 Minor findings; fix-loop count 0; reviewer reconnaissance evidence is recorded in reviews/p02-review-2026-08-30T022702Z.md.
+Phase p02 passed root review with 0 Critical, 0 Important, 1 deferred Medium, and 0 Minor findings; fix-loop count 0; reviewer reconnaissance evidence is recorded in reviews/archived/p02-review-2026-08-30T022702Z.md.
 
 ### 2026-08-30 · structural · oat-project-implement · p01
 
