@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 3dc7b053d647fe0cafb133812ec7d311b644eab4
+oat_current_task: p03-t04
+oat_last_commit: 896bfb44988b4cd17cd3b53b0543c8029bd490e7
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -83,7 +83,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/242' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T19:22:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T19:36:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: agent-provider-root
 
-**Status:** Main merged; remote review clean; revalidation in progress
+**Status:** Remote review fix queued
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — validating the resolved `origin/main` merge before refreshing the PR.
+Implementation — `p03-t04` queued from merged-head Bugbot feedback.
 
 ## Artifacts
 
@@ -138,6 +138,8 @@ Implementation — validating the resolved `origin/main` merge before refreshing
 - ✓ PR created
 - ✓ `origin/main` merged with PJM indexes regenerated and lockstep `0.2.47` preserved
 - ✓ Bugbot review of pre-merge head received with zero actionable findings
+- ✓ Merged-head Bugbot review received with one Minor finding
+- ⧗ Review fix `p03-t04`: restore omitted final-review ledger event
 - ⧗ Awaiting human review
 - ✓ Final HiLL approval
 
@@ -147,7 +149,7 @@ None
 
 ## Next Milestone
 
-Validate and push the resolved `origin/main` merge, then receive the Bugbot event for the merged PR head.
+Run `oat-project-implement` to execute `p03-t04`, reverify the review ledger, and refresh stale lifecycle evidence.
 
 - If the merged-head review adds fix tasks: resume with `oat-project-implement`.
 - If it is clean: refresh final lifecycle evidence before completion/archival.

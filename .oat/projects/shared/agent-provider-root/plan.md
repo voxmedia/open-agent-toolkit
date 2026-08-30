@@ -501,20 +501,58 @@ git add packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract
 git commit -m "fix(p03-t03): preserve executable reads beside sync examples"
 ```
 
+### Task p03-t04: (review) Restore omitted final review ledger event
+
+**Requirements:** Review-ledger event identity and append-order preservation
+
+**Files:**
+
+- Modify: `.oat/projects/shared/agent-provider-root/plan.md`
+
+**Step 1: Analyze the missing event**
+
+Compare `reviews/archived/final-review-2026-08-30T175056Z.md` with the
+implementation review log and the current Reviews table. Confirm its exact
+event identity, reviewed head, invocation, and completed fix task without
+mutating any other review event.
+
+**Step 2: Restore the append-ordered ledger row**
+
+Append the missing `final` + `code` + artifact event with reviewed head
+`2a6141fe8551067b48cc3db6ce49a92d1dad6469`, invocation `auto`, gate target
+`-`, and status `fixes_completed`. Preserve all existing rows, known values,
+unknown columns, and the separate passing re-review event.
+
+**Step 3: Verify targeted behavior**
+
+Format `plan.md`, then verify the ledger contains exactly one row for each of
+the `175056Z`, `181453Z`, and `182542Z` artifacts with their distinct statuses
+and provenance. Confirm no existing row was removed or rewritten.
+
+**Step 4: Verify project commands and commit**
+
+```bash
+pnpm format
+pnpm check
+git add .oat/projects/shared/agent-provider-root/plan.md .oat/projects/shared/agent-provider-root/implementation.md .oat/projects/shared/agent-provider-root/state.md
+git commit -m "fix(p03-t04): restore omitted final review ledger event"
+```
+
 ## Reviews
 
-| Scope         | Type     | Status  | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
-| ------------- | -------- | ------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01           | code     | passed  | 2026-08-30 | reviews/archived/p01-review-2026-08-30T164420Z.md             | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p02           | code     | passed  | 2026-08-30 | reviews/archived/p02-review-2026-08-30T170942Z.md             | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p03           | code     | passed  | 2026-08-30 | reviews/archived/p03-review-2026-08-30T173812Z.md             | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final         | code     | passed  | 2026-08-30 | reviews/archived/final-review-2026-08-30T181453Z.md           | 3240a1bec3e7bcdfe044ace76994502e0a4b666d | auto       | -                             |
-| spec          | artifact | pending | -          | -                                                             | -                                        | -          | -                             |
-| design        | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
-| plan          | artifact | passed  | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
-| plan          | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
-| final         | code     | passed  | 2026-08-30 | reviews/archived/final-review-2026-08-30T182542Z.md           | 1d2bcafab6a61ee3fa85bc878ba7efcef7512407 | gate       | cursor-fable-5-high           |
-| remote-pr-242 | code     | passed  | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md   | 71b39d208d959403ae36e1c22eab3bafcf46cbdd | -          | -                             |
+| Scope         | Type     | Status      | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------------- | -------- | ----------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01           | code     | passed      | 2026-08-30 | reviews/archived/p01-review-2026-08-30T164420Z.md             | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p02           | code     | passed      | 2026-08-30 | reviews/archived/p02-review-2026-08-30T170942Z.md             | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p03           | code     | passed      | 2026-08-30 | reviews/archived/p03-review-2026-08-30T173812Z.md             | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final         | code     | passed      | 2026-08-30 | reviews/archived/final-review-2026-08-30T181453Z.md           | 3240a1bec3e7bcdfe044ace76994502e0a4b666d | auto       | -                             |
+| spec          | artifact | pending     | -          | -                                                             | -                                        | -          | -                             |
+| design        | artifact | passed      | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
+| plan          | artifact | passed      | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
+| plan          | artifact | passed      | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
+| final         | code     | passed      | 2026-08-30 | reviews/archived/final-review-2026-08-30T182542Z.md           | 1d2bcafab6a61ee3fa85bc878ba7efcef7512407 | gate       | cursor-fable-5-high           |
+| remote-pr-242 | code     | passed      | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md   | 71b39d208d959403ae36e1c22eab3bafcf46cbdd | -          | -                             |
+| remote-pr-242 | code     | fixes_added | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
@@ -529,9 +567,9 @@ Preserve every existing row and unknown trailing cell.
 
 - Phase 1: 2 tasks - Typed classifier and exact-target fixture contract
 - Phase 2: 4 tasks - Seven live-read migrations and zero agent ratchet
-- Phase 3: 3 tasks - Documentation, release metadata, mutation, full gates, and the final-review ratchet fix
+- Phase 3: 4 tasks - Documentation, release metadata, mutation, full gates, the ratchet fix, and remote-review ledger repair
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
 Ready for code review and merge after all tasks, configured phase reviews, and
 the final review pass.

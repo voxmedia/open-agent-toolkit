@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | completed | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 4     | 4/4       |
+| Phase 3 | in_progress | 4     | 3/4       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ---
 
@@ -477,6 +477,16 @@ Chronological log of implementation progress.
 - **Artifact:** `reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md`
 - **New tasks:** None
 - **Next:** Validate and push the `origin/main` merge, then receive the Bugbot event for the merged head.
+
+### Remote Review Received: PR #242 merged head
+
+- **Date:** 2026-08-30
+- **Reviewed head:** `896bfb44988b4cd17cd3b53b0543c8029bd490e7`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+- **Disposition:** Converted `m1` to `p03-t04`; no findings were deferred or dismissed.
+- **Artifact:** `reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md`
+- **New tasks:** `p03-t04`
+- **Next:** Resume `oat-project-implement` to restore the omitted append-ordered final-review ledger event and refresh stale lifecycle evidence.
 
 ### Exit Gate Audit
 
