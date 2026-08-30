@@ -159,9 +159,6 @@ const PORTABLE_SKILL_READ =
 const PORTABLE_AGENT_READ =
   /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/agents\/|(?:\.\.\/)+agents\/)([a-zA-Z0-9_-]+)\.md/g;
 
-const PROVIDER_AGENT_SYNC_EXAMPLE =
-  /^(?=[\s\S]*\.(?:claude|cursor)\/agents\/)(?=[\s\S]*\(synced (?:to|from) `?\.(?:agents|claude|cursor)\/agents\/)/i;
-
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
   '`${HOME}/.agents/skills`',
@@ -338,8 +335,18 @@ function classifyPortableAssetTargets(
     const nextLineBreak = markdown.indexOf('\n', match.index);
     const lineEnd = nextLineBreak === -1 ? markdown.length : nextLineBreak;
     const line = markdown.slice(lineStart, lineEnd);
-    if (PROVIDER_AGENT_SYNC_EXAMPLE.test(line)) continue;
     const evidence = match[0];
+    const occurrenceStart = match.index - lineStart;
+    if (
+      isProviderAgentSyncOccurrence(
+        line,
+        occurrenceStart,
+        occurrenceStart + evidence.length,
+        name,
+      )
+    ) {
+      continue;
+    }
     indexed.push({
       asset: { kind: 'agent', name },
       target: evidence,
@@ -351,6 +358,37 @@ function classifyPortableAssetTargets(
   return indexed
     .sort((left, right) => left.index - right.index)
     .map(({ index: _index, ...finding }) => finding);
+}
+
+function isProviderAgentSyncOccurrence(
+  line: string,
+  occurrenceStart: number,
+  occurrenceEnd: number,
+  canonicalName: string,
+): boolean {
+  const before = line.slice(0, occurrenceStart);
+  const after = line.slice(occurrenceEnd);
+
+  // Canonical source followed immediately by its Claude/Cursor sync target.
+  // A directory-only target inherits the canonical occurrence's role; a
+  // target that names a role must name the same one.
+  const syncedProvider = after.match(
+    /^`?\s*\(synced to `?\.(?:claude|cursor)\/agents\/(?:([a-zA-Z0-9_-]+)\.md)?`?\)/i,
+  );
+  if (
+    syncedProvider &&
+    (!syncedProvider[1] || syncedProvider[1] === canonicalName)
+  ) {
+    return true;
+  }
+
+  // Provider view followed immediately by its exact canonical sync target.
+  // Matching the role on both sides keeps an unrelated earlier provider path
+  // from exempting this canonical occurrence.
+  const syncedCanonical = before.match(
+    /\.(?:claude|cursor)\/agents\/([a-zA-Z0-9_-]+)\.md`?\s*\(synced (?:to|from) `?$/i,
+  );
+  return syncedCanonical?.[1] === canonicalName && /^`?\)/.test(after);
 }
 
 function inspectCanonicalAgentCandidate(
@@ -870,6 +908,17 @@ describe('skills bundled docs contract', () => {
           asset: { kind: 'agent', name: 'oat-reviewer' },
           evidence: '../../agents/oat-reviewer.md',
           target: '../../agents/oat-reviewer.md',
+        },
+      ],
+    ],
+    [
+      'mixed executable read and same-role provider-sync example',
+      'Read `.agents/agents/oat-reviewer.md`; provider `.claude/agents/oat-reviewer.md` (synced to `.agents/agents/oat-reviewer.md`)',
+      [
+        {
+          asset: { kind: 'agent', name: 'oat-reviewer' },
+          evidence: '.agents/agents/oat-reviewer.md',
+          target: '.agents/agents/oat-reviewer.md',
         },
       ],
     ],
