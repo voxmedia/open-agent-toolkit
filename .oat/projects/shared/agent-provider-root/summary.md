@@ -83,3 +83,7 @@ Phase p03 passed after one source commit plus one planned evidence-only task and
 ### 2026-08-30 · structural · oat gate review · final
 
 target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/agent-provider-root/reviews/final-review-2026-08-30T182542Z.md
+
+### 2026-08-30 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/agent-provider-root/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,github-pr-checks,lifecycle-artifacts,project-log evidence_unavailable=oat-execution-learnings,session-transcript promotions=0 upstream=0 apply=skipped filing=skipped

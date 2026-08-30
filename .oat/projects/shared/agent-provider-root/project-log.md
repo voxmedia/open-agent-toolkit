@@ -64,6 +64,6 @@ target=cursor-fable-5-high threshold=important findings=critical:0,important:0,m
 
 retro artifact=.oat/projects/shared/agent-provider-root/references/project-retro.md evidence_used=archived-review-markdown,gate-receipts,git-history,github-pr-checks,lifecycle-artifacts,project-log evidence_unavailable=oat-execution-learnings,session-transcript promotions=0 upstream=0 apply=skipped filing=skipped
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Overall verdict: provider-aware canonical role reads shipped and were verified without changing native dispatch. Adopted adjustments: the provider-example exemption became occurrence-scoped, and the final-review ledger now preserves complete chronological history with passing latest-event semantics. Graduations: none; adjacent provider materialization and scope-selection work remains owned by the tracked tool-pack-scope-provider-truthfulness project.
