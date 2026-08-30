@@ -14,13 +14,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status      | Tasks | Completed |
-| ------------------------------------- | ----------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
-| p03 — Release Integration             | fixes_added | 2     | 1/2       |
+| Phase                                 | Status          | Tasks | Completed |
+| ------------------------------------- | --------------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
+| p03 — Release Integration             | fixes_completed | 2     | 2/2       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** fixes_added
+**Status:** fixes_completed
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
@@ -72,8 +72,8 @@ oat_generated: false
 
 ### Task p03-t02: Align completed lifecycle planning views
 
-**Status:** pending
-**Commit:** -
+**Status:** done
+**Commit:** `5e84048324b90f75247757d842a76cc21d0ab8f3`
 
 ## Orchestration Runs
 
@@ -317,6 +317,32 @@ oat_generated: false
   backlog overview, roadmap, and current-state view, regenerate the backlog
   index, and re-review the append-only fix
 - Fix-loop usage: 0/2 before dispatch
+
+#### Dispatch Record: p03 fix round 1
+
+- Request: `dispatch-p03-fix-r1-20260829-01`
+- Continuation of: `dispatch-p03-implementation-20260829-01`
+- Launch state/outcome: accepted / done
+- Exact fix base: `3352eaff8ae38ff1cd2fc876c78233f02d6a1cba`
+- Route: original `oat-phase-implementer-gpt-5-6-sol-high` handle
+- Scope: Important I1 from `reviews/p03-review-2026-08-30T045227Z.md`;
+  `p03-t02`; four authorized planning files
+- Fix-loop usage: round 1 of 2
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+### Fix Completed: p03 (round 1)
+
+- Append-only commit: `5e84048324b90f75247757d842a76cc21d0ab8f3`
+- Finding I1 / task `p03-t02`: fixed
+- Planning state: closed lifecycle cleanup removed from active curated views;
+  remaining scope-selection item owns its own work and links to the archived
+  historical record; `0.2.46` is explicitly not merged or published
+- Verification: backlog regeneration, scoped assertions/formatting, check,
+  lint, format, docs build, and diff check pass; PJM doctor has only the four
+  pre-existing layout warnings
+- Range and four-file bounds verified; worktree clean
+- Fix-loop usage: 1/2; narrowed re-review required
 
 <!-- orchestration-runs-end -->
 

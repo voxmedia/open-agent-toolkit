@@ -437,6 +437,7 @@ asset after the gates.
 **Files:**
 
 - Modify: `.oat/repo/pjm/backlog/index.md`
+- Modify: `.oat/repo/pjm/backlog/items/BL-260829-make-tool-pack-scope-selection.md`
 - Modify: `.oat/repo/pjm/roadmap.md`
 - Modify: `.oat/repo/pjm/current-state.md`
 
@@ -478,7 +479,7 @@ with captured logs.
 | p01    | code     | fixes_completed | 2026-08-30 | reviews/p01-review-2026-08-30T022309Z.md                    | 717df3056006286d036d0f2d07554a67f3272ea0 | auto       | -                        |
 | p01    | code     | passed          | 2026-08-30 | reviews/p01-review-2026-08-30T023404Z.md                    | caea5ebafe10883b39336219a5cb76a188c96358 | auto       | -                        |
 | p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
-| p03    | code     | fixes_added     | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
+| p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
