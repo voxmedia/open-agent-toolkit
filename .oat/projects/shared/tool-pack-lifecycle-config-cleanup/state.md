@@ -72,12 +72,12 @@ oat_post_implement_sequence:
   post_approval: []
   post_approval_completed: []
   failure: null
-oat_docs_updated: true
+oat_docs_updated: complete
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T06:19:00Z'
+oat_project_state_updated: '2026-08-30T06:29:06Z'
 oat_generated: false
 ---
 
