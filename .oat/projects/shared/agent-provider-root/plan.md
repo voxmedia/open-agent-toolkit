@@ -250,7 +250,7 @@ git commit -m "fix(p02-t02): bind plan reviewer instructions locally"
 
 ### Task p02-t03: Migrate implementation fallback roles
 
-**Requirements:** FR1, FR3, FR5, FR6, NFR3
+**Requirements:** FR1, FR3, FR5, FR6, NFR1, NFR3
 
 **Files:**
 
@@ -364,7 +364,7 @@ dispatch.
 **Step 2: Refresh generated views and release metadata**
 
 Fetch `origin/main`, verify the public-package baseline, and advance all five
-packages to the next unused common patch (currently `0.2.46` from `0.2.45`).
+packages to the next unused common patch strictly above that fetched baseline.
 Regenerate public-package version metadata and the lockfile through repository
 tooling. Run repository-source project sync and keep only expected generated
 changes. Revalidate Claude/Cursor base symlinks, Cursor variants, and Codex TOML
@@ -373,7 +373,7 @@ exclusion.
 **Step 3: Format and verify**
 
 ```bash
-pnpm exec oxfmt --write apps/oat-docs/docs/contributing/skills.md apps/oat-docs/docs/cli-utilities/tool-packs.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
+pnpm exec oxfmt --write apps/oat-docs/docs/contributing/skills.md apps/oat-docs/docs/cli-utilities/tool-packs.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
 pnpm lint
 pnpm format
 pnpm run check:skill-bumps
@@ -463,16 +463,16 @@ commit `chore(p03-t02): finalize provider-root release proof`. Otherwise let
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                             | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                             | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                             | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                             | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                             | -             | -          | -           |
-| design | artifact | passed   | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -             | -          | -           |
-| plan   | artifact | passed   | 2026-08-30 | -                                                             | -             | auto       | -           |
-| plan   | artifact | received | 2026-08-30 | reviews/artifact-plan-review-2026-08-30T160834Z.md            | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                             | -             | -          | -           |
+| p03    | code     | pending | -          | -                                                             | -             | -          | -           |
+| final  | code     | pending | -          | -                                                             | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                             | -             | -          | -           |
+| design | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -             | -          | -           |
+| plan   | artifact | passed  | 2026-08-30 | -                                                             | -             | auto       | -           |
+| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -             | -          | -           |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
