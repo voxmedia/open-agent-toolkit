@@ -34,6 +34,13 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.46` (`tool-pack-cleanup` branch; pending merge and release) completes
+  the tool-pack lifecycle/config cleanup with content-aware inventory, exact
+  adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
+  and removal of the inert per-pack install `--force` option. Compatibility
+  guidance now directs operators to scoped update and remove commands. The
+  lifecycle/config backlog item is closed on this branch, but `origin/main`
+  remains at `0.2.45`; `0.2.46` has not been merged or published.
 - CLI `0.2.45` (synced-project-scope, PR #227 integrated branch) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
@@ -85,8 +92,8 @@ copying their content here. -->
   keeps user scope skills-only where required and reports unmaterialized agents
   explicitly. All eleven repository gates and a zero-finding final closeout
   review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
-  diagnostics and lifecycle/config polish remain as implementation-ready
-  follow-up projects.
+  diagnostics remain as an implementation-ready follow-up, while the
+  lifecycle/config cleanup is complete on the pending-release `0.2.46` branch.
 - CLI `0.2.31` (explainer-improvements-v2, branch pending merge) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently

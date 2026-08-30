@@ -17,12 +17,12 @@
   carries real design questions (loaded-tier eligibility, and whether a shared
   root regresses independent per-dependency binding), so it is sized L and
   wants a design pass rather than a patch.
-- The first of three user-scope tool-pack closeout follow-ups is closed:
+- Two of three user-scope tool-pack closeout follow-ups are closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
-  links and their ratchet in PR #226. The two remaining bounded features stay
-  separate: `BL-260827-correct-scope-and-adoption` owns PJM adoption and
-  diagnostic correctness edges, while `BL-260827-clean-up-tool-pack-lifecycle`
-  owns lifecycle/config consistency findings.
+  links and their ratchet in PR #226, and the lifecycle/config cleanup is
+  complete on this branch with CLI `0.2.46` pending merge and release. The only
+  remaining bounded feature is `BL-260827-correct-scope-and-adoption`, which
+  owns PJM adoption and diagnostic correctness edges.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
