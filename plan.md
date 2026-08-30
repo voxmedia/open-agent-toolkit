@@ -401,7 +401,7 @@ git commit -m "test(p03-t02): prove configured headless gate outcomes"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
-- Modify: `pnpm-lock.yaml`
+- Modify if needed: `pnpm-lock.yaml`
 - Archive through CLI:
   `.oat/repo/pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md`
 - Archive through CLI:
@@ -419,8 +419,10 @@ execution, and the distinct `artifact_missing` versus
 **Step 2: Apply lockstep release bookkeeping**
 
 Increment all five publishable public package versions together to the next
-patch and refresh the lockfile. Do not change release policy or unrelated
-dependencies.
+patch. Run `pnpm install` only if the package edits require it, and retain a
+`pnpm-lock.yaml` change only when pnpm actually produces one; version-only
+lockstep bumps historically leave the lockfile unchanged. Do not change release
+policy or unrelated dependencies.
 
 **Step 3: Reconcile the authoritative backlog acceptance criteria**
 
@@ -444,7 +446,7 @@ review/gate integrity items.
 **Step 5: Format**
 
 ```bash
-pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
+pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
 ```
 
 **Step 6: Run the repository Definition of Done in CI order**
@@ -490,21 +492,22 @@ backlog lifecycle drift.
 **Step 7: Commit**
 
 ```bash
-git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog
+git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json .oat/repo/pjm/backlog
+# If pnpm actually changed the lockfile, also stage pnpm-lock.yaml.
 git commit -m "chore(p03-t03): finalize gate execution contract"
 ```
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-08-30 | reviews/artifact-plan-review-2026-08-30T222802Z.md | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target                   |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| p03    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| final  | code     | pending | -          | -                                                           | -             | -          | -                             |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -                             |
+| design | artifact | pending | -          | -                                                           | -             | -          | -                             |
+| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -             | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

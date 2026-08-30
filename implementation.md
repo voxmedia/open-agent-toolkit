@@ -124,6 +124,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+### Review Received: plan
+
+**Date:** 2026-08-30
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-08-30T222802Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 2
+
+**Artifact dispositions:**
+
+- `m1` (`resolve_in_artifact`): removed `pnpm-lock.yaml` from the oxfmt target list because oxfmt does not process YAML.
+- `m2` (`resolve_in_artifact`): made lockfile mutation and staging conditional on pnpm producing an actual change.
+
+**New tasks added:** None. Artifact-review findings were resolved directly in
+`plan.md`.
+
+**Next:** Continue the quick workflow into `oat-project-implement`.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
