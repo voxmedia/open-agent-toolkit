@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-23
+oat_last_updated: 2026-08-30
 oat_generated: true
 oat_summary_last_task: p05-t01
 oat_summary_revision_count: 0
@@ -218,3 +218,23 @@ Accepted fresh final lifecycle re-review after approved docs and repo-reference 
 ### 2026-07-23 · structural · oat gate review · final
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T163522Z.md
+
+### 2026-07-23 · structural · pr-feedback · PR #172 Bugbot
+
+Accepted and verified the homogeneous-wave axis-parity fix; rebased release metadata now targets 0.2.14, and the prior exit gate is stale pending refresh. See implementation.md.
+
+### 2026-07-23 · structural · pr-feedback · PR #172 Bugbot rerun
+
+Accepted and verified the engine-first consumer-load and request-selector mapping fixes in 4d59b8f7; strengthened coverage also corrected Cursor Cloud ordering. See implementation.md.
+
+### 2026-08-07 · structural · oat-project-retro · references/project-retro.md
+
+artifact=.oat/projects/shared/subagent-orchestration/references/project-retro.md evidence=project-log,lifecycle-artifacts,repo-reference-ledgers unavailable=oat-execution-learnings,review-artifacts,session-transcript promotions=1 filing=1 apply=deferred filing=deferred
+
+### 2026-08-07 · project · bug · retro generation receipt keys
+
+Correction to `### 2026-08-07 · structural · oat-project-retro · references/project-retro.md`: the unambiguous receipt is artifact=.oat/projects/shared/subagent-orchestration/references/project-retro.md evidence=project-log,lifecycle-artifacts,repo-reference-ledgers unavailable=oat-execution-learnings,review-artifacts,session-transcript promotions=1 upstream=1 apply=deferred filing=deferred. (observed on oat-project-retro 1.0.1, CLI 0.2.30)
+
+### 2026-08-30 · structural · oat-project-complete · completion-override
+
+Operator approved completion after PR #172 merged with green CI, release dry-run, and Bugbot checks. No implementation work remains; the stale post-feedback lifecycle gate is explicitly overridden for historical closeout.

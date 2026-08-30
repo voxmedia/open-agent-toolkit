@@ -1,44 +1,134 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-07-31
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-08-30
+oat_generated: true
+oat_summary_last_task: p-rev3-t02
+oat_summary_revision_count: 3
+oat_summary_includes_revisions: [p-rev1, p-rev2, p-rev3]
 ---
 
-# Project Log: bounded-recovery-authorization
+# Summary: bounded-recovery-authorization
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+OAT repeatedly requested authorization when phase verification found an obvious,
+in-scope defect after a task commit. This project made prevention primary and
+defined bounded same-target repair as part of existing phase authority while
+preserving immutable commits, accepted-launch terminality, and every
+consequential stop boundary.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- Added a three-way dispatch taxonomy separating forbidden accepted-launch
+  fallback, authorized same-target recovery, and scope-expanding work that
+  requires new direction.
+- Added tiered pre-commit verification and a dedicated
+  `oat_phase_recovery_policy` with a default limit of 10 attempts per phase,
+  optional `0`–`20` overrides, monotonic durable accounting, and explicit
+  exhaustion behavior.
+- Defined the complete append-only recovery protocol: reserve before editing,
+  preserve the original task commit, create one recovery commit per successful
+  attempt, emit one canonical recovery event per disposition, and validate the
+  committed terminal handoff before root bookkeeping clears the ledger.
+- Kept fresh recovery launches pinned to the exact accepted target and original
+  request through continuation events; route escalation and fallback remain
+  ineligible.
+- Regenerated Claude, Codex, and Cursor provider views and added relational
+  contract, provider-parity, and autonomy-inventory coverage.
+- Published the workflow and migration guidance, then advanced all five public
+  packages and bundled inventory in lockstep from `0.2.26` to `0.2.28` after
+  merge-time release reconciliation.
+- Closed PR feedback with direction-required pre-attempt handoff,
+  committed-tree recovery verification, report-specific task validation, and
+  event-distinct remote review evidence; PR #189 then merged with all checks
+  green.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+## Key Decisions
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Immutable append-only same-target recovery:** A committed task is never
+  amended or replaced. Mechanically bounded repair remains on the accepted
+  target and produces separately validated recovery history; every other
+  consumer remains default-deny unless it defines an equally complete standing
+  authority contract.
+- **Dedicated bounded recovery state:** Recovery uses its own per-phase numeric
+  budget rather than the review-loop retry counter. Usage never resets, a
+  reservation is consumed before editing, and terminal evidence remains
+  committed until root validation authorizes clearing.
+- **Tiered prevention with observable recovery:** Applicable discoverable checks
+  run before task commits, while disproportionate repository-wide checks may
+  remain phase-level. Any later post-commit disposition uses a canonical event
+  so lower prompt volume cannot conceal unchanged defect volume.
+- **Canonical policy with generated provider parity:** Shared skills and agent
+  contracts are authoritative; provider-specific assets are generated views
+  validated for equivalent behavior instead of independently maintained policy
+  forks.
 
-## Entry format
+## Design Deltas
 
-Judgment entries:
+- Revision phase `p-rev1` clarified the final-attempt boundary: an already
+  reserved, reconciled attempt may finish at `used == limit`, while exhaustion
+  still forbids a new reservation.
+- Revision phase `p-rev2` added three exact non-gate autonomy-inventory mappings
+  exposed by full Phase 4 verification.
+- Final lifecycle review found a circular validate/clear precondition. Phase 5
+  split the committed pre-bookkeeping terminal handoff from the post-bookkeeping
+  settled state and added ordered transition-matrix coverage.
 
-```text
-### 2026-07-31 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+## Notable Challenges
 
-Structural entries:
+- Phase 1 exhausted its three-cycle review cap with one Important finding, so
+  the terminal-attempt correction had to proceed through a separately
+  authorized revision phase without rewriting failed review history.
+- Phase 3's first review found a recovery-ledger ownership wording defect and
+  its original fix continuation lacked required linkage; a bounded corrected
+  launch preserved the same target and scope.
+- Full Phase 4 verification surfaced autonomy gate-inventory drift outside that
+  phase's authorized boundary. The release edits were restored, a narrow
+  revision phase repaired the mappings, and Phase 4 reran from a clean baseline.
 
-```text
-### 2026-07-31 · structural · <producer> · <ref>
-```
+## Tradeoffs Made
 
-## Entries
+- Broad tests and builds remain phase-level when their per-task cost is
+  disproportionate; emitted-output and configuration changes still trigger
+  discoverable scoped checks before commit.
+- The default budget of 10 covers the observed nine-event disruption with one
+  attempt of headroom. Hard bounds, non-resetting usage, and fail-closed
+  ambiguity handling trade some autonomy for auditable safety.
 
-Entries are chronological and append-only.
+## Integration Notes
+
+- Released assets are in public package version `0.2.28`.
+- Existing installations must run `oat tools update` and then
+  `oat sync --scope all` before global phase agents use the new contracts.
+- `oat_phase_recovery_policy` is independent of
+  `oat_orchestration_retry_limit`; review/fix and gate-loop behavior is
+  unchanged.
+
+## Revision History
+
+- **p-rev1 — final reserved-attempt boundary:** Superseded the unresolved Phase
+  1 review finding without reopening the failed phase. It preserved consumed
+  budget while allowing an already reserved attempt to reach a terminal state.
+- **p-rev2 — autonomy inventory coverage:** Added the exact `NG` mappings
+  required by new recovery-contract prompt-site prose, then allowed the
+  unchanged release phase to rerun.
+- **Phase 5 — final-review ledger handoff:** Closed the final Critical finding by
+  validating committed terminal markers before clearing and treating only the
+  post-clear null marker as settled.
+- **p-rev3 — post-PR contract and review evidence:** Resolved four Bugbot
+  recovery-contract findings, then preserved the original review event and
+  three event-distinct archived remote-review artifacts in append-only order.
+
+## Follow-up Items
+
+- The unrelated session-observer transcript-prefix mismatch remains outside
+  this project.
+- Project-specific standing authorization for already-running projects remains
+  deferred; this work intentionally shipped only the systemic OAT contract.
+
+## Workflow Observations
 
 ### 2026-07-31 · structural · oat-project-implement · p-rev1
 
@@ -152,6 +242,6 @@ PR #189 re-review passed at d5b830ec2676bb8ccf19a72c6fff51a309575fa8: CI, releas
 
 Correction to p-rev3-bugbot-pass: the zero-unresolved observation remains factual, but that entry did not itself establish a valid remote receive because the Reviews event identity and archived evidence were incomplete. Task p-rev3-t02 restores the original row and records event-distinct evidence in reviews/archived/remote-pr-189-review-2026-08-02T004800Z.md, remote-pr-189-review-2026-08-02T011158Z.md, and remote-pr-189-review-2026-08-02T011715Z.md. This later entry supersedes the prior bookkeeping interpretation without deleting history.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-08-30 · structural · oat-project-complete · completion-override
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Operator approved completion after PR #189 merged with green CI, release dry-run, and Bugbot checks. No implementation work remains; the stale refreshed final gate and unrecorded p-rev3 HiLL approval are explicitly overridden for historical closeout.
