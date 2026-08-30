@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 5f6e5c7019944ae7fa602367b9427c8713935cd5
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -8,7 +8,8 @@ associated_issues:
 oat_kind: implementation
 oat_parent: null
 oat_siblings: []
-oat_depends_on: []
+oat_depends_on:
+  - migrate-the-legacy-pjm
 oat_children: []
 oat_dispatch_policy:
   mode: managed
@@ -26,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T21:48:26Z'
+oat_project_state_updated: '2026-08-30T22:10:52Z'
 oat_generated: false
 ---
 
@@ -38,9 +39,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation started at p01-t01 from the revalidated current-main plan. The
-four phases are sequential, use the managed High dispatch ceiling, and stop at
-the final p04 HiLL checkpoint only.
+Phase p01 passed after two planned commits, one bounded Important fix, and a
+clean High re-review. Implementation continues at p02-t01 under the managed
+High dispatch ceiling and stops at the final p04 HiLL checkpoint only.
 
 ## Artifacts
 
@@ -48,7 +49,7 @@ the final p04 HiLL checkpoint only.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 9 tasks)
-- **Implementation:** `implementation.md` (in progress; 0/9 tasks complete)
+- **Implementation:** `implementation.md` (in progress; 2/9 tasks complete)
 
 ## Progress
 
@@ -67,13 +68,18 @@ the final p04 HiLL checkpoint only.
 - ✓ Shared-file merge order recorded: diagnostics first, umbrella rebase second
 - ✓ Final-only HiLL checkpoint and automatic checkpoint review resolved from
   workflow configuration
+- ✓ p01 complete; full PJM suite 79/79 and High re-review passed with zero
+  findings
+- ⚠ Merge depends on the separate `migrate-the-legacy-pjm` cleanup landing
+  first; rebase, inspect overlap, and rerun PJM evidence before merge
 
 ## Blockers
 
 None. The exhausted automatic plan-review retry is recorded as an explicit
-override, not a clean review pass.
+override, not a clean review pass. The PJM cleanup is a merge dependency, not an
+implementation blocker.
 
 ## Next Milestone
 
-Begin `oat-project-implement` at atomic task `p01-t01` and continue through the
-sequential phases using the managed High dispatch ceiling.
+Continue `oat-project-implement` at p02-t01. Do not merge ahead of the PJM
+cleanup PR; after it lands, rebase and rerun p01 verification before merge.

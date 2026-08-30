@@ -44,6 +44,14 @@ Entries are chronological and append-only.
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/scope-adoption-diagnostics/reviews/artifact-plan-review-2026-08-27T221042Z.md
 
+### 2026-08-30 · structural · oat-project-implement · p01
+
+Phase p01 passed after two planned commits and one bounded review fix; High re-review passed with zero findings. Artifact: reviews/p01-review-2026-08-30T220913Z.md.
+
+### 2026-08-30 · project · feedback · merge-order
+
+Diagnostics implementation may continue, but merge waits for migrate-the-legacy-pjm to land. Rebase diagnostics, inspect any pjm/doctor.ts overlap, and rerun the PJM suite before merge; tool-pack-scope-provider-truthfulness rebases after diagnostics.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

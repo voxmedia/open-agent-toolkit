@@ -87,6 +87,16 @@ dispatch provenance all remain owned by `tool-pack-scope-provider-truthfulness`.
   duplicate the renderer corrections.
 - Release manifests and PJM backlog indexes are final fan-in surfaces. Do not
   run a concurrent umbrella release bump or archive this backlog item twice.
+- The separate `migrate-the-legacy-pjm` cleanup lands before this project and
+  owns only the generated-pointer classification/test correction in
+  `packages/cli/src/commands/pjm/doctor.ts`. Diagnostics must rebase onto that
+  result and rerun p01 PJM verification before merge; it must not duplicate the
+  cleanup's layout-classification change.
+- The resulting merge order is PJM cleanup → scope-adoption diagnostics →
+  tool-pack scope/provider truthfulness. No direct source overlap is currently
+  planned: p02 writes `commands/doctor/index.ts` and `commands/status/index.ts`,
+  not `commands/pjm/doctor.ts`. Flag and reconcile any broader cleanup diff
+  before diagnostics merges.
 
 ## Parallelism
 
@@ -599,18 +609,19 @@ at the final reviewed head.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------------------------- |
-| p01    | code     | pending         | -          | -                                                    | -             | -          | -                             |
-| p02    | code     | pending         | -          | -                                                    | -             | -          | -                             |
-| p03    | code     | pending         | -          | -                                                    | -             | -          | -                             |
-| p04    | code     | pending         | -          | -                                                    | -             | -          | -                             |
-| final  | code     | pending         | -          | -                                                    | -             | -          | -                             |
-| spec   | artifact | pending         | -          | -                                                    | -             | -          | -                             |
-| design | artifact | pending         | -          | -                                                    | -             | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -             | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md` | -             | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-30 | -                                                    | -             | auto       | oat-reviewer-gpt-5-6-sol-high |
+| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | fixes_completed | 2026-08-30 | `reviews/p01-review-2026-08-30T220053Z.md`           | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
+| p01    | code     | passed          | 2026-08-30 | `reviews/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
+| p02    | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
+| p03    | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
+| p04    | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
+| final  | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
+| design | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-30 | -                                                    | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
