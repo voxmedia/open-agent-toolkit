@@ -496,15 +496,15 @@ git commit -m "chore(p03-t03): finalize gate execution contract"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-08-30 | reviews/artifact-plan-review-2026-08-30T222802Z.md | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
