@@ -1,3 +1,5 @@
+import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -5,11 +7,13 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { SyncedProjectRecord } from '@commands/project/sync/record';
 import type { OatConfig, OatLocalConfig } from '@config/oat-config';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  assertExactArchiveProjectRoot,
   resolveArchiveProjectTarget,
   type ArchiveProjectTarget,
 } from './archive-utils';
@@ -33,6 +37,9 @@ interface HarnessOptions {
       };
     } | null;
     warnings: string[];
+    lifecycleCommit?: string | null;
+    recapExportPaths?: string[];
+    snapshotId?: string;
   };
   archiveTarget?: ArchiveProjectTarget;
   config?: OatConfig;
@@ -42,6 +49,7 @@ interface HarnessOptions {
   processEnv?: NodeJS.ProcessEnv;
   projectsRoot?: string;
   timestamp?: string;
+  syncedRecord?: SyncedProjectRecord | null;
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -70,7 +78,7 @@ function createHarness(options: HarnessOptions = {}): {
     activeProject: '.oat/projects/shared/demo-project',
   };
   const processEnv = options.processEnv ?? { PATH: '/usr/bin' };
-  const archiveResult = options.archiveResult ?? {
+  const archiveResult = {
     archivePath: join(cwd, '.oat', 'projects', 'archived', 'demo-project'),
     s3Path:
       's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
@@ -84,6 +92,10 @@ function createHarness(options: HarnessOptions = {}): {
     ),
     projectRecapExport: null,
     warnings: ['Archive completed locally; S3 sync skipped.'],
+    lifecycleCommit: null,
+    recapExportPaths: [],
+    snapshotId: 'demo-project',
+    ...options.archiveResult,
   };
   const archiveTarget: ArchiveProjectTarget = options.archiveTarget ?? {
     archiveProjectPath: '.oat/projects/archived/demo-project',
@@ -121,6 +133,8 @@ function createHarness(options: HarnessOptions = {}): {
     resolveProjectsRoot: vi.fn(async () => projectsRoot),
     resolvePrimaryRepoRoot: vi.fn(async () => cwd),
     resolveArchiveProjectTarget: vi.fn(async () => archiveTarget),
+    assertExactArchiveProjectRoot,
+    readSyncedRecord: vi.fn(async () => options.syncedRecord ?? null),
     verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
     processEnv,
@@ -167,14 +181,19 @@ async function runProjectArchiveCommand(
 
 describe('oat project archive push', () => {
   let originalExitCode: number | undefined;
+  const tempDirs: string[] = [];
 
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
   });
 
   it('archives the explicit project path with archive config fields', async () => {
@@ -183,7 +202,7 @@ describe('oat project archive push', () => {
 
     await runArchivePushCommand(
       dependencies,
-      '.oat/projects/custom/demo-project',
+      '.oat/projects/shared/demo-project',
       {},
       context,
     );
@@ -194,7 +213,7 @@ describe('oat project archive push', () => {
         '/tmp/workspace/open-agent-toolkit',
         '.oat',
         'projects',
-        'custom',
+        'shared',
         'demo-project',
       ),
       projectName: 'demo-project',
@@ -350,6 +369,62 @@ describe('oat project archive push', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    '.oat/projects/shared/parent/demo-project',
+    '.oat/projects/local/parent/demo-project',
+    '.oat/projects/synced/container/demo-project',
+  ])(
+    'rejects descendant dry-run target %s before target resolution',
+    async (projectPath) => {
+      const { archiveProjectOnCompletion, capture, context, dependencies } =
+        createHarness();
+
+      await runArchivePushCommand(
+        dependencies,
+        projectPath,
+        { dryRun: true },
+        context,
+      );
+
+      expect(capture.error[0]).toContain('exact direct child');
+      expect(dependencies.resolveArchiveProjectTarget).not.toHaveBeenCalled();
+      expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('accepts a direct child through a confined symlinked absolute custom root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-archive-symlink-root-'));
+    tempDirs.push(root);
+    const repoRoot = join(root, 'repo');
+    const repoAlias = join(root, 'repo-alias');
+    const sharedRoot = join(repoRoot, '.oat', 'custom', 'shared');
+    await mkdir(join(sharedRoot, 'demo-project'), { recursive: true });
+    await symlink(repoRoot, repoAlias, 'dir');
+    const projectsRoot = join(repoAlias, '.oat', 'custom', 'shared');
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        cwd: repoRoot,
+        projectsRoot,
+        localConfig: {
+          version: 1,
+          activeProject: join(projectsRoot, 'demo-project'),
+        },
+      });
+
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { dryRun: true },
+      context,
+    );
+
+    expect(capture.error).toEqual([]);
+    expect(dependencies.resolveArchiveProjectTarget).toHaveBeenCalledOnce();
+    expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+  });
+
   it('previews the resolved primary-checkout archive target during --dry-run', async () => {
     const { archiveProjectOnCompletion, capture, context, dependencies } =
       createHarness({
@@ -387,6 +462,90 @@ describe('oat project archive push', () => {
     expect(capture.info[0]).toBe(
       'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456`.',
     );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps first-attempt and persisted-retry synced dry-run identities equal', async () => {
+    const cwd = '/tmp/workspace/open-agent-toolkit';
+    const archiveSnapshot = '20260401-demo-project';
+    const baseRecord: SyncedProjectRecord = {
+      schemaVersion: 1,
+      slug: 'demo-project',
+      scope: 'synced',
+      ref: 'refs/oat/projects/demo-project',
+      remote: 'origin',
+      status: 'complete',
+      createdAt: '2026-03-01T00:00:00.000Z',
+      completedAt: '2026-03-15T00:00:00.000Z',
+    };
+    const first = createHarness({
+      cwd,
+      json: true,
+      localConfig: {
+        version: 1,
+        activeProject: '.oat/projects/synced/demo-project',
+      },
+      syncedRecord: baseRecord,
+    });
+    const retry = createHarness({
+      cwd,
+      json: true,
+      localConfig: {
+        version: 1,
+        activeProject: '.oat/projects/synced/demo-project',
+      },
+      syncedRecord: { ...baseRecord, archiveSnapshot },
+      timestamp: '2026-04-02T12:34:56Z',
+    });
+
+    await runArchivePushCommand(
+      first.dependencies,
+      undefined,
+      { dryRun: true },
+      first.context,
+    );
+    await runArchivePushCommand(
+      retry.dependencies,
+      undefined,
+      { dryRun: true },
+      retry.context,
+    );
+
+    expect(first.dependencies.resolveArchiveProjectTarget).toHaveBeenCalledWith(
+      {
+        repoRoot: cwd,
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo-project',
+      },
+      expect.anything(),
+    );
+    expect(retry.dependencies.resolveArchiveProjectTarget).toHaveBeenCalledWith(
+      {
+        repoRoot: cwd,
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo-project',
+        archiveSnapshot,
+        archiveScope: 'synced',
+      },
+      expect.anything(),
+    );
+    expect(first.archiveProjectOnCompletion).not.toHaveBeenCalled();
+    expect(retry.archiveProjectOnCompletion).not.toHaveBeenCalled();
+    const expectedIdentity = {
+      mode: 'dry-run',
+      snapshotId: archiveSnapshot,
+      s3Path: `s3://example-bucket/oat-archive/open-agent-toolkit/projects/${archiveSnapshot}`,
+      summaryExportFile: join(
+        cwd,
+        '.oat',
+        'repo',
+        'reference',
+        'project-summaries',
+        `${archiveSnapshot}.md`,
+      ),
+    };
+    expect(first.capture.jsonPayloads[0]).toMatchObject(expectedIdentity);
+    expect(retry.capture.jsonPayloads[0]).toMatchObject(expectedIdentity);
     expect(process.exitCode).toBe(0);
   });
 
@@ -503,6 +662,9 @@ describe('oat project archive push', () => {
       summaryExportFile:
         '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-summaries/20260401-demo-project.md',
       projectRecapExport: recapExport,
+      lifecycleCommit: null,
+      recapExportPaths: [],
+      snapshotId: 'demo-project',
       warnings: ['Archive completed locally; S3 sync skipped.'],
     });
     expect(process.exitCode).toBe(0);
@@ -531,6 +693,19 @@ describe('oat project archive push', () => {
     });
 
     expect(archiveProjectOnCompletion).toHaveBeenCalledOnce();
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('wires --no-commit into synced archive options', async () => {
+    const { archiveProjectOnCompletion, command } = createHarness();
+
+    await runProjectArchiveCommand(command, {
+      commandArgs: ['.oat/projects/synced/demo-project', '--no-commit'],
+    });
+
+    expect(archiveProjectOnCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({ commit: false }),
+    );
     expect(process.exitCode).toBe(0);
   });
 });

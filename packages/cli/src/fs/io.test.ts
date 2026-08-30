@@ -119,6 +119,30 @@ describe('fs/io', () => {
     );
   });
 
+  it('copyDirectory filters entries by source-relative path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const srcDir = join(root, 'src');
+    const destDir = join(root, 'dest');
+    await mkdir(join(srcDir, 'reviews'), { recursive: true });
+    await writeFile(join(srcDir, '.git'), 'gitdir: elsewhere\n', 'utf8');
+    await writeFile(join(srcDir, 'state.md'), 'state', 'utf8');
+    await writeFile(join(srcDir, 'reviews', 'review.md'), 'review', 'utf8');
+
+    await copyDirectory(
+      srcDir,
+      destDir,
+      (_source, relativePath) =>
+        relativePath !== '.git' && relativePath !== 'reviews',
+    );
+
+    expect(await readFile(join(destDir, 'state.md'), 'utf8')).toBe('state');
+    await expect(readFile(join(destDir, '.git'), 'utf8')).rejects.toThrow();
+    await expect(
+      readFile(join(destDir, 'reviews', 'review.md'), 'utf8'),
+    ).rejects.toThrow();
+  });
+
   it('copyDirectory preserves executable mode on nested files', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
     tempDirs.push(root);

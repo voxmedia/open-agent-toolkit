@@ -51,6 +51,12 @@ or invalid provenance is omitted from the parsed object.
 
 Reads all projects under a configured projects root and returns lightweight `ProjectSummary` records suitable for list or dashboard surfaces.
 
+`ProjectSummary.scope` is an additive optional field (`shared`, `local`, or
+`synced`). The CLI's cross-scope list surface returns `ProjectListRow[]`, a
+discriminated union: materialized rows carry normal lifecycle state, while
+recorded-but-absent and remote rows use `null` lifecycle fields and an explicit
+pull recommendation instead of inventing project state.
+
 ### `recommendSkill(projectState)`
 
 Pure function that maps parsed project state to the next recommended OAT workflow skill.

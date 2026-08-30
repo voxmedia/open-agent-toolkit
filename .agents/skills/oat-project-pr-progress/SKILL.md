@@ -1,10 +1,10 @@
 ---
 name: oat-project-pr-progress
-version: 1.2.3
+version: 1.3.0
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 ---
 
 # Progress PR
@@ -240,6 +240,10 @@ Reference links policy:
 - Prefer clickable blob links to the current branch for References.
 - Build links from `origin` + current branch when possible.
 - If remote URL cannot be resolved into a web URL, fall back to plain relative paths.
+- For `synced`, never add project artifact paths to References. The delimited
+  `oat project links` block replaces them and contains only eligible pinned
+  discovery/design/summary links; it never links plan, state, implementation,
+  or reviews.
 
 Local path exclusion:
 
@@ -313,6 +317,23 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 ```
 
 ### Step 6: Optional - Open PR
+
+For a synced project whose user chooses to open the PR, use this ordered flow:
+
+1. Finish or refresh `summary.md` and the progress PR artifact.
+2. Run `oat project push "$PROJECT_PATH" --message "chore(oat): prepare progress PR artifacts" --json` so the ref contains both files; a nonzero exit stops the flow until the reported pull/conflict recovery is resolved and the push is retried.
+3. Render `oat project links "$PROJECT_PATH" --format markdown` and insert or replace its delimited block in the stripped PR body. A freshly generated summary must be present in this initial block.
+4. Push the code branch, run `gh pr create`, and capture the returned URL.
+5. Set `oat_phase_status: pr_open`, `oat_pr_status: open`, `oat_pr_url`, and `oat_project_state_updated` in `state.md`.
+6. Run `oat project push "$PROJECT_PATH" --message "chore(oat): record progress PR metadata" --json` again so push-time refresh rewrites the block to the new ref SHA. A nonzero exit stops closeout until the reported recovery is resolved and the push is retried.
+
+Resolve scope fail-closed before branching:
+
+```bash
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing PR bookkeeping" >&2; exit 1; }
+```
+
+The non-synced optional flow below remains unchanged.
 
 Ask the user:
 

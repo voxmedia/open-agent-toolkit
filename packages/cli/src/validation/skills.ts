@@ -46,6 +46,28 @@ interface ValidateOatSkillsDependencies {
   env?: NodeJS.ProcessEnv;
 }
 
+type SyncedBookkeepingKind = 'resolve' | 'arrival' | 'write';
+
+interface SyncedBookkeepingSite {
+  file: string;
+  anchor: string;
+  guard: string;
+  kind: SyncedBookkeepingKind;
+}
+
+interface ContentSite {
+  start: number;
+  end: number;
+  content: string;
+}
+
+interface LogicalLine {
+  content: string;
+  endLine: number;
+  offset: number;
+  startLine: number;
+}
+
 const execFileAsync = promisify(execFileCallback);
 
 async function isDirectory(path: string): Promise<boolean> {
@@ -55,6 +77,595 @@ async function isDirectory(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function isFile(path: string): Promise<boolean> {
+  try {
+    const s = await stat(path);
+    return s.isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function listMarkdownFiles(root: string): Promise<string[]> {
+  if (!(await isDirectory(root))) {
+    return [];
+  }
+
+  const files: string[] = [];
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listMarkdownFiles(path)));
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(path);
+    }
+  }
+  return files.sort();
+}
+
+function countOccurrences(content: string, anchor: string): number {
+  if (anchor.length === 0) {
+    return 0;
+  }
+
+  let count = 0;
+  let offset = 0;
+  while ((offset = content.indexOf(anchor, offset)) !== -1) {
+    count += 1;
+    offset += anchor.length;
+  }
+  return count;
+}
+
+function isLifecycleSafetyFile(file: string): boolean {
+  return (
+    /\/\.agents\/skills\/(?:oat-project-[^/]+|oat-worktree-[^/]+|oat-brainstorm|oat-wave-execute)\//.test(
+      file,
+    ) || file.endsWith('/.agents/agents/oat-phase-implementer.md')
+  );
+}
+
+function referencesProjectArtifactVariable(
+  line: string,
+  artifactArrays: ReadonlySet<string> = new Set(),
+): boolean {
+  if (
+    /\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\}|\$ARTIFACT_PATH|\$\{ARTIFACT_PATH\}|\$ACTIVE_PROJECT(?!_PATH)|\$\{ACTIVE_PROJECT\}|\$REVIEW_PATH|\$\{REVIEW_PATH\}|\$\{(?:PROJECT|RETRO)_[A-Z0-9_]*(?:PATHS|FILES)\[@\]\}/.test(
+      line,
+    )
+  ) {
+    return true;
+  }
+  return [...artifactArrays].some((name) => line.includes(`\${${name}[@]}`));
+}
+
+function projectArtifactArrays(content: string): Set<string> {
+  const arrays = new Set<string>();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const { content: line } of logicalLines(content)) {
+      const assignment = /^\s*([A-Z][A-Z0-9_]*)(?:\+)?=\((.*)\)\s*$/.exec(line);
+      const name = assignment?.[1];
+      const value = assignment?.[2];
+      if (
+        name &&
+        value &&
+        !arrays.has(name) &&
+        referencesProjectArtifactVariable(value, arrays)
+      ) {
+        arrays.add(name);
+        changed = true;
+      }
+    }
+  }
+  return arrays;
+}
+
+function executesCommand(line: string, command: 'git' | 'oat'): boolean {
+  const prefix =
+    '(?:(?:&&|\\|\\||;|\\bthen\\b|\\belse\\b|\\bdo\\b|\\bif\\b)\\s+)';
+  const modifiers =
+    '(?:!\\s+)?(?:command\\s+)?(?:env\\s+)?(?:[A-Z][A-Z0-9_]*=\\S+\\s+)*';
+  return new RegExp(
+    `^\\s*(?:(?:[A-Z][A-Z0-9_]*)=\\$\\()?${command}\\b|${prefix}${modifiers}${command}\\b`,
+  ).test(line);
+}
+
+function executesGitCommand(line: string): boolean {
+  return executesCommand(line, 'git');
+}
+
+function logicalLines(content: string): LogicalLine[] {
+  const physicalLines = content.split('\n');
+  const logical: LogicalLine[] = [];
+  let offset = 0;
+  for (let index = 0; index < physicalLines.length; index += 1) {
+    const startLine = index;
+    const startOffset = offset;
+    let combined = physicalLines[index] ?? '';
+    offset += combined.length + 1;
+    while (/\\\s*$/.test(combined) && index + 1 < physicalLines.length) {
+      combined = combined.replace(/\\\s*$/, ' ');
+      index += 1;
+      const continuation = physicalLines[index] ?? '';
+      combined += continuation.trimStart();
+      offset += continuation.length + 1;
+    }
+    logical.push({
+      content: combined,
+      endLine: index,
+      offset: startOffset,
+      startLine,
+    });
+  }
+  return logical;
+}
+
+function isProjectArtifactWriterLine(
+  line: string,
+  artifactArrays: ReadonlySet<string> = new Set(),
+): boolean {
+  const trimmed = line.trim();
+  const executesGitOrOat =
+    executesGitCommand(trimmed) || executesCommand(trimmed, 'oat');
+  const writesProjectArtifact =
+    executesGitOrOat &&
+    /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(trimmed) &&
+    referencesProjectArtifactVariable(line, artifactArrays);
+  const writesActiveProject =
+    executesGitOrOat && /\boat\s+config\s+set\s+activeProject\b/.test(trimmed);
+  return writesProjectArtifact || writesActiveProject;
+}
+
+function fencedContentSites(content: string): ContentSite[] {
+  const lines = content.split('\n');
+  const sites: ContentSite[] = [];
+  let offset = 0;
+  let opening: { marker: string; start: number } | null = null;
+
+  for (const line of lines) {
+    const lineEnd = offset + line.length;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1] ?? '';
+      if (opening === null) {
+        opening = { marker, start: offset };
+      } else if (
+        marker[0] === opening.marker[0] &&
+        marker.length >= opening.marker.length &&
+        /^\s*[`~]+\s*$/.test(line)
+      ) {
+        const end = lineEnd;
+        sites.push({
+          start: opening.start,
+          end,
+          content: content.slice(opening.start, end),
+        });
+        opening = null;
+      }
+    }
+    offset = lineEnd + 1;
+  }
+  return sites;
+}
+
+function contentSiteAt(
+  content: string,
+  offset: number,
+  fencedSites: readonly ContentSite[],
+): ContentSite {
+  const fenced = fencedSites.find(
+    (site) => offset >= site.start && offset < site.end,
+  );
+  if (fenced) return fenced;
+
+  const preceding = content.slice(0, offset);
+  const headings = [...preceding.matchAll(/^([#]{1,6})\s+.+$/gm)];
+  const heading = headings.at(-1);
+  if (heading?.index !== undefined) {
+    const level = heading[1]?.length ?? 6;
+    const following = content.slice(offset);
+    const nextHeading = [...following.matchAll(/^([#]{1,6})\s+.+$/gm)].find(
+      (candidate) => (candidate[1]?.length ?? 7) <= level,
+    );
+    const end =
+      nextHeading?.index === undefined
+        ? content.length
+        : offset + nextHeading.index;
+    return {
+      start: heading.index,
+      end,
+      content: content.slice(heading.index, end),
+    };
+  }
+
+  const start = content.lastIndexOf('\n', Math.max(0, offset - 1)) + 1;
+  const nextNewline = content.indexOf('\n', offset);
+  const end = nextNewline === -1 ? content.length : nextNewline;
+  return { start, end, content: content.slice(start, end) };
+}
+
+function projectArtifactWriterSites(content: string): ContentSite[] {
+  const fencedSites = fencedContentSites(content);
+  const sites = new Map<string, ContentSite>();
+  const artifactArrays = projectArtifactArrays(content);
+  for (const line of logicalLines(content)) {
+    if (isProjectArtifactWriterLine(line.content, artifactArrays)) {
+      const site = contentSiteAt(content, line.offset, fencedSites);
+      sites.set(`${site.start}:${site.end}`, site);
+    }
+  }
+  return [...sites.values()];
+}
+
+function collectSyncedContentFindings(
+  file: string,
+  content: string,
+  findings: ValidationFinding[],
+): void {
+  for (const match of content.matchAll(
+    /PROJECT_SCOPE=\$\(oat project scope[^\n]+\) \|\| exit 1\n\s*\[\s*"?\$PROJECT_SCOPE"?\s*=\s*"?synced"?\s*\]\s*&&\s*oat\s+project\s+pull\b/g,
+  )) {
+    const lineNumber = content.slice(0, match.index).split('\n').length + 1;
+    findings.push({
+      file,
+      message: `Line ${lineNumber}: Synced arrival pull must use an if block so shared and local arrival exits successfully`,
+    });
+  }
+
+  const logical = logicalLines(content);
+  const artifactArrays = projectArtifactArrays(content);
+  for (const [logicalIndex, site] of logical.entries()) {
+    const line = site.content;
+    const lineNumber = site.startLine + 1;
+
+    if (/\bgit\s+add\b[^\n]*\.oat\/projects\/synced(?:\/|\b)/.test(line)) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Never stage a path under .oat/projects/synced/; use oat project push`,
+      });
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(line) &&
+      (/--json\b/.test(line) || /\|[^\n]*\bjq\b/.test(line))
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Resolve project scope with --format value; do not parse --json or pipe into jq`,
+      });
+    }
+
+    if (
+      isLifecycleSafetyFile(file) &&
+      executesGitCommand(line) &&
+      /\bgit\s+add\s+-A(?:\s*$|\s*[;&|])/.test(line)
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact staging must use exact pathspecs; broad git add -A is forbidden`,
+      });
+    }
+    if (
+      isLifecycleSafetyFile(file) &&
+      executesGitCommand(line) &&
+      /\bgit\s+add\b/.test(line) &&
+      /(?:\$PROJECT_PATH|\$\{PROJECT_PATH\})(?:\/?(?:\*|\*\*)?)?(?:["'}\s]|$)/.test(
+        line,
+      ) &&
+      !/\$PROJECT_PATH\/[A-Za-z0-9_.-]+|\$\{PROJECT_PATH\}\/[A-Za-z0-9_.-]+/.test(
+        line,
+      )
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact staging must name exact files, not the project directory or a glob`,
+      });
+    }
+
+    const pushReceipt =
+      /^\s*([A-Z][A-Z0-9_]*)=\$\(oat project push\b[^\n]*--json\b/.exec(line);
+    if (pushReceipt) {
+      const outputVariable = pushReceipt[1] ?? '';
+      const validationLines = logical
+        .slice(logicalIndex + 1, logicalIndex + 5)
+        .map((candidate) => candidate.content);
+      const parserNeedle = `parse_synced_push_receipt "$${outputVariable}"`;
+      const parserOffset = validationLines.findIndex((candidate) =>
+        candidate.includes(parserNeedle),
+      );
+      if (parserOffset === -1) {
+        findings.push({
+          file,
+          message: `Line ${lineNumber}: Synced push JSON receipt must validate status as pushed or up-to-date and require a full SHA before use`,
+        });
+      } else {
+        for (const [offset, candidate] of validationLines
+          .slice(0, parserOffset)
+          .entries()) {
+          if (
+            candidate.includes(`$${outputVariable}`) &&
+            /(?:\.sha\b|\[['"]sha['"]\])/.test(candidate)
+          ) {
+            findings.push({
+              file,
+              message: `Line ${lineNumber + offset + 1}: Synced push JSON receipt must not extract or use .sha before parse_synced_push_receipt validation`,
+            });
+          }
+        }
+      }
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(line) &&
+      /\|\|\s*echo\s+["']?shared\b/.test(line)
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project scope resolution must fail closed; do not fall back to shared`,
+      });
+    }
+
+    const isPushCommand =
+      executesCommand(line, 'oat') && /\boat\s+project\s+push\b/.test(line);
+    const pushFailureHandled =
+      /\|\|\s*(?:\{|exit\b)/.test(line) ||
+      ((line.match(/"/g)?.length ?? 0) % 2 === 1 &&
+        logical
+          .slice(logicalIndex + 1, logicalIndex + 16)
+          .some((candidate) =>
+            /"\s*\|\|\s*(?:\{|exit\b)/.test(candidate.content),
+          ));
+    if (isPushCommand && !pushFailureHandled) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project push must handle a nonzero exit explicitly and stop bookkeeping`,
+      });
+    }
+  }
+
+  const lines = content.split('\n');
+  const logicalByStart = new Map(
+    logical.map((line) => [line.startLine, line.content] as const),
+  );
+  const continuedLines = new Set(
+    logical.flatMap((line) =>
+      Array.from(
+        { length: line.endLine - line.startLine },
+        (_, offset) => line.startLine + offset + 1,
+      ),
+    ),
+  );
+  let fenceMarker: string | null = null;
+  let scopeGuardSeen = false;
+
+  for (const [index, line] of lines.entries()) {
+    const lineNumber = index + 1;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})(?:[^`~]*)$/);
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1] ?? '';
+      if (fenceMarker === null) {
+        fenceMarker = marker;
+        scopeGuardSeen = false;
+      } else if (
+        marker[0] === fenceMarker[0] &&
+        marker.length >= fenceMarker.length &&
+        /^\s*[`~]+\s*$/.test(line)
+      ) {
+        fenceMarker = null;
+        scopeGuardSeen = false;
+      }
+      continue;
+    }
+
+    if (continuedLines.has(index)) continue;
+    const inspectedLine = logicalByStart.get(index) ?? line;
+
+    if (fenceMarker === null || !isLifecycleSafetyFile(file)) {
+      continue;
+    }
+
+    if (
+      /\boat\s+project\s+scope\b/.test(inspectedLine) &&
+      /--format\s+value\b/.test(inspectedLine)
+    ) {
+      scopeGuardSeen = true;
+    }
+    if (
+      /\bPROJECT_SCOPE\b/.test(inspectedLine) &&
+      /\bsynced\b/.test(inspectedLine)
+    ) {
+      scopeGuardSeen = true;
+    }
+
+    if (
+      /\bgit\s+(?:add|commit)\b/.test(inspectedLine) &&
+      referencesProjectArtifactVariable(inspectedLine, artifactArrays) &&
+      !scopeGuardSeen
+    ) {
+      findings.push({
+        file,
+        message: `Line ${lineNumber}: Project-artifact git writes require an oat project scope --format value guard earlier in the same fenced block`,
+      });
+    }
+  }
+}
+
+async function collectSyncedBookkeepingInventoryFindings(
+  repoRoot: string,
+  safetyFiles: readonly string[],
+  findings: ValidationFinding[],
+): Promise<void> {
+  const inventoryPath = join(
+    repoRoot,
+    'packages',
+    'cli',
+    'src',
+    'validation',
+    'synced-bookkeeping-sites.json',
+  );
+  if (!(await isFile(inventoryPath))) {
+    return;
+  }
+
+  let sites: SyncedBookkeepingSite[];
+  try {
+    const parsed = JSON.parse(await readFile(inventoryPath, 'utf8')) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new Error('expected a JSON array');
+    }
+    sites = parsed as SyncedBookkeepingSite[];
+  } catch (error) {
+    findings.push({
+      file: inventoryPath,
+      message: `Invalid synced-bookkeeping inventory: ${error instanceof Error ? error.message : String(error)}`,
+    });
+    return;
+  }
+
+  const inventoriedWriterSites = new Map<string, ContentSite[]>();
+  for (const site of sites) {
+    if (
+      typeof site?.file !== 'string' ||
+      typeof site?.anchor !== 'string' ||
+      typeof site?.guard !== 'string' ||
+      !['resolve', 'arrival', 'write'].includes(site?.kind)
+    ) {
+      findings.push({
+        file: inventoryPath,
+        message:
+          'Each synced-bookkeeping inventory entry requires file, unique anchor, companion guard, and kind (resolve | arrival | write)',
+      });
+      continue;
+    }
+
+    const sitePath = join(repoRoot, site.file);
+    let content: string;
+    try {
+      content = await readFile(sitePath, 'utf8');
+    } catch {
+      findings.push({
+        file: inventoryPath,
+        message: `Missing synced-bookkeeping inventory file: ${sitePath}`,
+      });
+      continue;
+    }
+
+    const occurrences = countOccurrences(content, site.anchor);
+    if (occurrences === 0) {
+      findings.push({
+        file: inventoryPath,
+        message: `Stale synced-bookkeeping inventory anchor in ${sitePath}: ${site.anchor}`,
+      });
+    } else if (occurrences > 1) {
+      findings.push({
+        file: inventoryPath,
+        message: `Synced-bookkeeping inventory anchor is not unique in ${sitePath}: ${site.anchor}`,
+      });
+    }
+
+    if (occurrences === 1) {
+      const fencedSites = fencedContentSites(content);
+      const anchorOffset = content.indexOf(site.anchor);
+      const anchorSite = contentSiteAt(content, anchorOffset, fencedSites);
+      const companionGuardPresent =
+        site.kind === 'write' && site.guard === 'project-scope'
+          ? /\boat\s+project\s+scope\b[^\n]*--format\s+value\b|\bPROJECT_SCOPE\b[^\n]*\bsynced\b/.test(
+              anchorSite.content,
+            )
+          : site.kind === 'arrival' && site.guard === 'materialized-arrival'
+            ? /\boat\s+project\s+pull\b|pulled and materialized/i.test(
+                anchorSite.content,
+              )
+            : site.kind === 'resolve' && site.guard === 'canonical-resolution'
+              ? /\bresolve(?:Project|NamedProject|SyncedTarget|ProjectScope|ActiveProject)\b|\bprojectScope\s*===\s*['"]synced['"]|options\.remote[^\n]*synced|\boat\s+project\s+new\b[^\n]*--scope\b|project:synced_tracked_artifacts|\boat\s+config\s+get\s+activeProject\b/.test(
+                  anchorSite.content,
+                )
+              : anchorSite.content.includes(site.guard);
+      if (!companionGuardPresent) {
+        findings.push({
+          file: inventoryPath,
+          message: `Synced-bookkeeping ${site.kind} site lacks its companion guard in the same function or fenced block: ${sitePath}: ${site.anchor}`,
+        });
+      }
+
+      if (site.kind === 'write') {
+        const fileSites = inventoriedWriterSites.get(sitePath) ?? [];
+        fileSites.push(anchorSite);
+        inventoriedWriterSites.set(sitePath, fileSites);
+      }
+    }
+  }
+
+  for (const file of safetyFiles) {
+    const content = await readFile(file, 'utf8');
+    if (!isLifecycleSafetyFile(file)) continue;
+
+    const inventoriedSites = inventoriedWriterSites.get(file) ?? [];
+    const writerSites = projectArtifactWriterSites(content);
+    const artifactArrays = projectArtifactArrays(content);
+    if (writerSites.length > 0 && inventoriedSites.length === 0) {
+      findings.push({
+        file: inventoryPath,
+        message: `Lifecycle project-artifact writer is missing from synced-bookkeeping inventory: ${file}`,
+      });
+      continue;
+    }
+    for (const writerSite of writerSites) {
+      if (
+        inventoriedSites.some(
+          (site) =>
+            site.start === writerSite.start && site.end === writerSite.end,
+        )
+      ) {
+        continue;
+      }
+      const writer = writerSite.content
+        .split('\n')
+        .find((line) => isProjectArtifactWriterLine(line, artifactArrays))
+        ?.trim();
+      findings.push({
+        file: inventoryPath,
+        message: `Lifecycle project-artifact writer site is missing from synced-bookkeeping inventory: ${file}: ${writer ?? '(unknown writer)'}`,
+      });
+    }
+  }
+}
+
+async function collectSyncedSafetyFindings(
+  repoRoot: string,
+  oatSkillDirs: readonly string[],
+  findings: ValidationFinding[],
+): Promise<void> {
+  const skillFiles = (
+    await Promise.all(
+      oatSkillDirs.map((dir) =>
+        listMarkdownFiles(join(repoRoot, '.agents', 'skills', dir)),
+      ),
+    )
+  ).flat();
+  const phaseImplementerPath = join(
+    repoRoot,
+    '.agents',
+    'agents',
+    'oat-phase-implementer.md',
+  );
+  const safetyFiles = (await isFile(phaseImplementerPath))
+    ? [...skillFiles, phaseImplementerPath]
+    : skillFiles;
+
+  for (const file of safetyFiles) {
+    collectSyncedContentFindings(file, await readFile(file, 'utf8'), findings);
+  }
+  await collectSyncedBookkeepingInventoryFindings(
+    repoRoot,
+    safetyFiles,
+    findings,
+  );
 }
 
 function frontmatterHasKey(frontmatter: string, key: string): boolean {
@@ -477,6 +1088,8 @@ export async function validateOatSkills(
       validateQuickStartSemantics(skillPath, content, findings);
     }
   }
+
+  await collectSyncedSafetyFindings(repoRoot, oatSkillDirs, findings);
 
   await collectGateabilityFindings(
     skillsRoot,

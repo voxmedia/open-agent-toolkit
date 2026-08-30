@@ -5,7 +5,33 @@ description: 'Project artifact contracts: state.md, spec.md, design.md, plan.md,
 
 # Project Artifacts
 
-Project artifacts live under `.oat/projects/<scope>/<project>/`.
+Project artifacts use one of three active scopes:
+
+- `shared` artifacts live directly on the feature branch under
+  `.oat/projects/shared/<project>/`.
+- `synced` artifacts live in a gitignored nested worktree at
+  `.oat/projects/synced/<project>/`, backed by
+  `refs/oat/projects/<project>` on `origin`. The feature branch tracks only
+  `.oat/projects/synced/<project>.json`.
+- `local` artifacts stay untracked on the current machine under
+  `.oat/projects/local/<project>/`.
+
+`projects.defaultScope` controls creation when a command does not pass
+`--scope`; its default is `synced`.
+
+## Synced artifact bookkeeping
+
+Lifecycle skills write the same project files in every scope. After a synced
+write, they use `oat project push` instead of staging the artifact path on the
+parent branch. The command makes an artifact commit in the nested checkout,
+rebases it on the fetched project ref, and pushes only that ref. Arrival skills
+run `oat project pull` before reading artifacts so a record or remote ref can
+materialize the checkout first.
+
+The tracked JSON record is routing metadata, not a copy of the project. It
+identifies the slug, `origin`, ref, status, and archive snapshot when present.
+The project ref remains the source of truth for active artifact content and
+history.
 
 ## Core artifacts
 

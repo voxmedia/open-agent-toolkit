@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   access,
+  cp,
   copyFile,
   mkdir,
   mkdtemp,
@@ -12,9 +13,23 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 
+import { ensureScopedRootGitignore } from '@commands/init/gitignore';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import {
+  buildSyncedRecord,
+  readSyncedRecord,
+  writeSyncedRecord,
+} from '@commands/project/sync/record';
+import {
+  buildSyncTarget,
+  createSyncedProject,
+  pushSynced,
+} from '@commands/project/sync/ref-sync';
+import { syncedRecordPath } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -488,6 +503,79 @@ describe('archive utils', () => {
     );
   });
 
+  it('refuses a persisted archive snapshot without its originating scope', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await expect(
+      resolveArchiveProjectTarget({
+        repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: 'demo',
+        archiveSnapshot: '20260827-demo',
+      }),
+    ).rejects.toEqual(
+      new CliError(
+        'Persisted archive snapshot `20260827-demo` is missing its originating project scope; refusing an unscoped retry.',
+      ),
+    );
+  });
+
+  it('refuses to archive a project outside every configured scope root', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, 'outside', 'demo');
+    const statePath = join(projectPath, 'state.md');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(statePath, '# state\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toEqual(
+      new CliError(
+        `Project path \`${projectPath}\` is outside the configured shared, local, and synced scope roots; refusing to archive without an originating scope.`,
+        1,
+      ),
+    );
+    await expect(readFile(statePath, 'utf8')).resolves.toBe('# state\n');
+    await expect(
+      access(join(repoRoot, '.oat', 'projects', 'archived')),
+    ).rejects.toThrow();
+  });
+
+  it('refuses a foreign project path with matching scope segments before mutation', async () => {
+    const repoRoot = await createRepoRoot();
+    const foreignRoot = await createRepoRoot();
+    const projectPath = join(foreignRoot, '.oat', 'projects', 'shared', 'demo');
+    const statePath = join(projectPath, 'state.md');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(statePath, '# foreign state\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toMatchObject({
+      name: 'CliError',
+      exitCode: 1,
+      message: expect.stringContaining('outside the configured'),
+    });
+    await expect(readFile(statePath, 'utf8')).resolves.toBe(
+      '# foreign state\n',
+    );
+    await expect(
+      access(join(repoRoot, '.oat', 'projects', 'archived')),
+    ).rejects.toThrow();
+  });
+
   it('archives the project locally during completion', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
@@ -518,6 +606,845 @@ describe('archive utils', () => {
     expect(result.summaryExportFile).toBeNull();
     expect(result.warnings).toEqual([]);
   });
+
+  it('rejects an existing archive whose snapshot metadata has the wrong scope', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archivePath = join(repoRoot, '.oat', 'projects', 'archived', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await mkdir(archivePath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: 'demo',
+        snapshotName: '20260827-demo',
+        scope: 'local',
+      })}\n`,
+      'utf8',
+    );
+    const targetExists = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          dirExists: targetExists,
+          timestamp: () => '2026-08-27T12:00:00Z',
+        },
+      ),
+    ).rejects.toEqual(
+      new CliError(
+        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo\`; refusing to overwrite it.`,
+      ),
+    );
+  });
+
+  it.each([
+    ['shared', 'valid'],
+    ['shared', 'malformed'],
+    ['local', 'valid'],
+    ['local', 'malformed'],
+  ] as const)(
+    'archives a %s project without reading an unrelated %s same-slug synced record',
+    async (scope, recordState) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        scope,
+        'same-slug',
+      );
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'state.md'), `# ${scope}\n`, 'utf8');
+      const recordPath = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'synced',
+        'same-slug.json',
+      );
+      if (recordState === 'valid') {
+        await writeSyncedRecord(recordPath, {
+          ...buildSyncedRecord('same-slug', new Date('2026-08-27T00:00:00Z')),
+          archiveSnapshot: 'unrelated-synced-snapshot',
+        });
+      } else {
+        await mkdir(join(repoRoot, '.oat', 'projects', 'synced'), {
+          recursive: true,
+        });
+        await writeFile(recordPath, '{ malformed\n', 'utf8');
+      }
+
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'same-slug',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      });
+
+      expect(result.archivePath).toBe(
+        join(repoRoot, '.oat', 'projects', 'archived', 'same-slug'),
+      );
+      await expect(
+        readFile(join(result.archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe(`# ${scope}\n`);
+      await expect(readFile(recordPath, 'utf8')).resolves.toContain(
+        recordState === 'valid' ? 'unrelated-synced-snapshot' : '{ malformed',
+      );
+    },
+  );
+
+  it('archives a clean pushed synced project and removes only its checkout', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'demo',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await mkdir(join(target.projectPath, 'reviews'), { recursive: true });
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '# state\n',
+        'utf8',
+      );
+      await writeFile(
+        join(target.projectPath, 'summary.md'),
+        '# summary\n',
+        'utf8',
+      );
+      await writeFile(
+        join(target.projectPath, 'reviews', 'review.md'),
+        '# review\n',
+        'utf8',
+      );
+      const recap = await createRecapPackage(target.projectPath);
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+      );
+
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3Uri: 's3://archive-bucket/projects',
+        s3SyncOnComplete: true,
+        projectRecapRun: recap.relativeRunPath,
+      };
+      const s3Calls: string[][] = [];
+      const commonDependencies = {
+        ensureS3ArchiveAccess: vi.fn(async () => ({
+          ok: true,
+          warnings: [],
+        })),
+        execFile: vi.fn(async (_file: string, args: readonly string[]) => {
+          s3Calls.push([...args]);
+          return { stdout: '', stderr: '' };
+        }),
+      };
+      const result = await archiveProjectOnCompletion(options, {
+        ...commonDependencies,
+        timestamp: () => '2026-08-27T12:00:00Z',
+      });
+      const snapshotId = '20260827-demo';
+
+      await expect(access(target.projectPath)).rejects.toThrow();
+      expect(result.archivePath).toBe(
+        join(fixture.cloneA, '.oat', 'projects', 'archived', 'demo'),
+      );
+      await expect(access(join(result.archivePath, '.git'))).rejects.toThrow();
+      await expect(
+        access(join(result.archivePath, 'reviews')),
+      ).rejects.toThrow();
+      await expect(
+        readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# summary\n');
+      expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+      expect(result.snapshotId).toBe(snapshotId);
+      expect(result.summaryExportFile).toBe(
+        join(
+          fixture.cloneA,
+          '.oat',
+          'repo',
+          'reference',
+          'project-summaries',
+          `${snapshotId}.md`,
+        ),
+      );
+      expect(result.projectRecapExport?.exportRoot).toBe(
+        join(
+          fixture.cloneA,
+          '.oat',
+          'repo',
+          'reference',
+          'project-recaps',
+          snapshotId,
+        ),
+      );
+      expect(result.s3Path).toBe(
+        `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+      );
+      expect(await readSyncedRecord(recordPath)).toMatchObject({
+        status: 'complete',
+        completedAt: '2026-08-27T12:00:00Z',
+        archiveSnapshot: snapshotId,
+      });
+
+      const retried = await archiveProjectOnCompletion(options, {
+        ...commonDependencies,
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried).toMatchObject({
+        archivePath: result.archivePath,
+        lifecycleCommit: result.lifecycleCommit,
+        snapshotId,
+      });
+      expect(retried.summaryExportFile).toBe(result.summaryExportFile);
+      expect(retried.projectRecapExport?.exportRoot).toBe(
+        result.projectRecapExport?.exportRoot,
+      );
+      expect(retried.s3Path).toBe(result.s3Path);
+      expect(
+        s3Calls
+          .filter((args) => args[0] === 's3' && args[1] === 'sync')
+          .map((args) => args[3]),
+      ).toEqual([result.s3Path, result.s3Path]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it.each(['alternate', 'absolute'] as const)(
+    'commits and removes a synced checkout under an %s configured root',
+    async (rootKind) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const projectsRoot =
+          rootKind === 'absolute'
+            ? join(fixture.cloneA, '.oat', 'absolute', 'team')
+            : '.oat/team-projects';
+        const target = buildSyncTarget(fixture.cloneA, projectsRoot, 'demo');
+        await ensureScopedRootGitignore(
+          fixture.cloneA,
+          target.syncedRoot,
+          'synced',
+          defaultGitRunner,
+        );
+        await defaultGitRunner.run(['add', '.gitignore'], {
+          cwd: fixture.cloneA,
+        });
+        await defaultGitRunner.run(
+          ['commit', '-m', 'test: configure custom project roots'],
+          { cwd: fixture.cloneA },
+        );
+        await createSyncedProject(target, defaultGitRunner);
+        await writeFile(
+          join(target.projectPath, 'state.md'),
+          '# state\n',
+          'utf8',
+        );
+        await pushSynced(target, defaultGitRunner, {});
+        const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+        await writeSyncedRecord(
+          recordPath,
+          buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
+        );
+        const beforeHead = (
+          await defaultGitRunner.run(['rev-parse', 'HEAD'], {
+            cwd: fixture.cloneA,
+          })
+        ).stdout;
+
+        const result = await archiveProjectOnCompletion(
+          {
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: target.slug,
+            projectsRoot,
+            s3SyncOnComplete: false,
+          },
+          { timestamp: () => '2026-08-27T12:00:00Z' },
+        );
+
+        expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+        expect(
+          (
+            await defaultGitRunner.run(
+              ['rev-list', '--count', `${beforeHead}..HEAD`],
+              { cwd: fixture.cloneA },
+            )
+          ).stdout,
+        ).toBe('1');
+        expect(
+          (
+            await defaultGitRunner.run(['status', '--porcelain'], {
+              cwd: fixture.cloneA,
+            })
+          ).stdout,
+        ).toBe('');
+        expect(
+          (
+            await defaultGitRunner.run(['worktree', 'list', '--porcelain'], {
+              cwd: fixture.cloneA,
+            })
+          ).stdout,
+        ).not.toContain(target.projectPath);
+        await expect(access(target.projectPath)).rejects.toThrow();
+        await expect(readSyncedRecord(recordPath)).resolves.toMatchObject({
+          status: 'complete',
+        });
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
+  it('resolves a same-day synced retry only to its same-scope archive', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'same-scope-retry';
+      const timestamp = () => '2026-08-27T12:00:00Z';
+      const sharedProjectPath = join(
+        fixture.cloneA,
+        '.oat',
+        'projects',
+        'shared',
+        slug,
+      );
+      await mkdir(sharedProjectPath, { recursive: true });
+      await writeFile(
+        join(sharedProjectPath, 'summary.md'),
+        '# shared summary\n',
+        'utf8',
+      );
+      const sharedArchive = await archiveProjectOnCompletion(
+        {
+          repoRoot: fixture.cloneA,
+          projectPath: sharedProjectPath,
+          projectName: slug,
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        { timestamp },
+      );
+
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'summary.md'),
+        '# synced summary\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+
+      const syncedArchive = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(syncedArchive.archivePath).not.toBe(sharedArchive.archivePath);
+      await expect(
+        readFile(join(syncedArchive.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# synced summary\n');
+
+      const retried = await archiveProjectOnCompletion(options, {
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried.archivePath).toBe(syncedArchive.archivePath);
+      expect(retried.snapshotId).toBe('20260827-same-scope-retry');
+      await expect(
+        readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# synced summary\n');
+      await expect(
+        readFile(
+          join(sharedArchive.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      ).resolves.toContain('"scope": "shared"');
+      await expect(
+        readFile(
+          join(syncedArchive.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      ).resolves.toContain('"scope": "synced"');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('omits reviews from shared archive snapshots', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(join(projectPath, 'reviews'), { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(projectPath, 'reviews', 'review.md'),
+      '# review\n',
+      'utf8',
+    );
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-08-27T12:00:00Z' },
+    );
+
+    await expect(
+      readFile(join(result.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# state\n');
+    await expect(access(join(result.archivePath, 'reviews'))).rejects.toThrow();
+  });
+
+  it('leaves no orphan archive when retry identity persistence fails', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'record-write-failure';
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '# state\n',
+        'utf8',
+      );
+      await writeFile(
+        join(target.projectPath, 'summary.md'),
+        '# summary\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+      const archiveRoot = join(fixture.cloneA, '.oat', 'projects', 'archived');
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-27T12:00:00Z',
+          writeSyncedRecord: vi.fn(async () => {
+            throw new Error('injected record write failure');
+          }),
+        }),
+      ).rejects.toThrow(/injected record write failure/);
+      await expect(access(archiveRoot)).rejects.toThrow();
+      expect(await readSyncedRecord(recordPath)).not.toHaveProperty(
+        'archiveSnapshot',
+      );
+
+      const retried = await archiveProjectOnCompletion(options, {
+        timestamp: () => '2026-08-28T12:00:00Z',
+      });
+      expect(retried.snapshotId).toBe('20260828-record-write-failure');
+      expect(await readdir(archiveRoot)).toEqual([slug]);
+      await expect(
+        readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
+      ).resolves.toBe('# summary\n');
+      expect(await readSyncedRecord(recordPath)).toMatchObject({
+        archiveSnapshot: retried.snapshotId,
+        status: 'complete',
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses to archive a dirty synced checkout before creating a snapshot', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'dirty',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'state.md'),
+        '# state\n',
+        'utf8',
+      );
+      await pushSynced(target, defaultGitRunner, {});
+      await writeSyncedRecord(
+        syncedRecordPath(target.syncedRoot, target.slug),
+        buildSyncedRecord('dirty', new Date('2026-08-27T00:00:00Z')),
+      );
+      await writeFile(
+        join(target.projectPath, 'pending.md'),
+        'dirty\n',
+        'utf8',
+      );
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot: fixture.cloneA,
+          projectPath: target.projectPath,
+          projectName: 'dirty',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/oat project push/);
+      await expect(
+        access(join(fixture.cloneA, '.oat/projects/archived/dirty')),
+      ).rejects.toThrow();
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it.each(['clean', 'dirty', 'unpushed'] as const)(
+    'fails closed for a %s synced checkout without its discovery record',
+    async (checkoutState) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const target = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          `missing-record-${checkoutState}`,
+        );
+        await createSyncedProject(target, defaultGitRunner);
+        await writeFile(
+          join(target.projectPath, 'state.md'),
+          '# state\n',
+          'utf8',
+        );
+        await pushSynced(target, defaultGitRunner, {});
+
+        if (checkoutState === 'dirty') {
+          await writeFile(
+            join(target.projectPath, 'pending.md'),
+            'dirty\n',
+            'utf8',
+          );
+        } else if (checkoutState === 'unpushed') {
+          await writeFile(
+            join(target.projectPath, 'state.md'),
+            '# state\nunpushed\n',
+            'utf8',
+          );
+          await defaultGitRunner.run(['add', 'state.md'], {
+            cwd: target.projectPath,
+          });
+          await defaultGitRunner.run(
+            [
+              '-c',
+              'core.hooksPath=/dev/null',
+              'commit',
+              '-m',
+              'test: leave synced project unpushed',
+            ],
+            { cwd: target.projectPath },
+          );
+        }
+
+        const registrationsBefore = await defaultGitRunner.run(
+          ['worktree', 'list', '--porcelain'],
+          { cwd: fixture.cloneA },
+        );
+        const archiveRoot = join(
+          fixture.cloneA,
+          '.oat',
+          'projects',
+          'archived',
+        );
+
+        await expect(
+          archiveProjectOnCompletion({
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: target.slug,
+            projectsRoot: '.oat/projects/shared',
+            s3SyncOnComplete: false,
+          }),
+        ).rejects.toThrow(/missing its discovery record.*project pull/s);
+
+        await expect(access(target.projectPath)).resolves.toBeUndefined();
+        await expect(
+          access(join(target.projectPath, '.git')),
+        ).resolves.toBeUndefined();
+        await expect(access(archiveRoot)).rejects.toThrow();
+        const registrationsAfter = await defaultGitRunner.run(
+          ['worktree', 'list', '--porcelain'],
+          { cwd: fixture.cloneA },
+        );
+        expect(registrationsAfter.stdout).toBe(registrationsBefore.stdout);
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
+  it.each([
+    'after-copy',
+    'after-s3',
+    'after-lifecycle',
+    'after-checkout-removal',
+  ] as const)(
+    'reuses one durable synced archive identity on retry %s with and without a recap',
+    async (failureBoundary) => {
+      for (const withRecap of [false, true]) {
+        const fixture = await createSyncedFixture();
+        try {
+          const slug = `${failureBoundary}-${withRecap ? 'recap' : 'plain'}`;
+          const target = buildSyncTarget(
+            fixture.cloneA,
+            '.oat/projects/shared',
+            slug,
+          );
+          await createSyncedProject(target, defaultGitRunner);
+          await writeFile(
+            join(target.projectPath, 'state.md'),
+            '# state\n',
+            'utf8',
+          );
+          await writeFile(
+            join(target.projectPath, 'summary.md'),
+            '# summary\n',
+            'utf8',
+          );
+          const recap = withRecap
+            ? await createRecapPackage(target.projectPath)
+            : null;
+          await pushSynced(target, defaultGitRunner, {});
+          const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+          await writeSyncedRecord(
+            recordPath,
+            buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+          );
+          await mkdir(
+            join(fixture.cloneA, '.oat', 'projects', 'archived', slug),
+            { recursive: true },
+          );
+
+          const commitsBefore = Number(
+            (
+              await defaultGitRunner.run(['rev-list', '--count', 'HEAD'], {
+                cwd: fixture.cloneA,
+              })
+            ).stdout,
+          );
+          const s3Calls: string[][] = [];
+          const successfulExecFile = vi.fn(
+            async (_file: string, args: readonly string[]) => {
+              s3Calls.push([...args]);
+              return { stdout: '', stderr: '' };
+            },
+          );
+          const options = {
+            repoRoot: fixture.cloneA,
+            projectPath: target.projectPath,
+            projectName: slug,
+            projectsRoot: '.oat/projects/shared',
+            summaryExportPath: '.oat/repo/reference/project-summaries',
+            s3Uri: 's3://archive-bucket/projects',
+            s3SyncOnComplete: true,
+            ...(recap ? { projectRecapRun: recap.relativeRunPath } : {}),
+          };
+          const commonDependencies = {
+            ensureS3ArchiveAccess: vi.fn(async () => ({
+              ok: true,
+              warnings: [],
+            })),
+            execFile: successfulExecFile,
+          };
+          const firstDependencies = {
+            ...commonDependencies,
+            timestamp: () => '2026-08-27T12:00:00Z',
+            ...(failureBoundary === 'after-copy'
+              ? {
+                  copySingleFile: async (
+                    source: string,
+                    destination: string,
+                  ) => {
+                    if (destination.includes('project-summaries')) {
+                      throw new Error('injected after-copy failure');
+                    }
+                    await copyFile(source, destination);
+                  },
+                }
+              : {}),
+            ...(failureBoundary === 'after-s3'
+              ? {
+                  commitRecordChange: vi.fn(async () => {
+                    throw new Error('injected after-s3 failure');
+                  }),
+                }
+              : {}),
+            ...(failureBoundary === 'after-lifecycle'
+              ? {
+                  removeSyncedCheckout: vi.fn(async () => {
+                    throw new Error('injected after-lifecycle failure');
+                  }),
+                }
+              : {}),
+          };
+
+          if (failureBoundary === 'after-checkout-removal') {
+            await archiveProjectOnCompletion(options, firstDependencies);
+          } else {
+            await expect(
+              archiveProjectOnCompletion(options, firstDependencies),
+            ).rejects.toThrow(/injected/);
+          }
+          const committedLifecycleBeforeRetry =
+            failureBoundary === 'after-lifecycle' ||
+            failureBoundary === 'after-checkout-removal'
+              ? (
+                  await defaultGitRunner.run(['rev-parse', 'HEAD'], {
+                    cwd: fixture.cloneA,
+                  })
+                ).stdout
+              : null;
+
+          const retried = await archiveProjectOnCompletion(options, {
+            ...commonDependencies,
+            timestamp: () => '2026-08-28T12:00:00Z',
+          });
+          const snapshotId = `20260827-${slug}`;
+          const localArchiveId = `${slug}-20260827120000`;
+          expect(retried.snapshotId).toBe(snapshotId);
+          expect(retried.archivePath).toBe(
+            join(
+              fixture.cloneA,
+              '.oat',
+              'projects',
+              'archived',
+              localArchiveId,
+            ),
+          );
+          expect(retried.summaryExportFile).toBe(
+            join(
+              fixture.cloneA,
+              '.oat',
+              'repo',
+              'reference',
+              'project-summaries',
+              `${snapshotId}.md`,
+            ),
+          );
+          expect(retried.s3Path).toBe(
+            `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+          );
+          expect(retried.projectRecapExport?.exportRoot ?? null).toBe(
+            recap
+              ? join(
+                  fixture.cloneA,
+                  '.oat',
+                  'repo',
+                  'reference',
+                  'project-recaps',
+                  snapshotId,
+                )
+              : null,
+          );
+          expect(retried.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          if (committedLifecycleBeforeRetry) {
+            expect(retried.lifecycleCommit).toBe(committedLifecycleBeforeRetry);
+          }
+          await expect(access(target.projectPath)).rejects.toThrow();
+          expect(await readSyncedRecord(recordPath)).toMatchObject({
+            archiveSnapshot: snapshotId,
+            completedAt:
+              failureBoundary === 'after-copy'
+                ? '2026-08-28T12:00:00Z'
+                : '2026-08-27T12:00:00Z',
+            status: 'complete',
+          });
+          const commitsAfter = Number(
+            (
+              await defaultGitRunner.run(['rev-list', '--count', 'HEAD'], {
+                cwd: fixture.cloneA,
+              })
+            ).stdout,
+          );
+          expect(commitsAfter - commitsBefore).toBe(1);
+          expect(
+            await readdir(
+              join(
+                fixture.cloneA,
+                '.oat',
+                'repo',
+                'reference',
+                'project-summaries',
+              ),
+            ),
+          ).toEqual([`${snapshotId}.md`]);
+          if (recap) {
+            expect(
+              await readdir(
+                join(
+                  fixture.cloneA,
+                  '.oat',
+                  'repo',
+                  'reference',
+                  'project-recaps',
+                ),
+              ),
+            ).toEqual([snapshotId]);
+          }
+          expect(
+            s3Calls
+              .filter((args) => args[0] === 's3' && args[1] === 'sync')
+              .map((args) => args[3]),
+          ).toEqual(
+            expect.arrayContaining([
+              `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
+            ]),
+          );
+        } finally {
+          await fixture.cleanup();
+        }
+      }
+    },
+    20_000,
+  );
 
   it.each(['failed', 'incomplete'] as const)(
     'exports only the selected %s recap package before deleting the active project',
@@ -1187,6 +2114,21 @@ describe('archive utils', () => {
       'project-recaps',
     );
     expect(await readdir(exportParent)).toEqual([]);
+
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    await expect(
+      access(join(retried.projectRecapExport!.exportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
   });
 
   it('accepts canonical immutable GitHub source backlinks', async () => {
@@ -1435,6 +2377,118 @@ describe('archive utils', () => {
     await expect(access(exportRoot)).rejects.toThrow();
   });
 
+  it.each(['tracked', 'untracked'] as const)(
+    'preserves an adopted %s recap export when later cleanup fails',
+    async (trackingState) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath);
+      const options = {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      };
+      const timestamp = () => '2026-04-01T12:34:56Z';
+      const archived = await archiveProjectOnCompletion(options, { timestamp });
+      const exportRoot = archived.projectRecapExport!.exportRoot;
+      await cp(archived.archivePath, projectPath, { recursive: true });
+
+      await defaultGitRunner.run(['init'], { cwd: repoRoot });
+      await defaultGitRunner.run(['config', 'user.name', 'OAT Tests'], {
+        cwd: repoRoot,
+      });
+      await defaultGitRunner.run(
+        ['config', 'user.email', 'oat-tests@example.com'],
+        { cwd: repoRoot },
+      );
+      const exportPathspec = '.oat/repo/reference/project-recaps';
+      if (trackingState === 'tracked') {
+        await defaultGitRunner.run(['add', exportPathspec], { cwd: repoRoot });
+        await defaultGitRunner.run(['commit', '-m', 'track recap export'], {
+          cwd: repoRoot,
+        });
+      }
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          removePath: async (target, removeOptions) => {
+            if (target === projectPath) {
+              throw new Error('injected project cleanup failure');
+            }
+            await rm(target, removeOptions);
+          },
+          timestamp,
+        }),
+      ).rejects.toThrow('injected project cleanup failure');
+
+      await expect(
+        access(join(exportRoot, 'manifest.json')),
+      ).resolves.toBeUndefined();
+      const tracked = await defaultGitRunner.run(
+        [
+          'ls-files',
+          '--error-unmatch',
+          `${exportPathspec}/20260401-demo/manifest.json`,
+        ],
+        { allowFailure: true, cwd: repoRoot },
+      );
+      expect(tracked.code === 0).toBe(trackingState === 'tracked');
+    },
+  );
+
+  it('removes an attempt-owned partial archive so retry uses one complete target', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archiveRoot = join(repoRoot, '.oat', 'projects', 'archived');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          copyDirectory: async (_source, destination) => {
+            await mkdir(destination, { recursive: true });
+            await writeFile(join(destination, 'partial.txt'), 'partial\n');
+            throw new Error('injected during-copy failure');
+          },
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow('injected during-copy failure');
+
+    await expect(readdir(archiveRoot)).resolves.toEqual([]);
+    await expect(access(projectPath)).resolves.toBeUndefined();
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+
+    await expect(readdir(archiveRoot)).resolves.toEqual([
+      result.archivePath.slice(result.archivePath.lastIndexOf('/') + 1),
+    ]);
+    await expect(
+      access(join(result.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME)),
+    ).resolves.toBeUndefined();
+  });
+
   it('uploads the archived project to S3 when completion sync is enabled and configured', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
@@ -1571,8 +2625,115 @@ describe('archive utils', () => {
         '20260401-demo.md',
       ),
     );
+    expect(isAbsolute(result.summaryExportFile!)).toBe(true);
     await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
       '# summary\n',
+    );
+  });
+
+  it('cleans a new synced recap after summary failure, retries, and preserves the adopted recap', async () => {
+    const repoRoot = await createRepoRoot();
+    const syncedRoot = join(repoRoot, '.oat', 'projects', 'synced');
+    const projectPath = join(syncedRoot, 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+    const recap = await createRecapPackage(projectPath);
+    await writeSyncedRecord(
+      syncedRecordPath(syncedRoot, 'demo'),
+      buildSyncedRecord('demo', new Date('2026-04-01T00:00:00.000Z')),
+    );
+    const options = {
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: recap.relativeRunPath,
+      s3SyncOnComplete: false,
+      summaryExportPath: '.oat/repo/reference/project-summaries',
+      commit: false,
+    };
+    const timestamp = () => '2026-04-01T12:34:56Z';
+    const preflightSyncedCheckout = vi.fn(async () => ({
+      status: 'clean' as const,
+      sha: 'a'.repeat(40),
+    }));
+    const removeSyncedCheckout = vi.fn(async () => ({
+      status: 'removed' as const,
+    }));
+    const failSummaryCopy = async (source: string, destination: string) => {
+      if (basename(source) === 'summary.md') {
+        throw new Error('injected summary copy failure');
+      }
+      await mkdir(dirname(destination), { recursive: true });
+      await copyFile(source, destination);
+    };
+    const recapExportRoot = join(
+      repoRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'project-recaps',
+      '20260401-demo',
+    );
+
+    await expect(
+      archiveProjectOnCompletion(options, {
+        copySingleFile: failSummaryCopy,
+        preflightSyncedCheckout,
+        removeSyncedCheckout,
+        timestamp,
+      }),
+    ).rejects.toThrow('injected summary copy failure');
+    await expect(access(recapExportRoot)).rejects.toThrow();
+
+    const retried = await archiveProjectOnCompletion(options, {
+      preflightSyncedCheckout,
+      removeSyncedCheckout,
+      timestamp,
+    });
+    expect(retried.snapshotId).toBe('20260401-demo');
+    await expect(
+      access(join(recapExportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
+    await rm(retried.summaryExportFile!);
+
+    await expect(
+      archiveProjectOnCompletion(options, {
+        copySingleFile: failSummaryCopy,
+        preflightSyncedCheckout,
+        removeSyncedCheckout,
+        timestamp,
+      }),
+    ).rejects.toThrow('injected summary copy failure');
+    await expect(
+      access(join(recapExportRoot, 'manifest.json')),
+    ).resolves.toBeUndefined();
+  });
+
+  it('directs an active record with an absent checkout to project pull', async () => {
+    const repoRoot = await createRepoRoot();
+    const syncedRoot = join(repoRoot, '.oat', 'projects', 'synced');
+    const projectPath = join(syncedRoot, 'absent-demo');
+    await writeSyncedRecord(
+      syncedRecordPath(syncedRoot, 'absent-demo'),
+      buildSyncedRecord('absent-demo', new Date('2026-08-27T00:00:00Z')),
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'absent-demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          preflightSyncedCheckout: vi.fn(async () => ({ status: 'absent' })),
+        },
+      ),
+    ).rejects.toThrow(
+      /is absent; run oat project pull absent-demo before archiving/,
     );
   });
 
@@ -2056,6 +3217,97 @@ describe('archive utils', () => {
     ]);
   });
 
+  it.each(
+    (['shared', 'synced'] as const).flatMap((scope) =>
+      (['missing-cli', 'invalid-credentials', 'sync-failure'] as const).map(
+        (failure) => ({ scope, failure }),
+      ),
+    ),
+  )(
+    'keeps $scope completion nonblocking on S3 $failure',
+    async ({ scope, failure }) => {
+      const fixture = scope === 'synced' ? await createSyncedFixture() : null;
+      try {
+        const slug = `s3-${failure}`;
+        const repoRoot = fixture?.cloneA ?? (await createRepoRoot());
+        const target = fixture
+          ? buildSyncTarget(repoRoot, '.oat/projects/shared', slug)
+          : null;
+        const projectPath =
+          target?.projectPath ??
+          join(repoRoot, '.oat', 'projects', 'shared', slug);
+        if (target) {
+          await createSyncedProject(target, defaultGitRunner);
+        } else {
+          await mkdir(projectPath, { recursive: true });
+        }
+        await writeFile(join(projectPath, 'summary.md'), '# summary\n', 'utf8');
+        let recordPath: string | null = null;
+        if (target) {
+          await pushSynced(target, defaultGitRunner, {});
+          recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+          await writeSyncedRecord(
+            recordPath,
+            buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
+          );
+        }
+
+        const accessWarning =
+          failure === 'missing-cli'
+            ? 'Archive S3 sync skipped because AWS CLI is unavailable.'
+            : 'Archive S3 sync skipped because AWS credentials are unusable.';
+        const ensureAccess = vi.fn(async () =>
+          failure === 'sync-failure'
+            ? { ok: true, warnings: [] }
+            : { ok: false, warnings: [accessWarning] },
+        );
+        const execFile = vi.fn(async () => {
+          throw new Error('injected aws s3 sync failure');
+        });
+        const result = await archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: slug,
+            projectsRoot: '.oat/projects/shared',
+            summaryExportPath: '.oat/repo/reference/project-summaries',
+            s3Uri: 's3://archive-bucket/projects',
+            s3SyncOnComplete: true,
+          },
+          {
+            ensureS3ArchiveAccess: ensureAccess,
+            execFile,
+            timestamp: () => '2026-08-27T12:00:00Z',
+          },
+        );
+
+        expect(result.s3Path).toBeNull();
+        expect(result.summaryExportFile).not.toBeNull();
+        await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
+          '# summary\n',
+        );
+        expect(result.warnings).toEqual([
+          failure === 'sync-failure'
+            ? expect.stringContaining('injected aws s3 sync failure')
+            : accessWarning,
+        ]);
+        await expect(access(projectPath)).rejects.toThrow();
+        if (recordPath) {
+          expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
+          expect(await readSyncedRecord(recordPath)).toMatchObject({
+            status: 'complete',
+            archiveSnapshot: `20260827-${slug}`,
+          });
+        } else {
+          expect(result.lifecycleCommit).toBeNull();
+        }
+      } finally {
+        await fixture?.cleanup();
+      }
+    },
+    20_000,
+  );
+
   it('warns during completion when archive sync is enabled but aws is missing', async () => {
     const execFile = vi.fn(async () => {
       const error = new Error('spawn aws ENOENT') as NodeJS.ErrnoException;
@@ -2337,6 +3589,156 @@ describe('archive utils', () => {
       expect('AWS_REGION' in env).toBe(false);
     });
   });
+
+  it.each(['shared', 'local'] as const)(
+    'refuses a %s descendant before copying or removing it',
+    async (scope) => {
+      const repoRoot = await createRepoRoot();
+      const scopeRoot = join(repoRoot, '.oat', 'projects', scope);
+      const projectPath = join(scopeRoot, 'parent', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'sentinel.md'), 'preserve\n', 'utf8');
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow('exact direct child');
+
+      await expect(
+        readFile(join(projectPath, 'sentinel.md'), 'utf8'),
+      ).resolves.toBe('preserve\n');
+      await expect(
+        access(join(repoRoot, '.oat', 'projects', 'archived')),
+      ).rejects.toThrow();
+    },
+  );
+
+  it('refuses a nested synced basename collision without touching either project', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const canonical = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'demo',
+      );
+      const container = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'container',
+      );
+      await createSyncedProject(canonical, defaultGitRunner);
+      await createSyncedProject(container, defaultGitRunner);
+      await writeFile(join(canonical.projectPath, 'canonical.md'), 'keep\n');
+      await writeFile(join(container.projectPath, 'container.md'), 'keep\n');
+      await pushSynced(canonical, defaultGitRunner, {});
+      await pushSynced(container, defaultGitRunner, {});
+      for (const target of [canonical, container]) {
+        await writeSyncedRecord(
+          syncedRecordPath(target.syncedRoot, target.slug),
+          buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+        );
+      }
+      const collidingDescendant = join(container.projectPath, 'nested', 'demo');
+      await mkdir(collidingDescendant, { recursive: true });
+      await writeFile(join(collidingDescendant, 'sentinel.md'), 'nested\n');
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot: fixture.cloneA,
+          projectPath: collidingDescendant,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow('exact direct child');
+
+      await expect(access(canonical.projectPath)).resolves.toBeUndefined();
+      await expect(access(container.projectPath)).resolves.toBeUndefined();
+      await expect(
+        readFile(join(collidingDescendant, 'sentinel.md'), 'utf8'),
+      ).resolves.toBe('nested\n');
+      await expect(
+        readSyncedRecord(syncedRecordPath(canonical.syncedRoot, 'demo')),
+      ).resolves.toMatchObject({ status: 'active' });
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 20_000);
+
+  it('rejects an archive retry after the authoritative source ref advances', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'stale-archive-retry',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), 'old tree\n');
+      const firstPush = await pushSynced(target, defaultGitRunner, {});
+      const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-29T00:00:00Z')),
+      );
+      const options = {
+        repoRoot: fixture.cloneA,
+        projectPath: target.projectPath,
+        projectName: target.slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+      };
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-29T12:00:00Z',
+          removeSyncedCheckout: vi.fn(async () => {
+            throw new Error('injected post-copy failure');
+          }),
+        }),
+      ).rejects.toThrow('injected post-copy failure');
+      const afterFailure = await readSyncedRecord(recordPath);
+      expect(afterFailure).toMatchObject({
+        archiveSourceRefSha: firstPush.sha,
+      });
+      const archivePath = (
+        await resolveArchiveProjectTarget({
+          repoRoot: fixture.cloneA,
+          projectsRoot: '.oat/projects/shared',
+          projectName: target.slug,
+          archiveSnapshot: afterFailure!.archiveSnapshot,
+          archiveScope: 'synced',
+        })
+      ).archivePath;
+      await expect(
+        readFile(join(archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe('old tree\n');
+
+      await writeFile(join(target.projectPath, 'state.md'), 'new tree\n');
+      const secondPush = await pushSynced(target, defaultGitRunner, {});
+      expect(secondPush.sha).not.toBe(firstPush.sha);
+
+      await expect(
+        archiveProjectOnCompletion(options, {
+          timestamp: () => '2026-08-29T12:00:00Z',
+        }),
+      ).rejects.toThrow('refusing to accept stale archive content');
+      await expect(
+        readFile(join(archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe('old tree\n');
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(readSyncedRecord(recordPath)).resolves.toMatchObject({
+        archiveSourceRefSha: firstPush.sha,
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 20_000);
 });
 
 function hashContent(value: string | Buffer): string {

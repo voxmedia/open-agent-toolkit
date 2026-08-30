@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   lstat,
   mkdir,
@@ -15,6 +16,7 @@ import { registerCommands } from '@commands/index';
 import type { SyncConfig } from '@config/index';
 import { checkbox, confirm } from '@inquirer/prompts';
 import type { Manifest } from '@manifest/index';
+import { createSyncedFixture } from '@test-support/synced-fixture';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@inquirer/prompts', () => ({
@@ -481,5 +483,172 @@ describe('e2e workflow', () => {
         (entry) => entry.canonicalPath === '.agents/skills/skill-one',
       ),
     ).toBe(false);
+  });
+});
+
+describe('synced project lifecycle', () => {
+  it('creates, pushes, and pulls a default synced project while preserving explicit shared scope', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const cloneB = fixture.cloneB!;
+      const base = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.cloneA,
+        encoding: 'utf8',
+      }).trim();
+      const awsKeys = Object.keys(process.env).filter((key) =>
+        key.startsWith('AWS_'),
+      );
+      const savedAws = new Map(awsKeys.map((key) => [key, process.env[key]]));
+      const savedPath = process.env.PATH;
+      const isolatedToolPath = await mkdtemp(join(tmpdir(), 'oat-gh-missing-'));
+      for (const key of awsKeys) delete process.env[key];
+
+      try {
+        const created = await runCli(
+          fixture.cloneA,
+          ['project', 'new', 'demo', '--no-dashboard'],
+          ['--json'],
+        );
+        expect(created.exitCode).toBe(0);
+        expect(JSON.parse(created.stdout)).toMatchObject({
+          status: 'ok',
+          scope: 'synced',
+          ref: 'refs/oat/projects/demo',
+        });
+        expect(
+          execFileSync('git', ['diff', '--name-only', `${base}..HEAD`], {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          })
+            .trim()
+            .split('\n'),
+        ).toEqual(['.oat/projects/synced/demo.json']);
+
+        await writeFile(
+          join(
+            fixture.cloneA,
+            '.oat',
+            'projects',
+            'synced',
+            'demo',
+            'state.md',
+          ),
+          '---\noat_phase: plan\noat_phase_status: in_progress\noat_workflow_mode: quick\noat_pr_status: open\noat_pr_url: "https://github.com/example/oat-fixture/pull/1"\n---\n\n# Updated remotely\n',
+          'utf8',
+        );
+        await symlink(
+          execFileSync('which', ['git'], { encoding: 'utf8' }).trim(),
+          join(isolatedToolPath, 'git'),
+        );
+        process.env.PATH = isolatedToolPath;
+        const pushed = await runCli(
+          fixture.cloneA,
+          ['project', 'push', 'demo'],
+          ['--json'],
+        );
+        expect(pushed.exitCode).toBe(0);
+        expect(JSON.parse(pushed.stdout)).toMatchObject({
+          status: 'pushed',
+          prRefresh: 'skipped',
+        });
+        expect(pushed.stderr).toBe('');
+        const warnedPush = await runCli(fixture.cloneA, [
+          'project',
+          'push',
+          'demo',
+        ]);
+        expect(warnedPush.exitCode).toBe(0);
+        expect(warnedPush.stderr).toContain(
+          'Skipping PR link refresh because the GitHub CLI is unavailable.',
+        );
+
+        execFileSync('git', ['push', '-q', 'origin', 'main'], {
+          cwd: fixture.cloneA,
+        });
+        execFileSync('git', ['pull', '-q', '--ff-only'], { cwd: cloneB });
+        const pulled = await runCli(
+          cloneB,
+          ['project', 'pull', 'demo'],
+          ['--json'],
+        );
+        expect(pulled.exitCode).toBe(0);
+        expect(JSON.parse(pulled.stdout)).toMatchObject({ status: 'created' });
+        await expect(
+          readFile(
+            join(cloneB, '.oat', 'projects', 'synced', 'demo', 'state.md'),
+            'utf8',
+          ),
+        ).resolves.toContain('# Updated remotely');
+        process.env.PATH = savedPath;
+
+        const archived = await runCli(
+          fixture.cloneA,
+          ['project', 'archive', '.oat/projects/synced/demo'],
+          ['--json'],
+        );
+        expect(archived.stderr).toBe('');
+        const archivedPayload = JSON.parse(archived.stdout);
+        expect(archivedPayload).toMatchObject({
+          status: 'ok',
+          projectName: 'demo',
+          snapshotId: expect.stringMatching(/^\d{8}-demo$/),
+          lifecycleCommit: expect.stringMatching(/^[a-f0-9]{40}$/),
+        });
+        expect(archived.exitCode).toBe(0);
+        await expect(
+          lstat(join(fixture.cloneA, '.oat/projects/synced/demo')),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+        expect(
+          execFileSync(
+            'git',
+            ['ls-remote', 'origin', 'refs/oat/projects/demo'],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ),
+        ).toContain('refs/oat/projects/demo');
+        expect(
+          JSON.parse(
+            await readFile(
+              join(fixture.cloneA, '.oat/projects/synced/demo.json'),
+              'utf8',
+            ),
+          ),
+        ).toMatchObject({
+          status: 'complete',
+          archiveSnapshot: expect.stringMatching(/^\d{8}-demo$/),
+        });
+
+        const legacy = await runCli(
+          fixture.cloneA,
+          ['project', 'new', 'legacy', '--scope', 'shared', '--no-dashboard'],
+          ['--json'],
+        );
+        expect(legacy.exitCode).toBe(0);
+        expect(JSON.parse(legacy.stdout)).toMatchObject({
+          scope: 'shared',
+          projectPath: '.oat/projects/shared/legacy',
+        });
+        expect(
+          execFileSync(
+            'git',
+            [
+              'ls-tree',
+              '--name-only',
+              'HEAD',
+              '.oat/projects/shared/legacy/state.md',
+            ],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ).trim(),
+        ).toBe('.oat/projects/shared/legacy/state.md');
+      } finally {
+        process.env.PATH = savedPath;
+        await rm(isolatedToolPath, { recursive: true, force: true });
+        for (const [key, value] of savedAws) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    } finally {
+      await fixture.cleanup();
+    }
   });
 });

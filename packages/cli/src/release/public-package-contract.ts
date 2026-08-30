@@ -29,6 +29,7 @@ const COMMON_METADATA_FIELDS = [
 const COMMON_FORBIDDEN_PATH_PATTERNS = [
   'src/**',
   '**/*.test.*',
+  '**/__tests__/**',
   'tsconfig.tsbuildinfo',
 ] as const;
 

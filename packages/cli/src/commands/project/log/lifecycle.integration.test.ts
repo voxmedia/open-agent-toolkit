@@ -134,6 +134,7 @@ async function createFixture(
   const scaffold = await scaffoldProject({
     repoRoot: root,
     projectName: PROJECT_NAME,
+    scope: 'shared',
     mode: 'quick',
     setActive: true,
     refreshDashboard: false,

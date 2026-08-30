@@ -24,6 +24,9 @@ Project scope is used for project workflows and repo-local sync state. User scop
   config.local.json
   projects/
     shared/
+    synced/
+      <project>.json
+      <project>/
     local/
     archived/
   ideas/
@@ -47,7 +50,7 @@ Project scope is used for project workflows and repo-local sync state. User scop
 | `.oat/config.json`       | Shared repo runtime config for non-sync settings    | Includes `worktrees.root`, `projects.root`, `git.defaultBranch`, `archive.*`, and `documentation.*`     |
 | `.oat/config.local.json` | Local per-developer runtime state                   | Gitignored; includes `activeProject`, `lastPausedProject`, `activeIdea`                                 |
 | `.oat/state.md`          | Generated repo state dashboard                      | Gitignored; rebuilt with `oat state refresh` from config, project artifacts, and knowledge metadata     |
-| `.oat/projects/`         | OAT project artifacts                               | `shared`, `local`, `archived` scopes                                                                    |
+| `.oat/projects/`         | OAT project artifacts                               | `shared`, `synced`, `local`, and lifecycle `archived` locations                                         |
 | `.oat/ideas/`            | Project-level ideas store                           | Often gitignored                                                                                        |
 | `.oat/sync/`             | Interop sync state/config                           | See details below                                                                                       |
 | `.oat/templates/`        | Artifact templates used by OAT skills               | Source for scaffolding. Includes `docs-app-fuma/` (Fumadocs) and `docs-app-mkdocs/` (MkDocs) templates. |
@@ -105,6 +108,7 @@ Current schema keys:
 | `version`                                                  | `number`                   | `1`                      | Schema version                                                                                                                                                                                                                                                                                          |
 | `worktrees.root`                                           | `string`                   | `".worktrees"`           | Root directory for git worktrees (repo-relative or absolute)                                                                                                                                                                                                                                            |
 | `projects.root`                                            | `string`                   | `".oat/projects/shared"` | Default root directory for OAT projects                                                                                                                                                                                                                                                                 |
+| `projects.defaultScope`                                    | `string`                   | `"synced"`               | Scope used by project creation when `--scope` is omitted: `shared`, `local`, or `synced`. Environment override: `OAT_PROJECTS_DEFAULT_SCOPE`.                                                                                                                                                           |
 | `localPaths`                                               | `string[]`                 | -                        | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`.                                                                                                                                                                             |
 | `documentation.root`                                       | `string`                   | -                        | Root directory containing documentation source files (e.g., `apps/docs/docs`)                                                                                                                                                                                                                           |
 | `documentation.tooling`                                    | `string`                   | -                        | Documentation framework identifier (`mkdocs` or `fumadocs`)                                                                                                                                                                                                                                             |
@@ -139,7 +143,8 @@ Example:
 {
   "version": 1,
   "projects": {
-    "root": ".oat/projects/shared"
+    "root": ".oat/projects/shared",
+    "defaultScope": "synced"
   },
   "worktrees": {
     "root": ".worktrees"
@@ -173,12 +178,23 @@ For repo-relative values (levels 3-4), paths are resolved from the repository ro
 Each OAT project lives under:
 
 - `.oat/projects/shared/<project>/`
+- `.oat/projects/synced/<project>/` for a gitignored nested worktree whose
+  history is published to `refs/oat/projects/<project>`
+- `.oat/projects/synced/<project>.json` for the tracked discovery record that
+  identifies the ref, remote, and active or complete status
 - `.oat/projects/local/<project>/`
 - `.oat/projects/archived/<project>/`
 
-Archive sync behavior:
+Completion and archive sync behavior:
 
-- `oat-project-complete` always archives locally into `.oat/projects/archived/<project>/`.
+- When archiving is selected, `oat-project-complete` archives locally into
+  `.oat/projects/archived/<project>/`. For a synced project, the snapshot omits
+  the nested checkout's `.git` pointer and `reviews/`, then completion marks
+  the tracked record complete, removes the nested worktree, and retains the
+  project ref so pinned links keep resolving.
+- When archiving is disabled or declined, completion leaves the synced
+  checkout and ref in place, pushes the finalized artifacts, and exact-path
+  commits the tracked record as complete.
 - If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
 - `oat repo archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
 - `oat repo archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.

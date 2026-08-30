@@ -50,6 +50,7 @@ import {
 } from '@config/dispatch-matrix';
 import {
   readOatConfig,
+  readOatConfigForDefaultScopeRepair,
   type OatConfig,
   type OatLocalConfig,
   readOatLocalConfig,
@@ -84,6 +85,7 @@ import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
 
 import { checkStaleInvocations } from './stale-invocations';
+import { checkSyncedProjects } from './synced-projects';
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -102,6 +104,7 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
+  readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
   validateMatrixCell: (
@@ -130,6 +133,7 @@ interface DoctorDependencies {
     pathExists: (path: string) => Promise<boolean>,
   ) => Promise<SkillVersionReport>;
   checkStaleInvocations: (repoRoot: string) => Promise<DoctorCheck>;
+  checkSyncedProjects: (repoRoot: string) => Promise<DoctorCheck[]>;
 }
 
 interface OutdatedSkillVersion {
@@ -294,6 +298,7 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     readOatConfig,
+    readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
     readUserConfig,
     validateMatrixCell,
@@ -312,6 +317,7 @@ function createDependencies(): DoctorDependencies {
       pathExists = pathExistsDefault,
     ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
     checkStaleInvocations,
+    checkSyncedProjects,
   };
 }
 
@@ -1169,6 +1175,7 @@ async function runChecksForScope(
 
   if (scope === 'project') {
     checks.push(await dependencies.checkStaleInvocations(scopeRoot));
+    checks.push(...(await dependencies.checkSyncedProjects(scopeRoot)));
 
     try {
       const assetsRoot = await dependencies.resolveAssetsRoot();
@@ -1223,11 +1230,36 @@ async function runChecksForScope(
     }
 
     const repoReferenceRoot = join(scopeRoot, '.oat', 'repo');
-    const [userConfig, config, localConfig] = await Promise.all([
+    const [userConfig, configResult, localConfig] = await Promise.all([
       dependencies.readUserConfig(userConfigDir),
-      dependencies.readOatConfig(scopeRoot),
+      dependencies.readOatConfig(scopeRoot).then(
+        (config) => ({ config }),
+        async (error: unknown) => {
+          if (
+            !(error instanceof Error) ||
+            !error.message.startsWith('Invalid projects.defaultScope in ')
+          ) {
+            throw error;
+          }
+          return {
+            config:
+              await dependencies.readOatConfigForDefaultScopeRepair(scopeRoot),
+            defaultScopeError: error.message,
+          };
+        },
+      ),
       dependencies.readOatLocalConfig(scopeRoot),
     ]);
+    if ('defaultScopeError' in configResult) {
+      checks.push({
+        name: 'project:projects_default_scope',
+        description: 'Project creation default scope',
+        status: 'fail',
+        message: configResult.defaultScopeError,
+        fix: 'Run `oat config set projects.defaultScope <shared|local|synced>`.',
+      });
+    }
+    const config = configResult.config;
     checks.push(
       await createDispatchMatrixDoctorCheck(
         scopeRoot,
@@ -1251,6 +1283,7 @@ async function runChecksForScope(
     const adoption = await dependencies.resolvePjmAdoption({
       projectRoot: scopeRoot,
       repoRoot: repoReferenceRoot,
+      config,
     });
     if (adoption.state !== 'none') {
       checks.push(

@@ -76,7 +76,17 @@ Earlier CLI versions returned `config.json` / `config.local.json` / `env` / `def
 
 Common keys in `.oat/config.json`:
 
-- `projects.root` — where tracked projects live
+- `projects.root` — shared-scope project root. Relative values resolve from the
+  repository root; absolute values remain absolute. OAT derives the `local`
+  and `synced` roots as sibling directories named `local` and `synced` under
+  this root's parent, so a custom value relocates all three scope roots as one
+  layout. Synced project creation requires the derived `synced` root to resolve
+  inside the repository; an external absolute root remains usable for `shared`
+  and `local` projects but is rejected before any synced checkout, ref, record,
+  active pointer, or Git index mutation.
+- `projects.defaultScope` — scope used by project creation when `--scope` is
+  omitted (`synced` by default). `OAT_PROJECTS_DEFAULT_SCOPE` overrides the
+  configured value for the current process.
 - `worktrees.root` — where OAT-managed worktrees live
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership

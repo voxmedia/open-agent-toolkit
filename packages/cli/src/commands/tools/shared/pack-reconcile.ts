@@ -152,7 +152,15 @@ function materializationOperations(
   );
   const ownership = asset.ownership[input.scope];
   const isMissing = observed?.status === 'missing';
-  if (ownership === 'seed-if-missing' && !isMissing) return [];
+  if (
+    ownership === 'seed-if-missing' &&
+    !isMissing &&
+    !(
+      asset.generation === 'projects-config-default' &&
+      observed?.status === 'outdated'
+    )
+  )
+    return [];
   if (ownership === 'managed' && observed?.status === 'current') return [];
 
   const destination = join(input.scopeRoot, asset.destination);

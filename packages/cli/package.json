@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/cli",
-  "version": "0.2.46",
+  "version": "0.2.45",
   "private": false,
   "description": "Open Agent Toolkit CLI",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",
@@ -26,7 +26,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bash scripts/bundle-assets.sh && tsc && tsc-alias && chmod +x dist/index.js && touch dist/index.js",
+    "build": "bash scripts/bundle-assets.sh && { [ ! -d dist ] || find dist -type d -name __tests__ -prune -exec rm -rf {} +; } && tsc && tsc-alias && chmod +x dist/index.js && touch dist/index.js",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "dev": "tsx watch src/index.ts",
     "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",
@@ -38,7 +38,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit && tsc -p tsconfig.test-support.json"
   },
   "dependencies": {
     "@iarna/toml": "2.2.5",

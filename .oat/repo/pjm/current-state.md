@@ -34,7 +34,18 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.41` (portable-agent-references, branch pending merge) generalizes
+- CLI `0.2.45` (synced-project-scope, PR #227 integrated branch) adds a Git-native
+  `synced` project scope that keeps lifecycle artifacts off feature branches
+  while publishing them to retained `refs/oat/projects/<slug>` histories.
+  New projects default to the configurable synced scope; explicit `shared` and
+  `local` behavior remains available. Scope-aware creation, push/pull, remote
+  discovery and adoption, coordination pulls, migration, pruning, archive,
+  diagnostics, and open/pause flows are integrated across the CLI and lifecycle
+  skills. Small tracked discovery records and SHA-pinned PR links preserve
+  reviewer access without exposing machine-only artifacts, with canonical
+  identity checks, exact parent-path allowlists, non-forced publication, and
+  resumable completion receipts protecting every cross-repository mutation.
+- CLI `0.2.41` (portable-agent-references, merged as PR #231) generalizes
   portable references from the identified cross-skill reads to the entire
   user-default asset surface. A manifest-driven ratchet derives skill _and_
   agent assets from `PACK_MANIFEST` and classifies cross-skill `SKILL.md` reads

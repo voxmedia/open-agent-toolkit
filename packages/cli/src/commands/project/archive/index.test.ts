@@ -14,6 +14,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectArchiveCommand } from './index';
 
+it('marks archive --no-commit as manual-only in CLI help', () => {
+  expect(createProjectArchiveCommand().helpInformation()).toMatch(
+    /Manual\/library use only: omit the synced\s+lifecycle commit receipt/,
+  );
+});
+
 interface HarnessOptions {
   config?: OatConfig;
   cwd?: string;

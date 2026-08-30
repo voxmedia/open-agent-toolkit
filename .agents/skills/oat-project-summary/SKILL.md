@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.5.0
+version: 1.5.1
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -323,11 +323,34 @@ Run this step after `summary.md` has been authored or refreshed, including the
 distinct `## Autonomous Execution Learnings` section when its source artifact
 exists.
 
+Before the roll-up or decision promotion mutates repository-wide outputs,
+preflight the owned paths and snapshot unrelated staged state:
+
+```bash
+DECISIONS_ROOT=".oat/repo/reference/decisions"
+DECISION_INDEX_PATH="$DECISIONS_ROOT/index.md"
+PROMOTED_DECISION_PATHS=()
+DECISION_INDEX_CHANGED="false"
+PROJECT_LOG_LEDGER_APPENDED="false"
+PROJECT_LOG_LEDGER_PATH=$(oat config get workflow.projectLogLedgerPath 2>/dev/null || true)
+OWNED_STAGE_PATHS=("$PROJECT_PATH/summary.md" "$PROJECT_PATH/project-log.md" "$DECISIONS_ROOT")
+if [ -n "$PROJECT_LOG_LEDGER_PATH" ]; then
+  OWNED_STAGE_PATHS+=("$PROJECT_LOG_LEDGER_PATH")
+fi
+git diff --cached --quiet -- "${OWNED_STAGE_PATHS[@]}" || {
+  echo "oat: summary-owned output is already staged; refusing to mix staged state" >&2
+  exit 1
+}
+UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)
+```
+
+This preflight intentionally leaves unrelated staged paths in place. Step 8
+must reproduce their staged patch byte-for-byte after its exact-path commits.
+
 When Step 2.5 found entries, run:
 
 ```bash
-PROJECT_LOG_LEDGER_PATH=$(oat config get workflow.projectLogLedgerPath)
-PROJECT_LOG_LEDGER_APPENDED="false"
+test -n "$PROJECT_LOG_LEDGER_PATH" || exit 1
 PROJECT_LOG_ROLLUP=$(oat project log rollup --project "$PROJECT_PATH" --json)
 ```
 
@@ -414,7 +437,12 @@ is missing, stop decision promotion and recommend `oat pjm init`. Never use
    - Otherwise → create it:
 
      ```bash
-     oat decision new "<title>" --status accepted --context "<context>" --decision "<decision>" --consequences "<consequences>"
+     DECISION_CREATE=$(oat decision new "<title>" --status accepted --context "<context>" --decision "<decision>" --consequences "<consequences>" --json)
+     DECISION_ID=$(printf '%s\n' "$DECISION_CREATE" | jq -er '.id') || exit 1
+     DECISION_RECORD_PATH="$DECISIONS_ROOT/${DECISION_ID}.md"
+     test -f "$DECISION_RECORD_PATH" || exit 1
+     PROMOTED_DECISION_PATHS+=("$DECISION_RECORD_PATH")
+     DECISION_INDEX_CHANGED="true"
      ```
 
      The command generates the deterministic `DR-YYMMDD-slug` ID, fills every decision body section, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
@@ -436,14 +464,75 @@ This is informational only. There is no interactive prompt anywhere in this step
 ### Step 8: Commit
 
 ```bash
-git add "$PROJECT_PATH/summary.md"
-if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
-  git add "$PROJECT_PATH/project-log.md"
-fi
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+
+PARENT_OUTPUT_PATHS=()
 if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
-  git add "$PROJECT_LOG_LEDGER_PATH"
+  PARENT_OUTPUT_PATHS+=("$PROJECT_LOG_LEDGER_PATH")
 fi
-git commit -m "docs: generate summary for {project-name}"
+if [ "${#PROMOTED_DECISION_PATHS[@]}" -gt 0 ]; then
+  PARENT_OUTPUT_PATHS+=("${PROMOTED_DECISION_PATHS[@]}")
+fi
+if [ "$DECISION_INDEX_CHANGED" = "true" ]; then
+  PARENT_OUTPUT_PATHS+=("$DECISION_INDEX_PATH")
+fi
+
+PARENT_DURABILITY_COMMIT=""
+if [ "$PROJECT_SCOPE" = "synced" ] && [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; then
+  git add -- "${PARENT_OUTPUT_PATHS[@]}"
+  if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ] && [ "$DECISION_INDEX_CHANGED" = "true" ]; then
+    PARENT_COMMIT_MESSAGE="docs: update project log ledger and decisions for {project-name}"
+  elif [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
+    PARENT_COMMIT_MESSAGE="docs: update project log ledger for {project-name}"
+  else
+    PARENT_COMMIT_MESSAGE="docs: promote summary decisions for {project-name}"
+  fi
+  git commit --only -m "$PARENT_COMMIT_MESSAGE" -- "${PARENT_OUTPUT_PATHS[@]}"
+  PARENT_DURABILITY_COMMIT=$(git rev-parse HEAD)
+  PARENT_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$PARENT_DURABILITY_COMMIT")
+  # Inspect the complete output and require exact set equality with the
+  # de-duplicated PARENT_OUTPUT_PATHS array before continuing.
+fi
+```
+
+Define this fail-closed parser before either synced summary push. On rejection,
+print the full CLI JSON, run `oat project pull "$PROJECT_PATH"`, resolve its
+reported conflict, and retry the original push.
+
+```bash
+parse_synced_push_receipt() {
+  node -e '
+let value;
+try { value = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+if (!["pushed", "up-to-date"].includes(value.status) || !/^[0-9a-f]{40}$/.test(value.sha)) process.exit(1);
+process.stdout.write(value.sha);
+' "$1"
+}
+```
+
+```bash
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: generate summary for {project-name}" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+  SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
+else
+  PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/summary.md")
+  if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
+    PROJECT_OUTPUT_PATHS+=("$PROJECT_PATH/project-log.md")
+  fi
+  if [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; then
+    PROJECT_OUTPUT_PATHS+=("${PARENT_OUTPUT_PATHS[@]}")
+  fi
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git commit --only -m "docs: generate summary for {project-name}" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
+fi
+
+UNRELATED_STAGED_PATCH_AFTER=$(git diff --cached --binary)
+[ "$UNRELATED_STAGED_PATCH_AFTER" = "$UNRELATED_STAGED_PATCH_BEFORE" ] || {
+  echo "oat: unrelated staged state changed during summary persistence" >&2
+  exit 1
+}
 ```
 
 These conditional paths are required: append-based promotion mutates
@@ -451,12 +540,23 @@ These conditional paths are required: append-based promotion mutates
 repository ledger. A permitted skip or deduplicated ledger does not add a
 ledger staging path.
 
-If decision records were promoted in Step 7, also stage `.oat/repo/reference/decisions/` so the new `DR-*.md` records and the regenerated `index.md` land with the summary.
+For a synced project, repository-wide decision and ledger outputs are committed
+on the parent branch before the summary is pushed to its project ref. A new
+decision with no ledger append therefore receives the dedicated guarded parent
+commit above. Record `PARENT_DURABILITY_COMMIT` and the verified exact paths in
+the output summary. Never stage the whole decisions directory.
 
 If this is a re-run (incremental update):
 
 ```bash
-git commit -m "docs: update summary for {project-name}"
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+  SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
+else
+  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
+  git commit --only -m "docs: update summary for {project-name}" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
+fi
 ```
 
 ### Step 9: Output Summary

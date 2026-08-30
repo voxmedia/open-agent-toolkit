@@ -1,11 +1,11 @@
 ---
 name: oat-project-document
-version: 1.8.0
+version: 1.8.1
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 ---
 
 # Project Documentation Sync
@@ -524,8 +524,14 @@ Update `$PROJECT_PATH/state.md` frontmatter based on apply outcome:
 - If `$ALL_SUCCEEDED` is false: do **not** set `oat_docs_updated: complete` — leave the field as `null` so the skill can be re-run. Still set `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`. Surface the failures clearly in the summary report (Step 8d) so the user knows which updates failed and why.
 
 ```bash
-git add "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2; exit 1; }
+# fail closed: never fall back to branch bookkeeping when scope resolution fails
+if [ "$PROJECT_SCOPE" = "synced" ]; then
+  oat project push "$PROJECT_PATH" --message "chore({project-name}): mark docs updated" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+else
+  git add "$PROJECT_PATH/state.md"
+  git diff --cached --quiet || git commit -m "chore({project-name}): mark docs updated"
+fi
 ```
 
 **8c. Handle edge cases:**

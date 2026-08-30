@@ -286,6 +286,28 @@ describe('installWorkflows', () => {
     ).resolves.toContain('.oat/projects/custom-config');
   });
 
+  it('preserves defaultScope while backfilling the projects root', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+    await mkdir(join(targetRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(targetRoot, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { defaultScope: 'local' } })}\n`,
+      'utf8',
+    );
+
+    await installWorkflows({ assetsRoot, targetRoot });
+
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('"defaultScope": "local"');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'config.json'), 'utf8'),
+    ).resolves.toContain('"root": ".oat/projects/shared"');
+  });
+
   it('scaffolds projects directories with .gitkeep files on fresh install', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');

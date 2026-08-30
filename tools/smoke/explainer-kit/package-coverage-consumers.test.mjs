@@ -182,9 +182,10 @@ test('one untouched core package passes finalizer, archive, and push coverage', 
   );
   assert.equal(finalization.status, 'ready');
 
-  const { verifySelectedProjectRecapForArchive } = await importDist(
-    'commands/project/archive/archive-utils.js',
-  );
+  const {
+    assertExactArchiveProjectRoot,
+    verifySelectedProjectRecapForArchive,
+  } = await importDist('commands/project/archive/archive-utils.js');
   const selectedRun = join('explainers', 'coverage-smoke');
   await verifySelectedProjectRecapForArchive(projectPath, selectedRun);
 
@@ -222,6 +223,7 @@ test('one untouched core package passes finalizer, archive, and push coverage', 
         primaryRepoRootAvailable: true,
         localOnlyWarning: null,
       }),
+      assertExactArchiveProjectRoot,
       verifySelectedProjectRecapForArchive,
       archiveProjectOnCompletion: async () => {
         archived += 1;

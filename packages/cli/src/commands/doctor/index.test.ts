@@ -73,6 +73,7 @@ interface HarnessOptions {
     version: string | null;
   }>;
   oatConfig?: OatConfig;
+  oatConfigError?: Error;
   oatLocalConfig?: OatLocalConfig;
   userConfig?: UserConfig;
   pjmChecks?: DoctorCheck[];
@@ -326,7 +327,13 @@ function createHarness(options: HarnessOptions = {}): {
       }
       return content;
     }),
-    readOatConfig: vi.fn(
+    readOatConfig: vi.fn(async () => {
+      if (options.oatConfigError) {
+        throw options.oatConfigError;
+      }
+      return options.oatConfig ?? ({ version: 1 } satisfies OatConfig);
+    }),
+    readOatConfigForDefaultScopeRepair: vi.fn(
       async () => options.oatConfig ?? ({ version: 1 } satisfies OatConfig),
     ),
     readOatLocalConfig: vi.fn(
@@ -345,6 +352,7 @@ function createHarness(options: HarnessOptions = {}): {
     checkSkillVersions,
     runPjmDoctorChecks,
     checkStaleInvocations,
+    checkSyncedProjects: vi.fn(async () => [] as DoctorCheck[]),
     inventoryPack,
     resolvePjmAdoption,
     validateMatrixCell,
@@ -453,6 +461,28 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('providers');
     expect(capture.info[0]).toContain('claude@2.0.0');
+  });
+
+  it('reports an invalid projects.defaultScope as a failing check', async () => {
+    const { command, capture } = createHarness({
+      oatConfigError: new Error(
+        'Invalid projects.defaultScope in /tmp/workspace/.oat/config.json: "remote". Expected one of: shared, local, synced.',
+      ),
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      scope: 'project',
+      checks: expect.arrayContaining([
+        expect.objectContaining({
+          name: 'project:projects_default_scope',
+          status: 'fail',
+          fix: 'Run `oat config set projects.defaultScope <shared|local|synced>`.',
+        }),
+      ]),
+    });
+    expect(process.exitCode).toBe(2);
   });
 
   it('warns with file and line evidence for stale project invocations', async () => {
@@ -633,6 +663,7 @@ describe('createDoctorCommand', () => {
     expect(resolvePjmAdoption).toHaveBeenCalledWith({
       projectRoot: '/tmp/workspace',
       repoRoot: '/tmp/workspace/.oat/repo',
+      config: { version: 1 },
     });
     expect(runPjmDoctorChecks).toHaveBeenCalledWith(
       '/tmp/workspace/.oat/repo',

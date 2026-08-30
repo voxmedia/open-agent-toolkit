@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { ApplyOatCoreGitattributesResult } from '@commands/init/gitattributes';
 import type { ApplyOatCoreResult } from '@commands/init/gitignore';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
 import type {
@@ -64,6 +65,9 @@ export interface UpdateToolsDependencies {
   fileExists: (path: string) => Promise<boolean>;
   chmod: (path: string, mode: number) => Promise<void>;
   applyOatCoreGitignore?: (repoRoot: string) => Promise<ApplyOatCoreResult>;
+  applyOatCoreGitattributes?: (
+    repoRoot: string,
+  ) => Promise<ApplyOatCoreGitattributesResult>;
   inventoryScopedPack?: (
     input: InventoryScopedPackInput,
   ) => Promise<ScopedPackInventory>;
