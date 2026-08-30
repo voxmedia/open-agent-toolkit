@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-29
+oat_last_updated: 2026-08-30
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
@@ -503,6 +503,122 @@ formatted.
 **Phase 3 Verification:** All focused tests and eleven repository gates exit 0
 with captured logs.
 
+## Phase 4: Final Review Fixes
+
+**Goal:** Close the final review's verification and traceability gaps, then
+restore an internally consistent lifecycle record before the exit gate.
+
+### Task p04-t01: (review) Assert direct-pack JSON adoption output
+
+**Review source:**
+`reviews/archived/final-review-2026-08-30T053322Z.md` (Medium 1)
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 1: Add the missing boundary assertion**
+
+Add a direct project install using `docs` with `--json --scope project`.
+Assert that the command emits exactly one JSON payload and that the payload
+contains `adoptedPacks: ['docs']` in canonical order.
+
+**Step 2: Format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/init/tools/index.test.ts`
+
+**Step 3: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/index.test.ts`
+
+Expected: the direct-pack JSON boundary is explicitly covered and the complete
+init/tools suite passes.
+
+**Step 4: Commit**
+
+`git commit -m "test(p04-t01): cover direct pack adoption json"`
+
+### Task p04-t02: (review) Retarget archived backlog references
+
+**Review source:**
+`reviews/archived/final-review-2026-08-30T053322Z.md` (Medium 2)
+
+**Files:**
+
+- Modify: `.oat/projects/shared/tool-pack-lifecycle-config-cleanup/discovery.md`
+- Modify: `.oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md`
+- Modify:
+  `.oat/projects/shared/tool-pack-scope-provider-truthfulness/discovery.md`
+
+**Step 1: Repair live traceability links**
+
+Point the three live references at
+`backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md`. Preserve the
+p03-t01 instruction that records the original active source path for the move.
+
+**Step 2: Format**
+
+Run:
+`pnpm exec oxfmt --write .oat/projects/shared/tool-pack-lifecycle-config-cleanup/discovery.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md .oat/projects/shared/tool-pack-scope-provider-truthfulness/discovery.md`
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+! rg -n -F "../../../repo/pjm/backlog/items/BL-260827-clean-up-tool-pack-lifecycle.md" .oat/projects/shared/tool-pack-lifecycle-config-cleanup/discovery.md .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md .oat/projects/shared/tool-pack-scope-provider-truthfulness/discovery.md
+git diff --check
+```
+
+Expected: no live project reference targets the removed active-item path, while
+the historical move instruction remains unchanged.
+
+**Step 4: Commit**
+
+`git commit -m "docs(p04-t02): retarget archived backlog references"`
+
+### Task p04-t03: (review) Align final plan closeout
+
+**Review source:**
+`reviews/archived/final-review-2026-08-30T053322Z.md` (Minor 1)
+
+**Files:**
+
+- Modify: `.oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md`
+
+**Step 1: Finalize the plan rollup**
+
+After p04-t01 and p04-t02 complete, confirm the phase summaries and total task
+count include all twelve tasks. Replace the temporary review-fix readiness note
+with the actual closeout boundary: final narrowed re-review, configured exit
+gate, and HiLL approval.
+
+**Step 2: Format**
+
+Run:
+`pnpm exec oxfmt --write .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md`
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+rg -n "Phase 4: 3 tasks|Total: 12 tasks|final narrowed re-review" .oat/projects/shared/tool-pack-lifecycle-config-cleanup/plan.md
+git diff --check
+```
+
+Expected: the plan accurately reports four phases and twelve tasks and names
+the current lifecycle boundary.
+
+**Step 4: Commit**
+
+`git commit -m "docs(p04-t03): align final plan closeout"`
+
+**Phase 4 Verification:** The focused init/tools suite passes, all live backlog
+links resolve to the archived item, and the lifecycle plan reports 12 tasks.
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
@@ -513,7 +629,7 @@ with captured logs.
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
 | p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                        |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | fixes_added     | 2026-08-30 | reviews/archived/final-review-2026-08-30T053322Z.md         | b7f761019202cb5bd150c8acf6519ead6795ee3f | auto       | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | plan   | artifact | passed          | 2026-08-27 | -                                                           | -                                        | auto       | -                        |
@@ -530,10 +646,13 @@ with captured logs.
   state.
 - Phase 3: 3 tasks — release integration, versions, docs, complete gates, and
   aligned PJM planning views.
+- Phase 4: 3 tasks — final-review test coverage, traceability, and lifecycle
+  plan alignment.
 
-**Total: 6 tasks**
+**Total: 12 tasks**
 
-Ready for implementation after plan review and gate disposition.
+Ready to execute the final review-fix phase before narrowed re-review and the
+configured lifecycle exit gate.
 
 ## References
 

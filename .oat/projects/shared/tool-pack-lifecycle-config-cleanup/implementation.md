@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -19,8 +19,9 @@ oat_generated: false
 | p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
 | p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
 | p03 — Release Integration             | passed | 3     | 3/3       |
+| p04 — Final Review Fixes              | active | 3     | 0/3       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/12 tasks completed
 
 ## Phase 1: Content-Accurate Pack Inventory
 
@@ -79,6 +80,22 @@ oat_generated: false
 
 **Status:** done
 **Commit:** `bd48b17bd50d11931a8f0540e02a86453087876f`
+
+## Phase 4: Final Review Fixes
+
+**Status:** active
+
+### Task p04-t01: (review) Assert direct-pack JSON adoption output
+
+**Status:** pending
+
+### Task p04-t02: (review) Retarget archived backlog references
+
+**Status:** pending
+
+### Task p04-t03: (review) Align final plan closeout
+
+**Status:** pending
 
 ## Orchestration Runs
 
@@ -417,6 +434,24 @@ oat_generated: false
   only three active bounded companions and excludes completed lifecycle cleanup
 - Verdict: passed at the governance cap; fix-loop count 2
 - Project log: terminal p03 outcome recorded once
+
+### Review Received: final (round 1)
+
+- Artifact:
+  `reviews/archived/final-review-2026-08-30T053322Z.md`
+- Reviewed head: `b7f761019202cb5bd150c8acf6519ead6795ee3f`
+- Reconnaissance: attempted
+- Findings: 0 Critical, 0 Important, 2 Medium, 1 Minor
+- Disposition map:
+  - M1 → `p04-t01` (converted): closes the explicit direct-pack JSON
+    acceptance boundary.
+  - M2 → `p04-t02` (converted): repairs live traceability after backlog
+    archival.
+  - m1 → `p04-t03` (converted): aligns the plan's final task rollup and
+    lifecycle status.
+- New tasks: `p04-t01`, `p04-t02`, `p04-t03`
+- Review cycle: 1 of 3
+- Next: execute p04 and run a narrowed final re-review before the exit gate.
 
 <!-- orchestration-runs-end -->
 
