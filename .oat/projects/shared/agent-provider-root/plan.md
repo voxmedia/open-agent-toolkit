@@ -469,7 +469,7 @@ commit `chore(p03-t02): finalize provider-root release proof`. Otherwise let
 | ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01    | code     | passed  | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
 | p02    | code     | passed  | 2026-08-30 | reviews/p02-review-2026-08-30T170942Z.md                      | 3353831302d36e34aa42f7a6a0984bcc07f86bd1 | auto       | oat-reviewer-gpt-5-6-sol-high |
-| p03    | code     | pending | -          | -                                                             | -                                        | -          | -                             |
+| p03    | code     | passed  | 2026-08-30 | reviews/p03-review-2026-08-30T173812Z.md                      | af69a800833f51e6c36458fc38744b8195311d8f | auto       | oat-reviewer-gpt-5-6-sol-high |
 | final  | code     | pending | -          | -                                                             | -                                        | -          | -                             |
 | spec   | artifact | pending | -          | -                                                             | -                                        | -          | -                             |
 | design | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |

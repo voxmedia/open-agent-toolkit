@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 2     | 2/2       |
 
-**Total:** 6/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -163,20 +163,58 @@ oat_generated: false
 
 ## Phase 3: Documentation, Packaging, and Release Proof
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-30
+
+### Phase Summary
+
+**Outcome:**
+
+- Documented the provider-root contract and its separation from native dispatch across contributor and tool-pack guidance.
+- Advanced all five public packages plus generated release metadata to the unused lockstep version `0.2.47` above current `origin/main` and npm `0.2.46`.
+- Revalidated synchronized provider layouts without changing `.claude/`, `.cursor/`, `.codex/`, or user-owned provider directories.
+- Proved the zero-agent ratchet through a temporary real-tree mutation, exact evidence, guaranteed byte restoration, and a clean rerun.
+- Completed the HOME-isolated uncached workspace test and all repository Definition-of-Done gates with direct exit code 0.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/contributing/skills.md` and `apps/oat-docs/docs/cli-utilities/tool-packs.md` - portable canonical role-read contract.
+- Five public package manifests and `packages/cli/assets/public-package-versions.json` - lockstep `0.2.47` release metadata.
+- `.oat/sync/manifest.json` - synchronized bundled OAT version metadata.
+
+**Verification:**
+
+- Mutation run exited 1 with exact source-to-target evidence; restoration hash matched and the restored 78-test suite passed.
+- HOME-isolated `turbo run test --force`: 10/10 tasks, Cached 0, 4,525 CLI tests passed.
+- Smoke, skills, release, canonical skill validation, lint, and format all exited 0.
+- Complete eight-gate Definition of Done exited 0 in documented order.
+- Independent Phase 3 review passed with zero findings.
+
+**Notes / Decisions:**
+
+- p03-t02 intentionally produced no source commit because all verification passed without a tracked correction, as required by the plan.
+- The earlier non-blocking Phase 2 same-line exemption concern remains carried for final disposition.
+- `oat status --scope project` continues to report 74 pre-existing tracked Cursor skill strays, while all 88 managed entries are in sync with zero drift or missing entries.
 
 ### Task p03-t01: Document and package the provider-root contract
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** af69a800833f51e6c36458fc38744b8195311d8f
+
+**Outcome:** Shipped docs, synchronized metadata, and lockstep public package version `0.2.47` without provider-view drift.
+
+**Verification:** Release/version gates, lint, format, sync, and post-commit version checks passed.
 
 ---
 
 ### Task p03-t02: Prove mutation detection and complete repository gates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** - (planned evidence-only task; no tracked correction)
+
+**Outcome:** Mutation detection, restoration, uncached tests, focused suites, and the full repository gate sequence all passed.
+
+**Verification:** Every planned command exited 0 except the intentionally failing mutation run, which exited 1 with exact evidence before clean restoration.
 
 ---
 
@@ -274,6 +312,47 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Medium review concern: the line-wide provider-sync example exemption can suppress an executable bare read on the same line; see `reviews/p02-review-2026-08-30T170942Z.md`.
 - Continue with p03-t01.
 
+### Run 3 — 2026-08-30T17:12:00Z
+
+- Branch: `feature/feat/unified-agent-provider-root`
+- Tier: 1 — native subagents available without authorization
+- Policy: managed High
+- Phase counts: passed=1, failed=0, stopped=0
+
+#### p03 implementation dispatch
+
+- Request: `agent-provider-root-p03-20260830T1712Z`
+- Launch: accepted; outcome `DONE_WITH_CONCERNS` using the accepted-success branch
+- Base/head: `9f457c96d7976992cb78bfb16fae1966776db850..af69a800833f51e6c36458fc38744b8195311d8f`
+- Task commits: `af69a800833f51e6c36458fc38744b8195311d8f`; p03-t02 was planned evidence-only with no source commit
+- Selection reason: `native-catalog`
+- Candidates: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery attempts: 0/10; optional nested dispatches: none
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### p03 review dispatch
+
+- Request: `agent-provider-root-p03-review-20260830T1730Z`
+- Launch: accepted; outcome `PASS`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Artifact: `reviews/p03-review-2026-08-30T173812Z.md`
+- Reconnaissance: not-attempted
+- Selection reason: `native-catalog`
+- Candidates: `oat-reviewer-gpt-5-6-sol-high`
+- Fix iterations: 0
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task commits                | Review | Fix iterations |
+| ----- | ------- | --------------------------- | ------ | -------------- |
+| p03   | passed  | 1 plus 1 evidence-only task | passed | 0              |
+
+#### Outstanding Items
+
+- Run final lifecycle review and configured implementation exit gate.
+- Preserve the carried Phase 2 Medium concern for final disposition.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -292,7 +371,8 @@ Chronological log of implementation progress.
 - [x] p02-t02: Migrate plan artifact-review instructions - `9f7417249`
 - [x] p02-t03: Migrate implementation fallback roles - `1a29933d6`
 - [x] p02-t04: Activate the zero-executable agent ratchet - `335383130`
-- [ ] p03-t01: Document and package the provider-root contract - in progress
+- [x] p03-t01: Document and package the provider-root contract - `af69a8008`
+- [x] p03-t02: Prove mutation detection and complete repository gates - evidence-only, no source commit
 
 **What changed (high level):**
 
@@ -300,6 +380,7 @@ Chronological log of implementation progress.
 - Managed High dispatch and final-phase HiLL policy resolved before source work.
 - Phase 1 delivered the typed classifier and exact-target fixture contract.
 - Phase 2 migrated all seven live reads, bumped four skills, and activated the zero-agent ratchet.
+- Phase 3 shipped docs and release metadata, proved mutation detection, and completed every repository gate.
 
 **Decisions:**
 
@@ -330,34 +411,38 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run     | Passed | Failed | Coverage                        |
-| ----- | ------------- | ------ | ------ | ------------------------------- |
-| p01   | -             | -      | -      | -                               |
-| p02   | focused union | 296    | 0      | exact eight-file phase boundary |
-| p03   | -             | -      | -      | -                               |
+| Phase | Tests Run                         | Passed      | Failed | Coverage                                   |
+| ----- | --------------------------------- | ----------- | ------ | ------------------------------------------ |
+| p01   | -                                 | -           | -      | -                                          |
+| p02   | focused union                     | 296         | 0      | exact eight-file phase boundary            |
+| p03   | full phase and Definition of Done | all planned | 0      | mutation restored; uncached workspace test |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Typed canonical skill/agent portability classification and exact-target provider-layout contracts.
+- Seven portable canonical role reads with independent dependency roots and pack-aware recovery.
+- Zero-executable-agent ratchet, provider-root documentation, and lockstep `0.2.47` release metadata.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Canonical role instructions resolve from a safe loaded provider root, then user and project `.agents`, without changing native model, effort, variant, or route selection.
+- Missing or noncanonical targets continue through candidates and fail closed with workflows-pack recovery when all candidates miss.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- Canonical project review, remote review, plan-writing, and implementation skills - portable role-instruction binding.
+- `skills-bundled-docs-contract.test.ts` - typed classifier, exact-target fixtures, and zero-agent ratchet.
+- Contributor/tool-pack docs - public provider-root contract.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused classifier/review suites, mutation proof, provider sync validation, HOME-isolated uncached workspace tests, lint/format, and all eight Definition-of-Done gates.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None. A non-blocking review concern about a same-line provider-example exemption remains explicitly carried for final disposition.
 
 ## References
 
