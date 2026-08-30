@@ -1987,6 +1987,7 @@ describe('validateOatSkills', () => {
         'ok',
         'blocked',
         'review_failed',
+        'artifact_missing',
         'artifact_validation_failed',
         'targeting_correlation_failed',
       ]) {
@@ -2005,6 +2006,13 @@ describe('validateOatSkills', () => {
         /artifact_validation_failed[\s\S]{0,800}(?:correct|fix)[\s\S]{0,300}revalidat/i,
       );
     }
+
+    expect(workflowGates, 'artifact-missing recovery contract').toMatch(
+      /`artifact_missing`[\s\S]{0,300}`receiveEligible: false`[\s\S]{0,500}synchronously awaited child[\s\S]{0,100}start\s+a new gate run[\s\S]{0,150}(?:do not|without).*review-receive/i,
+    );
+    expect(cliReference, 'artifact-missing recovery guidance').toMatch(
+      /`artifact_missing`[\s\S]{0,300}fix synchronous review\/artifact completion and start a new run, without review-receive or same-run remediation/i,
+    );
 
     expect(projectReviews, 'phase gate conjunctive eligibility').toMatch(
       /all three eligibility conditions:.*status.*`ok`.*`blocked`.*`receiveEligible` is `true`.*`handoff` is\s+non-null/is,
