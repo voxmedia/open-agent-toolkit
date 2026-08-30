@@ -342,20 +342,20 @@ git commit -m "feat(p03-t01): reject invalid structured gate configuration"
 
 **Files:**
 
-- Create or modify, choosing the smallest coherent harness:
+- Create:
   `packages/cli/src/commands/gate/configured-gate.integration.test.ts`
-- Modify if reused:
-  `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
 - Modify:
   `packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs`
 
 **Step 1: Build a configuration-driven fixture**
 
 Create a temporary executable `oat` shim that invokes the repository source
-CLI, configure a skill gate through public `gate set`, resolve the stored
-command, assert it is unchanged, and execute that exact shell command with
-`PROJECT_PATH` set. Keep stderr diagnostics separate from the one final stdout
-envelope.
+CLI. Prepend only that shim directory to the child `PATH`, assert
+`command -v oat` resolves to the fixture shim, configure a skill gate through
+public `gate set`, resolve the stored command, assert it is unchanged, and
+execute that exact shell command with `PROJECT_PATH` and the deterministic fake
+runtime environment set. Keep stderr diagnostics separate from the one final
+stdout envelope.
 
 **Step 2: Add the three-outcome matrix**
 
@@ -371,7 +371,7 @@ second child.
 **Step 3: Format**
 
 ```bash
-pnpm exec oxfmt packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/gate-hardening.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
+pnpm exec oxfmt packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
 ```
 
 **Step 4: Verify**
@@ -386,7 +386,7 @@ matrix pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/gate-hardening.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
+git add packages/cli/src/commands/gate/configured-gate.integration.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs
 git commit -m "test(p03-t02): prove configured headless gate outcomes"
 ```
 
@@ -422,7 +422,16 @@ Increment all five publishable public package versions together to the next
 patch and refresh the lockfile. Do not change release policy or unrelated
 dependencies.
 
-**Step 3: Close both delivered backlog items atomically**
+**Step 3: Reconcile the authoritative backlog acceptance criteria**
+
+Before archival, confirm both active item records contain concrete criteria
+matching the approved combined discovery/design. Preserve the supersession note
+that replaces BL-260726's earlier warning-only/either-position proposal with
+blocking canonical placement. Confirm the implementation and focused tests
+satisfy every criterion; do not archive either item while any criterion is
+unmet.
+
+**Step 4: Close both delivered backlog items atomically**
 
 ```bash
 oat backlog archive BL-260826-gate-targets-must-not-yield --summary "Headless gate children must complete synchronously and clean no-artifact exits now have a distinct terminal diagnosis."
@@ -432,13 +441,13 @@ oat backlog archive BL-260726-validate-structured-output --summary "Gate configu
 Delete a matching one-shot handoff only if one exists. Do not close unrelated
 review/gate integrity items.
 
-**Step 4: Format**
+**Step 5: Format**
 
 ```bash
 pnpm exec oxfmt apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md
 ```
 
-**Step 5: Run the repository Definition of Done in CI order**
+**Step 6: Run the repository Definition of Done in CI order**
 
 For each command, capture the command's own exit code before inspecting or
 filtering its log:
@@ -478,7 +487,7 @@ Expected: All CI gates pass, the uncached run reports real execution rather
 than cache replay, skill and release validation pass, and PJM reports no new
 backlog lifecycle drift.
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
 git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml .oat/repo/pjm/backlog
