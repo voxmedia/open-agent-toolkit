@@ -1701,6 +1701,39 @@ config_file = "agents/${roleName}.toml"
     expect(process.exitCode).toBe(0);
   });
 
+  it('renders findings and recovery commands as distinct non-colliding lines', async () => {
+    const { command, capture } = createHarness({
+      packInventories: [
+        packInventory('docs', [
+          scopedInventory('docs', 'project', 'partial', [
+            packAsset('.agents/skills/oat-docs-apply', 'missing', 'project'),
+            packAsset(
+              '.oat/templates/docs-app-fuma',
+              'present',
+              'project',
+              'seed-if-missing',
+            ),
+          ]),
+        ]),
+        packInventory('utility', [
+          scopedInventory('utility', 'project', 'complete', [
+            packAsset('.agents/skills/analyze', 'outdated', 'project'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command);
+
+    const output = capture.info[0]!;
+    expect(output).toContain(
+      '\n  - docs [retained-override]: 1 owner-owned override(s) retained; managed defaults are not applied here',
+    );
+    expect(output).toContain(
+      '\n  Fix: oat tools update --pack docs --scope project\n  Fix: oat tools update --pack utility --scope project',
+    );
+  });
+
   it('attributes a retained shared asset only to the applicable pack owner', async () => {
     const sharedPath = '.oat/scripts/resolve-tracking.sh';
     const { command, capture } = createHarness({

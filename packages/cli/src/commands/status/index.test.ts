@@ -73,6 +73,8 @@ interface TestHarnessOptions {
   packInventories?: PackInventory[];
   pjmAdoption?: PjmAdoption;
   projectScopeUnavailable?: boolean;
+  resolveAssetsRootError?: Error;
+  inventoryPackError?: { pack: PackName; error: Error };
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -326,6 +328,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   detectStrays: ReturnType<typeof vi.fn>;
   inventoryPack: ReturnType<typeof vi.fn>;
+  resolveAssetsRoot: ReturnType<typeof vi.fn>;
   resolvePjmAdoption: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -411,6 +414,9 @@ function createHarness(options: TestHarnessOptions = {}): {
     ]),
   );
   const inventoryPack = vi.fn(async ({ pack }: { pack: PackName }) => {
+    if (options.inventoryPackError?.pack === pack) {
+      throw options.inventoryPackError.error;
+    }
     return (
       inventoriesByPack.get(pack) ?? {
         pack,
@@ -447,6 +453,12 @@ function createHarness(options: TestHarnessOptions = {}): {
     failed: 0,
     skipped: 0,
   }));
+  const resolveAssetsRoot = vi.fn(async () => {
+    if (options.resolveAssetsRootError) {
+      throw options.resolveAssetsRootError;
+    }
+    return '/tmp/assets';
+  });
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -495,7 +507,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     adoptStray,
     applyNativeSkillDisposition,
     formatStatusTable: formatReports,
-    resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+    resolveAssetsRoot,
     inventoryPack,
     resolvePjmAdoption,
   });
@@ -514,6 +526,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     computeCodexProjectExtensionPlan,
     detectStrays,
     inventoryPack,
+    resolveAssetsRoot,
     resolvePjmAdoption,
   };
 }
@@ -2152,6 +2165,68 @@ describe('createStatusCommand', () => {
       });
     });
 
+    it('degrades asset-resolution failures to a redacted human inventory warning', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+        resolveAssetsRootError: new Error(
+          'bundle metadata unavailable under /tmp/home/private-assets',
+        ),
+      });
+
+      await expect(
+        runStatusCommand(command, ['--scope', 'all']),
+      ).resolves.toBeUndefined();
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('packs:inventory');
+      expect(output).toContain(
+        'bundle metadata unavailable under ~/private-assets',
+      );
+      expect(output).toContain('project scope is unavailable');
+      expect(output).not.toContain('/tmp/home');
+    });
+
+    it('degrades one-pack inventory failures to structured JSON', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+        inventoryPackError: {
+          pack: 'workflows',
+          error: new Error(
+            'cannot read /tmp/home/.agents/skills/oat-project-new',
+          ),
+        },
+      });
+
+      await expect(
+        runStatusCommand(command, ['--scope', 'all', '--json']),
+      ).resolves.toBeUndefined();
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: {
+          availability: {
+            status: string;
+            diagnostic?: { code: string; message: string; recovery: string };
+          };
+          states: unknown[];
+          unavailableScopes: string[];
+        };
+      };
+      expect(payload.packs.availability).toMatchObject({
+        status: 'unavailable',
+        diagnostic: {
+          code: 'packs:inventory',
+          message:
+            'Unable to inventory managed packs: cannot read ~/.agents/skills/oat-project-new',
+          recovery: 'Run `pnpm build` and rerun `oat status`.',
+        },
+      });
+      expect(payload.packs.states).toEqual([]);
+      expect(payload.packs.unavailableScopes).toEqual(['project']);
+      expect(JSON.stringify(payload)).not.toContain('/tmp/home');
+    });
+
     it('fails when an explicitly requested project scope is unavailable', async () => {
       const { command } = createHarness({
         driftReports: [],
@@ -2233,13 +2308,13 @@ describe('createStatusCommand', () => {
     });
 
     it('skips managed pack inventory in hook mode', async () => {
-      const { command, inventoryPack, resolvePjmAdoption } = createHarness({
-        driftReports: [],
-      });
+      const { command, inventoryPack, resolveAssetsRoot, resolvePjmAdoption } =
+        createHarness({ driftReports: [] });
 
       await runStatusCommand(command, ['--scope', 'project', '--hook']);
 
       expect(inventoryPack).not.toHaveBeenCalled();
+      expect(resolveAssetsRoot).not.toHaveBeenCalled();
       expect(resolvePjmAdoption).not.toHaveBeenCalled();
     });
   });

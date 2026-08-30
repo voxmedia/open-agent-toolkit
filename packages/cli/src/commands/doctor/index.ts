@@ -982,10 +982,10 @@ function createScopedPackStateCheck(
     name: `${scope}:pack_state`,
     description: 'Managed pack completeness and drift',
     status: recoveries.length > 0 ? 'warn' : 'pass',
-    message: scoped
-      .map((finding) => formatPackFinding(finding, roots))
-      .join('; '),
-    fix: recoveries.length > 0 ? recoveries.join('; ') : undefined,
+    message: `Findings:\n${scoped
+      .map((finding) => `  - ${formatPackFinding(finding, roots)}`)
+      .join('\n')}`,
+    fix: recoveries.length > 0 ? recoveries.join('\n  Fix: ') : undefined,
   };
 }
 
@@ -1009,10 +1009,10 @@ function createPackDuplicationCheck(
     name: 'packs:scope_duplication',
     description: 'Cross-scope pack duplication',
     status: 'warn',
-    message: duplicates
-      .map((finding) => formatPackFinding(finding, roots))
-      .join('; '),
-    fix: uniqueRecoveries(duplicates).join('; '),
+    message: `Findings:\n${duplicates
+      .map((finding) => `  - ${formatPackFinding(finding, roots)}`)
+      .join('\n')}`,
+    fix: uniqueRecoveries(duplicates).join('\n  Fix: '),
   };
 }
 

@@ -161,10 +161,58 @@ interface StatusPjmState {
   recovery: string | null;
 }
 
+interface StatusPackAvailability {
+  status: 'available' | 'unavailable';
+  diagnostic?: {
+    code: 'packs:inventory';
+    message: string;
+    recovery: string;
+  };
+}
+
 interface StatusPackReport {
+  availability: StatusPackAvailability;
   states: StatusPackState[];
   unavailableScopes: ConcreteScope[];
   pjm: StatusPjmState | null;
+}
+
+function unavailablePackReport(
+  error: unknown,
+  roots: PackPathRoots,
+  unavailableScopes: ConcreteScope[],
+): StatusPackReport {
+  let detail = error instanceof Error ? error.message : 'Unknown error.';
+  const replacements: Array<[string, string]> = [
+    ...(roots.projectRoot
+      ? ([
+          [`${roots.projectRoot}/`, ''],
+          [roots.projectRoot, '.'],
+        ] satisfies Array<[string, string]>)
+      : []),
+    ...(roots.userRoot
+      ? ([
+          [`${roots.userRoot}/`, '~/'],
+          [roots.userRoot, '~'],
+        ] satisfies Array<[string, string]>)
+      : []),
+  ].sort(([left], [right]) => right.length - left.length);
+  for (const [root, replacement] of replacements) {
+    detail = detail.replaceAll(root, replacement);
+  }
+  return {
+    availability: {
+      status: 'unavailable',
+      diagnostic: {
+        code: 'packs:inventory',
+        message: `Unable to inventory managed packs: ${detail}`,
+        recovery: 'Run `pnpm build` and rerun `oat status`.',
+      },
+    },
+    states: [],
+    unavailableScopes,
+    pjm: null,
+  };
 }
 
 interface StatusJsonPayload {
@@ -572,29 +620,46 @@ async function collectPackReport(
     ...(scopeRoots.has('user') ? { userRoot: scopeRoots.get('user')! } : {}),
   };
   if (scopeRoots.size === 0) {
-    return { states: [], unavailableScopes, pjm: null };
+    return {
+      availability: { status: 'available' },
+      states: [],
+      unavailableScopes,
+      pjm: null,
+    };
   }
 
-  const assetsRoot = await dependencies.resolveAssetsRoot();
-  const inventories = attributeSharedOwnerDiagnostics(
-    await Promise.all(
-      PACK_NAMES.map((pack) =>
-        dependencies.inventoryPack({
-          pack,
-          assetsRoot,
-          ...roots,
-          ...(scopeRoots.has('user') ? { userManagedRoleMaterialization } : {}),
-        }),
+  let inventories: PackInventory[];
+  try {
+    const assetsRoot = await dependencies.resolveAssetsRoot();
+    inventories = attributeSharedOwnerDiagnostics(
+      await Promise.all(
+        PACK_NAMES.map((pack) =>
+          dependencies.inventoryPack({
+            pack,
+            assetsRoot,
+            ...roots,
+            ...(scopeRoots.has('user')
+              ? { userManagedRoleMaterialization }
+              : {}),
+          }),
+        ),
       ),
-    ),
-  );
+    );
+  } catch (error) {
+    return unavailablePackReport(error, roots, unavailableScopes);
+  }
   const states = inventories
     .map((inventory) => toStatusPackState(inventory, roots))
     .filter((state): state is StatusPackState => state !== null);
 
   const projectRoot = scopeRoots.get('project');
   if (!projectRoot) {
-    return { states, unavailableScopes, pjm: null };
+    return {
+      availability: { status: 'available' },
+      states,
+      unavailableScopes,
+      pjm: null,
+    };
   }
 
   const adoption = await dependencies.resolvePjmAdoption({
@@ -602,6 +667,7 @@ async function collectPackReport(
     repoRoot: join(projectRoot, '.oat', 'repo'),
   });
   return {
+    availability: { status: 'available' },
     states,
     unavailableScopes,
     pjm: {
@@ -630,6 +696,13 @@ function describePackScope(state: StatusPackScopeState): string {
 
 function formatPackReport(report: StatusPackReport): string | null {
   const lines: string[] = [];
+
+  if (report.availability.diagnostic) {
+    lines.push(
+      `${report.availability.diagnostic.code}: ${report.availability.diagnostic.message}`,
+      `  Fix: ${report.availability.diagnostic.recovery}`,
+    );
+  }
 
   if (report.states.length > 0) {
     lines.push('Pack state:');
