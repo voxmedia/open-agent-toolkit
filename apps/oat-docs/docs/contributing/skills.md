@@ -51,6 +51,37 @@ Probe each candidate for the exact target and use the first match. If none
 exists, name the missing sibling, give an actionable install or update command,
 and stop that workflow branch instead of improvising the sibling's process.
 
+### Skills bind canonical agent reads through a local provider root
+
+When a skill must read one fixed canonical role instruction, bind a local
+`${AGENT_PROVIDER_ROOT}` for that dependency in this order:
+
+1. Derive `${SKILL_DIR}/../..` from the loaded skill path, but admit it only
+   when the exact unsuffixed `agents/<canonical-name>.md` target is the
+   same-scope canonical Markdown file or a symlink whose real path is exactly
+   that file.
+2. Try the user-scope root at `${HOME}/.agents`.
+3. Fall back to the project-scope root at `<repo-root>/.agents`.
+
+An invalid loaded target is a candidate miss, so resolution continues to the
+user and project roots. Regular provider copies, broken or escaping symlinks,
+transformed content, other role names, model/effort/variant-suffixed files, and
+`.codex/agents/*.toml` are never canonical candidates. Claude and Cursor base
+role symlinks can qualify when they resolve exactly to the same-scope canonical
+file; Cursor materialized variants cannot.
+
+`${AGENT_PROVIDER_ROOT}` is local authored-instruction notation, not a global
+environment variable or a provider-native role selector. It has no authority
+over provider, model, effort, variant, route, or dispatch choice. Resolve every
+owning pack independently, even when multiple role dependencies coexist. If
+all candidates miss for a workflows-owned role, stop before fallback launch
+and report both recovery forms for the intended scope:
+
+```bash
+oat tools install workflows --scope <user|project>
+oat tools update --pack workflows --scope <user|project>
+```
+
 ### Materialized agents resolve in two steps
 
 Canonical agents are materialized into provider-specific views — Codex receives
