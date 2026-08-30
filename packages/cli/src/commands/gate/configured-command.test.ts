@@ -28,6 +28,22 @@ describe('validateConfiguredGateCommand', () => {
   });
 
   it.each([
+    'oat --cwd /tmp gate review --project "$PROJECT_PATH"',
+    'oat --cwd /tmp gate review --json --project "$PROJECT_PATH"',
+    'oat --json --cwd /tmp gate review --project "$PROJECT_PATH"',
+    'oat --cwd=/tmp gate review --project "$PROJECT_PATH"',
+    'oat --cwd=/tmp gate review --json --project "$PROJECT_PATH"',
+    'oat --json --cwd=/tmp gate review --project "$PROJECT_PATH"',
+  ])('recognizes non-canonical --cwd command prefixes: %s', (command) => {
+    expect(validateConfiguredGateCommand(command)).toEqual({
+      kind: 'invalid',
+      command: 'gate-review',
+      message:
+        'Configured oat gate review commands must use the structured-output contract `oat --json gate review ...`.',
+    });
+  });
+
+  it.each([
     'codex exec --json "Review the configured oat gate review contract"',
     'claude -p "oat gate review --json"',
     'oat gate status --json',
@@ -44,6 +60,8 @@ describe('validateConfiguredGateCommand', () => {
     'sh -c "oat --json gate review"',
     'oat --json gate review | jq .',
     'oat --json gate review $(echo later)',
+    'oat --json gate review\necho trailing',
+    'oat --json gate review `echo trailing`',
   ])(
     'handles wrappers and shell-heavy shapes conservatively: %s',
     (command) => {
@@ -52,4 +70,15 @@ describe('validateConfiguredGateCommand', () => {
       });
     },
   );
+
+  it('preserves literal single-quoted shell-looking content', () => {
+    expect(
+      validateConfiguredGateCommand(
+        "oat --json gate review --prompt '`echo literal` $(not-a-substitution)'",
+      ),
+    ).toEqual({
+      kind: 'valid',
+      command: 'gate-review',
+    });
+  });
 });
