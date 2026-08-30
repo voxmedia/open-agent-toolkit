@@ -133,6 +133,16 @@ function packAsset(
   };
 }
 
+function sharedPackAsset(
+  destination: string,
+  status: PackAssetStatus,
+  scope: 'project' | 'user',
+): PackAssetInventory {
+  const asset = packAsset(destination, status, scope);
+  asset.definition.sharedOwner = 'resolve-tracking';
+  return asset;
+}
+
 function scopedInventory(
   pack: PackName,
   scope: 'project' | 'user',
@@ -1689,6 +1699,47 @@ config_file = "agents/${roleName}.toml"
       'oat tools update --pack workflows --scope project',
     );
     expect(process.exitCode).toBe(0);
+  });
+
+  it('attributes a retained shared asset only to the applicable pack owner', async () => {
+    const sharedPath = '.oat/scripts/resolve-tracking.sh';
+    const { command, capture } = createHarness({
+      scope: 'user',
+      packInventories: [
+        packInventory('docs', [
+          scopedInventory(
+            'docs',
+            'user',
+            'absent',
+            [sharedPackAsset(sharedPath, 'current', 'user')],
+            {
+              intent: {
+                pack: 'docs',
+                scope: 'user',
+                enabled: false,
+                source: 'none',
+                configPath: '/tmp/home/.oat/config.json',
+                diagnostics: [],
+              },
+            },
+          ),
+        ]),
+        packInventory('workflows', [
+          scopedInventory('workflows', 'user', 'complete', [
+            packAsset('.agents/skills/oat-project-new', 'current', 'user'),
+            sharedPackAsset(sharedPath, 'current', 'user'),
+          ]),
+        ]),
+      ],
+    });
+
+    await runDoctor(command, { scope: 'user' });
+
+    expect(capture.info[0]).toContain('workflows [shared-owner-observation]');
+    expect(capture.info[0]).toContain(
+      'installed or intended pack owner(s): workflows',
+    );
+    expect(capture.info[0]).not.toContain('docs [shared-owner-observation]');
   });
 
   it('warns about legacy false pack intent that still has managed assets', async () => {

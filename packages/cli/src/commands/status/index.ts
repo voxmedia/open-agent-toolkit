@@ -41,6 +41,7 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
   type InventoryPackInput,
@@ -575,14 +576,16 @@ async function collectPackReport(
   }
 
   const assetsRoot = await dependencies.resolveAssetsRoot();
-  const inventories = await Promise.all(
-    PACK_NAMES.map((pack) =>
-      dependencies.inventoryPack({
-        pack,
-        assetsRoot,
-        ...roots,
-        ...(scopeRoots.has('user') ? { userManagedRoleMaterialization } : {}),
-      }),
+  const inventories = attributeSharedOwnerDiagnostics(
+    await Promise.all(
+      PACK_NAMES.map((pack) =>
+        dependencies.inventoryPack({
+          pack,
+          assetsRoot,
+          ...roots,
+          ...(scopeRoots.has('user') ? { userManagedRoleMaterialization } : {}),
+        }),
+      ),
     ),
   );
   const states = inventories

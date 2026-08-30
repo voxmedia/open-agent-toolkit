@@ -17,7 +17,7 @@ import {
 } from '@shared/types';
 
 import { digestDirectory, digestFile } from './content-digest';
-import { getPackDefinition } from './pack-manifest';
+import { getPackDefinition, PACK_NAMES } from './pack-manifest';
 import {
   type PackIntentDiagnostic,
   type ScopedPackIntent,
@@ -410,6 +410,85 @@ export function hasScopedPackPlacementEvidence(
   );
 }
 
+/**
+ * Attribute each present shared asset only after every candidate pack has been
+ * inventoried. Shared presence cannot establish placement, so applicable
+ * owners are limited to packs with independent intent or non-shared managed
+ * assets. The observation is attached once to the first applicable owner in
+ * canonical pack order while naming the complete applicable owner set.
+ */
+export function attributeSharedOwnerDiagnostics(
+  inventories: PackInventory[],
+): PackInventory[] {
+  const attributed = inventories.map((inventory) => ({
+    ...inventory,
+    scopes: inventory.scopes.map((scoped) => ({
+      ...scoped,
+      diagnostics: scoped.diagnostics.filter(
+        ({ code }) => code !== 'shared-owner-observation',
+      ),
+    })),
+    diagnostics: inventory.diagnostics.filter(
+      ({ code }) => code !== 'shared-owner-observation',
+    ),
+  }));
+  const inventoryByPack = new Map(
+    attributed.map((inventory) => [inventory.pack, inventory]),
+  );
+  const groups = new Map<
+    string,
+    {
+      owner: string;
+      destination: string;
+      scope: ConcreteScope;
+      candidates: Array<{ pack: PackName; scoped: ScopedPackInventory }>;
+      paths: Set<string>;
+    }
+  >();
+
+  for (const inventory of attributed) {
+    for (const scoped of inventory.scopes) {
+      for (const asset of scoped.assets) {
+        const owner = asset.definition.sharedOwner;
+        if (!owner || asset.status === 'missing') continue;
+        const key = `${scoped.scope}:${owner}:${asset.definition.destination}`;
+        const group = groups.get(key) ?? {
+          owner,
+          destination: asset.definition.destination,
+          scope: scoped.scope,
+          candidates: [],
+          paths: new Set<string>(),
+        };
+        group.candidates.push({ pack: inventory.pack, scoped });
+        group.paths.add(asset.path);
+        groups.set(key, group);
+      }
+    }
+  }
+
+  const packOrder = new Map(PACK_NAMES.map((pack, index) => [pack, index]));
+  for (const group of groups.values()) {
+    const applicable = group.candidates
+      .filter(({ scoped }) => hasScopedPackPlacementEvidence(scoped))
+      .sort(
+        (left, right) => packOrder.get(left.pack)! - packOrder.get(right.pack)!,
+      );
+    if (applicable.length === 0) continue;
+
+    const applicableOwners = applicable.map(({ pack }) => pack);
+    const diagnostic: PackDiagnostic = {
+      code: 'shared-owner-observation',
+      message: `Shared managed asset ${group.destination} (${group.owner}) at ${group.scope} scope applies to installed or intended pack owner(s): ${applicableOwners.join(', ')}`,
+      paths: [...group.paths].sort(),
+    };
+    const selected = applicable[0]!;
+    selected.scoped.diagnostics.push(diagnostic);
+    inventoryByPack.get(selected.pack)!.diagnostics.push(diagnostic);
+  }
+
+  return attributed;
+}
+
 export async function inventoryPack(
   input: InventoryPackInput,
 ): Promise<PackInventory> {
@@ -447,19 +526,6 @@ export async function inventoryPack(
           ? 'user'
           : 'unavailable';
   const diagnostics = scopes.flatMap(({ diagnostics: values }) => values);
-  for (const scoped of scopes) {
-    const shared = scoped.assets.filter(
-      ({ definition: asset, status }) =>
-        asset.sharedOwner !== undefined && status !== 'missing',
-    );
-    if (shared.length > 0 && !hasScopedPackPlacementEvidence(scoped)) {
-      diagnostics.push({
-        code: 'shared-owner-observation',
-        message: `Pack ${input.pack} has shared managed assets at ${scoped.scope} scope without pack ownership evidence`,
-        paths: shared.map(({ path }) => path),
-      });
-    }
-  }
 
   if (placement === 'both') {
     const assets = active.flatMap(({ assets: values }) =>

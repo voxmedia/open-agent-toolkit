@@ -31,6 +31,7 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
   type InventoryPackInput,
@@ -822,22 +823,6 @@ function collectPackStateFindings(
     for (const scoped of inventory.scopes) {
       const { scope } = scoped;
       if (!hasScopedPackPlacementEvidence(scoped)) {
-        const sharedPresent = scoped.assets.filter(
-          (asset) =>
-            asset.definition.sharedOwner !== undefined &&
-            asset.status !== 'missing',
-        );
-        if (sharedPresent.length > 0) {
-          findings.push({
-            pack: inventory.pack,
-            scope,
-            code: 'shared-owner-observation',
-            detail:
-              'shared managed assets are present without pack ownership evidence',
-            paths: sharedPresent.map(({ path }) => path),
-            recovery: null,
-          });
-        }
         continue;
       }
 
@@ -922,6 +907,17 @@ function collectPackStateFindings(
             scope,
             code: 'user-agent-unmaterialized',
             detail: `${diagnostic.paths.length} user-scope agent(s) lack native provider-role materialization; canonical instruction reads are unaffected, and active Codex or Cursor materialization supplies only the bundled managed roles, so install this pack at project scope to materialize the affected agents`,
+            paths: diagnostic.paths,
+            recovery: null,
+          });
+          continue;
+        }
+        if (diagnostic.code === 'shared-owner-observation') {
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'shared-owner-observation',
+            detail: diagnostic.message,
             paths: diagnostic.paths,
             recovery: null,
           });
@@ -1052,14 +1048,16 @@ async function createPackStateChecks(
             ),
           )
       : false;
-    const inventories = await Promise.all(
-      PACK_NAMES.map((pack) =>
-        dependencies.inventoryPack({
-          pack,
-          assetsRoot,
-          ...roots,
-          ...(userRoot ? { userManagedRoleMaterialization } : {}),
-        }),
+    const inventories = attributeSharedOwnerDiagnostics(
+      await Promise.all(
+        PACK_NAMES.map((pack) =>
+          dependencies.inventoryPack({
+            pack,
+            assetsRoot,
+            ...roots,
+            ...(userRoot ? { userManagedRoleMaterialization } : {}),
+          }),
+        ),
       ),
     );
     findings = collectPackStateFindings(inventories);

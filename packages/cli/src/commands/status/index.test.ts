@@ -261,6 +261,16 @@ function packAsset(
   };
 }
 
+function sharedPackAsset(
+  destination: string,
+  status: PackAssetStatus,
+  scope: 'project' | 'user',
+): PackAssetInventory {
+  const asset = packAsset(destination, status, scope);
+  asset.definition.sharedOwner = 'resolve-tracking';
+  return asset;
+}
+
 function scopedInventory(
   pack: PackName,
   scope: 'project' | 'user',
@@ -1894,6 +1904,49 @@ describe('createStatusCommand', () => {
       expect(packSection).toContain(
         'oat tools update --pack docs --scope project',
       );
+    });
+
+    it('renders one shared-owner observation for the applicable pack only', async () => {
+      const sharedPath = '.oat/scripts/resolve-tracking.sh';
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('docs', [
+            scopedInventory(
+              'docs',
+              'user',
+              'absent',
+              [sharedPackAsset(sharedPath, 'current', 'user')],
+              {
+                intent: {
+                  pack: 'docs',
+                  scope: 'user',
+                  enabled: false,
+                  source: 'none',
+                  configPath: '/tmp/home/.oat/config.json',
+                  diagnostics: [],
+                },
+              },
+            ),
+          ]),
+          packInventory('workflows', [
+            scopedInventory('workflows', 'user', 'complete', [
+              packAsset('.agents/skills/oat-project-new', 'current', 'user'),
+              sharedPackAsset(sharedPath, 'current', 'user'),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'user']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('workflows');
+      expect(output).toContain('shared-owner-observation');
+      expect(output).toContain(
+        'installed or intended pack owner(s): workflows',
+      );
+      expect(output).not.toContain('docs: no installed scope');
     });
 
     it('emits structured pack state in JSON mode', async () => {

@@ -12,7 +12,11 @@ import { dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { inventoryPack, inventoryScopedPack } from './pack-inventory';
+import {
+  attributeSharedOwnerDiagnostics,
+  inventoryPack,
+  inventoryScopedPack,
+} from './pack-inventory';
 import { getPackDefinition } from './pack-manifest';
 import type { PackAssetDefinition, PackName } from './types';
 
@@ -669,10 +673,46 @@ describe('pack inventory', () => {
   });
 
   it.each([
+    {
+      label: 'manifest order',
+      order: ['docs', 'workflows'] as const,
+    },
+    {
+      label: 'reverse order',
+      order: ['workflows', 'docs'] as const,
+    },
+  ])(
+    'attributes a shared asset once to both applicable owners in $label',
+    async ({ order }) => {
+      const assetsRoot = await makeRoot('oat-assets-');
+      const userRoot = await makeRoot('oat-user-');
+      await materializeManagedPack('docs', 'user', assetsRoot, userRoot);
+      await materializeManagedPack('workflows', 'user', assetsRoot, userRoot);
+
+      const attributed = attributeSharedOwnerDiagnostics(
+        await Promise.all(
+          order.map((pack) => inventoryPack({ pack, assetsRoot, userRoot })),
+        ),
+      );
+      const sharedDiagnostics = attributed.flatMap(
+        ({ diagnostics: inventoryDiagnostics }) =>
+          inventoryDiagnostics.filter(
+            ({ code }) => code === 'shared-owner-observation',
+          ),
+      );
+      expect(sharedDiagnostics).toHaveLength(1);
+      expect(sharedDiagnostics[0]?.message).toContain('docs, workflows');
+      expect(
+        attributed.find(({ pack }) => pack === 'docs')?.diagnostics,
+      ).toContainEqual(sharedDiagnostics[0]);
+    },
+  );
+
+  it.each([
     { removed: 'docs' as const, retained: 'workflows' as const },
     { removed: 'workflows' as const, retained: 'docs' as const },
   ])(
-    'does not infer $removed placement from a shared asset retained by $retained',
+    'attributes a retained shared asset to $retained without inferring $removed placement',
     async ({ removed, retained }) => {
       const assetsRoot = await makeRoot('oat-assets-');
       const userRoot = await makeRoot('oat-user-');
@@ -691,17 +731,61 @@ describe('pack inventory', () => {
         }
       }
 
-      const inventory = await inventoryPack({
-        pack: removed,
-        assetsRoot,
-        userRoot,
-      });
-      expect(inventory.placement).toBe('unavailable');
-      expect(inventory.diagnostics).toEqual(
+      const attributed = attributeSharedOwnerDiagnostics(
+        await Promise.all(
+          [removed, retained].map((pack) =>
+            inventoryPack({ pack, assetsRoot, userRoot }),
+          ),
+        ),
+      );
+      const removedInventory = attributed.find(({ pack }) => pack === removed);
+      const retainedInventory = attributed.find(
+        ({ pack }) => pack === retained,
+      );
+      expect(removedInventory?.placement).toBe('unavailable');
+      expect(removedInventory?.diagnostics).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: 'shared-owner-observation' }),
         ]),
       );
+      expect(retainedInventory?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: 'shared-owner-observation',
+            message: expect.stringContaining(retained),
+          }),
+        ]),
+      );
+      expect(retainedInventory?.diagnostics[0]?.message).not.toContain(
+        `${removed},`,
+      );
     },
   );
+
+  it('suppresses a shared asset observation when neither owner is installed or intended', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const userRoot = await makeRoot('oat-user-');
+    const shared = getPackDefinition('docs').assets.find(
+      ({ sharedOwner }) => sharedOwner === 'resolve-tracking',
+    )!;
+    await writeAsset(assetsRoot, shared.source!, shared);
+    await writeAsset(userRoot, shared.destination, shared);
+
+    const attributed = attributeSharedOwnerDiagnostics(
+      await Promise.all(
+        (['docs', 'workflows'] as const).map((pack) =>
+          inventoryPack({ pack, assetsRoot, userRoot }),
+        ),
+      ),
+    );
+
+    expect(
+      attributed.every(({ placement }) => placement === 'unavailable'),
+    ).toBe(true);
+    expect(attributed.flatMap(({ diagnostics }) => diagnostics)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'shared-owner-observation' }),
+      ]),
+    );
+  });
 });
