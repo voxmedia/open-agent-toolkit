@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 8c59dd044109458828a1f2498e8907c87131265c
+oat_last_commit: 3dc7b053d647fe0cafb133812ec7d311b644eab4
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -16,7 +16,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -33,7 +33,7 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -65,8 +65,8 @@ oat_implement_exit_gate:
   receive_commit: 6660812b2eed33b46f1e45d639a80e8148853153
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-08-30T19:10:51Z'
+  failure: origin/main merge and remote-review bookkeeping changed the effective implementation delta after the passing gate.
+  updated_at: '2026-08-30T19:22:11Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -83,7 +83,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/242' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T19:10:51.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T19:22:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: agent-provider-root
 
-**Status:** Implementation complete; PR open
+**Status:** Main merged; remote review clean; revalidation in progress
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation complete — PR #242 remains open for review.
+Implementation — validating the resolved `origin/main` merge before refreshing the PR.
 
 ## Artifacts
 
@@ -111,7 +111,7 @@ Implementation complete — PR #242 remains open for review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
@@ -136,6 +136,8 @@ Implementation complete — PR #242 remains open for review.
 - ✓ Implementation-tail project recap explicitly skipped
 - ✓ Final PR artifact prepared
 - ✓ PR created
+- ✓ `origin/main` merged with PJM indexes regenerated and lockstep `0.2.47` preserved
+- ✓ Bugbot review of pre-merge head received with zero actionable findings
 - ⧗ Awaiting human review
 - ✓ Final HiLL approval
 
@@ -145,7 +147,8 @@ None
 
 ## Next Milestone
 
-PR #242 is open and unmerged. Implementation and its configured closeout lifecycle are complete.
+Validate and push the resolved `origin/main` merge, then receive the Bugbot event for the merged PR head.
 
-- To incorporate PR feedback later: run `oat-project-revise`.
+- If the merged-head review adds fix tasks: resume with `oat-project-implement`.
+- If it is clean: refresh final lifecycle evidence before completion/archival.
 - Project completion/archival remains a separate `oat-project-complete` step.
