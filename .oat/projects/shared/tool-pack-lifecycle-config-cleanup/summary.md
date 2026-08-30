@@ -34,8 +34,8 @@ update behavior.
   generated version asset advanced in lockstep to `0.2.46`; tool-pack and
   troubleshooting documentation were updated. The graduated backlog item was
   archived, and the curated backlog, roadmap, current-state view, and lifecycle
-  closeout artifacts were aligned. At project completion, `0.2.46` was prepared
-  locally but had not been merged or published.
+  closeout artifacts were aligned. At the documentation sync before final
+  approval, `0.2.46` was prepared locally but had not been merged or published.
 - **Review closeout:** Phase 4 added direct-pack JSON adoption coverage,
   repaired three live links to the archived backlog item, and aligned the plan
   and reusable implementation summary to the canonical four-phase, thirteen-task
@@ -110,6 +110,8 @@ update behavior.
   diff checks exited successfully.
 - `oat pjm doctor` retained four unchanged pre-existing layout warnings. They
   were explicitly separated from this project's changes and were non-blocking.
+  Follow-up `BL-260830-migrate-the-legacy-pjm` carries their lossless cleanup
+  in a dedicated branch after PR #240 merges.
 
 ## Associated Issues
 
