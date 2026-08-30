@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | pending   | 3     | 0/3       |
+| Phase 2 | completed | 3     | 3/3       |
 | Phase 3 | pending   | 2     | 0/2       |
 | Phase 4 | pending   | 2     | 0/2       |
 
-**Total:** 2/9 tasks completed
+**Total:** 5/9 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -82,23 +82,29 @@ required the complete canonical PJM scaffold before reporting
 
 ## Phase 2: Provider-Aware and Fault-Tolerant Diagnostics
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-08-30 22:12 UTC
+**Completed:** 2026-08-30 22:42 UTC
 
 ### Task p02-t01: Make user-agent reachability provider-aware
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `3bc33cdfcb034ea1b2bbf87d5fb9424e7990c300`
 
 ### Task p02-t02: Attribute shared-owner observations to applicable packs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `38d3faf5ce50a924e5f00ac6fd99dba9b1f2d783`
 
 ### Task p02-t03: Degrade status inventory failures and delimit doctor output
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `35df5a10ef832564d0f9fe230925f71ff7bece5d`
+
+**Recovery:** Attempt 1/10 aligned the mechanically dependent removal test in
+`496b3759e24dd9c4229e932d53194322924aaed8`; recovery accounting is settled at
+`used_attempts: 1`, `pending_attempt: null`. Final High review passed with zero
+findings.
 
 ## Phase 3: Test-Quality Ratchets
 
@@ -142,13 +148,14 @@ required the complete canonical PJM scaffold before reporting
 **Schedule:** p01 → p02 → p03 → p04 (sequential)
 **HiLL checkpoint:** p04 only; automatic checkpoint review enabled
 **Retry limit:** 2
-**Status:** p01 passed; continuing at p02-t01
+**Status:** p01-p02 passed; continuing at p03-t01
 
 #### Phase Outcomes
 
-| Phase | Implementer | Review | Fix Iterations | Disposition |
-| ----- | ----------- | ------ | -------------- | ----------- |
-| p01   | DONE        | pass   | 1/2            | accepted    |
+| Phase | Implementer        | Review | Fix Iterations | Disposition                  |
+| ----- | ------------------ | ------ | -------------- | ---------------------------- |
+| p01   | DONE               | pass   | 1/2            | accepted                     |
+| p02   | DONE_WITH_CONCERNS | pass   | 0/2            | accepted; one phase recovery |
 
 #### p01 Dispatch and Evidence
 
@@ -163,6 +170,42 @@ required the complete canonical PJM scaffold before reporting
   pass in `reviews/p01-review-2026-08-30T220913Z.md`.
 - Recovery attempts: 0/10; pending attempt: null.
 
+#### p02 Dispatch and Evidence
+
+- Implementation: `oat-phase-implementer-gpt-5-6-sol-high`; planned commits
+  `3bc33cdf`, `38d3faf5`, and `35df5a10`.
+- Phase recovery: reservation `8290f88c`, recovered test correction
+  `496b3759`, event `p02-recovery-001`; root settled the durable ledger in
+  `99619f39` with 1/10 used and no pending attempt.
+- Root phase rerun: inventory/doctor/status 159/159; recovered remove-tools
+  suite 22/22.
+- High review: zero findings and pass in
+  `reviews/p02-review-2026-08-30T224248Z.md`; reviewer reconnaissance attempted
+  but its optional explorer was rejected pre-start by the host thread limit,
+  so the reviewer reconciled inline.
+- Broad CLI suite is explicitly non-clean under concurrent load: reviewer run
+  had 17 unrelated five-second Git-fixture timeouts plus one cleanup error,
+  while all p02 suites passed in that same run and a sampled failure passed in
+  isolation. p04 must still establish the required evidence-grade full-suite
+  result.
+
+### Recovery Event p02-recovery-001
+
+- Phase/task: p02 / p02-t02
+- Original request: 795acaac-8487-4da6-bc1c-3d542c5e9692
+- Original commit: 38d3faf5ce50a924e5f00ac6fd99dba9b1f2d783
+- Defect class: test
+- Discovered by: `pnpm --filter @open-agent-toolkit/cli test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 496b3759e24dd9c4229e932d53194322924aaed8
+- Verification: remove-tools 22/22 and phase suite 159/159 passed before and
+  after the committed correction
+- Reason: stale standalone-inventory assertions were mechanically aligned with
+  complete cross-pack attribution
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
@@ -173,16 +216,18 @@ required the complete canonical PJM scaffold before reporting
 
 ## Test Results
 
-| Phase | Tests Run       | Passed | Failed | Coverage                                          |
-| ----- | --------------- | ------ | ------ | ------------------------------------------------- |
-| 1     | PJM phase suite | 79     | 0      | Adoption/legacy matrix and canonical completeness |
-| 2     | -               | -      | -      | -                                                 |
-| 3     | -               | -      | -      | -                                                 |
-| 4     | -               | -      | -      | -                                                 |
+| Phase | Tests Run                           | Passed | Failed | Coverage                                             |
+| ----- | ----------------------------------- | ------ | ------ | ---------------------------------------------------- |
+| 1     | PJM phase suite                     | 79     | 0      | Adoption/legacy matrix and canonical completeness    |
+| 2     | Phase plus recovered removal suites | 181    | 0      | Provider, ownership, degradation, rendering, removal |
+| 3     | -                                   | -      | -      | -                                                    |
+| 4     | -                                   | -      | -      | -                                                    |
 
 ## Final Summary (for PR/docs)
 
-In progress. Phase p01 is complete and independently reviewed; p02 is next.
+In progress. Phases p01-p02 are complete and independently reviewed; p03 is
+next. The broad CLI suite remains non-clean under concurrent load and must be
+proven at the final evidence-grade gate.
 
 ## References
 

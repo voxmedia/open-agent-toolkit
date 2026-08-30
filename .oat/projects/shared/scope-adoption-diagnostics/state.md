@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 5f6e5c7019944ae7fa602367b9427c8713935cd5
+oat_current_task: p03-t01
+oat_last_commit: 496b3759e24dd9c4229e932d53194322924aaed8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -32,7 +32,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T22:10:52Z'
+oat_project_state_updated: '2026-08-30T22:44:40Z'
 oat_generated: false
 ---
 
@@ -44,9 +44,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 passed after two planned commits, one bounded Important fix, and a
-clean High re-review. Implementation continues at p02-t01 under the managed
-High dispatch ceiling and stops at the final p04 HiLL checkpoint only.
+Phases p01-p02 passed their High reviews. p02 used one durable phase-recovery
+attempt for a mechanically dependent test correction; accounting is settled at
+1/10 used with no pending marker. Implementation continues at p03-t01 and stops
+at the final p04 HiLL checkpoint only.
 
 ## Artifacts
 
@@ -54,7 +55,7 @@ High dispatch ceiling and stops at the final p04 HiLL checkpoint only.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 9 tasks)
-- **Implementation:** `implementation.md` (in progress; 2/9 tasks complete)
+- **Implementation:** `implementation.md` (in progress; 5/9 tasks complete)
 
 ## Progress
 
@@ -75,6 +76,10 @@ High dispatch ceiling and stops at the final p04 HiLL checkpoint only.
   workflow configuration
 - ✓ p01 complete; full PJM suite 79/79 and High re-review passed with zero
   findings
+- ✓ p02 complete; phase/recovery suites 181/181 and High review passed with
+  zero findings
+- ⚠ Broad CLI suite remains non-clean under concurrent load; p04 owns the
+  evidence-grade full-suite result
 - ⚠ Merge depends on the separate `migrate-the-legacy-pjm` cleanup landing
   first; rebase, inspect overlap, and rerun PJM evidence before merge
 
@@ -86,5 +91,5 @@ implementation blocker.
 
 ## Next Milestone
 
-Continue `oat-project-implement` at p02-t01. Do not merge ahead of the PJM
+Continue `oat-project-implement` at p03-t01. Do not merge ahead of the PJM
 cleanup PR; after it lands, rebase and rerun p01 verification before merge.
