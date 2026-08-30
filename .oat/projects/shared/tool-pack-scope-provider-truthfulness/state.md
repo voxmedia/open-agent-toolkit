@@ -25,8 +25,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -90,26 +90,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T21:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T21:50:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Discovery complete — ready for design
+**Status:** Design draft complete — awaiting HiLL review
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Discovery - Complete after bounded revalidation against merged PR #227, PR
-#240, and PR #242. Ready for requirements confirmation and design.
+Design - Full draft written, independently reviewed, and revised; awaiting user
+approval before implementation planning.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
-- **Design:** `design.md` (scaffolded template — not started)
+- **Spec:** `spec.md` (complete — requirements confirmed)
+- **Design:** `design.md` (in_progress — draft awaiting HiLL review)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -119,7 +119,11 @@ Discovery - Complete after bounded revalidation against merged PR #227, PR
 - ✓ Downstream lifecycle files scaffolded
 - ✓ Backlog items linked
 - ✓ Current PR/code/project boundaries revalidated
-- ⧗ Requirements confirmation and design
+- ✓ Requirements confirmed
+- ✓ Full design drafted and self-reviewed
+- ✓ Independent design findings resolved in the draft
+- ✓ Active laptop diagnostics predecessor and merge-order gate recorded
+- ⧗ HiLL design review and approval
 
 ## Blockers
 
@@ -127,6 +131,5 @@ None
 
 ## Next Milestone
 
-Confirm requirements and begin selective-collaborative design for the shared
-state model and its directory-symlink, `AGENTS.md`, restart, and dispatch
-provenance child workstreams.
+Review the committed design, resolve its two highlighted decisions, and approve
+or request revisions before implementation planning.
