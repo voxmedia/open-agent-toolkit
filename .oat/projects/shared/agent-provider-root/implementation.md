@@ -265,7 +265,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request: `agent-provider-root-p01-review-20260830T1641Z`
 - Launch: accepted; outcome `PASS`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
-- Artifact: `reviews/p01-review-2026-08-30T164420Z.md`
+- Artifact: `reviews/archived/p01-review-2026-08-30T164420Z.md`
 - Reconnaissance: not-attempted
 - Selection reason: `native-catalog`
 - Candidates: `oat-reviewer-gpt-5-6-sol-high`
@@ -305,7 +305,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request: `agent-provider-root-p02-review-20260830T1706Z`
 - Launch: accepted; outcome `PASS`
 - Findings: 0 Critical, 0 Important, 1 Medium, 0 Minor
-- Artifact: `reviews/p02-review-2026-08-30T170942Z.md`
+- Artifact: `reviews/archived/p02-review-2026-08-30T170942Z.md`
 - Reconnaissance: not-attempted
 - Selection reason: `native-catalog`
 - Candidates: `oat-reviewer-gpt-5-6-sol-high`
@@ -320,7 +320,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Medium review concern: the line-wide provider-sync example exemption can suppress an executable bare read on the same line; see `reviews/p02-review-2026-08-30T170942Z.md`.
+- Medium review concern: the line-wide provider-sync example exemption can suppress an executable bare read on the same line; see `reviews/archived/p02-review-2026-08-30T170942Z.md`.
 - Continue with p03-t01.
 
 ### Run 3 — 2026-08-30T17:12:00Z
@@ -346,7 +346,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Request: `agent-provider-root-p03-review-20260830T1730Z`
 - Launch: accepted; outcome `PASS`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
-- Artifact: `reviews/p03-review-2026-08-30T173812Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-30T173812Z.md`
 - Reconnaissance: not-attempted
 - Selection reason: `native-catalog`
 - Candidates: `oat-reviewer-gpt-5-6-sol-high`
