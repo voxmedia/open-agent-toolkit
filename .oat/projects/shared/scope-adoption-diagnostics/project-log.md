@@ -60,6 +60,14 @@ Phase p02 passed after three planned commits and one settled phase-recovery atte
 
 Phase p03 passed after two test-only commits; High review passed with zero findings. Artifact: reviews/p03-review-2026-08-30T225845Z.md.
 
+### 2026-08-30 · structural · oat-project-implement · p04-integration
+
+PR #244 integrated at ac380219d after diagnostics release commit 0d6371d69; no source conflict existed in packages/cli/src/commands/pjm/doctor.ts, generated backlog/version conflicts preserved both projects, and oat pjm doctor passed all checks.
+
+### 2026-08-30 · project · friction · full-test-gate
+
+The final focused suite passed 417/417 and all timeout-affected files passed 250/250 together in a bounded rerun, but three ordinary full-suite runs and one forced run remained nonzero from changing Git-fixture timeouts; no assertion failed. Keep p04-t02 blocked until pnpm test exits zero; do not treat isolated evidence as a gate pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

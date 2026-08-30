@@ -87,11 +87,11 @@ dispatch provenance all remain owned by `tool-pack-scope-provider-truthfulness`.
   duplicate the renderer corrections.
 - Release manifests and PJM backlog indexes are final fan-in surfaces. Do not
   run a concurrent umbrella release bump or archive this backlog item twice.
-- The separate `migrate-the-legacy-pjm` cleanup lands before this project and
-  owns only the generated-pointer classification/test correction in
-  `packages/cli/src/commands/pjm/doctor.ts`. Diagnostics must rebase onto that
-  result and rerun p01 PJM verification before merge; it must not duplicate the
-  cleanup's layout-classification change.
+- The separate `migrate-the-legacy-pjm` cleanup landed as PR #244 before this
+  project and owns only the generated-pointer classification/test correction
+  in `packages/cli/src/commands/pjm/doctor.ts`. Diagnostics integrated that
+  result at `ac380219d` without a source conflict, reran PJM doctor cleanly, and
+  did not duplicate the cleanup's layout-classification change.
 - The resulting merge order is PJM cleanup → scope-adoption diagnostics →
   tool-pack scope/provider truthfulness. No direct source overlap is currently
   planned: p02 writes `commands/doctor/index.ts` and `commands/status/index.ts`,
@@ -646,16 +646,18 @@ review result.
 
 **Total: 9 tasks**
 
-Implementation is not started. Current-main revalidation retained all nine
-tasks, adapting five of them without expanding into umbrella ownership.
-Completion requires all nine tasks, phase/final reviews, and the complete
-repository gate sequence.
+Implementation is 8/9 tasks complete. Current-main revalidation retained all
+nine tasks, adapting five without expanding into umbrella ownership; PR #244's
+cleanup-first dependency is now integrated. p04-t02 remains blocked because
+the exact `pnpm test` gate is nonzero from changing timeout-only failures, even
+though focused and affected-file reruns pass. Completion still requires that
+gate to exit 0, followed by p04/final review and closeout.
 
 ## References
 
 - Discovery: `discovery.md`
 - Associated backlog item:
-  [`BL-260827-correct-scope-and-adoption`](../../../repo/pjm/backlog/items/BL-260827-correct-scope-and-adoption.md)
+  [`BL-260827-correct-scope-and-adoption`](../../../repo/pjm/backlog/archived/BL-260827-correct-scope-and-adoption.md)
 - Archived source-project summary and follow-up inventory:
   `../../../repo/reference/project-summaries/20260827-user-scope-tool-packs.md`
 - Revalidation baselines: PR #240 (`cd07d72e5`) and PR #242 (`ce7c3225d`)

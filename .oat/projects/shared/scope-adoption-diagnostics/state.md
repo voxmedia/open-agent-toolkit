@@ -1,15 +1,16 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 2c108e71372ff9e7f08741512cc6818523ae300d
-oat_blockers: []
+oat_current_task: p04-t02
+oat_last_commit: ac380219d444c54c18629fc23c44b7de8beaec0e
+oat_blockers:
+  - task_id: p04-t02
+    reason: 'Required pnpm test remains nonzero from changing load-sensitive Git-fixture timeouts; no assertion or implementation-linked failure was found.'
 associated_issues:
   - type: backlog
     ref: BL-260827-correct-scope-and-adoption
 oat_kind: implementation
 oat_parent: null
 oat_siblings: []
-oat_depends_on:
-  - migrate-the-legacy-pjm
+oat_depends_on: []
 oat_children: []
 oat_dispatch_policy:
   mode: managed
@@ -32,7 +33,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T23:00:13Z'
+oat_project_state_updated: '2026-08-30T23:25:25Z'
 oat_generated: false
 ---
 
@@ -44,10 +45,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01-p03 passed their High reviews. p02 used one durable phase-recovery
-attempt for a mechanically dependent test correction; accounting is settled at
-1/10 used with no pending marker. Implementation continues at p04-t01 and the
-final p04 HiLL checkpoint.
+Phases p01-p03 passed their High reviews and p04-t01 completed the `0.2.49`
+release/archive commit. PR #244 is integrated without PJM doctor source
+conflicts. p04-t02 is blocked at the required full-test gate; final p04 review
+and the final HiLL checkpoint have not run.
 
 ## Artifacts
 
@@ -55,7 +56,7 @@ final p04 HiLL checkpoint.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 9 tasks)
-- **Implementation:** `implementation.md` (in progress; 7/9 tasks complete)
+- **Implementation:** `implementation.md` (blocked; 8/9 tasks complete)
 
 ## Progress
 
@@ -79,18 +80,25 @@ final p04 HiLL checkpoint.
 - ✓ p02 complete; phase/recovery suites 181/181 and High review passed with
   zero findings
 - ✓ p03 complete; phase suite 179/179 and High review passed with zero findings
-- ⚠ Broad CLI suite remains non-clean under concurrent load; p04 owns the
-  evidence-grade full-suite result
-- ⚠ Merge depends on the separate `migrate-the-legacy-pjm` cleanup landing
-  first; rebase, inspect overlap, and rerun PJM evidence before merge
+- ✓ PR #244 cleanup landed first and was integrated at `ac380219d`; no
+  `pjm/doctor.ts` source conflict occurred and PJM doctor passes all 12 checks
+- ✓ p04-t01 advanced the lockstep release to `0.2.49` and archived the backlog
+  item through the CLI
+- ✓ Focused final suite 417/417, timeout-file subset 250/250, seven other CI
+  gates, lint, format, and every supplemental suite passed
+- ⚠ Required `pnpm test` remains nonzero after repeated runs because different
+  Git-heavy fixtures exceed their existing timeouts; no assertion failed
 
 ## Blockers
 
-None. The exhausted automatic plan-review retry is recorded as an explicit
-override, not a clean review pass. The PJM cleanup is a merge dependency, not an
-implementation blocker.
+Task p04-t02 is blocked because the required `pnpm test` gate has not exited 0.
+Passing focused and isolated reruns demonstrate no implementation-linked
+assertion failure but do not satisfy the repository gate. The cleanup-first
+merge dependency is resolved.
 
 ## Next Milestone
 
-Continue `oat-project-implement` at p04-t01. Do not merge ahead of the PJM
-cleanup PR; after it lands, rebase and rerun p01 verification before merge.
+Resume `oat-project-implement` at p04-t02 when the load-sensitive full test gate
+can be rerun. A zero exit permits the p04 and final reviews; otherwise modify
+the plan explicitly before changing timeout infrastructure outside this
+project's ownership.
