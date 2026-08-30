@@ -72,6 +72,10 @@ interface PortableAssetFinding {
   evidence: string;
 }
 
+interface PortableAssetReference extends PortableAssetFinding {
+  file: string;
+}
+
 type AgentCandidateTier = 'loaded' | 'user' | 'project';
 type AgentCandidateOutcome =
   | 'missing'
@@ -154,6 +158,9 @@ const PORTABLE_SKILL_READ =
 
 const PORTABLE_AGENT_READ =
   /(?<![/a-zA-Z0-9_.-])(?:(?:\.\.?\/)*\.agents\/agents\/|(?:\.\.\/)+agents\/)([a-zA-Z0-9_-]+)\.md/g;
+
+const PROVIDER_AGENT_SYNC_EXAMPLE =
+  /^(?=[\s\S]*\.(?:claude|cursor)\/agents\/)(?=[\s\S]*\(synced (?:to|from) `?\.(?:agents|claude|cursor)\/agents\/)/i;
 
 const PORTABLE_SKILLS_ROOT_CANDIDATES = [
   '`${SKILL_DIR}/..`',
@@ -327,6 +334,11 @@ function classifyPortableAssetTargets(
   for (const match of markdown.matchAll(PORTABLE_AGENT_READ)) {
     const name = match[1]!;
     if (!canonicalAgentNames.has(name)) continue;
+    const lineStart = markdown.lastIndexOf('\n', match.index) + 1;
+    const nextLineBreak = markdown.indexOf('\n', match.index);
+    const lineEnd = nextLineBreak === -1 ? markdown.length : nextLineBreak;
+    const line = markdown.slice(lineStart, lineEnd);
+    if (PROVIDER_AGENT_SYNC_EXAMPLE.test(line)) continue;
     const evidence = match[0];
     indexed.push({
       asset: { kind: 'agent', name },
@@ -636,6 +648,33 @@ function collectUserDefaultCrossSkillReferences(): CrossSkillReference[] {
     .sort(compareCrossSkillReferences);
 }
 
+function collectPortableAssetReferences(
+  assets: readonly MarkdownAsset[],
+): PortableAssetReference[] {
+  return assets.flatMap((asset) =>
+    asset.files.flatMap((file) => {
+      const relativeFile = file.slice(REPO_ROOT.length + 1);
+      return classifyPortableAssetTargets(readFileSync(file, 'utf8')).map(
+        (finding) => ({ file: relativeFile, ...finding }),
+      );
+    }),
+  );
+}
+
+function collectUserDefaultPortableAssetReferences(): PortableAssetReference[] {
+  return collectPortableAssetReferences(collectUserDefaultMarkdownAssets());
+}
+
+function collectCanonicalSkillPortableAssetReferences(): PortableAssetReference[] {
+  return collectPortableAssetReferences(
+    listSkillDirs().map((owner) => ({
+      kind: 'skill',
+      owner,
+      files: listAuthoredMarkdown(join(SKILLS_DIR, owner)),
+    })),
+  );
+}
+
 // Non-executable evidence only. Each entry is pinned by source file, target
 // skill, and target path so it can never widen into a wildcard allowance.
 const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
@@ -737,6 +776,56 @@ describe('skills bundled docs contract', () => {
       ),
       'Historical evidence stays limited to dogfood records and test fixtures',
     ).toBe(true);
+  });
+
+  it.each([
+    [
+      'manifest-derived user-default',
+      collectUserDefaultPortableAssetReferences,
+    ],
+    ['every canonical skill', collectCanonicalSkillPortableAssetReferences],
+  ] as const)(
+    'leaves zero executable canonical agent reads in the %s scan',
+    (_scope, collectReferences) => {
+      const agentReferences = collectReferences().filter(
+        ({ asset }) => asset.kind === 'agent',
+      );
+      const detail = agentReferences
+        .map(({ file, target }) => `  ${file} -> ${target}`)
+        .join('\n');
+
+      expect(
+        agentReferences,
+        `Executable canonical agent reads must resolve from a bound provider root:\n${detail}`,
+      ).toEqual([]);
+    },
+  );
+
+  it('keeps skeptic and other provider-view descriptions classified as examples', () => {
+    const exampleLines = listSkillDirs().flatMap((skill) =>
+      listAuthoredMarkdown(join(SKILLS_DIR, skill)).flatMap((file) =>
+        readFileSync(file, 'utf8')
+          .split('\n')
+          .filter((line) => /\.(?:claude|cursor)\/agents\//.test(line))
+          .map((line) => ({
+            file: file.slice(REPO_ROOT.length + 1),
+            line,
+            findings: classifyPortableAssetTargets(line).filter(
+              ({ asset }) => asset.kind === 'agent',
+            ),
+          })),
+      ),
+    );
+    const skepticExamples = exampleLines.filter(({ file }) =>
+      file.endsWith('/skeptic/SKILL.md'),
+    );
+
+    expect(skepticExamples).toHaveLength(2);
+    expect(
+      exampleLines.flatMap(({ file, findings }) =>
+        findings.map(({ target }) => `${file} -> ${target}`),
+      ),
+    ).toEqual([]);
   });
 
   it.each([
