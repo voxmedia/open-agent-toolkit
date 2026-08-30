@@ -1,6 +1,6 @@
 ---
-oat_current_task: parallel-group-merge
-oat_last_commit: caea5ebafe10883b39336219a5cb76a188c96358
+oat_current_task: p03-t01
+oat_last_commit: 80f8216fd0b1d705087798ae4aa0bd6608cd45a7
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -26,7 +26,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T02:35:58Z'
+oat_project_state_updated: '2026-08-30T04:09:09Z'
 oat_generated: false
 ---
 
@@ -38,9 +38,9 @@ oat_generated: false
 
 ## Current Phase
 
-Both plan-declared parallel phases passed root review. Phase p01 passed after
-one bounded append-only fix round; Phase p02 passed with one deferred Medium
-test-coverage finding. Plan-order fan-in is next.
+Both plan-declared parallel phases passed root review and merged in plan order.
+The merged 495-test focused surface is green. Phase p03 release integration is
+next, including its documentation approval gate and full definition of done.
 
 ## Artifacts
 
@@ -63,6 +63,8 @@ test-coverage finding. Plan-order fan-in is next.
 - ✓ Phase p02 root review passed with no blocking findings
 - ✓ Phase p01 Critical finding fixed in one append-only continuation commit
 - ✓ Phase p01 narrowed re-review passed with zero findings
+- ✓ p01/p02 merged in plan order; 495 combined focused tests passed
+- ✓ Merged phase worktrees removed after clean fan-in
 
 ## Blockers
 
@@ -70,5 +72,5 @@ None.
 
 ## Next Milestone
 
-Merge p01 and p02 in plan order with integration verification after each
-fan-in, then begin p03 release integration.
+Run p03 release integration, obtain approval for any substantive documentation
+delta, then execute every CI-equivalent gate in order.

@@ -56,6 +56,10 @@ Phase p02 passed root review with 0 Critical, 0 Important, 1 deferred Medium, an
 
 Phase p01 passed narrowed root re-review with zero findings after one bounded fix round; reviewed fix head caea5ebafe10883b39336219a5cb76a188c96358; fix-loop count 1.
 
+### 2026-08-30 · structural · oat-project-implement · parallel-p01-p02
+
+Parallel group p01/p02 merged in plan order at cfc8585d0cc11a2e01af36cdef895fd8794c9485 and 80f8216fd0b1d705087798ae4aa0bd6608cd45a7; combined fan-in verification passed 495 tests; both isolated worktrees were removed after clean merges.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

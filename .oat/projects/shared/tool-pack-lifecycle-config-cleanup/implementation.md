@@ -14,11 +14,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status  | Tasks | Completed |
-| ------------------------------------- | ------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | passed  | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | passed  | 3     | 3/3       |
-| p03 — Release Integration             | pending | 1     | 0/1       |
+| Phase                                 | Status      | Tasks | Completed |
+| ------------------------------------- | ----------- | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged      | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged      | 3     | 3/3       |
+| p03 — Release Integration             | in_progress | 1     | 0/1       |
 
 **Total:** 6/7 tasks completed
 
@@ -212,6 +212,20 @@ oat_generated: false
   that pins one-document output and `adoptedPacks`; runtime behavior was
   independently verified and no defect was observed.
 - Project log: terminal p02 outcome and reviewer orchestration recorded once
+
+### Parallel Group Outcome: p01/p02
+
+- Merge order: p01, then p02
+- p01 merge: `cfc8585d0cc11a2e01af36cdef895fd8794c9485`
+- p01 fan-in verification: 233 focused tests passed after one no-edit rerun;
+  the first attempt was environment-only `ENOSPC`
+- p02 merge: `80f8216fd0b1d705087798ae4aa0bd6608cd45a7`
+- Combined verification: 10 files, 495 tests passed
+- Worktrees: both clean merged worktrees removed; phase branches retained
+- Environment recovery: operator approved deletion of 74 stale, unopened
+  `tmp.*` directories older than three hours, restoring about 1.6 GiB of
+  writable headroom
+- Merge result: passed; p03 may begin
 
 <!-- orchestration-runs-end -->
 
