@@ -85,6 +85,7 @@ import {
   type ProcessRunOptions,
   type ProcessRunResult,
 } from './child-process';
+import { validateConfiguredGateCommand } from './configured-command';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -2968,6 +2969,12 @@ async function runGateSet(
     const layer = parseLayer(options.layer);
     const normalizedSkill = trimRequired(skillName, '<skill>');
     const gate = parseGateConfig(options);
+    if (gate) {
+      const validation = validateConfiguredGateCommand(gate.command);
+      if (validation.kind === 'invalid') {
+        throw new Error(validation.message);
+      }
+    }
     const warnings = gate
       ? detectDevBuildGateCommandWarnings(gate.command)
       : [];
