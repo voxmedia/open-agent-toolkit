@@ -2,11 +2,13 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-27
+oat_last_updated: 2026-08-29
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
   - [p01, p02]
+oat_plan_hill_phases: [p03]
+oat_auto_review_at_hill_checkpoints: true
 oat_phase_review_gate: false
 oat_plan_source: quick
 oat_import_reference: null
