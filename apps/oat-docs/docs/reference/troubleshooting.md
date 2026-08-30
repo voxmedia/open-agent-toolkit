@@ -149,18 +149,23 @@ Both commands report managed pack state with a scoped recovery command:
 
 - `partial` — some managed assets are missing, or intent is declared with none
   installed. Fix with `oat tools update --pack <pack> --scope <scope>`.
-- `stale` — installed assets are behind the bundled release. Same fix.
+- `stale` — installed assets are behind the bundled release, or a managed skill
+  or agent has the bundled version metadata but different canonical content.
+  Expected executable-bit normalization on managed scripts is ignored. Fix with
+  the same scoped update command.
 - `newer` — installed assets are ahead of the bundle. This is informational and
   usually means the CLI is older than the assets; update the CLI rather than
   downgrading the pack.
-- `retained-override` — an owner-owned seeded asset exists at the scope, so the
-  managed default is intentionally not applied there. This covers repository
-  templates under `.oat/templates/` **and** seeded content such as
-  `.oat/ideas/backlog.md` and `.oat/ideas/scratchpad.md`. Deleting the file is
-  the right move only for a **template** you want OAT to manage again; never
-  delete seeded content you have edited, because the next install or update
-  reseeds the bundled default in its place and your edits are gone. The finding
-  is informational and carries no recovery command for exactly that reason.
+- `retained-override` — a source-backed owner-owned seed differs from its
+  bundled default, so OAT retains the edited copy instead of overwriting it. A
+  bundle-equal seed is current and does not produce this finding. Retained
+  overrides cover repository templates under `.oat/templates/` **and** seeded
+  content such as `.oat/ideas/backlog.md` and `.oat/ideas/scratchpad.md`.
+  Deleting the file is the right move only for a **template** you intentionally
+  want OAT to seed from the bundle again; never delete seeded content you have
+  edited, because the next install or update reseeds the bundled default in its
+  place and your edits are gone. The finding is informational and carries no
+  recovery command for exactly that reason.
 - `user-agent-unmaterialized` — the pack installed canonical agents into
   `~/.agents/agents/`, but user scope materializes no provider view for them
   beyond the bundled managed role files. `oat tools update` cannot fix this.
