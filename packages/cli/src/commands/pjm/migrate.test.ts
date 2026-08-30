@@ -161,7 +161,8 @@ describe('migratePjmRepo', () => {
   it('reports a no-op when repository adoption is incomplete', async () => {
     const { assetsRoot, repoRoot, root } = await createWorkspace();
     tempDirs.push(root);
-    await seedLegacyPjm(repoRoot);
+    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
+    await writeFile(join(repoRoot, 'pjm', 'roadmap.md'), '# Roadmap\n', 'utf8');
     const before = await snapshotTree(repoRoot);
 
     const result = await migratePjmRepo({
@@ -176,9 +177,8 @@ describe('migratePjmRepo', () => {
     });
 
     expect(result.status).toBe('skipped');
-    expect(result.reason).toContain('partial-initialization');
+    expect(result.reason).toMatch(/partial/i);
     expect(result.reason).toContain('oat pjm init');
-    await expect(pathExists(join(repoRoot, 'pjm'))).resolves.toBe(false);
     await expect(snapshotTree(repoRoot)).resolves.toEqual(before);
   });
 

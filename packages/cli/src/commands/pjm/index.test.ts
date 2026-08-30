@@ -2,17 +2,19 @@ import {
   access,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type { PjmAdoptionState } from './adoption';
 import { createPjmCommand } from './index';
 
 interface CliResult {
@@ -79,6 +81,63 @@ async function enableProjectManagement(root: string): Promise<void> {
     join(root, '.oat', 'config.json'),
     JSON.stringify(
       { version: 1, tools: { 'project-management': true } },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+}
+
+async function snapshotTree(root: string): Promise<Record<string, string>> {
+  const snapshot: Record<string, string> = {};
+
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        snapshot[relative(root, full)] = await readFile(full, 'utf8');
+      }
+    }
+  }
+
+  await walk(root);
+  return snapshot;
+}
+
+async function seedLegacySource(root: string): Promise<void> {
+  const referenceRoot = join(root, '.oat', 'repo', 'reference');
+  await mkdir(referenceRoot, { recursive: true });
+  await writeFile(
+    join(referenceRoot, 'current-state.md'),
+    '# Legacy current state\n',
+    'utf8',
+  );
+}
+
+async function seedCompleteCurrentLayout(root: string): Promise<void> {
+  const repoRoot = join(root, '.oat', 'repo');
+  await mkdir(join(repoRoot, 'pjm'), { recursive: true });
+  await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+}
+
+async function seedPartialCurrentLayout(root: string): Promise<void> {
+  const pjmRoot = join(root, '.oat', 'repo', 'pjm');
+  await mkdir(pjmRoot, { recursive: true });
+  await writeFile(join(pjmRoot, 'roadmap.md'), '# Roadmap\n', 'utf8');
+}
+
+async function setProjectPackIntent(
+  root: string,
+  enabled: boolean,
+): Promise<void> {
+  await mkdir(join(root, '.oat'), { recursive: true });
+  await writeFile(
+    join(root, '.oat', 'config.json'),
+    JSON.stringify(
+      { version: 1, tools: { 'project-management': enabled } },
       null,
       2,
     ),
@@ -258,6 +317,8 @@ describe('oat pjm', () => {
   it('prints the bundled migration prompt without running migration', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
+    const before = await snapshotTree(root);
+    let adoptionCalls = 0;
 
     const result = await runCli(
       root,
@@ -265,6 +326,10 @@ describe('oat pjm', () => {
       (program) => {
         program.addCommand(
           createPjmCommand({
+            resolvePjmAdoption: async () => {
+              adoptionCalls += 1;
+              throw new Error('adoption should not be resolved');
+            },
             readPjmMigrationPrompt: async () =>
               '# OAT PJM repo-reference migration\n',
             migratePjmRepo: async () => {
@@ -278,6 +343,123 @@ describe('oat pjm', () => {
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toBe('');
     expect(result.stdout).toContain('# OAT PJM repo-reference migration');
+    expect(adoptionCalls).toBe(0);
+    await expect(snapshotTree(root)).resolves.toEqual(before);
+  });
+
+  const migrationMatrix: Array<{
+    state: PjmAdoptionState;
+    legacy: boolean;
+    expectedStatus: 'dry-run' | 'already-migrated' | 'skipped';
+  }> = [
+    { state: 'declared', legacy: true, expectedStatus: 'dry-run' },
+    { state: 'declared', legacy: false, expectedStatus: 'already-migrated' },
+    { state: 'inferred-legacy', legacy: true, expectedStatus: 'dry-run' },
+    {
+      state: 'inferred-legacy',
+      legacy: false,
+      expectedStatus: 'already-migrated',
+    },
+    {
+      state: 'partial-initialization',
+      legacy: true,
+      expectedStatus: 'dry-run',
+    },
+    {
+      state: 'partial-initialization',
+      legacy: false,
+      expectedStatus: 'skipped',
+    },
+    { state: 'none', legacy: true, expectedStatus: 'dry-run' },
+    { state: 'none', legacy: false, expectedStatus: 'skipped' },
+  ];
+
+  it.each(
+    migrationMatrix.flatMap((entry) =>
+      [false, true].map((packEnabled) => ({ ...entry, packEnabled })),
+    ),
+  )(
+    'resolves $state with legacy=$legacy independently of project pack intent=$packEnabled',
+    async ({ state, legacy, expectedStatus, packEnabled }) => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      const repoRoot = join(root, '.oat', 'repo');
+      await setProjectPackIntent(root, packEnabled);
+      if (legacy) {
+        await seedLegacySource(root);
+      } else if (state === 'declared' || state === 'inferred-legacy') {
+        await seedCompleteCurrentLayout(root);
+      } else if (state === 'partial-initialization') {
+        await seedPartialCurrentLayout(root);
+      }
+      const before = await snapshotTree(root);
+
+      const result = await runCli(
+        root,
+        [
+          '--json',
+          'pjm',
+          'migrate',
+          ...(expectedStatus === 'skipped' ? ['--apply'] : []),
+        ],
+        (program) => {
+          program.addCommand(
+            createPjmCommand({
+              resolvePjmAdoption: async () => ({
+                state,
+                repoRoot,
+                recovery:
+                  state === 'partial-initialization' || state === 'none'
+                    ? 'oat pjm init'
+                    : null,
+              }),
+            }),
+          );
+        },
+      );
+
+      expect(result.exitCode).toBe(0);
+      const payload = JSON.parse(result.stdout);
+      expect(payload.status).toBe(expectedStatus);
+      if (state === 'partial-initialization' && !legacy) {
+        expect(payload.reason).toMatch(/partial/i);
+        expect(payload.reason).toContain('oat pjm init');
+      }
+      if (state === 'none' && !legacy) {
+        expect(payload.reason).toMatch(/no recognized.*migration input/i);
+        expect(payload.reason).toContain('oat pjm init');
+      }
+      await expect(snapshotTree(root)).resolves.toEqual(before);
+    },
+  );
+
+  it('applies a recognized legacy migration even when adoption is none', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const repoRoot = join(root, '.oat', 'repo');
+    await seedLegacySource(root);
+
+    const result = await runCli(
+      root,
+      ['--json', 'pjm', 'migrate', '--apply'],
+      (program) => {
+        program.addCommand(
+          createPjmCommand({
+            resolvePjmAdoption: async () => ({
+              state: 'none',
+              repoRoot,
+              recovery: 'oat pjm init',
+            }),
+          }),
+        );
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout).status).toBe('migrated');
+    await expect(
+      readFile(join(repoRoot, 'pjm', 'current-state.md'), 'utf8'),
+    ).resolves.toBe('# Legacy current state\n');
   });
 
   it('resolves adoption once and supplies it to the migration core', async () => {

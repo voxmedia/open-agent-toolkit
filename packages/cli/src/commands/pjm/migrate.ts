@@ -85,6 +85,11 @@ const JUDGMENT_TARGETS = [
   'reference/backlog-completed.md',
 ] as const;
 
+const LEGACY_MIGRATION_PATHS = [
+  ...ACTIVE_MOVES.map((move) => move.source),
+  'reference/decision-record.md',
+] as const;
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -371,6 +376,16 @@ async function collectJudgmentProposals(
   return actions;
 }
 
+async function hasRecognizedLegacySources(repoRoot: string): Promise<boolean> {
+  for (const legacyPath of LEGACY_MIGRATION_PATHS) {
+    if (await pathExists(join(repoRoot, legacyPath))) {
+      return true;
+    }
+  }
+
+  return (await collectJudgmentProposals(repoRoot)).length > 0;
+}
+
 async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
   const hasPjm = await pathExists(join(repoRoot, 'pjm'));
   const hasDecisions = await pathExists(
@@ -472,19 +487,17 @@ function buildEmptyResult(
 export async function migratePjmRepo(
   options: PjmMigrationOptions,
 ): Promise<PjmMigrationResult> {
-  if (await isAlreadyMigrated(options.repoRoot)) {
+  const hasLegacySources = await hasRecognizedLegacySources(options.repoRoot);
+  if (!hasLegacySources && (await isAlreadyMigrated(options.repoRoot))) {
     return buildEmptyResult(options, 'already-migrated');
   }
 
-  if (
-    options.adoption.state !== 'declared' &&
-    options.adoption.state !== 'inferred-legacy'
-  ) {
-    return buildEmptyResult(
-      options,
-      'skipped',
-      `PJM adoption state ${options.adoption.state} is not migration-eligible; ${options.adoption.recovery ?? 'run oat pjm init'}`,
-    );
+  if (!hasLegacySources) {
+    const reason =
+      options.adoption.state === 'partial-initialization'
+        ? 'PJM initialization is partial and no recognized legacy migration input was found; run oat pjm init to complete initialization'
+        : 'No recognized PJM migration input was found; run oat pjm init to initialize this repository';
+    return buildEmptyResult(options, 'skipped', reason);
   }
 
   const apply = options.apply ?? false;
