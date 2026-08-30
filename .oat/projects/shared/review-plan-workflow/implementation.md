@@ -2156,10 +2156,12 @@ public packages advanced together to 0.2.48.
 
 **Dogfood handoff:** Added
 `references/external-repository-dogfood-runbook.md` with prerequisites,
-worktree CLI build/link/source verification, consumer-local enforce setup,
-real small/medium/broad local/remote/direct/gate/re-review/cap workflows,
-evidence capture, issues #206/#207 observations, pass/fail criteria,
-synced-project pull/push, rollback, and the evidence package for PR #190. This
+worktree CLI build/link/source verification, project-scope installation and
+verification of this build's workflow/utility assets, fresh-session proof,
+consumer-local enforce setup, real small/medium/broad
+local/remote/direct/gate/re-review/cap workflows, evidence capture, issues
+#206/#207 observations, pass/fail criteria, scope-correct synced-project
+pull/push, fail-closed rollback, and the evidence package for PR #190. This
 recovery did not run another repository's workflows and did not post, push, or
 change PR state.
 

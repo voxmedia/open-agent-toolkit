@@ -3601,8 +3601,10 @@ test matrix and record any failing cell before live dogfood.
 `references/external-repository-dogfood-runbook.md` from a separate real
 consumer repository. Build and globally link this worktree's CLI with the
 repository-owned `pnpm run cli:link` script, verify the resolved binary points
-to this worktree and version, and enable
-`workflow.reviewPlanMode=enforce --local` only in the consumer repository.
+to this worktree and version, install and verify this build's workflow and
+utility packs at project scope on a dedicated consumer dogfood branch, reopen
+the consumer agent session, and enable `workflow.reviewPlanMode=enforce
+--local` only in the consumer repository.
 
 Use real small, medium, and broad implemented scopes to exercise local,
 root-owned direct phase/checkpoint/final, remote structured, gate, re-review,
@@ -3622,9 +3624,9 @@ pending until the external consumer-repository runbook returns complete
 evidence for every required workflow.
 
 **Step 5: Commit** After Thomas completes the external run,
-`test(p06-t06): record external enforce dogfood`. Posting the evidence to PR
-PR #190, changing its readiness, or pushing remains a separate operator-authorized
-action.
+`test(p06-t06): record external enforce dogfood`. Posting the evidence to
+PR #190, changing its readiness, or pushing remains a separate
+operator-authorized action.
 
 #### Recovery p06-t06-r01: Integrate the current Stage A base
 
