@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t04
-oat_last_commit: 896bfb44988b4cd17cd3b53b0543c8029bd490e7
+oat_current_task: null
+oat_last_commit: 13392c5f26098aa2416e9560e53e32ff0e06f0f5
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -65,8 +65,8 @@ oat_implement_exit_gate:
   receive_commit: 6660812b2eed33b46f1e45d639a80e8148853153
   receive_eligible: true
   receive_completed: true
-  failure: origin/main merge and remote-review bookkeeping changed the effective implementation delta after the passing gate.
-  updated_at: '2026-08-30T19:22:11Z'
+  failure: The bookkeeping-only p03-t04 fix changed tracked project evidence after the passing gate; the user explicitly skipped a full gate rerun, so freshness remains stale.
+  updated_at: '2026-08-30T19:53:27Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -83,7 +83,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/242' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T19:36:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T19:53:27.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: agent-provider-root
 
-**Status:** Remote review fix queued
+**Status:** Remote review fix complete; exit gate rerun skipped
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — `p03-t04` queued from merged-head Bugbot feedback.
+Implementation — All 10 tasks complete; configured exit-gate freshness remains stale by explicit operator choice.
 
 ## Artifacts
 
@@ -126,7 +126,7 @@ Implementation — `p03-t04` queued from merged-head Bugbot feedback.
 - ✓ Independent Phase 2 review passed with one non-blocking Medium finding
 - ✓ Phase 3: Documentation, Packaging, and Release Proof
 - ✓ Independent Phase 3 review passed with zero findings
-- ✓ All nine plan tasks complete
+- ✓ All 10 plan tasks complete
 - ✓ Final-review fix `p03-t03`
 - ✓ Final lifecycle re-review passed with zero findings
 - ✓ Configured implementation exit gate review received with zero findings
@@ -139,8 +139,9 @@ Implementation — `p03-t04` queued from merged-head Bugbot feedback.
 - ✓ `origin/main` merged with PJM indexes regenerated and lockstep `0.2.47` preserved
 - ✓ Bugbot review of pre-merge head received with zero actionable findings
 - ✓ Merged-head Bugbot review received with one Minor finding
-- ⧗ Review fix `p03-t04`: restore omitted final-review ledger event
-- ⧗ Awaiting human review
+- ✓ Review fix `p03-t04`: restored omitted final-review ledger event
+- ✓ Independent bounded `p03-t04` review passed with zero findings
+- ⧗ Full configured exit-gate rerun explicitly skipped; gate freshness remains stale
 - ✓ Final HiLL approval
 
 ## Blockers
@@ -149,8 +150,8 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute `p03-t04`, reverify the review ledger, and refresh stale lifecycle evidence.
+Push the `p03-t04` fix and receive the next Bugbot event for PR #242 when available.
 
-- If the merged-head review adds fix tasks: resume with `oat-project-implement`.
-- If it is clean: refresh final lifecycle evidence before completion/archival.
+- If Bugbot adds another fix task: resume with `oat-project-implement`.
+- The project remains `in_progress` because the configured exit gate is stale. Rerun `oat-project-implement` if a fresh lifecycle-complete gate disposition is required.
 - Project completion/archival remains a separate `oat-project-complete` step.

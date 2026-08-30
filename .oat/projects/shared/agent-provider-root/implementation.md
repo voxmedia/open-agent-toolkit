@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 4     | 4/4       |
-| Phase 3 | in_progress | 4     | 3/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 4     | 4/4       |
+| Phase 3 | completed | 4     | 4/4       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -175,6 +175,7 @@ oat_generated: false
 - Revalidated synchronized provider layouts without changing `.claude/`, `.cursor/`, `.codex/`, or user-owned provider directories.
 - Proved the zero-agent ratchet through a temporary real-tree mutation, exact evidence, guaranteed byte restoration, and a clean rerun.
 - Completed the HOME-isolated uncached workspace test and all repository Definition-of-Done gates with direct exit code 0.
+- Restored the omitted append-ordered final-review ledger event identified by merged-head Bugbot feedback.
 
 **Key files touched:**
 
@@ -226,6 +227,17 @@ oat_generated: false
 **Outcome:** Provider-sync descriptions now exempt only their paired same-role canonical occurrence, preserving executable bare reads on the same line as findings.
 
 **Verification:** The new regression failed before the fix; formatting and the post-commit focused suite passed with 241/241 tests.
+
+---
+
+### Task p03-t04: (review) Restore omitted final review ledger event
+
+**Status:** completed
+**Commit:** 13392c5f26098aa2416e9560e53e32ff0e06f0f5
+
+**Outcome:** Restored the distinct `175056Z` final-review event without changing any pre-existing review cell values or conflating the later passing re-review and gate events.
+
+**Verification:** Formatting and `pnpm check` exited 0; normalized before/after review-row comparison exited 0; the `175056Z`, `181453Z`, and `182542Z` review rows each occur exactly once; independent bounded review passed with zero findings.
 
 ---
 
@@ -397,6 +409,48 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Run the configured implementation exit gate and HiLL closeout.
 
+### Run 5 — 2026-08-30T19:42:00Z
+
+- Branch: `feature/feat/unified-agent-provider-root`
+- Tier: 1 — native subagents available without authorization
+- Policy: managed High
+- Phase counts: passed=1, failed=0, stopped=0
+
+#### p03-t04 fix dispatch
+
+- Request: `agent-provider-root-p03-t04-fix-20260830`
+- Continuation of: `agent-provider-root-p03-20260830T1712Z`
+- Launch: accepted; outcome `DONE`
+- Base/head: `b6fad10859d4d19317289dfb8023dbdcbeb7dfb1..13392c5f26098aa2416e9560e53e32ff0e06f0f5`
+- Task commit: `13392c5f26098aa2416e9560e53e32ff0e06f0f5`
+- Selection reason: `native-catalog`
+- Candidates: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery attempts: 0/10; optional nested dispatches: none
+- Dispatch: scope=p03-t04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### p03-t04 review dispatch
+
+- Request: `agent-provider-root-p03-t04-review-20260830T1951Z`
+- Launch: accepted; outcome `PASS`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Artifact: `reviews/archived/p03-t04-review-2026-08-30T195106Z.md`
+- Reconnaissance: not-attempted
+- Selection reason: `native-catalog`
+- Candidates: `oat-reviewer-gpt-5-6-sol-high`
+- Fix iterations: 0
+- Dispatch: scope=p03-t04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task commits | Review | Fix iterations |
+| ----- | ------- | ------------ | ------ | -------------- |
+| p03   | passed  | 1            | passed | 0              |
+
+#### Outstanding Items
+
+- The user explicitly skipped a full configured exit-gate rerun for this bookkeeping-only fix; the persisted gate remains stale and lifecycle completion remains in progress.
+- Push the fix and receive the next Bugbot event for PR #242 when available.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -418,14 +472,15 @@ Chronological log of implementation progress.
 - [x] p03-t01: Document and package the provider-root contract - `af69a8008`
 - [x] p03-t02: Prove mutation detection and complete repository gates - evidence-only, no source commit
 - [x] p03-t03: Scope provider-sync exemption to paired occurrence - `3240a1bec`
+- [x] p03-t04: Restore omitted final review ledger event - `13392c5f2`
 
 **What changed (high level):**
 
-- Implementation tracking initialized from the approved eight-task plan.
+- Implementation tracking initialized from the approved plan and extended with two review-generated tasks.
 - Managed High dispatch and final-phase HiLL policy resolved before source work.
 - Phase 1 delivered the typed classifier and exact-target fixture contract.
 - Phase 2 migrated all seven live reads, bumped four skills, and activated the zero-agent ratchet.
-- Phase 3 shipped docs and release metadata, proved mutation detection, and completed every repository gate.
+- Phase 3 shipped docs and release metadata, proved mutation detection, completed every repository gate for the implementation basis, and repaired the review ledger.
 
 **Decisions:**
 
@@ -434,7 +489,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Rerun final review over the bounded p03-t03 fix.
+- Push `p03-t04` and receive the next Bugbot event for PR #242.
+- The user explicitly skipped a full configured exit-gate rerun for this bookkeeping-only fix; rerun `oat-project-implement` if lifecycle-complete gate freshness is later required.
 
 **Blockers:**
 
@@ -488,6 +544,15 @@ Chronological log of implementation progress.
 - **New tasks:** `p03-t04`
 - **Next:** Resume `oat-project-implement` to restore the omitted append-ordered final-review ledger event and refresh stale lifecycle evidence.
 
+### Review Received: p03-t04
+
+- **Date:** 2026-08-30
+- **Reviewed head:** `13392c5f26098aa2416e9560e53e32ff0e06f0f5`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Disposition:** Passed; the omitted event is restored and the merged-head Bugbot event advanced to `fixes_completed`.
+- **Artifact:** `reviews/archived/p03-t04-review-2026-08-30T195106Z.md`
+- **Next:** Push the fix and receive the next Bugbot event. The full configured exit-gate rerun was explicitly skipped by the user.
+
 ### Exit Gate Audit
 
 - **2026-08-30T18:18:37Z — generation initialized:** Resolved the configured semantic final-review gate once, captured reviewed head `3240a1bec3e7bcdfe044ace76994502e0a4b666d`, base `refs/remotes/origin/main`, and immutable effective-delta fingerprint `sha256:effective-delta-v1:1357744bea95ceb0c19c4c94ef6ebdeb9532d93e88fa0baf68f6d43ea3fce29b`. Launch has not started.
@@ -506,6 +571,7 @@ Chronological log of implementation progress.
 - **2026-08-30T19:07:54Z — final approval recorded:** The user approved the final `p03` implementation checkpoint. The durable closeout sequence entered `post_approval`; its configured post-approval step list is empty, and PR #242 remains open and unmerged.
 - **2026-08-30T19:08:58Z — closeout sequence complete:** No post-approval steps were configured, so the approved closeout sequence completed without further dispatch. The implementation phase can now be marked complete independently of the still-open PR.
 - **2026-08-30T19:10:10Z — implementation complete:** Marked all 9/9 tasks, the final `p03` HiLL checkpoint, and the configured implementation closeout lifecycle complete. PR #242 remains open and unmerged; project completion and archival remain separate lifecycle work.
+- **2026-08-30T19:53:27Z — exit-gate rerun skipped by operator:** After the bookkeeping-only `p03-t04` fix and its zero-finding bounded review, the user explicitly chose not to rerun the full configured exit gate. The prior gate provenance is preserved, its freshness status remains `stale`, and implementation lifecycle status remains `in_progress` rather than fabricating an allowed gate disposition.
 
 ---
 
@@ -534,6 +600,7 @@ Track test execution during implementation.
 - Typed canonical skill/agent portability classification and exact-target provider-layout contracts.
 - Seven portable canonical role reads with independent dependency roots and pack-aware recovery.
 - Zero-executable-agent ratchet, provider-root documentation, and lockstep `0.2.47` release metadata.
+- Append-complete review-ledger history for the initial final review, bounded fix, passing re-review, and configured gate event.
 
 **Behavioral changes (user-facing):**
 
@@ -552,7 +619,7 @@ Track test execution during implementation.
 
 **Design deltas (if any):**
 
-- None. The final review's same-line provider-example concern was fixed in `p03-t03` and the bounded re-review passed with zero findings.
+- None. The final review's same-line provider-example concern was fixed in `p03-t03`, and the later review-ledger omission was repaired in `p03-t04`; both bounded re-reviews passed with zero findings.
 
 ## References
 

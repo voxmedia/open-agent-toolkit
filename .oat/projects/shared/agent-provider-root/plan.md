@@ -552,8 +552,9 @@ git commit -m "fix(p03-t04): restore omitted final review ledger event"
 | plan          | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
 | final         | code     | passed          | 2026-08-30 | reviews/archived/final-review-2026-08-30T182542Z.md           | 1d2bcafab6a61ee3fa85bc878ba7efcef7512407 | gate       | cursor-fable-5-high           |
 | remote-pr-242 | code     | passed          | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T192211Z.md   | 71b39d208d959403ae36e1c22eab3bafcf46cbdd | -          | -                             |
-| remote-pr-242 | code     | fixes_added     | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
+| remote-pr-242 | code     | fixes_completed | 2026-08-30 | reviews/archived/remote-pr-242-review-2026-08-30T193630Z.md   | 896bfb44988b4cd17cd3b53b0543c8029bd490e7 | -          | -                             |
 | final         | code     | fixes_completed | 2026-08-30 | reviews/archived/final-review-2026-08-30T175056Z.md           | 2a6141fe8551067b48cc3db6ce49a92d1dad6469 | auto       | -                             |
+| p03-t04       | code     | passed          | 2026-08-30 | reviews/archived/p03-t04-review-2026-08-30T195106Z.md         | 13392c5f26098aa2416e9560e53e32ff0e06f0f5 | manual     | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
