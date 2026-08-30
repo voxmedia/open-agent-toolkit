@@ -20,6 +20,20 @@ oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
 oat_phase_status: in_progress
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p02-recovery-001
+        original_request_id: 795acaac-8487-4da6-bc1c-3d542c5e9692
+        original_task_id: p02-t02
+        original_commit: 38d3faf5ce50a924e5f00ac6fd99dba9b1f2d783
+        discovered_by: pnpm --filter @open-agent-toolkit/cli test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 35df5a10ef832564d0f9fe230925f71ff7bece5d
+        status: pending
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
