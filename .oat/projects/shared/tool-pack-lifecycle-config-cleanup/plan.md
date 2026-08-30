@@ -512,6 +512,7 @@ with captured logs.
 | p02    | code     | passed          | 2026-08-30 | reviews/p02-review-2026-08-30T022702Z.md                    | 44edd2bc56ecbf542f0f70f26b79cb31e646c69e | auto       | -                        |
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T045227Z.md                    | ae7bbc84e8ca115e3146fc2def4511e5135ac43b | auto       | -                        |
 | p03    | code     | fixes_completed | 2026-08-30 | reviews/p03-review-2026-08-30T050726Z.md                    | 5e84048324b90f75247757d842a76cc21d0ab8f3 | auto       | -                        |
+| p03    | code     | passed          | 2026-08-30 | reviews/p03-review-2026-08-30T051631Z.md                    | bd48b17bd50d11931a8f0540e02a86453087876f | auto       | -                        |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
@@ -523,10 +524,12 @@ with captured logs.
 
 **Summary:**
 
-- Phase 1: 2 tasks — content-accurate seed and versioned-asset inventory.
+- Phase 1: 3 tasks — content-accurate seed and versioned-asset inventory,
+  including normalized executable-mode handling.
 - Phase 2: 3 tasks — explicit adoption reporting and supported config/CLI
   state.
-- Phase 3: 1 task — release integration, versions, docs, and complete gates.
+- Phase 3: 3 tasks — release integration, versions, docs, complete gates, and
+  aligned PJM planning views.
 
 **Total: 6 tasks**
 

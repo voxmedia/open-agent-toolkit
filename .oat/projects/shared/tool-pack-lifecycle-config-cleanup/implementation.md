@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-27
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-08-30
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,11 +14,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                 | Status          | Tasks | Completed |
-| ------------------------------------- | --------------- | ----- | --------- |
-| p01 — Content-Accurate Pack Inventory | merged          | 3     | 3/3       |
-| p02 — Explicit Adoption and CLI State | merged          | 3     | 3/3       |
-| p03 — Release Integration             | fixes_completed | 3     | 3/3       |
+| Phase                                 | Status | Tasks | Completed |
+| ------------------------------------- | ------ | ----- | --------- |
+| p01 — Content-Accurate Pack Inventory | merged | 3     | 3/3       |
+| p02 — Explicit Adoption and CLI State | merged | 3     | 3/3       |
+| p03 — Release Integration             | passed | 3     | 3/3       |
 
 **Total:** 9/9 tasks completed
 
@@ -62,7 +62,7 @@ oat_generated: false
 
 ## Phase 3: Release Integration
 
-**Status:** fixes_completed
+**Status:** passed
 
 ### Task p03-t01: Update release notes, versions, and verify the merged tree
 
@@ -396,8 +396,51 @@ oat_generated: false
 - Range and one-file bound verified; worktree clean
 - Fix-loop usage: 2/2; third/final phase review required
 
+#### Dispatch Record: p03 review round 3
+
+- Request: `dispatch-p03-review-r3-20260829-01`
+- Launch state/outcome: accepted / passed
+- Narrowed range:
+  `aa4756bbb7adc956a706bcb991b72d6006e805c9..bd48b17bd50d11931a8f0540e02a86453087876f`
+- Prior artifact: `reviews/p03-review-2026-08-30T050726Z.md`
+- Route: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+### Review Received: p03 (round 3, final narrowed)
+
+- Artifact: `reviews/p03-review-2026-08-30T051631Z.md`
+- Reviewed head: `bd48b17bd50d11931a8f0540e02a86453087876f`
+- Reconnaissance: not attempted
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Disposition verification: remaining Important I1 fully fixed; roadmap names
+  only three active bounded companions and excludes completed lifecycle cleanup
+- Verdict: passed at the governance cap; fix-loop count 2
+- Project log: terminal p03 outcome recorded once
+
 <!-- orchestration-runs-end -->
 
 ## Final Summary (for PR/docs)
 
-_Populate after implementation._
+Tool-pack lifecycle/config cleanup is implementation-complete across nine
+tasks. Inventory now distinguishes bundled seed defaults from retained
+overrides and detects same-version skill/agent content drift without treating
+intentional executable-bit normalization as drift. Project config adoption is
+reported deterministically, unsupported false pack-intent writes are rejected,
+and inert per-pack `--force` is removed with supported update/remove guidance.
+
+Release integration advances all five public packages and the generated public
+version asset to `0.2.46`, updates the tool-pack and troubleshooting docs,
+archives the completed backlog item, and aligns the curated backlog, roadmap,
+and current-state views. Main implementation surfaces are the CLI inventory,
+config/install/update commands and tests, public package manifests/assets, two
+docs pages, and PJM planning artifacts.
+
+Verification includes 495 merged focused tests, 482 release-focused tests,
+an evidence-grade forced Turbo run with 0 cached / 10 executed and 4,645 package
+tests, the complete CI-order gate sequence, lint, format, docs build, release
+validation, generated-version parity, PJM integrity checks, and independent
+phase reviews. One content-digest mode defect was fixed in p01; p03 used one
+append-only composition recovery and two bounded planning-view review fixes.
+The only remaining PJM doctor output is four unchanged pre-existing layout
+warnings; no implementation blocker remains.
