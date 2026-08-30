@@ -1,5 +1,5 @@
 ---
-oat_current_task: post-implement-sequence
+oat_current_task: null
 oat_last_commit: c8ca82b970e8e8d6240cfcf2671d92b8666c8b2d
 oat_blockers: []
 associated_issues:
@@ -18,7 +18,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: true
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: complete
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_phase_recovery_policy:
@@ -77,7 +77,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/240'
 oat_project_created: '2026-08-27T22:36:19.690Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T15:20:21Z'
+oat_project_state_updated: '2026-08-30T15:21:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -87,13 +87,14 @@ oat_project_recap:
 
 # Project State: Tool-Pack Lifecycle and Config Cleanup
 
-**Status:** Implementation in progress
+**Status:** Implementation complete
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation complete — final approval recorded; project lifecycle
+completion and archive are next.
 
 ## Artifacts
 
@@ -142,6 +143,7 @@ Implementation — PR open; completion may run before or after merge.
   promotion or filing proposals
 - ⧗ Awaiting human review
 - ✓ Final HiLL approval received from the user
+- ✓ Implementation phase complete
 
 ## Blockers
 
@@ -149,8 +151,5 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Complete and archive the project lifecycle while preserving PR #240's durable
+project links.
