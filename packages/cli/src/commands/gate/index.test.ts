@@ -4606,6 +4606,35 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('classifies a clean review target without an artifact as artifact missing', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      artifactPath: null,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message: expect.stringContaining(
+        'completed without producing the required correlated review artifact',
+      ),
+      recovery: expect.stringMatching(
+        /write and finalize the review artifact before the process exits.*new gate run/i,
+      ),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it.each([
     {
       outcome: 'success',
@@ -4643,9 +4672,9 @@ describe('oat gate', () => {
       expectedCounts: false,
     },
     {
-      outcome: 'targeting-correlation failure',
+      outcome: 'artifact-missing failure',
       childExitCode: 0,
-      expectedStatus: 'targeting_correlation_failed',
+      expectedStatus: 'artifact_missing',
       expectedExitCode: 1,
       expectedArtifact: false,
       expectedCounts: false,
@@ -5093,6 +5122,12 @@ describe('oat gate', () => {
     expect(promptModel).toBe('provider-default');
     expect(execute?.stdoutDestination).toBe('stderr');
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
+    expect(invocationPrompt).toContain(
+      'Complete the review, artifact write, and required bookkeeping inline or through a synchronously awaited child before this headless process exits.',
+    );
+    expect(invocationPrompt).toContain(
+      'Do not start background tasks, monitors, or waiters that outlive this turn.',
+    );
     expect(
       runner.calls
         .filter((call) => call.purpose !== 'execute')
@@ -7801,8 +7836,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
@@ -7830,8 +7865,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
