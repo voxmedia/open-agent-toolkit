@@ -72,7 +72,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
@@ -83,7 +83,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T18:45:48.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T18:47:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -128,7 +128,8 @@ Implementation - Final HiLL closeout
 - ✓ Configured implementation exit gate review received with zero findings
 - ✓ Configured implementation exit gate allowed with durable receive provenance
 - ✓ Project summary generated and canonical decisions promoted
-- ⧗ Documentation sync awaiting one recommendation decision
+- ✓ Documentation sync complete; contributor ratchet coverage updated
+- ⧗ Configured PR step awaiting separate push/PR authorization
 - ⧗ Final HiLL closeout
 
 ## Blockers
@@ -137,4 +138,4 @@ None
 
 ## Next Milestone
 
-Resolve the documentation recommendation, then continue the configured closeout sequence
+Obtain separate authorization before running the configured PR step
