@@ -21,6 +21,20 @@ oat_phase: implement
 oat_phase_status: in_progress
 oat_workflow_mode: quick
 oat_workflow_origin: native
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p03:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p03-20260830T043447Z-01
+        original_request_id: dispatch-p03-implementation-20260829-01
+        original_task_id: p03-t01
+        original_commit: f2463616f12f5046579184e853ed9d6b0a23c615
+        discovered_by: git status --short
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: f2463616f12f5046579184e853ed9d6b0a23c615
+        status: pending
 oat_docs_updated: null
 oat_pr_status: null
 oat_pr_url: null
