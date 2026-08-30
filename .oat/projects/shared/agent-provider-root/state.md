@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 3240a1bec3e7bcdfe044ace76994502e0a4b666d
+oat_last_commit: 8c59dd044109458828a1f2498e8907c87131265c
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -13,10 +13,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -83,7 +83,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/242' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T19:09:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T19:10:10.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: agent-provider-root
 
-**Status:** Closeout sequence complete
+**Status:** Implementation complete; PR open
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — PR open; approved closeout sequence complete.
+Implementation complete — PR #242 remains open for review.
 
 ## Artifacts
 
@@ -111,7 +111,7 @@ Implementation — PR open; approved closeout sequence complete.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -137,7 +137,7 @@ Implementation — PR open; approved closeout sequence complete.
 - ✓ Final PR artifact prepared
 - ✓ PR created
 - ⧗ Awaiting human review
-- ⧗ Final HiLL approval
+- ✓ Final HiLL approval
 
 ## Blockers
 
@@ -145,8 +145,7 @@ None
 
 ## Next Milestone
 
-PR is open and the implementation lifecycle is awaiting final approval.
+PR #242 is open and unmerged. Implementation and its configured closeout lifecycle are complete.
 
-- Approve this HiLL checkpoint to complete `oat-project-implement` bookkeeping.
 - To incorporate PR feedback later: run `oat-project-revise`.
 - Project completion/archival remains a separate `oat-project-complete` step.
