@@ -10,7 +10,10 @@ import {
   WORKFLOW_TEMPLATES,
 } from '@commands/init/tools/shared/skill-manifest';
 import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
-import { inventoryPack } from '@commands/tools/shared/pack-inventory';
+import {
+  attributeSharedOwnerDiagnostics,
+  inventoryPack,
+} from '@commands/tools/shared/pack-inventory';
 import {
   hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
@@ -600,18 +603,37 @@ describe('removeTools', () => {
       await runRemoveCommand(scopeRoot, ['--pack', removed, '--no-sync']);
 
       await expect(pathExists(shared)).resolves.toBe(true);
-      await expect(
-        inventoryPack({
-          pack: removed,
-          assetsRoot: await resolveAssetsRoot(),
-          userRoot: scopeRoot,
-        }),
-      ).resolves.toMatchObject({
-        placement: 'unavailable',
-        diagnostics: [
+      const assetsRoot = await resolveAssetsRoot();
+      const inventories = attributeSharedOwnerDiagnostics(
+        await Promise.all(
+          [removed, retained].map((pack) =>
+            inventoryPack({
+              pack,
+              assetsRoot,
+              userRoot: scopeRoot,
+            }),
+          ),
+        ),
+      );
+      const removedInventory = inventories.find(({ pack }) => pack === removed);
+      const retainedInventory = inventories.find(
+        ({ pack }) => pack === retained,
+      );
+
+      expect(removedInventory).toMatchObject({ placement: 'unavailable' });
+      expect(removedInventory?.diagnostics).not.toEqual(
+        expect.arrayContaining([
           expect.objectContaining({ code: 'shared-owner-observation' }),
-        ],
-      });
+        ]),
+      );
+      expect(retainedInventory?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: 'shared-owner-observation',
+            message: expect.stringContaining(retained),
+          }),
+        ]),
+      );
     },
   );
 
