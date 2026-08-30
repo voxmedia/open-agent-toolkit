@@ -500,17 +500,71 @@ git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/re
 git commit -m "chore(p03-t03): finalize gate execution contract"
 ```
 
+### Task p03-t04: Repair final lifecycle handoff references
+
+**Review finding:** M1, m1
+
+**Files:**
+
+- Modify: `.oat/projects/synced/gate-execution-contract-hardening/implementation.md`
+- Modify: `.oat/projects/synced/gate-execution-contract-hardening/discovery.md`
+
+**Step 1: Align the final handoff with shipped files**
+
+Replace nonexistent module paths in the implementation summary with the actual
+gate command/runtime owner and configured-gate integration test. Mark the spec
+reference not applicable for quick mode.
+
+**Step 2: Repair archived backlog links**
+
+Update the two discovery links from the removed active-item paths to their
+archived records without changing the recorded requirements or scope.
+
+**Step 3: Verify and commit**
+
+```bash
+pnpm exec oxfmt .oat/projects/synced/gate-execution-contract-hardening/implementation.md .oat/projects/synced/gate-execution-contract-hardening/discovery.md
+test -f .oat/repo/pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md
+test -f .oat/repo/pjm/backlog/archived/BL-260726-validate-structured-output.md
+git diff --check
+git commit -m "docs(p03-t04): repair final lifecycle handoff"
+```
+
+### Task p03-t05: Complete the artifact-missing contract assertion
+
+**Review finding:** M2
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Extend the complete terminal-status contract**
+
+Add `artifact_missing` to the complete gate-result union assertion and require
+its public recovery contract: receive is ineligible, same-run receive or
+remediation is forbidden, and the operator starts a new run only after fixing
+synchronous artifact production.
+
+**Step 2: Verify and commit**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+pnpm run check:skill-bumps
+pnpm check
+git commit -m "test(p03-t05): assert artifact-missing recovery contract"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed  | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
-| p02    | code     | passed  | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
-| p03    | code     | passed  | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -                             |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed      | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
+| p02    | code     | passed      | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
+| p03    | code     | passed      | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
+| final  | code     | fixes_added | 2026-08-30 | reviews/archived/code-final-review-2026-08-30T234844Z.md    | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                             |
+| plan   | artifact | passed      | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -522,10 +576,10 @@ git commit -m "chore(p03-t03): finalize gate execution contract"
 - Phase 1: 2 tasks — pure configured-command contract and canonical skill
   alignment
 - Phase 2: 2 tasks — cause-specific runtime diagnosis and no-yield prompt
-- Phase 3: 3 tasks — configuration enforcement, end-to-end proof, and release
-  closeout
+- Phase 3: 5 tasks — configuration enforcement, end-to-end proof, release
+  closeout, and bounded final-review repairs
 
-**Total: 7 tasks**
+**Total: 9 tasks**
 
 Ready for code review and merge after every task, review, and gate is complete.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 5     | 3/5       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/9 tasks completed
 
 ---
 
 ## Phase 1: Configuration Contract Core
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -168,6 +168,24 @@ owned backlog items are archived and the complete repository DoD passed.
 
 ---
 
+### Task p03-t04: Repair final lifecycle handoff references
+
+**Status:** pending
+**Commit:** -
+
+**Outcome:** Pending.
+
+---
+
+### Task p03-t05: Complete the artifact-missing contract assertion
+
+**Status:** pending
+**Commit:** -
+
+**Outcome:** Pending.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -279,6 +297,32 @@ severity. The reviewed head was
 **Artifact:**
 
 - `reviews/archived/code-p03-review-2026-08-30T233249Z.md`
+
+### Review Received: final
+
+**Date:** 2026-08-30
+**Review artifact:** `reviews/archived/code-final-review-2026-08-30T234844Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 2
+- Minor: 1
+
+**New tasks added:** p03-t04, p03-t05
+
+**Finding dispositions:**
+
+- M1 (`artifact_alignment_required`, Minor scope): align the final summary's
+  module/spec references to the accepted shipped implementation in p03-t04.
+- M2 (`code_fix_required`, Minor scope): extend the complete public terminal
+  contract assertion for `artifact_missing` in p03-t05.
+- m1 (`artifact_alignment_required`, Negligible scope): repair the two
+  discovery links after their planned backlog archival in p03-t04.
+
+**Next:** Execute the two bounded fixes, mark this review `fixes_completed`,
+then run a final re-review to reach `passed`.
 
 ---
 
