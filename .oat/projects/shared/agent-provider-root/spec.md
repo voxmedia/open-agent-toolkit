@@ -314,18 +314,18 @@ using their existing sync/materialization contracts.
 
 ## Requirement Index
 
-| ID   | Description                                         | Priority | Verification                                | Planned Tasks    |
-| ---- | --------------------------------------------------- | -------- | ------------------------------------------- | ---------------- |
-| FR1  | Bind a provider-aware local canonical root          | P0       | integration: three-candidate ordering       | Deferred to plan |
-| FR2  | Admit only exact canonical loaded targets           | P0       | integration: provider-layout target checks  | Deferred to plan |
-| FR3  | Preserve independent dependency binding             | P0       | unit: missing dependency isolation          | Deferred to plan |
-| FR4  | Detect typed bare agent reads and prove the ratchet | P0       | unit: matcher and mutation evidence         | Deferred to plan |
-| FR5  | Migrate and classify every live consumer            | P1       | manual: complete consumer inventory         | Deferred to plan |
-| FR6  | Continue on misses and fail closed with recovery    | P1       | integration: fallback and recovery contract | Deferred to plan |
-| FR7  | Ship documentation and version discipline           | P1       | manual: docs, skill, and package gates      | Deferred to plan |
-| NFR1 | Resolve deterministically and fail closed           | P0       | integration: invalid and missing candidates | Deferred to plan |
-| NFR2 | Preserve existing portable behavior                 | P0       | unit: existing cross-skill contract suite   | Deferred to plan |
-| NFR3 | Keep provider and ownership boundaries safe         | P1       | manual: no provider mutation or runtime API | Deferred to plan |
+| ID   | Description                                         | Priority | Verification                                | Planned Tasks             |
+| ---- | --------------------------------------------------- | -------- | ------------------------------------------- | ------------------------- |
+| FR1  | Bind a provider-aware local canonical root          | P0       | integration: three-candidate ordering       | p01-t02, p02-t01..p02-t03 |
+| FR2  | Admit only exact canonical loaded targets           | P0       | integration: provider-layout target checks  | p01-t02                   |
+| FR3  | Preserve independent dependency binding             | P0       | unit: missing dependency isolation          | p01-t02, p02-t01..p02-t03 |
+| FR4  | Detect typed bare agent reads and prove the ratchet | P0       | unit: matcher and mutation evidence         | p01-t01, p02-t04, p03-t02 |
+| FR5  | Migrate and classify every live consumer            | P1       | manual: complete consumer inventory         | p02-t01..p02-t04          |
+| FR6  | Continue on misses and fail closed with recovery    | P1       | integration: fallback and recovery contract | p01-t02, p02-t01..p02-t03 |
+| FR7  | Ship documentation and version discipline           | P1       | manual: docs, skill, and package gates      | p03-t01, p03-t02          |
+| NFR1 | Resolve deterministically and fail closed           | P0       | integration: invalid and missing candidates | p01-t02, p02-t01..p02-t04 |
+| NFR2 | Preserve existing portable behavior                 | P0       | unit: existing cross-skill contract suite   | p01-t01, p02-t04, p03-t02 |
+| NFR3 | Keep provider and ownership boundaries safe         | P1       | manual: no provider mutation or runtime API | p02-t03, p03-t01, p03-t02 |
 
 ## Resolved Design Decisions
 

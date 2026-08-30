@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 78b8ac3d6bd75f4a090e58a0a6730f99504931c6
+oat_last_commit: 10689de0719ae1269c9f3144620c40dceb4ae296
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -15,7 +15,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -25,18 +25,10 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -80,36 +72,41 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T15:03:21.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T16:24:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_explainer:
+  decision: skip
+  source: interactive
+  decided_at: '2026-08-30T15:09:01.951Z'
 ---
 
 # Project State: agent-provider-root
 
-**Status:** Design complete
+**Status:** Plan complete
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Design - Ready for implementation planning
+Planning - Ready for implementation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Current-main discovery evidence revalidated
-- ✓ Specification confirmed
-- ✓ Design sections collaboratively approved
-- ✓ Design draft assembled and self-reviewed
-- ✓ Independent artifact review passed and received
-- ⧗ Awaiting implementation plan
+- ✓ Discovery evidence revalidated
+- ✓ Specification complete
+- ✓ Design complete and independently reviewed
+- ✓ Plan approved with managed High dispatch policy
+- ✓ Plan artifact review and cross-family gate passed
+- ✓ Review findings received and resolved in the plan
+- ⧗ Awaiting implementation
 
 ## Blockers
 
@@ -117,4 +114,4 @@ None
 
 ## Next Milestone
 
-Create the implementation plan with `oat-project-plan`
+Start execution with `oat-project-implement`
