@@ -524,23 +524,55 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('sets tools.project-management to false in config.json', async () => {
+  it('rejects writing false pack intent without changing config.json', async () => {
     const root = await createRepoRoot();
+    const originalConfig = {
+      version: 1,
+      tools: { 'project-management': true },
+    };
     await writeFile(
       join(root, '.oat', 'config.json'),
-      `${JSON.stringify({ version: 1, tools: { 'project-management': true } })}\n`,
+      `${JSON.stringify(originalConfig)}\n`,
       'utf8',
     );
-    const { command } = createHarness({ cwd: root });
+    const { command, capture } = createHarness({ cwd: root });
 
     await runCommand(command, ['set', 'tools.project-management', 'false']);
 
     const raw = await readFile(join(root, '.oat', 'config.json'), 'utf8');
-    expect(JSON.parse(raw)).toEqual({
-      version: 1,
-      tools: { 'project-management': false },
-    });
+    expect(JSON.parse(raw)).toEqual(originalConfig);
+    expect(capture.error[0]).toContain(
+      'oat tools remove --pack project-management',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps legacy false pack intent readable without rewriting it', async () => {
+    const root = await createRepoRoot();
+    const configPath = join(root, '.oat', 'config.json');
+    const rawConfig = `${JSON.stringify({ version: 1, tools: { docs: false } })}\n`;
+    await writeFile(configPath, rawConfig, 'utf8');
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['get', 'tools.docs']);
+
+    expect(capture.info[0]).toBe('false');
+    expect(await readFile(configPath, 'utf8')).toBe(rawConfig);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects unknown pack intent keys before creating config.json', async () => {
+    const root = await createRepoRoot();
+    const configPath = join(root, '.oat', 'config.json');
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['set', 'tools.unknown', 'false']);
+
+    expect(capture.error[0]).toContain('Unknown config key: tools.unknown');
+    await expect(readFile(configPath, 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('gets tools.brainstorm default false when not set', async () => {
