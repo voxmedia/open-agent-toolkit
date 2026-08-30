@@ -4,24 +4,22 @@
 
 ## Curated Overview
 
-- `BL-260830-migrate-the-legacy-pjm` isolates the repository's four known PJM
-  layout warning classes from PR #240. Its dedicated-branch handoff requires a
-  lossless decision dry run, duplicate-content reconciliation, and explicit
-  preservation checks before any legacy file is removed.
-- Portable references now cover canonical skill-to-agent reads on the
-  `agent-provider-root` branch. `BL-260829-unified-agent-provider-root` defines
-  a dependency-owned local `${AGENT_PROVIDER_ROOT}`, admits loaded targets only
-  through exact same-scope canonical identity, migrates seven live reads, and
-  adds a zero-executable-agent ratchet with mutation proof. Provider-native
-  model, effort, and variant dispatch remain unchanged. Implementation and all
-  repository/review gates are complete; the item remains open only until the
-  branch merges.
-- Two of three user-scope tool-pack closeout follow-ups are closed:
+- `BL-260830-migrate-the-legacy-pjm` completed the repository's administrative
+  reference-layout cleanup: all 23 legacy decisions were migrated, both legacy
+  backlog generations were preserved with explicit dispositions, and source
+  `oat pjm doctor` now passes every check.
+- Portable canonical skill-to-agent reads shipped in PR #242 as CLI `0.2.47`.
+  The archived `BL-260829-unified-agent-provider-root` established the
+  dependency-owned local `${AGENT_PROVIDER_ROOT}`, exact same-scope canonical
+  identity, seven migrated live reads, and the executable-agent ratchet. The
+  active `tool-pack-scope-provider-truthfulness` project consumes that contract
+  without reopening provider-root implementation.
+- All three user-scope tool-pack closeout follow-ups are closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
   links and their ratchet in PR #226, and the lifecycle/config cleanup merged
-  in PR #240 with CLI `0.2.46` pending release. The only
-  remaining bounded feature is `BL-260827-correct-scope-and-adoption`, which
-  owns PJM adoption and diagnostic correctness edges.
+  in PR #240 with released CLI `0.2.46`, and provider-root portability shipped
+  in PR #242. The active `BL-260827-correct-scope-and-adoption` project owns the
+  remaining bounded PJM adoption and diagnostic correctness edges.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The
@@ -200,7 +198,6 @@
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature | L        |
-| BL-260829-unified-agent-provider-root    | Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references                           | open   | high     | task    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                | open   | medium   | feature | M        |
@@ -215,7 +212,6 @@
 | BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature | L        |
-| BL-260830-migrate-the-legacy-pjm         | Migrate the legacy PJM reference layout                                                               | open   | medium   | task    | M        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task    | S        |
 | BL-260819-repair-verified-bundled-skill  | Repair verified bundled skill contract drift                                                          | open   | medium   | task    | M        |
@@ -226,7 +222,7 @@
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task    | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task    |          |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task    | S        |
-| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                            | open   | medium   | task    |          |
+| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                            | open   | medium   | task    | M        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task    | S        |
 | BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                                | open   | medium   | task    | M        |
 | BL-260826-warn-on-silent-oatversion      | Warn on silent oatVersion restamps outside sync                                                       | open   | medium   | task    | S        |

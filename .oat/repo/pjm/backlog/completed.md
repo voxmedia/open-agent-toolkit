@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-08-30 — BL-260830-migrate-the-legacy-pjm — Migrate the legacy PJM reference layout — Migrated 23 legacy decisions, preserved historical PJM and backlog records with explicit dispositions, relocated durable explainer evidence, corrected provider-pointer diagnostics and recap destinations, and cleared every PJM doctor warning.
+- 2026-08-30 — BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references — Shipped in PR #242 as CLI v0.2.47 with provider-aware canonical agent reads, exact canonical identity checks, and contract enforcement.
 - 2026-08-30 — BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and config contracts — Closed lifecycle/config consistency gaps with content-aware inventory, explicit adoption reporting, supported config state, and corrected CLI help.
 - 2026-08-28 — BL-260827-make-packaged-skill-references — Make packaged skill references scope-portable — Made packaged sibling-skill references scope-portable and added a recursive syntax-robust regression ratchet.
 - 2026-08-27 — BL-260818-make-the-project-management — Make every OAT tool pack user-scope eligible — Shipped user-scope eligibility, unified lifecycle, safe migration, PJM ownership boundaries, diagnostics, documentation, and release verification for every OAT tool pack; three bounded follow-up projects retain explicitly deferred polish.

@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.8.2
+version: 1.9.0
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -459,7 +459,8 @@ The mechanical caller constructs an `explainer-kit.run-request/v1` document whos
 required keys are exactly:
 `schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
 `{ "id": "program-recap", "version": "1" }`; this is an object with exactly
-`id` and `version`. Set `outputRoot` to `.oat/repo/explainers/<slug>/`. Bind the
+`id` and `version`. Set `outputRoot` to
+`.oat/repo/reference/explainers/<slug>/`. Bind the
 synthesized fact-base file through `factBase` with the required keys
 `mode, freshnessPolicy`, set `mode` to `"supplied"`, set `freshnessPolicy` to
 `"live-wins"`, and set `path` to that file.

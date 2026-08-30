@@ -13,6 +13,34 @@ triage value against effort, expose dependencies and ownership lanes, and
 recommend a practical sequence. This document is a living review, not an
 authorization to change item priorities or execute the proposed work.
 
+## 2026-08-30 current-state addendum
+
+The canonical active set is again **55 records**. PR #240 shipped and archived
+`BL-260827-clean-up-tool-pack-lifecycle`; PR #242 shipped and archived
+`BL-260829-unified-agent-provider-root`; and PR #240 added
+`BL-260830-migrate-the-legacy-pjm`, which this cleanup branch completed
+directly. Repository PJM adoption is now explicitly `declared`.
+
+The post-PR #231 catalog, B56 analysis, ratings, and dependency diagrams below
+are retained as the evidence snapshot that produced the current alignment, but
+their active-state language is superseded as follows:
+
+- B56 is a shipped prerequisite, not an active project. Its links now target
+  the archived record.
+- The `tool-pack-scope-provider-truthfulness` and
+  `scope-adoption-diagnostics` projects are active in separate worktrees and
+  own their existing backlog coverage.
+- The existing `gate-headless-no-yield` and
+  `gate-structured-output-contract` projects remain independent launch
+  candidates; do not replace them with external plans.
+- The structured-output item now carries estimate M, and the headless item has
+  concrete acceptance criteria derived from its existing discovery artifact.
+- Future `oat-repo-improve` passes should target only unowned, well-scoped items
+  that do not need deeper discovery.
+
+See [priority-alignment.md](./priority-alignment.md) for the current execution
+view. The dated sections below should not be used as live active-item counts.
+
 ## Adoption and preflight
 
 `oat pjm doctor --json` completed the canonical-file and backlog-specific
@@ -58,7 +86,7 @@ and 15 Avoid / Defer candidates.
    boundaries from [BL-260827-correct-scope-and-adoption — Correct scope and
    adoption diagnostics](../items/BL-260827-correct-scope-and-adoption.md) and
    [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
-   config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md), not
+   config contracts](../archived/BL-260827-clean-up-tool-pack-lifecycle.md), not
    be treated as an isolated picker-only fix.
 3. **Sequence [BL-260820-bind-each-gate-review — Bind each gate review
    disposition to its exact received ledger event](../items/BL-260820-bind-each-gate-review.md)
@@ -403,7 +431,7 @@ contract drift](../items/BL-260819-repair-verified-bundled-skill.md),
 [BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps
 outside sync](../items/BL-260826-warn-on-silent-oatversion.md),
 [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
-config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md),
+config contracts](../archived/BL-260827-clean-up-tool-pack-lifecycle.md),
 [BL-260827-correct-scope-and-adoption — Correct scope and adoption
 diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
 [BL-260827-make-packaged-skill-references — Make packaged skill references
@@ -418,7 +446,7 @@ and [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider
 reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md).
 
 The portable-reference sublane is [BL-260829-unified-agent-provider-root —
-Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md).
+Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../archived/BL-260829-unified-agent-provider-root.md).
 It is spec-driven and should complete its contract/design decision before B55
 implements canonical fallback integration. B56 and B55 may perform discovery in
 parallel, but their implementation changes should be serialized around the
@@ -529,7 +557,7 @@ These waves are a proposed order, not a silent roadmap mutation.
 ### Wave 1 — Truthful scope and review foundations
 
 First complete the contract/design pass for [BL-260829-unified-agent-provider-root
-— Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md).
+— Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references](../archived/BL-260829-unified-agent-provider-root.md).
 Then start [BL-260829-make-tool-pack-scope-selection — Make tool-pack scope,
 provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
 with the existing diagnostics and lifecycle boundaries:
@@ -537,7 +565,7 @@ with the existing diagnostics and lifecycle boundaries:
 - [BL-260827-correct-scope-and-adoption — Correct scope and adoption
   diagnostics](../items/BL-260827-correct-scope-and-adoption.md)
 - [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
-  config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md)
+  config contracts](../archived/BL-260827-clean-up-tool-pack-lifecycle.md)
 - [BL-260724-support-provider-directory — Support provider directory symlinks
   as full collection sync](../items/BL-260724-support-provider-directory.md)
 - [BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
@@ -657,7 +685,7 @@ the current capacity constraint, and add [BL-260829-make-tool-pack-scope-selecti
 — Make tool-pack scope, provider reachability, and dispatch state truthful](../items/BL-260829-make-tool-pack-scope-selection.md)
 because the issue #228 evidence shows an active user-facing correctness gap.
 Also keep [BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT
-binding for portable skill and agent references](../items/BL-260829-unified-agent-provider-root.md)
+binding for portable skill and agent references](../archived/BL-260829-unified-agent-provider-root.md)
 in Now for its spec/design phase, while implementation remains coordinated with
 the scope/provider lane.
 
@@ -668,7 +696,7 @@ The existing next grouping contains [BL-260827-make-packaged-skill-references
 [BL-260827-correct-scope-and-adoption — Correct scope and adoption
 diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
 [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
-config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md),
+config contracts](../archived/BL-260827-clean-up-tool-pack-lifecycle.md),
 [BL-260806-fail-closed-when-configured — Fail closed when configured closeout
 snapshot is absent](../items/BL-260806-fail-closed-when-configured.md),
 [BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for
@@ -853,7 +881,7 @@ walkthrough of `.oat/repo/pjm/backlog/reviews/priority-alignment.md` to decide:
   [BL-260827-correct-scope-and-adoption — Correct scope and adoption
   diagnostics](../items/BL-260827-correct-scope-and-adoption.md),
   [BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and
-  config contracts](../items/BL-260827-clean-up-tool-pack-lifecycle.md), and
+  config contracts](../archived/BL-260827-clean-up-tool-pack-lifecycle.md), and
   [BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance
   prompt during init and workflow installation](../items/BL-260828-add-project-level-oat-guidance.md)
   should be represented as one initiative or a sequenced set;

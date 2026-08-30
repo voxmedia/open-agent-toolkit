@@ -2,175 +2,105 @@
 
 <!-- markdownlint-disable MD013 -->
 
-**Date:** 2026-08-29 (America/Chicago)
-**Status:** Active — Post-PR #231 alignment. `agent-provider-root` is now a
-spec-driven contract project; the scope/provider and review/gate clusters have
-been grouped and sequenced. This view is provisional until current capacity,
-calendar constraints, and PR #190's final state are reconfirmed.
+**Date:** 2026-08-30 (America/Chicago)
+**Status:** Active — Post-PR #242 alignment. The provider-root contract shipped;
+the scope/provider umbrella and scope-adoption diagnostics are active in
+separate worktrees; ReviewPlan remains an existing project; and the two bounded
+gate projects remain independent launch candidates.
 
-One-page execution guide: recommended order, scope, parallelism, and the next
-candidate kickoff stack. For the full value/effort catalog, dependency graph,
-project grouping tree, and quadrant tables, see
+This is the compact execution guide. For the full catalog and historical
+value/effort review, see
 [backlog-and-roadmap-review.md](./backlog-and-roadmap-review.md) and
 [roadmap.md](../../roadmap.md).
 
-> This alignment captures the operator decisions made in the current review:
-> bookkeeping-only findings are repaired without re-review and are the highest
-> priority safety rule; the agent-root and scope/provider implementations are
-> sequential at the contract boundary but may overlap during discovery/design;
-> review-plan work and review/gate integrity are separate but coordinated; and
-> bounded gate contracts remain standalone quick-start work.
+## Current ownership
 
-## Capacity and revalidation assumptions
+| Lane                    | Owned work                                                                                                                                                                                                                                                                                                                                                                         | Current disposition                                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Scope/provider umbrella | [BL-260829-make-tool-pack-scope-selection](../items/BL-260829-make-tool-pack-scope-selection.md), [BL-260724-support-provider-directory](../items/BL-260724-support-provider-directory.md), [BL-260826-populate-native-subagent](../items/BL-260826-populate-native-subagent.md), [BL-260828-add-project-level-oat-guidance](../items/BL-260828-add-project-level-oat-guidance.md) | Active tool-pack-scope-provider-truthfulness project. Revalidate against PRs #227, #240, and #242 before design. |
+| Scope diagnostics       | [BL-260827-correct-scope-and-adoption](../items/BL-260827-correct-scope-and-adoption.md)                                                                                                                                                                                                                                                                                           | Active scope-adoption-diagnostics project. Keep its diagnostics slice bounded.                                   |
+| ReviewPlan              | [BL-260729-implement-reviewplan-first](../items/BL-260729-implement-reviewplan-first.md)                                                                                                                                                                                                                                                                                           | Existing review-plan-workflow project; reconcile PR #190 against current main.                                   |
+| Review/gate integrity   | [BL-260829-order-phase-bookkeeping-before](../items/BL-260829-order-phase-bookkeeping-before.md) and dependent review-receipt work                                                                                                                                                                                                                                                 | Preserve shared lifecycle ordering; do not replace the cluster with isolated plans.                              |
+| Headless gate           | [BL-260826-gate-targets-must-not-yield](../items/BL-260826-gate-targets-must-not-yield.md)                                                                                                                                                                                                                                                                                         | Existing gate-headless-no-yield project; independent bounded launch candidate.                                   |
+| Structured output       | [BL-260726-validate-structured-output](../items/BL-260726-validate-structured-output.md)                                                                                                                                                                                                                                                                                           | Existing gate-structured-output-contract project; independent bounded launch candidate.                          |
 
-- Treat the current capacity model as **four substantial tracks plus bounded
-  companions**, not four simultaneous implementation streams.
-- Keep `review-plan-workflow` in its existing quick-origin lifecycle while PR
-  #190 is reconciled. Promote it only at a clean boundary; do not reset its
-  history mid-PR.
-- Revalidate this document after PR #190, the `agent-provider-root` design
-  review, and the first scope/provider implementation plan. This alignment is
-  an execution starting point, not an exhaustive backlog review.
-- No kickoff handoff files are generated by this pass. The stack below is a
-  proposed working stack, pending explicit confirmation of capacity and timing.
+The archived
+[BL-260829-unified-agent-provider-root](../archived/BL-260829-unified-agent-provider-root.md)
+shipped in PR #242 as CLI 0.2.47. It is now a prerequisite consumed by the
+scope/provider umbrella, not an active lane.
 
-## Related sources
+## Dependency interpretation
 
-| Document                                                         | Role                                                              |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [roadmap.md](../../roadmap.md)                                   | Authoritative Now / Next / Later order plus project grouping tree |
-| [current-state.md](../../current-state.md)                       | Shipped capabilities and selected active backlog, if maintained   |
-| [backlog/index.md](../index.md)                                  | Curated overview and generated item table                         |
-| [backlog/items/](../items/)                                      | Executable backlog records                                        |
-| [backlog-and-roadmap-review.md](./backlog-and-roadmap-review.md) | Full catalog, ratings, dependencies, and waves                    |
+- PR #242's provider-root contract precedes scope/provider implementation; that
+  dependency is satisfied.
+- The active scope/provider and diagnostics worktrees may proceed concurrently,
+  but must coordinate changes to inventory, diagnostics, sync, and shared
+  provider-state surfaces.
+- ReviewPlan must establish the current review artifact/event baseline before
+  exact received-event identity and later receipt-provenance work.
+- [BL-260829-order-phase-bookkeeping-before](../items/BL-260829-order-phase-bookkeeping-before.md)
+  should precede
+  [BL-260711-skip-re-review-for-bookkeeping](../items/BL-260711-skip-re-review-for-bookkeeping.md).
+- The headless and structured-output projects remain independent probes. They
+  support review/gate integrity without taking ownership of its lifecycle model.
 
----
+## Recommended concurrent stack
 
-## Finishing / in flight
+These lanes are peers except where the dependencies above say otherwise:
 
-| Item                                                                                                                                                                         | Scope | Notes                                                                                                                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md)                                  | L     | Reconcile PR #190 against current `origin/main`, refresh QA/dogfood evidence, and determine residual scope before treating the item as complete. This is the current review-lane bottleneck.              |
-| [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) | L     | PR #231 supplied the starting contract. Complete the promoted spec/design pass before implementation; resolve canonical-root representation, loaded-tier eligibility, and dependency-isolation questions. |
+1. Merge the completed PJM cleanup and migration PR.
+2. Continue the active scope/provider umbrella and diagnostics projects with
+   explicit shared-file coordination.
+3. Reconcile the existing ReviewPlan project and PR #190.
+4. Launch the existing headless and structured-output projects when capacity
+   allows.
+5. Use oat-repo-improve only for remaining well-scoped backlog items that do
+   not already belong to one of these projects and do not require deeper
+   discovery.
 
-### Dependency interpretation
+## Priority clusters
 
-The three items above are **not one serial queue**. They are three lanes that
-can start or continue concurrently, subject to normal shared-file coordination:
+### Truthful distribution and adoption
 
-- **Lane A — ReviewPlan:** [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) finishes PR #190 and establishes the current review artifact/event baseline.
-- **Lane B — Agent root:** [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) completes its spec/design contract.
-- **Lane C — Phase bookkeeping:** [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) prevents stale state from being written before a review dispatch.
+The active umbrella owns provider × scope × content-type truth, restart
+visibility, picker state, collection-level symlink adoption, project guidance,
+and native/fallback provenance. The diagnostics project owns only its bounded
+eligibility, attribution, materialization, and failure-rendering slice. PR #240
+closed the tool-pack lifecycle/config cleanup; PR #242 closed provider-root
+portability.
 
-The hard dependencies are downstream, not between these three kickoff lanes:
+### Review and gate integrity
 
-- [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) must be accepted before implementation of [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md).
-- [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) must be reconciled before [**BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**](../items/BL-260820-bind-each-gate-review.md) and the later receipt work.
-- [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) should land before [**BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**](../items/BL-260711-skip-re-review-for-bookkeeping.md).
+Keep the shared review lifecycle model intact:
 
-There is no hard dependency requiring ReviewPlan to finish before agent-root
-design, or requiring either of those to finish before phase-bookkeeping work.
-The only reason to serialize any of the three is an actual file-ownership
-collision discovered when their implementation plans are opened.
+1. Prevent stale phase bookkeeping before review dispatch.
+2. Establish exact received-event identity.
+3. Apply bookkeeping-only re-review suppression.
+4. Add source-qualified receipt provenance.
+5. Add closeout freshness and configured fail-closed behavior.
+6. Advance autonomous completion and broader gate hardening only after those
+   contracts are stable.
 
----
+### Standalone gate contracts
 
-## Phase 1 — Truthful distribution and adoption
+gate-headless-no-yield and gate-structured-output-contract are existing bounded
+projects. Improve their backlog links or estimates when needed, but do not
+create replacement projects or external plans.
 
-This phase closes the scope/provider failure cluster. Discovery and design may
-run in parallel, but the `agent-provider-root` implementation should establish
-the portable reference contract before the scope/provider umbrella implements
-canonical fallback provenance. This does not wait for ReviewPlan or phase
-bookkeeping; those are separate lanes. The two existing quick projects can provide
-bounded evidence without taking ownership of the umbrella.
+## Shared-file coordination
 
-| Item                                                                                                                                                                               | Scope | Parallel with                                      | Notes                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md)       | L     | PR #190 reconciliation; bounded diagnostics/design | Spec-driven prerequisite for the shared skill-to-agent reference contract.                                                                                                     |
-| [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md)    | L     | Diagnostics and lifecycle discovery                | Start implementation after the root contract is accepted. Owns provider × scope × content-type truth, notices, restart guidance, picker state, and native/fallback provenance. |
-| [**BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics**](../items/BL-260827-correct-scope-and-adoption.md)                                              | M     | Root design; lifecycle cleanup                     | Existing quick-start plan. Keep diagnostic ownership bounded and feed findings into the umbrella state model.                                                                  |
-| [**BL-260827-clean-up-tool-pack-lifecycle — Clean up tool-pack lifecycle and config contracts**](../items/BL-260827-clean-up-tool-pack-lifecycle.md)                               | S     | Root design; diagnostics                           | Existing quick-start plan. Resolve declared/installed/adopted state without duplicating provider reachability logic.                                                           |
-| [**BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**](../items/BL-260724-support-provider-directory.md)                         | M     | Guidance work after the provider matrix is stable  | Prefer a directory-level symlink until real divergence, then fall back to per-entry sync.                                                                                      |
-| [**BL-260826-populate-native-subagent — Populate native subagent runtime identity from provider transcript metadata**](../items/BL-260826-populate-native-subagent.md)             | M     | Provider-matrix work                               | Preserve native-role rejection versus generic-child fallback and exact provenance.                                                                                             |
-| [**BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**](../items/BL-260828-add-project-level-oat-guidance.md) | M     | Symlink work after shared ownership is clear       | Add the AGENTS.md notice/question and standalone workflow-install behavior without conflating user-scope installation with project adoption.                                   |
-
----
-
-## Phase 2 — Review and gate integrity
-
-This phase uses one shared lifecycle model. Phase bookkeeping can start as a
-parallel prevention lane while ReviewPlan is being reconciled. ReviewPlan is a
-prerequisite for exact received-event identity; bookkeeping prevention is a
-prerequisite for the no-re-review safety net. Establish both before classifying
-receipts so the highest-priority rule is safe rather than merely fast.
-
-| Item                                                                                                                                                                        | Scope | Keep sequential                                          | Notes                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md)             | M     | Before bookkeeping re-review suppression                 | Prevention item: persist current phase state before dispatch so stale ledgers do not create avoidable findings. |
-| [**BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**](../items/BL-260820-bind-each-gate-review.md)                   | M     | Before provenance and suppression                        | Establish immutable received-event identity across gate and review flows.                                       |
-| [**BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**](../items/BL-260711-skip-re-review-for-bookkeeping.md)                  | L     | After event classification; highest-priority safety rule | Repair deterministic ledger/bookkeeping findings without paying for another quality-review cycle.               |
-| [**BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**](../items/BL-260820-emit-source-qualified.md)                | M     | After exact event identity                               | Distinguish native-role rejection, generic fallback, and other receipt sources.                                 |
-| [**BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head**](../items/BL-260820-track-pr-closeout-evidence.md)                | L     | After receipt provenance                                 | Prevent closeout evidence from silently describing an earlier head.                                             |
-| [**BL-260806-fail-closed-when-configured — Fail closed when configured closeout snapshot is absent**](../items/BL-260806-fail-closed-when-configured.md)                    | M     | With or after closeout freshness                         | Make configured child completion auditable and terminal completion fail closed.                                 |
-| [**BL-260718-harden-full-surface-gate — Harden full-surface gate reviews against budget and recursive dispatch**](../items/BL-260718-harden-full-surface-gate.md)           | M     | After ReviewPlan and headless behavior are understood    | Apply the stabilized dispatch and budget contract to broad gate reviews.                                        |
-| [**BL-260711-add-activity-aware-gate — Add activity-aware gate timeouts**](../items/BL-260711-add-activity-aware-gate.md)                                                   | M     | Coordinate with full-surface gate work                   | Avoid killing progressing reviews while preserving hard safety ceilings.                                        |
-| [**BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto companion skill for autonomous closeouts**](../items/BL-260720-add-oat-project-complete-auto.md) | M     | After closeout snapshot and freshness contracts          | Consume the stabilized integrity model; do not introduce a parallel closeout ledger.                            |
-
----
-
-## Phase 3 — Standalone gate contracts
-
-These quick-start projects can run in parallel with discovery/design when their
-changes do not touch shared review artifacts. They are useful bounded probes,
-not reasons to reopen the larger review/gate design.
-
-| Item                                                                                                                                                             | Scope       | Parallel with                                | Notes                                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| [**BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode**](../items/BL-260826-gate-targets-must-not-yield.md) | M           | Root design and bounded provider diagnostics | Isolated headless execution contract; validate before using it as a prerequisite for broader gate work. |
-| [**BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands**](../items/BL-260726-validate-structured-output.md)        | Unestimated | Root design and bounded provider diagnostics | Quick-start command contract; normalize the missing estimate before kickoff.                            |
-
----
-
-## Parallelism cheat sheet
-
-| Can run together                                                                               | Keep sequential                                                                                                                                                                                                                                                                         |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR #190 reconciliation ∥ `agent-provider-root` discovery/design ∥ phase-bookkeeping prevention | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** before scope/provider implementation of **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful** |
-| Scope/adoption diagnostics ∥ tool-pack lifecycle cleanup ∥ root design                         | **BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch** before **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**                                                                       |
-| Headless no-yield ∥ structured-output validation ∥ non-overlapping discovery                   | **BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event** before **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts**                                                         |
-| Symlink and project-guidance discovery after the provider matrix is defined                    | **BL-260820-emit-source-qualified — Emit source-qualified provenance envelopes for review and gate receipts** before **BL-260820-track-pr-closeout-evidence — Track PR-closeout evidence freshness against the current head** and closeout enforcement                                  |
-
----
-
-## Suggested next kickoff lanes (concurrent)
-
-This is a proposed set of concurrent lanes, not an authorization to start
-implementation or to create handoff files. The three entries are peers; the
-order shown is for readability, not a sequence. Confirm capacity and calendar
-constraints before kickoff.
-
-- **Lane A — Finish:** [**BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**](../items/BL-260729-implement-reviewplan-first.md) — reconcile PR #190 and establish the current review artifact/event baseline.
-- **Lane B — Complete design:** [**BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**](../items/BL-260829-unified-agent-provider-root.md) — settle the contract that the urgent scope/provider implementation must consume.
-- **Lane C — Start prevention:** [**BL-260829-order-phase-bookkeeping-before — Order phase bookkeeping before per-phase review dispatch**](../items/BL-260829-order-phase-bookkeeping-before.md) — reduce avoidable ledger-only review cycles while the larger distribution design proceeds.
-
-After these lanes progress, the dependent work branches rather than forming one
-long chain:
-
-- Lane B unlocks [**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md).
-- Lane A unlocks [**BL-260820-bind-each-gate-review — Bind each gate review disposition to its exact received ledger event**](../items/BL-260820-bind-each-gate-review.md), then provenance and closeout work.
-- Lane C unlocks [**BL-260711-skip-re-review-for-bookkeeping — Skip re-review for bookkeeping-only review findings**](../items/BL-260711-skip-re-review-for-bookkeeping.md), subject to the event classification supplied by Lane A.
-
-The next scope/provider implementation candidate is
-[**BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider
-reachability, and dispatch state truthful**](../items/BL-260829-make-tool-pack-scope-selection.md)
-once the agent-root design boundary is accepted. The two quick gate contracts
-and the existing diagnostic/config projects remain available as parallel,
-bounded work only when capacity permits.
-
----
+- This cleanup PR owns .oat/repo/pjm/, legacy .oat/repo/reference/ layout
+  migration, removal of obsolete native-read Cursor skill mirrors, and the
+  verifying issue-triage record.
+- Active implementation projects own their project artifacts and implementation
+  files. Avoid editing those project records here unless a broken repository
+  link requires a minimal correction.
+- The scope/provider and diagnostics projects should coordinate before changing
+  pack-inventory, provider sync, or shared diagnostics surfaces.
 
 ## Changelog
 
-| Date       | Update                                                                                                                                                                                                                                          |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 view; added the spec-driven agent-root prerequisite, scope/provider and review/gate phases, standalone quick-start contracts, explicit sequencing, and a provisional kickoff stack. |
+| Date       | Update                                                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items. |
+| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                  |

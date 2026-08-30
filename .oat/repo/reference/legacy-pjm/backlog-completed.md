@@ -1,0 +1,644 @@
+# OAT Backlog Completed Archive (Internal / Dogfood)
+
+> Historical snapshot: this pre-file-backed completion ledger is preserved for
+> detail only. The canonical completion ledger lives at
+> `.oat/repo/pjm/backlog/completed.md`.
+
+Historical record of completed backlog items moved out of the active backlog for easier triage.
+
+## How to Use
+
+- Move completed entries here from `.oat/repo/reference/backlog.md`.
+- Keep the newest completed items at the top.
+- Use this file as append-only historical context; do not add future work here.
+
+## Done
+
+- [x] **(P?) [area] {Title}**
+  - Outcome:
+  - Links:
+
+- [x] **(P1) [skills] Add retroactive project capture skill (`oat-project-capture`)**
+  - Outcome:
+    - `oat-project-capture` creates a full OAT project from untracked work on an existing branch using conversation context + commit history.
+    - Uses `oat project new --mode quick` scaffold, populates `discovery.md` from conversation context and `implementation.md` from commit analysis.
+    - Lifecycle state defaults to `awaiting-review` but user chooses based on whether work is complete or in progress.
+    - Skill-only architecture (no CLI command) because it requires conversation context only the agent has.
+  - Links:
+    - Skill: `.agents/skills/oat-project-capture/SKILL.md`
+    - Project: `.oat/projects/archived/retroactive-project-capture/`
+    - PR: #68
+  - Created: 2026-03-09
+  - Completed: 2026-03-14
+
+- [x] **(P1) [skills] Add research, analysis, verification, and synthesis skill suite**
+  - Outcome:
+    - Five new skills: `deep-research` (comprehensive research orchestrator with parallel sub-agent dispatch), `analyze` (multi-angle analysis of artifacts/codebases/systems), `compare` (domain-aware comparative analysis with clear recommendations), `skeptic` (adversarial claim verification with cited evidence), `synthesize` (merge multiple analysis artifacts into single report with provenance tracking).
+    - Sub-agent: `skeptical-evaluator` (adversarial evidence gatherer for `/skeptic`).
+    - Shared schema templates: 6 schemas under `.agents/skills/deep-research/references/schema-*.md` (base, technical, comparative, conceptual, architectural, analysis).
+    - Three-tier execution system with graceful provider degradation.
+    - Model-tagged filenames for multi-agent coordination.
+    - Artifact frontmatter contract (`oat_skill`, `oat_schema`, `oat_topic`, `oat_model`, `oat_generated_at`) for cross-skill discovery.
+    - CLI tool pack: `research` (installable via `oat tools install research`).
+  - Links:
+    - Skills: `.agents/skills/deep-research/`, `.agents/skills/analyze/`, `.agents/skills/compare/`, `.agents/skills/skeptic/`, `.agents/skills/synthesize/`
+    - Sub-agent: `.agents/agents/skeptical-evaluator.md`
+    - Project: `.oat/projects/archived/deep-research/`
+    - PR: #75
+  - Created: 2026-03-12
+  - Completed: 2026-03-15
+
+- [x] **(P1) [tooling] Add guided setup flow to `oat init` with documentation detection**
+  - Outcome:
+    - Enhanced `oat init` with guided setup flow: auto-triggers on fresh repos (no `.oat/`), supports `--setup` flag for re-run on existing repos.
+    - Sequential step flow with opt-in per step: provider selection, local paths multi-select, tools pack installation, sync, documentation detection.
+    - Documentation detection and configuration added to guided setup (#74) and `oat-agent-instructions-analyze` (#73).
+    - Workflow continuation guidance added (#69).
+  - Links:
+    - Project: `.oat/projects/archived/guided-oat-init/`
+    - PRs: #61, #69, #73, #74
+  - Created: 2026-03-09
+  - Completed: 2026-03-14
+
+- [x] **(P1) [docs] Update AGENTS.md with documentation surface info during `oat docs init`**
+  - Outcome:
+    - Added shared `upsertAgentsMdSection()` utility (`packages/cli/src/commands/shared/agents-md.ts`) using HTML-comment-delimited managed sections (`<!-- OAT <key> -->` / `<!-- END OAT <key> -->`).
+    - Utility is idempotent: creates AGENTS.md if missing, appends new sections, replaces existing sections, and detects no-change.
+    - `oat docs init` now calls `upsertAgentsMdSection(repoRoot, 'docs', body)` after scaffolding, writing docs root path, framework type, index file path, and config file path (MkDocs).
+    - Comprehensive test coverage: 112 lines for the shared utility, 197 lines for the docs init integration.
+  - Links:
+    - Shared utility: `packages/cli/src/commands/shared/agents-md.ts`
+    - Docs init: `packages/cli/src/commands/docs/init/index.ts`
+    - Tests: `packages/cli/src/commands/shared/agents-md.test.ts`, `packages/cli/src/commands/docs/init/index.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-10
+
+- [x] **(P1) [tooling] Update AGENTS.md with workflow system details during `oat tools init`**
+  - Outcome:
+    - `oat tools init` now calls `upsertAgentsMdSection(repoRoot, 'workflows', body)` after pack selection.
+    - Generated section includes skills directory reference, discovery instructions, sync command guidance, and list of installed packs with descriptions.
+    - Pack descriptions map: workflows (project lifecycle), ideas (idea capture/refinement), utility (standalone utilities).
+    - Section coexists with the docs section and any manually written AGENTS.md content.
+    - Test coverage: 75 lines covering section creation, logging, no-op on empty selection, and pack filtering.
+  - Links:
+    - Tools init: `packages/cli/src/commands/init/tools/index.ts`
+    - Tests: `packages/cli/src/commands/init/tools/index.test.ts`
+
+- [x] **(P1) [tooling] Add timestamp frontmatter to project state documents**
+  - Outcome:
+    - Added three ISO 8601 UTC timestamp fields to `state.md` template: `oat_project_created`, `oat_project_completed`, `oat_project_state_updated`.
+    - CLI scaffolder (`scaffold.ts`) sets `oat_project_created` and `oat_project_state_updated` at project creation time.
+    - Updated 14 skills across all state.md write points to maintain `oat_project_state_updated` on every mutation.
+    - `oat-project-complete` sets both `oat_project_completed` and `oat_project_state_updated` via shell script.
+    - Existing projects without timestamps continue to work (fields default to `null`).
+  - Links:
+    - Templates: `.oat/templates/state.md`, `packages/cli/assets/templates/state.md`
+    - Scaffolder: `packages/cli/src/commands/project/new/scaffold.ts`
+    - Test: `packages/cli/src/commands/project/new/scaffold.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-10
+
+- [x] **(P1) [tooling] Single source of truth for bundled skill lists**
+  - Outcome:
+    - Extracted `packages/cli/src/commands/init/tools/shared/skill-manifest.ts` as the canonical manifest for all bundled skills, agents, templates, and scripts per pack (workflows, ideas, utility).
+    - Installer modules (`install-workflows.ts`, `install-ideas.ts`, `install-utility.ts`) import and re-export from the manifest instead of maintaining local arrays.
+    - Test files import from the installer modules, eliminating local duplicate arrays.
+    - `bundle-assets.sh` keeps its own bash array (can't import TS) but `bundle-consistency.test.ts` guards against drift.
+  - Links:
+    - Manifest: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+    - Guard test: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [skills] Rename `create-skill` to `create-agnostic-skill` and add to utility pack**
+  - Outcome:
+    - Renamed `.agents/skills/create-skill/` to `.agents/skills/create-agnostic-skill/`.
+    - Updated skill frontmatter, all cross-references (from `create-oat-skill`, docs, reference files), and provider symlinks.
+    - Added `create-agnostic-skill` to utility pack in `skill-manifest.ts` and `bundle-assets.sh`.
+  - Links:
+    - Skill: `.agents/skills/create-agnostic-skill/SKILL.md`
+    - Manifest: `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Managed OAT gitignore section in `oat init`**
+  - Outcome:
+    - Added `applyOatCoreGitignore()` to `oat init --scope project` that writes a managed `# OAT core` / `# END OAT core` section in `.gitignore`.
+    - Core entries: `.oat/config.local.json`, `.oat/state.md`, `.oat/projects/local/**`, `.oat/projects/archived/**`, plus `.gitkeep` negations.
+    - Idempotent: creates, updates, or no-ops as needed. Coexists with `# OAT local paths` section.
+    - Consolidated this repo's `.gitignore`: moved manual OAT entries into the managed section, removed duplicates from `localPaths` config.
+  - Links:
+    - Implementation: `packages/cli/src/commands/init/gitignore.ts`
+    - Tests: `packages/cli/src/commands/init/gitignore.test.ts`
+  - Created: 2026-03-08
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Scaffold `.oat/projects/{shared,local,archived}` during workflow pack install**
+  - Outcome:
+    - Projects directory scaffolding (`shared/`, `local/.gitkeep`, `archived/.gitkeep`) added to `installWorkflows()` in the workflow tool pack installer.
+    - After scaffolding, prompts user whether PR and review directories should be local-only (gitignored) or version-controlled.
+    - Non-interactive mode defaults to local-only. Uses `oat local` infrastructure (`addLocalPaths` + `applyGitignore`) for the local-only policy.
+    - Idempotent: skips if `shared/` directory already exists.
+  - Links:
+    - Implementation: `packages/cli/src/commands/init/tools/workflows/install-workflows.ts`
+    - VCS prompt: `packages/cli/src/commands/init/tools/index.ts`
+  - Created: 2026-02-23
+  - Completed: 2026-03-09
+
+- [x] **(P2) [tooling] Migrate active-idea pointers to config-local state**
+  - Outcome:
+    - Effectively completed as part of the B15+B02 project lifecycle config consolidation.
+    - `activeProject` and `lastPausedProject` moved to `.oat/config.local.json`. Active-idea pointer migration deferred as low-priority follow-on; current pointer-file approach works and worktree propagation handles it.
+    - Closing as the core config consolidation pattern is established; remaining pointer migration is incremental.
+  - Links:
+    - Related: `.oat/repo/reference/external-plans/b15-b02-project-lifecycle-config-consolidation.md`
+  - Created: 2026-02-22
+  - Completed: 2026-03-09
+
+- [x] **(P1) [tooling] Add configurable VCS policy + worktree sync behavior for OAT artifact directories**
+  - Outcome:
+    - Core VCS policy functionality delivered via `oat local add/remove/apply/sync/status` CLI commands and `localPaths` config in `.oat/config.json`.
+    - Users can configure any directory as local-only (gitignored) via `oat local add <path>`.
+    - Workflow pack install now prompts for PR/review directory VCS policy during scaffolding.
+    - Worktree artifact propagation remains a separate concern; active-project/active-idea propagation already handled by `oat-worktree-bootstrap`.
+  - Links:
+    - CLI: `packages/cli/src/commands/local/`
+    - Config: `.oat/config.json` (`localPaths`)
+  - Created: 2026-02-17
+  - Completed: 2026-03-09
+
+- [x] **(P1) [skills] Add `oat-project-document` for post-implementation documentation synthesis**
+  - Outcome:
+    - `oat-project-document` skill reads project artifacts, verifies against code, scans documentation surfaces (docs dir, READMEs, reference files, AGENTS.md, provider rules), produces UPDATE/CREATE/SPLIT delta plan, and applies approved changes.
+    - Supports `--auto` flag for autonomous flows (skips interactive approval).
+    - Added `documentation` config schema to `.oat/config.json` (root, tooling, config, requireForProjectCompletion).
+    - Added `oat_docs_updated` state field (null | skipped | complete) to state.md template.
+    - Integrated documentation sync check into `oat-project-complete` (soft suggestion by default, hard gate when configured).
+    - State dashboard shows docs sync status and routes to `oat-project-document` when implementation is complete but docs not synced.
+  - Links:
+    - Skill: `.agents/skills/oat-project-document/SKILL.md`
+    - Project: `.oat/projects/shared/oat-project-document/`
+    - Config: `packages/cli/src/config/oat-config.ts` (OatDocumentationConfig)
+    - State: `packages/cli/src/commands/state/generate.ts` (docsUpdated)
+  - Created: 2026-02-17
+  - Completed: 2026-03-08
+
+- [x] **(P1) [tooling] Flip CLI-wide mutability convention from `--apply` to `--dry-run`**
+  - Outcome:
+    - Unified all OAT CLI mutating commands under `--dry-run` opt-in convention (mutate by default).
+    - Flipped 6 legacy commands (`sync`, `instructions sync`, `remove skill`, `remove skills`, `cleanup artifacts`, `cleanup project`) from `--apply` (dry-run by default) to match the newer `oat tools` convention.
+    - Renamed `CommandContext.apply` → `CommandContext.dryRun` and `SyncJsonPayload.apply` → `SyncJsonPayload.dryRun` (inverted semantics).
+    - Removed `--apply` entirely (clean break, no deprecation period; pre-1.0).
+    - Updated all tests (34 files), docs (9 files), skills/agent docs (8 files), and reference docs.
+  - Links:
+    - Project: `.oat/projects/shared/auto-apply-dry-run/`
+    - ADR: ADR-014 (deferred flip from `oat tools` implementation)
+    - Related: `packages/cli/src/app/command-context.ts`
+  - Created: 2026-03-07
+  - Completed: 2026-03-07
+
+- [x] **(P1) [skills] Add "Reconcile manual implementation" skill for human/AI mixed workflows**
+  - Outcome:
+    - `oat-project-reconcile` skill implemented with 6 workflow steps: checkpoint detection, commit analysis, task mapping, HiTL confirmation, artifact updates, bookkeeping commit.
+    - Bridges manual/human implementation back into OAT tracking artifacts.
+  - Links:
+    - Skill: `.agents/skills/oat-project-reconcile/SKILL.md`
+    - Project: `.oat/projects/shared/oat-project-reconcile/`
+    - PR: #42
+  - Created: 2026-02-21
+  - Completed: 2026-03-07
+
+- [x] **(P1) [skills] Documentation analysis skill family (`oat-docs-analyze`, `oat-docs-apply`)**
+  - Outcome:
+    - `oat-docs-analyze` evaluates documentation structure, navigation, and coverage against docs app contract; produces severity-rated analysis artifacts.
+    - `oat-docs-apply` applies approved analysis findings with branch, docs updates, and optional PR workflow.
+    - Same analyze→apply pattern as agent instructions, applied to documentation surfaces.
+  - Links:
+    - Skills: `.agents/skills/oat-docs-analyze/SKILL.md`, `.agents/skills/oat-docs-apply/SKILL.md`
+  - Created: 2026-02-19
+  - Completed: 2026-03-07
+
+- [x] **(P2) [tooling] Add skill uninstall command (`oat remove skill` / `oat uninstall skill`)**
+  - Outcome:
+    - Implemented as `oat tools remove` within the `oat tools` command group.
+    - Supports removal by name, pack, or all; handles both project and user scopes.
+    - Canonical storage cleanup with clear reporting of what was removed vs skipped.
+  - Links:
+    - Command: `packages/cli/src/commands/tools/remove/`
+    - PR: #41
+  - Created: 2026-02-16
+  - Completed: 2026-03-07
+
+- [x] **(P1) [tooling] Add skill versioning to SKILL.md frontmatter and `oat init tools` update detection**
+  - Outcome:
+    - All 44 skills have `version:` frontmatter (currently 1.2.0).
+    - `oat tools outdated` detects skills needing updates; `oat tools update` applies them.
+    - Implemented via `copy-helpers.ts` (`copyDirWithVersionCheck`), `version.ts`, and `frontmatter.ts`.
+  - Links:
+    - PR: #34
+  - Created: 2026-02-19
+  - Completed: 2026-03-07
+
+- [x] **(P1) [skills] Enforce autonomous review gates in `oat-project-subagent-implement`**
+  - Outcome:
+    - Step 4 implements mandatory peer subagent reviewer dispatch (`oat-reviewer`) with two-stage checks (spec compliance + code quality) and fix-loop retry bounded by `oat_orchestration_retry_limit`.
+    - Step 5 pre-merge verdict gate refuses merge when no verdict entry exists or verdict is not `pass` — no skip possible.
+    - Review verdicts logged with full traceability in `implementation.md` `## Orchestration Runs` section (Review Interaction Log).
+    - Reviewer dispatched as peer subagent, not nested.
+  - Links:
+    - Skill: `.agents/skills/oat-project-subagent-implement/SKILL.md`
+    - GitHub issue: #27
+    - Related PR: https://github.com/tkstang/open-agent-toolkit/pull/29
+  - Created: 2026-02-21
+  - Completed: 2026-02-23
+
+- [x] **(P1) [skills] Complete review receive + PR-review intake skill family**
+  - Outcome:
+    - Added `oat-review-receive` for ad-hoc local review artifact triage (parse findings, classify severity, generate standalone tasks).
+    - Added `oat-review-receive-remote` for ad-hoc GitHub PR review comment ingestion (fetch unresolved comments via `npx agent-reviews`, triage, generate standalone tasks).
+    - Added `oat-project-review-receive-remote` for project-scoped GitHub PR review receive (fetch PR comments, create plan tasks, update project artifacts).
+    - All review receive skills enforce non-mutating mode (no code changes, no silent dismissals).
+  - Links:
+    - Skills: `.agents/skills/oat-review-receive/`, `.agents/skills/oat-review-receive-remote/`, `.agents/skills/oat-project-review-receive-remote/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/29
+  - Created: 2026-02-14
+  - Completed: 2026-02-23
+
+- [x] **(P1) [tooling] Add Codex markdown→TOML subagent adapter and re-enable Codex agent sync**
+  - Outcome:
+    - Implemented canonical agent parser/renderer (`packages/cli/src/agents/canonical/`) for structured conversion of markdown agent definitions.
+    - Implemented Codex codec (`packages/cli/src/providers/codex/codec/`) with export-to-codex, import-from-codex, config-merge, and sync-extension modules.
+    - Sync extension generates `.codex/agents/*.toml` role files and merges role declarations into `.codex/config.toml`.
+    - Idempotent regeneration: repeated syncs produce deterministic output.
+  - Links:
+    - Implementation: `packages/cli/src/agents/canonical/`, `packages/cli/src/providers/codex/codec/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/32
+  - Created: 2026-02-19
+  - Completed: 2026-02-23
+
+- [x] **(P1) [tooling] Add context management commands for `AGENTS.md` ↔ `CLAUDE.md` integrity**
+  - Outcome:
+    - Implemented as `oat instructions validate` (report missing/mismatched instruction file pointers) and `oat instructions sync` (repair with dry-run + apply semantics).
+    - Recursively scans for `AGENTS.md` files and validates sibling `CLAUDE.md` contains `@AGENTS.md` context pointer.
+    - Supports `--dry-run` (default) and `--apply` modes with clear reporting.
+  - Links:
+    - Implementation: `packages/cli/src/commands/instructions/`
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/31
+  - Created: 2026-02-14
+  - Completed: 2026-02-23
+
+- [x] **(P1) [tooling] B15+B02 project lifecycle config consolidation (`oat config`, `oat project open/pause`)**
+  - Outcome:
+    - Consolidated project lifecycle state into `.oat/config.json` / `.oat/config.local.json` (`projects.root`, `activeProject`, `lastPausedProject`) with repo-relative active project paths.
+    - Added `oat config get/set/list` and migrated workflow skills/CLI consumers to config-backed resolution (no canonical pointer-file reads in migrated flows).
+    - Added `oat project open` / `oat project pause` with pause metadata, resume semantics, and dashboard integration.
+    - Removed legacy pointer fallback behavior from migrated command paths and documented ADR decisions + review-fix follow-up work.
+  - Links:
+    - Project: `.oat/projects/shared/b15-b02-project-lifecycle-config-consolidation/`
+    - Reviews: `.oat/projects/shared/b15-b02-project-lifecycle-config-consolidation/reviews/`
+    - Decisions: `.oat/repo/reference/decision-record.md` (ADR-012, ADR-013)
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/33`
+  - Created: 2026-02-17
+  - Completed: 2026-02-23
+
+- [x] **(P1) [skills] Refine subagent implementation flow and review receive UX**
+  - Outcome:
+    - Refactored subagent orchestration dispatch and result collection for cleaner implementation flow.
+    - Improved review receive UX with better applied plan detail propagation into PR body.
+    - Fixed tracking manifest to store root-branch commit hash for accurate delta tracking.
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/26
+  - Created: 2026-02-19
+  - Completed: 2026-02-21
+
+- [x] **(P0) [skills] Agent instructions skill family (`oat-agent-instructions-analyze`, `oat-agent-instructions-apply`)**
+  - Outcome:
+    - Analyze skill scans codebase for instruction file coverage, quality, and drift with severity-rated analysis artifacts.
+    - Apply skill interactively generates/updates instruction files with multi-provider support (AGENTS.md, Claude rules, Cursor rules, Copilot instructions) and PR workflow.
+    - 7 instruction file templates, 3 helper scripts (tracking, providers, file discovery), quality checklist and directory assessment criteria.
+    - Reference docs bundled as symlinks (dereferenced during CLI distribution).
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/25
+    - Project: `.oat/projects/archived/agent-instructions-skills/`
+  - Created: 2026-02-19
+  - Completed: 2026-02-19
+
+- [x] **(P1) [tooling] Add shared OAT tracking manifest (`.oat/tracking.json`)**
+  - Outcome:
+    - `.oat/tracking.json` with `{"version": 1}` schema and optimistic per-key merge via `resolve-tracking.sh`.
+    - Supports `read`, `write`, `init` subcommands with optional `--artifact-path` flag.
+    - Knowledge index integrated — writes tracking entry after successful runs.
+    - Delta mode infrastructure ready for all skill families.
+  - Links:
+    - PR: https://github.com/tkstang/open-agent-toolkit/pull/25 (shipped with agent instructions)
+    - Script: `.agents/skills/oat-agent-instructions-analyze/scripts/resolve-tracking.sh`
+  - Created: 2026-02-19
+  - Completed: 2026-02-19
+
+- [x] **(P1) [skills] Switch user-facing skill/docs command examples from `pnpm run cli` to direct `oat` CLI**
+  - Outcome:
+    - Replaced all `pnpm run cli --` references in user-facing `oat-*` skills, `.agents/README.md`, and `AGENTS.md` skills discovery with direct `oat <command>` invocation.
+    - Kept `pnpm run cli` only in `AGENTS.md` Development Workflow section (repo-maintainer context) and `bootstrap.sh` (executable script).
+    - Added `cli:link` script to root `package.json` for build + global link in one step.
+    - No test/snapshot regressions (verified: no `pnpm run cli` references in test or snap files).
+  - Links:
+    - 16 files updated across `.agents/skills/`, `.agents/README.md`, `AGENTS.md`, `package.json`
+  - Created: 2026-02-18
+  - Completed: 2026-02-19
+
+- [x] **(P1) [tooling] Add project cleanup command for stale pointers and completion normalization**
+  - Outcome:
+    - Added `oat cleanup project` to audit project metadata and fix common drift: invalid active-project pointer, missing `state.md`, completed projects missing `oat_lifecycle: complete`, stale dashboard.
+    - Dry-run + apply semantics with deterministic summary.
+  - Links:
+    - CLI: `packages/cli/src/commands/cleanup/project/`
+    - Related files: `.oat/active-project`, `.oat/projects/shared/*/state.md`, `.oat/state.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add artifact cleanup command for reviews and external plans**
+  - Outcome:
+    - Added `oat cleanup artifacts` with duplicate pruning, reference guards, interactive triage for `.oat/repo/reviews/` and `.oat/repo/reference/external-plans/`.
+    - Auto-cleans duplicate version chains, preserves latest. Dry-run + apply semantics.
+  - Links:
+    - CLI: `packages/cli/src/commands/cleanup/artifacts/`
+    - Related directories: `.oat/repo/reviews/`, `.oat/repo/reference/external-plans/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add `oat init ideas` subcommand to scaffold ideas workflow**
+  - Outcome:
+    - Implemented as `oat init tools ideas` with `--force` flag.
+    - Scaffolds `.oat/ideas/` directory with templates and copies `oat-idea-*` skills into target project's `.agents/skills/`.
+    - Idempotent (skips existing files unless `--force`).
+  - Links:
+    - CLI: `packages/cli/src/commands/init/tools/ideas/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-18
+
+- [x] **(P1) [tooling] Add `oat init workflows` subcommand to scaffold project workflow**
+  - Outcome:
+    - Implemented as `oat init tools workflows` with `--force` flag.
+    - Scaffolds workflow skills, agents, templates, and scripts into target project's `.agents/skills/`.
+    - Idempotent (skips existing files unless `--force`).
+  - Links:
+    - CLI: `packages/cli/src/commands/init/tools/workflows/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-18
+
+- [x] **(P1) [skills] Add stronger subagent orchestration skills (sequential + parallel dispatch)**
+  - Outcome:
+    - Shipped `oat-execution-mode-select`, `oat-subagent-orchestrate`, `oat-worktree-bootstrap-auto` skill contracts with reference shell scripts and test suite.
+    - `oat_execution_mode` field added to `state.md` template; orchestration status fields in `implementation.md` template.
+    - Execution mode persisted per project (`single-thread` default). Orchestrator governs HiLL checkpoints.
+  - Links:
+    - PR: #21
+    - Project: `.oat/projects/archived/autonomous-orchestration/`
+    - External plan: `.oat/repo/reference/external-plans/2026-02-17-oat-autonomous-worktree-orchestration.md`
+    - Inspiration: https://github.com/obra/superpowers/blob/e16d611eee14ac4c3253b4bf4c55a98d905c2e64/skills/writing-plans/SKILL.md#L103
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md
+    - Inspiration: https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md
+  - Created: 2026-02-17
+  - Completed: 2026-02-19
+
+- [x] **(P2) [workflow] Rename HiL terminology to HiLL (Human in Loop Lock)**
+  - Outcome:
+    - Hard-cut rename of `oat_hil_checkpoints` -> `oat_hill_checkpoints`, `oat_hil_completed` -> `oat_hill_completed`, `oat_plan_hil_phases` -> `oat_plan_hill_phases` across all active surfaces.
+    - No backward compatibility shim. Archived project artifacts intentionally not migrated.
+  - Links:
+    - PR: #23
+    - Project: `.oat/projects/archived/oat-hil-to-hill-frontmatter-rename/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-19
+
+- [x] **(P1) [skills] Make `oat-reviewer` mode-aware for quick/import projects (B09)**
+  - Outcome:
+    - `oat-project-review-provide` enforces mode-specific artifact requirements for `spec-driven|quick|import`.
+    - Review metadata now carries mode + available artifact context (including `discovery.md` and `references/imported-plan.md` where relevant).
+    - Canonical reviewer prompt updated to evaluate requirements from mode-appropriate evidence instead of assuming `spec.md` + `design.md` are always present.
+  - Links:
+    - Skill: `.agents/skills/oat-project-review-provide/SKILL.md`
+    - Reviewer prompt: `.agents/agents/oat-reviewer.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P2) [docs] Add web-research convention using `markdown.new/` URL prefix (B06)**
+  - Outcome:
+    - Added markdown-first web retrieval guidance to root `AGENTS.md`, including `markdown.new` usage and fallback semantics.
+    - Standardized recommendation for lower-overhead research fetches when source pages are suitable for markdown conversion.
+  - Links:
+    - Guidance: `AGENTS.md`
+    - Service: https://markdown.new/
+  - Created: 2026-02-17
+  - Completed: 2026-02-18
+
+- [x] **(P2) [tooling] Remove `.oat/scripts/` directory after all migrations complete (B16)**
+  - Outcome:
+    - `.oat/scripts/` directory deleted after all four script migrations completed.
+    - All reference docs updated to use CLI commands instead of script paths.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Migrate `generate-thin-index.sh` to CLI (B15)**
+  - Outcome:
+    - Migrated thin index generation to `oat index init` CLI command (`packages/cli/src/commands/index-cmd/thin-index.ts`).
+    - Options: `--head-sha <sha>`, `--merge-base-sha <sha>`.
+    - `oat-repo-knowledge-index` skill updated to call CLI command.
+    - 17 unit tests + 5 handler tests.
+    - `.oat/scripts/generate-thin-index.sh` removed.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Migrate `generate-oat-state.sh` to CLI (B14)**
+  - Outcome:
+    - Migrated state dashboard generation to `oat state refresh` CLI command (`packages/cli/src/commands/state/generate.ts`).
+    - 1:1 translation of 419-line shell script to TypeScript with injectable git operations.
+    - 6 skills updated to call CLI command instead of shell script.
+    - 13 unit tests + 4 handler tests.
+    - `scaffold.ts` dashboard refresh seam replaced with direct `generateStateDashboard` call.
+    - `.oat/scripts/generate-oat-state.sh` removed.
+  - Links:
+    - Project: `.oat/projects/shared/oat-state-index-cli/`
+  - Created: 2026-02-14
+  - Completed: 2026-02-17
+
+- [x] **(P1) [skills] Add OAT-native git worktree workflow skill**
+  - Outcome:
+    - Added `oat-worktree-bootstrap` with create/resume modes, deterministic worktree-root precedence, and readiness checks (`worktree:init`, `oat status`, tests, clean git status).
+    - Added active-project pointer validation guardrails and explicit baseline-failure handling before continuing.
+    - Updated guidance to prefer ordered candidate-root resolution and avoid ambiguous fallback behavior.
+  - Links:
+    - Skill: `.agents/skills/oat-worktree-bootstrap/SKILL.md`
+    - Related config: `.oat/config.json`
+    - Project: `.oat/projects/shared/oat-worktree-bootstrap-and-config-consolidation/`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Introduce `.oat/config.json` phase-A non-sync settings ownership**
+  - Outcome:
+    - Added `.oat/config.json` as the canonical home for new non-sync settings.
+    - Implemented `worktrees.root` as the first key and set repo-local default to `.worktrees`.
+    - Kept existing pointer/sync files stable (`.oat/projects-root`, `.oat/active-project`, `.oat/sync/config.json`) for backward compatibility.
+  - Links:
+    - Config file: `.oat/config.json`
+    - Decision: `.oat/repo/reference/decision-record.md` (ADR-010)
+    - Follow-up backlog item: `.oat/repo/reference/backlog.md`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Fix `oat project new --help` parsing bug that scaffolds a `--help` project**
+  - Outcome:
+    - Root cause: `pnpm run cli --` passes a literal `--` into Commander's argv, disabling option parsing. Commander consumed `--help` as the `<name>` positional argument, and `validateProjectName` allowed it because `-` was a valid character.
+    - Added dash-prefix rejection in `validateProjectName` (defensive layer).
+    - Added `name.startsWith('-')` guard in the action handler that calls `command.help()` instead of scaffolding (correct UX).
+    - Added regression tests in both `scaffold.test.ts` and `index.test.ts`.
+  - Links:
+    - Files: `packages/cli/src/commands/project/new/index.ts`, `packages/cli/src/commands/project/new/scaffold.ts`
+  - Created: 2026-02-17
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Migrate `validate-oat-skills.ts` from `.oat/scripts/` to CLI**
+  - Outcome:
+    - Migrated skill validation logic to `oat internal validate-oat-skills` CLI command (`packages/cli/src/commands/internal/validate-oat-skills.ts`).
+    - Core validation logic extracted to `packages/cli/src/validation/skills.ts`.
+    - `.oat/scripts/validate-oat-skills.ts` removed.
+    - `pnpm oat:validate-skills` package.json script updated to call CLI command.
+  - Links:
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/12`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
+- [x] **(P1) [tooling] Migrate `new-oat-project.ts` from `.oat/scripts/` to CLI**
+  - Outcome:
+    - Migrated project scaffolding to `oat project new <name>` CLI command (`packages/cli/src/commands/project/new/`).
+    - Preserved `--force`, `--no-set-active`, `--no-dashboard` flags plus added `--mode` flag.
+    - `oat-project-new` skill updated to use CLI command.
+    - `.oat/scripts/new-oat-project.ts` removed.
+  - Links:
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/12`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
+- [x] **(P1) [tooling] Add explicit supported-provider configuration for project sync**
+  - Outcome:
+    - Added explicit project provider enable/disable management in `.oat/sync/config.json` via `oat providers set --scope project --enabled ... --disabled ...`.
+    - Added provider selection during `oat init --scope project` (interactive) and persisted explicit provider states.
+    - Updated `oat sync --scope project` to use config-aware adapter activation and provide mismatch remediation:
+      - interactive prompt path in TTY mode
+      - non-interactive warning path with deterministic remediation guidance.
+    - Added and documented worktree bootstrap flow: `pnpm run worktree:init` for fresh worktrees with missing provider roots.
+  - Links:
+    - CLI docs: `docs/oat/cli/provider-interop/config.md`
+    - Troubleshooting: `docs/oat/reference/troubleshooting.md`
+    - Implementation PR: `https://github.com/tkstang/open-agent-toolkit/pull/14`
+  - Created: 2026-02-16
+  - Completed: 2026-02-17
+
+- [x] **(P1) [tooling] Retire AGENTS skills-table refresh work item**
+  - Outcome:
+    - Removed the large `SKILLS_TABLE_START` / `SKILLS_TABLE_END` inventory block from `AGENTS.md`.
+    - Replaced it with a concise skills discovery contract that points to canonical `.agents/skills` + provider sync views.
+    - Marked the old "refresh AGENTS skills table" work item as obsolete because provider/symlink sync now handles discovery.
+  - Links:
+    - Reference update: `AGENTS.md`
+    - Backlog update: `.oat/repo/reference/backlog.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-16
+
+- [x] **(P1) [skills] Add ad-hoc review provide flow when no project state exists**
+  - Outcome:
+    - Added `oat-review-provide` for non-project review scopes:
+      - commit range (`base_sha`, explicit `sha..sha`)
+      - branch-based range (`base_branch=<branch>`)
+      - staged / unstaged working tree
+      - explicit pre-existing files (`--files`)
+    - Added destination policy helper:
+      - defaults to local-only `.oat/projects/local/orphan-reviews/`
+      - auto-uses tracked `.oat/repo/reviews/` when it already exists and is not gitignored
+      - supports inline-only output
+    - Updated `oat-project-review-provide` to hard-stop when active project/state is missing and route to `oat-review-provide`.
+  - Links:
+    - Skills:
+      - `.agents/skills/oat-review-provide/SKILL.md`
+      - `.agents/skills/oat-review-provide/scripts/resolve-review-output.sh`
+      - `.agents/skills/oat-project-review-provide/SKILL.md`
+    - PR: `https://github.com/tkstang/open-agent-toolkit/pull/8`
+  - Created: 2026-02-16
+  - Completed: 2026-02-16
+
+- [x] **(P1) [workflow] Add quick/import project lanes with canonical plan normalization**
+  - Outcome:
+    - Added lifecycle entry skills:
+      - `oat-project-quick-start`
+      - `oat-project-import-plan`
+      - `oat-project-promote-spec-driven`
+    - Added mode/provenance metadata contracts:
+      - `.oat/templates/state.md`: `oat_workflow_mode`, `oat_workflow_origin`
+      - `.oat/templates/plan.md`: `oat_plan_source`, import traceability fields
+    - Made routing and downstream workflows mode-aware:
+      - `oat-project-progress`
+      - `oat-project-review-provide`
+      - `oat-project-pr-progress`
+      - `oat-project-pr-final`
+      - `.oat/scripts/generate-oat-state.sh`
+  - Links:
+    - Project: `.oat/projects/shared/quick-oats/`
+    - Plan: `.oat/projects/shared/quick-oats/plan.md`
+  - Created: 2026-02-16
+  - Completed: 2026-02-16
+
+- [x] **(P1) [skills] Normalize skill naming to namespace model (`oat-<domain>-<action>`)**
+  - Outcome:
+    - Adopted naming pattern: `oat-<domain>-<action>` for external-facing skills; internal-only skills kept unprefixed.
+    - Final mappings applied:
+      - `oat-new-project` -> `oat-project-new`
+      - `oat-open-project` -> `oat-project-open`
+      - `oat-clear-active-project` -> `oat-project-clear-active`
+      - `oat-complete-project` -> `oat-project-complete`
+      - `oat-discovery` -> `oat-project-discover`
+      - `oat-spec` -> `oat-project-spec`
+      - `oat-design` -> `oat-project-design`
+      - `oat-plan` -> `oat-project-plan`
+      - `oat-implement` -> `oat-project-implement`
+      - `oat-progress` -> `oat-project-progress`
+      - `oat-index` -> `oat-repo-knowledge-index`
+      - `oat-pr-progress` -> `oat-project-pr-progress`
+      - `oat-pr-project` -> `oat-project-pr-final`
+      - `oat-request-review` -> `oat-project-review-provide`
+      - `oat-receive-review` -> `oat-project-review-receive`
+    - All skill directories, SKILL.md frontmatter, AGENTS.md registrations, and cross-references in templates updated.
+    - All `/oat:` slash-command references in repo reference docs and project artifacts replaced with skill-first names.
+  - Links:
+    - Source discussion: OAT feature ideas (naming philosophy + domain model)
+    - Plan: `.oat/repo/archive/external-plans/skill-rename-slash-cleanup.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-15
+
+- [x] **(P1) [skills] Standardize OAT invocation language to skill-first across templates/docs**
+  - Outcome:
+    - All `/oat:` slash-command references in repo reference and project artifacts replaced with skill-first names (no slash prefix).
+    - Templates, skill SKILL.md files, and project artifacts now use canonical skill names as primary references.
+    - Completed as part of the naming normalization rename pass.
+  - Links:
+    - Source discussion: invocation compatibility for Codex vs slash-enabled hosts
+    - Plan: `.oat/repo/archive/external-plans/skill-rename-slash-cleanup.md`
+  - Created: 2026-02-14
+  - Completed: 2026-02-15
+
+- [x] **(P2) [workflow] Visual progress indicators during workflow execution**
+  - Outcome:
+    - Standardized user-facing progress indicator guidance across `oat-*` skills:
+      - prominent separator banners (`OAT ▸ …`)
+      - short step indicators (2–5 lines)
+      - “starting/done” updates for long-running work
+  - Links:
+    - Workflow feedback: `.oat/repo/archive/workflow-user-feedback.md`
+    - Commits: `d39876d`, `57de516`, `a22c107`, `bca8167`, `13de18f`, `bdc9a76`
+  - Created: 2026-01-30
+  - Completed: 2026-01-31
