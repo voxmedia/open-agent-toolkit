@@ -1413,7 +1413,7 @@ function createReconciledPackCommand(
   const base = new Command(pack).description(descriptions[pack]);
   const packCommand = pack === 'core' ? base : withScopeOption(base);
   return packCommand
-    .option('--force', 'Reconcile managed assets to bundled content')
+    .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

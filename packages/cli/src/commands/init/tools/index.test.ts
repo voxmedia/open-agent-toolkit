@@ -6,6 +6,7 @@ import type {
   SelectChoice,
 } from '@commands/shared/shared.prompts';
 import type { PackLifecycleRequest } from '@commands/tools/shared/pack-lifecycle';
+import { createToolsUpdateCommand } from '@commands/tools/update';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -464,6 +465,41 @@ describe('createInitToolsCommand', () => {
     expect(subcommands).toContain('utility');
     expect(subcommands).toContain('research');
     expect(subcommands).toContain('brainstorm');
+  });
+
+  it('does not advertise force for any individual pack command', () => {
+    const { command } = createHarness({ useLifecycle: true });
+
+    for (const packCommand of command.commands) {
+      expect(packCommand.helpInformation()).not.toContain('--force');
+    }
+  });
+
+  it('rejects force for an individual pack install', async () => {
+    const { command, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+    command.commands.forEach((packCommand) => packCommand.exitOverride());
+
+    await expect(
+      runCommand(command, ['docs', '--force'], ['--scope', 'project']),
+    ).rejects.toMatchObject({ code: 'commander.unknownOption' });
+    expect(reconcilePacks).not.toHaveBeenCalled();
+  });
+
+  it('retains the supported top-level update options', () => {
+    const updateCommand = createToolsUpdateCommand();
+    const optionFlags = updateCommand.options.map(({ flags }) => flags);
+
+    expect(optionFlags).toEqual(
+      expect.arrayContaining([
+        '--pack <pack>',
+        '--all',
+        '--dry-run',
+        '--no-sync',
+      ]),
+    );
   });
 
   it('bare oat init tools in interactive mode shows grouped pack list', async () => {
