@@ -389,23 +389,23 @@ _Detailed schemas, interfaces, and ownership transitions are resolved in
 
 ## Requirement Index
 
-| ID   | Description                                   | Priority | Verification                                 | Planned Tasks   |
-| ---- | --------------------------------------------- | -------- | -------------------------------------------- | --------------- |
-| FR1  | Layered source-qualified truth model          | P0       | unit + integration: normalized evidence      | Pending plan.md |
-| FR2  | Truthful scope selection and realization      | P0       | e2e: issue-228 picker and install flow       | Pending plan.md |
-| FR3  | Consistent inventory and lifecycle surfaces   | P0       | integration: CLI human and JSON parity       | Pending plan.md |
-| FR4  | Provider capability/materialization matrix    | P0       | unit + integration: provider state matrix    | Pending plan.md |
-| FR5  | Safe collection-directory symlink child       | P0       | integration: alias adoption and divergence   | Pending plan.md |
-| FR6  | Safe project AGENTS.md guidance child         | P0       | integration: prompt and managed block        | Pending plan.md |
-| FR7  | Truthful restart and refresh guidance child   | P0       | unit + integration: provider restart notices | Pending plan.md |
-| FR8  | Native and fallback dispatch provenance child | P0       | unit + integration: dispatch event lineage   | Pending plan.md |
-| FR9  | Sanitized runtime observation boundary        | P1       | integration: transcript metadata evidence    | Pending plan.md |
-| FR10 | PR #227/#240/#242 baseline compatibility      | P0       | integration: baseline regression contracts   | Pending plan.md |
-| NFR1 | Filesystem and ownership safety               | P0       | integration: containment and race fixtures   | Pending plan.md |
-| NFR2 | Idempotence and failure atomicity             | P0       | integration: rerun and partial failure       | Pending plan.md |
-| NFR3 | Provenance and explainability                 | P0       | unit + integration: source-qualified output  | Pending plan.md |
-| NFR4 | Compatibility and release discipline          | P0       | manual + integration: release gates          | Pending plan.md |
-| NFR5 | Bounded local evaluation                      | P1       | unit: no-launch static inventory boundaries  | Pending plan.md |
+| ID   | Description                                   | Priority | Verification                                 | Planned Tasks                                                                                              |
+| ---- | --------------------------------------------- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| FR1  | Layered source-qualified truth model          | P0       | unit + integration: normalized evidence      | p02-t01, p02-t04, p02-t06, p03-t05, p06-t02, p07-t03                                                       |
+| FR2  | Truthful scope selection and realization      | P0       | e2e: issue-228 picker and install flow       | p02-t04, p02-t05                                                                                           |
+| FR3  | Consistent inventory and lifecycle surfaces   | P0       | integration: CLI human and JSON parity       | p02-t01, p02-t05, p02-t06, p02-t07                                                                         |
+| FR4  | Provider capability/materialization matrix    | P0       | unit + integration: provider state matrix    | p02-t02, p02-t03, p03-t01, p03-t02, p03-t03, p03-t04                                                       |
+| FR5  | Safe collection-directory symlink child       | P0       | integration: alias adoption and divergence   | p04-t01, p04-t02, p04-t03, p04-t04, p04-t05                                                                |
+| FR6  | Safe project AGENTS.md guidance child         | P0       | integration: prompt and managed block        | p05-t01, p05-t02, p05-t03, p05-t04                                                                         |
+| FR7  | Truthful restart and refresh guidance child   | P0       | unit + integration: provider restart notices | p03-t05                                                                                                    |
+| FR8  | Native and fallback dispatch provenance child | P0       | unit + integration: dispatch event lineage   | p06-t01, p06-t02, p06-t03, p06-t04                                                                         |
+| FR9  | Sanitized runtime observation boundary        | P1       | integration: transcript metadata evidence    | p07-t01, p07-t02, p07-t03                                                                                  |
+| FR10 | PR #227/#240/#242 baseline compatibility      | P0       | integration: baseline regression contracts   | p01-t01, p02-t01, p02-t05, p06-t01, p06-t02, p07-t04                                                       |
+| NFR1 | Filesystem and ownership safety               | P0       | integration: containment and race fixtures   | p04-t02, p04-t03, p04-t04, p05-t01, p06-t03, p07-t01, p07-t02                                              |
+| NFR2 | Idempotence and failure atomicity             | P0       | integration: rerun and partial failure       | p02-t04, p02-t05, p02-t07, p03-t02, p03-t03, p04-t01, p04-t03, p04-t04, p05-t01, p05-t03, p06-t02, p06-t03 |
+| NFR3 | Provenance and explainability                 | P0       | unit + integration: source-qualified output  | p02-t01, p02-t06, p03-t05, p06-t01, p06-t02, p06-t03, p06-t04, p07-t03                                     |
+| NFR4 | Compatibility and release discipline          | P0       | manual + integration: release gates          | p01-t01, p02-t06, p02-t07, p04-t01, p06-t04, p07-t04                                                       |
+| NFR5 | Bounded local evaluation                      | P1       | unit: no-launch static inventory boundaries  | p02-t02, p02-t03, p03-t01, p03-t05, p07-t01, p07-t02, p07-t03                                              |
 
 ## Open Questions
 

@@ -25,8 +25,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -35,18 +35,10 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -90,27 +82,31 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T22:31:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T23:10:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_explainer:
+  decision: skip
+  source: interactive
+  decided_at: '2026-08-30T22:48:05.739Z'
 ---
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Design complete — ready for planning
+**Status:** Plan drafted — awaiting confirmation and review setup
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Design - Review findings resolved and HiLL approval complete. Ready for
-implementation planning.
+Plan - Seven phases and thirty stable tasks drafted from the approved design;
+awaiting plan confirmation, dispatch policy, review setup, and artifact review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (drafted — confirmation/review pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -125,7 +121,8 @@ implementation planning.
 - ✓ Active laptop diagnostics predecessor and merge-order gate recorded
 - ✓ Artifact review findings resolved directly in design
 - ✓ HiLL design approval complete
-- ⧗ Implementation planning
+- ✓ Implementation plan drafted and requirement index mapped
+- ⧗ Plan confirmation and review readiness
 
 ## Blockers
 
@@ -133,5 +130,5 @@ None
 
 ## Next Milestone
 
-Create and review the executable implementation plan after the diagnostics
-predecessor landing constraint is represented as a planning gate.
+Confirm the executable plan, select the project dispatch policy and optional
+phase gate, then run the automatic plan artifact review and configured gate.

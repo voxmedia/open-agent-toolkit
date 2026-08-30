@@ -1150,12 +1150,14 @@ The flag changes no pack scope and no PJM state.
 
 ### Collection Alias Adoption
 
-`oat sync` retains `--strategy auto|symlink|copy`. Under `auto`, an absent
-provider collection may receive an OAT-created alias and an existing exact
-safe alias may be adopted without rewriting. Existing real directories are
-never converted in the first release; they remain on per-entry sync. Dry-run
-reports the same collection transaction and fallback reasons that apply will
-execute.
+`oat sync` retains the resolved configuration strategy
+`auto | symlink | copy`; current CLI behavior does not expose a per-run
+`--strategy` flag. Under configured `auto`, an absent provider collection may
+receive an OAT-created alias and an existing exact safe alias may be adopted
+without rewriting. Explicit configured `symlink` and `copy` remain per-entry
+strategies. Existing real directories are never converted in the first
+release; they remain on per-entry sync. Dry-run reports the same collection
+transaction and fallback reasons that apply will execute.
 
 ### Dispatch Provenance Recording
 
