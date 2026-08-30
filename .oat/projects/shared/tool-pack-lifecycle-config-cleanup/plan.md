@@ -653,8 +653,8 @@ links resolve to the archived item, and the lifecycle plan reports 12 tasks.
 
 **Total: 12 tasks**
 
-Ready to execute the final review-fix phase before narrowed re-review and the
-configured lifecycle exit gate.
+Phase 4 implementation is complete. Ready for final narrowed re-review, then
+the configured lifecycle exit gate and HiLL approval.
 
 ## References
 
