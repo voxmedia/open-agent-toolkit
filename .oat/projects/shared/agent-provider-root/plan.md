@@ -465,16 +465,16 @@ commit `chore(p03-t02): finalize provider-root release proof`. Otherwise let
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                             | -             | -          | -           |
-| p03    | code     | pending | -          | -                                                             | -             | -          | -           |
-| final  | code     | pending | -          | -                                                             | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                                             | -             | -          | -           |
-| design | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -             | -          | -           |
-| plan   | artifact | passed  | 2026-08-30 | -                                                             | -             | auto       | -           |
-| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | ------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed  | 2026-08-30 | reviews/p01-review-2026-08-30T164420Z.md                      | b2ba7751eb4754626d765d43de7ae8701db6dfa9 | auto       | oat-reviewer-gpt-5-6-sol-high |
+| p02    | code     | pending | -          | -                                                             | -                                        | -          | -                             |
+| p03    | code     | pending | -          | -                                                             | -                                        | -          | -                             |
+| final  | code     | pending | -          | -                                                             | -                                        | -          | -                             |
+| spec   | artifact | pending | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | passed  | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T145223Z.md | -                                        | -          | -                             |
+| plan   | artifact | passed  | 2026-08-30 | -                                                             | -                                        | auto       | -                             |
+| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T160834Z.md   | -                                        | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full SHA. `Invocation` records
 `manual`, `auto`, or `gate`; `Gate Target` is populated only for gates.
