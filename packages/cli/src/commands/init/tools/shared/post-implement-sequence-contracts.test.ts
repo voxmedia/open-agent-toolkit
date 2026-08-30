@@ -43,6 +43,18 @@ function readNextSkill(): string {
   );
 }
 
+function readLifecycleGateSkill(skillName: string): string {
+  return readFileSync(
+    join(
+      import.meta.dirname,
+      '../../../../../../../.agents/skills',
+      skillName,
+      'SKILL.md',
+    ),
+    'utf8',
+  );
+}
+
 function readStateTemplate(): string {
   return readFileSync(
     join(import.meta.dirname, '../../../../../../../.oat/templates/state.md'),
@@ -52,6 +64,14 @@ function readStateTemplate(): string {
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
+}
+
+function lastGateExecutionSection(skill: string): string {
+  const heading = [...skill.matchAll(/^###.*Gate Execution.*$/gm)].at(-1);
+  if (heading?.index === undefined) {
+    throw new Error('Missing Gate Execution heading');
+  }
+  return skill.slice(heading.index);
 }
 
 function git(cwd: string, ...args: string[]): string {
@@ -393,6 +413,36 @@ describe('post-implementation sequence contracts', () => {
     expect(gate).not.toContain(
       'A valid reusable shape is\n   `oat gate review --project "$PROJECT_PATH" ...`',
     );
+  });
+
+  it('keeps planning lifecycle gate commands canonical and configuration-only', () => {
+    for (const skillName of [
+      'oat-project-discover',
+      'oat-project-design',
+      'oat-project-plan',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const skill = readLifecycleGateSkill(skillName);
+      const gate = lastGateExecutionSection(skill);
+      const normalized = normalizeWhitespace(gate);
+
+      expect(gate, `${skillName} canonical command`).toContain(
+        'oat --json gate review --project "$PROJECT_PATH" ...',
+      );
+      expect(normalized, `${skillName} global placement`).toContain(
+        'global `--json` before `gate review`',
+      );
+      expect(normalized, `${skillName} legacy rejection`).toContain(
+        'Reject `oat gate review ...`',
+      );
+      expect(normalized, `${skillName} no argv injection`).toContain(
+        'never inject or append execution-time argv',
+      );
+      expect(normalized, `${skillName} target neutrality`).toMatch(
+        /must not (?:contain|include|add) `?--target(?:\s|<)/i,
+      );
+    }
   });
 
   it('persists launch acceptance markers and reconciles before relaunch', () => {
