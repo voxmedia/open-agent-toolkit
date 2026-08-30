@@ -12,7 +12,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.221Z
-updated: 2026-08-26T22:57:19.221Z
+updated: 2026-08-30T21:53:59Z
 associated_issues: []
 external_plans: []
 ---
@@ -23,5 +23,12 @@ Three consecutive claude-fable-skip-permissions exit-gate children (2026-08-26, 
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Headless gate prompts and execution contracts explicitly forbid background
+  tasks, monitors, or waiters from hiding required work; accepted work must
+  finish synchronously and write its correlated artifact before child exit.
+- The runner distinguishes child exit without an artifact from an artifact
+  correlation mismatch, and neither outcome is receive-eligible.
+- Deterministic tests cover foreground completion, synchronously awaited work,
+  a background/waiter exit, and a wrong-run artifact.
+- A child that accepted work and then failed does not authorize an automatic
+  replacement or generic fallback.
