@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -142,6 +149,111 @@ describe('pack inventory', () => {
     expect(
       drifted.assets.find(
         ({ definition }) => definition.id === staticTemplate.id,
+      ),
+    ).toMatchObject({ status: 'outdated' });
+  });
+
+  it('distinguishes bundled seed defaults from retained overrides', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-project-');
+    const seed = getPackDefinition('ideas').assets.find(
+      ({ kind, source }) => kind === 'seed' && source,
+    )!;
+    await writeAsset(assetsRoot, seed.source!, seed, 'bundled default\n');
+
+    const absent = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      absent.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'missing' });
+
+    await writeAsset(scopeRoot, seed.destination, seed, 'bundled default\n');
+    const identical = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      identical.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'current' });
+
+    const retainedContent = 'owner override\n';
+    await writeFile(join(scopeRoot, seed.destination), retainedContent);
+    const retained = await inventoryScopedPack({
+      pack: 'ideas',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      retained.assets.find(({ definition }) => definition.id === seed.id),
+    ).toMatchObject({ status: 'present' });
+    await expect(
+      readFile(join(scopeRoot, seed.destination), 'utf8'),
+    ).resolves.toBe(retainedContent);
+  });
+
+  it('preserves generation-aware inventory for generated seeds', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-project-');
+    await materializeManagedPack('workflows', 'project', assetsRoot, scopeRoot);
+    await mkdir(join(scopeRoot, '.oat', 'projects', 'local'), {
+      recursive: true,
+    });
+    await mkdir(join(scopeRoot, '.oat', 'projects', 'archived'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects-root'),
+      '.oat/projects/custom\n',
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'config.json'),
+      JSON.stringify({ projects: { root: '.oat/projects/shared' } }),
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects', 'local', '.gitkeep'),
+      '',
+    );
+    await writeFile(
+      join(scopeRoot, '.oat', 'projects', 'archived', '.gitkeep'),
+      '',
+    );
+
+    const inventory = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    const generated = new Map(
+      inventory.assets
+        .filter(({ definition }) => definition.generation)
+        .map(({ definition, status }) => [definition.generation, status]),
+    );
+    expect(generated).toMatchObject(
+      new Map([
+        ['projects-root-default', 'present'],
+        ['projects-config-default', 'present'],
+        ['empty-file', 'present'],
+      ]),
+    );
+
+    await writeFile(join(scopeRoot, '.oat', 'config.json'), '{}');
+    const invalidConfig = await inventoryScopedPack({
+      pack: 'workflows',
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      invalidConfig.assets.find(
+        ({ definition }) => definition.generation === 'projects-config-default',
       ),
     ).toMatchObject({ status: 'outdated' });
   });

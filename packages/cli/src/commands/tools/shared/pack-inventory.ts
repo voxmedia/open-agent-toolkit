@@ -9,6 +9,7 @@ import {
   type ResolvedManagedRoot,
   resolveManagedScopeRoots,
   validateManagedPath,
+  validateRealPathWithinScope,
 } from '@fs/paths';
 import {
   type ConcreteScope,
@@ -168,22 +169,43 @@ async function inventoryAsset(
   }
 
   if (definition.ownership[scope] === 'seed-if-missing') {
-    if (definition.generation === 'projects-config-default') {
-      const config = await readOatConfig(scopeRoot);
+    if (definition.generation) {
+      if (definition.generation === 'projects-config-default') {
+        const config = await readOatConfig(scopeRoot);
+        return {
+          definition,
+          path: installedPath,
+          status: config.projects?.root?.trim() ? 'present' : 'outdated',
+          installedVersion: null,
+          bundledVersion: null,
+        };
+      }
       return {
         definition,
         path: installedPath,
-        status: config.projects?.root?.trim() ? 'present' : 'outdated',
+        status: 'present',
         installedVersion: null,
         bundledVersion: null,
       };
     }
-    return {
+    if (!definition.source) {
+      throw new Error(
+        `Seeded pack asset ${definition.id} has no materialized source`,
+      );
+    }
+    const { realPath: bundledPath } = await validateRealPathWithinScope(
+      join(assetsRoot, definition.source),
+      assetsRoot,
+    );
+    const inventory = await inventoryStaticAsset(
       definition,
+      realPath,
+      bundledPath,
+    );
+    return {
+      ...inventory,
       path: installedPath,
-      status: 'present',
-      installedVersion: null,
-      bundledVersion: null,
+      status: inventory.status === 'current' ? 'current' : 'present',
     };
   }
   if (!definition.source) {
