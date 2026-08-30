@@ -1,4 +1,5 @@
 import {
+  chmod,
   mkdir,
   mkdtemp,
   readFile,
@@ -465,6 +466,49 @@ describe('pack inventory', () => {
     expect(
       inventory.assets.find(({ definition }) => definition.id === skill.id),
     ).toMatchObject({ status: 'current' });
+  });
+
+  it('ignores materialized script mode normalization but detects content drift', async () => {
+    const assetsRoot = await makeRoot('oat-assets-');
+    const scopeRoot = await makeRoot('oat-user-');
+    await materializeManagedPack('research', 'user', assetsRoot, scopeRoot);
+    const skill = getPackDefinition('research').assets.find(
+      ({ kind }) => kind === 'skill',
+    )!;
+    const bundledScript = join(assetsRoot, skill.source!, 'scripts', 'run.sh');
+    const installedScript = join(
+      scopeRoot,
+      skill.destination,
+      'scripts',
+      'run.sh',
+    );
+    await mkdir(dirname(bundledScript), { recursive: true });
+    await mkdir(dirname(installedScript), { recursive: true });
+    await writeFile(bundledScript, '#!/bin/sh\necho current\n');
+    await writeFile(installedScript, '#!/bin/sh\necho current\n');
+    await chmod(bundledScript, 0o644);
+    await chmod(installedScript, 0o755);
+
+    const current = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      current.assets.find(({ definition }) => definition.id === skill.id),
+    ).toMatchObject({ status: 'current' });
+
+    await writeFile(installedScript, '#!/bin/sh\necho modified\n');
+    const drifted = await inventoryScopedPack({
+      pack: 'research',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(
+      drifted.assets.find(({ definition }) => definition.id === skill.id),
+    ).toMatchObject({ status: 'outdated' });
   });
 
   it('names user-scope canonical agents that reach no provider view', async () => {

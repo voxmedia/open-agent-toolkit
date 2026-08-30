@@ -131,8 +131,8 @@ async function canonicalFileMatches(
   bundledPath: string,
 ): Promise<boolean> {
   const [installedDigest, bundledDigest] = await Promise.all([
-    digestFile(installedPath),
-    digestFile(bundledPath),
+    digestFile(installedPath, 0o644),
+    digestFile(bundledPath, 0o644),
   ]);
   return installedDigest === bundledDigest;
 }
