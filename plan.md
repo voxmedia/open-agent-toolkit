@@ -506,7 +506,7 @@ git commit -m "chore(p03-t03): finalize gate execution contract"
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01    | code     | passed  | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
 | p02    | code     | passed  | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
-| p03    | code     | pending | -          | -                                                           | -                                        | -          | -                             |
+| p03    | code     | passed  | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
 | final  | code     | pending | -          | -                                                           | -                                        | -          | -                             |
 | spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
 | design | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
