@@ -68,6 +68,10 @@ PR #244 integrated at ac380219d after diagnostics release commit 0d6371d69; no s
 
 The final focused suite passed 417/417 and all timeout-affected files passed 250/250 together in a bounded rerun, but three ordinary full-suite runs and one forced run remained nonzero from changing Git-fixture timeouts; no assertion failed. Keep p04-t02 blocked until pnpm test exits zero; do not treat isolated evidence as a gate pass.
 
+### 2026-08-30 · structural · oat-project-implement · p04-test-retry
+
+Exact pnpm test retry exited 1 with 4593/4599 passing and six timeout-only failures across four Git-heavy files; the failure set again changed and shrank, with no assertion failure. p04-t02 remains blocked.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -33,7 +33,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-30T23:25:25Z'
+oat_project_state_updated: '2026-08-30T23:57:00Z'
 oat_generated: false
 ---
 
@@ -87,7 +87,8 @@ and the final HiLL checkpoint have not run.
 - ✓ Focused final suite 417/417, timeout-file subset 250/250, seven other CI
   gates, lint, format, and every supplemental suite passed
 - ⚠ Required `pnpm test` remains nonzero after repeated runs because different
-  Git-heavy fixtures exceed their existing timeouts; no assertion failed
+  Git-heavy fixtures exceed their existing timeouts; the latest retry passed
+  4,593/4,599 with six timeout-only failures and no assertion failure
 
 ## Blockers
 

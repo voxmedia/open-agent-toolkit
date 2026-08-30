@@ -143,13 +143,14 @@ Selected lockstep version `0.2.49` above freshly fetched `origin/main` at
 **Status:** blocked
 **Commit:** -
 
-**Blocker:** The required `pnpm test` gate exited 1 in three ordinary runs and
+**Blocker:** The required `pnpm test` gate exited 1 in four ordinary runs and
 one uncached forced run because different Git-heavy fixtures exceeded their
 five-second limits (plus one 15-second split-flow timeout). No assertion failed.
 The focused project suite passed 417/417, the nine timeout-affected files passed
 250/250 together without workspace build load, and every other required gate
 and supplemental suite passed. The gate remains non-passing until its own
-command exits 0.
+command exits 0. The latest exact retry improved to 4,593/4,599 passing with six
+timeout-only failures across four files.
 
 ## Orchestration Runs
 
@@ -272,7 +273,7 @@ gate
 | 3     | Test-quality phase suite            | 179    | 0      | Production-reachable assertions and safe globals     |
 | 4     | Focused integrated suite            | 417    | 0      | Final diagnostics, PJM, sync, lifecycle, and harness |
 | 4     | Timeout-affected file subset        | 250    | 0      | Nine Git-heavy files outside full workspace load     |
-| 4     | Full `pnpm test`                    | 4581   | 18     | Timeout-only failures; required gate remains blocked |
+| 4     | Latest full `pnpm test` retry       | 4593   | 6      | Timeout-only failures; required gate remains blocked |
 
 ## Final Summary (for PR/docs)
 
