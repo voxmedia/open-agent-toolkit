@@ -80,15 +80,15 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T14:37:25.345Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T20:06:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-30T14:46:15.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: agent-provider-root
 
-**Status:** Design
+**Status:** Design — draft assembled
 **Started:** 2026-08-29
-**Last Updated:** 2026-08-29
+**Last Updated:** 2026-08-30
 
 ## Current Phase
 
@@ -97,17 +97,18 @@ Design - Resolving the portable agent-reference contract before planning
 ## Artifacts
 
 - **Discovery:** `discovery.md` (in_progress)
-- **Spec:** `spec.md` (draft)
+- **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (draft)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Missing specification and design artifacts backfilled
-- ⧗ Design decisions require review before planning
-- ⧗ Awaiting user input
+- ✓ Current-main discovery evidence revalidated
+- ✓ Specification confirmed
+- ✓ Design sections collaboratively approved
+- ✓ Design draft assembled and self-reviewed
+- ⧗ Independent artifact review pending
 
 ## Blockers
 
@@ -115,4 +116,4 @@ None
 
 ## Next Milestone
 
-Resolve design questions, then generate the implementation plan
+Pass the configured artifact-review gate, then mark design complete

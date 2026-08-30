@@ -2,552 +2,562 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-29
+oat_last_updated: 2026-08-30
 oat_generated: false
+oat_template: false
+oat_template_name: design
 ---
 
 # Design: agent-provider-root
 
-> Revalidation notice: this design is an initial architecture proposal, not an
-> exhaustive implementation design. Revalidate the provider matrix, canonical
-> asset inventory, candidate roots, generated views, and changed consumer sites
-> before converting it into a plan or implementation work.
-
 ## Overview
 
-This project closes the skill-to-agent direction left outside the merged PR #231
-portability ratchet. Canonical skills need a stable way to locate canonical OAT
-agent instructions when packs are installed at user scope, while provider-native
-views remain a separate materialization concern.
+This project repairs canonical skill-to-agent reads without changing provider
+dispatch. A consuming skill binds a provider-aware local
+`${AGENT_PROVIDER_ROOT}` for its workflows-pack dependency and probes three
+ordered candidates: the loaded root derived from `${SKILL_DIR}/../..`, the
+user canonical root at `${HOME}/.agents`, and the repository canonical root at
+`<repo-root>/.agents`. The loaded candidate is eligible only when the exact
+unsuffixed role target is the same installation scope's canonical Markdown
+file or a symlink resolving exactly to it.
 
-The recommended design uses an agent-root abstraction with `/agents` and, where
-shared vocabulary is valuable, `/skills` leaves. The root is resolved in the
-canonical user/project tiers and is bound independently for each consuming
-dependency. This preserves the existing isolation guarantee while avoiding
-bare repository-relative reads.
+The binding is authored locally in each consumer. It is not a process
+environment variable, ambient singleton, CLI resolver, persistent setting, or
+provider-selection API. Each dependency binds and validates its own root; when
+multiple independent packs are involved, the consumer uses descriptive
+pack-qualified binding names instead of sharing one root implicitly.
 
-No provider restart, provider-directory mutation, or native catalog update is
-performed by this project. The neighboring scope/provider project owns those
-behaviors and consumes this contract only when it needs canonical fallback role
-instructions.
+Provider-native role selection remains authoritative. Codex and Cursor model
+and effort variants continue to be selected and launched through the existing
+dispatch resolver. Canonical root resolution supplies role instructions only
+for direct source-of-truth reads and the bounded fresh-child fallback after a
+recorded pre-start native-role rejection. It cannot choose, replace, or
+reinterpret the dispatch target.
 
 ## Architecture
 
 ### System Context
 
+Canonical Markdown under `.agents/agents` is the source of truth for direct
+role-instruction reads. Claude and Cursor may expose unsuffixed base agents as
+symlinks to that source, while Cursor also materializes suffixed variants and
+Codex materializes transformed TOML variants. Only the exact unsuffixed
+canonical identity is eligible for this contract; provider variants remain
+native dispatch targets rather than instruction sources.
+
 ```text
+existing dispatch resolver
+        |
+        +-- exact provider variant/model/effort --> native dispatch first
+        |
+        `-- after pre-start native rejection only
+                 |
+                 v
 canonical skill consumer
         |
         v
-per-dependency portable agent-root binding
+local dependency-owned root binding
         |
-        +--> user canonical root (~/.agents/agents)
-        |
-        +--> project canonical root (<repo>/.agents/agents)
-        |
-        v
-canonical Markdown role instructions
-        |
-        +--> fallback dispatch provenance (consumer-owned)
-        +--> provider materialization/catalog visibility (separate project)
+        +-- loaded root: ${SKILL_DIR}/../..
+        +-- user root:   ${HOME}/.agents
+        `-- project:     <repo-root>/.agents
+                 |
+                 v
+exact unsuffixed canonical Markdown instructions
+                 |
+                 v
+fresh child with the original immutable dispatch target
 ```
 
 **Key Components:**
 
-- **Root-binding contract:** Resolves an eligible canonical root for one
-  dependency and exposes the agent leaf without consulting the current working
-  directory.
-- **Asset inventory and ratchet:** Derives the checked surface from the
-  manifest, detects bare agent-read forms, and produces exact evidence.
-- **Consumer migration layer:** Replaces or classifies the nine identified
-  sites, with special attention to executable fallback paths.
-- **Release/documentation layer:** Keeps contributor docs, bundled assets,
-  frontmatter versions, and lockstep package versions synchronized.
-
-### Component Diagram
-
-```text
-PACK_MANIFEST
-     |
-     v
-portable-reference inventory -----> ratchet + mutation fixture
-     |
-     v
-consumer dependency binding ------> canonical agent resolver
-                                      |
-                                      +--> user .agents/agents
-                                      +--> project .agents/agents
-                                      |
-                                      v
-                              canonical role-file path/version
-
-scope/provider project -------- reads contract for fallback provenance
-provider sync/materialization - remains outside this project
-```
+- **Local root-binding contract:** Defines candidate order, ownership, exact
+  target eligibility, miss behavior, and recovery.
+- **Exact-target validator:** Distinguishes canonical files and exact canonical
+  symlinks from copies, variants, transformed files, and unsafe links.
+- **Typed portable-reference classifier:** Detects skill and agent target forms
+  for both ratchet scan scopes.
+- **Consumer migration layer:** Ports verified live reads while preserving
+  dispatch and source-of-truth semantics.
+- **Release verification layer:** Protects generated views, skill versions,
+  package versions, and repository gates.
 
 ### Data Flow
 
-1. A canonical skill identifies a named OAT role dependency.
-2. The consumer binds the dependency's eligible canonical agent-root candidates
-   without reusing another dependency's binding.
-3. Candidates are evaluated in the documented tier order and are checked for
-   the expected canonical role representation.
-4. The selected role file is passed to the consumer's fallback instructions;
-   missing or ambiguous candidates produce a fail-closed result.
-5. The portability ratchet scans the same shipped consumer surface for bare
-   agent reads and reports exact source-to-target evidence.
-6. Provider sync/catalog visibility is evaluated separately by the
-   scope/provider project; a canonical file's presence never implies native
-   provider availability.
+For a direct source-of-truth pointer, the consumer resolves its one owning
+dependency, reads the exact canonical role file, or fails with pack-aware
+recovery. For dispatch fallback, the existing resolver first fixes the exact
+provider target and attempts native dispatch. Only a recorded pre-start
+rejection reaches canonical instruction resolution. The fallback then composes
+the unchanged target with the resolved canonical instructions.
+
+Candidate evaluation is deterministic. Invalid loaded representations are
+candidate misses, not terminal errors, so resolution continues to the user and
+project canonical roots. If every candidate misses, the consumer stops before
+fresh-child launch. No result from one dependency is reused for another.
+
+Separately, the portability ratchet scans the manifest-derived user-default
+surface and every canonical agent through one typed parser. A new executable
+bare agent read fails with exact `source -> target` evidence. Provider-view
+examples and already-portable forms are classified but do not become findings.
 
 ## Component Design
 
-### Per-dependency root binding
+### Local root-binding contract
 
-**Purpose:** Provide a portable canonical root for one pack or role dependency.
-
-**Responsibilities:**
-
-- Keep the dependency's candidate list independent from other pack bindings.
-- Make user/project tier order explicit and deterministic.
-- Return canonical Markdown role instructions, not transformed provider views.
-- Preserve enough source/version information for fallback provenance.
-
-**Interfaces:**
-
-```typescript
-type AgentRootTier = 'user' | 'project';
-
-type CanonicalAgentRoot = {
-  tier: AgentRootTier;
-  root: string;
-  representation: 'canonical-markdown';
-};
-
-type AgentDependencyBinding = {
-  dependency: string;
-  candidates: CanonicalAgentRoot[];
-};
-
-type AgentResolution =
-  | {
-      status: 'resolved';
-      dependency: string;
-      tier: AgentRootTier;
-      roleFile: string;
-      representation: 'canonical-markdown';
-    }
-  | {
-      status: 'unavailable' | 'ambiguous';
-      dependency: string;
-      candidates: string[];
-      reason: string;
-    };
-```
-
-**Dependencies:**
-
-- Canonical pack manifest and installed-root conventions.
-- Existing portable cross-skill binding behavior from PR #231.
-- Consumer-specific fallback contracts.
-
-**Design Decisions:**
-
-- Start with canonical user/project tiers. Do not include provider-loaded tiers
-  until format equivalence is proven.
-- Bind the root per dependency even if the physical candidate paths happen to
-  be identical.
-- Treat a missing role file as an explicit resolution failure, not as a reason
-  to fall through to an unrelated role or current-working-directory path.
-
-### Portable-reference ratchet
-
-**Purpose:** Prevent new non-portable skill-to-agent references.
+**Purpose:** Bind one consuming dependency to the first eligible canonical
+agent root without relying on the current working directory.
 
 **Responsibilities:**
 
-- Derive the checked skill and agent surface from the pack manifest.
-- Recognize executable bare `.agents/agents/` reads and equivalent path forms.
-- Reuse the strongest existing matcher behavior where possible.
-- Keep descriptive-only references separately classified with rationale.
+- Probe `loaded -> user -> project` in that order.
+- Keep the binding local to the consuming instruction and dependency.
+- Use `${AGENT_PROVIDER_ROOT}` only when one owning pack is involved.
+- Use descriptive dependency- or pack-qualified names for simultaneous roots.
+- Stop with workflows-pack recovery only after all candidates miss.
 
-**Interfaces:**
+**Interface:** This is a shared authored-instruction pattern, not a new runtime
+function. Each migrated site names a fixed canonical role and binds the first
+valid root before constructing `${AGENT_PROVIDER_ROOT}/agents/<name>.md`.
+
+**Design decisions:** A valid earlier tier wins; coexisting valid tiers are not
+ambiguous. A root is never inferred from a different dependency's successful
+read. No global cache or exported environment value is introduced.
+
+### Exact-target validator
+
+**Purpose:** Admit a loaded provider view only when its requested unsuffixed
+target has canonical identity.
+
+**Responsibilities:**
+
+- Check exactly `agents/<canonical-name>.md` under the candidate root.
+- Accept the same-scope canonical file directly.
+- Accept a symlink only when its realpath is exactly that canonical file.
+- Treat missing files, broken or escaping links, regular provider copies,
+  transformed formats, wrong names, and suffixed variants as misses.
+- Produce equivalent results whether `${SKILL_DIR}` is logical or already
+  realpathed.
+
+**Dependencies:** Existing `.agents`, `.claude`, and `.cursor` installation
+layouts and normal filesystem identity checks.
+
+**Design decisions:** Extension, byte equality, and role-name similarity are
+insufficient. The validator compares exact canonical identity, which allows
+Claude and Cursor base symlinks but excludes Cursor model variants and Codex
+TOML.
+
+### Typed portable-reference classifier
+
+**Purpose:** Prevent new non-portable canonical skill and agent reads.
+
+**Responsibilities:**
+
+- Return typed `skill` or `agent` targets with exact source evidence.
+- Detect canonical bare agent forms, dot-relative forms, and repeated-parent
+  `agents/<name>.md` hops from nested skill content.
+- Exclude portable bindings, provider-view examples, suffixed variants, Codex
+  TOML, and unanchored prose.
+- Serve both the manifest-derived user-default scan and the every-canonical-
+  agent scan.
+- Preserve the existing six-entry historical skill baseline byte-for-byte and
+  enforce a separate zero-executable agent baseline.
+
+**Interface:**
 
 ```typescript
-type PortableReferenceFinding = {
+type PortableAssetTarget =
+  | { kind: 'skill'; name: string }
+  | { kind: 'agent'; name: string };
+
+type PortableAssetFinding = {
   source: string;
   target: string;
-  kind: 'skill' | 'agent';
-  executable: boolean;
-  rationale?: string;
+  asset: PortableAssetTarget;
 };
 
-type RatchetResult = {
-  liveFindings: PortableReferenceFinding[];
-  historicalFindings: PortableReferenceFinding[];
-};
+function classifyPortableAssetTargets(markdown: string): PortableAssetFinding[];
 ```
 
-**Design Decisions:**
+**Design decisions:** One parser prevents regex drift, while retaining two
+scan scopes avoids assuming that manifest coverage will always remain
+identical to every-canonical-agent coverage. Duplicate matcher code may be
+removed only after proving current manifest representation. Both scan scopes
+remain even if their matcher implementation is centralized.
 
-- Use the manifest-derived surface as the source of truth so new user-default
-  assets enter the check automatically.
-- Mutation-test the detector by injecting a bare agent read and asserting exact
-  source-to-target output.
-- Reconcile duplicate matcher logic rather than extending one copy and leaving
-  another known to drift.
+### Consumer migration and dispatch boundary
 
-### Consumer migration
-
-**Purpose:** Port the current live role-file consumers to the contract.
+**Purpose:** Port the live role reads without changing how subagents are
+selected or launched.
 
 **Responsibilities:**
 
-- Migrate the four executable sites identified by discovery.
-- Classify the five descriptive/pointer sites during revalidation.
-- Preserve fallback instructions and native-role rejection semantics.
-- Record role-file source and version without claiming native equivalence.
+- Port five executable spellings across the four mandatory sites.
+- Port two remote-review source-of-truth pointers as live reads.
+- Retain the two `skeptic` Claude/Cursor descriptions as classified examples
+  after revalidation.
+- Re-sweep the full canonical skill surface before planning and implementation.
+- Preserve exact native variant-first and fresh-child rejection semantics.
 
-**Design Decisions:**
+**Interface:** Dispatch consumers compose an existing immutable resolved target
+with canonical instructions only after native-role rejection. Root resolution
+has no provider, model, effort, variant, or route-selection authority.
 
-- Do not change provider dispatch selection or generic-child policy here.
-- If the dispatch layer later owns role-file delivery, treat that as a
-  replacement design and retire the direct-read contract deliberately.
+**Design decisions:** Direct canonical reads remain for bounded fallback and
+source-of-truth paths. Moving role delivery behind dispatch would require a
+broader behavioral API and is outside this repair.
 
-### Documentation and release layer
+### Release verification layer
 
-**Purpose:** Make the boundary durable in shipped documentation and versioning.
+**Purpose:** Ship canonical skill and ratchet changes consistently.
 
-**Responsibilities:**
-
-- Document canonical versus provider-native representations.
-- Explain independent dependency binding and eligible tiers.
-- Bump changed skill frontmatter once per PR and lockstep public packages when
-  shipped assets change.
-- Link the scope/provider project as the owner of materialization and restart
-  behavior.
+**Responsibilities:** Revalidate generated provider views and sync drift, bump
+each changed skill once per PR, advance the five public package versions in
+lockstep, and run focused plus repository-wide gates with evidence-grade exit
+codes.
 
 ## Data Models
 
-### Root resolution record
+These models describe contract and test evidence. This project creates no new
+persistent runtime record, configuration file, or public response schema.
 
-**Purpose:** The minimal inspectable result needed by a consumer and its tests.
-
-**Schema:**
+### Canonical agent resolution
 
 ```typescript
-interface RootResolutionRecord {
-  dependency: string;
-  requestedRole: string;
-  candidateTiers: Array<'user' | 'project'>;
-  selectedTier: 'user' | 'project' | null;
-  selectedRoot: string | null;
-  representation: 'canonical-markdown' | null;
-  status: 'resolved' | 'unavailable' | 'ambiguous';
-  reason: string | null;
-}
+type AgentCandidateTier = 'loaded' | 'user' | 'project';
+
+type AgentCandidateAttempt = {
+  tier: AgentCandidateTier;
+  candidate: string;
+  outcome:
+    | 'missing'
+    | 'broken-symlink'
+    | 'escaping-symlink'
+    | 'noncanonical-copy'
+    | 'transformed-format'
+    | 'wrong-target';
+};
+
+type CanonicalAgentResolution =
+  | {
+      status: 'resolved';
+      dependency: string;
+      canonicalName: string;
+      tier: AgentCandidateTier;
+      providerRoot: string;
+      selectedFile: string;
+      canonicalFile: string;
+      validation: 'direct-canonical' | 'exact-canonical-symlink';
+    }
+  | {
+      status: 'miss';
+      dependency: string;
+      canonicalName: string;
+      attempts: AgentCandidateAttempt[];
+    };
 ```
 
-**Validation Rules:**
+The attempt order is fixed. A resolved loaded candidate records both the
+provider-facing file and exact canonical target. Resolution data contains no
+model, effort, provider variant, or dispatch-route fields.
 
-- `resolved` requires a selected tier, root, canonical representation, and
-  existing expected role file.
-- `unavailable` or `ambiguous` requires a reason and candidate evidence.
-- A record never reports provider catalog visibility; that is a separate state
-  owned by scope/provider diagnostics.
+### Fresh-child fallback composition
 
-**Storage:**
+```typescript
+type FreshChildFallback = {
+  dispatchTarget: ExistingResolvedDispatchTarget;
+  roleInstructions: CanonicalAgentResolution & { status: 'resolved' };
+};
+```
 
-- **Location:** In the consuming command/skill's existing structured result or
-  review artifact as appropriate.
-- **Persistence:** Preserve only where the consumer already persists fallback
-  provenance; this project does not create a new global state file.
+`dispatchTarget` is selected by the existing resolver and remains immutable.
+`roleInstructions` supplies canonical Markdown only. The composition is
+consumer-owned and persisted only where an existing workflow already records
+fallback provenance.
 
 ## API Design
 
-### Portable agent resolution interface
+There is no new public CLI command, runtime API, environment variable,
+configuration surface, or network endpoint.
 
-**Method:** Internal resolver contract
-**Path:** N/A — local CLI/skill contract
+### Authored local-binding interface
 
-**Request:**
+Each migrated consumer follows this conceptual procedure:
 
-```typescript
-interface ResolveAgentRequest {
-  dependency: string;
-  role: string;
-  allowedTiers: Array<'user' | 'project'>;
-  expectedRepresentation: 'canonical-markdown';
-}
+```text
+bind canonical agent dependency:
+  1. test ${SKILL_DIR}/../.. as the loaded provider root
+  2. test ${HOME}/.agents
+  3. test <repo-root>/.agents
+  4. bind the first valid root locally
+  5. if none is valid, report workflows-pack recovery and stop that fallback
 ```
 
-**Response:** `RootResolutionRecord`
+The loaded candidate accepts only the exact canonical file or an exact
+canonical symlink. User and project candidates are direct canonical `.agents`
+targets. The canonical role name is a fixed consumer-owned literal.
 
-**Error Handling:**
+### Dispatch integration
 
-- `unavailable`: no eligible canonical root contains the requested role.
-- `ambiguous`: more than one eligible candidate violates the documented
-  precedence or ownership contract.
-- `invalid-dependency`: the consumer asks for a root it does not own.
+The existing resolver selects the provider target and attempts native dispatch
+first. Canonical resolution is consulted only for direct pointers or after a
+recorded pre-start native rejection. It cannot modify the target. Missing
+canonical instructions block only the fresh-child fallback and do not
+invalidate successful native dispatch.
 
-**Authorization:** The resolver reads only OAT-managed canonical roots and does
-not mutate provider directories or user configuration.
+### Ratchet parser interface
+
+`classifyPortableAssetTargets(markdown)` is internal test infrastructure used
+by both scan scopes. It returns exact typed evidence and is not shipped as a
+command or supported public API.
 
 ## Security Considerations
 
-### Authentication
+This is local read-only filesystem resolution. It introduces no
+authentication, network access, elevated privilege, or provider-directory
+write.
 
-Not applicable; this is local path resolution.
+- Canonical role names are fixed literals, not user-supplied paths.
+- Paths are quoted and normalized before exact comparison.
+- Loaded symlinks are accepted only when their resolved target exactly equals
+  the expected same-scope canonical file.
+- Broken links, traversal, escaping links, transformed copies, and differently
+  named targets are rejected.
+- Each dependency validates its own target.
+- Resolution never rewrites provider views, canonical assets, user
+  configuration, or dispatch policy.
+- Diagnostics report dependency, candidate tier, and miss reason without
+  printing role contents or unrelated home-directory data.
+- Canonical resolution cannot weaken or replace the selected provider, model,
+  effort, or variant.
 
-### Authorization
-
-Candidate roots must remain contained within the OAT-managed user/project roots.
-User-owned provider directories are not write targets for this project.
-
-### Data Protection
-
-- **Encryption:** Not applicable.
-- **PII Handling:** Do not include home-path secrets or unrelated user content
-  in diagnostics beyond the existing redaction policy.
-- **Input Validation:** Validate dependency names, role names, candidate-root
-  ancestry, and canonical representation before selection.
-
-### Threat Mitigation
-
-- **Path traversal:** Reject role/dependency values that escape the managed
-  root; never concatenate unchecked user input into a candidate path.
-- **Wrong-root substitution:** Keep dependency bindings independent and fail
-  closed when the expected canonical role is missing.
-- **Provider confusion:** Label canonical instructions separately from provider
-  materialization and native catalog visibility.
+Ordinary local-user filesystem trust still applies. Defending against an
+attacker who can concurrently rewrite the user's OAT installation is outside
+scope; observed invalid state nevertheless fails closed.
 
 ## Performance Considerations
 
-### Scalability
+Resolution performs at most three targeted filesystem checks per dependency.
+It does not recursively scan provider directories, refresh catalogs, restart
+processes, or access the network. Native dispatch remains the primary route;
+canonical resolution affects direct pointers and the bounded fallback only.
 
-The resolver operates over a small manifest-derived candidate set. It should
-remain O(number of eligible tiers) per dependency; the ratchet runs in tests,
-not on every user invocation.
-
-### Caching
-
-No new persistent cache is required. Any existing command-scoped inventory may
-be reused only if its scope and dependency ownership remain explicit.
-
-### Resource Limits
-
-- **Memory:** Negligible manifest/role metadata only.
-- **CPU:** Bounded by the number of managed assets and candidate tiers.
-- **Network:** None.
+Roots are not cached globally. Per-dependency revalidation avoids stale
+symlink results and cross-dependency reuse. The ratchet scans existing bounded
+Markdown surfaces and shares one parser between its two scopes. No database,
+cache, resource-limit, or scalability mechanism is required beyond preserving
+the constant candidate count and avoiding directory-wide discovery.
 
 ## Error Handling
 
-### Error Categories
+Candidate failures are classified but are not terminal until all eligible
+tiers have been checked.
 
-- **User errors:** Missing user/project pack or role produces an actionable
-  project-scope or pack-install explanation.
-- **System errors:** Invalid or ambiguous roots fail closed with evidence.
-- **External service errors:** Not applicable; provider catalog state is outside
-  this project.
+| Condition                                                                | Behavior                                                        |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Loaded target missing, broken, escaping, transformed, copied, or wrong   | Record a miss; continue to user and project roots               |
+| User target missing or invalid                                           | Continue to the project root                                    |
+| Project target missing or invalid                                        | Complete resolution as unavailable                              |
+| All candidates miss                                                      | Stop before fresh-child fallback; do not improvise instructions |
+| One dependency is missing                                                | Fail only that dependency; do not reuse another root            |
+| Native dispatch succeeds                                                 | Do not invoke fallback failure handling                         |
+| Native target is rejected before start, but instructions are unavailable | Preserve target evidence and block fallback                     |
+| Ratchet detects a bare executable agent read                             | Fail with exact `source -> target` evidence                     |
 
-### Retry Logic
+Terminal recovery names the workflows dependency and intended scope and
+reports these available actions:
 
-No automatic retry or provider restart. The caller may rerun after installation
-or scope changes, while the scope/provider project explains catalog refresh
-requirements.
+```text
+oat tools install workflows --scope <user|project>
+oat tools update --pack workflows --scope <user|project>
+```
 
-### Logging
-
-- **Info:** Selected canonical tier and role representation where the existing
-  caller exposes resolution details.
-- **Warn:** A deprecated/bare reference is found during development checks.
-- **Error:** Resolution is unavailable or ambiguous, with redacted candidate
-  evidence and a recovery pointer.
+There are no automatic retries. A valid later tier resolves normally without
+presenting an earlier loaded-provider miss as a workflow failure.
 
 ## Testing Strategy
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification           | Key Scenarios                                              |
-| ---- | ---------------------- | ---------------------------------------------------------- |
-| FR1  | unit + integration     | user-only role resolution, project fallback, missing role  |
-| FR2  | design + contract      | canonical Markdown versus provider view, tier policy       |
-| FR3  | unit + integration     | dependency A present/B missing and reverse                 |
-| FR4  | unit                   | bare-path matcher, mutation failure, exact evidence        |
-| FR5  | contract + integration | four executable sites, descriptive-site classification     |
-| FR6  | integration            | native rejection followed by canonical fallback provenance |
-| FR7  | release + contract     | docs, skill versions, package lockstep                     |
-| NFR1 | unit + integration     | missing and ambiguous candidates fail closed               |
-| NFR2 | regression             | existing portable cross-skill suite and candidate order    |
-| NFR3 | integration + manual   | no provider mutation, boundary diagnostics                 |
+| ID   | Verification                | Key Scenarios                                                                                       |
+| ---- | --------------------------- | --------------------------------------------------------------------------------------------------- |
+| FR1  | Integration                 | Loaded, user-only, and project-only resolution; exact candidate ordering                            |
+| FR2  | Integration                 | Claude/Cursor canonical symlinks; Codex canonical root; variant, TOML, copy, and unsafe-link misses |
+| FR3  | Unit + integration          | Independent bindings; one-present/one-missing dependencies in both directions                       |
+| FR4  | Unit + mutation             | Bare and portable table cases; exact evidence; zero agent baseline; unchanged skill baseline        |
+| FR5  | Contract + manual inventory | Seven migrated live reads; classified `skeptic` examples; full canonical re-sweep                   |
+| FR6  | Integration                 | Continue after loaded misses; first valid tier; fail-closed workflows recovery                      |
+| FR7  | Repository gates            | Documentation, skill frontmatter, five-package lockstep, generated-view sync                        |
+| NFR1 | Integration                 | Deterministic invalid/missing outcomes and no unrelated substitution                                |
+| NFR2 | Unit + regression           | Existing cross-skill suite, candidate order, and historical evidence unchanged                      |
+| NFR3 | Contract + manual           | No provider mutation, restart, runtime resolver, or dispatch-target change                          |
 
-### Unit Tests
+### Matcher unit tests
 
-- **Scope:** Candidate binding, path validation, representation checks, matcher
-  forms, and dependency isolation.
-- **Coverage Target:** All resolver branches and all live matcher forms; no
-  numeric percentage target is substituted for branch coverage.
-- **Key Test Cases:**
-  - user-only and project-only canonical roots;
-  - missing, ambiguous, traversal, and wrong-representation candidates;
-  - independent dependency bindings;
-  - bare `.agents/agents/` mutation fails with exact evidence.
+Table-driven positive cases cover `.agents/agents/<name>.md`, dot-relative
+forms, repeated-parent `agents/<name>.md` hops, and existing bare skill forms.
+Negative cases cover portable root bindings, canonical user/repo bindings,
+legitimate Claude/Cursor examples, suffixed variants, Codex TOML, and
+unanchored prose. Both scan scopes call the same parser. Current manifest
+representation of every canonical agent must be proven before any duplicate
+matcher implementation is removed; both scan scopes remain.
 
-### Integration Tests
+### Provider-layout integration fixtures
 
-- **Scope:** Pack-manifest-derived asset inventory, migrated canonical skills,
-  and fallback provenance consumers.
-- **Test Environment:** Isolated user/project roots with disposable canonical
-  Markdown assets; no provider restart or external provider state.
-- **Key Test Cases:**
-  - user-scope workflows/research consumer resolution;
-  - four executable fallback/pointer consumers;
-  - new manifest asset automatically enters the ratchet;
-  - provider-view presence does not alter canonical resolution.
+Fixtures cover safe Claude and Cursor base symlinks, ignored Cursor variants,
+Codex native `.agents` resolution, rejected TOML, logical and realpathed skill
+directories, unsafe loaded targets, candidate ordering, valid coexistence,
+dependency isolation, and pack-aware recovery.
 
-### End-to-End Tests
+### Dispatch regression assertions
 
-- **Scope:** A minimal user-scope-only fallback scenario if the existing OAT
-  fixture can run it without provider process control.
-- **Test Scenarios:**
-  - native role unavailable, canonical role file resolved, generic fallback
-    records its provenance;
-  - canonical role unavailable, fallback fails with an actionable cause.
+Focused contracts preserve exact native variant-first selection, immutable
+model and effort pins, pre-start-rejection gating, fallback composition, and
+the rule that missing instructions cannot affect a successful native launch.
+
+### Ratchet and mutation verification
+
+The final executable agent baseline is zero and the six-entry historical skill
+baseline is byte-for-byte unchanged. A temporary bare read injected into a
+user-default skill must fail with exact `source -> target` evidence. The file
+is restored in all cases, the worktree is checked clean, and the focused suite
+must then pass.
+
+### Repository verification
+
+Revalidate provider-generated views and sync drift. Run `pnpm lint` and
+`pnpm format`, then the full Definition of Done in documented order. Capture
+every exit code explicitly and use uncached, isolated-`HOME` evidence where
+required by `AGENTS.md`.
 
 ## Deployment Strategy
 
-### Build Process
+This ships through the existing workflows pack and CLI package release
+process. It requires no service deployment, feature flag, database migration,
+provider restart, or new configuration.
 
-Run the repository's required skill, type, test, build, version, release, and
-docs gates for any shipped skill/asset change. The focused ratchet and consumer
-tests must pass before the full suite.
+1. Update canonical skills, ratchet tests, and applicable documentation.
+2. Revalidate generated Claude, Cursor, and Codex views and sync drift.
+3. Apply one frontmatter version bump to each changed skill.
+4. Advance the five public package versions in lockstep.
+5. Run focused resolution, matcher, dispatch, mutation, and sync checks.
+6. Run lint, format, and the complete Definition of Done.
+7. Release through the repository's normal package process.
 
-### Deployment Steps
-
-1. Revalidate discovery and this design against current `origin/main`.
-2. Resolve open questions and convert this design into a concrete plan.
-3. Implement contract, ratchet, consumer migrations, docs, and version bumps.
-4. Run focused tests followed by the full definition-of-done gate sequence.
-5. Verify no provider materialization or user-owned directory behavior changed.
-
-### Rollback Plan
-
-Revert the implementation PR as one versioned change. Existing project/user
-candidate behavior must remain available, and no migration should require
-rewriting user-owned provider directories.
-
-### Configuration
-
-- **Environment Variables:** None proposed.
-- **Feature Flags:** None proposed; the contract should be deterministic once
-  shipped.
-
-### Monitoring
-
-- **Metrics:** No new runtime metric required initially.
-- **Alerts:** Focused contract failure and fail-closed diagnostics are the
-  primary signals.
-- **Dashboards:** Not applicable.
+Users receive the behavior through existing workflows install/update commands.
+Before publication, rollback reverts the source and metadata changes. After
+publication, rollback requires a new patch version restoring prior behavior;
+published versions are never decremented. No persistent state or user data
+requires restoration, and this project defines no new monitoring surface.
 
 ## Migration Plan
 
-This is a source-contract migration, not a persistent data migration.
+This is a source-contract migration, not a database or persistent-data
+migration.
 
-### Migration Steps
+1. Re-sweep all canonical skill Markdown before editing.
+2. Introduce the shared typed parser and table-driven matcher coverage.
+3. Add the separate zero agent expectation without changing the six historical
+   skill entries.
+4. Port the five executable spellings across the four mandatory sites.
+5. Port the two remote-review source-of-truth pointers.
+6. Retain and classify the two `skeptic` provider-view descriptions.
+7. Classify any new findings before deciding their treatment.
+8. Revalidate provider mappings, generated views, sync, versions, and the
+   clean ratchet.
 
-1. Inventory and classify all canonical skill-to-agent reads.
-2. Implement and test the approved binding.
-3. Port executable consumers and reconcile descriptive references.
-4. Update docs and version metadata.
-
-### Rollback Strategy
-
-Revert the source/documentation/version changes. Since this project does not
-rewrite provider views or canonical installation state, rollback is file-local.
-
-### Data Validation
-
-Validate the final manifest-derived consumer inventory, zero live bare agent
-reads, expected user/project resolution, and exact fallback provenance.
+Existing project-scope consumers remain compatible because the repository
+canonical root stays in the chain. User-scope consumers gain the loaded and
+user candidates. Dispatch policy and provider variants are not migrated.
+Rollback restores the prior wording and matcher behavior and then verifies the
+original focused suite and generated-view state.
 
 ## Open Questions
 
-- **Tier eligibility:** Is user/project-only resolution the safe default, or can
-  loaded provider siblings be proven canonical Markdown across providers?
-- **Naming:** Is `${AGENT_PROVIDER_ROOT}` clear enough beside existing
-  per-dependency skill-root names?
-- **Isolation:** What exact binding shape preserves per-dependency isolation if
-  both leaves share a physical root?
-- **Long-term interface:** Should a later dispatch service eliminate direct
-  skill-to-agent file reads?
-- **Integration sequencing:** Does the scope/provider project consume this
-  contract first, or do both projects land separate compatible slices with one
-  shared test fixture?
+No material design questions remain open.
+
+- Loaded roots are eligible only through exact canonical-target validation.
+- `${AGENT_PROVIDER_ROOT}` names one owning pack; multiple roots are qualified.
+- Each dependency binds independently even when roots coincide physically.
+- Direct canonical reads remain for bounded fallback and source-of-truth paths.
+- `tool-pack-scope-provider-truthfulness` may consume this contract later but
+  is not a prerequisite for this project to ship.
+- Provider-specific variants remain dispatch targets, not instruction sources.
 
 ## Implementation Phases
 
 ### Phase 1: Contract and ratchet
 
-**Goal:** Decide and enforce the portable canonical agent-reference contract.
+**Goal:** Establish exact resolution and portable-reference protection.
 
-**Tasks:**
+**Tasks:** Add the shared typed parser, matcher cases, provider-layout fixtures,
+separate zero agent baseline, and mutation proof while preserving historical
+skill evidence.
 
-- Revalidate asset inventory and resolve tier/representation/isolation questions.
-- Implement the manifest-derived agent-read ratchet and mutation test.
-- Reconcile duplicate matcher logic and establish focused fixtures.
+**Verification:** Focused parser, provider-layout, dependency-isolation, and
+mutation contracts pass with exact evidence.
 
-**Verification:** Contract tests fail on injected bare reads and pass for the
-approved canonical forms, with no regression in existing cross-skill checks.
+### Phase 2: Consumer migration
 
-### Phase 2: Consumer migration and release
+**Goal:** Port live reads without changing native dispatch.
 
-**Goal:** Port live consumers and ship the documented contract.
+**Tasks:** Port seven live reads/pointers, preserve model and effort selection,
+classify provider examples, and re-sweep the canonical surface.
 
-**Tasks:**
+**Verification:** All live reads are portable, dispatch regressions pass, and
+the agent ratchet is clean.
 
-- Migrate the four executable role-file consumers.
-- Classify or exempt descriptive references with recorded rationale.
-- Update docs, skill frontmatter versions, lockstep package versions, and
-  release artifacts.
-- Verify the integration boundary with the scope/provider project.
+### Phase 3: Release verification
 
-**Verification:** User-scope-only canonical fallback tests pass, provenance is
-preserved, and the full repository definition-of-done sequence passes.
+**Goal:** Prove shipped artifacts and repository gates remain coherent.
+
+**Tasks:** Revalidate generated views and sync drift, apply skill/package
+version bumps, and run focused plus complete repository checks.
+
+**Verification:** Lint, format, release checks, and the Definition of Done pass
+with explicit evidence.
 
 ## Dependencies
 
-### External Dependencies
+There are no new external packages, services, APIs, environment variables, or
+runtime processes.
 
-- None; this is local CLI/skill behavior.
+- `BL-260829-unified-agent-provider-root` is the requirements authority.
+- The pack manifest defines shipped user-default and canonical-agent surfaces.
+- The existing portable cross-skill classifier and historical baseline provide
+  the ratchet foundation.
+- Provider sync/materialization supplies layouts that this project validates
+  but does not own.
+- Existing dispatch resolvers remain authoritative for variant, model, and
+  effort selection.
+- Existing skill, generated-view, lockstep package, and release gates enforce
+  shipment integrity.
+- `tool-pack-scope-provider-truthfulness` may consume the contract later.
+- `BL-260724-support-provider-directory` owns broader provider-directory
+  symlink behavior.
 
-### Internal Dependencies
-
-- `BL-260829-unified-agent-provider-root` (Unified AGENT_PROVIDER_ROOT binding
-  for portable skill and agent references).
-- Merged PR #231's portable-reference ratchet and generated asset baseline.
-- `tool-pack-scope-provider-truthfulness` for provider visibility and fallback
-  integration boundaries.
-- `BL-260724-support-provider-directory` (Support provider directory symlinks
-  as full collection sync) for directory ownership semantics.
-
-### Development Dependencies
-
-- Existing manifest-derived contract-test fixtures.
-- Isolated user/project asset fixtures.
-- Repository lockstep version and docs-release gates.
+If a provider cannot expose an exact same-scope canonical target, its loaded
+candidate is skipped and normal canonical fallbacks remain available.
 
 ## Risks and Mitigation
 
-- **Provider format drift:** Medium likelihood / high impact. Revalidate
-  provider representations and require canonical Markdown checks.
-- **Root isolation regression:** Medium likelihood / high impact. Add explicit
-  two-dependency tests and preserve per-dependency bindings.
-- **Cross-project file collision:** Medium likelihood / medium impact. Keep
-  materialization changes out of this project and coordinate shared fallback
-  assertions before implementation.
-- **False confidence from the current OAT repo:** Medium likelihood / high
-  impact. Test a disposable user-scope-only repository without project agent
-  files.
+| Risk                                                       | Probability | Impact | Mitigation                                                   | Contingency                                      |
+| ---------------------------------------------------------- | ----------- | ------ | ------------------------------------------------------------ | ------------------------------------------------ |
+| Canonical resolution changes native model/effort selection | Low         | High   | Immutable target boundary and dispatch regression assertions | Block release and restore prior consumer wording |
+| Provider layout drift                                      | Medium      | High   | Exact-target validation and generated-view fixtures          | Miss loaded candidate and use canonical fallback |
+| Variants become instruction sources                        | Low         | High   | Unsuffixed exact Markdown identity only                      | Fail closed and correct the provider mapping     |
+| Matcher misses a new path form                             | Medium      | High   | Table cases, two scans, full sweep, mutation proof           | Extend the shared parser before migration        |
+| Matcher flags legitimate documentation                     | Medium      | Medium | Typed exclusions and classified examples                     | Add a narrow evidence-backed exclusion           |
+| Dependency roots bleed together                            | Low         | High   | Independent bindings and two-direction fixtures              | Block the missing dependency only                |
+| Logical and real skill paths diverge                       | Medium      | Medium | Test both against canonical identity                         | Continue to user/project candidates              |
+| HOME or cache creates false confidence                     | Medium      | High   | Isolated HOME, uncached runs, explicit exit codes            | Discard evidence and rerun cleanly               |
+| Canonical and generated assets drift                       | Medium      | Medium | Sync, frontmatter, lockstep, lint, and format gates          | Regenerate or correct before release             |
+| Provider-truthfulness work overlaps files                  | Medium      | Medium | Preserve the documented ownership boundary                   | Reconcile sequencing before implementation       |
+| All fallback candidates are unavailable                    | Medium      | Medium | Fail before launch with precise recovery                     | Install or update workflows at intended scope    |
+
+The residual risk is intentionally fail-closed: a novel provider layout may
+miss the loaded candidate temporarily, but it cannot silently substitute
+transformed instructions or alter the selected execution target.
 
 ## References
 
@@ -555,6 +565,6 @@ preserved, and the full repository definition-of-done sequence passes.
 - Discovery: `discovery.md`
 - Backlog: `../../../repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md`
 - Related project: `../tool-pack-scope-provider-truthfulness/`
-- Knowledge Base: `.oat/repo/knowledge/project-index.md`
-- Architecture Docs: `.oat/repo/knowledge/architecture.md`
-- Conventions: `.oat/repo/knowledge/conventions.md`
+- Knowledge base: `../../../repo/knowledge/project-index.md`
+- Architecture: `../../../repo/knowledge/architecture.md`
+- Conventions: `../../../repo/knowledge/conventions.md`
