@@ -1,4 +1,4 @@
-import { lstat } from 'node:fs/promises';
+import { lstat, readdir, readlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { compareVersions } from '@commands/init/tools/shared/version';
@@ -107,13 +107,79 @@ async function inventoryVersionedAsset(
     readVersion(installedPath),
     readVersion(bundledPath),
   ]);
+  const versionStatus = compareVersions(installedVersion, bundledVersion);
+  const contentMatches =
+    versionStatus !== 'current'
+      ? null
+      : definition.kind === 'skill'
+        ? await canonicalDirectoryMatches(installedPath, bundledPath)
+        : await canonicalFileMatches(installedPath, bundledPath);
   return {
     definition,
     path: installedPath,
-    status: compareVersions(installedVersion, bundledVersion),
+    status:
+      versionStatus === 'current' && !contentMatches
+        ? 'outdated'
+        : versionStatus,
     installedVersion,
     bundledVersion,
   };
+}
+
+async function canonicalFileMatches(
+  installedPath: string,
+  bundledPath: string,
+): Promise<boolean> {
+  const [installedDigest, bundledDigest] = await Promise.all([
+    digestFile(installedPath),
+    digestFile(bundledPath),
+  ]);
+  return installedDigest === bundledDigest;
+}
+
+async function canonicalDirectoryMatches(
+  installedRoot: string,
+  bundledRoot: string,
+): Promise<boolean> {
+  const entries = await readdir(bundledRoot, { withFileTypes: true });
+  for (const entry of entries) {
+    const installedPath = join(installedRoot, entry.name);
+    const bundledPath = join(bundledRoot, entry.name);
+    if (!(await pathExists(installedPath))) return false;
+
+    const installedMetadata = await lstat(installedPath);
+    if (entry.isDirectory()) {
+      if (
+        !installedMetadata.isDirectory() ||
+        !(await canonicalDirectoryMatches(installedPath, bundledPath))
+      ) {
+        return false;
+      }
+      continue;
+    }
+    if (entry.isFile()) {
+      if (
+        !installedMetadata.isFile() ||
+        !(await canonicalFileMatches(installedPath, bundledPath))
+      ) {
+        return false;
+      }
+      continue;
+    }
+    if (entry.isSymbolicLink()) {
+      if (
+        !installedMetadata.isSymbolicLink() ||
+        (await readlink(installedPath)) !== (await readlink(bundledPath))
+      ) {
+        return false;
+      }
+      continue;
+    }
+    throw new Error(
+      `Unsupported filesystem entry in pack asset: ${bundledPath}`,
+    );
+  }
+  return true;
 }
 
 async function inventoryStaticAsset(
@@ -213,7 +279,10 @@ async function inventoryAsset(
       `Managed pack asset ${definition.id} has no materialized source`,
     );
   }
-  const bundledPath = join(assetsRoot, definition.source);
+  const { realPath: bundledPath } = await validateRealPathWithinScope(
+    join(assetsRoot, definition.source),
+    assetsRoot,
+  );
   if (definition.kind === 'skill' || definition.kind === 'agent') {
     const inventory = await inventoryVersionedAsset(
       definition,
