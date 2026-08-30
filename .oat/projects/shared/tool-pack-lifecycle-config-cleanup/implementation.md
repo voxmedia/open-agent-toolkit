@@ -174,6 +174,18 @@ oat_generated: false
   worktree clean
 - Fix-loop usage: 1/2; narrowed re-review required
 
+#### Dispatch Record: p01 review round 2
+
+- Request: `dispatch-p01-review-r2-20260829-01`
+- Launch state/outcome: accepted / pending
+- Narrowed range:
+  `717df3056006286d036d0f2d07554a67f3272ea0..caea5ebafe10883b39336219a5cb76a188c96358`
+- Prior artifact: `reviews/p01-review-2026-08-30T022309Z.md`
+- Route: `oat-reviewer-gpt-5-6-sol-high`
+- Selection: managed reviewer target `gpt-5.6-sol` / `high`; ceiling `high`
+- Dispatch stamp:
+  `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
 ### Review Received: p02 (round 1)
 
 - Artifact: `reviews/p02-review-2026-08-30T022702Z.md`
