@@ -12,7 +12,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.221Z
-updated: 2026-08-26T22:57:19.221Z
+updated: 2026-08-30T22:21:34Z
 associated_issues: []
 external_plans: []
 ---
@@ -23,5 +23,16 @@ Three consecutive claude-fable-skip-permissions exit-gate children (2026-08-26, 
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Headless gate instructions and the runner-owned prompt require review work,
+  artifact creation, and bookkeeping to finish inline or through a
+  synchronously awaited child before the child exits; background tasks,
+  monitors, and waiters must not outlive the turn.
+- A clean accepted child exit without a produced artifact returns a dedicated
+  `artifact_missing` terminal result with actionable recovery guidance.
+- An observed wrong-run, wrong-project, duplicate, or otherwise mismatched
+  artifact remains `targeting_correlation_failed`; neither terminal is
+  receive-eligible, remediable within the accepted run, or replacement-
+  eligible.
+- Deterministic integration coverage proves correlated success, clean
+  child-without-artifact failure, and correlation mismatch as separate
+  headless outcomes.
