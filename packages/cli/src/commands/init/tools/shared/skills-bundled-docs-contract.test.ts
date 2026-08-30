@@ -1100,6 +1100,32 @@ describe('skills bundled docs contract', () => {
     },
   );
 
+  it('binds plan artifact-review instructions from the workflows scope', () => {
+    const skill = 'oat-project-plan-writing';
+    const content = readFileSync(join(SKILLS_DIR, skill, 'SKILL.md'), 'utf8');
+    const boundRead = '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md';
+
+    expectPortableAgentRootCandidateOrder(content, skill);
+    expect(
+      content.match(new RegExp(boundRead.replaceAll('$', '\\$&'), 'g')),
+    ).toHaveLength(1);
+    expect(content).toMatch(
+      /stop before[\s\S]{0,80}(?:artifact-review|fresh-child)[\s\S]{0,80}(?:dispatch|fallback)/i,
+    );
+    expect(content).toContain(
+      'oat tools install workflows --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack workflows --scope <user|project>',
+    );
+    expect(content).toMatch(
+      /exact\s+registered[\s\S]{0,240}(?:variant|agent_type)[\s\S]{0,180}first/i,
+    );
+    expect(content).toMatch(
+      /role instructions[\s\S]{0,240}(?:must not|cannot)[\s\S]{0,180}(?:target|provider)[\s\S]{0,120}model[\s\S]{0,120}effort[\s\S]{0,120}variant/i,
+    );
+  });
+
   it('maps brainstorm sibling recovery to the owning pack', () => {
     const content = readFileSync(
       join(SKILLS_DIR, 'oat-brainstorm', 'SKILL.md'),

@@ -2609,6 +2609,13 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
+    expect(shared).toContain(
+      '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
+    );
+    expect(shared).toMatch(
+      /\$\{SKILL_DIR\}\/\.\.\/\.\.[\s\S]{0,160}\$\{HOME\}\/\.agents[\s\S]{0,160}<repo-root>\/\.agents/,
+    );
     expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
     expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
     expect(shared).toMatch(/re-run the[\s\S]{0,40}resolver/i);
@@ -2647,7 +2654,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.19');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2791,7 +2798,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.19');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3900,7 +3907,7 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.19'],
+      ['oat-project-plan-writing', '1.2.20'],
       ['oat-project-review-provide', '1.5.2'],
       ['oat-project-review-receive', '1.6.1'],
       ['oat-project-review-receive-remote', '1.5.1'],
@@ -4974,7 +4981,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.19'],
+      ['oat-project-plan-writing', '1.2.20'],
       ['oat-project-plan', '1.4.5'],
       ['oat-project-quick-start', '2.3.6'],
       ['oat-project-import-plan', '1.4.10'],
