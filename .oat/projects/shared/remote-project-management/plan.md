@@ -105,7 +105,8 @@ packages/cli/src/config/oat-config.test.ts.
 
 ### Task p01-t02: Resolve transport preferences by owning scope
 
-**Implementation:** in progress
+**Implementation:** completed in
+`b3479ac367467fcdc381c277e6da6399d78fcdaf`
 
 **Files:** Modify packages/cli/src/config/resolve.ts and
 packages/cli/src/config/resolve.test.ts.
@@ -119,6 +120,8 @@ packages/cli/src/config/resolve.test.ts.
 5. Commit: feat(p01-t02): resolve remote transport preferences
 
 ### Task p01-t03: Expose remote configuration through config commands
+
+**Implementation:** in progress
 
 **Files:** Modify packages/cli/src/commands/config/index.ts and
 packages/cli/src/commands/config/index.test.ts.

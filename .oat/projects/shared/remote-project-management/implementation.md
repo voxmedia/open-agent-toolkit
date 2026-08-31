@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -100,12 +100,15 @@ oat_generated: false
 
 ### Task p01-t02: Resolve transport preferences by owning scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b3479ac367467fcdc381c277e6da6399d78fcdaf
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- Local transport lists replace user lists per provider, user lists replace
+  built-ins, duplicates are removed in order, and explicit empty lists disable
+  that provider. Focused resolver tests passed (57 tests), along with CLI
+  type-check and lint.
 
 ---
 
@@ -266,12 +269,14 @@ Chronological log of implementation progress.
 **Session Start:** 2026-08-31T04:10:00Z
 
 - [x] p01-t01: Define remote configuration types - 6f5de98828e8b71c62014677cb7f4391cf0e8941
-- [ ] p01-t02: Resolve transport preferences by owning scope - in progress
+- [x] p01-t02: Resolve transport preferences by owning scope - b3479ac367467fcdc381c277e6da6399d78fcdaf
+- [ ] p01-t03: Expose remote configuration through config commands - in progress
 
 **What changed (high level):**
 
 - Added ownership-safe shared remote policy/storage and local/user transport
   configuration surfaces.
+- Added provider-specific transport resolution with per-value source evidence.
 
 **Decisions:**
 
