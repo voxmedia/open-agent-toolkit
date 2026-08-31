@@ -697,9 +697,9 @@ phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
 phase_head: eed80d5ab6b297d19da4569ca9963e25fd53b57d
 recovery_usage: 1/10
 pending_attempt: null
-review_cycles: 3/3
-review_fix_loops: 2
-phase_outcome: blocked
+review_cycles: 3/4
+review_fix_loops: 2/3
+phase_outcome: operator-fix-authorized
 terminal_review_artifact: reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
@@ -712,6 +712,9 @@ continuation_events:
     target: oat-phase-implementer-gpt-5-6-sol-high
     outcome: done
     commit: eed80d5ab6b297d19da4569ca9963e25fd53b57d
+  - id: review-fix-p02-r3-20260831T1515Z
+    reason: operator-authorized bounded fix for the terminal Phase 2 credential-boundary finding
+    target: oat-phase-implementer-gpt-5-6-sol-high
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
@@ -731,6 +734,23 @@ continuation_events:
   Phase 2 repair/review cycle requires explicit operator direction.
 - Every reviewer reported `**Reconnaissance:** not-attempted`; none of the
   three review artifacts contains a `## Review Orchestration` section.
+
+#### Operator-authorized review extension
+
+- Authorization: the user explicitly authorized continuation after the normal
+  three-review Phase 2 governance stop.
+- Scope: exactly one additional bounded fix/review cycle for the single
+  Critical finding in
+  `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`.
+- Repair boundary: one shared credential-assignment scanner plus snapshot and
+  preview consumers/regressions. The two Medium findings remain out of scope.
+- Governance exception: review-fix capacity is extended from 2 to 3 and review
+  capacity from 3 to 4 for Phase 2 only. Prior usage is preserved.
+- Exact implementation and reviewer targets remain
+  `oat-phase-implementer-gpt-5-6-sol-high` and
+  `oat-reviewer-gpt-5-6-sol-high`.
+- No further fix/review cycle, target change, or Phase 3 dispatch is authorized
+  if the fourth review remains blocked.
 
 #### Approved future-phase boundary correction
 
