@@ -235,9 +235,10 @@ git commit -m "feat(p02-t01): gate retirement on archive durability"
 
 Exercise interruptions before completed-ref creation, after completed-ref
 creation, after active-ref removal, after checkout removal, before lifecycle
-commit, and after lifecycle commit recovery. Assert one snapshot identity, one
-exact lifecycle commit, no active JSON record on success, no active remote ref,
-and a completed ref at `archiveSourceRefSha`.
+commit, after filesystem deletion of the JSON record but before that deletion
+is committed, and after lifecycle commit recovery. Assert one snapshot
+identity, one exact lifecycle commit, no active JSON record on success, no
+active remote ref, and a completed ref at `archiveSourceRefSha`.
 
 Include legacy `status: complete` records with retained active refs and absent
 checkouts so rerunning archive performs the same safe terminal transition.
@@ -257,7 +258,10 @@ checkout before the terminal lifecycle commit, then delete the record and
 commit the deletion together with summary/recap exports. Extend lifecycle
 receipt recovery to validate deletion rather than a complete-record payload.
 Use archive metadata plus completed-ref state when retrying after checkout or
-active-ref removal.
+active-ref removal. A retry after the JSON file has already been deleted must
+locate and validate the original snapshot from the completed ref plus persisted
+archive metadata; it must not create a replacement active record or choose a
+new dated snapshot.
 
 **Step 3: Format**
 
@@ -293,7 +297,10 @@ git commit -m "feat(p02-t02): seal synced archive without active record"
 Require structured output to report the completed ref, verified source SHA,
 record-retirement status, lifecycle commit, archive path, and S3 disposition.
 Prove that a durability failure returns a non-success result and leaves
-completion resumable.
+completion resumable. Add a direct command-entry recovery case where the JSON
+record is already absent, the completed ref matches the persisted archive
+metadata, and the command resumes the original snapshot/lifecycle receipt
+instead of rejecting the project or creating a second snapshot.
 
 Run:
 
