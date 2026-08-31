@@ -767,7 +767,7 @@ codes after both remote-review fixes are committed.
 | plan           | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
 | plan           | artifact | fixes_completed | 2026-08-30 | -                                                             | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 | final          | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md`         | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
-| github-pr #249 | code     | fixes_added     | 2026-08-31 | `reviews/archived/remote-pr-249-review-2026-08-31T040842Z.md` | 5b5e6837eac12695ae38d7d99cee96f095b97ae1 | -          | -                             |
+| github-pr #249 | code     | fixes_completed | 2026-08-31 | `reviews/archived/remote-pr-249-review-2026-08-31T040842Z.md` | 5b5e6837eac12695ae38d7d99cee96f095b97ae1 | -          | -                             |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -797,11 +797,13 @@ review result.
 
 **Total: 12 tasks**
 
-Ten of 12 implementation tasks are complete. Remote PR #249 findings added
-`p04-t04` and `p04-t05` for one PJM eligibility correction and one
-shared-observation representation correction. The earlier closeout evidence is
-preserved, but its final review and configured gate are stale until the
-substantive revision is implemented and revalidated.
+All 12 implementation tasks are complete. Remote PR #249 findings added and
+resolved `p04-t04` and `p04-t05`: judgment-only leftovers no longer authorize
+PJM migration writes, and shared-owner observations now have one scope-owned
+representation with exact output-cardinality coverage. The complete ordered
+repository gate sequence passes on the revision. Earlier closeout provenance is
+preserved, while its final review and configured gate remain stale until the
+changed basis is independently revalidated.
 
 ## References
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t04
-oat_last_commit: bc7fa79f1ee63a66cd5d8b8181fefe5257777adc
+oat_current_task: null
+oat_last_commit: eb66f8e962bc7b86099208efa02cd15a307375b0
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -18,7 +18,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/249'
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T04:08:42Z'
+oat_project_state_updated: '2026-08-31T04:19:25Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,15 +98,15 @@ oat_project_recap:
 
 # Project State: Scope and Adoption Diagnostics
 
-**Status:** PR revision in progress
+**Status:** Revision complete; PR open
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — remote PR #249 revision in progress. Bugbot findings are
-tracked as `p04-t04` and `p04-t05`; the earlier final review and Cursor Fable
-exit gate are preserved but stale for the changed implementation basis.
+Implementation — remote PR #249 revision complete. Bugbot findings were fixed
+by `p04-t04` and `p04-t05`; the earlier final review and Cursor Fable exit gate
+are preserved but stale for the changed implementation basis.
 
 ## Artifacts
 
@@ -114,7 +114,7 @@ exit gate are preserved but stale for the changed implementation basis.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (4 phases, 12 tasks including two remote-review fixes)
-- **Implementation:** `implementation.md` (10/12 tasks; revision in progress)
+- **Implementation:** `implementation.md` (12/12 tasks; revision complete)
 - **Retrospective:** `references/project-retro.md` (complete; no promotion or filing proposals)
 
 ## Progress
@@ -163,7 +163,8 @@ exit gate are preserved but stale for the changed implementation basis.
 - ✓ Current `origin/main` through PR #246 integrated; release reconciled to
   `0.2.50`
 - ✓ Post-integration PJM doctor and all eight ordered repository gates passed
-- ⧗ Remote PR #249 findings converted to `p04-t04` and `p04-t05`
+- ✓ Remote PR #249 findings resolved by `p04-t04` and `p04-t05`
+- ✓ Combined revision passed all eight ordered gates and PJM doctor
 - ⧗ Awaiting human review
 - ✓ Approval-aware closeout sequence completed
 
@@ -177,8 +178,8 @@ review and gate evidence after implementation.
 
 ## Next Milestone
 
-Complete `p04-t04` and `p04-t05`, then refresh final review and configured gate
-evidence before returning the PR to closeout.
+PR is open with the review fixes pushed next. Refresh final review and the
+configured implementation exit gate before returning the project to closeout.
 
 - To incorporate feedback: run `oat-project-revise`
 - Complete before merge: run `oat-project-complete` now, then merge the PR.

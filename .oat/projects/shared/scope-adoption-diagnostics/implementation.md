@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: implementation
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -12,19 +12,19 @@ oat_generated: false
 **Started:** 2026-08-30 21:48 UTC
 **Last Updated:** 2026-08-30
 
-> Remote PR revision is in progress with the managed High dispatch ceiling;
-> `p04-t04` is the current task.
+> All 12 implementation tasks are complete with the managed High dispatch
+> ceiling; the remote PR revision awaits refreshed final review/gate evidence.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in_progress | 5     | 3/5       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 5     | 5/5       |
 
-**Total:** 10/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -127,7 +127,8 @@ findings.
 
 **Status:** completed
 **Started:** 2026-08-30 22:59 UTC
-**Completed:** 2026-08-31 00:18 UTC
+**Initial completion:** 2026-08-31 00:18 UTC
+**Remote-review revision completed:** 2026-08-31 04:19 UTC
 
 ### Task p04-t01: Advance lockstep public package versions
 
@@ -170,6 +171,33 @@ review's PASS verdict for product/release behavior with only `m1`. Thomas
 explicitly waived a redundant second review on 2026-08-30 after this
 artifact-only alignment. Configured closeout gates and approval remain.
 Historical orchestration snapshots stay unchanged.
+
+### Task p04-t04: (review) Keep judgment leftovers out of migration eligibility
+
+**Status:** completed
+**Commit:** `8fec34fc2c370732a2acad2f5c020c8e5066a48c`
+
+Judgment-only backlog and second-roadmap leftovers no longer satisfy the
+mechanical legacy-source predicate. Complete canonical repositories now return
+`already-migrated`, incomplete repositories skip with recovery, and both paths
+are byte-for-byte write-free. The focused PJM suite passed 39/39.
+
+### Task p04-t05: (review) Store shared-owner observations once
+
+**Status:** completed
+**Commit:** `eb66f8e962bc7b86099208efa02cd15a307375b0`
+
+Shared-owner observations are stored only on the selected applicable scope;
+status and doctor retain one human/JSON observation without depending on a
+duplicate parent-pack copy. Inventory/status/doctor/removal coverage passed
+181/181, and the combined review-focused suite passed 198/198 before the task
+split.
+
+The final combined revision passed the complete ordered gate sequence: check,
+type-check, test (CLI 4,648/4,648; smoke 140/140; skills 586/586; release 39
+passed/1 skipped), build, skill-version validation, live release-version check,
+release validation, and docs build all exited 0. PJM doctor also passed all 12
+checks.
 
 ## Orchestration Runs
 
@@ -396,8 +424,11 @@ scope/pack messages, but the duplicate stored representation violates the
 emit-once contract and is accepted as a bounded correction. No findings were
 deferred or dismissed.
 
-**Next:** Execute the two revision tasks and revalidate the substantive branch
-basis before closeout.
+**Outcome:** Resolved by `p04-t04` and `p04-t05`; no finding was deferred or
+dismissed. The revision passes all ordered repository gates.
+
+**Next:** Refresh final lifecycle review and the configured implementation exit
+gate for the changed basis before closeout.
 
 <!-- orchestration-runs-end -->
 
