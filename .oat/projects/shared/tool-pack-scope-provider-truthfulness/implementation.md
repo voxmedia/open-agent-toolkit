@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 1 received; fixes pending
+**Status:** review round 1 fixes complete; round 2 pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -368,6 +368,20 @@ unchanged`, making the source-qualified recovery record contradictory.
   4. Correct the documented `providers set` user-scope command syntax.
 - The original exact High p03 implementer remains the fix owner. A fresh High
   reviewer will assess the complete range after verification.
+
+### Review Round 1 Fix
+
+- Commit: `11a35ce90994848ddbe4a3ed2e4f0739b40a1233`
+- Preserved planned extension operations while adding separate apply results;
+  made Claude core user-agent materialization visible to status/doctor;
+  reverted unsupported runtime refresh claims to `unknown`; and corrected the
+  user provider command examples.
+- Verification: focused 5 files / 218 tests, expanded phase 20 files / 498
+  tests, CLI lint/type-check/format, `pnpm check`, `git diff --check`, CLI help,
+  and full `pnpm test` pass.
+- A first post-commit full test run hit an unrelated `ENOTEMPTY` temporary-dir
+  cleanup race. The no-edit focused rerun passed 18/18 and the complete no-edit
+  `pnpm test` rerun passed; no recovery or source change was needed.
 
 ---
 
@@ -617,6 +631,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Artifact: `reviews/p03-review-2026-08-31T184315Z.md`
 - Reconnaissance: not attempted
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 1
+
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `11a35ce90994848ddbe4a3ed2e4f0739b40a1233`
+- Outcome: all three Important and one Medium findings corrected; focused 218,
+  expanded phase 498, and full repository tests passed
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

@@ -1711,7 +1711,8 @@ gates exit 0 at the final reviewed head.
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T155718Z.md                      | e85ba38ae575e193a7084f1046798ca0827f6bef | manual     | -           |
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T164057Z.md                      | 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f | manual     | -           |
 | p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T170932Z.md                      | eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab | manual     | -           |
-| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T184315Z.md                      | 810f0788d6034b12997e2154f14ac50dce8623df | manual     | -           |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T184315Z.md                      | 810f0788d6034b12997e2154f14ac50dce8623df | manual     | -           |
+| p03    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
