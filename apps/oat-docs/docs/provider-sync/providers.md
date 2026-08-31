@@ -128,7 +128,8 @@ current-session catalog probe is still not proof of provider visibility.
 ## Scope rules
 
 - Project scope: skills + agents + rules
-- User scope: skills, plus the two bundled managed Codex and Cursor role definitions used only for user-owned target expansion (provider mappings vary by adapter)
+- User scope: skills plus capability-supported ordinary agents (provider mappings vary by adapter)
+- The two bundled managed roles separately participate in Codex and Cursor extension expansion for user-owned targets
 - Rules are project-scoped only in this release
 - Codex user-scope sync materializes user-config custom roles under `~/.codex`; project-config and supported-catalogue output remains project-scoped and version controlled
 - Cursor user-scope sync materializes user-config variants under `~/.cursor/agents`; project-config and supported-catalogue output remains project-scoped and version controlled

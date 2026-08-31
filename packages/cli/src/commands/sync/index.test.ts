@@ -560,7 +560,23 @@ describe('createSyncCommand', () => {
           removals: [],
         },
       ],
-      executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'reviewer.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
     });
 
     await runSyncCommand(command, {
@@ -584,6 +600,43 @@ describe('createSyncCommand', () => {
           },
         },
       ],
+    });
+  });
+
+  it('keeps aggregate-only mixed counts unattributed to named assets', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [first, second].map((canonical) => ({
+            canonical,
+            provider: 'claude',
+            providerPath: `/tmp/home/.claude/agents/${canonical.name}`,
+            operation: 'create_copy' as const,
+            strategy: 'copy' as const,
+            reason: 'missing',
+          })),
+          removals: [],
+        },
+      ],
+      executeResults: [{ applied: 1, failed: 1, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      summary: { applied: 1, failed: 1 },
+      operationResults: [
+        { asset: 'first.md', status: 'unknown' },
+        { asset: 'second.md', status: 'unknown' },
+      ],
+      providerRefreshAdvice: [],
     });
   });
 
@@ -1557,6 +1610,84 @@ describe('createSyncCommand', () => {
       ],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('renders exact mixed extension results separately from plan reasons', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              reason: 'managed role file missing',
+              roleName: 'reviewer',
+              content: 'developer_instructions = "review"',
+            },
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-reviewer',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 1,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              entryName: 'reviewer',
+              status: 'changed',
+            },
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'failed',
+              failure:
+                'Materialization failed; inspect local verbose diagnostics and retry sync.',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(capture.info[0]).toContain('codex extension results');
+    expect(capture.info[0]).toContain(
+      '- codex:role:create .codex/agents/reviewer.toml (reviewer)\n  reason: managed role file missing\n  result: changed',
+    );
+    expect(capture.info[0]).toContain(
+      '- codex:config:update .codex/config.toml\n  reason: managed config differs\n  result: failed — Materialization failed; inspect local verbose diagnostics and retry sync.',
+    );
+    expect(capture.info[0]).not.toContain('extension (applied)');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
   });
 
   it('reports combined user extension partial failure in JSON and exits nonzero', async () => {

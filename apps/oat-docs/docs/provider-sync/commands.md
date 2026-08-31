@@ -99,11 +99,13 @@ Purpose:
 
 Purpose:
 
-- Enable or disable project providers in sync config
+- Enable or disable providers in the selected scope's sync config; project is
+  the default scope
 
 Key behavior:
 
-- Modifies `.oat/sync/config.json` to toggle provider enablement
+- Updates the selected scope's sync config to toggle provider enablement
+- Scope: `--scope project|user` (defaults to `project`)
 - Options: `--enabled <providers>`, `--disabled <providers>` (comma-separated)
 - Changes take effect on next `oat sync`
 

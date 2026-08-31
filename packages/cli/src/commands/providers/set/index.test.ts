@@ -130,6 +130,19 @@ describe('oat providers set', () => {
     tempDirs.length = 0;
   });
 
+  it('documents project default and project or user sync config scopes', () => {
+    const help = createProvidersSetCommand().helpInformation();
+    const normalizedHelp = help.replace(/\s+/g, ' ');
+
+    expect(normalizedHelp).toContain(
+      "Enable or disable providers in the selected scope's sync config",
+    );
+    expect(normalizedHelp).toContain('(project by default)');
+    expect(normalizedHelp).toContain('--scope <scope>');
+    expect(normalizedHelp).toContain('Sync config scope: project or user');
+    expect(normalizedHelp).toContain('default: "project"');
+  });
+
   it('succeeds without --scope (defaults to project scope)', async () => {
     // p01-t03: bare invocation should not require --scope project
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));

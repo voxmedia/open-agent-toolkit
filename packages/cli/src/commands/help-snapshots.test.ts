@@ -466,8 +466,8 @@ describe('help output snapshots', () => {
       Commands:
         list [options]                List provider adapters and sync summary
         inspect [options] <provider>  Inspect provider details and mapping state
-        set [options]                 Enable or disable project providers in sync
-                                      config
+        set [options]                 Enable or disable providers in the selected
+                                      scope's sync config (project by default)
         codex                         Codex provider utilities
         help [command]                display help for command
       "
@@ -536,11 +536,12 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat providers set [options]
 
-      Enable or disable project providers in sync config
+      Enable or disable providers in the selected scope's sync config (project by
+      default)
 
       Options:
-        --scope <scope>         Limit execution scope (choices: "project", "user",
-                                "all", default: "project")
+        --scope <scope>         Sync config scope: project or user (default:
+                                "project")
         --enabled <providers>   Comma-separated providers to enable
         --disabled <providers>  Comma-separated providers to disable
         -h, --help              display help for command

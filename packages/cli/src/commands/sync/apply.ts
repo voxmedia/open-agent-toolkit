@@ -107,22 +107,17 @@ function countSkippedExtensionEntries(scopePlans: ScopeSyncPlan[]): number {
 
 function buildSummary(
   scopePlans: ScopeSyncPlan[],
-  operationResults: readonly SyncOperationResult[],
+  coreApplied: number,
+  coreFailed: number,
+  coreSkipped: number,
   extensionApplied: number,
   extensionFailed: number,
 ): SyncSummary {
   return {
     plannedOperations: countPlannedOperations(scopePlans),
-    applied:
-      operationResults.filter(({ status }) => status === 'changed').length +
-      extensionApplied,
-    failed:
-      operationResults.filter(
-        ({ status }) => status === 'failed' || status === 'missing',
-      ).length + extensionFailed,
-    skipped:
-      operationResults.filter(({ status }) => status === 'current').length +
-      countSkippedExtensionEntries(scopePlans),
+    applied: coreApplied + extensionApplied,
+    failed: coreFailed + extensionFailed,
+    skipped: coreSkipped + countSkippedExtensionEntries(scopePlans),
   };
 }
 
@@ -134,64 +129,33 @@ function normalizeOperationResults(
     return result.operations;
   }
 
-  let appliedRemaining = result.applied;
-  let failedRemaining = result.failed;
   const plannedOperations = [...plan.entries, ...plan.removals];
-  const normalized = plannedOperations.map((operation) => {
-    let status: SyncOperationResult['status'];
-    let failure: string | undefined;
-    if (operation.operation === 'skip') {
-      status = 'current';
-    } else if (appliedRemaining > 0) {
-      appliedRemaining -= 1;
-      status = 'changed';
-    } else if (failedRemaining > 0) {
-      failedRemaining -= 1;
-      status = 'failed';
-      failure =
-        'Operation failed; inspect local verbose diagnostics and retry sync.';
-    } else {
-      status = 'unknown';
-    }
+  return plannedOperations.map((operation) => {
     return {
       scope: plan.scope,
       provider: operation.provider,
       contentKind: operation.canonical.type,
       asset: operation.canonical.name,
       action: operation.operation,
-      status,
-      ...(failure ? { failure } : {}),
+      status: operation.operation === 'skip' ? 'current' : 'unknown',
     };
   });
-  const fallbackOperation = plannedOperations[0];
-  if (!fallbackOperation) {
-    return normalized;
-  }
-  while (appliedRemaining > 0) {
-    appliedRemaining -= 1;
-    normalized.push({
-      scope: plan.scope,
-      provider: fallbackOperation.provider,
-      contentKind: fallbackOperation.canonical.type,
-      asset: fallbackOperation.canonical.name,
-      action: fallbackOperation.operation,
-      status: 'changed',
-    });
-  }
-  while (failedRemaining > 0) {
-    failedRemaining -= 1;
-    normalized.push({
-      scope: plan.scope,
-      provider: fallbackOperation.provider,
-      contentKind: fallbackOperation.canonical.type,
-      asset: fallbackOperation.canonical.name,
-      action: fallbackOperation.operation,
-      status: 'failed',
-      failure:
-        'Operation failed; inspect local verbose diagnostics and retry sync.',
-    });
-  }
-  return normalized;
+}
+
+function materializationOperationIdentity(operation: {
+  provider: string;
+  target: string;
+  path: string;
+  action: string;
+  entryName?: string;
+}): string {
+  return JSON.stringify([
+    operation.provider,
+    operation.target,
+    operation.path,
+    operation.action,
+    operation.entryName ?? null,
+  ]);
 }
 
 function formatAppliedOutput(
@@ -218,13 +182,24 @@ function formatAppliedOutput(
 
       const extensionSections = scopePlan.materializationExtensions.map(
         (extension) => {
+          const resultsByIdentity = new Map(
+            (extension.operationResults ?? []).map((result) => [
+              materializationOperationIdentity(result),
+              result,
+            ]),
+          );
           const lines = extension.operations.map((operation) => {
             const entry = operation.entryName
               ? ` (${operation.entryName})`
               : '';
-            return `- ${operation.provider}:${operation.target}:${operation.action} ${operation.path}${entry} (${operation.reason})`;
+            const result = resultsByIdentity.get(
+              materializationOperationIdentity(operation),
+            );
+            const status = result?.status ?? 'unknown';
+            const failure = result?.failure ? ` — ${result.failure}` : '';
+            return `- ${operation.provider}:${operation.target}:${operation.action} ${operation.path}${entry}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
           });
-          return `${extension.provider} extension (applied)\n${lines.join('\n')}`;
+          return `${extension.provider} extension results\n${lines.join('\n')}`;
         },
       );
 
@@ -240,6 +215,9 @@ export async function runSyncApply(
 ): Promise<void> {
   let extensionApplied = 0;
   let extensionFailed = 0;
+  let coreApplied = 0;
+  let coreFailed = 0;
+  let coreSkipped = 0;
   const operationResults: SyncOperationResult[] = [];
   const extensionOperationResults: Array<
     MaterializationOperationResult & { scope: ConcreteScope }
@@ -272,6 +250,9 @@ export async function runSyncApply(
         scopePlan.manifest,
         scopePlan.manifestPath,
       );
+      coreApplied += result.applied;
+      coreFailed += result.failed;
+      coreSkipped += result.skipped;
       operationResults.push(
         ...normalizeOperationResults(scopePlan.plan, result),
       );
@@ -316,7 +297,9 @@ export async function runSyncApply(
 
   const summary = buildSummary(
     scopePlans,
-    operationResults,
+    coreApplied,
+    coreFailed,
+    coreSkipped,
     extensionApplied,
     extensionFailed,
   );

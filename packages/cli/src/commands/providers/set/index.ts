@@ -2,7 +2,6 @@ import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type { ProvidersSetDependencies } from '@commands/providers/providers.types';
-import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   DEFAULT_SYNC_CONFIG,
@@ -20,7 +19,7 @@ import {
   getProviderRegistrations,
   resolveProviderScopeContext,
 } from '@providers/shared';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 
 interface ProvidersSetOptions {
   enabled?: string;
@@ -213,9 +212,16 @@ export function createProvidersSetCommand(
     dependencies.resolveProviderScopeContext = undefined;
   }
 
-  // Default to project scope for compatibility; user scope is explicit.
-  return withScopeOption(new Command('set'), 'project')
-    .description('Enable or disable project providers in sync config')
+  return new Command('set')
+    .description(
+      "Enable or disable providers in the selected scope's sync config (project by default)",
+    )
+    .addOption(
+      new Option(
+        '--scope <scope>',
+        'Sync config scope: project or user',
+      ).default('project'),
+    )
     .option('--enabled <providers>', 'Comma-separated providers to enable')
     .option('--disabled <providers>', 'Comma-separated providers to disable')
     .action(async (options: ProvidersSetOptions, command: Command) => {
