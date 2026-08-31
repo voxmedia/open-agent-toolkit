@@ -88,6 +88,14 @@ Fresh p02 generation passed re-review at 95bb211215e469645fb9fd7e371cf665cd4b0ba
 
 After p02/p03 merge, combined behavior tests, type-checks, CLI check, and skill-bump validation passed. pnpm oat:validate-skills identified three stale synced-bookkeeping inventory anchors in pull, links, and prune; this is a bounded p04 integration task before full definition-of-done gates.
 
+### 2026-08-31 · general · feedback · HiLL checkpoint phase timing
+
+The implement workflow misread oat_hill_checkpoints: [p04] as a gate before p04 and paused before the final phase. The intended contract is that a phase-listed HiLL checkpoint is evaluated after that phase completes. Strengthen the skill, template comments, and user-facing prose to say explicitly that pNN means after pNN, not before it. (observed on Observed on OAT 0.2.50)
+
+### 2026-08-31 · general · feedback · HiLL checkpoint timing correction
+
+Correction to the immediately preceding HiLL checkpoint phase timing entry: the intended observed version is OAT 0.2.50; the CLI rendered the supplied version-note prefix redundantly. The checkpoint-timing recommendation is unchanged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
