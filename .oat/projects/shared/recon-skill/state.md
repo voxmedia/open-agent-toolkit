@@ -1,7 +1,9 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: d10b5271e072687ae244c03b5fd268c3eacbc828
-oat_blockers: []
+oat_current_task: p02-t04
+oat_last_commit: c58c148136284cea9548e4398662e53585d674c1
+oat_blockers:
+  - task_id: p02-t04
+    reason: 'Phase p02 final re-review remains blocked after the configured two fix iterations; see reviews/p02-code-final-rereview-2026-08-31T065541Z.md.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -80,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementing p02-t01 - Recon controller and worker contracts
+Implementation blocked at p02-t04 - packet workflow assurance contracts
 
 ## Artifacts
 
@@ -110,11 +112,16 @@ Implementing p02-t01 - Recon controller and worker contracts
 - ✓ Planning PR opened as #248
 - ✓ Implementation started with a final-phase HiLL checkpoint at p04
 - ✓ p01 passed independent review after one bounded fix iteration
+- ⧗ p02 implementation completed, but final independent re-review remains
+  blocked after two fix iterations
 
 ## Blockers
 
-None
+- Phase p02 has four Critical and one Important finding at reviewed head
+  `c58c148136284cea9548e4398662e53585d674c1`; continuing requires explicit
+  authorization for another correction iteration.
 
 ## Next Milestone
 
-Complete phase p02 and its independent review
+Resolve the exhausted p02 review-fix blocker, then obtain a passing fresh
+independent review
