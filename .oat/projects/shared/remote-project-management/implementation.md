@@ -177,6 +177,74 @@ oat_generated: false
 > For single-thread execution (via `oat-project-implement`), this section remains empty.
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — Phase p01
+
+#### Generic dispatch record
+
+```yaml
+request_id: implement-p01-20260831T0410Z
+caller: oat-project-implement
+scope: p01
+objective: Execute all ten Phase 1 tasks in plan order with one verified implementation commit and one separate bookkeeping commit per task.
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+catalog_snapshot:
+  id: root-native-p01-20260831T0410Z
+  source: tool-schema
+  observed_at: 2026-08-31T04:10:00Z
+authority: phase-p01-write
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+reasoning_mode_selector: null
+service_tier_selector: priority
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-25
+guidance_verified_at: 2026-07-25
+guidance_status: fresh
+selection_source: native-default
+candidates_considered:
+  - oat-phase-implementer-gpt-5-6-sol-high
+  - oat-phase-implementer-gpt-5-6-sol-medium
+selection_reason: native-catalog
+selected_route: native
+task_class: hard-reasoning
+model_class_floor: hard-reasoning
+classification_source: caller
+classification_reason: Phase p01 combines ownership-sensitive config, atomic persistence, concurrent intent, compatibility, and safety diagnostics.
+floor_satisfaction: satisfied
+deadline_seconds: 0
+retry_limit: 0
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
+payload:
+  phase_base_head: 24eed8db6176c06f609501c57616b9440efaceaf
+  phase_recovery_limit: 10
+  phase_recovery_attempts_used: 0
+  pending_attempt: null
+launch_status: accepted
+child_outcome: in-progress
+configured_invocation_evidence:
+  - native agent_type oat-phase-implementer-gpt-5-6-sol-high accepted
+runtime_confirmation: not-reported
+diagnostics:
+  - Preflight found the declared authoritative p01 recovery ledger absent; root initialized it before implementation edits.
+continuation_events:
+  - id: implement-p01-20260831T0410Z-context-1
+    reason: missing authoritative recovery ledger
+    target: oat-phase-implementer-gpt-5-6-sol-high
+```
+
+**Dispatch stamp:** Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
