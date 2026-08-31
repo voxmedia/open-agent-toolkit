@@ -16,12 +16,14 @@
   identity, seven migrated live reads, and the executable-agent ratchet. The
   active `tool-pack-scope-provider-truthfulness` project consumes that contract
   without reopening provider-root implementation.
-- All three user-scope tool-pack closeout follow-ups are closed:
+- All four user-scope tool-pack closeout follow-ups are closed:
   `BL-260827-make-packaged-skill-references` delivered portable cross-skill
   links and their ratchet in PR #226, and the lifecycle/config cleanup merged
   in PR #240 with released CLI `0.2.46`, and provider-root portability shipped
-  in PR #242. The active `BL-260827-correct-scope-and-adoption` project owns the
-  remaining bounded PJM adoption and diagnostic correctness edges.
+  in PR #242. `BL-260827-correct-scope-and-adoption` completed the remaining
+  bounded PJM migration, provider-aware reachability, shared-owner attribution,
+  and fault-tolerant inventory diagnostics in the staged CLI `0.2.49` release
+  unit; the broader scope/provider state model remains active separately.
 - User-scope tool distribution is now a high-priority cross-pack initiative:
   `BL-260818-make-the-project-management` covers every tool pack, including
   `project-management`, while keeping PJM operational data repo-owned. The

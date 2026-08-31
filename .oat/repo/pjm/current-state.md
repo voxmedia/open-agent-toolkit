@@ -37,6 +37,18 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.49` (scope-adoption diagnostics, implementation complete) makes PJM
+  migration eligibility depend on recognized legacy evidence rather than pack
+  intent or adoption labels alone. User-agent reachability now follows
+  config-aware active Codex/Cursor adapters, shared-owner inventory findings
+  name only applicable packs, and doctor/status render inventory failures as an
+  explicit unavailable state. The focused suite passed 417/417, the exact full
+  test command passed 4,599/4,599 with a four-worker CLI Vitest cap, all eight
+  repository gates passed, and the independent Cursor Fable closeout review
+  reported zero findings. The broader provider-by-scope model, directory
+  symlinks, restart guidance, `AGENTS.md` behavior, picker truthfulness, catalog
+  visibility, and dispatch provenance remain with
+  `tool-pack-scope-provider-truthfulness`.
 - CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
   `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
   pointer correctness to `oat instructions validate`. The repository's 23
@@ -117,9 +129,10 @@ copying their content here. -->
   and preserves shared assets and repository customizations. Provider sync
   keeps user scope skills-only where required and reports unmaterialized agents
   explicitly. All eleven repository gates and a zero-finding final closeout
-  review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
-  diagnostics remain as an implementation-ready follow-up, while the
-  lifecycle/config cleanup shipped in `0.2.46` through PR #240.
+  review passed. Closed `BL-260818-make-the-project-management`; the
+  lifecycle/config cleanup shipped in `0.2.46` through PR #240, and the bounded
+  scope/adoption diagnostics follow-up is complete in the staged `0.2.49`
+  release unit.
 - CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently
@@ -420,11 +433,12 @@ observed value justifies the additional provider role matrix.
 
 PR #242 closes the remaining unenforced portable-read direction with a
 dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
-exact-canonical-identity rule. The `tool-pack-scope-provider-truthfulness`
-project can now consume that shipped contract while retaining ownership of
-provider materialization, reachability diagnostics, restart visibility, and
-dispatch truthfulness. Revalidate that project against PRs #227, #240, and
-#242 before advancing from discovery to design.
+exact-canonical-identity rule. The completed scope/adoption diagnostics slice
+adds the bounded active-adapter and inventory/rendering inputs. The
+`tool-pack-scope-provider-truthfulness` project should rebase after diagnostics
+merges and retain ownership of the broader provider materialization model,
+catalog and picker visibility, collection symlinks, restart guidance,
+`AGENTS.md` behavior, and dispatch provenance.
 
 The legacy PJM reference-layout migration is complete: all four warning classes
 are cleared, source doctor is clean, 13 actionable residual records are active
