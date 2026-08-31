@@ -316,6 +316,120 @@ describe('oat-config', () => {
     });
   });
 
+  it('reads and writes shared PJM remote policy and storage config', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      pjm: {
+        initialized: true,
+        schemaVersion: 1,
+        remote: {
+          schemaVersion: 1,
+          storage: { state: 'shared' },
+          policy: {
+            description: 'managed-section',
+            authority: {
+              default: 'read-only',
+              operations: { annotate: 'user-approved' },
+            },
+            providers: {
+              github: {
+                description: 'replace',
+                authority: { operations: { create: 'user-authorized' } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          schemaVersion: 1,
+          storage: { state: 'shared' },
+          policy: {
+            description: 'managed-section',
+            authority: {
+              default: 'read-only',
+              operations: { annotate: 'user-approved' },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it('reads transport preferences from local and user PJM config', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));
+    tempDirs.push(userConfigDir);
+
+    await writeOatLocalConfig(repoRoot, {
+      version: 1,
+      pjm: { remote: { transports: { github: ['gh'], linear: [] } } },
+    });
+    await writeUserConfig(userConfigDir, {
+      version: 1,
+      pjm: { remote: { transports: { jira: ['mcp', 'acli'] } } },
+    });
+
+    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+      pjm: { remote: { transports: { github: ['gh'], linear: [] } } },
+    });
+    await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
+      pjm: { remote: { transports: { jira: ['mcp', 'acli'] } } },
+    });
+  });
+
+  it('rejects transport config on the shared surface', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: { remote: { transports: { github: ['gh'] } } },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).rejects.toThrow(
+      /pjm\.remote\.transports.*local or user/i,
+    );
+  });
+
+  it('rejects shared policy and storage config on local and user surfaces', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));
+    tempDirs.push(userConfigDir);
+    const remote = {
+      schemaVersion: 1,
+      storage: { state: 'shared' },
+      policy: {
+        description: 'none',
+        authority: { default: 'read-only' },
+      },
+    };
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      JSON.stringify({ version: 1, pjm: { remote } }),
+      'utf8',
+    );
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      JSON.stringify({ version: 1, pjm: { remote } }),
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).rejects.toThrow(
+      /pjm\.remote\.(policy|storage).*shared/i,
+    );
+    await expect(readUserConfig(userConfigDir)).rejects.toThrow(
+      /pjm\.remote\.(policy|storage).*shared/i,
+    );
+  });
+
   it('preserves tools.brainstorm through readOatConfig round-trip', async () => {
     const repoRoot = await createRepoRoot();
 

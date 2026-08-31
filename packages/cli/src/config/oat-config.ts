@@ -899,10 +899,88 @@ export type OatToolsConfig = Partial<
   >
 >;
 
+export type OatPjmRemoteProvider = 'github' | 'linear' | 'jira';
+export type OatPjmRemoteDescriptionMode =
+  | 'replace'
+  | 'managed-section'
+  | 'none';
+export type OatPjmRemoteMutationAuthority =
+  | 'read-only'
+  | 'user-approved'
+  | 'user-authorized'
+  | 'autonomous';
+export type OatPjmRemoteOperationClass =
+  | 'create'
+  | 'update-fields'
+  | 'transition'
+  | 'annotate'
+  | 'delete'
+  | 'relink'
+  | 'detach'
+  | 'recreate';
+
+export interface OatPjmRemoteAuthorityPolicy {
+  default?: OatPjmRemoteMutationAuthority;
+  operations?: Partial<
+    Record<OatPjmRemoteOperationClass, OatPjmRemoteMutationAuthority>
+  >;
+}
+
+export interface OatPjmRemoteProviderPolicy {
+  description?: OatPjmRemoteDescriptionMode;
+  authority?: OatPjmRemoteAuthorityPolicy;
+}
+
+export interface OatPjmRemoteSharedConfig {
+  schemaVersion: 1;
+  storage?: { state: 'local' | 'shared' };
+  policy: {
+    description: OatPjmRemoteDescriptionMode;
+    authority: OatPjmRemoteAuthorityPolicy & {
+      default: OatPjmRemoteMutationAuthority;
+    };
+    providers?: Partial<
+      Record<OatPjmRemoteProvider, OatPjmRemoteProviderPolicy>
+    >;
+  };
+}
+
+export interface OatPjmRemoteTransportConfig {
+  transports?: Partial<Record<OatPjmRemoteProvider, string[]>>;
+}
+
 export interface OatPjmConfig {
   initialized?: boolean;
   schemaVersion?: number;
+  remote?: OatPjmRemoteSharedConfig;
 }
+
+export interface OatPjmTransportConfig {
+  remote?: OatPjmRemoteTransportConfig;
+}
+
+const PJM_REMOTE_PROVIDERS = ['github', 'linear', 'jira'] as const;
+const PJM_REMOTE_DESCRIPTION_MODES = [
+  'replace',
+  'managed-section',
+  'none',
+] as const;
+const PJM_REMOTE_AUTHORITIES = [
+  'read-only',
+  'user-approved',
+  'user-authorized',
+  'autonomous',
+] as const;
+const PJM_REMOTE_OPERATION_CLASSES = [
+  'create',
+  'update-fields',
+  'transition',
+  'annotate',
+  'delete',
+  'relink',
+  'detach',
+  'recreate',
+] as const;
 
 const VALID_TOOL_PACKS = [
   'core',
@@ -945,7 +1023,132 @@ function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
   ) {
     pjm.schemaVersion = value.schemaVersion;
   }
+  if (isRecord(value.remote)) {
+    if ('transports' in value.remote) {
+      throw new CliError(
+        'pjm.remote.transports is owned by local or user config; shared config accepts only policy and storage.',
+        2,
+      );
+    }
+    const remote = normalizePjmRemoteSharedConfig(value.remote);
+    if (remote) {
+      pjm.remote = remote;
+    }
+  }
   return Object.keys(pjm).length > 0 ? pjm : undefined;
+}
+
+function normalizePjmRemoteAuthorityPolicy(
+  value: unknown,
+): OatPjmRemoteAuthorityPolicy | undefined {
+  if (!isRecord(value)) return undefined;
+  const policy: OatPjmRemoteAuthorityPolicy = {};
+  if (
+    typeof value.default === 'string' &&
+    (PJM_REMOTE_AUTHORITIES as readonly string[]).includes(value.default)
+  ) {
+    policy.default = value.default as OatPjmRemoteMutationAuthority;
+  }
+  if (isRecord(value.operations)) {
+    const operations: Partial<
+      Record<OatPjmRemoteOperationClass, OatPjmRemoteMutationAuthority>
+    > = {};
+    for (const operation of PJM_REMOTE_OPERATION_CLASSES) {
+      const authority = value.operations[operation];
+      if (
+        typeof authority === 'string' &&
+        (PJM_REMOTE_AUTHORITIES as readonly string[]).includes(authority)
+      ) {
+        operations[operation] = authority as OatPjmRemoteMutationAuthority;
+      }
+    }
+    if (Object.keys(operations).length > 0) policy.operations = operations;
+  }
+  return Object.keys(policy).length > 0 ? policy : undefined;
+}
+
+function normalizePjmRemoteSharedConfig(
+  value: Record<string, unknown>,
+): OatPjmRemoteSharedConfig | undefined {
+  if (value.schemaVersion !== 1 || !isRecord(value.policy)) return undefined;
+  const description = value.policy.description;
+  const authority = normalizePjmRemoteAuthorityPolicy(value.policy.authority);
+  if (
+    typeof description !== 'string' ||
+    !(PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
+      description,
+    ) ||
+    !authority?.default
+  ) {
+    return undefined;
+  }
+  const policy: OatPjmRemoteSharedConfig['policy'] = {
+    description: description as OatPjmRemoteDescriptionMode,
+    authority: { ...authority, default: authority.default },
+  };
+  if (isRecord(value.policy.providers)) {
+    const providers: NonNullable<
+      OatPjmRemoteSharedConfig['policy']['providers']
+    > = {};
+    for (const provider of PJM_REMOTE_PROVIDERS) {
+      const candidate = value.policy.providers[provider];
+      if (!isRecord(candidate)) continue;
+      const providerPolicy: OatPjmRemoteProviderPolicy = {};
+      if (
+        typeof candidate.description === 'string' &&
+        (PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
+          candidate.description,
+        )
+      ) {
+        providerPolicy.description =
+          candidate.description as OatPjmRemoteDescriptionMode;
+      }
+      const providerAuthority = normalizePjmRemoteAuthorityPolicy(
+        candidate.authority,
+      );
+      if (providerAuthority) providerPolicy.authority = providerAuthority;
+      if (Object.keys(providerPolicy).length > 0) {
+        providers[provider] = providerPolicy;
+      }
+    }
+    if (Object.keys(providers).length > 0) policy.providers = providers;
+  }
+  const remote: OatPjmRemoteSharedConfig = { schemaVersion: 1, policy };
+  if (
+    isRecord(value.storage) &&
+    (value.storage.state === 'local' || value.storage.state === 'shared')
+  ) {
+    remote.storage = { state: value.storage.state };
+  }
+  return remote;
+}
+
+function normalizePjmTransportConfig(
+  value: unknown,
+): OatPjmTransportConfig | undefined {
+  if (!isRecord(value) || !isRecord(value.remote)) return undefined;
+  for (const forbidden of ['policy', 'storage', 'schemaVersion'] as const) {
+    if (forbidden in value.remote) {
+      throw new CliError(
+        `pjm.remote.${forbidden} is owned by shared config; local and user config accept only transports.`,
+        2,
+      );
+    }
+  }
+  if (!isRecord(value.remote.transports)) return undefined;
+  const transports: NonNullable<OatPjmRemoteTransportConfig['transports']> = {};
+  for (const provider of PJM_REMOTE_PROVIDERS) {
+    const candidate = value.remote.transports[provider];
+    if (!Array.isArray(candidate)) continue;
+    const values = candidate.filter(
+      (transport): transport is string =>
+        typeof transport === 'string' && transport.trim().length > 0,
+    );
+    transports[provider] = [
+      ...new Set(values.map((transport) => transport.trim())),
+    ];
+  }
+  return { remote: { transports } };
 }
 
 export interface OatConfig {
@@ -970,6 +1173,7 @@ export interface OatLocalConfig {
   activeIdea?: string | null;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
+  pjm?: OatPjmTransportConfig;
 }
 
 export interface UserConfig {
@@ -979,6 +1183,7 @@ export interface UserConfig {
   tools?: OatToolsConfig;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
+  pjm?: OatPjmTransportConfig;
 }
 
 export interface ActiveProjectResolution {
@@ -1291,6 +1496,11 @@ function normalizeOatLocalConfig(
     next.workflow = workflow;
   }
 
+  const pjm = normalizePjmTransportConfig(parsed.pjm);
+  if (pjm) {
+    next.pjm = pjm;
+  }
+
   return next;
 }
 
@@ -1490,6 +1700,7 @@ const USER_CONFIG_OWNED_KEYS = new Set([
   'updateNotifications',
   'tools',
   'workflow',
+  'pjm',
   'knownStrays',
 ]);
 
@@ -1523,6 +1734,11 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
   const workflow = normalizeWorkflowConfig(parsed.workflow);
   if (workflow) {
     next.workflow = workflow;
+  }
+
+  const pjm = normalizePjmTransportConfig(parsed.pjm);
+  if (pjm) {
+    next.pjm = pjm;
   }
 
   return next;
