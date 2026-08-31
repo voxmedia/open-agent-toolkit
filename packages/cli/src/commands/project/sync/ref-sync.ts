@@ -795,6 +795,54 @@ async function prepareAdoptionRecord(
   };
 }
 
+async function probeChildRemoteRefs(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<{ activeSha: string | null; completedSha: string | null }> {
+  const completedRef = completedSyncedRefName(target.slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, target.ref, completedRef],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (
+    classifyRemoteRefLookup(
+      lookup,
+      target.remote,
+      `${target.ref} and ${completedRef}`,
+    ) === 'absent'
+  ) {
+    return { activeSha: null, completedSha: null };
+  }
+
+  const expectedRefs = new Set([target.ref, completedRef]);
+  const advertised = new Map<string, string>();
+  for (const row of lookup.stdout.split('\n').filter(Boolean)) {
+    const fields = row.trim().split(/\s+/);
+    if (
+      fields.length !== 2 ||
+      !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(fields[0] ?? '') ||
+      !expectedRefs.has(fields[1] ?? '') ||
+      advertised.has(fields[1] ?? '')
+    ) {
+      throw new CliError(
+        `Unable to verify terminal refs for child ${target.slug}: origin returned a malformed ref advertisement.`,
+        2,
+      );
+    }
+    advertised.set(fields[1]!, fields[0]!);
+  }
+  if (advertised.size === 0) {
+    throw new CliError(
+      `Unable to verify terminal refs for child ${target.slug}: origin returned a malformed empty advertisement.`,
+      2,
+    );
+  }
+  return {
+    activeSha: advertised.get(target.ref) ?? null,
+    completedSha: advertised.get(completedRef) ?? null,
+  };
+}
+
 export async function pullChildren(
   parentTarget: SyncTarget,
   git: GitRunner,
@@ -839,16 +887,12 @@ export async function pullChildren(
     };
     try {
       await assertCanonicalSyncTargetIdentity(childTarget);
-      const adoptionRecord = await classifyAdoptionRecord(childTarget, git);
-      const remote = await git.run(
-        ['ls-remote', '--exit-code', childTarget.remote, childTarget.ref],
-        { cwd: parentTarget.repoRoot, allowFailure: true },
+      const completedRef = completedSyncedRefName(slug);
+      const { activeSha, completedSha } = await probeChildRemoteRefs(
+        childTarget,
+        git,
       );
-      if (
-        remote.code === 2 &&
-        remote.stdout.trim() === '' &&
-        remote.stderr.trim() === ''
-      ) {
+      if (activeSha === null && completedSha === null) {
         results.push({
           slug,
           status: 'missing',
@@ -857,15 +901,29 @@ export async function pullChildren(
         });
         continue;
       }
-      if (remote.code !== 0) {
+      if (
+        activeSha !== null &&
+        completedSha !== null &&
+        activeSha !== completedSha
+      ) {
         results.push({
           slug,
           status: 'error',
-          message: `git ls-remote ${childTarget.remote} ${childTarget.ref} failed (exit ${remote.code}): ${remote.stderr || remote.stdout || 'unknown Git error'}`,
-          exitCode: 2,
+          message: `Invalid terminal refs for child ${slug}: active ${childTarget.ref} is ${activeSha}, completed ${completedRef} is ${completedSha}. Repair the ref mismatch before retrying; the child was not pulled.`,
+          exitCode: 1,
         });
         continue;
       }
+      if (completedSha !== null) {
+        results.push({
+          slug,
+          status: 'error',
+          message: `Synced child ${slug} is already archived at ${completedRef}@${completedSha} and will not be pulled.${activeSha === completedSha ? ` The matching active ref ${childTarget.ref} is only an inert alias.` : ''}`,
+          exitCode: 1,
+        });
+        continue;
+      }
+      const adoptionRecord = await classifyAdoptionRecord(childTarget, git);
       const result = await pullSynced(childTarget, git, {
         adopt: adoptionRecord !== 'durable',
         adoptionRecord,

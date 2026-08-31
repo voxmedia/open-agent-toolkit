@@ -1412,6 +1412,94 @@ describe('pullSynced', () => {
 });
 
 describe('pullChildren', () => {
+  it('suppresses terminal children and reports mismatched terminal refs without adoption', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const parent = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        'parent',
+      );
+      await mkdir(parent.projectPath, { recursive: true });
+      await writeFile(
+        join(parent.projectPath, 'state.md'),
+        '---\noat_kind: coordination\noat_children:\n  - completed-only\n  - matching-alias\n  - mismatch\n---\n',
+        'utf8',
+      );
+
+      for (const slug of ['completed-only', 'matching-alias', 'mismatch']) {
+        const remoteTarget = buildSyncTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          slug,
+        );
+        await createSyncedProject(remoteTarget, defaultGitRunner);
+        await writeFile(
+          join(remoteTarget.projectPath, 'state.md'),
+          `${slug}\n`,
+          'utf8',
+        );
+        const pushed = await pushSynced(remoteTarget, defaultGitRunner, {});
+        const completedSha =
+          slug === 'mismatch'
+            ? git(fixture.cloneA, ['rev-parse', 'HEAD'])
+            : pushed.sha;
+        git(fixture.cloneA, [
+          'push',
+          '-q',
+          'origin',
+          `${completedSha}:refs/oat/completed/${slug}`,
+        ]);
+        if (slug === 'completed-only') {
+          git(fixture.cloneA, [
+            'push',
+            '-q',
+            'origin',
+            '--delete',
+            remoteTarget.ref,
+          ]);
+        }
+      }
+
+      const results = await pullChildren(parent, defaultGitRunner);
+
+      expect(results).toEqual([
+        expect.objectContaining({
+          slug: 'completed-only',
+          status: 'error',
+          exitCode: 1,
+          message: expect.stringMatching(/already archived.*not be pulled/i),
+        }),
+        expect.objectContaining({
+          slug: 'matching-alias',
+          status: 'error',
+          exitCode: 1,
+          message: expect.stringMatching(
+            /already archived.*active ref.*inert alias/i,
+          ),
+        }),
+        expect.objectContaining({
+          slug: 'mismatch',
+          status: 'error',
+          exitCode: 1,
+          message: expect.stringMatching(
+            /invalid terminal refs.*repair the ref mismatch/i,
+          ),
+        }),
+      ]);
+      for (const slug of ['completed-only', 'matching-alias', 'mismatch']) {
+        await expect(
+          access(join(fixture.cloneB!, '.oat/projects/synced', slug)),
+        ).rejects.toThrow();
+        await expect(
+          access(join(fixture.cloneB!, '.oat/projects/synced', `${slug}.json`)),
+        ).rejects.toThrow();
+      }
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('isolates an aliased first child while adopting and committing a healthy later child', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
     try {
