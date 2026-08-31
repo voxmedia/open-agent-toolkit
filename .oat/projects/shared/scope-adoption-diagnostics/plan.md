@@ -675,20 +675,20 @@ git commit -m "fix(p04-t03): align terminal review summaries"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-08-30 | `reviews/p01-review-2026-08-30T220053Z.md`            | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
-| p01    | code     | passed          | 2026-08-30 | `reviews/p01-review-2026-08-30T220913Z.md`            | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
-| p02    | code     | passed          | 2026-08-30 | `reviews/p02-review-2026-08-30T224248Z.md`            | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
-| p03    | code     | passed          | 2026-08-30 | `reviews/p03-review-2026-08-30T225845Z.md`            | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
-| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`   | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
-| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md` | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
-| spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md`  | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md`  | -                                        | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-30 | -                                                     | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md` | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | fixes_completed | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220053Z.md`           | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
+| p01    | code     | passed          | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
+| p02    | code     | passed          | 2026-08-30 | `reviews/archived/p02-review-2026-08-30T224248Z.md`           | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
+| p03    | code     | passed          | 2026-08-30 | `reviews/archived/p03-review-2026-08-30T225845Z.md`           | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
+| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`           | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
+| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md`         | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T215450Z.md` | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-30 | -                                                             | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md`         | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.

@@ -200,11 +200,11 @@ Historical orchestration snapshots stay unchanged.
   `355340798`, `b30da4105`; full PJM suite 78/78 before review.
 - Review round 1: High target `oat-reviewer-gpt-5-6-sol-high`; one Important
   canonical-completeness finding in
-  `reviews/p01-review-2026-08-30T220053Z.md`.
+  `reviews/archived/p01-review-2026-08-30T220053Z.md`.
 - Fix round 1: same accepted implementation target; commit `5f6e5c701`; root
   focused suite 32/32 and full PJM suite 79/79.
 - Re-review: High target `oat-reviewer-gpt-5-6-sol-high`; zero findings and
-  pass in `reviews/p01-review-2026-08-30T220913Z.md`.
+  pass in `reviews/archived/p01-review-2026-08-30T220913Z.md`.
 - Recovery attempts: 0/10; pending attempt: null.
 
 #### p02 Dispatch and Evidence
@@ -217,7 +217,7 @@ Historical orchestration snapshots stay unchanged.
 - Root phase rerun: inventory/doctor/status 159/159; recovered remove-tools
   suite 22/22.
 - High review: zero findings and pass in
-  `reviews/p02-review-2026-08-30T224248Z.md`; reviewer reconnaissance attempted
+  `reviews/archived/p02-review-2026-08-30T224248Z.md`; reviewer reconnaissance attempted
   but its optional explorer was rejected pre-start by the host thread limit,
   so the reviewer reconciled inline.
 - Broad CLI suite is explicitly non-clean under concurrent load: reviewer run
@@ -252,7 +252,7 @@ Historical orchestration snapshots stay unchanged.
   import before the duplicated assertion block could run.
 - Root phase rerun: five declared suites, 179/179.
 - High review: zero findings and pass in
-  `reviews/p03-review-2026-08-30T225845Z.md`.
+  `reviews/archived/p03-review-2026-08-30T225845Z.md`.
 - Recovery attempts: 0/10; pending attempt: null.
 
 #### p04 Dispatch and Evidence
