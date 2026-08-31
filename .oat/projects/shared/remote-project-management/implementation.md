@@ -272,10 +272,11 @@ reconciliation, exact authority resolution, preview-bound approvals,
 terminal-safe operation reduction, and postcondition verification that blocks
 blind retries.
 
-**Verification:** After the first bounded review-fix round, the combined Phase
-2 suite passed 82/82; format, CLI type-check, lint, check, and build passed; the
-uncached full CLI suite passed 326 files and 4,797 tests with 0 cached tasks.
-Before review, root independently reran the then-current 79-test phase suite.
+**Verification:** After the second bounded review-fix round, the combined Phase
+2 suite passed 91/91; format, CLI type-check, lint, check, and build passed; the
+uncached full CLI suite passed 326 files and 4,806 tests with 0 cached tasks.
+Before the first review, root independently reran the then-current 79-test
+phase suite.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -455,6 +456,24 @@ format/build, type-check, and lint passed.
 - Verification: focused affected suites 26/26; combined Phase 2 suite 82/82;
   CLI type-check, lint, check, and build passed; uncached full CLI 4,797/4,797
   with 0 cached tasks.
+- Recovery usage remains 1/10 with `pending_attempt: null`.
+
+---
+
+### Review Fix Round 2
+
+- Review artifact:
+  `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`
+- Findings addressed: 2 Critical and 0 Important.
+- Fix commit: `eed80d5ab6b297d19da4569ca9963e25fd53b57d`
+- Boundary: snapshot and preview credential detection only; the two
+  nonblocking Medium findings remain untouched.
+- Outcome: multiline quoted credential values redact completely across all
+  retained snapshot fields; quoted and unquoted credential assignments redact
+  from concise previews and are rejected as approval evidence.
+- Verification: focused snapshot/preview suites 26/26; combined Phase 2 suite
+  91/91; CLI format, type-check, lint, check, and build passed; uncached full
+  CLI 4,806/4,806 with 0 cached tasks.
 - Recovery usage remains 1/10 with `pending_attempt: null`.
 
 ---
@@ -675,7 +694,7 @@ floor_satisfaction: satisfied
 launch_status: accepted
 child_outcome: done
 phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
-phase_head: bbbb3857cc793eb9a6def31e75cf6af65cccfa9f
+phase_head: eed80d5ab6b297d19da4569ca9963e25fd53b57d
 recovery_usage: 1/10
 pending_attempt: null
 continuation_events:
@@ -687,6 +706,8 @@ continuation_events:
   - id: review-fix-p02-r2-20260831T1444Z
     reason: bounded fixes for Phase 2 round-2 Critical credential-safety findings
     target: oat-phase-implementer-gpt-5-6-sol-high
+    outcome: done
+    commit: eed80d5ab6b297d19da4569ca9963e25fd53b57d
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high

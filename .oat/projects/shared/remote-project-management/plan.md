@@ -1264,6 +1264,7 @@ in-scope implementation files when a gate exposes a project defect.
 | ------ | -------- | --------------- | ---------- | --------------------------------------------------------------- | ---------------------------------------- | ------------------ | ------------------------ |
 | p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension | codex:sol-high           |
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md          | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1           | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md        | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2           | codex:sol-high           |
 | p03    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
 | p04    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
 | p05    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
