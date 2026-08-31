@@ -13,6 +13,7 @@ import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
 import {
   attributeSharedOwnerDiagnostics,
   inventoryPack,
+  type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import {
   hasScopedPackOwnershipEvidence,
@@ -93,6 +94,42 @@ function createDeps(
     },
     pathExists: async () => false,
     hasPackOwnershipEvidence: async () => false,
+  };
+}
+
+function lifecycleInventory(
+  pack: 'ideas',
+  scope: 'project' | 'user',
+  present: boolean,
+): ScopedPackInventory {
+  return {
+    pack,
+    scope,
+    intent: {
+      pack,
+      scope,
+      enabled: present,
+      source: present ? 'declared' : 'none',
+      configPath: '/scope/.oat/config.json',
+      diagnostics: [],
+    },
+    completeness: present ? 'complete' : 'absent',
+    assets: [
+      {
+        definition: {
+          id: 'skill:oat-idea-new',
+          kind: 'skill',
+          destination: '.agents/skills/oat-idea-new',
+          scopes: [scope],
+          ownership: { [scope]: 'managed' },
+        },
+        path: '/scope/.agents/skills/oat-idea-new',
+        status: present ? 'current' : 'missing',
+        installedVersion: null,
+        bundledVersion: null,
+      },
+    ],
+    diagnostics: [],
   };
 }
 
@@ -229,6 +266,9 @@ describe('removeTools', () => {
       }),
     ];
     const deps = createDeps({ project: tools });
+    let inventoryCalls = 0;
+    deps.inventoryScopedPack = async ({ pack, scope }) =>
+      lifecycleInventory(pack as 'ideas', scope, inventoryCalls++ === 0);
 
     const result = await removeTools(
       { kind: 'pack', pack: 'ideas' },
@@ -251,7 +291,7 @@ describe('removeTools', () => {
         selection: {
           pack: 'ideas',
           targetScopes: ['project'],
-          retainedRealizedScopes: ['project'],
+          retainedRealizedScopes: [],
         },
         canonical: { status: 'applied' },
         finalEvidence: { realizedPlacement: 'none' },
@@ -475,6 +515,63 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toHaveLength(0);
     expect(deps.removedFiles).toHaveLength(0);
     expect(result).not.toHaveProperty('lifecycle');
+  });
+
+  it('preserves current pack evidence during a pack dry-run', async () => {
+    const deps = createDeps({ project: [createTool()] });
+    deps.inventoryScopedPack = async ({ pack, scope }) =>
+      lifecycleInventory(pack as 'ideas', scope, true);
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'ideas' },
+      ['project'],
+      '/cwd',
+      '/home',
+      true,
+      deps,
+    );
+
+    expect(result.lifecycle).toMatchObject([
+      {
+        canonical: { status: 'unchanged' },
+        selection: { retainedRealizedScopes: ['project'] },
+        finalEvidence: { realizedPlacement: 'project' },
+      },
+    ]);
+  });
+
+  it('reports only re-inventoried remaining scopes after partial removal', async () => {
+    const deps = createDeps({
+      project: [createTool({ scope: 'project' })],
+      user: [createTool({ scope: 'user' })],
+    });
+    let phase: 'before' | 'after' = 'before';
+    let calls = 0;
+    deps.inventoryScopedPack = async ({ pack, scope }) => {
+      calls += 1;
+      if (calls > 2) phase = 'after';
+      return lifecycleInventory(
+        pack as 'ideas',
+        scope,
+        phase === 'before' || scope === 'user',
+      );
+    };
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'ideas' },
+      ['project', 'user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.lifecycle).toMatchObject([
+      {
+        selection: { retainedRealizedScopes: ['user'] },
+        finalEvidence: { realizedPlacement: 'user' },
+      },
+    ]);
   });
 
   it('errors when tool name not found in any scope', async () => {

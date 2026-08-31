@@ -11,13 +11,20 @@ import {
   saveSyncConfig,
 } from '@config/index';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
-import { getProviderRegistrations } from '@providers/shared';
+import {
+  getProviderRegistrations,
+  resolveProviderScopeContext,
+} from '@providers/shared';
 import { Command } from 'commander';
 
 interface ProvidersSetOptions {
   enabled?: string;
   disabled?: string;
 }
+
+type ContextualSetDependencies = ProvidersSetDependencies & {
+  resolveProviderScopeContext?: typeof resolveProviderScopeContext;
+};
 
 function parseCsvList(raw?: string): string[] {
   if (!raw) {
@@ -36,7 +43,7 @@ function formatList(values: string[]): string {
   return values.length > 0 ? values.join(', ') : '(none)';
 }
 
-function createDependencies(): ProvidersSetDependencies {
+function createDependencies(): ContextualSetDependencies {
   return {
     buildCommandContext,
     async resolveScopeRoot(scope, context) {
@@ -53,6 +60,7 @@ function createDependencies(): ProvidersSetDependencies {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
     },
     saveSyncConfig,
+    resolveProviderScopeContext,
   };
 }
 
@@ -88,7 +96,7 @@ function buildUpdatedConfig(
 async function runProvidersSetCommand(
   context: CommandContext,
   options: ProvidersSetOptions,
-  dependencies: ProvidersSetDependencies,
+  dependencies: ContextualSetDependencies,
 ): Promise<void> {
   try {
     if (context.scope === 'all') {
@@ -115,9 +123,20 @@ async function runProvidersSetCommand(
       );
     }
 
-    const knownProviders = dependencies
-      .getAdapters()
-      .map((adapter) => adapter.name);
+    const scope = context.scope;
+    const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
+    const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
+    const config = await dependencies.loadSyncConfig(configPath);
+    const providerContext = dependencies.resolveProviderScopeContext
+      ? await dependencies.resolveProviderScopeContext({
+          scope,
+          scopeRoot,
+          config,
+        })
+      : undefined;
+    const knownProviders = providerContext
+      ? providerContext.registrations.map(({ adapter }) => adapter.name)
+      : dependencies.getAdapters().map((adapter) => adapter.name);
     const unknown = [...enabledProviders, ...disabledProviders].filter(
       (provider) => !knownProviders.includes(provider),
     );
@@ -127,10 +146,6 @@ async function runProvidersSetCommand(
       );
     }
 
-    const scope = context.scope;
-    const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
-    const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
-    const config = await dependencies.loadSyncConfig(configPath);
     const updated = buildUpdatedConfig(
       config,
       enabledProviders,
@@ -166,12 +181,18 @@ async function runProvidersSetCommand(
 }
 
 export function createProvidersSetCommand(
-  overrides: Partial<ProvidersSetDependencies> = {},
+  overrides: Partial<ContextualSetDependencies> = {},
 ): Command {
-  const dependencies: ProvidersSetDependencies = {
+  const dependencies: ContextualSetDependencies = {
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    overrides.getAdapters !== undefined
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   // Default to project scope for compatibility; user scope is explicit.
   return withScopeOption(new Command('set'), 'project')

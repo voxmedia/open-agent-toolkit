@@ -30,8 +30,10 @@ import { loadManifest } from '@manifest/index';
 import {
   getConfigAwareAdapters,
   getProviderRegistrations,
+  resolveProviderScopeContext,
   toMaterializationOperations,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import { formatSyncPlan } from '@ui/output';
@@ -47,7 +49,15 @@ import type {
   SyncVersionSkew,
 } from './sync.types';
 
-function defaultDependencies(): SyncCommandDependencies {
+type ContextualSyncDependencies = SyncCommandDependencies & {
+  resolveProviderScopeContext?: (input: {
+    scope: ScopeSyncPlan['scope'];
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
+};
+
+function defaultDependencies(): ContextualSyncDependencies {
   return {
     buildCommandContext,
     async resolveScopeRoot(scope, context) {
@@ -68,6 +78,7 @@ function defaultDependencies(): SyncCommandDependencies {
       return getProviderRegistrations().map(({ adapter }) => adapter);
     },
     getConfigAwareAdapters,
+    resolveProviderScopeContext,
     selectProvidersWithAbort: selectManyWithAbort,
     computeSyncPlan,
     executeSyncPlan,
@@ -155,7 +166,8 @@ async function maybeResolveProviderMismatches(
   config: SyncConfig,
   adapters: ProviderAdapter[],
   mismatches: SyncProviderMismatches,
-  dependencies: SyncCommandDependencies,
+  dependencies: ContextualSyncDependencies,
+  activeAdapters?: ProviderAdapter[],
 ): Promise<{
   config: SyncConfig;
   mismatches: SyncProviderMismatches;
@@ -169,9 +181,11 @@ async function maybeResolveProviderMismatches(
     return {
       config,
       mismatches,
-      activeAdapters: await dependencies
-        .getConfigAwareAdapters(adapters, scopeRoot, config)
-        .then((resolution) => resolution.activeAdapters),
+      activeAdapters:
+        activeAdapters ??
+        (await dependencies
+          .getConfigAwareAdapters(adapters, scopeRoot, config)
+          .then((resolution) => resolution.activeAdapters)),
     };
   }
 
@@ -262,7 +276,7 @@ function detectVersionSkew(
 
 async function computePlans(
   context: CommandContext,
-  dependencies: SyncCommandDependencies,
+  dependencies: ContextualSyncDependencies,
   canonicalFilter?: CanonicalSyncFilter,
 ): Promise<ScopeSyncPlan[]> {
   const scopePlans: ScopeSyncPlan[] = [];
@@ -292,12 +306,24 @@ async function computePlans(
         );
       }
     }
-    const adapters = dependencies.getAdapters();
-    const initialResolution = await dependencies.getConfigAwareAdapters(
-      adapters,
-      scopeRoot,
-      config,
-    );
+    const providerContext = dependencies.resolveProviderScopeContext
+      ? await dependencies.resolveProviderScopeContext({
+          scope,
+          scopeRoot,
+          config,
+        })
+      : undefined;
+    const adapters = providerContext
+      ? providerContext.registrations.map(({ adapter }) => adapter)
+      : dependencies.getAdapters();
+    const initialResolution = providerContext
+      ? undefined
+      : await dependencies.getConfigAwareAdapters(adapters, scopeRoot, config);
+    const initialActiveAdapters = providerContext
+      ? adapters.filter(({ name }) =>
+          providerContext.activeProviders.includes(name),
+        )
+      : initialResolution!.activeAdapters;
 
     const resolved = await maybeResolveProviderMismatches(
       context,
@@ -307,10 +333,17 @@ async function computePlans(
       config,
       adapters,
       {
-        detectedUnset: initialResolution.detectedUnset,
-        detectedDisabled: initialResolution.detectedDisabled,
+        detectedUnset: [
+          ...(providerContext?.mismatches.detectedUnset ??
+            initialResolution!.detectedUnset),
+        ],
+        detectedDisabled: [
+          ...(providerContext?.mismatches.detectedDisabled ??
+            initialResolution!.detectedDisabled),
+        ],
       },
       dependencies,
+      initialActiveAdapters,
     );
 
     const plan = await dependencies.computeSyncPlan({
@@ -326,9 +359,11 @@ async function computePlans(
     const activeAdapterNames = resolved.activeAdapters.map(
       (adapter) => adapter.name,
     );
-    const enabledExtensions = dependencies
-      .getMaterializationExtensions()
-      .filter((extension) => activeAdapterNames.includes(extension.provider));
+    const enabledExtensions = (
+      providerContext
+        ? providerContext.registrations.flatMap(({ extensions }) => extensions)
+        : dependencies.getMaterializationExtensions()
+    ).filter((extension) => activeAdapterNames.includes(extension.provider));
     const extensionCanonical =
       scope === 'user' && enabledExtensions.length > 0
         ? [...canonical, ...(await dependencies.scanBundledManagedAgents())]
@@ -443,12 +478,20 @@ async function runSyncCommand(
 }
 
 export function createSyncCommand(
-  overrides: Partial<SyncCommandDependencies> = {},
+  overrides: Partial<ContextualSyncDependencies> = {},
 ): Command {
-  const dependencies: SyncCommandDependencies = {
+  const dependencies: ContextualSyncDependencies = {
     ...defaultDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined ||
+      overrides.getMaterializationExtensions !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('sync'))
     .description('Sync canonical content to provider views')

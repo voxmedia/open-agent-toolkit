@@ -180,6 +180,57 @@ describe('oat providers inspect', () => {
     expect(capture.info[0]).not.toContain('User mappings: none');
   });
 
+  it('inspects a provider supplied only by the injected scope registry', async () => {
+    const capture = createLoggerCapture();
+    const registryOnly = createAdapter('registry-only', true, '9.9.9');
+    const command = createProvidersInspectCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+      loadSyncConfig: vi.fn(async () => ({
+        version: 1,
+        defaultStrategy: 'auto',
+        knownStrays: [],
+        providers: {},
+      })),
+      resolveProviderScopeContext: vi.fn(async () => ({
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [
+          { adapter: registryOnly, extensions: [], capabilities: [] },
+        ],
+      })),
+      getSyncMappings: vi.fn(
+        (adapter: ProviderAdapter) => adapter.projectMappings,
+      ),
+      loadManifest: vi.fn(async () => createManifest([])),
+      detectDrift: vi.fn(),
+    });
+
+    await runInspectCommand(command, {
+      provider: 'registry-only',
+      globalArgs: ['--json', '--scope', 'project'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      name: 'registry-only',
+      detected: true,
+      version: '9.9.9',
+    });
+  });
+
   it('shows per-mapping sync state', async () => {
     const { command, capture } = createHarness({
       driftStateByProviderPath: {

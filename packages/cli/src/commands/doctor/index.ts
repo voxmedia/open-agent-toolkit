@@ -87,7 +87,9 @@ import {
 import {
   getConfigAwareAdapters,
   getProviderRegistrations,
+  resolveProviderScopeContext,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
@@ -119,6 +121,11 @@ interface DoctorDependencies {
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
+  resolveProviderScopeContext?: (input: {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -310,6 +317,7 @@ function createDependencies(): DoctorDependencies {
     resolveUserSyncConfig,
     getAdapters: () => getProviderRegistrations().map(({ adapter }) => adapter),
     getConfigAwareAdapters,
+    resolveProviderScopeContext,
     readOatConfig,
     readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
@@ -1027,17 +1035,40 @@ async function createPackStateChecks(
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const userRoot = scopeRoots.get('user');
     const userManagedRoleMaterialization = userRoot
-      ? await dependencies
-          .getConfigAwareAdapters(
-            dependencies.getAdapters(),
-            userRoot,
-            await dependencies.resolveUserSyncConfig(join(userRoot, '.oat')),
-          )
-          .then(({ activeAdapters }) =>
-            activeAdapters.some(
-              ({ name }) => name === 'codex' || name === 'cursor',
-            ),
-          )
+      ? await (async () => {
+          const config = await dependencies.resolveUserSyncConfig(
+            join(userRoot, '.oat'),
+          );
+          const providerContext = dependencies.resolveProviderScopeContext
+            ? await dependencies.resolveProviderScopeContext({
+                scope: 'user',
+                scopeRoot: userRoot,
+                config,
+              })
+            : null;
+          const activeProviders = providerContext
+            ? providerContext.activeProviders
+            : await dependencies
+                .getConfigAwareAdapters(
+                  dependencies.getAdapters(),
+                  userRoot,
+                  config,
+                )
+                .then(({ activeAdapters }) =>
+                  activeAdapters.map(({ name }) => name),
+                );
+          return providerContext
+            ? providerContext.registrations
+                .filter(({ adapter }) => activeProviders.includes(adapter.name))
+                .some(({ extensions }) =>
+                  extensions.some(({ provider }) =>
+                    ['codex', 'cursor'].includes(provider),
+                  ),
+                )
+            : activeProviders.some(
+                (name) => name === 'codex' || name === 'cursor',
+              );
+        })()
       : false;
     inventories = attributeSharedOwnerDiagnostics(
       await Promise.all(
@@ -1405,6 +1436,13 @@ export function createDoctorCommand(
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('doctor'))
     .description('Run environment and setup diagnostics')

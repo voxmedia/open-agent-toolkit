@@ -13,6 +13,7 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
@@ -62,6 +63,7 @@ const defaultDependencies: RemoveToolsDependencies = {
   },
   hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
     hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
+  inventoryScopedPack,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {

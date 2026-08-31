@@ -71,6 +71,11 @@ export interface ProviderScopeContext {
   scope: ConcreteScope;
   configSource: string;
   activeProviders: readonly string[];
+  detectedProviders: readonly string[];
+  mismatches: {
+    detectedUnset: readonly string[];
+    detectedDisabled: readonly string[];
+  };
   activation: readonly ProviderActivationEvidence[];
   registrations: readonly ProviderRegistration[];
 }
@@ -220,6 +225,16 @@ export async function resolveProviderScopeContext(input: {
     input.scopeRoot,
     input.config,
   );
+  const detectedProviders = (
+    await Promise.all(
+      registrations.map(async ({ adapter }) => ({
+        name: adapter.name,
+        detected: await adapter.detect(input.scopeRoot),
+      })),
+    )
+  )
+    .filter(({ detected }) => detected)
+    .map(({ name }) => name);
   const active = new Set(result.activeAdapters.map(({ name }) => name));
   const activation = registrations.map(({ adapter }) => {
     const configured = input.config.providers[adapter.name]?.enabled;
@@ -257,6 +272,11 @@ export async function resolveProviderScopeContext(input: {
     activeProviders: registrations
       .map(({ adapter }) => adapter.name)
       .filter((name) => active.has(name)),
+    detectedProviders,
+    mismatches: {
+      detectedUnset: result.detectedUnset,
+      detectedDisabled: result.detectedDisabled,
+    },
     activation,
     registrations,
   };

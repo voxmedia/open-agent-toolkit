@@ -11,6 +11,7 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '@config/index';
 import { detectDrift } from '@drift/index';
 import {
   normalizeToPosixPath,
@@ -18,9 +19,19 @@ import {
   resolveScopeRoot,
 } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
-import { getProviderRegistrations, getSyncMappings } from '@providers/shared';
+import {
+  getProviderRegistrations,
+  getSyncMappings,
+  resolveProviderScopeContext,
+  type ProviderScopeContext,
+} from '@providers/shared';
 import { formatProviderDetails } from '@ui/output';
 import { Command } from 'commander';
+
+type ContextualInspectDependencies = ProvidersInspectDependencies & {
+  loadSyncConfig?: typeof loadSyncConfig;
+  resolveProviderScopeContext?: typeof resolveProviderScopeContext;
+};
 
 function entryInMapping(providerPath: string, providerDir: string): boolean {
   const normalizedPath = normalizeToPosixPath(providerPath);
@@ -31,7 +42,7 @@ function entryInMapping(providerPath: string, providerDir: string): boolean {
   );
 }
 
-function createDependencies(): ProvidersInspectDependencies {
+function createDependencies(): ContextualInspectDependencies {
   return {
     buildCommandContext,
     async resolveScopeRoot(scope, context) {
@@ -46,36 +57,57 @@ function createDependencies(): ProvidersInspectDependencies {
     getSyncMappings,
     loadManifest,
     detectDrift,
+    async loadSyncConfig(configPath) {
+      return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+    },
+    resolveProviderScopeContext,
   };
 }
 
 async function collectInspectResult(
   providerName: string,
   context: CommandContext,
-  dependencies: ProvidersInspectDependencies,
+  dependencies: ContextualInspectDependencies,
 ): Promise<ProviderInspectResult | null> {
-  const adapter = dependencies
-    .getAdapters()
-    .find(
-      (candidate) =>
-        candidate.name.toLowerCase() === providerName.toLowerCase(),
-    );
-  if (!adapter) {
-    return null;
-  }
-
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
-    scopes.map(async (scope) => ({
-      scope,
-      root: await dependencies.resolveScopeRoot(scope, context),
-    })),
+    scopes.map(async (scope) => {
+      const root = await dependencies.resolveScopeRoot(scope, context);
+      const config = dependencies.loadSyncConfig
+        ? await dependencies.loadSyncConfig(
+            join(root, '.oat', 'sync', 'config.json'),
+          )
+        : undefined;
+      const providerContext =
+        config && dependencies.resolveProviderScopeContext
+          ? await dependencies.resolveProviderScopeContext({
+              scope,
+              scopeRoot: root,
+              config,
+            })
+          : undefined;
+      return { scope, root, providerContext };
+    }),
   );
+  const providerContexts = scopeRoots
+    .map(({ providerContext }) => providerContext)
+    .filter((value): value is ProviderScopeContext => value !== undefined);
+  const adapters = providerContexts[0]
+    ? providerContexts[0].registrations.map(({ adapter }) => adapter)
+    : dependencies.getAdapters();
+  const adapter = adapters.find(
+    (candidate) => candidate.name.toLowerCase() === providerName.toLowerCase(),
+  );
+  if (!adapter) return null;
   const mappings: ProviderInspectMappingState[] = [];
   let detected = false;
 
   for (const scopeRoot of scopeRoots) {
-    if (await adapter.detect(scopeRoot.root)) {
+    if (
+      scopeRoot.providerContext
+        ? scopeRoot.providerContext.detectedProviders.includes(adapter.name)
+        : await adapter.detect(scopeRoot.root)
+    ) {
       detected = true;
     }
 
@@ -198,12 +230,18 @@ async function runInspectCommand(
 }
 
 export function createProvidersInspectCommand(
-  overrides: Partial<ProvidersInspectDependencies> = {},
+  overrides: Partial<ContextualInspectDependencies> = {},
 ): Command {
-  const dependencies: ProvidersInspectDependencies = {
+  const dependencies: ContextualInspectDependencies = {
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    overrides.getAdapters !== undefined
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('inspect'))
     .description('Inspect provider details and mapping state')

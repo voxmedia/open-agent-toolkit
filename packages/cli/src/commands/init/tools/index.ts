@@ -23,6 +23,7 @@ import {
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import type { AutoSyncResult } from '@commands/tools/shared/auto-sync';
 import {
   canonicalPathsForPacks,
   getInstalledCanonicalPaths,
@@ -43,7 +44,11 @@ import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
 } from '@commands/tools/shared/pack-lifecycle';
-import { resolveAdditivePackScopeSelection } from '@commands/tools/shared/pack-lifecycle-outcome';
+import {
+  evaluatePackLifecycleOutcome,
+  resolveAdditivePackScopeSelection,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
@@ -197,6 +202,11 @@ export interface InitToolsDependencies {
     options?: { dryRun?: boolean },
   ) => Promise<PackLifecycleResult[]>;
   inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
+  syncAfterInstall?: (
+    scopes: ConcreteScope[],
+    context: CommandContext,
+    installedCanonicalPaths: string[],
+  ) => Promise<AutoSyncResult>;
 }
 
 interface OutdatedSkillRecord {
@@ -211,6 +221,7 @@ interface InitToolsRunMetadata {
   affectedScopes: ConcreteScope[];
   appliedScopes: ConcreteScope[];
   adoptedPacks: ToolPack[];
+  syncHandled: boolean;
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -232,6 +243,7 @@ type UserEligiblePack = Exclude<ToolPack, 'core'>;
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
 const appliedScopesByCommand = new WeakMap<Command, ConcreteScope[]>();
+const syncHandledByCommand = new WeakSet<Command>();
 
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
@@ -522,6 +534,10 @@ export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
   return metadata;
 }
 
+export function wasInstallSyncHandled(command: Command): boolean {
+  return syncHandledByCommand.has(command);
+}
+
 /**
  * Resolve a possibly-deferred scope-selection signal into a concrete mode.
  *
@@ -756,6 +772,7 @@ function reportSuccess(
   packs: PackScopeInfo[],
   syncScopes: ConcreteScope[],
   adoptedPacks: ToolPack[],
+  lifecycle: readonly PackLifecycleOutcome[],
 ): void {
   if (context.json) {
     context.logger.json({
@@ -763,6 +780,7 @@ function reportSuccess(
       installedPacks: packs,
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+      lifecycle,
     });
     return;
   }
@@ -781,6 +799,11 @@ function reportSuccess(
   });
   if (syncScopes.length === 0) {
     context.logger.info('No sync needed.');
+  }
+  for (const outcome of lifecycle) {
+    context.logger.info(
+      `Lifecycle ${outcome.selection.pack}: ${outcome.status} (${outcome.canonical.status})`,
+    );
   }
 }
 
@@ -889,6 +912,9 @@ export async function runInitTools(
   dependencies: InitToolsDependencies,
 ): Promise<ToolPack[]> {
   lastRunInitToolsMetadata = null;
+  let attemptedPacks: ToolPack[] = [];
+  let attemptedSelections: PackLifecycleOutcome['selection'][] = [];
+  let lifecycleOutcomes: PackLifecycleOutcome[] = [];
 
   try {
     const userRoot = dependencies.resolveScopeRoot(
@@ -928,11 +954,13 @@ export async function runInitTools(
     if (!context.interactive) {
       selectedPacks.push('project-management');
     }
+    attemptedPacks = selectedPacks;
     if (selectedPacks.length === 0) {
       lastRunInitToolsMetadata = {
         affectedScopes: [],
         appliedScopes: [],
         adoptedPacks: [],
+        syncHandled: dependencies.syncAfterInstall !== undefined,
       };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
@@ -946,6 +974,16 @@ export async function runInitTools(
       selectedPacks,
       initialPackStates,
       dependencies,
+    );
+    attemptedSelections = selectedPacks.map((pack) =>
+      resolveAdditivePackScopeSelection({
+        pack,
+        requested: pack === 'core' ? 'user' : packScopes[pack],
+        knownRealizedScopes: scopesForLocation(
+          initialPackStates[pack].location,
+        ),
+        unknownScopes: [],
+      }),
     );
 
     function scopeRoot(scope: ConcreteScope): string {
@@ -995,6 +1033,20 @@ export async function runInitTools(
             ),
           ),
         );
+        lifecycleOutcomes = finalEvidence.map((evidence) => {
+          const packResults = lifecycle.filter(
+            ({ request }) => request.pack === evidence.pack,
+          );
+          const selection = attemptedSelections.find(
+            ({ pack }) => pack === evidence.pack,
+          )!;
+          return evaluatePackLifecycleOutcome({
+            selection,
+            lifecycle: packResults,
+            sync: { scopes: [], status: 'not-run', providers: [] },
+            finalEvidence: evidence,
+          });
+        });
         for (const evidence of finalEvidence) {
           const target =
             evidence.pack === 'core'
@@ -1391,19 +1443,87 @@ export async function runInitTools(
             )
           ).adoptedPacks
         : [];
+    if (dependencies.syncAfterInstall) {
+      const sync = await dependencies.syncAfterInstall(
+        affectedScopesList,
+        context,
+        canonicalPathsForPacks(selectedPacks),
+      );
+      lifecycleOutcomes = lifecycleOutcomes.map((outcome) =>
+        evaluatePackLifecycleOutcome({
+          selection: outcome.selection,
+          lifecycle: outcome.canonical.results,
+          sync: {
+            scopes: sync.scopes.filter((scope) =>
+              outcome.selection.targetScopes.includes(scope),
+            ),
+            status:
+              sync.scopes.length === 0
+                ? 'not-run'
+                : sync.synced
+                  ? 'complete'
+                  : 'failed',
+            providers: [],
+            ...(sync.error ? { error: sync.error } : {}),
+          },
+          finalEvidence: outcome.finalEvidence,
+        }),
+      );
+    }
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
       appliedScopes,
       adoptedPacks,
+      syncHandled: dependencies.syncAfterInstall !== undefined,
     };
-    reportSuccess(context, packScopeInfo, affectedScopesList, adoptedPacks);
-    process.exitCode = 0;
+    reportSuccess(
+      context,
+      packScopeInfo,
+      affectedScopesList,
+      adoptedPacks,
+      lifecycleOutcomes,
+    );
+    process.exitCode = lifecycleOutcomes.some(
+      ({ status }) => status !== 'complete',
+    )
+      ? 1
+      : 0;
     return selectedPacks;
   } catch (error) {
     lastRunInitToolsMetadata = null;
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
-      context.logger.json({ status: 'error', message });
+      context.logger.json({
+        status: 'error',
+        message,
+        ...(attemptedPacks.length > 0
+          ? {
+              lifecycle:
+                lifecycleOutcomes.length > 0
+                  ? lifecycleOutcomes
+                  : attemptedPacks.map((pack) => ({
+                      schemaVersion: 1,
+                      selection: attemptedSelections.find(
+                        (selection) => selection.pack === pack,
+                      ) ?? {
+                        pack,
+                        requested: 'user' as const,
+                        retainedRealizedScopes: [],
+                        targetScopes: [],
+                      },
+                      canonical: { status: 'failed' as const, results: [] },
+                      sync: {
+                        scopes: [],
+                        status: 'not-run' as const,
+                        providers: [],
+                      },
+                      finalEvidence: null,
+                      status: 'failed' as const,
+                      recovery: [{ code: 'canonical-apply-failed', message }],
+                    })),
+            }
+          : {}),
+      });
     } else {
       context.logger.error(message);
     }
@@ -1428,22 +1548,27 @@ export async function runInitToolsWithDefaults(
  * `defaultScope`. Falls back to the configured default only when placement
  * cannot be observed (no inventory dependency, or an inventory failure).
  */
-async function resolvePackCommandScopes(
+async function resolvePackCommandSelection(
   pack: ToolPack,
   context: CommandContext,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
   requested?: ConcreteScope | 'both',
-): Promise<ConcreteScope[]> {
+): Promise<PackLifecycleOutcome['selection']> {
   const definition = getPackDefinition(pack);
   const inventory = dependencies.inventoryPack;
   if (!inventory) {
     const fallback = requested ?? definition.defaultScope;
     const fallbackScopes: ConcreteScope[] =
       fallback === 'both' ? ['project', 'user'] : [fallback];
-    return fallbackScopes.filter((scope) =>
-      definition.allowedScopes.includes(scope),
-    );
+    return {
+      pack,
+      requested: fallback,
+      retainedRealizedScopes: [],
+      targetScopes: fallbackScopes.filter((scope) =>
+        definition.allowedScopes.includes(scope),
+      ),
+    };
   }
 
   const userRoot = dependencies.resolveScopeRoot(
@@ -1468,12 +1593,18 @@ async function resolvePackCommandScopes(
     evidence.knownRealizedScopes.length === 2
       ? 'both'
       : (evidence.knownRealizedScopes[0] ?? definition.defaultScope);
-  return resolveAdditivePackScopeSelection({
+  const selection = resolveAdditivePackScopeSelection({
     pack,
     requested: requested ?? defaultRequest,
     knownRealizedScopes: evidence.knownRealizedScopes,
     unknownScopes: evidence.unknownScopes,
-  }).targetScopes.filter((scope) => definition.allowedScopes.includes(scope));
+  });
+  return {
+    ...selection,
+    targetScopes: selection.targetScopes.filter((scope) =>
+      definition.allowedScopes.includes(scope),
+    ),
+  };
 }
 
 function createReconciledPackCommand(
@@ -1500,6 +1631,8 @@ function createReconciledPackCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
+      let lifecycleOutcome: PackLifecycleOutcome | null = null;
+      let selection: PackLifecycleOutcome['selection'] | null = null;
       try {
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
@@ -1508,7 +1641,7 @@ function createReconciledPackCommand(
           context.scope === 'project' || context.scope === 'user'
             ? context.scope
             : null;
-        const scopes = await resolvePackCommandScopes(
+        selection = await resolvePackCommandSelection(
           pack,
           context,
           assetsRoot,
@@ -1519,6 +1652,7 @@ function createReconciledPackCommand(
               ? requestedScope
               : undefined,
         );
+        const scopes = [...selection.targetScopes];
         for (const scope of scopes) {
           if (!definition.allowedScopes.includes(scope)) {
             throw new Error(`Pack ${pack} does not allow ${scope} scope`);
@@ -1543,8 +1677,9 @@ function createReconciledPackCommand(
           ),
         );
         const results = await dependencies.reconcilePacks!(requests);
+        let finalEvidence: ToolPackEvidence | null = null;
         if (dependencies.inventoryPack) {
-          const finalEvidence = await loadPackEvidence(
+          finalEvidence = await loadPackEvidence(
             pack,
             requests.some(({ scope }) => scope === 'project')
               ? await dependencies.resolveProjectRoot(context.cwd)
@@ -1553,8 +1688,14 @@ function createReconciledPackCommand(
             assetsRoot,
             dependencies.inventoryPack,
           );
-          assertVerifiedPackScopes(finalEvidence, scopes);
         }
+        lifecycleOutcome = evaluatePackLifecycleOutcome({
+          selection,
+          lifecycle: results,
+          sync: { scopes: [], status: 'not-run', providers: [] },
+          finalEvidence,
+        });
+        if (finalEvidence) assertVerifiedPackScopes(finalEvidence, scopes);
         appliedScopesByCommand.set(
           command,
           results
@@ -1562,6 +1703,33 @@ function createReconciledPackCommand(
             .map(({ request }) => request.scope),
         );
         setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
+        if (dependencies.syncAfterInstall) {
+          syncHandledByCommand.add(command);
+          const changedScopes = results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope);
+          const sync = await dependencies.syncAfterInstall(
+            changedScopes,
+            context,
+            canonicalPathsForPacks([pack]),
+          );
+          lifecycleOutcome = evaluatePackLifecycleOutcome({
+            selection,
+            lifecycle: results,
+            sync: {
+              scopes: sync.scopes,
+              status:
+                sync.scopes.length === 0
+                  ? 'not-run'
+                  : sync.synced
+                    ? 'complete'
+                    : 'failed',
+              providers: [],
+              ...(sync.error ? { error: sync.error } : {}),
+            },
+            finalEvidence,
+          });
+        }
 
         // Project-scope placement installs capability only. The
         // project-management and decisions AGENTS sections are written by the
@@ -1586,6 +1754,7 @@ function createReconciledPackCommand(
             pack,
             scopes,
             results,
+            lifecycle: lifecycleOutcome,
             ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
           });
         } else {
@@ -1593,6 +1762,9 @@ function createReconciledPackCommand(
             context.logger.info(`Adopted project tool pack: ${adoptedPack}`);
           }
           context.logger.info(`Installed ${pack} tool pack.`);
+          context.logger.info(
+            `Lifecycle: ${lifecycleOutcome.status} (${lifecycleOutcome.canonical.status})`,
+          );
           for (const result of results) {
             context.logger.info(`Scope: ${result.request.scope}`);
             context.logger.info(`Target root: ${result.request.scopeRoot}`);
@@ -1604,10 +1776,29 @@ function createReconciledPackCommand(
             );
           }
         }
-        process.exitCode = 0;
+        process.exitCode = lifecycleOutcome.status === 'complete' ? 0 : 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (context.json) context.logger.json({ status: 'error', message });
+        lifecycleOutcome ??= {
+          schemaVersion: 1,
+          selection: selection ?? {
+            pack,
+            requested: 'user',
+            retainedRealizedScopes: [],
+            targetScopes: [],
+          },
+          canonical: { status: 'failed', results: [] },
+          sync: { scopes: [], status: 'not-run', providers: [] },
+          finalEvidence: null,
+          status: 'failed',
+          recovery: [{ code: 'canonical-apply-failed', message }],
+        };
+        if (context.json)
+          context.logger.json({
+            status: 'error',
+            message,
+            lifecycle: lifecycleOutcome,
+          });
         else context.logger.error(message);
         process.exitCode = 1;
       }

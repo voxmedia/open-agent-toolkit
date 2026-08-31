@@ -270,7 +270,21 @@ function createHarness(options: HarnessOptions = {}) {
             diagnostics: [],
           },
           completeness: 'complete' as const,
-          assets: [],
+          assets: [
+            {
+              definition: {
+                id: `${request.pack}-fixture`,
+                kind: 'skill' as const,
+                destination: `.agents/skills/${request.pack}-fixture`,
+                scopes: [request.scope],
+                ownership: { [request.scope]: 'managed' as const },
+              },
+              path: `${request.scopeRoot}/.agents/skills/${request.pack}-fixture`,
+              status: 'current' as const,
+              installedVersion: '1.0.0',
+              bundledVersion: '1.0.0',
+            },
+          ],
           diagnostics: [],
         };
         const operation = {
@@ -371,6 +385,11 @@ function createHarness(options: HarnessOptions = {}) {
       };
     },
   );
+  const syncAfterInstall = vi.fn(async (scopes: Array<'project' | 'user'>) => ({
+    synced: scopes.length > 0,
+    scopes,
+    error: null,
+  }));
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -411,7 +430,9 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     upsertAgentsMdSection,
     removeAgentsMdSection,
-    ...(options.useLifecycle ? { reconcilePacks, inventoryPack } : {}),
+    ...(options.useLifecycle
+      ? { reconcilePacks, inventoryPack, syncAfterInstall }
+      : {}),
   });
 
   return {
@@ -439,6 +460,7 @@ function createHarness(options: HarnessOptions = {}) {
     upsertAgentsMdSection,
     reconcilePacks,
     inventoryPack,
+    syncAfterInstall,
   };
 }
 
@@ -1622,6 +1644,148 @@ describe('createInitToolsCommand', () => {
     expect(installDocs).not.toHaveBeenCalled();
     expect(installProjectManagement).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits complete lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle: Array<{ status: string }> | { status: string };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ status: 'complete' }),
+        ]),
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits canonical failure lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture, reconcilePacks } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      reconcilePacks.mockRejectedValueOnce(new Error('canonical failed'));
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        status: string;
+        lifecycle:
+          | Array<{ canonical: { status: string } }>
+          | {
+              canonical: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(payload.status).toBe('error');
+      expect(outcomes[0]?.canonical.status).toBe('failed');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits verification failure lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture, inventoryPack } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      inventoryPack.mockResolvedValue({
+        pack: 'docs',
+        placement: 'unavailable',
+        scopes: [],
+        diagnostics: [],
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle:
+          | Array<{ canonical: { status: string } }>
+          | {
+              canonical: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes[0]?.canonical.status).toBe('verification-failed');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits partial lifecycle evidence when provider sync fails for $label installs',
+    async ({ args }) => {
+      const { command, capture, syncAfterInstall } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      syncAfterInstall.mockResolvedValue({
+        synced: false,
+        scopes: ['user'],
+        error: 'provider sync failed',
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle:
+          | Array<{ status: string; sync: { status: string } }>
+          | {
+              status: string;
+              sync: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes[0]).toMatchObject({
+        status: 'partial',
+        sync: { status: 'failed' },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('does not preserve declared-only placement when repairing a fully missing aggregate pack', async () => {
     const { command, reconcilePacks } = createHarness({

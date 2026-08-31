@@ -4,6 +4,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { createProvidersCommand } from '@commands/providers/index';
+import { createProvidersListCommand } from '@commands/providers/list/list';
 import type { Manifest, ManifestEntry } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -173,6 +174,62 @@ describe('oat providers list', () => {
     expect(capture.info[0]).toContain('cursor');
     expect(capture.info[0]).toContain('detected');
     expect(capture.info[0]).toContain('not detected');
+  });
+
+  it('uses an injected registry-only provider without command-local registration edits', async () => {
+    const capture = createLoggerCapture();
+    const registryOnly = createAdapter('registry-only', 'Registry Only', true);
+    const listCommand = createProvidersListCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+      loadSyncConfig: vi.fn(async () => ({
+        version: 1,
+        defaultStrategy: 'auto',
+        knownStrays: [],
+        providers: {},
+      })),
+      resolveProviderScopeContext: vi.fn(async () => ({
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [
+          {
+            provider: 'registry-only',
+            state: 'active',
+            source: 'detected-unset',
+            reason: 'test registry',
+          },
+        ],
+        registrations: [
+          { adapter: registryOnly, extensions: [], capabilities: [] },
+        ],
+      })),
+      getSyncMappings: vi.fn(
+        (adapter: ProviderAdapter) => adapter.projectMappings,
+      ),
+      loadManifest: vi.fn(async () => createManifest([])),
+      detectDrift: vi.fn(),
+    });
+    const command = new Command('providers').addCommand(listCommand);
+
+    await runProvidersList(command, {
+      globalArgs: ['--json', '--scope', 'project'],
+    });
+
+    expect(capture.jsonPayloads[0]).toEqual([
+      expect.objectContaining({ name: 'registry-only', detected: true }),
+    ]);
   });
 
   it('shows sync status summary per provider', async () => {

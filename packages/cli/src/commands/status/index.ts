@@ -106,9 +106,11 @@ import {
   getConfigAwareAdapters,
   getProviderRegistrations,
   getSyncMappings,
+  resolveProviderScopeContext,
   type PathMapping,
   type MaterializationPlan,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import type { AdoptionSource } from '@providers/shared/adapter.types';
 import { getAdoptionSources } from '@providers/shared/adapter.utils';
@@ -260,6 +262,11 @@ interface StatusDependencies {
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
+  resolveProviderScopeContext?: (input: {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
   getAdoptionSources: (
     adapter: ProviderAdapter,
@@ -381,6 +388,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
     return getProviderRegistrations().map(({ adapter }) => adapter);
   },
   getConfigAwareAdapters,
+  resolveProviderScopeContext,
   getSyncMappings,
   getAdoptionSources,
   detectDrift,
@@ -797,12 +805,24 @@ async function collectScopeReports(
       dependencies.loadSyncConfig(syncConfigPath),
       dependencies.resolveUserSyncConfig(userConfigDir),
     ]);
-  const adapters = dependencies.getAdapters();
-  const { activeAdapters } = await dependencies.getConfigAwareAdapters(
-    adapters,
-    scopeRoot,
-    scope === 'user' ? userSyncConfig : syncConfig,
-  );
+  const effectiveConfig = scope === 'user' ? userSyncConfig : syncConfig;
+  const providerContext = dependencies.resolveProviderScopeContext
+    ? await dependencies.resolveProviderScopeContext({
+        scope,
+        scopeRoot,
+        config: effectiveConfig,
+      })
+    : null;
+  const adapters = providerContext
+    ? providerContext.registrations.map(({ adapter }) => adapter)
+    : dependencies.getAdapters();
+  const activeAdapters = providerContext
+    ? adapters.filter(({ name }) =>
+        providerContext.activeProviders.includes(name),
+      )
+    : await dependencies
+        .getConfigAwareAdapters(adapters, scopeRoot, effectiveConfig)
+        .then((resolution) => resolution.activeAdapters);
   const reports: DriftReport[] = [];
   const strayCandidates: StatusStrayCandidate[] = [];
   const trackedCanonicalByProvider = new Set(
@@ -814,15 +834,25 @@ async function collectScopeReports(
   const activeProviderNames = new Set(
     activeAdapters.map((adapter) => adapter.name),
   );
+  const activeExtensionProviders = new Set(
+    providerContext
+      ? providerContext.registrations
+          .filter(({ adapter }) => activeProviderNames.has(adapter.name))
+          .flatMap(({ extensions }) =>
+            extensions.map(({ provider }) => provider),
+          )
+      : [...activeProviderNames],
+  );
   const extensionCanonicalEntries =
     scope === 'user' &&
-    (activeProviderNames.has('codex') || activeProviderNames.has('cursor'))
+    (activeExtensionProviders.has('codex') ||
+      activeExtensionProviders.has('cursor'))
       ? [
           ...canonicalEntries,
           ...(await dependencies.scanBundledManagedAgents()),
         ]
       : canonicalEntries;
-  const codexExtensionPlan = activeProviderNames.has('codex')
+  const codexExtensionPlan = activeExtensionProviders.has('codex')
     ? await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
         extensionCanonicalEntries,
@@ -830,7 +860,7 @@ async function collectScopeReports(
         { userConfigDir },
       )
     : undefined;
-  const cursorExtensionPlan = activeProviderNames.has('cursor')
+  const cursorExtensionPlan = activeExtensionProviders.has('cursor')
     ? await dependencies.computeCursorProjectExtensionPlan(
         scopeRoot,
         extensionCanonicalEntries,
@@ -1369,6 +1399,13 @@ export function createStatusCommand(
     ...DEFAULT_DEPENDENCIES,
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('status'))
     .description('Report provider sync and drift status')

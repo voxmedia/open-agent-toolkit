@@ -1,9 +1,13 @@
 import { join } from 'node:path';
 
 import {
+  packScopeFactsFromInventory,
   projectPackEvidence,
-  type PackScopeFacts,
 } from '@commands/tools/shared/pack-evidence';
+import type {
+  InventoryScopedPackInput,
+  ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
 import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
@@ -41,6 +45,9 @@ export interface RemoveToolsDependencies {
     scope: ConcreteScope,
     scopeRoot: string,
   ) => Promise<boolean>;
+  inventoryScopedPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
 }
 
 interface RemovedTool {
@@ -123,6 +130,7 @@ interface ScopeRemovalPlan {
   managedTargets: ManagedRemovalTarget[];
   retainedOwnerData: Array<{ path: string; reason: string }>;
   presentPacks: PackName[];
+  beforeInventories: ScopedPackInventory[];
 }
 
 interface ManagedPackRemovalPlan {
@@ -329,6 +337,18 @@ export async function removeTools(
       dryRun,
       deps,
     );
+    const beforeInventories = deps.inventoryScopedPack
+      ? await Promise.all(
+          selectedPacks(target).map((pack) =>
+            deps.inventoryScopedPack!({
+              pack,
+              scope,
+              scopeRoot,
+              assetsRoot,
+            }),
+          ),
+        )
+      : [];
     const seedData = PACK_MANIFEST.filter(({ name }) =>
       selectedPacks(target).includes(name),
     ).flatMap(({ assets }) =>
@@ -350,6 +370,7 @@ export async function removeTools(
       managedTargets: managedPlan.targets,
       retainedOwnerData: [...managedPlan.retained, ...seedData],
       presentPacks: managedPlan.presentPacks,
+      beforeInventories,
     });
   }
 
@@ -385,6 +406,23 @@ export async function removeTools(
     );
   }
 
+  const finalInventories = dryRun
+    ? plans.flatMap(({ beforeInventories }) => beforeInventories)
+    : deps.inventoryScopedPack
+      ? await Promise.all(
+          plans.flatMap((plan) =>
+            selectedPacks(target).map((pack) =>
+              deps.inventoryScopedPack!({
+                pack,
+                scope: plan.scope,
+                scopeRoot: plan.scopeRoot,
+                assetsRoot,
+              }),
+            ),
+          ),
+        )
+      : [];
+
   return {
     removed,
     removedAssets,
@@ -396,6 +434,7 @@ export async function removeTools(
       scopes,
       packOutcomes,
       dryRun,
+      finalInventories,
     ),
   };
 }
@@ -405,26 +444,25 @@ function removalLifecycleOutcomes(
   scopes: readonly ConcreteScope[],
   outcomes: readonly PackRemovalOutcome[],
   dryRun: boolean,
+  finalInventories: readonly ScopedPackInventory[],
 ): PackLifecycleOutcome[] {
+  if (finalInventories.length === 0) return [];
   return packs.map((pack) => {
-    const removedScopes = outcomes
-      .filter((outcome) => outcome.pack === pack && outcome.removed)
-      .map(({ scope }) => scope);
-    const facts: PackScopeFacts[] = scopes.map((scope) => ({
-      scope,
-      intent: {
-        pack,
-        scope,
-        enabled: false,
-        source: 'none',
-        configPath: `${scope === 'project' ? '<project>' : '~'}/.oat/config.json`,
-        diagnostics: [],
-      },
-      inventory: { state: 'available', source: 'pack-inventory' },
-      completeness: 'absent',
-      health: 'absent',
-      realization: 'absent',
-    }));
+    const packInventories = finalInventories.filter(
+      (inventory) => inventory.pack === pack,
+    );
+    const finalEvidence =
+      packInventories.length === 0
+        ? null
+        : projectPackEvidence({
+            canonical: null,
+            scopes: packInventories.map(packScopeFactsFromInventory),
+          });
+    const removed = outcomes.some(
+      (outcome) => outcome.pack === pack && outcome.removed,
+    );
+    const verified =
+      finalEvidence !== null && finalEvidence.unknownScopes.length === 0;
     return {
       schemaVersion: 1,
       selection: {
@@ -433,17 +471,24 @@ function removalLifecycleOutcomes(
           scopes.includes('project') && scopes.includes('user')
             ? 'both'
             : scopes[0]!,
-        retainedRealizedScopes: removedScopes,
+        retainedRealizedScopes: finalEvidence?.knownRealizedScopes ?? [],
         targetScopes: scopes,
       },
       canonical: {
-        status: removedScopes.length > 0 && !dryRun ? 'applied' : 'unchanged',
+        status: removed && !dryRun ? 'applied' : 'unchanged',
         results: [],
       },
       sync: { scopes: [], status: 'not-run', providers: [] },
-      finalEvidence: projectPackEvidence({ canonical: null, scopes: facts }),
-      status: 'complete',
-      recovery: [],
+      finalEvidence,
+      status: verified ? 'complete' : 'failed',
+      recovery: verified
+        ? []
+        : [
+            {
+              code: 'final-inventory-unverified',
+              message: `Re-run status for ${pack}; final removal state could not be verified`,
+            },
+          ],
     };
   });
 }

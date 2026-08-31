@@ -11,6 +11,7 @@ import {
   readGlobalOptions,
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
+import { DEFAULT_SYNC_CONFIG, loadSyncConfig } from '@config/index';
 import { detectDrift } from '@drift/index';
 import {
   normalizeToPosixPath,
@@ -20,11 +21,18 @@ import {
 import { loadManifest } from '@manifest/index';
 import {
   getProviderRegistrations,
+  resolveProviderScopeContext,
   getSyncMappings,
   type PathMapping,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import type { ContentType } from '@shared/types';
 import { Command } from 'commander';
+
+type ContextualListDependencies = ProvidersListDependencies & {
+  loadSyncConfig?: typeof loadSyncConfig;
+  resolveProviderScopeContext?: typeof resolveProviderScopeContext;
+};
 
 function formatSummary(item: ProviderListItem): string {
   const contentTypes =
@@ -79,7 +87,7 @@ function formatList(items: ProviderListItem[]): string {
   return [header, divider, ...rows].join('\n');
 }
 
-function createDependencies(): ProvidersListDependencies {
+function createDependencies(): ContextualListDependencies {
   return {
     buildCommandContext,
     async resolveScopeRoot(scope, context) {
@@ -94,6 +102,10 @@ function createDependencies(): ProvidersListDependencies {
     getSyncMappings,
     loadManifest,
     detectDrift,
+    async loadSyncConfig(configPath) {
+      return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+    },
+    resolveProviderScopeContext,
   };
 }
 
@@ -108,14 +120,27 @@ function createEmptySummary(): ProviderListSummary {
 
 async function collectProviderList(
   context: CommandContext,
-  dependencies: ProvidersListDependencies,
+  dependencies: ContextualListDependencies,
 ): Promise<ProviderListItem[]> {
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
-    scopes.map(async (scope) => ({
-      scope,
-      root: await dependencies.resolveScopeRoot(scope, context),
-    })),
+    scopes.map(async (scope) => {
+      const root = await dependencies.resolveScopeRoot(scope, context);
+      const config = dependencies.loadSyncConfig
+        ? await dependencies.loadSyncConfig(
+            join(root, '.oat', 'sync', 'config.json'),
+          )
+        : undefined;
+      const providerContext =
+        config && dependencies.resolveProviderScopeContext
+          ? await dependencies.resolveProviderScopeContext({
+              scope,
+              scopeRoot: root,
+              config,
+            })
+          : undefined;
+      return { scope, root, providerContext };
+    }),
   );
   const manifestsByRoot = new Map<
     string,
@@ -131,7 +156,13 @@ async function collectProviderList(
   }
 
   const items: ProviderListItem[] = [];
-  for (const adapter of dependencies.getAdapters()) {
+  const providerContexts = scopeRoots
+    .map(({ providerContext }) => providerContext)
+    .filter((value): value is ProviderScopeContext => value !== undefined);
+  const adapters = providerContexts[0]
+    ? providerContexts[0].registrations.map(({ adapter }) => adapter)
+    : dependencies.getAdapters();
+  for (const adapter of adapters) {
     const summary = createEmptySummary();
     const contentTypes = new Set<ContentType>();
     const allMappings: PathMapping[] = [];
@@ -144,7 +175,11 @@ async function collectProviderList(
     let detected = false;
 
     for (const scopeRoot of scopeRoots) {
-      if (await adapter.detect(scopeRoot.root)) {
+      if (
+        scopeRoot.providerContext
+          ? scopeRoot.providerContext.detectedProviders.includes(adapter.name)
+          : await adapter.detect(scopeRoot.root)
+      ) {
         detected = true;
       }
 
@@ -219,12 +254,18 @@ async function runListCommand(
 }
 
 export function createProvidersListCommand(
-  overrides: Partial<ProvidersListDependencies> = {},
+  overrides: Partial<ContextualListDependencies> = {},
 ): Command {
-  const dependencies: ProvidersListDependencies = {
+  const dependencies: ContextualListDependencies = {
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    overrides.getAdapters !== undefined
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('list'))
     .description('List provider adapters and sync summary')
