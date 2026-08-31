@@ -850,6 +850,7 @@ git commit -m "chore(p04-t02): prepare recon release"
 | design    | artifact | passed          | 2026-08-31 | `reviews/design-self-review-2026-08-31T005342Z.md`            | -             | -          | -           |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/plan-self-review-2026-08-31T011150Z.md`              | -             | -          | -           |
 | plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -             | -          | -           |
+| plan      | artifact | received        | 2026-08-31 | `reviews/artifact-plan-review-2026-08-31T012704Z.md`          | -             | -          | -           |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
