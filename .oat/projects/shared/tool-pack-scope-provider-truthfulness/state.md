@@ -41,16 +41,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: recovery-p02-t02-20260831T122114Z
-        original_request_id: dispatch-p02-20260831T120200Z-492af17f6
-        original_task_id: p02-t02
-        original_commit: 1f81e62de770e95db763a76d3931426876453b2d
-        discovered_by: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/index.test.ts src/commands/sync/index.test.ts src/commands/status/index.test.ts src/commands/doctor/index.test.ts src/commands/providers
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: 63aa62d174a1b8a3a62ee1f81d0de5127223a7b6
-        status: completed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
