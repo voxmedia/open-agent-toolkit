@@ -1,10 +1,11 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { isAbsolute, relative } from 'node:path';
+import { isAbsolute, posix, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import { validateSyncedArchiveTerminalReport } from './finalize-synced-archive.mjs';
+import { recoverArchivedRecapEvidenceReceipt } from './recover-completion-receipts.mjs';
 import { resolveSyncedArchiveEntry } from './resolve-synced-archive-entry.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -15,8 +16,17 @@ function executionError(message) {
   return error;
 }
 
-function buildPostArchiveContinuation(archiveReport, projectPath) {
+async function buildPostArchiveContinuation(
+  archiveReport,
+  projectPath,
+  repoRoot,
+  recoverArchiveEvidence,
+) {
   let selectedProjectRecapRun = '';
+  let exportedManifestPath = '';
+  let exportedBuildRecordPath = '';
+  let evidenceCommit = '';
+  let evidencePushRequired = false;
   if (archiveReport.projectRecapExport !== undefined) {
     const sourceRunRoot = archiveReport.projectRecapExport?.sourceRunRoot;
     const exportRoot = archiveReport.projectRecapExport?.exportRoot;
@@ -31,7 +41,9 @@ function buildPostArchiveContinuation(archiveReport, projectPath) {
         'Archive resume report has an invalid project recap export receipt.',
       );
     }
-    selectedProjectRecapRun = relative(projectPath, sourceRunRoot);
+    selectedProjectRecapRun = relative(projectPath, sourceRunRoot)
+      .split(sep)
+      .join('/');
     if (
       selectedProjectRecapRun.length === 0 ||
       /^\.\.(?:[/\\]|$)/.test(selectedProjectRecapRun) ||
@@ -40,6 +52,32 @@ function buildPostArchiveContinuation(archiveReport, projectPath) {
       throw executionError(
         'Archive resume recap source is outside the original project path.',
       );
+    }
+    const exportRootRelative = relative(repoRoot, exportRoot)
+      .split(sep)
+      .join('/');
+    if (
+      exportRootRelative.length === 0 ||
+      /^\.\.(?:[/\\]|$)/.test(exportRootRelative) ||
+      isAbsolute(exportRootRelative)
+    ) {
+      throw executionError(
+        'Archive resume recap export is outside the repository root.',
+      );
+    }
+    exportedManifestPath = posix.join(exportRootRelative, manifestPath);
+    exportedBuildRecordPath = posix.join(
+      exportRootRelative,
+      'build-record.json',
+    );
+    const recoveredEvidence = await recoverArchiveEvidence({
+      repoRoot,
+      lifecycleCommit: archiveReport.lifecycleCommit,
+      evidencePaths: [exportedManifestPath, exportedBuildRecordPath],
+    });
+    if (recoveredEvidence.evidenceCommit !== null) {
+      evidenceCommit = recoveredEvidence.evidenceCommit;
+      evidencePushRequired = recoveredEvidence.evidencePushRequired;
     }
   }
   return {
@@ -51,6 +89,10 @@ function buildPostArchiveContinuation(archiveReport, projectPath) {
     s3Path: archiveReport.s3Path ?? '',
     selectedProjectRecapRun,
     projectRecapExport: archiveReport.projectRecapExport ?? null,
+    exportedManifestPath,
+    exportedBuildRecordPath,
+    evidenceCommit,
+    evidencePushRequired,
   };
 }
 
@@ -58,6 +100,7 @@ export async function continueSyncedArchiveCompletion({
   executionResult,
   finalizeLinks,
   refreshDashboard,
+  attestRecap,
   pushBookkeeping,
   closeoutPr,
   clearPointer,
@@ -75,6 +118,12 @@ export async function continueSyncedArchiveCompletion({
   }
   await finalizeLinks(executionResult.continuation);
   await refreshDashboard(executionResult.continuation);
+  if (
+    executionResult.continuation.projectRecapExport !== null &&
+    executionResult.continuation.evidenceCommit === ''
+  ) {
+    await attestRecap(executionResult.continuation);
+  }
   await pushBookkeeping(executionResult.continuation);
   await closeoutPr(executionResult.continuation);
   await clearPointer(executionResult.archiveReport);
@@ -96,6 +145,7 @@ export async function executeSyncedArchiveEntry({
   runActiveWorkflowSteps,
   archiveProject,
   validateArchive,
+  recoverArchiveEvidence = recoverArchivedRecapEvidenceReceipt,
 }) {
   const entry = record
     ? await resolveSyncedArchiveEntry({
@@ -160,7 +210,12 @@ export async function executeSyncedArchiveEntry({
     archiveSnapshot: archiveReport.snapshotId,
     archiveReport,
     terminalReceiptValidated: true,
-    continuation: buildPostArchiveContinuation(archiveReport, projectPath),
+    continuation: await buildPostArchiveContinuation(
+      archiveReport,
+      projectPath,
+      repoRoot,
+      recoverArchiveEvidence,
+    ),
   };
 }
 

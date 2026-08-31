@@ -1218,9 +1218,11 @@ Rules:
 
 Skip when no final recap was selected, for local-scope projects, when the
 selected recap is already durable solely through independently verified publish
-evidence, or when Step 7.5 restored an exact `EVIDENCE_COMMIT`. In the recovered
-evidence case, verify the selected run's manifest and build record are the two
-exact paths in that commit and continue without re-attesting or rewriting them.
+evidence, or when Step 7.5 or the synced archive-resume executor restored an
+exact `EVIDENCE_COMMIT`. In the recovered evidence case, the recovery primitive
+has already verified the selected run's manifest and build record as the two
+exact paths in that commit, with `LIFECYCLE_COMMIT` as its immediate parent.
+Continue without re-attesting or rewriting either record.
 
 For an archived recap, consume the exact `projectRecapExport` values recorded
 in Step 8. Plan finalization through
@@ -1267,7 +1269,8 @@ details, and continue to the evidence commit.
 
 ### Step 10.6: Commit Evidence + Push
 
-When Step 10.5 ran and Step 7.5 did not restore `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
+When Step 10.5 ran and neither Step 7.5 nor the synced archive-resume executor
+restored `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
 `verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
 commit parent/order, exact evidence paths, attestation outcome, and unchanged
 unrelated-change snapshots.
@@ -1294,6 +1297,7 @@ git commit --only -m "chore(oat): attest final project recap" -- \
 EVIDENCE_COMMIT=$(git rev-parse HEAD)
 test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
 test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"
+EVIDENCE_PUSH_REQUIRED="true"
 ```
 
 Verify the evidence commit contains exactly those two paths, the lifecycle
@@ -1329,12 +1333,16 @@ test "$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)" = \
   "$UNRELATED_PROJECT_STAGE_BEFORE"
 ```
 
-When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records
-again. Require the retained remote ref to equal that exact evidence SHA, keep
-its immediate parent equal to `PROJECT_REF_COMMIT`, and preserve the recovered
-`PROJECT_LINKS_PIN_COMMIT`. The parent discovery-record commit remains confined
-to its one canonical path, and all unrelated staged-state snapshots must remain
-byte-for-byte unchanged.
+When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not
+stage or commit recap records again. Require the retained remote ref to equal
+that exact evidence SHA, keep its immediate parent equal to
+`PROJECT_REF_COMMIT`, and preserve the recovered `PROJECT_LINKS_PIN_COMMIT`.
+When the synced archive-resume executor restored `EVIDENCE_COMMIT`, likewise do
+not re-attest, stage, or commit: it already required the evidence commit to
+change exactly `EXPORTED_MANIFEST_PATH` and `EXPORTED_BUILD_RECORD_PATH`, with
+`LIFECYCLE_COMMIT` as its immediate parent. Its `EVIDENCE_PUSH_REQUIRED`
+receipt determines whether the one parent-branch push remains pending. All
+unrelated staged-state snapshots must remain byte-for-byte unchanged.
 
 For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
 push the parent branch exactly once after the lifecycle receipt and any recap
@@ -1347,11 +1355,26 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
   test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
   git merge-base --is-ancestor "$LIFECYCLE_COMMIT" \
     "$BOOKKEEPING_PUSH_COMMIT" || exit 1
-  git push || exit 1
+  if [[ -n "$EVIDENCE_COMMIT" ]]; then
+    test "$(git rev-parse "$EVIDENCE_COMMIT^")" = \
+      "$LIFECYCLE_COMMIT" || exit 1
+    if [[ "$EVIDENCE_PUSH_REQUIRED" != "true" && \
+      "$EVIDENCE_PUSH_REQUIRED" != "false" ]]; then
+      exit 1
+    fi
+    case "$EVIDENCE_PUSH_REQUIRED" in
+      true) git push || exit 1 ;;
+      false) echo "Reusing published recap evidence receipt: $EVIDENCE_COMMIT" ;;
+    esac
+  else
+    git push || exit 1
+  fi
   BOOKKEEPING_UPSTREAM=$(git rev-parse --abbrev-ref \
     --symbolic-full-name '@{u}') || exit 1
-  git merge-base --is-ancestor "$BOOKKEEPING_PUSH_COMMIT" \
-    "$BOOKKEEPING_UPSTREAM" || exit 1
+  BOOKKEEPING_UPSTREAM_COMMIT=$(git rev-parse \
+    "$BOOKKEEPING_UPSTREAM^{commit}") || exit 1
+  test "$BOOKKEEPING_UPSTREAM_COMMIT" = \
+    "$BOOKKEEPING_PUSH_COMMIT" || exit 1
   echo "Completion bookkeeping pushed: $BOOKKEEPING_PUSH_COMMIT"
 fi
 ```
@@ -1420,15 +1443,28 @@ Steps:
 4. Push the updated body:
 
    ```bash
-   gh pr edit "$PR_REF" --body-file "$TMP_BODY"
+   if ! command -v gh >/dev/null 2>&1; then
+     echo "GitHub CLI is unavailable; update the tracked PR manually from $TMP_BODY." >&2
+     if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+       exit 1
+     fi
+   elif ! gh pr edit "$PR_REF" --body-file "$TMP_BODY"; then
+     echo "PR description update failed; update it manually from $TMP_BODY." >&2
+     if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+       exit 1
+     fi
+   fi
    ```
 
 5. Clean up the temp file.
 
 Failure handling:
 
-- If `gh` is missing, warn and print the path to the regenerated artifact body so the user can paste it into the PR manually. Do not fail the skill.
-- If `gh pr edit` fails (e.g. PR was merged between Step 2 and now, or the auth token lacks edit permission), warn and continue. Step 12's completion summary should call out that the PR body was not updated and surface the artifact path so the user can update it manually.
+- If `gh` is missing or `gh pr edit` fails, always print the manual-update path.
+  For a synced archive completion this tracked-PR update is required: stop
+  before Step 12, retain the active pointer, and let the next invocation resume
+  recordlessly. Other completion shapes retain their existing warning-only
+  behavior and Step 12 summary guidance.
 - Never re-archive or re-commit on failure here — the lifecycle bookkeeping
   and any recap evidence update in Step 10.6 already shipped.
 
