@@ -151,4 +151,159 @@ describe('PACK_MANIFEST', () => {
       { pack: 'workflows', owner: 'resolve-tracking' },
     ]);
   });
+
+  it('validates same-scope selected-asset dependency declarations', () => {
+    const utility = fixture({
+      name: 'utility',
+      assets: [
+        {
+          ...fixture().assets[0],
+          id: 'skill:oat-dispatch-subagents',
+          source: 'skills/oat-dispatch-subagents',
+          destination: '.agents/skills/oat-dispatch-subagents',
+        },
+        {
+          ...fixture().assets[0],
+          id: 'skill:subagent-orchestration',
+          source: 'skills/subagent-orchestration',
+          destination: '.agents/skills/subagent-orchestration',
+        },
+      ],
+    });
+    const research = fixture({
+      name: 'research',
+      dependencies: [
+        {
+          pack: 'utility',
+          scope: 'same',
+          assets: [
+            'skill:oat-dispatch-subagents',
+            'skill:subagent-orchestration',
+          ],
+        },
+      ],
+    });
+
+    expect(() => validatePackManifest([utility, research])).not.toThrow();
+    expect(() =>
+      validatePackManifest([
+        utility,
+        {
+          ...research,
+          dependencies: [
+            { pack: 'docs', scope: 'same', assets: ['skill:missing'] },
+          ],
+        },
+      ]),
+    ).toThrow(/unknown dependency pack/i);
+    expect(() =>
+      validatePackManifest([
+        utility,
+        {
+          ...research,
+          dependencies: [
+            { pack: 'utility', scope: 'same', assets: ['skill:missing'] },
+          ],
+        },
+      ]),
+    ).toThrow(/unknown dependency asset/i);
+    expect(() =>
+      validatePackManifest([
+        utility,
+        {
+          ...research,
+          dependencies: [
+            {
+              pack: 'utility',
+              scope: 'project' as 'same',
+              assets: ['skill:oat-dispatch-subagents'],
+            },
+          ],
+        },
+      ]),
+    ).toThrow(/same scope/i);
+    expect(() =>
+      validatePackManifest([
+        utility,
+        {
+          ...research,
+          dependencies: [
+            {
+              pack: 'utility',
+              scope: 'same',
+              assets: ['skill:oat-dispatch-subagents'],
+            },
+            {
+              pack: 'utility',
+              scope: 'same',
+              assets: ['skill:oat-dispatch-subagents'],
+            },
+          ],
+        },
+      ]),
+    ).toThrow(/duplicate dependency edge/i);
+  });
+
+  it('rejects dependency cycles', () => {
+    expect(() =>
+      validatePackManifest([
+        fixture({
+          name: 'ideas',
+          dependencies: [
+            { pack: 'docs', scope: 'same', assets: ['fixture-docs'] },
+          ],
+        }),
+        fixture({
+          name: 'docs',
+          assets: [
+            {
+              ...fixture().assets[0],
+              id: 'fixture-docs',
+              source: 'skills/fixture-docs',
+              destination: '.agents/skills/fixture-docs',
+            },
+          ],
+          dependencies: [
+            { pack: 'ideas', scope: 'same', assets: ['fixture-skill'] },
+          ],
+        }),
+      ]),
+    ).toThrow(/dependency cycle/i);
+  });
+
+  it('allows user materialization only for managed user-scope agents', () => {
+    const materializable = {
+      ...fixture().assets[0],
+      id: 'agent:fixture.md',
+      kind: 'agent' as const,
+      source: 'agents/fixture.md',
+      destination: '.agents/agents/fixture.md',
+      userMaterializable: true,
+    };
+    expect(() =>
+      validatePackManifest([fixture({ assets: [materializable] })]),
+    ).not.toThrow();
+    expect(() =>
+      validatePackManifest([
+        fixture({
+          assets: [{ ...materializable, kind: 'skill' }],
+        }),
+      ]),
+    ).toThrow(/user materializable.*agent/i);
+    expect(() =>
+      validatePackManifest([
+        fixture({
+          allowedScopes: ['project'],
+          defaultScope: 'project',
+          assets: [
+            {
+              ...materializable,
+              scopes: ['project'],
+              ownership: { project: 'managed' },
+            },
+          ],
+        }),
+      ]),
+    ).toThrow(/user materializable.*user scope/i);
+  });
 });

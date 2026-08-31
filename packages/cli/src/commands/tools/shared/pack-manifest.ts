@@ -7,6 +7,7 @@ import type {
   PackAssetGeneration,
   PackAssetKind,
   PackAssetOwnership,
+  PackDependencyDefinition,
   PackDefinition,
   PackName,
 } from './types';
@@ -16,6 +17,7 @@ export type {
   PackAssetGeneration,
   PackAssetKind,
   PackAssetOwnership,
+  PackDependencyDefinition,
   PackDefinition,
 };
 
@@ -417,12 +419,103 @@ function validateAsset(pack: PackDefinition, asset: PackAssetDefinition): void {
       );
     }
   }
+
+  if (asset.userMaterializable) {
+    if (asset.kind !== 'agent') {
+      throw new Error(
+        `Pack ${pack.name} user materializable asset ${asset.id} must be an agent`,
+      );
+    }
+    if (!asset.scopes.includes('user') || asset.ownership.user !== 'managed') {
+      throw new Error(
+        `Pack ${pack.name} user materializable agent ${asset.id} must support user scope with managed ownership`,
+      );
+    }
+  }
+}
+
+function validateDependencies(
+  manifest: readonly PackDefinition[],
+  packs: ReadonlyMap<PackName, PackDefinition>,
+): void {
+  const graph = new Map<PackName, Set<PackName>>();
+
+  for (const pack of manifest) {
+    const edges = new Set<string>();
+    for (const dependency of pack.dependencies ?? []) {
+      if (dependency.scope !== 'same') {
+        throw new Error(
+          `Pack ${pack.name} dependency on ${dependency.pack} must use same scope`,
+        );
+      }
+      const owner = packs.get(dependency.pack);
+      if (!owner) {
+        throw new Error(
+          `Pack ${pack.name} declares unknown dependency pack ${dependency.pack}`,
+        );
+      }
+      if (dependency.assets.length === 0) {
+        throw new Error(
+          `Pack ${pack.name} dependency on ${dependency.pack} selects no assets`,
+        );
+      }
+      for (const scope of pack.allowedScopes) {
+        if (!owner.allowedScopes.includes(scope)) {
+          throw new Error(
+            `Pack ${pack.name} dependency on ${dependency.pack} cannot resolve at same scope ${scope}`,
+          );
+        }
+      }
+      for (const assetId of dependency.assets) {
+        const edge = `${dependency.pack}:${assetId}`;
+        if (edges.has(edge)) {
+          throw new Error(
+            `Pack ${pack.name} has duplicate dependency edge ${edge}`,
+          );
+        }
+        edges.add(edge);
+        const asset = owner.assets.find(({ id }) => id === assetId);
+        if (!asset) {
+          throw new Error(
+            `Pack ${pack.name} declares unknown dependency asset ${dependency.pack}/${assetId}`,
+          );
+        }
+        for (const scope of pack.allowedScopes) {
+          if (!asset.scopes.includes(scope)) {
+            throw new Error(
+              `Pack ${pack.name} dependency asset ${dependency.pack}/${assetId} does not support same scope ${scope}`,
+            );
+          }
+        }
+      }
+      const targets = graph.get(pack.name) ?? new Set<PackName>();
+      targets.add(dependency.pack);
+      graph.set(pack.name, targets);
+    }
+  }
+
+  const visiting = new Set<PackName>();
+  const visited = new Set<PackName>();
+  const visit = (pack: PackName, path: PackName[]): void => {
+    if (visiting.has(pack)) {
+      throw new Error(`Pack dependency cycle: ${[...path, pack].join(' -> ')}`);
+    }
+    if (visited.has(pack)) return;
+    visiting.add(pack);
+    for (const dependency of graph.get(pack) ?? []) {
+      visit(dependency, [...path, pack]);
+    }
+    visiting.delete(pack);
+    visited.add(pack);
+  };
+  for (const pack of packs.keys()) visit(pack, []);
 }
 
 export function validatePackManifest(
   manifest: readonly PackDefinition[] = PACK_MANIFEST,
 ): void {
   const packNames = new Set<PackName>();
+  const packs = new Map<PackName, PackDefinition>();
   const destinations = new Map<
     string,
     Array<{ pack: PackName; asset: PackAssetDefinition }>
@@ -433,6 +526,7 @@ export function validatePackManifest(
       throw new Error(`Duplicate pack name: ${pack.name}`);
     }
     packNames.add(pack.name);
+    packs.set(pack.name, pack);
 
     if (!pack.allowedScopes.includes(pack.defaultScope)) {
       throw new Error(
@@ -455,6 +549,8 @@ export function validatePackManifest(
       }
     }
   }
+
+  validateDependencies(manifest, packs);
 
   for (const [destination, entries] of destinations) {
     if (entries.length < 2) continue;
