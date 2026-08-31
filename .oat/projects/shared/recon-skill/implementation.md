@@ -64,7 +64,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 <!-- orchestration-runs-start -->
 
-No implementation run has started.
+### Run 1 — 2026-08-31
+
+- Status: in progress
+- Execution tier: Tier 1 subagents
+- Dispatch policy: managed `high` ceiling from project state
+- Schedule: p01 → p02 → p03 → p04
+- HiLL checkpoints: final phase only (`p04`)
+- Auto-review at HiLL checkpoints: enabled
+- Optional per-phase external review gate: disabled
 
 <!-- orchestration-runs-end -->
 
@@ -79,6 +87,14 @@ No implementation run has started.
 - The remaining Minor note records the accepted harness constraint that leaves
   process `HOME` unchanged; new bundle-tier tests must inject temporary roots.
 - Next task: `p01-t01`.
+
+### 2026-08-31 - Implementation started
+
+- Resolved the Codex implementation route under the managed `high` ceiling.
+- Selected Tier 1 because the native phase-implementer and reviewer roles are
+  available without an additional authorization grant.
+- Confirmed sequential execution and the final-only `p04` HiLL checkpoint from
+  repository workflow preferences.
 
 ## Deviations from Plan / Design
 

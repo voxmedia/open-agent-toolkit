@@ -3,9 +3,11 @@ oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p04']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
