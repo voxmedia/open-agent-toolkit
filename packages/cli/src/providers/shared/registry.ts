@@ -135,12 +135,16 @@ const REGISTRATIONS: readonly ProviderRegistration[] = [
   },
   {
     adapter: cursorAdapter,
-    extensions: [cursorMaterializationExtension],
+    get extensions() {
+      return [cursorMaterializationExtension];
+    },
     capabilities: capabilitiesFor(cursorAdapter, ['agent']),
   },
   {
     adapter: codexAdapter,
-    extensions: [codexMaterializationExtension],
+    get extensions() {
+      return [codexMaterializationExtension];
+    },
     capabilities: capabilitiesFor(codexAdapter, ['agent']),
   },
   {

@@ -1,6 +1,6 @@
 import type { SyncConfig } from '@config/sync-config';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   getProviderRegistrations,
@@ -59,6 +59,18 @@ describe('provider registry', () => {
     expect(
       registrations.every(({ capabilities }) => capabilities.length === 8),
     ).toBe(true);
+  });
+
+  it('resolves extension ownership after shared-index import cycles settle', async () => {
+    vi.resetModules();
+    await import('@commands/init');
+    const { getProviderRegistrations: loadRegistrations } =
+      await import('./registry');
+    expect(
+      loadRegistrations().flatMap(({ extensions }) =>
+        extensions.map(({ provider }) => provider),
+      ),
+    ).toEqual(['cursor', 'codex']);
   });
 
   it('records explicit scope/content support, projections, extensions, collections, and refresh policy', () => {
