@@ -28,13 +28,13 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | pending  | 5     | 0/5       |
+| Phase 3 | recovery | 5     | 5/5       |
 | Phase 4 | pending  | 5     | 0/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
-**Total:** 8/30 tasks completed
+**Total:** 13/30 tasks completed
 
 ---
 
@@ -291,6 +291,61 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ---
 
+## Phase 3: Provider Materialization and Restart Truth
+
+**Status:** recovery in progress after 5/5 planned task commits
+**Started:** 2026-08-31
+
+### Phase Summary
+
+- Added provider-capability-aware user scanning, per-operation core and
+  extension evidence, user provider configuration and inspection, and sourced
+  refresh advice without converting filesystem state into runtime visibility.
+- All five planned task commits are present in order. The Phase 3 union passes
+  19 files / 470 tests, and CLI lint, type-check, format, `pnpm check`, and
+  `git diff --check` pass at `90a4c7a3e`.
+- Full `pnpm test` exposed one stale integration assertion that still expects a
+  Claude user agent not to materialize. The focused integration rerun reproduces
+  the failure; the production behavior is the intended p03-t01 behavior.
+- The adjacent integration test is a mechanically derived in-phase boundary.
+  Recovery attempt 1/10 is reserved at the exact accepted High target.
+
+| Task    | Status   | Commit      | Outcome                                         |
+| ------- | -------- | ----------- | ----------------------------------------------- |
+| p03-t01 | complete | `1120329eb` | Provider-capability-aware user scanning         |
+| p03-t02 | complete | `3d518e69e` | Per-asset core sync outcomes                    |
+| p03-t03 | complete | `3b79113da` | Provider extension materialization evidence     |
+| p03-t04 | complete | `1375eeadd` | User provider configuration and inspection      |
+| p03-t05 | complete | `90a4c7a3e` | Sourced provider refresh advice and diagnostics |
+
+### Recovery Event p03-test-boundary-20260831T130906Z
+
+- Phase/task: p03 / p03-t01
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Original commit: `1120329eba12785717376dfe9b17733feea525fc`
+- Defect class: test
+- Discovered by: `pnpm test`
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: -
+- Verification: Phase-focused 470/470 pass; focused integration rerun fails at
+  `packages/cli/src/commands/commands.integration.test.ts:1108`
+- Reason: the assertion encodes the pre-p03 user-agent contract; no edit,
+  reservation, or recovery commit occurred before the phase handoff.
+
+### Pending Recovery p03-recovery-20260831T181500Z
+
+- Attempt 1/10 is reserved against head
+  `90a4c7a3e7d022813e97b972c4ec5c00044f54f7`.
+- Scope is restricted to updating the stale Claude user-agent integration
+  expectation and rerunning that suite plus relevant Phase 3 verification.
+- Target and axes remain exactly
+  `oat-phase-implementer-gpt-5-6-sol-high`, `gpt-5.6-sol`, effort `high`.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -495,6 +550,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: not attempted
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+### Run 7 — 2026-08-31T17:15:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — exact-target phase implementer
+- Dispatch policy: managed High from project state
+- Scope: p03 implementation, five sequential tasks
+- Outcome: `DONE_WITH_CONCERNS`; 5/5 planned tasks committed, bounded automatic
+  recovery reserved for one stale full-suite integration assertion
+- Verification: Phase 3 union 19 files / 470 tests, CLI lint, type-check,
+  formatting, `pnpm check`, and whitespace checks pass at `90a4c7a3e`; full
+  `pnpm test` and its focused reproduction fail one stale assertion
+- Recovery: attempt 1/10 reserved; exact accepted target retained
+- Outstanding: complete the test-only recovery, then run p03 review
+
+#### Dispatch record — `dispatch-p03-20260831T171500Z-e3512dcbc`
+
+- Scope/action/role: `p03` / `implementation` / `implementer`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Phase range: `e3512dcbcfb54ea7e999ac9242291eed9f47bbac..90a4c7a3e7d022813e97b972c4ec5c00044f54f7`
+- Child outcome: five ordered task commits; one pre-attempt direction-required
+  event from the full test gate; clean worktree
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -610,10 +689,11 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                | Source of Truth        | Follow-up                         |
-| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------- | --------------------------------- |
-| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work | PR #249 / current main | none                              |
-| p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture    | Round-1 review finding | recorded; no production expansion |
+| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                  | Source of Truth        | Follow-up                         |
+| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------- | --------------------------------- |
+| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work   | PR #249 / current main | none                              |
+| p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture      | Round-1 review finding | recorded; no production expansion |
+| p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                | Mechanically derived full-suite fixture | p03-t01 behavior       | recovery attempt 1/10 reserved    |
 
 ## Test Results
 

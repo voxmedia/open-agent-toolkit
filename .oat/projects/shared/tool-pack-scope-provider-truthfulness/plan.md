@@ -246,6 +246,8 @@ git commit -m "feat(p02-t02): centralize provider capability registration"
 - Modify: `packages/cli/src/commands/init/index.test.ts`
 - Modify: `packages/cli/src/commands/sync/index.ts`
 - Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts` (mechanically
+  derived full-suite fixture correction)
 - Modify: `packages/cli/src/commands/status/index.ts`
 - Modify: `packages/cli/src/commands/status/index.test.ts`
 - Modify: `packages/cli/src/commands/doctor/index.ts`
@@ -542,7 +544,7 @@ explicit unsupported rows.
 **Step 4: Verify**
 
 Run:
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/scanner.test.ts src/engine/compute-plan.test.ts src/commands/sync/index.test.ts`
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/scanner.test.ts src/engine/compute-plan.test.ts src/commands/sync/index.test.ts src/commands/commands.integration.test.ts`
 
 Expected: user agent planning follows capability without collisions.
 
