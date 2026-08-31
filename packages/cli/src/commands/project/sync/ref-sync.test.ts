@@ -1941,6 +1941,7 @@ describe('synced ref retirement', () => {
       ).resolves.toEqual({
         status: 'retired',
         state: 'completed-only',
+        activeAliasRetained: false,
         activeRef: target.ref,
         completedRef: completedSyncedRefName(target.slug),
         verifiedSha: sourceSha,
@@ -1979,7 +1980,7 @@ describe('synced ref retirement', () => {
     }
   });
 
-  it('converges after completed-ref creation left both refs at the bound SHA', async () => {
+  it('treats matching active and completed refs as an already-terminal state', async () => {
     const { fixture, target, sourceSha } =
       await createPushedTarget('both-ref-retry');
     try {
@@ -1990,17 +1991,33 @@ describe('synced ref retirement', () => {
         target.remote,
         `${sourceSha}:${completedRef}`,
       ]);
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push(args);
+          return defaultGitRunner.run(args, options);
+        },
+      };
 
       await expect(
-        retireSyncedRef(target, sourceSha, defaultGitRunner),
-      ).resolves.toMatchObject({
-        status: 'retired',
-        state: 'completed-only',
+        retireSyncedRef(target, sourceSha, recordingRunner),
+      ).resolves.toEqual({
+        status: 'already-retired',
+        state: 'matching-aliases',
+        activeAliasRetained: true,
+        activeRef: target.ref,
+        completedRef,
         verifiedSha: sourceSha,
       });
+      expect(calls.some((args) => args[0] === 'push')).toBe(false);
       expect(
-        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
-      ).toBe('');
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
       expect(
         git(fixture.cloneA, [
           'ls-remote',
@@ -2014,7 +2031,7 @@ describe('synced ref retirement', () => {
     }
   });
 
-  it('fails closed with both refs when the remote lacks atomic push support', async () => {
+  it('returns matching aliases when the remote lacks atomic push support', async () => {
     const { fixture, target, sourceSha } = await createPushedTarget(
       'non-atomic-retirement',
     );
@@ -2036,7 +2053,14 @@ describe('synced ref retirement', () => {
 
       await expect(
         retireSyncedRef(target, sourceSha, nonAtomicRunner),
-      ).rejects.toThrow(/does not support atomic.*both refs remain/i);
+      ).resolves.toEqual({
+        status: 'retired',
+        state: 'matching-aliases',
+        activeAliasRetained: true,
+        activeRef: target.ref,
+        completedRef: completedSyncedRefName(target.slug),
+        verifiedSha: sourceSha,
+      });
       expect(calls).toContainEqual([
         'push',
         `--force-with-lease=${completedSyncedRefName(target.slug)}:`,
@@ -2057,6 +2081,17 @@ describe('synced ref retirement', () => {
           target.ref,
         ]).split(/\s/)[0],
       ).toBe(sourceSha);
+      await expect(
+        retireSyncedRef(target, sourceSha, nonAtomicRunner),
+      ).resolves.toEqual({
+        status: 'already-retired',
+        state: 'matching-aliases',
+        activeAliasRetained: true,
+        activeRef: target.ref,
+        completedRef: completedSyncedRefName(target.slug),
+        verifiedSha: sourceSha,
+      });
+      expect(calls.filter((args) => args.includes('--atomic'))).toHaveLength(1);
       expect(
         git(fixture.cloneA, [
           'ls-remote',
@@ -2220,7 +2255,10 @@ describe('synced ref retirement', () => {
 
       await expect(
         retireSyncedRef(target, sourceSha, racingRunner),
-      ).rejects.toThrow();
+      ).resolves.toMatchObject({
+        state: 'matching-aliases',
+        activeAliasRetained: true,
+      });
       expect(deletionAttempted).toBe(false);
       expect(
         git(fixture.cloneA, [
@@ -2255,6 +2293,7 @@ describe('synced ref retirement', () => {
       ).resolves.toEqual({
         status: 'already-retired',
         state: 'completed-only',
+        activeAliasRetained: false,
         activeRef: target.ref,
         completedRef: completedSyncedRefName(target.slug),
         verifiedSha: sourceSha,
@@ -2294,6 +2333,7 @@ describe('synced ref retirement', () => {
       ).resolves.toMatchObject({
         status: 'already-retired',
         state: 'completed-only',
+        activeAliasRetained: false,
         verifiedSha: sourceSha,
       });
       await expect(

@@ -110,7 +110,8 @@ export type MigrateResult = {
 
 export type SyncedRefRetirementReceipt = {
   status: 'retired' | 'already-retired';
-  state: 'completed-only';
+  state: 'completed-only' | 'matching-aliases';
+  activeAliasRetained: boolean;
   activeRef: string;
   completedRef: string;
   verifiedSha: string;
@@ -1072,6 +1073,12 @@ function assertRetirementProbe(
   }
 }
 
+function isTerminalRetirementProbe(
+  probe: import('./resolve-target').SyncedTerminalRefProbe,
+): boolean {
+  return probe.state === 'completed-only' || probe.state === 'both';
+}
+
 async function fallbackRemoteRefTransition(
   target: SyncTarget,
   sourceSha: string,
@@ -1079,11 +1086,6 @@ async function fallbackRemoteRefTransition(
   completedExpectedSha: string | null,
   git: GitRunner,
 ): Promise<void> {
-  const unsupportedAtomicTransitionError = (): CliError =>
-    new CliError(
-      `Remote ${target.remote} does not support atomic ref retirement for ${target.slug}; completed ref ${completedRef} was verified at ${sourceSha}, and active ref ${target.ref} was retained. Both refs remain for a recoverable retry.`,
-      2,
-    );
   const create = await git.run(
     [
       'push',
@@ -1096,10 +1098,7 @@ async function fallbackRemoteRefTransition(
   if (create.code !== 0) {
     const afterFailure = await probeTerminalRefs(target, sourceSha, git);
     assertRetirementProbe(target, sourceSha, afterFailure);
-    if (afterFailure.state === 'completed-only') return;
-    if (afterFailure.state === 'both') {
-      throw unsupportedAtomicTransitionError();
-    }
+    if (isTerminalRetirementProbe(afterFailure)) return;
     throw new CliError(
       `Remote ref retirement for ${target.slug} was rejected while creating ${completedRef}: ${create.stderr || create.stdout || 'unknown Git error'}`,
       2,
@@ -1108,14 +1107,12 @@ async function fallbackRemoteRefTransition(
 
   const afterCreate = await probeTerminalRefs(target, sourceSha, git);
   assertRetirementProbe(target, sourceSha, afterCreate);
-  if (afterCreate.state === 'completed-only') return;
-  if (afterCreate.state !== 'both') {
+  if (!isTerminalRetirementProbe(afterCreate)) {
     throw new CliError(
       `Remote ref retirement for ${target.slug} did not preserve both refs after completed-ref creation.`,
       2,
     );
   }
-  throw unsupportedAtomicTransitionError();
 }
 
 async function transitionRemoteRefs(
@@ -1146,7 +1143,7 @@ async function transitionRemoteRefs(
 
   const afterFailure = await probeTerminalRefs(target, sourceSha, git);
   assertRetirementProbe(target, sourceSha, afterFailure);
-  if (afterFailure.state !== 'completed-only') {
+  if (!isTerminalRetirementProbe(afterFailure)) {
     throw new CliError(
       `Remote ref retirement for ${target.slug} was rejected; active ref ${target.ref} was retained: ${result.stderr || result.stdout || 'unknown Git error'}`,
       2,
@@ -1208,7 +1205,7 @@ async function reconcileLocalTerminalRefs(
       );
       const afterFetch = await probeTerminalRefs(target, sourceSha, git);
       assertRetirementProbe(target, sourceSha, afterFetch);
-      if (afterFetch.state !== 'completed-only') {
+      if (!isTerminalRetirementProbe(afterFetch)) {
         throw new CliError(
           `Refusing local ref reconciliation for ${target.slug}: remote terminal refs changed while fetching ${completedRef}.`,
           2,
@@ -1250,7 +1247,7 @@ export async function retireSyncedRef(
   assertRetirementProbe(target, sourceSha, initial);
   const completedRef = initial.completedRef;
 
-  if (initial.state !== 'completed-only') {
+  if (initial.state === 'active-only') {
     await transitionRemoteRefs(
       target,
       sourceSha,
@@ -1262,17 +1259,20 @@ export async function retireSyncedRef(
 
   const terminal = await probeTerminalRefs(target, sourceSha, git);
   assertRetirementProbe(target, sourceSha, terminal);
-  if (terminal.state !== 'completed-only') {
+  if (!isTerminalRetirementProbe(terminal)) {
     throw new CliError(
-      `Unable to verify completed-only terminal state for ${target.slug}; active ref ${target.ref} was not safely retired.`,
+      `Unable to verify a completed terminal state for ${target.slug}; completed ref ${completedRef} was not safely established.`,
       2,
     );
   }
   await reconcileLocalTerminalRefs(target, sourceSha, completedRef, git);
 
+  const activeAliasRetained = terminal.state === 'both';
+
   return {
-    status: initial.state === 'completed-only' ? 'already-retired' : 'retired',
-    state: 'completed-only',
+    status: isTerminalRetirementProbe(initial) ? 'already-retired' : 'retired',
+    state: activeAliasRetained ? 'matching-aliases' : 'completed-only',
+    activeAliasRetained,
     activeRef: target.ref,
     completedRef,
     verifiedSha: sourceSha,
