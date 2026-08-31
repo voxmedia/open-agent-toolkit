@@ -1,4 +1,5 @@
 import type { CommandContext } from '@app/command-context';
+import type { SyncOperationResult } from '@engine/engine.types';
 
 import type {
   ScopeSyncPlan,
@@ -29,6 +30,23 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
       );
     }, 0),
   };
+}
+
+function buildOperationResults(
+  scopePlans: readonly ScopeSyncPlan[],
+): SyncOperationResult[] {
+  return scopePlans.flatMap((scopePlan) =>
+    [...scopePlan.plan.entries, ...scopePlan.plan.removals].map(
+      (operation) => ({
+        scope: scopePlan.scope,
+        provider: operation.provider,
+        contentKind: operation.canonical.type,
+        asset: operation.canonical.name,
+        action: operation.operation,
+        status: operation.operation === 'skip' ? 'current' : 'planned',
+      }),
+    ),
+  );
 }
 
 function formatMaterializationExtensions(scopePlan: ScopeSyncPlan): string {
@@ -84,6 +102,7 @@ export function runSyncDryRun(
   const materializationExtensions = scopePlans.flatMap(
     (scopePlan) => scopePlan.materializationExtensions,
   );
+  const operationResults = buildOperationResults(scopePlans);
   const codexExtensions = materializationExtensions
     .filter((extension) => extension.provider === 'codex')
     .map((extension) => ({
@@ -107,6 +126,7 @@ export function runSyncDryRun(
       providerMismatches,
       versionSkew,
       materializationExtensions,
+      operationResults,
       codexExtensions,
     });
   } else {

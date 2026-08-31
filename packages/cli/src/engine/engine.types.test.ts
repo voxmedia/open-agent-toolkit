@@ -83,15 +83,30 @@ describe('engine types', () => {
     expect(plan.removals[1]?.operation).toBe('detach');
   });
 
-  it('SyncResult tracks applied + failed counts', () => {
+  it('SyncResult retains compatibility counts and per-operation evidence', () => {
     const result: SyncResult = {
       applied: 3,
       failed: 1,
       skipped: 2,
+      operations: [
+        {
+          scope: 'user',
+          provider: 'claude',
+          contentKind: 'agent',
+          asset: 'oat-reviewer.md',
+          action: 'create_symlink',
+          status: 'changed',
+        },
+      ],
     };
 
     expect(result.applied).toBe(3);
     expect(result.failed).toBe(1);
     expect(result.skipped).toBe(2);
+    expect(result.operations?.[0]).toMatchObject({
+      provider: 'claude',
+      contentKind: 'agent',
+      status: 'changed',
+    });
   });
 });

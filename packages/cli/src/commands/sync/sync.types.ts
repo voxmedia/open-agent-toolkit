@@ -4,6 +4,7 @@ import type {
   PromptContext,
 } from '@commands/shared/shared.prompts';
 import type { SyncConfig } from '@config/index';
+import type { SyncOperationResult } from '@engine/engine.types';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
 import type {
@@ -66,6 +67,7 @@ export interface SyncJsonPayload {
   providerMismatches?: SyncProviderMismatches[];
   versionSkew?: SyncVersionSkew[];
   materializationExtensions?: MaterializationExtensionSummary[];
+  operationResults: SyncOperationResult[];
   /** Retained for compatibility with existing Codex JSON consumers. */
   codexExtensions?: CodexExtensionSummary[];
 }

@@ -427,7 +427,7 @@ description: React components
       },
     );
 
-    expect(result).toEqual({ applied: 0, failed: 1, skipped: 0 });
+    expect(result).toMatchObject({ applied: 0, failed: 1, skipped: 0 });
     await expect(lstat(join(external, 'skill-one'))).rejects.toMatchObject({
       code: 'ENOENT',
     });
@@ -615,7 +615,7 @@ description: React components
     );
     const updated = await loadManifest(manifestPath);
 
-    expect(result).toEqual({ applied: 0, failed: 0, skipped: 0 });
+    expect(result).toMatchObject({ applied: 0, failed: 0, skipped: 0 });
     expect(updated.oatVersion).toBe(OAT_VERSION);
     expect(updated.entries[0]).toMatchObject({
       contentHash: 'deadbeef',
@@ -651,6 +651,26 @@ description: React components
     expect(stat.isSymbolicLink()).toBe(true);
     expect(result.applied).toBe(1);
     expect(result.failed).toBe(1);
+    expect(result.operations).toEqual([
+      {
+        scope: 'project',
+        provider: 'claude',
+        contentKind: 'skill',
+        asset: 'missing-skill',
+        action: 'create_copy',
+        status: 'missing',
+        failure:
+          'Canonical or provider input was missing; restore it and retry sync.',
+      },
+      {
+        scope: 'project',
+        provider: 'claude',
+        contentKind: 'skill',
+        asset: 'good-skill',
+        action: 'create_symlink',
+        status: 'changed',
+      },
+    ]);
   });
 
   it('returns SyncResult with counts', async () => {
@@ -673,6 +693,16 @@ description: React components
       failed: 0,
       skipped: 0,
     });
+    expect(result.operations).toEqual([
+      {
+        scope: 'project',
+        provider: 'claude',
+        contentKind: 'skill',
+        asset: 'skill-one',
+        action: 'create_symlink',
+        status: 'changed',
+      },
+    ]);
   });
 
   it('inferScopeRoot handles mixed path separators', () => {

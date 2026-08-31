@@ -1,4 +1,6 @@
 import type { CommandContext } from '@app/command-context';
+import type { SyncOperationResult } from '@engine/engine.types';
+import type { SyncPlan, SyncResult } from '@engine/index';
 
 import type {
   ScopeSyncPlan,
@@ -7,7 +9,7 @@ import type {
 } from './sync.types';
 import { countPlannedOperations } from './sync.utils';
 
-function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
+function countSkippedExtensionEntries(scopePlans: ScopeSyncPlan[]): number {
   return scopePlans.reduce((total, scopePlan) => {
     const extensionSkipped = scopePlan.materializationExtensions.reduce(
       (count, extension) =>
@@ -16,26 +18,97 @@ function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
           .length,
       0,
     );
-    return (
-      total +
-      scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
-        .length +
-      extensionSkipped
-    );
+    return total + extensionSkipped;
   }, 0);
 }
 
 function buildSummary(
   scopePlans: ScopeSyncPlan[],
-  applied: number,
-  failed: number,
+  operationResults: readonly SyncOperationResult[],
+  extensionApplied: number,
+  extensionFailed: number,
 ): SyncSummary {
   return {
     plannedOperations: countPlannedOperations(scopePlans),
-    applied,
-    failed,
-    skipped: countSkippedEntries(scopePlans),
+    applied:
+      operationResults.filter(({ status }) => status === 'changed').length +
+      extensionApplied,
+    failed:
+      operationResults.filter(
+        ({ status }) => status === 'failed' || status === 'missing',
+      ).length + extensionFailed,
+    skipped:
+      operationResults.filter(({ status }) => status === 'current').length +
+      countSkippedExtensionEntries(scopePlans),
   };
+}
+
+function normalizeOperationResults(
+  plan: SyncPlan,
+  result: SyncResult,
+): SyncOperationResult[] {
+  if (result.operations) {
+    return result.operations;
+  }
+
+  let appliedRemaining = result.applied;
+  let failedRemaining = result.failed;
+  const plannedOperations = [...plan.entries, ...plan.removals];
+  const normalized = plannedOperations.map((operation) => {
+    let status: SyncOperationResult['status'];
+    let failure: string | undefined;
+    if (operation.operation === 'skip') {
+      status = 'current';
+    } else if (appliedRemaining > 0) {
+      appliedRemaining -= 1;
+      status = 'changed';
+    } else if (failedRemaining > 0) {
+      failedRemaining -= 1;
+      status = 'failed';
+      failure =
+        'Operation failed; inspect local verbose diagnostics and retry sync.';
+    } else {
+      status = 'unknown';
+    }
+    return {
+      scope: plan.scope,
+      provider: operation.provider,
+      contentKind: operation.canonical.type,
+      asset: operation.canonical.name,
+      action: operation.operation,
+      status,
+      ...(failure ? { failure } : {}),
+    };
+  });
+  const fallbackOperation = plannedOperations[0];
+  if (!fallbackOperation) {
+    return normalized;
+  }
+  while (appliedRemaining > 0) {
+    appliedRemaining -= 1;
+    normalized.push({
+      scope: plan.scope,
+      provider: fallbackOperation.provider,
+      contentKind: fallbackOperation.canonical.type,
+      asset: fallbackOperation.canonical.name,
+      action: fallbackOperation.operation,
+      status: 'changed',
+    });
+  }
+  while (failedRemaining > 0) {
+    failedRemaining -= 1;
+    normalized.push({
+      scope: plan.scope,
+      provider: fallbackOperation.provider,
+      contentKind: fallbackOperation.canonical.type,
+      asset: fallbackOperation.canonical.name,
+      action: fallbackOperation.operation,
+      status: 'failed',
+      failure:
+        'Operation failed; inspect local verbose diagnostics and retry sync.',
+    });
+  }
+  return normalized;
 }
 
 function formatAppliedOutput(
@@ -82,8 +155,9 @@ export async function runSyncApply(
   scopePlans: ScopeSyncPlan[],
   dependencies: SyncCommandDependencies,
 ): Promise<void> {
-  let applied = 0;
-  let failed = 0;
+  let extensionApplied = 0;
+  let extensionFailed = 0;
+  const operationResults: SyncOperationResult[] = [];
 
   for (const scopePlan of scopePlans) {
     const hasSyncEntries =
@@ -112,8 +186,9 @@ export async function runSyncApply(
         scopePlan.manifest,
         scopePlan.manifestPath,
       );
-      applied += result.applied;
-      failed += result.failed;
+      operationResults.push(
+        ...normalizeOperationResults(scopePlan.plan, result),
+      );
     }
 
     for (const plan of scopePlan.materializationExtensionPlans) {
@@ -133,8 +208,8 @@ export async function runSyncApply(
         scopePlan.scopeRoot,
         plan,
       );
-      applied += result.applied;
-      failed += result.failed;
+      extensionApplied += result.applied;
+      extensionFailed += result.failed;
       const summary = scopePlan.materializationExtensions.find(
         (candidate) => candidate.provider === plan.provider,
       );
@@ -144,7 +219,12 @@ export async function runSyncApply(
     }
   }
 
-  const summary = buildSummary(scopePlans, applied, failed);
+  const summary = buildSummary(
+    scopePlans,
+    operationResults,
+    extensionApplied,
+    extensionFailed,
+  );
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
@@ -179,18 +259,19 @@ export async function runSyncApply(
       providerMismatches,
       versionSkew,
       materializationExtensions,
+      operationResults,
       codexExtensions,
     });
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));
     if (summary.plannedOperations === 0) {
       context.logger.info('\nNo changes required.');
-    } else if (failed > 0) {
+    } else if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
     } else {
       context.logger.success('\nSync applied successfully.');
     }
   }
 
-  process.exitCode = failed > 0 ? 1 : 0;
+  process.exitCode = summary.failed > 0 ? 1 : 0;
 }

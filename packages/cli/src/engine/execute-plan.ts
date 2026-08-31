@@ -11,7 +11,12 @@ import {
 } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 
-import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
+import type {
+  SyncOperationResult,
+  SyncPlan,
+  SyncPlanEntry,
+  SyncResult,
+} from './engine.types';
 import { insertMarker, writeDirectorySentinel } from './markers';
 import { assertSafeProviderMutationPath } from './provider-path-safety';
 
@@ -23,6 +28,45 @@ const DEFAULT_EXECUTE_SYNC_PLAN_DEPENDENCIES: ExecuteSyncPlanDependencies = {};
 
 function mutatesProviderPath(entry: SyncPlanEntry): boolean {
   return entry.operation !== 'skip' && entry.operation !== 'detach';
+}
+
+function operationEvidence(
+  scope: SyncPlan['scope'],
+  entry: SyncPlanEntry,
+  status: SyncOperationResult['status'],
+  failure?: string,
+): SyncOperationResult {
+  return {
+    scope,
+    provider: entry.provider,
+    contentKind: entry.canonical.type,
+    asset: entry.canonical.name,
+    action: entry.operation,
+    status,
+    ...(failure ? { failure } : {}),
+  };
+}
+
+function classifyFailure(
+  error: unknown,
+): Pick<SyncOperationResult, 'status' | 'failure'> {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'ENOENT'
+  ) {
+    return {
+      status: 'missing',
+      failure:
+        'Canonical or provider input was missing; restore it and retry sync.',
+    };
+  }
+  return {
+    status: 'failed',
+    failure:
+      'Operation failed; inspect local verbose diagnostics and retry sync.',
+  };
 }
 
 async function assertSafeEntryProviderPath(
@@ -206,11 +250,7 @@ export async function executeSyncPlan(
 ): Promise<SyncResult> {
   let nextManifest = manifest;
   let beforeFirstMutationCalled = false;
-  const result: SyncResult = {
-    applied: 0,
-    failed: 0,
-    skipped: 0,
-  };
+  const operationResults: SyncOperationResult[] = [];
   const operations = [...plan.entries, ...plan.removals];
 
   for (const operation of operations) {
@@ -222,7 +262,9 @@ export async function executeSyncPlan(
   for (const operation of operations) {
     if (operation.operation === 'skip') {
       nextManifest = await ensureSkipEntryManaged(operation, nextManifest);
-      result.skipped += 1;
+      operationResults.push(
+        operationEvidence(plan.scope, operation, 'current'),
+      );
       continue;
     }
 
@@ -235,12 +277,31 @@ export async function executeSyncPlan(
         await assertSafeEntryProviderPath(operation);
       }
       nextManifest = await applyEntry(operation, nextManifest);
-      result.applied += 1;
-    } catch {
-      result.failed += 1;
+      operationResults.push(
+        operationEvidence(plan.scope, operation, 'changed'),
+      );
+    } catch (error) {
+      const failure = classifyFailure(error);
+      operationResults.push(
+        operationEvidence(
+          plan.scope,
+          operation,
+          failure.status,
+          failure.failure,
+        ),
+      );
     }
   }
 
   await saveManifest(manifestPath, nextManifest);
-  return result;
+  return {
+    applied: operationResults.filter(({ status }) => status === 'changed')
+      .length,
+    failed: operationResults.filter(
+      ({ status }) => status === 'failed' || status === 'missing',
+    ).length,
+    skipped: operationResults.filter(({ status }) => status === 'current')
+      .length,
+    operations: operationResults,
+  };
 }

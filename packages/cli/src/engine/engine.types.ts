@@ -36,8 +36,29 @@ export interface SyncPlan {
   removals: RemovalSyncPlanEntry[];
 }
 
+export type SyncOperationStatus =
+  | 'planned'
+  | 'changed'
+  | 'current'
+  | 'missing'
+  | 'failed'
+  | 'unsupported'
+  | 'unknown';
+
+export interface SyncOperationResult {
+  scope: EngineScope;
+  provider: string;
+  contentKind: CanonicalEntry['type'];
+  asset: string;
+  action: SyncOperationType;
+  status: SyncOperationStatus;
+  failure?: string;
+}
+
 export interface SyncResult {
   applied: number;
   failed: number;
   skipped: number;
+  /** Additive per-operation evidence; optional for legacy execution adapters. */
+  operations?: SyncOperationResult[];
 }
