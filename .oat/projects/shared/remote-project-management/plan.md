@@ -360,6 +360,9 @@ packages/cli/src/commands/pjm/remote/authority.test.ts.
 
 ### Task p02-t07: Bind previews and approvals to load-bearing inputs
 
+**Implementation:** completed in
+`8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/preview.ts and
 packages/cli/src/commands/pjm/remote/preview.test.ts.
 

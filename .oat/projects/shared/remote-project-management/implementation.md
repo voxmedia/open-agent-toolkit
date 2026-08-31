@@ -360,6 +360,22 @@ type-check, and lint passed.
 
 ### Task p02-t07: Bind previews and approvals to load-bearing inputs
 
+**Status:** completed
+**Commit:** 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
+
+**Outcome:** Added canonical binding previews whose digest covers binding,
+target, baseline, revision, capability, policy, projection, operation, and
+field mask. Bodies render as hashes, credential-shaped concise values redact,
+and approvals validate digest, operation, freshness, and bounded non-secret
+actor/source evidence.
+
+**Verification:** Preview suite passed (11 tests); CLI format/build, type-check,
+and lint passed.
+
+---
+
+### Task p02-t08: Implement operation and substep state reduction
+
 **Status:** pending
 **Commit:** -
 
@@ -581,6 +597,7 @@ Chronological log of implementation progress.
 - [x] p02-t04: Implement managed Markdown boundaries - 1fe6b21049235bfb0a74ab1d28d11e2194794645
 - [x] p02-t05: Classify three-way field reconciliation - 6e4533d0b1fad24aa6fe735788786fee500fd0a6
 - [x] p02-t06: Resolve effective remote authority exactly - 6032d969ef102012e658bd788565ca1596553bb0
+- [x] p02-t07: Bind previews and approvals to load-bearing inputs - 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
 
 **What changed (high level):**
 
