@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** blocked after terminal review round 4; operator disposition required
+**Status:** operator HiLL decision recorded; bounded policy correction authorized
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -630,6 +630,26 @@ high confidence. The original commit remains the source authority.
   overstates p03-t05 as sourced and complete.
 - This operator-authorized round 4 is terminal. No fifth automatic correction
   or p04 launch is authorized; operator disposition is required.
+
+### HiLL Decision: Conservative New-Session Advice
+
+- On 2026-08-31, Thomas resolved the terminal refresh-policy boundary: after a
+  successful provider-visible file change, OAT should conservatively advise
+  starting a new provider session to ensure the provider has an opportunity to
+  load the changed asset.
+- This is repository-decision provenance for OAT safety guidance. It is not an
+  undocumented provider contract, does not claim that the application process
+  must restart, and does not prove that the new session loaded or exposed the
+  asset.
+- No advice is emitted for no-op, planned-only, failed, missing, inactive, or
+  unsupported materialization. Runtime visibility remains observation-only.
+- The decision authorizes one bounded p03 correction, one fresh independent
+  High review, and direct continuation to p04 only if that review passes.
+- This intentionally resolves the design's p03-t05 HiLL alternative with a
+  sourced `repository-decision` policy instead of accepting vacuous `unknown`
+  advice as FR7 delivery. The implementation and this decision are the source
+  of truth for the bounded policy; no other requirement or phase boundary
+  changes.
 
 ---
 

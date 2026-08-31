@@ -104,6 +104,10 @@ Operator-authorized fix cb8156ab27a864e86fafcd857f7d98ecbb8266c1 rejects invalid
 
 Operator-authorized fix cb8156ab27a864e86fafcd857f7d98ecbb8266c1 resolved both round-3 defects, but terminal High review round 4 remained blocked with critical:0, important:1 because every production refresh policy is unknown and no HiLL acceptance of the FR7 first-release limitation is recorded. Reconnaissance was attempted and reconciled in reviews/p03-review-2026-08-31T223136Z.md; no fifth cycle or p04 launch is authorized.
 
+### 2026-08-31 · structural · oat-project-implement · p03-session-policy-hill-authorized
+
+Thomas resolved the p03 refresh-policy HiLL boundary: after a successful provider-visible file change, OAT will conservatively advise starting a new provider session. This is repository-decision safety guidance, not a provider hot-reload guarantee or runtime visibility proof; one bounded correction and one fresh High review are authorized, with p04 gated on pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
