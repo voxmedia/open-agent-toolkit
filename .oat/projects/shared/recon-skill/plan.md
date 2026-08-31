@@ -841,18 +841,18 @@ git commit -m "chore(p04-t02): prepare recon release"
 
 ## Reviews
 
-| Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01       | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p02       | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p03       | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p04       | code     | pending         | -          | -                                                             | -             | -          | -           |
-| final     | code     | pending         | -          | -                                                             | -             | -          | -           |
-| spec      | artifact | pending         | -          | -                                                             | -             | -          | -           |
-| design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -             | -          | -           |
-| plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -             | -          | -           |
-| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -             | -          | -           |
-| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md` | -             | -          | -           |
+| Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
+| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01       | code     | received        | 2026-08-31 | `reviews/p01-code-review-2026-08-31T044331Z.md`               | 7db3728253d018daf1303b55261a4a90ac9d5a04 | auto       | -           |
+| p02       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p03       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p04       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| final     | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
+| design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
+| plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -           |
+| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -                                        | -          | -           |
+| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md` | -                                        | -          | -           |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate

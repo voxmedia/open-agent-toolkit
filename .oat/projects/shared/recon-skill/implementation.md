@@ -74,6 +74,36 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Auto-review at HiLL checkpoints: enabled
 - Optional per-phase external review gate: disabled
 
+#### Dispatch p01 implementation
+
+- Request ID: `recon-skill-p01-implementation-20260831T043249Z`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Authority: write only the p01 planned file boundary; one planned task commit
+- Task class/floor: `hard-reasoning` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Task commit: `7db3728253d018daf1303b55261a4a90ac9d5a04`
+- Recovery attempts: 0/10; no recovery event
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Dispatch p01 review round 1
+
+- Request ID: `recon-skill-p01-review-20260831T044331Z`
+- Role/class: `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: read phase range and write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p01-code-review-2026-08-31T044331Z.md`
+- Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -95,6 +125,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   available without an additional authorization grant.
 - Confirmed sequential execution and the final-only `p04` HiLL checkpoint from
   repository workflow preferences.
+
+### 2026-08-31 - p01 review round 1 received
+
+- The phase implementation commit and focused contracts validated at the root.
+- Independent review found two Important contract ambiguities: canonical
+  fingerprints did not unambiguously bind nested wave topology, and prepared
+  runs did not explicitly exclude the generic fresh same-target recovery
+  exception after launch acceptance.
+- The findings are bounded to the four p01 task files and return to the original
+  phase implementer handle for correction and re-review.
 
 ## Deviations from Plan / Design
 
