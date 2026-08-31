@@ -42,10 +42,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
   freshness_head: c68032b004a29cfedccb63e02728c6446eb6a33c
   freshness_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: a1fce449-4b3c-4166-8bed-13952143778c
+  launch_started_at: '2026-08-31T01:17:08Z'
+  launch_result_receipt: /tmp/oat-implement-exit-gate-scope-adoption-diagnostics-a1fce449-4b3c-4166-8bed-13952143778c.json
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -61,7 +61,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T01:16:32Z'
+  updated_at: '2026-08-31T01:17:08Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
