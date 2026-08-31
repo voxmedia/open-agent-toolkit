@@ -49,6 +49,7 @@ interface HarnessOptions {
   useDefaultEnsureCanonicalDirs?: boolean;
   adapters?: ProviderAdapter[];
   providerContext?: ProviderScopeContext;
+  providerContextResolver?: () => Promise<ProviderScopeContext>;
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
   userKnownStrays?: string[];
@@ -67,6 +68,17 @@ interface HarnessOptions {
 interface RunInitArgs {
   globalArgs?: string[];
   commandArgs?: string[];
+}
+
+function createProviderAdapter(name: string): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'symlink',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => true,
+  };
 }
 
 const ADOPT_REMEDIATION =
@@ -196,8 +208,8 @@ function createHarness(options: HarnessOptions = {}): {
   const selectWithAbort = vi.fn(async () =>
     singleSelectResponses.length > 0 ? singleSelectResponses.shift()! : 'no',
   );
-  const selectProvidersWithAbort = vi.fn(
-    async () => providerSelectResponses.shift() ?? [],
+  const selectProvidersWithAbort = vi.fn(async () =>
+    providerSelectResponses.length > 0 ? providerSelectResponses.shift()! : [],
   );
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
@@ -320,13 +332,15 @@ function createHarness(options: HarnessOptions = {}): {
       detectedUnset: options.configAwareActiveAdapterNames ?? ['claude'],
       detectedDisabled: [],
     })),
-    ...(options.providerContext
-      ? {
-          resolveProviderScopeContext: vi.fn(
-            async () => options.providerContext!,
-          ),
-        }
-      : {}),
+    ...(options.providerContextResolver
+      ? { resolveProviderScopeContext: options.providerContextResolver }
+      : options.providerContext
+        ? {
+            resolveProviderScopeContext: vi.fn(
+              async () => options.providerContext!,
+            ),
+          }
+        : {}),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     getHookInstallInfo,
     configureLocalHooksPath,
@@ -539,6 +553,50 @@ describe('createInitCommand', () => {
       }),
     );
   });
+
+  for (const [path, response] of [
+    ['cancel', null],
+    ['save', ['registry-only']],
+  ] as const) {
+    it(`detects each provider once during interactive init ${path}`, async () => {
+      const adapter = createProviderAdapter('registry-only');
+      const detect = vi.spyOn(adapter, 'detect').mockResolvedValue(true);
+      const providerContextResolver = vi.fn(async () => {
+        await adapter.detect('/tmp/workspace');
+        return {
+          scope: 'project' as const,
+          configSource: '<project>/.oat/sync/config.json',
+          activeProviders: ['registry-only'],
+          detectedProviders: ['registry-only'],
+          mismatches: {
+            detectedUnset: ['registry-only'],
+            detectedDisabled: [],
+          },
+          activation: [
+            {
+              provider: 'registry-only',
+              state: 'active' as const,
+              source: 'detected-unset' as const,
+              reason: 'detected without explicit configuration',
+            },
+          ],
+          registrations: [{ adapter, extensions: [], capabilities: [] }],
+        };
+      });
+      const { command } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        adapters: [adapter],
+        providerContextResolver,
+        providerSelectResponses: [response],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(providerContextResolver).toHaveBeenCalledTimes(1);
+      expect(detect).toHaveBeenCalledTimes(1);
+    });
+  }
 
   it('non-interactive mode does not mutate provider config and shows guidance', async () => {
     const { command, capture, selectProvidersWithAbort, saveSyncConfig } =

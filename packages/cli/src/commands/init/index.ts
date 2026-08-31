@@ -102,6 +102,7 @@ import {
   getActiveAdapters,
   getConfigAwareAdapters,
   getProviderRegistrations,
+  recomputeProviderScopeContext,
   resolveProviderScopeContext,
   type MaterializationPlan,
   type PathMapping,
@@ -977,12 +978,8 @@ async function runInitCommand(
           syncConfig = config;
         }
 
-        providerContext = dependencies.resolveProviderScopeContext
-          ? await dependencies.resolveProviderScopeContext({
-              scope,
-              scopeRoot,
-              config,
-            })
+        providerContext = providerContext
+          ? recomputeProviderScopeContext(providerContext, config)
           : undefined;
         resolution = providerContext
           ? undefined

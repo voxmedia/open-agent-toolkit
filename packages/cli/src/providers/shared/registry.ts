@@ -228,16 +228,42 @@ export async function resolveProviderScopeContext(input: {
   const detectedProviders = detection
     .filter(({ detected }) => detected)
     .map(({ adapter }) => adapter.name);
+  return recomputeProviderScopeContext(
+    {
+      scope: input.scope,
+      configSource: join(
+        input.scope === 'project' ? '<project>' : '~',
+        '.oat',
+        'sync',
+        'config.json',
+      ),
+      detectedProviders,
+      registrations,
+    },
+    input.config,
+  );
+}
+
+export function recomputeProviderScopeContext(
+  snapshot: Pick<
+    ProviderScopeContext,
+    'scope' | 'configSource' | 'detectedProviders' | 'registrations'
+  >,
+  config: SyncConfig,
+): ProviderScopeContext {
+  const detected = new Set(snapshot.detectedProviders);
   const active = new Set<string>();
   const detectedUnset: string[] = [];
   const detectedDisabled: string[] = [];
-  const activation = detection.map(({ adapter, detected }) => {
-    const configured = input.config.providers[adapter.name]?.enabled;
+  const activation = snapshot.registrations.map(({ adapter }) => {
+    const isDetected = detected.has(adapter.name);
+    const configured = config.providers[adapter.name]?.enabled;
     const isActive =
-      configured === true || (configured === undefined && detected);
+      configured === true || (configured === undefined && isDetected);
     if (isActive) active.add(adapter.name);
-    if (configured === undefined && detected) detectedUnset.push(adapter.name);
-    if (configured === false && detected) detectedDisabled.push(adapter.name);
+    if (configured === undefined && isDetected)
+      detectedUnset.push(adapter.name);
+    if (configured === false && isDetected) detectedDisabled.push(adapter.name);
     const source: ProviderActivationSource =
       configured === true
         ? 'config-enabled'
@@ -261,22 +287,14 @@ export async function resolveProviderScopeContext(input: {
     } satisfies ProviderActivationEvidence;
   });
   return {
-    scope: input.scope,
-    configSource: join(
-      input.scope === 'project' ? '<project>' : '~',
-      '.oat',
-      'sync',
-      'config.json',
-    ),
-    activeProviders: registrations
+    ...snapshot,
+    activeProviders: snapshot.registrations
       .map(({ adapter }) => adapter.name)
       .filter((name) => active.has(name)),
-    detectedProviders,
     mismatches: {
       detectedUnset,
       detectedDisabled,
     },
     activation,
-    registrations,
   };
 }

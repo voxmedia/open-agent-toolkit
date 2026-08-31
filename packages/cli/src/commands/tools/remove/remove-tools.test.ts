@@ -55,6 +55,7 @@ import {
   type RemoveTarget,
   type RemoveToolsDependencies,
   failedRemovalLifecycleOutcomes,
+  failedPostRemovalLifecycleOutcomes,
   removalLifecycleOutcomes,
   removeTools,
 } from './remove-tools';
@@ -684,6 +685,133 @@ describe('removeTools', () => {
             message: 'managed assets remain',
           },
         ],
+      },
+    ]);
+  });
+
+  for (const stage of ['intent-write', 'final-inventory'] as const) {
+    for (const json of [false, true]) {
+      it(`reports ${stage} failure after canonical removal in ${json ? 'JSON' : 'human'} mode`, async () => {
+        const deps = createDeps({ project: [createTool()] });
+        let inventoryCalls = 0;
+        deps.writeScopedPackIntent = async () => {
+          if (stage === 'intent-write') throw new Error('intent store offline');
+        };
+        deps.inventoryScopedPack = async ({ pack, scope }) => {
+          inventoryCalls += 1;
+          if (stage === 'final-inventory' && inventoryCalls > 1) {
+            throw new Error('inventory unreadable');
+          }
+          return lifecycleInventory(pack as 'ideas', scope, true);
+        };
+        const stdout: string[] = [];
+        const stderr: string[] = [];
+        const stdoutWrite = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation((chunk) => {
+            stdout.push(String(chunk));
+            return true;
+          });
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation((chunk) => {
+            stderr.push(String(chunk));
+            return true;
+          });
+        const previousExitCode = process.exitCode;
+        try {
+          process.exitCode = 0;
+          const program = new Command()
+            .name('oat')
+            .option('--json')
+            .option('--scope <scope>')
+            .option('--cwd <path>')
+            .exitOverride();
+          const tools = new Command('tools');
+          tools.addCommand(
+            createToolsRemoveCommand(deps, { runSync: async () => {} }),
+          );
+          program.addCommand(tools);
+          await program.parseAsync(
+            [
+              ...(json ? ['--json'] : []),
+              '--scope',
+              'project',
+              '--cwd',
+              '/project',
+              'tools',
+              'remove',
+              '--pack',
+              'ideas',
+              '--no-sync',
+            ],
+            { from: 'user' },
+          );
+
+          expect(process.exitCode).toBe(1);
+          expect(deps.removedDirs).toContain(
+            '/project/.agents/skills/oat-idea-new',
+          );
+          const expectedStage =
+            stage === 'intent-write'
+              ? 'durable intent update failed'
+              : 'final inventory failed';
+          if (json) {
+            const payload = JSON.parse(stdout.join('')) as {
+              result: { removed: Array<{ name: string }> };
+              lifecycle: Array<{
+                canonical: { status: string };
+                finalEvidence: unknown;
+                status: string;
+                recovery: Array<{ message: string }>;
+              }>;
+            };
+            expect(payload.result.removed).toEqual([
+              expect.objectContaining({ name: 'oat-idea-new' }),
+            ]);
+            expect(payload.lifecycle[0]).toMatchObject({
+              canonical: { status: 'applied' },
+              finalEvidence: null,
+              status: 'failed',
+              recovery: [
+                {
+                  message: expect.stringContaining(
+                    `${expectedStage} at project scope`,
+                  ),
+                },
+              ],
+            });
+          } else {
+            expect(stdout.join('')).toContain('Removed: oat-idea-new');
+            expect(`${stdout.join('')} ${stderr.join('')}`).toContain(
+              expectedStage,
+            );
+          }
+        } finally {
+          process.exitCode = previousExitCode;
+          stdoutWrite.mockRestore();
+          stderrWrite.mockRestore();
+        }
+      });
+    }
+  }
+
+  it('projects post-removal failures as applied but unverified', () => {
+    expect(
+      failedPostRemovalLifecycleOutcomes(
+        { kind: 'pack', pack: 'ideas' },
+        ['project'],
+        [{ pack: 'ideas', scope: 'project', removed: true }],
+        'intent-write',
+        'ideas',
+        'project',
+        new Error('intent store offline'),
+      ),
+    ).toMatchObject([
+      {
+        canonical: { status: 'applied' },
+        finalEvidence: null,
+        status: 'failed',
       },
     ]);
   });

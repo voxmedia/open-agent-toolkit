@@ -48,6 +48,12 @@ export interface RemoveToolsDependencies {
   inventoryScopedPack?: (
     input: InventoryScopedPackInput,
   ) => Promise<ScopedPackInventory>;
+  writeScopedPackIntent?: (input: {
+    pack: PackName;
+    scope: ConcreteScope;
+    scopeRoot: string;
+    enabled: boolean;
+  }) => Promise<unknown>;
 }
 
 interface RemovedTool {
@@ -521,4 +527,51 @@ export function failedRemovalLifecycleOutcomes(
     status: 'failed',
     recovery: [{ code: 'canonical-apply-failed', message }],
   }));
+}
+
+export function failedPostRemovalLifecycleOutcomes(
+  target: Exclude<RemoveTarget, { kind: 'name' }>,
+  scopes: readonly ConcreteScope[],
+  outcomes: readonly PackRemovalOutcome[],
+  stage: 'intent-write' | 'final-inventory',
+  failedPack: PackName,
+  failedScope: ConcreteScope,
+  error: unknown,
+): PackLifecycleOutcome[] {
+  const detail = error instanceof Error ? error.message : String(error);
+  return selectedPacks(target).map((pack) => {
+    const canonicalApplied = outcomes.some(
+      (outcome) => outcome.pack === pack && outcome.removed,
+    );
+    const stageLabel =
+      stage === 'intent-write'
+        ? 'durable intent update failed'
+        : 'final inventory failed';
+    const recoveryScope = pack === failedPack ? failedScope : scopes[0]!;
+    return {
+      schemaVersion: 1,
+      selection: {
+        pack,
+        requested:
+          scopes.includes('project') && scopes.includes('user')
+            ? 'both'
+            : scopes[0]!,
+        retainedRealizedScopes: [],
+        targetScopes: scopes,
+      },
+      canonical: {
+        status: canonicalApplied ? 'applied' : 'unchanged',
+        results: [],
+      },
+      sync: { scopes: [], status: 'not-run', providers: [] },
+      finalEvidence: null,
+      status: 'failed',
+      recovery: [
+        {
+          code: 'final-inventory-unverified',
+          message: `Canonical removal was already applied for ${pack}, but ${stageLabel} at ${failedScope} scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${recoveryScope}`,
+        },
+      ],
+    };
+  });
 }

@@ -45,6 +45,7 @@ export type {
 } from './registry';
 export {
   getProviderRegistrations,
+  recomputeProviderScopeContext,
   resolveProviderScopeContext,
   validateProviderRegistrations,
 } from './registry';

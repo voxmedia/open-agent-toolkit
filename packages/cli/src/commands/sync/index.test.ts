@@ -49,6 +49,7 @@ import type { SyncMaterializationExtension } from './sync.types';
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
   providerContext?: ProviderScopeContext;
+  providerContextResolver?: () => Promise<ProviderScopeContext>;
   plans?: SyncPlan[];
   executeResults?: SyncResult[];
   codexExtensionPlans?: CodexExtensionPlan[];
@@ -323,8 +324,8 @@ function createHarness(options: HarnessOptions = {}): {
       });
 
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
-  const selectProvidersWithAbort = vi.fn(
-    async () => providerSelectResponses.shift() ?? [],
+  const selectProvidersWithAbort = vi.fn(async () =>
+    providerSelectResponses.length > 0 ? providerSelectResponses.shift()! : [],
   );
 
   const saveSyncConfig = vi.fn(
@@ -374,13 +375,15 @@ function createHarness(options: HarnessOptions = {}): {
       : vi.fn(async () => []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
-    ...(options.providerContext
-      ? {
-          resolveProviderScopeContext: vi.fn(
-            async () => options.providerContext!,
-          ),
-        }
-      : {}),
+    ...(options.providerContextResolver
+      ? { resolveProviderScopeContext: options.providerContextResolver }
+      : options.providerContext
+        ? {
+            resolveProviderScopeContext: vi.fn(
+              async () => options.providerContext!,
+            ),
+          }
+        : {}),
     selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
@@ -1059,6 +1062,49 @@ describe('createSyncCommand', () => {
     );
     expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([]);
   });
+
+  for (const [path, response] of [
+    ['cancel', null],
+    ['save', ['registry-only']],
+  ] as const) {
+    it(`detects each provider once during interactive sync ${path}`, async () => {
+      const adapter = createAdapter('registry-only');
+      const detect = vi.spyOn(adapter, 'detect').mockResolvedValue(true);
+      const providerContextResolver = vi.fn(async () => {
+        await adapter.detect('/tmp/workspace');
+        return {
+          scope: 'project' as const,
+          configSource: '<project>/.oat/sync/config.json',
+          activeProviders: ['registry-only'],
+          detectedProviders: ['registry-only'],
+          mismatches: {
+            detectedUnset: ['registry-only'],
+            detectedDisabled: [],
+          },
+          activation: [
+            {
+              provider: 'registry-only',
+              state: 'active' as const,
+              source: 'detected-unset' as const,
+              reason: 'detected without explicit configuration',
+            },
+          ],
+          registrations: [{ adapter, extensions: [], capabilities: [] }],
+        };
+      });
+      const { command } = createHarness({
+        interactive: true,
+        adapters: [adapter],
+        providerContextResolver,
+        providerSelectResponses: [response],
+      });
+
+      await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(providerContextResolver).toHaveBeenCalledTimes(1);
+      expect(detect).toHaveBeenCalledTimes(1);
+    });
+  }
 
   it('warns in non-interactive mode and does not mutate config on mismatches', async () => {
     const { command, saveSyncConfig, capture, selectProvidersWithAbort } =

@@ -28,6 +28,7 @@ import { Command } from 'commander';
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,
+  failedPostRemovalLifecycleOutcomes,
   failedRemovalLifecycleOutcomes,
   removalLifecycleOutcomes,
   removeTools,
@@ -66,6 +67,7 @@ const defaultDependencies: RemoveToolsDependencies = {
   hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
     hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
   inventoryScopedPack,
+  writeScopedPackIntent,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
@@ -159,62 +161,103 @@ export function createToolsRemoveCommand(
 
       if (!dryRun && target.kind !== 'name') {
         const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
-        for (const scope of scopes) {
-          const scopeRoot = await dependencies.resolveScopeRoot(
-            scope,
-            context.cwd,
-            context.home,
-          );
-          for (const pack of packs) {
-            // Durable scoped intent is what lets `oat tools update` restore a
-            // pack whose files are all missing, so it may only be cleared for a
-            // pack this run actually removed something for. A removal that
-            // removed nothing reports nothing and must leave intent alone.
-            const removedForPack = result.packOutcomes.some(
-              (outcome) =>
-                outcome.pack === pack &&
-                outcome.scope === scope &&
-                outcome.removed,
-            );
-            if (!removedForPack) continue;
-            await writeScopedPackIntent({
-              pack,
+        let stage: 'intent-write' | 'final-inventory' = 'intent-write';
+        let currentPack = packs[0]!;
+        let currentScope = scopes[0]!;
+        try {
+          for (const scope of scopes) {
+            currentScope = scope;
+            const scopeRoot = await dependencies.resolveScopeRoot(
               scope,
-              scopeRoot,
-              enabled: false,
-            });
+              context.cwd,
+              context.home,
+            );
+            for (const pack of packs) {
+              currentPack = pack;
+              // Durable scoped intent is what lets `oat tools update` restore a
+              // pack whose files are all missing, so it may only be cleared for a
+              // pack this run actually removed something for.
+              const removedForPack = result.packOutcomes.some(
+                (outcome) =>
+                  outcome.pack === pack &&
+                  outcome.scope === scope &&
+                  outcome.removed,
+              );
+              if (!removedForPack) continue;
+              await (
+                dependencies.writeScopedPackIntent ?? writeScopedPackIntent
+              )({
+                pack,
+                scope,
+                scopeRoot,
+                enabled: false,
+              });
+            }
           }
-        }
-        if (dependencies.inventoryScopedPack) {
-          const assetsRoot = await dependencies.resolveAssetsRoot();
-          const finalInventories = (
-            await Promise.all(
-              scopes.map(async (scope) => {
-                const scopeRoot = await dependencies.resolveScopeRoot(
-                  scope,
-                  context.cwd,
-                  context.home,
+          if (dependencies.inventoryScopedPack) {
+            stage = 'final-inventory';
+            const assetsRoot = await dependencies.resolveAssetsRoot();
+            const finalInventories: Awaited<
+              ReturnType<NonNullable<typeof dependencies.inventoryScopedPack>>
+            >[] = [];
+            for (const scope of scopes) {
+              currentScope = scope;
+              const scopeRoot = await dependencies.resolveScopeRoot(
+                scope,
+                context.cwd,
+                context.home,
+              );
+              for (const pack of selectedPacks(target)) {
+                currentPack = pack;
+                finalInventories.push(
+                  await dependencies.inventoryScopedPack({
+                    pack,
+                    scope,
+                    scopeRoot,
+                    assetsRoot,
+                  }),
                 );
-                return Promise.all(
-                  selectedPacks(target).map((pack) =>
-                    dependencies.inventoryScopedPack!({
-                      pack,
-                      scope,
-                      scopeRoot,
-                      assetsRoot,
-                    }),
-                  ),
-                );
-              }),
-            )
-          ).flat();
-          result.lifecycle = removalLifecycleOutcomes(
-            selectedPacks(target),
+              }
+            }
+            result.lifecycle = removalLifecycleOutcomes(
+              selectedPacks(target),
+              scopes,
+              result.packOutcomes,
+              false,
+              finalInventories,
+            );
+          }
+        } catch (error) {
+          const lifecycle = failedPostRemovalLifecycleOutcomes(
+            target,
             scopes,
             result.packOutcomes,
-            false,
-            finalInventories,
+            stage,
+            currentPack,
+            currentScope,
+            error,
           );
+          const legacyResult = { ...result };
+          delete legacyResult.lifecycle;
+          if (context.json) {
+            logger.json({
+              target: describeTarget(target),
+              dryRun,
+              result: legacyResult,
+              lifecycle,
+            });
+          } else {
+            for (const tool of result.removed) {
+              logger.success(`Removed: ${tool.name} (${tool.scope})`);
+            }
+            for (const outcome of lifecycle) {
+              logger.warn(
+                outcome.recovery.map(({ message }) => message).join('; '),
+              );
+            }
+          }
+          process.exitCode = 1;
+          return;
         }
       }
 

@@ -30,6 +30,7 @@ import { loadManifest } from '@manifest/index';
 import {
   getConfigAwareAdapters,
   getProviderRegistrations,
+  recomputeProviderScopeContext,
   resolveProviderScopeContext,
   toMaterializationOperations,
   type ProviderAdapter,
@@ -168,6 +169,7 @@ async function maybeResolveProviderMismatches(
   mismatches: SyncProviderMismatches,
   dependencies: ContextualSyncDependencies,
   activeAdapters?: ProviderAdapter[],
+  providerContext?: ProviderScopeContext,
 ): Promise<{
   config: SyncConfig;
   mismatches: SyncProviderMismatches;
@@ -197,15 +199,14 @@ async function maybeResolveProviderMismatches(
   );
 
   if (selected === null) {
-    const resolution = await dependencies.getConfigAwareAdapters(
-      adapters,
-      scopeRoot,
-      config,
-    );
     return {
       config,
       mismatches,
-      activeAdapters: resolution.activeAdapters,
+      activeAdapters:
+        activeAdapters ??
+        (await dependencies
+          .getConfigAwareAdapters(adapters, scopeRoot, config)
+          .then((resolution) => resolution.activeAdapters)),
     };
   }
 
@@ -228,14 +229,10 @@ async function maybeResolveProviderMismatches(
     providers,
   });
 
-  const providerContext = dependencies.resolveProviderScopeContext
-    ? await dependencies.resolveProviderScopeContext({
-        scope,
-        scopeRoot,
-        config: savedConfig,
-      })
+  const refreshedProviderContext = providerContext
+    ? recomputeProviderScopeContext(providerContext, savedConfig)
     : undefined;
-  const resolution = providerContext
+  const resolution = refreshedProviderContext
     ? undefined
     : await dependencies.getConfigAwareAdapters(
         adapters,
@@ -247,18 +244,20 @@ async function maybeResolveProviderMismatches(
     config: savedConfig,
     mismatches: {
       detectedUnset: [
-        ...(providerContext?.mismatches.detectedUnset ??
+        ...(refreshedProviderContext?.mismatches.detectedUnset ??
           resolution!.detectedUnset),
       ],
       detectedDisabled: [
-        ...(providerContext?.mismatches.detectedDisabled ??
+        ...(refreshedProviderContext?.mismatches.detectedDisabled ??
           resolution!.detectedDisabled),
       ],
     },
-    activeAdapters: providerContext
-      ? providerContext.registrations
+    activeAdapters: refreshedProviderContext
+      ? refreshedProviderContext.registrations
           .map(({ adapter }) => adapter)
-          .filter(({ name }) => providerContext.activeProviders.includes(name))
+          .filter(({ name }) =>
+            refreshedProviderContext.activeProviders.includes(name),
+          )
       : resolution!.activeAdapters,
   };
 }
@@ -363,6 +362,7 @@ async function computePlans(
       },
       dependencies,
       initialActiveAdapters,
+      providerContext,
     );
 
     const plan = await dependencies.computeSyncPlan({
