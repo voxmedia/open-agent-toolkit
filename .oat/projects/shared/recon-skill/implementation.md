@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,15 +18,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status  | Tasks | Completed |
-| ------------ | ------- | ----- | --------- |
-| Phase 1      | passed  | 1     | 1/1       |
-| Phase 2      | passed  | 4     | 4/4       |
-| Phase 3      | passed  | 4     | 4/4       |
-| Phase 4      | pending | 2     | 0/2       |
-| Phase p-rev1 | passed  | 2     | 2/2       |
+| Phase        | Status | Tasks | Completed |
+| ------------ | ------ | ----- | --------- |
+| Phase 1      | passed | 1     | 1/1       |
+| Phase 2      | passed | 4     | 4/4       |
+| Phase 3      | passed | 4     | 4/4       |
+| Phase 4      | passed | 2     | 2/2       |
+| Phase p-rev1 | passed | 2     | 2/2       |
 
-**Total:** 11/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ## Task Status
 
@@ -56,10 +56,10 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 4: Documentation, Release Packaging, and Completion Gates
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p04-t01 | pending | -      |
-| p04-t02 | pending | -      |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p04-t01 | completed | `846e01809` |
+| p04-t02 | completed | `e2b8b4077` |
 
 ### Phase p-rev1: Revision 1 — Simplify Packet Validation
 
@@ -700,6 +700,61 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Accepted deviations: migration runtime seam, scanner export seam, generated
   project provider outputs, and Cursor native-read skill behavior
 
+#### Dispatch p04 implementation
+
+- Request ID: `recon-skill-p04-implementation-20260831T2048Z`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Authority: execute exactly p04-t01 and p04-t02 with one planned commit per
+  task; project tracking remained root-owned/read-only
+- Task class/floor: `default-implementation` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Task commits: `846e018091e5c63c911ae2ba08e0bbecdf8398ca` and
+  `e2b8b40771dd64d22dc3e16e2faa1110db1e792a`
+- Recovery attempts: 0; no recovery event
+- Optional nested dispatches: none
+- Accepted adjacent outputs: generated public-package version asset and the two
+  required autonomy-contract inventory rows; no lockfile diff was produced
+- Verification: all CI-order gates passed; fresh forced tests passed 4625/4625
+  with 0/10 Turbo cache hits; smoke 140/140, skill 742/742, and release 39/39
+  with one intentional skip
+- Dispatch: request_id=recon-skill-p04-implementation-20260831T2048Z scope=p04 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Dispatch p04 terminal review
+
+- Request ID: `recon-skill-p04-review-20260831T2245Z`
+- Role/class: `oat-reviewer` / reviewer
+- Provider/context: Codex / fresh root-native session
+- Authority: independently review the exact two-commit p04 range and write only
+  the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed and passed
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p04-review-2026-08-31T213712Z.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Reviewed head: `e2b8b40771dd64d22dc3e16e2faa1110db1e792a`
+- Disposition: p04-t01, p04-t02, and p04 are authorized to pass and enter the
+  configured final-phase HiLL closeout path
+- Overengineering assessment: documentation and release metadata only; no new
+  runtime abstraction or speculative workflow integration
+- Dispatch: request_id=recon-skill-p04-review-20260831T2245Z scope=p04 role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase p04 outcome
+
+- Status: passed
+- Planned task commits: 2
+- Review-fix iterations: 0
+- Recovery attempts: 0
+- Optional nested dispatches: none
+- Terminal review: `reviews/p04-review-2026-08-31T213712Z.md`
+- Accepted deviations: generated release-version asset, two mechanical
+  autonomy inventory rows, and no lockfile diff for workspace self versions
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -1037,6 +1092,15 @@ context before p02 can advance.
   no generalized state simulator, transaction framework, ownership engine, or
   new persistence model was introduced. Next task: `p04-t01`.
 
+### 2026-08-31 - p04 passed and implementation tasks complete
+
+- Phase 4 completed in two planned commits: user-facing recon documentation and
+  the lockstep `0.2.51` release preparation for all five public packages.
+- Independent review passed with zero findings and confirmed the phase adds no
+  automatic workflow integration or speculative runtime abstraction.
+- All 13 planned and revision tasks are complete. Final lifecycle review and
+  the configured implementation exit gate remain before HiLL approval.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -1048,6 +1112,10 @@ context before p02 can advance.
   skills natively and must not receive an obsolete `.cursor/skills/recon` view.
 - These deviations were independently reviewed as proportionate integration
   consequences rather than scope expansion.
+- p04-t02 includes the generated public-package version asset and exactly two
+  autonomy-contract inventory rows required by existing release and prompt-site
+  gates. `pnpm-lock.yaml` correctly remains unchanged because only package self
+  versions changed and internal dependencies remain `workspace:*`.
 
 ## Test Results
 
@@ -1109,7 +1177,45 @@ context before p02 can advance.
 - Terminal p03 review passes its final/prior finding set 11/11, 742/742 skill
   tests, 63-skill validation, provider containment 9/9, project sync, CLI
   type/lint/format, and full/narrow diff checks.
+- Phase p04 passes every CI gate in repository order: check, type-check, test,
+  build, skill bumps, release version checks, release validation, and docs
+  build. Fresh forced Turbo tests pass 4625/4625 with no cache hits; smoke,
+  skill, release, focused bundle/public-package, docs, lint, and format checks
+  also pass.
+- Terminal p04 review independently passes the exact two-commit range with zero
+  findings, validates all 12 changed files, and confirms release `0.2.51` is
+  strictly above fetched `origin/main` `0.2.50` for all five public packages.
 
 ## Final Summary (for PR/docs)
 
-To be completed after all implementation tasks and reviews pass.
+The project ships a provider-neutral `recon` skill that prepares an exact
+model/effort dispatch envelope for user approval, fans bounded evidence work
+through approved economical workers, and publishes a validated directory-based
+evidence packet. Packets include a compact consumer-facing synthesis and claim
+ledger, typed source locators, gaps and contradictions, verification and
+adversarial results, and quarantined raw dossiers that normal consumers do not
+need to read.
+
+The implementation adds deterministic packet schemas, canonical hashing,
+source and path validation, selective-blind review briefs, categorical claim
+promotion, honest partial outcomes, and an end-to-end fixture harness. It also
+adds same-scope research-pack dependency leases for the utility pack,
+user-materializable `recon-worker` support across provider views, research-pack
+bundle ownership, lifecycle-safe install/update/remove/migrate behavior, and
+the corresponding user and contributor documentation.
+
+The primary shipped surfaces are `.agents/skills/recon`,
+`.agents/agents/recon-worker.md`, the approval-bound extensions under
+`.agents/skills/oat-dispatch-subagents`, tool-pack lifecycle and provider-sync
+code in `packages/cli`, the research pack manifest and bundled assets, and the
+recon documentation under `apps/oat-docs/docs`.
+
+Verification includes the complete repository CI gate sequence, a fresh
+4625/4625 forced workspace test run with no Turbo cache hits, 742/742 skill
+tests, 140/140 smoke tests, release validation for all five `0.2.51` packages,
+canonical skill validation, lint, format, type checking, builds, docs generation
+and a 73-page docs build. Independent terminal phase reviews passed p01, p02
+through revision p-rev1, p03, and p04. Review fixes stayed inside existing
+contracts and lifecycle seams; no generalized transaction/state framework or
+automatic discovery, quick-start, analyze, or deep-research integration was
+added. Those broader integrations remain separate backlog items.

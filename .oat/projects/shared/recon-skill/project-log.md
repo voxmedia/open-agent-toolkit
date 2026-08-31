@@ -68,6 +68,10 @@ Terminal review passed at 841a7164a with 0 findings after 3 review-fix iteration
 
 Terminal review passed at cb3d94ac2 with 0 findings after 3 review-fix iterations; reviews/p03-review-2026-08-31T204054Z.md closes all seven prior p03 Critical/Important findings.
 
+### 2026-08-31 · structural · oat-project-implement · p04
+
+Terminal review passed at e2b8b4077 with 0 findings and no fix iterations; reviews/p04-review-2026-08-31T213712Z.md closes both p04 tasks and advances the project to final implementation closeout.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
