@@ -217,10 +217,9 @@ export function createProvidersSetCommand(
       "Enable or disable providers in the selected scope's sync config (project by default)",
     )
     .addOption(
-      new Option(
-        '--scope <scope>',
-        'Sync config scope: project or user',
-      ).default('project'),
+      new Option('--scope <scope>', 'Sync config scope: project or user')
+        .choices(['project', 'user'])
+        .default('project'),
     )
     .option('--enabled <providers>', 'Comma-separated providers to enable')
     .option('--disabled <providers>', 'Comma-separated providers to disable')

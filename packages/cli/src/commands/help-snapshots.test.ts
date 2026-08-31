@@ -540,8 +540,8 @@ describe('help output snapshots', () => {
       default)
 
       Options:
-        --scope <scope>         Sync config scope: project or user (default:
-                                "project")
+        --scope <scope>         Sync config scope: project or user (choices:
+                                "project", "user", default: "project")
         --enabled <providers>   Comma-separated providers to enable
         --disabled <providers>  Comma-separated providers to disable
         -h, --help              display help for command

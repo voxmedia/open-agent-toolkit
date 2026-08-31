@@ -28,6 +28,13 @@ interface ProviderRefreshAdvice {
   visibility: ProviderVisibilityEvidence;
 }
 
+interface CoreApplyEvidence {
+  plan: SyncPlan;
+  operationResults: readonly SyncOperationResult[];
+  aggregateOnly: boolean;
+  aggregate: Pick<SyncResult, 'applied' | 'failed' | 'skipped'>;
+}
+
 function buildProviderRefreshAdvice(input: {
   operationResults: readonly SyncOperationResult[];
   extensionResults: readonly (MaterializationOperationResult & {
@@ -158,8 +165,77 @@ function materializationOperationIdentity(operation: {
   ]);
 }
 
+function syncOperationIdentity(operation: {
+  scope: string;
+  provider: string;
+  contentKind: string;
+  asset: string;
+  action: string;
+}): string {
+  return JSON.stringify([
+    operation.scope,
+    operation.provider,
+    operation.contentKind,
+    operation.asset,
+    operation.action,
+  ]);
+}
+
+function coreHumanStatus(
+  status: SyncOperationResult['status'] | undefined,
+): 'changed' | 'current' | 'failed' | 'missing' | 'unknown' {
+  switch (status) {
+    case 'changed':
+    case 'current':
+    case 'failed':
+    case 'missing':
+    case 'unknown':
+      return status;
+    default:
+      return 'unknown';
+  }
+}
+
+function formatCoreResults(
+  plan: SyncPlan,
+  evidence: CoreApplyEvidence | undefined,
+  dependencies: SyncCommandDependencies,
+): string {
+  const operations = [...plan.entries, ...plan.removals];
+  if (operations.length === 0) {
+    return dependencies.formatSyncPlan(plan, true);
+  }
+
+  const resultsByIdentity = new Map(
+    (evidence?.operationResults ?? []).map((result) => [
+      syncOperationIdentity(result),
+      result,
+    ]),
+  );
+  const lines = operations.map((operation) => {
+    const result = resultsByIdentity.get(
+      syncOperationIdentity({
+        scope: plan.scope,
+        provider: operation.provider,
+        contentKind: operation.canonical.type,
+        asset: operation.canonical.name,
+        action: operation.operation,
+      }),
+    );
+    const status = coreHumanStatus(result?.status);
+    const failure = result?.failure ? ` — ${result.failure}` : '';
+    return `- ${plan.scope}:${operation.provider}:${operation.canonical.type}:${operation.operation} ${operation.canonical.name}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
+  });
+  const aggregate = evidence?.aggregateOnly
+    ? `\nCore aggregate result: applied ${evidence.aggregate.applied}, failed ${evidence.aggregate.failed}, skipped ${evidence.aggregate.skipped}; non-skip named outcomes remain unknown.`
+    : '';
+
+  return `Core results${aggregate}\n${lines.join('\n')}`;
+}
+
 function formatAppliedOutput(
   scopePlans: ScopeSyncPlan[],
+  coreApplyEvidence: readonly CoreApplyEvidence[],
   dependencies: SyncCommandDependencies,
 ): string {
   if (scopePlans.length === 0) {
@@ -175,7 +251,11 @@ function formatAppliedOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, true);
+      const syncOutput = formatCoreResults(
+        scopePlan.plan,
+        coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan),
+        dependencies,
+      );
       if (scopePlan.materializationExtensions.length === 0) {
         return `Scope: ${scopePlan.scope}\n${syncOutput}`;
       }
@@ -219,6 +299,7 @@ export async function runSyncApply(
   let coreFailed = 0;
   let coreSkipped = 0;
   const operationResults: SyncOperationResult[] = [];
+  const coreApplyEvidence: CoreApplyEvidence[] = [];
   const extensionOperationResults: Array<
     MaterializationOperationResult & { scope: ConcreteScope }
   > = [];
@@ -253,9 +334,17 @@ export async function runSyncApply(
       coreApplied += result.applied;
       coreFailed += result.failed;
       coreSkipped += result.skipped;
-      operationResults.push(
-        ...normalizeOperationResults(scopePlan.plan, result),
+      const normalizedResults = normalizeOperationResults(
+        scopePlan.plan,
+        result,
       );
+      operationResults.push(...normalizedResults);
+      coreApplyEvidence.push({
+        plan: scopePlan.plan,
+        operationResults: normalizedResults,
+        aggregateOnly: result.operations === undefined,
+        aggregate: result,
+      });
     }
 
     for (const plan of scopePlan.materializationExtensionPlans) {
@@ -346,7 +435,9 @@ export async function runSyncApply(
       providerRefreshAdvice,
     });
   } else {
-    context.logger.info(formatAppliedOutput(scopePlans, dependencies));
+    context.logger.info(
+      formatAppliedOutput(scopePlans, coreApplyEvidence, dependencies),
+    );
     if (summary.plannedOperations === 0) {
       context.logger.info('\nNo changes required.');
     } else if (summary.failed > 0) {

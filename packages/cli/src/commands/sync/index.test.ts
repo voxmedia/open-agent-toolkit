@@ -640,6 +640,130 @@ describe('createSyncCommand', () => {
     });
   });
 
+  it('renders aggregate-only core evidence as unknown without attributing counts', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical: first,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/first.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'first agent missing',
+            },
+            {
+              canonical: second,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/second.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'second agent missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [{ applied: 1, failed: 1, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    expect(capture.info[0]).toContain(
+      'Core aggregate result: applied 1, failed 1, skipped 0; non-skip named outcomes remain unknown.',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy first.md\n  reason: first agent missing\n  result: unknown',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy second.md\n  reason: second agent missing\n  result: unknown',
+    );
+    expect(capture.info[0]).not.toContain('first.md\n  result: changed');
+    expect(capture.info[0]).not.toContain('second.md\n  result: failed');
+    expect(capture.info[0]).not.toContain('Sync plan (applied)');
+  });
+
+  it('joins exact mixed core results to plan reasons by stable identity', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical: first,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/first.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'first agent missing',
+            },
+            {
+              canonical: second,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/second.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'second agent stale',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 1,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'second.md',
+              action: 'create_copy',
+              status: 'failed',
+              failure:
+                'Materialization failed; inspect local verbose diagnostics and retry sync.',
+            },
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'first.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy first.md\n  reason: first agent missing\n  result: changed',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy second.md\n  reason: second agent stale\n  result: failed — Materialization failed; inspect local verbose diagnostics and retry sync.',
+    );
+    expect(capture.info[0]).not.toContain('Sync plan (applied)');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+  });
+
   it('apply (default): executes skip-only plans to reconcile manifest state', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('skip')],

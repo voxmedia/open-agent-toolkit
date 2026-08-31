@@ -143,6 +143,28 @@ describe('oat providers set', () => {
     expect(normalizedHelp).toContain('default: "project"');
   });
 
+  it('rejects an invalid JSON scope before resolving roots or writing config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+
+    const { command, capture, resolveScopeRoot } = createHarness({ cwd: root });
+    command.exitOverride();
+
+    await expect(
+      runCommand(command, {
+        globalArgs: ['--json'],
+        commandArgs: ['--scope', 'nonsense', '--enabled', 'claude'],
+      }),
+    ).rejects.toMatchObject({ code: 'commander.invalidArgument' });
+
+    expect(resolveScopeRoot).not.toHaveBeenCalled();
+    await expect(
+      readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(capture.jsonPayloads).toEqual([]);
+    expect(process.exitCode).not.toBe(0);
+  });
+
   it('succeeds without --scope (defaults to project scope)', async () => {
     // p01-t03: bare invocation should not require --scope project
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
@@ -272,14 +294,17 @@ describe('oat providers set', () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
 
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, capture, resolveScopeRoot } = createHarness({ cwd: root });
+    command.exitOverride();
 
-    await runCommand(command, {
-      commandArgs: ['--scope', 'all', '--enabled', 'claude'],
-    });
+    await expect(
+      runCommand(command, {
+        commandArgs: ['--scope', 'all', '--enabled', 'claude'],
+      }),
+    ).rejects.toMatchObject({ code: 'commander.invalidArgument' });
 
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('requires one concrete scope');
+    expect(resolveScopeRoot).not.toHaveBeenCalled();
+    expect(capture.error).toEqual([]);
   });
 
   it('writes provider enablement at user scope', async () => {
