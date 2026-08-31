@@ -546,6 +546,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Overengineering assessment: passed
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p03 fix round 1
+
+- Original request ID: `recon-skill-p03-implementation-20260831T1710Z`
+- Continuation event: `recon-skill-p03-fix-r1-20260831T1845Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: bounded correction of the three Important p03 findings in the
+  existing update/lifecycle/migration boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `63829d6426fc50df40598ac3c9bae4519360fc34`
+- Finding dispositions: root updates require direct intent or a complete legacy
+  footprint; successive releases project only `requiredBy`; migration releases
+  source dependencies before source mutation so retry remains valid
+- Scope: seven files, including one authorized adjacent stale test fixture
+- Verification: focused reviewer regressions 52/52, complete Phase 3 surface
+  739/739, CLI type-check, lint, format, and diff checks pass
+- Optional nested dispatches: none
+- Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z continuation_event=recon-skill-p03-fix-r1-20260831T1845Z scope=p03-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -803,6 +826,19 @@ context before p02 can advance.
   and return to the original p03 implementer for one bounded append-only fix
   and fresh re-review.
 
+### 2026-08-31 - p03 review fixes round 1 completed
+
+- The original p03 implementer added append-only fix commit `63829d642` across
+  the seven bounded update/lifecycle/migration production and test files.
+- Direct reviewer regressions now confirm transitive-only utility updates stay
+  non-direct and partial, final batched lease releases remove selected files,
+  and injected migration dependency-release failure retains a retryable source.
+- Root inspection rejected a broad inventory simulator during implementation;
+  the final fix projects only ordered `requiredBy` state while real inventory
+  remains authoritative and global preflight-before-write is preserved.
+- Focused 52/52 and complete Phase 3 739/739 suites, CLI type-check, lint,
+  format, and diff checks pass. A fresh independent re-review is next.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -857,6 +893,9 @@ context before p02 can advance.
   validation, project provider sync/link verification, and diff checks.
 - Passing gates do not override the three production-function lifecycle
   failures recorded in `reviews/p03-review-2026-08-31T183356Z.md`.
+- After p03 fix round 1, the exact three production regressions pass 52/52 and
+  the complete Phase 3 surface passes 739/739; CLI type-check, lint, format,
+  and diff checks also pass.
 
 ## Final Summary (for PR/docs)
 
