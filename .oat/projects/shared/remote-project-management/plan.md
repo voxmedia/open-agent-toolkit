@@ -154,7 +154,8 @@ packages/cli/src/commands/pjm/remote/schema.test.ts.
 
 ### Task p01-t05: Resolve portable and operational storage locations
 
-**Implementation:** in progress
+**Implementation:** completed in
+`56ed685b95af7663bddbbb7998119efe055ff895`
 
 **Files:** Create packages/cli/src/commands/pjm/remote/storage-locator.ts and
 packages/cli/src/commands/pjm/remote/storage-locator.test.ts.
@@ -168,6 +169,8 @@ packages/cli/src/commands/pjm/remote/storage-locator.test.ts.
 5. Commit: feat(p01-t05): resolve remote storage locations
 
 ### Task p01-t06: Persist remote records atomically
+
+**Implementation:** in progress
 
 **Files:** Create packages/cli/src/commands/pjm/remote/store.ts and
 packages/cli/src/commands/pjm/remote/store.test.ts.

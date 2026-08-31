@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -145,8 +145,16 @@ passed.
 
 ### Task p01-t05: Resolve portable and operational storage locations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 56ed685b95af7663bddbbb7998119efe055ff895
+
+**Outcome:** Storage resolution now separates portable metadata from
+machine-local operational state, shares a Git-common-dir store across
+worktrees, isolates new clones, supports explicit shared-state opt-in for
+shared/synced owners, and rejects shared state for local projects.
+
+**Verification:** Focused storage locator suite passed (8 tests); CLI type-check
+and lint passed.
 
 ---
 
@@ -289,7 +297,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: Resolve transport preferences by owning scope - b3479ac367467fcdc381c277e6da6399d78fcdaf
 - [x] p01-t03: Expose remote configuration through config commands - 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
 - [x] p01-t04: Define strict remote record schemas - b67d6e45097049687de95cca2c5fdce9497e5049
-- [ ] p01-t05: Resolve portable and operational storage locations - in progress
+- [x] p01-t05: Resolve portable and operational storage locations - 56ed685b95af7663bddbbb7998119efe055ff895
+- [ ] p01-t06: Persist remote records atomically - in progress
 
 **What changed (high level):**
 
@@ -300,6 +309,8 @@ Chronological log of implementation progress.
   enforcing shared versus local/user ownership.
 - Added strict remote persistence schemas with stable identity and bounded
   provider extensions.
+- Added deterministic portable/local/shared storage location resolution across
+  clones and worktrees.
 
 **Decisions:**
 
