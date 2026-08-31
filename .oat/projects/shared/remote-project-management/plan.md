@@ -326,6 +326,9 @@ packages/cli/src/commands/pjm/remote/managed-markdown.test.ts.
 
 ### Task p02-t05: Classify three-way field reconciliation
 
+**Implementation:** completed in
+`6e4533d0b1fad24aa6fe735788786fee500fd0a6`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/reconcile.ts and
 packages/cli/src/commands/pjm/remote/reconcile.test.ts.
 

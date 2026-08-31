@@ -328,6 +328,22 @@ type-check, and lint passed.
 
 ### Task p02-t05: Classify three-way field reconciliation
 
+**Status:** completed
+**Commit:** 6e4533d0b1fad24aa6fe735788786fee500fd0a6
+
+**Outcome:** Added pure per-field baseline/local/remote classification for the
+minimal shared contract and binding-level disjoint/conflict outcomes. Field
+directions, description scope, optional priority capability, remote lifecycle
+anomalies, and uncertain prior operations all fail closed without treating
+status or provider-native fields as shared state.
+
+**Verification:** Reconciliation suite passed (12 tests); CLI format/build,
+type-check, and lint passed.
+
+---
+
+### Task p02-t06: Resolve effective remote authority exactly
+
 **Status:** pending
 **Commit:** -
 
@@ -547,6 +563,7 @@ Chronological log of implementation progress.
 - [x] p02-t02: Project local backlog and project content safely - 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
 - [x] p02-t03: Redact and bound retained remote snapshots - 9e3df8f1cb4efd3a42b0903f4a563691ac1297fb
 - [x] p02-t04: Implement managed Markdown boundaries - 1fe6b21049235bfb0a74ab1d28d11e2194794645
+- [x] p02-t05: Classify three-way field reconciliation - 6e4533d0b1fad24aa6fe735788786fee500fd0a6
 
 **What changed (high level):**
 
