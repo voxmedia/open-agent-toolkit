@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -288,6 +288,43 @@ describe('oat providers set', () => {
       join(root, '.oat', 'sync', 'config.json'),
     );
     expect(config.providers.claude?.enabled).toBe(true);
+  });
+
+  it('uses the canonical user config schema and preserves legacy siblings', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        tools: { workflows: true },
+        futureField: { preserved: true },
+        knownStrays: ['.cursor/skills/user-only'],
+      }),
+      'utf8',
+    );
+
+    const { command } = createHarness({ cwd: root });
+    await runCommand(command, {
+      commandArgs: ['--scope', 'user', '--enabled', 'claude'],
+    });
+
+    expect(
+      JSON.parse(
+        await readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+      ),
+    ).toMatchObject({
+      providers: { claude: { enabled: true } },
+      knownStrays: ['.cursor/skills/user-only'],
+    });
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      tools: { workflows: true },
+      futureField: { preserved: true },
+    });
   });
 
   it('preserves existing provider strategy when updating enabled', async () => {

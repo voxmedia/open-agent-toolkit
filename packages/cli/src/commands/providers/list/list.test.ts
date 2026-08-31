@@ -212,7 +212,21 @@ describe('oat providers list', () => {
           },
         ],
         registrations: [
-          { adapter: registryOnly, extensions: [], capabilities: [] },
+          {
+            adapter: registryOnly,
+            extensions: [],
+            capabilities: [
+              {
+                scope: 'project',
+                contentKind: 'skill',
+                support: 'supported',
+                projectionModes: ['entry-sync'],
+                nativeRoleSurface: false,
+                collectionAlias: 'supported',
+                catalogRefresh: { state: 'unknown', reason: 'not sourced' },
+              },
+            ],
+          },
         ],
       })),
       getSyncMappings: vi.fn(
@@ -228,7 +242,26 @@ describe('oat providers list', () => {
     });
 
     expect(capture.jsonPayloads[0]).toEqual([
-      expect.objectContaining({ name: 'registry-only', detected: true }),
+      expect.objectContaining({
+        name: 'registry-only',
+        detected: true,
+        scopes: [
+          expect.objectContaining({
+            scope: 'project',
+            activation: expect.objectContaining({ state: 'active' }),
+            content: [
+              expect.objectContaining({
+                contentKind: 'skill',
+                capability: 'supported',
+                projectionModes: ['entry-sync'],
+                materialization: 'unknown',
+                visibility: 'not-reported',
+                nativeRead: false,
+              }),
+            ],
+          }),
+        ],
+      }),
     ]);
   });
 

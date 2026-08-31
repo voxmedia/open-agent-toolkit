@@ -209,7 +209,21 @@ describe('oat providers inspect', () => {
         mismatches: { detectedUnset: [], detectedDisabled: [] },
         activation: [],
         registrations: [
-          { adapter: registryOnly, extensions: [], capabilities: [] },
+          {
+            adapter: registryOnly,
+            extensions: [],
+            capabilities: [
+              {
+                scope: 'project',
+                contentKind: 'skill',
+                support: 'supported',
+                projectionModes: ['native-read'],
+                nativeRoleSurface: false,
+                collectionAlias: 'supported',
+                catalogRefresh: { state: 'unknown', reason: 'not sourced' },
+              },
+            ],
+          },
         ],
       })),
       getSyncMappings: vi.fn(
@@ -228,6 +242,22 @@ describe('oat providers inspect', () => {
       name: 'registry-only',
       detected: true,
       version: '9.9.9',
+      scopes: [
+        {
+          scope: 'project',
+          activation: expect.objectContaining({ state: 'active' }),
+          content: [
+            expect.objectContaining({
+              contentKind: 'skill',
+              capability: 'supported',
+              projectionModes: ['native-read'],
+              nativeRead: true,
+              materialization: 'not-required',
+              visibility: 'not-reported',
+            }),
+          ],
+        },
+      ],
     });
   });
 

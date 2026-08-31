@@ -4,6 +4,8 @@ import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type {
   ProviderListItem,
   ProviderListSummary,
+  ProviderContentInspection,
+  ProviderScopeInspection,
   ProvidersListDependencies,
 } from '@commands/providers/providers.types';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -24,6 +26,7 @@ import {
   resolveProviderScopeContext,
   getSyncMappings,
   type PathMapping,
+  type ProviderContentCapability,
   type ProviderScopeContext,
 } from '@providers/shared';
 import type { ContentType } from '@shared/types';
@@ -37,6 +40,17 @@ type ContextualListDependencies = ProvidersListDependencies & {
 function formatSummary(item: ProviderListItem): string {
   const contentTypes =
     item.contentTypes.length > 0 ? item.contentTypes.join('|') : 'none';
+  const scopeEvidence = item.scopes
+    .map(
+      (scope) =>
+        `${scope.scope}:activation=${scope.activation.state};${scope.content
+          .map(
+            (content) =>
+              `${content.contentKind}=${content.capability}/${content.projectionModes.join('|')}/${content.materialization}/${content.visibility}`,
+          )
+          .join('+')}`,
+    )
+    .join(',');
   return [
     item.detected ? 'detected' : 'not detected',
     `strategy=${item.defaultStrategy}`,
@@ -45,6 +59,7 @@ function formatSummary(item: ProviderListItem): string {
     `in_sync=${item.summary.inSync}`,
     `drifted=${item.summary.drifted}`,
     `missing=${item.summary.missing}`,
+    `evidence=${scopeEvidence || 'not-resolved'}`,
   ].join(', ');
 }
 
@@ -118,6 +133,56 @@ function createEmptySummary(): ProviderListSummary {
   };
 }
 
+function deriveContentInspection(
+  capability: ProviderContentCapability,
+  summary: ProviderListSummary | undefined,
+): ProviderContentInspection {
+  const nativeRead = capability.projectionModes.includes('native-read');
+  const materialization: ProviderContentInspection['materialization'] =
+    capability.support === 'unsupported'
+      ? 'unsupported'
+      : nativeRead &&
+          !capability.projectionModes.includes('entry-sync') &&
+          !capability.projectionModes.includes('materialization-extension')
+        ? 'not-required'
+        : (summary?.missing ?? 0) > 0
+          ? 'missing'
+          : (summary?.managed ?? 0) > 0 && summary?.inSync === summary?.managed
+            ? 'current'
+            : 'unknown';
+  return {
+    contentKind: capability.contentKind,
+    capability: capability.support,
+    projectionModes: capability.projectionModes,
+    nativeRead,
+    materialization,
+    visibility:
+      capability.support === 'unsupported' ? 'unsupported' : 'not-reported',
+  };
+}
+
+function fallbackCapabilities(
+  mappings: readonly PathMapping[],
+  scope: ProviderScopeInspection['scope'],
+): ProviderContentCapability[] {
+  const seen = new Set<string>();
+  return mappings.flatMap((mapping) => {
+    if (seen.has(mapping.contentType)) return [];
+    seen.add(mapping.contentType);
+    return [
+      {
+        scope,
+        contentKind: mapping.contentType,
+        support: 'supported',
+        projectionModes: [mapping.nativeRead ? 'native-read' : 'entry-sync'],
+        nativeRoleSurface: mapping.contentType === 'agent',
+        collectionAlias: 'unsupported',
+        catalogRefresh: { state: 'unknown', reason: 'not resolved' },
+      },
+    ];
+  });
+}
+
 async function collectProviderList(
   context: CommandContext,
   dependencies: ContextualListDependencies,
@@ -165,11 +230,12 @@ async function collectProviderList(
   for (const adapter of adapters) {
     const summary = createEmptySummary();
     const contentTypes = new Set<ContentType>();
-    const allMappings: PathMapping[] = [];
+    const contentSummaryByScope = new Map<string, ProviderListSummary>();
     for (const scope of scopes) {
-      for (const mapping of dependencies.getSyncMappings(adapter, scope)) {
+      const mappings =
+        scope === 'project' ? adapter.projectMappings : adapter.userMappings;
+      for (const mapping of mappings) {
         contentTypes.add(mapping.contentType);
-        allMappings.push(mapping);
       }
     }
     let detected = false;
@@ -194,7 +260,11 @@ async function collectProviderList(
         }
 
         summary.managed += 1;
-        const matchedMapping = allMappings.find((mapping) => {
+        const scopeMappings =
+          scopeRoot.scope === 'project'
+            ? adapter.projectMappings
+            : adapter.userMappings;
+        const matchedMapping = scopeMappings.find((mapping) => {
           const normalizedEntry = normalizeToPosixPath(entry.providerPath);
           const normalizedDir = normalizeToPosixPath(mapping.providerDir);
           return (
@@ -211,19 +281,69 @@ async function collectProviderList(
           scopeRoot.root,
           copyTransform,
         );
+        const contentSummaryKey = `${scopeRoot.scope}:${entry.contentType}`;
+        const contentSummary =
+          contentSummaryByScope.get(contentSummaryKey) ?? createEmptySummary();
+        contentSummary.managed += 1;
+        contentSummaryByScope.set(contentSummaryKey, contentSummary);
         if (report.state.status === 'in_sync') {
           summary.inSync += 1;
+          contentSummary.inSync += 1;
           continue;
         }
         if (report.state.status === 'missing') {
           summary.missing += 1;
+          contentSummary.missing += 1;
           continue;
         }
         if (report.state.status === 'drifted') {
           summary.drifted += 1;
+          contentSummary.drifted += 1;
         }
       }
     }
+
+    const providerScopes: ProviderScopeInspection[] = scopeRoots.map(
+      (scopeRoot) => {
+        const registration = scopeRoot.providerContext?.registrations.find(
+          ({ adapter: candidate }) => candidate.name === adapter.name,
+        );
+        const capabilities =
+          registration?.capabilities.filter(
+            ({ scope }) => scope === scopeRoot.scope,
+          ) ??
+          fallbackCapabilities(
+            scopeRoot.scope === 'project'
+              ? adapter.projectMappings
+              : adapter.userMappings,
+            scopeRoot.scope,
+          );
+        const activation = scopeRoot.providerContext?.activation.find(
+          ({ provider }) => provider === adapter.name,
+        );
+        const detectedAtScope = scopeRoot.providerContext
+          ? scopeRoot.providerContext.detectedProviders.includes(adapter.name)
+          : detected;
+        return {
+          scope: scopeRoot.scope,
+          activation: activation ?? {
+            state: detectedAtScope ? 'active' : 'unknown',
+            source: detectedAtScope ? 'detection-fallback' : 'not-resolved',
+            reason: detectedAtScope
+              ? 'Provider detected without resolved configuration authority'
+              : 'Provider activation was not resolved',
+          },
+          content: capabilities.map((capability) =>
+            deriveContentInspection(
+              capability,
+              contentSummaryByScope.get(
+                `${scopeRoot.scope}:${capability.contentKind}`,
+              ),
+            ),
+          ),
+        };
+      },
+    );
 
     items.push({
       name: adapter.name,
@@ -232,6 +352,7 @@ async function collectProviderList(
       defaultStrategy: adapter.defaultStrategy,
       contentTypes: [...contentTypes].sort(),
       summary,
+      scopes: providerScopes,
     });
   }
 

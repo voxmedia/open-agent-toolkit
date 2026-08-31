@@ -4,6 +4,8 @@ import { buildCommandContext, type CommandContext } from '@app/command-context';
 import type {
   ProviderInspectMappingState,
   ProviderInspectResult,
+  ProviderContentInspection,
+  ProviderScopeInspection,
   ProvidersInspectDependencies,
 } from '@commands/providers/providers.types';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -24,6 +26,7 @@ import {
   getSyncMappings,
   resolveProviderScopeContext,
   type ProviderScopeContext,
+  type ProviderContentCapability,
 } from '@providers/shared';
 import { formatProviderDetails } from '@ui/output';
 import { Command } from 'commander';
@@ -32,6 +35,56 @@ type ContextualInspectDependencies = ProvidersInspectDependencies & {
   loadSyncConfig?: typeof loadSyncConfig;
   resolveProviderScopeContext?: typeof resolveProviderScopeContext;
 };
+
+function contentInspection(
+  capability: ProviderContentCapability,
+  mappingState?: ProviderInspectMappingState,
+): ProviderContentInspection {
+  const nativeRead = capability.projectionModes.includes('native-read');
+  return {
+    contentKind: capability.contentKind,
+    capability: capability.support,
+    projectionModes: capability.projectionModes,
+    nativeRead,
+    materialization:
+      capability.support === 'unsupported'
+        ? 'unsupported'
+        : nativeRead &&
+            !capability.projectionModes.includes('entry-sync') &&
+            !capability.projectionModes.includes('materialization-extension')
+          ? 'not-required'
+          : mappingState?.missing
+            ? 'missing'
+            : mappingState?.managed &&
+                mappingState.inSync === mappingState.managed
+              ? 'current'
+              : 'unknown',
+    visibility:
+      capability.support === 'unsupported' ? 'unsupported' : 'not-reported',
+  };
+}
+
+function fallbackCapabilities(
+  mappings: readonly ProviderInspectResult['projectMappings'][number][],
+  scope: ProviderScopeInspection['scope'],
+): ProviderContentCapability[] {
+  const seen = new Set<string>();
+  return mappings.flatMap((mapping) => {
+    if (seen.has(mapping.contentType)) return [];
+    seen.add(mapping.contentType);
+    return [
+      {
+        scope,
+        contentKind: mapping.contentType,
+        support: 'supported',
+        projectionModes: [mapping.nativeRead ? 'native-read' : 'entry-sync'],
+        nativeRoleSurface: mapping.contentType === 'agent',
+        collectionAlias: 'unsupported',
+        catalogRefresh: { state: 'unknown', reason: 'not resolved' },
+      },
+    ];
+  });
+}
 
 function entryInMapping(providerPath: string, providerDir: string): boolean {
   const normalizedPath = normalizeToPosixPath(providerPath);
@@ -114,10 +167,11 @@ async function collectInspectResult(
     const manifestPath = join(scopeRoot.root, '.oat', 'sync', 'manifest.json');
     const manifest = await dependencies.loadManifest(manifestPath);
 
-    for (const mapping of dependencies.getSyncMappings(
-      adapter,
-      scopeRoot.scope,
-    )) {
+    const scopeMappings =
+      scopeRoot.scope === 'project'
+        ? adapter.projectMappings
+        : adapter.userMappings;
+    for (const mapping of scopeMappings) {
       const state: ProviderInspectMappingState = {
         scope: scopeRoot.scope,
         contentType: mapping.contentType,
@@ -126,6 +180,10 @@ async function collectInspectResult(
         inSync: 0,
         drifted: 0,
         missing: 0,
+        nativeRead: mapping.nativeRead,
+        projectionModes: [mapping.nativeRead ? 'native-read' : 'entry-sync'],
+        materialization: mapping.nativeRead ? 'not-required' : 'unknown',
+        visibility: 'not-reported',
       };
 
       const copyTransform = mapping.transformCanonical
@@ -159,9 +217,60 @@ async function collectInspectResult(
         }
       }
 
+      if (!mapping.nativeRead) {
+        state.materialization =
+          state.missing > 0
+            ? 'missing'
+            : state.managed > 0 && state.inSync === state.managed
+              ? 'current'
+              : 'unknown';
+      }
+
       mappings.push(state);
     }
   }
+
+  const providerScopes: ProviderScopeInspection[] = scopeRoots.map(
+    (scopeRoot) => {
+      const registration = scopeRoot.providerContext?.registrations.find(
+        ({ adapter: candidate }) => candidate.name === adapter.name,
+      );
+      const scopeMappings =
+        scopeRoot.scope === 'project'
+          ? adapter.projectMappings
+          : adapter.userMappings;
+      const capabilities =
+        registration?.capabilities.filter(
+          ({ scope }) => scope === scopeRoot.scope,
+        ) ?? fallbackCapabilities(scopeMappings, scopeRoot.scope);
+      const activation = scopeRoot.providerContext?.activation.find(
+        ({ provider }) => provider === adapter.name,
+      );
+      const detectedAtScope = scopeRoot.providerContext
+        ? scopeRoot.providerContext.detectedProviders.includes(adapter.name)
+        : detected;
+      return {
+        scope: scopeRoot.scope,
+        activation: activation ?? {
+          state: detectedAtScope ? 'active' : 'unknown',
+          source: detectedAtScope ? 'detection-fallback' : 'not-resolved',
+          reason: detectedAtScope
+            ? 'Provider detected without resolved configuration authority'
+            : 'Provider activation was not resolved',
+        },
+        content: capabilities.map((capability) =>
+          contentInspection(
+            capability,
+            mappings.find(
+              (mapping) =>
+                mapping.scope === scopeRoot.scope &&
+                mapping.contentType === capability.contentKind,
+            ),
+          ),
+        ),
+      };
+    },
+  );
 
   const version = adapter.detectVersion ? await adapter.detectVersion() : null;
   return {
@@ -173,6 +282,7 @@ async function collectInspectResult(
     userMappings: adapter.userMappings,
     version,
     mappings,
+    scopes: providerScopes,
   };
 }
 
@@ -196,8 +306,22 @@ function formatInspect(result: ProviderInspectResult): string {
     lines.push('Mappings:');
     for (const mapping of result.mappings) {
       lines.push(
-        `- [${mapping.scope}] ${mapping.contentType} ${mapping.providerDir} managed=${mapping.managed} in_sync=${mapping.inSync} drifted=${mapping.drifted} missing=${mapping.missing}`,
+        `- [${mapping.scope}] ${mapping.contentType} ${mapping.providerDir} projection=${mapping.projectionModes.join('|')} materialization=${mapping.materialization} visibility=${mapping.visibility} managed=${mapping.managed} in_sync=${mapping.inSync} drifted=${mapping.drifted} missing=${mapping.missing}`,
       );
+    }
+  }
+
+  if (result.scopes.length > 0) {
+    lines.push('Capability evidence:');
+    for (const scope of result.scopes) {
+      lines.push(
+        `- [${scope.scope}] activation=${scope.activation.state} source=${scope.activation.source}`,
+      );
+      for (const content of scope.content) {
+        lines.push(
+          `  - ${content.contentKind} capability=${content.capability} projection=${content.projectionModes.join('|')} native_read=${content.nativeRead} materialization=${content.materialization} visibility=${content.visibility}`,
+        );
+      }
     }
   }
 

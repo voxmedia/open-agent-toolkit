@@ -10,6 +10,11 @@ import {
   type SyncConfig,
   saveSyncConfig,
 } from '@config/index';
+import {
+  getUserSyncConfigPath,
+  resolveUserSyncConfig,
+  updateUserSyncConfig,
+} from '@config/user-sync-config';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import {
   getProviderRegistrations,
@@ -24,6 +29,8 @@ interface ProvidersSetOptions {
 
 type ContextualSetDependencies = ProvidersSetDependencies & {
   resolveProviderScopeContext?: typeof resolveProviderScopeContext;
+  resolveUserSyncConfig?: typeof resolveUserSyncConfig;
+  updateUserSyncConfig?: typeof updateUserSyncConfig;
 };
 
 function parseCsvList(raw?: string): string[] {
@@ -61,6 +68,8 @@ function createDependencies(): ContextualSetDependencies {
     },
     saveSyncConfig,
     resolveProviderScopeContext,
+    resolveUserSyncConfig,
+    updateUserSyncConfig,
   };
 }
 
@@ -125,8 +134,15 @@ async function runProvidersSetCommand(
 
     const scope = context.scope;
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
-    const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
-    const config = await dependencies.loadSyncConfig(configPath);
+    const userConfigDir = join(scopeRoot, '.oat');
+    const configPath =
+      scope === 'user'
+        ? getUserSyncConfigPath(userConfigDir)
+        : join(scopeRoot, '.oat', 'sync', 'config.json');
+    const config =
+      scope === 'user' && dependencies.resolveUserSyncConfig
+        ? await dependencies.resolveUserSyncConfig(userConfigDir)
+        : await dependencies.loadSyncConfig(configPath);
     const providerContext = dependencies.resolveProviderScopeContext
       ? await dependencies.resolveProviderScopeContext({
           scope,
@@ -146,12 +162,15 @@ async function runProvidersSetCommand(
       );
     }
 
-    const updated = buildUpdatedConfig(
-      config,
-      enabledProviders,
-      disabledProviders,
-    );
-    const saved = await dependencies.saveSyncConfig(configPath, updated);
+    const saved =
+      scope === 'user' && dependencies.updateUserSyncConfig
+        ? await dependencies.updateUserSyncConfig(userConfigDir, (current) =>
+            buildUpdatedConfig(current, enabledProviders, disabledProviders),
+          )
+        : await dependencies.saveSyncConfig(
+            configPath,
+            buildUpdatedConfig(config, enabledProviders, disabledProviders),
+          );
 
     if (context.json) {
       context.logger.json({
