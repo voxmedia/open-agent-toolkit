@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -91,25 +91,23 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:33:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:35:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-execution-contract-hardening
 
-**Status:** Implementation in progress
+**Status:** PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implement - all nine tasks are complete and the clean full-project re-review
-passed at source head `659547363032fd9f41eefadc947bb0496fe7457f`.
-The configured implementation exit gate is next.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -142,7 +140,8 @@ The configured implementation exit gate is next.
 - ✓ Bounded final-review fixes completed at p03-t04 and p03-t05
 - ✓ Independent final re-review passed with zero findings
 - ✓ Configured implementation exit gate passed and receive completed durably
-- ⧗ Configured post-implementation sequence next
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -150,5 +149,8 @@ None
 
 ## Next Milestone
 
-Continue the configured post-implementation sequence toward the final-phase
-HiLL checkpoint; the configured implementation exit gate is allowed and fresh.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
