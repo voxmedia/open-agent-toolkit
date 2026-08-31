@@ -562,8 +562,18 @@ Expected: both version and public-package dry-run validation pass.
 
 - Modify only if verification exposes a bounded defect: files owned by the
   failing phase/task above.
+- Modify for the operator-approved bounded recovery:
+  `packages/cli/vitest.config.ts`
 - Record results during root bookkeeping:
   `.oat/projects/shared/scope-adoption-diagnostics/implementation.md`
+
+**Approved recovery boundary (2026-08-30):** The repeated full-suite failures
+proved that Git-heavy fixtures exceed their five-second limits only under
+workspace concurrency while the same affected files pass together outside that
+load. Adjust the CLI test runner's worker concurrency in this task so the exact
+`pnpm test` gate is stable. Do not change production code, individual or global
+test timeouts, test assertions, or the broader project lifecycle fixtures. The
+exact unmodified gate command must exit 0 before this recovery is accepted.
 
 **Step 1: Check integrated focused behavior**
 

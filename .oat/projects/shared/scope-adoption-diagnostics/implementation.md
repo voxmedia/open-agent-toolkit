@@ -152,6 +152,12 @@ and supplemental suite passed. The gate remains non-passing until its own
 command exits 0. The latest exact retry improved to 4,593/4,599 passing with six
 timeout-only failures across four files.
 
+**Approved recovery:** Thomas approved one bounded in-project p04 recovery on
+2026-08-30. Attempt 1/10 is reserved to reduce CLI test-runner worker
+concurrency in `packages/cli/vitest.config.ts`; production behavior, timeouts,
+assertions, and lifecycle fixtures remain out of bounds. Acceptance requires
+the exact `pnpm test` command to exit 0.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -252,7 +258,10 @@ gate
   validation all passed. The nine ordinary-run timeout files passed 250/250 in
   a bounded rerun, while lint and format both exited 0.
 - Recovery attempts: 0/10; pending attempt: null. No timeout, test, or source
-  change was authorized under p04's verification-only ownership.
+  change was initially authorized under p04's verification-only ownership.
+- Operator scope extension: one concurrency-only recovery was approved after
+  the fourth exact retry again failed only from changing timeouts. Attempt 1/10
+  is reserved as `p04-recovery-001` under the original High implementer target.
 
 <!-- orchestration-runs-end -->
 
