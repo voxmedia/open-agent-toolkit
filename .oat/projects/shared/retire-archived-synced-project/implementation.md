@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -19,20 +19,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in progress | 2     | 1/2       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | pending   | 3     | 0/3       |
+| p03   | pending   | 3     | 0/3       |
+| p04   | pending   | 2     | 0/2       |
 
-**Total:** 1/10 tasks completed
+**Total:** 2/10 tasks completed
 
 ---
 
 ## Phase 1: Terminal Ref and Transition Foundation
 
-**Status:** in progress — revised contract
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Task p01-t01: Define completed synced-ref identity
@@ -42,8 +42,8 @@ oat_generated: false
 
 ### Task p01-t02: Implement idempotent completed-ref terminalization
 
-**Status:** in progress — operator-approved contract revision
-**Commit:** ce631f78b9ebdce4746ec2f1614ffb30362c3ddf
+**Status:** completed
+**Commit:** c59bcc4c0f54c8541a43090eea6ebfe33e34244d
 **Revision:** The completed ref is authoritative. Completed-only and matching
 active/completed refs are valid terminal outcomes; a matching active ref is an
 inert alias. Differing SHAs still fail closed.
@@ -174,7 +174,11 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Revision review result: blocked — 1 Critical torn remote-ref observation and
   1 Important unleased explicit-prune deletion.
 - Independent verification: 128/128 focused tests passed before review.
-- Fresh fix iterations: 1 of 2 in progress; review rounds: 1 of 3 used.
+- Fix round 1 commit: `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`.
+- Re-review artifact: `reviews/p01-review-2026-08-31T122419Z.md`.
+- Re-review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Final verification: 134/134 focused tests and CLI type-check passed.
+- Fresh fix iterations: 1 of 2 used; review rounds: 2 of 3 used.
 
 <!-- orchestration-runs-end -->
 
@@ -183,7 +187,8 @@ _Orchestration runs from `oat-project-implement` are appended here._
 The original p01 generation exhausted its review budget on Git's omission of a
 no-op completed-ref update. The operator resolved that blocker by making the
 completed ref authoritative and accepting a matching active ref as an inert
-terminal alias. A fresh bounded fix/review generation is now in progress.
+terminal alias. The fresh generation passed after one bounded fix round; p01 is
+complete at `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`.
 
 ## Deviations from Plan / Design
 

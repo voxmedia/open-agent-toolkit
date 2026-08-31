@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t02
-oat_last_commit: 3d0f106597f80f5f3c22b96d89670028b89444b5
+oat_current_task: p02-t01
+oat_last_commit: c59bcc4c0f54c8541a43090eea6ebfe33e34244d
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -88,13 +88,13 @@ oat_generated: false
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation in progress in p01
+**Status:** Implementation in progress; p01 passed
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p01 contract revision authorized; fix and review in progress
+Implement - merge current main, then run parallel p02/p03
 
 ## Artifacts
 
@@ -120,8 +120,9 @@ Implement - p01 contract revision authorized; fix and review in progress
 - ✗ p01 review round 3 found one remaining atomic no-op Critical
 - ✓ Operator accepted completed-ref authority and same-SHA active aliases
 - ✓ Revised terminal receipt implementation passed 128 focused tests
-- → Fresh review found a torn probe and unleased prune deletion; fix round 1
-  is in progress
+- ✓ Fix round 1 closed the torn probe and unleased prune deletion
+- ✓ p01 re-review passed with 0 findings; 134 focused tests pass
+- → Merge `origin/main`, then begin parallel p02/p03 implementation
 
 ## Blockers
 
@@ -131,5 +132,5 @@ SHAs still fail closed.
 
 ## Next Milestone
 
-Complete and review the revised p01 transition, then merge `origin/main` before
-starting parallel p02/p03 implementation
+Merge `origin/main`, resolve and verify any seams, then start parallel p02/p03
+implementation

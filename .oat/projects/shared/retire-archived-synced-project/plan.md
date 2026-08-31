@@ -688,7 +688,8 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 | p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T052034Z.md                    | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
 | p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T053841Z.md                    | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
 | p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T055541Z.md                    | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
-| p01    | code     | fixes_added     | 2026-08-31 | reviews/p01-review-2026-08-31T120543Z.md                    | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T120543Z.md                    | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
+| p01    | code     | passed          | 2026-08-31 | reviews/p01-review-2026-08-31T122419Z.md                    | c59bcc4c0f54c8541a43090eea6ebfe33e34244d | manual     | -                             |
 | p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |

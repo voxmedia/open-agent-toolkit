@@ -56,6 +56,10 @@ Operator approved completed-ref authority: completed-only and matching active/co
 
 Fresh p01 revision review at 3d0f106597f80f5f3c22b96d89670028b89444b5 blocked with one Critical torn two-process remote-ref observation and one Important unleased completed-ref prune deletion. Focused tests remained 128/128; bounded fix round 1 authorized by the active generation.
 
+### 2026-08-31 · structural · oat-project-implement · p01-passed
+
+Phase p01 passed re-review at c59bcc4c0f54c8541a43090eea6ebfe33e34244d with zero findings. Coherent terminal probing and leased remote/local prune deletion verified; 134 focused tests and CLI type-check passed. Proceeding to merge origin/main before p02/p03.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
