@@ -251,4 +251,33 @@ describe('RemoteSyncStore', () => {
       }),
     ).rejects.toThrow(/duplicate stepId/i);
   });
+
+  it('preserves simultaneous unique journals and derives concurrent-intent conflicts', async () => {
+    const { store } = await createStore();
+    await store.writeBindingState({
+      ...bindingState(),
+      activeOperationIds: ['op_operation_123'],
+    });
+
+    await Promise.all([
+      store.createOperation(operation('op_operation_123')),
+      store.createOperation(operation('op_operation_456')),
+    ]);
+
+    expect(
+      (await store.listActiveOperations('bnd_binding_123')).map(
+        (record) => record.operationId,
+      ),
+    ).toEqual(['op_operation_123', 'op_operation_456']);
+    await expect(
+      store.detectConcurrentOperationIntents('bnd_binding_123'),
+    ).resolves.toMatchObject({
+      bindingState: { activeOperationIds: ['op_operation_123'] },
+      hasConcurrentIntents: true,
+      activeOperations: [
+        { operationId: 'op_operation_123' },
+        { operationId: 'op_operation_456' },
+      ],
+    });
+  });
 });

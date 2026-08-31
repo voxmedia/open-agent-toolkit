@@ -97,6 +97,20 @@ export interface RemoteOperationTransition {
   appendStep?: RemoteOperationStep;
 }
 
+export interface ConcurrentOperationIntentInspection {
+  bindingState: RemoteBindingState | null;
+  activeOperations: RemoteOperationRecord[];
+  hasConcurrentIntents: boolean;
+}
+
+const ACTIVE_OPERATION_STATES: ReadonlySet<RemoteOperationState> = new Set([
+  'planned',
+  'authorized',
+  'attempt-started',
+  'partial',
+  'uncertain',
+]);
+
 export class RemoteSyncStore {
   readonly #dependencies: RemoteSyncStoreDependencies;
 
@@ -173,6 +187,33 @@ export class RemoteSyncStore {
     );
     assertRecordIdMatchesFilename(path, parsed.operationId);
     await this.#exclusiveWrite(path, parsed);
+  }
+
+  async listActiveOperations(
+    bindingId: string,
+  ): Promise<RemoteOperationRecord[]> {
+    const operations = await this.#listRecords(
+      this.locations.operational.operationsDir,
+      RemoteOperationRecordSchema,
+      (record) => record.operationId,
+    );
+    return operations.filter(
+      (operation) =>
+        operation.bindingId === bindingId &&
+        ACTIVE_OPERATION_STATES.has(operation.state),
+    );
+  }
+
+  async detectConcurrentOperationIntents(
+    bindingId: string,
+  ): Promise<ConcurrentOperationIntentInspection> {
+    const bindingState = await this.readBindingState(bindingId);
+    const activeOperations = await this.listActiveOperations(bindingId);
+    return {
+      bindingState,
+      activeOperations,
+      hasConcurrentIntents: activeOperations.length > 1,
+    };
   }
 
   async transitionOperation(
