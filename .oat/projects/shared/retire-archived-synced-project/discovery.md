@@ -8,135 +8,174 @@ oat_generated: false
 
 # Discovery: retire-archived-synced-project
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Create a high-priority quick-workflow project for
+`BL-260831-retire-archived-synced-project`. Once a synced project has completed
+and its archive is durable, remove its tracked JSON record from the active
+synced namespace just as shared project sources are removed. Preserve durable
+history and recovery guarantees rather than converting cleanup into destructive
+project-history deletion.
 
-## Clarifying Questions
+## Request Assessment
 
-### Question 1: {Topic}
+The product requirement is well-understood. Prior discussion selected the
+L-sized terminal lifecycle contract rather than a display-only fix: active
+records and active discovery refs should disappear after successful archive,
+while archived identity, commit reachability, migration, and retry safety remain
+available.
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+## Current Behavior
+
+- Synced records combine active discovery identity, completion state, and
+  archive retry bindings in `.oat/projects/synced/<slug>.json`.
+- Archive marks that record complete, removes the nested checkout, and retains
+  `refs/oat/projects/<slug>`.
+- Listing classifies any record without a checkout as `recorded-absent`, without
+  considering completion or archive state, and recommends `oat project pull`.
+- Pull and open can then rematerialize the archived project. Remote discovery
+  also treats every `refs/oat/projects/*` ref as potentially active.
+- SHA-pinned GitHub artifact links use the commit SHA and can remain durable as
+  long as a non-active ref continues to make that commit reachable.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Terminal namespace transition (selected)
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+After archive durability is established, remove the active synced record and
+move or copy the retained history to a completed-only ref namespace such as
+`refs/oat/completed/<slug>`. Active discovery ignores completed refs, while the
+completed ref, archive metadata, and durable summary preserve terminal identity
+and commit reachability.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+This is the right choice when completed projects must disappear from active
+surfaces without deleting their durable history. It requires an explicit,
+idempotent transition protocol across Git refs, the parent-branch lifecycle
+commit, local archive state, and optional S3 synchronization.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 2: Relocate the JSON tombstone
 
-### Approach 2: {Strategy Name}
+Move the record to a separate tracked completed-record directory and teach all
+readers about that namespace. This preserves a single metadata object but leaves
+per-project lifecycle tombstones in source control indefinitely and adds a
+second record inventory to maintain.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Approach 3: Reader-only suppression
+
+Keep the current record and ref, but hide completed archived rows and block
+pull/open. This is smaller, but it does not satisfy the requested cleanup model
+and leaves active-discovery state permanently overloaded with terminal projects.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Use the terminal namespace transition. The active JSON record is transaction
+state, not the permanent completion receipt. On success, durable terminal
+evidence lives in the archive metadata, project summary, and completed ref (or
+an equivalent terminal representation), while active list/pull/open discovery
+has no claim on the project.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Active record cleanup:** Successful synced archival deletes
+   `.oat/projects/synced/<slug>.json` in the exact lifecycle commit.
+2. **History retention:** Completion reclassifies the project ref outside
+   `refs/oat/projects/*` instead of pruning project history. Full-SHA links must
+   remain reachable.
+3. **Discovery semantics:** Completed refs and terminal archive evidence are not
+   candidates for active remote discovery, pull, open, or continuation advice.
+4. **Durable identity:** Archive snapshot identity, source-ref SHA, completion
+   time, and project slug remain recoverable without the active record.
+5. **Transaction safety:** Every interruption point must be retryable without a
+   second archive seal, a changed snapshot identity, a mismatched source ref, or
+   accidental project resurrection.
+6. **Configured archive durability:** When S3 synchronization is configured for
+   completion, terminal record/ref cleanup cannot claim success until that
+   synchronization succeeds; unconfigured S3 remains outside the required
+   durability set.
+7. **Compatibility:** Existing complete records and retained active refs need an
+   explicit migration or compatibility path; active and incomplete projects
+   must retain their current behavior.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve the exact source-ref SHA binding already used by archive retries.
+- Preserve local archive and summary exports across transition and recovery.
+- Keep parent-branch lifecycle commits exact-path and independently verifiable.
+- Do not make `project prune` the normal completion path; prune intentionally
+  destroys ref reachability and remains a separate destructive operation.
+- Do not silently regenerate malformed or missing lifecycle metadata.
+- Maintain the existing shared-project completion behavior.
+- Include shipped CLI documentation and lockstep public package versioning
+  required by repository policy.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A completed and successfully archived synced project leaves no JSON record in
+  the active synced namespace and no ref in the active project-ref namespace.
+- Its archive metadata, durable summary, source commit, and full-SHA links remain
+  recoverable and reachable through terminal state.
+- Project list, remote list, pull, open, links, prune, dashboard, archive sync,
+  and retry/recovery paths agree on the terminal classification.
+- Legacy completed records and retained refs can be migrated or handled safely
+  without rematerializing archived projects.
+- Transaction-level tests cover failures before, during, and after ref
+  reclassification and record deletion, proving idempotent recovery and one
+  archive seal.
+- Documentation describes the active-to-completed transition and the difference
+  between retained terminal history and destructive pruning.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing active synced-project collaboration or nested-worktree behavior.
+- General Git ref garbage collection or destructive history retention policy.
+- Redesigning archive package contents, recap structure, or unrelated S3 sync
+  behavior.
+- General project/review/gate integrity, receipt/event redesign, ReviewPlan, or
+  bookkeeping-only re-review policy.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- A general completed-project browsing command or dashboard is deferred until
+  usage evidence shows that terminal archives need a first-class interactive
+  surface beyond archive sync and summaries.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+No product question blocks planning. Implementation must validate the safest
+remote ref-transition primitive and encode an explicit recovery state if the
+Git remote cannot make the completed-ref creation and active-ref deletion one
+atomic operation.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- `origin` supports custom refs for both active and completed namespaces.
+- Existing SHA-pinned links remain valid when the commit stays reachable from a
+  completed ref.
+- The existing archive metadata and summary surfaces can carry the terminal
+  identity needed after record deletion, with additive fields if required.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Cross-boundary partial completion:** Git ref updates and parent-branch
+  commits cannot be assumed to share one transaction.
+  - **Likelihood:** High
+  - **Impact:** High
+  - **Mitigation:** Model explicit transition states and test every durable
+    boundary with idempotent retries.
+- **Legacy resurrection:** Old complete records or retained active refs could be
+  rediscovered and pulled.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation:** Add compatibility classification and a bounded migration
+    path before enabling automatic cleanup.
+- **Link regression:** Deleting or moving the only reachability root could allow
+  archived commits to be garbage-collected.
+  - **Likelihood:** Low
+  - **Impact:** High
+  - **Mitigation:** Create and verify completed ref reachability before removing
+    the active ref, then test rendered full-SHA links.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Confirm the requirement set, then generate an execution-ready quick plan with
+separate terminal-state, discovery/action, and integration phases.
