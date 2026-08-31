@@ -27,6 +27,7 @@ import {
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  completedSyncedRefName,
   PROJECT_SCOPES,
   resolveScopeRoot,
   type ProjectScope,
@@ -51,6 +52,7 @@ interface ProjectListDependencies {
   listProjects: (projectsRoot: string) => Promise<ProjectSummary[]>;
   listSyncedRecords: typeof listSyncedRecords;
   probeSyncedTerminalRefs: typeof probeSyncedTerminalRefs;
+  probeAuthoritativeCompletedRef: typeof probeAuthoritativeCompletedRef;
   directoryExists: (path: string) => Promise<boolean>;
   readProjectMetadata: (projectPath: string) => Promise<ProjectListMetadata>;
   processEnv: NodeJS.ProcessEnv;
@@ -76,6 +78,7 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   listProjects,
   listSyncedRecords,
   probeSyncedTerminalRefs,
+  probeAuthoritativeCompletedRef,
   directoryExists,
   readProjectMetadata,
   processEnv: process.env,
@@ -222,6 +225,8 @@ const ARCHIVE_RETRY_REASON =
   'archive snapshot is incomplete; retry oat-project-complete before retiring terminal state';
 const RETIREMENT_RETRY_REASON =
   'archive is durable but legacy terminal cleanup remains; retry oat-project-complete';
+const AUTHORITATIVE_COMPLETION_REASON =
+  'completed ref is authoritative; remove the stale local checkout or active record with oat-project-complete';
 
 function terminalMismatchReason(
   activeSha: string | null,
@@ -268,6 +273,27 @@ export function classifyLegacySyncedRecord(
     };
   }
 
+  if (probe?.state === 'completed-only' || probe?.state === 'both') {
+    return {
+      kind: 'recorded-terminal',
+      name: record.slug,
+      path,
+      scope: 'synced',
+      checkout: 'absent',
+      terminalState: 'authoritative-completion',
+      archiveSnapshot: record.archiveSnapshot ?? null,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: 'complete',
+      progress: null,
+      recommendation: {
+        skill: 'none',
+        reason: AUTHORITATIVE_COMPLETION_REASON,
+      },
+    };
+  }
+
   if (record.status === 'complete') {
     return {
       kind: 'recorded-terminal',
@@ -307,6 +333,53 @@ export function classifyLegacySyncedRecord(
       reason: 'checkout absent',
     },
   };
+}
+
+export async function probeAuthoritativeCompletedRef(
+  target: ReturnType<typeof buildSyncTarget>,
+  git: GitRunner,
+): Promise<SyncedTerminalRefProbe | null> {
+  const completedRef = completedSyncedRefName(target.slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, completedRef],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (lookup.code !== 0) {
+    return null;
+  }
+  const rows = lookup.stdout.split('\n').filter(Boolean);
+  const [sha, ref] = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    rows.length !== 1 ||
+    ref !== completedRef ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(sha ?? '')
+  ) {
+    throw new CliError(
+      `Unable to reconcile completed authority for ${target.slug}: origin returned a malformed completed-ref advertisement.`,
+      2,
+    );
+  }
+  return probeSyncedTerminalRefs(target, sha!, git);
+}
+
+function classifyMaterializedTerminalRow(
+  row: Extract<ProjectListRow, { kind: 'materialized' }>,
+  probe: SyncedTerminalRefProbe,
+): ProjectListRow {
+  const record: SyncedProjectRecord = {
+    schemaVersion: 1,
+    slug: row.name,
+    scope: 'synced',
+    ref: probe.activeRef,
+    remote: 'origin',
+    status: 'active',
+    createdAt: new Date(0).toISOString(),
+    completedAt: null,
+  };
+  const classified = classifyLegacySyncedRecord(record, row.path, probe);
+  return classified.kind === 'recorded-terminal'
+    ? { ...classified, checkout: 'present' }
+    : classified;
 }
 
 function displayPath(repoRoot: string, absolutePath: string): string {
@@ -358,13 +431,6 @@ async function collectProjectRows(
       );
     }
     if (root.scope === 'synced') {
-      const materialized = new Set(
-        rows
-          .filter(
-            (row) => row.scope === 'synced' && row.kind === 'materialized',
-          )
-          .map((row) => row.name),
-      );
       const records = await dependencies.listSyncedRecords(root.path, {
         onInvalid: (path, error) => {
           const message =
@@ -406,16 +472,41 @@ async function collectProjectRows(
           );
         },
       });
+      for (const row of rows.filter(
+        (
+          candidate,
+        ): candidate is Extract<ProjectListRow, { kind: 'materialized' }> =>
+          candidate.scope === 'synced' && candidate.kind === 'materialized',
+      )) {
+        const target = buildSyncTarget(repoRoot, projectsRoot, row.name);
+        const probe = await dependencies.probeAuthoritativeCompletedRef(
+          target,
+          dependencies.gitRunner,
+        );
+        if (!probe) continue;
+        const index = rows.indexOf(row);
+        rows[index] = classifyMaterializedTerminalRow(row, probe);
+      }
+      const represented = new Set(
+        rows.filter((row) => row.scope === 'synced').map((row) => row.name),
+      );
       for (const record of records) {
-        if (!materialized.has(record.slug)) {
+        if (!represented.has(record.slug)) {
           const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
-          const probe = record.archiveSourceRefSha
-            ? await dependencies.probeSyncedTerminalRefs(
-                target,
-                record.archiveSourceRefSha,
-                dependencies.gitRunner,
-              )
-            : undefined;
+          const authoritative =
+            await dependencies.probeAuthoritativeCompletedRef(
+              target,
+              dependencies.gitRunner,
+            );
+          const probe =
+            authoritative ??
+            (record.archiveSourceRefSha
+              ? await dependencies.probeSyncedTerminalRefs(
+                  target,
+                  record.archiveSourceRefSha,
+                  dependencies.gitRunner,
+                )
+              : undefined);
           rows.push(
             classifyLegacySyncedRecord(
               record,

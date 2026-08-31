@@ -18,6 +18,7 @@ interface HarnessOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
   projects?: ProjectSummary[];
+  syncedProjects?: ProjectSummary[];
   projectsRoot?: string;
   projectMetadata?: Record<
     string,
@@ -26,6 +27,7 @@ interface HarnessOptions {
   remoteOutput?: string;
   syncedRecords?: SyncedProjectRecord[];
   terminalProbes?: Record<string, SyncedTerminalRefProbe>;
+  authoritativeProbes?: Record<string, SyncedTerminalRefProbe | null>;
   resolveError?: Error;
 }
 
@@ -37,7 +39,11 @@ function createHarness(options: HarnessOptions): {
 } {
   const capture = createLoggerCapture();
   const listProjects = vi.fn(async (root: string) =>
-    root.endsWith('/shared') ? (options.projects ?? []) : [],
+    root.endsWith('/shared')
+      ? (options.projects ?? [])
+      : root.endsWith('/synced')
+        ? (options.syncedProjects ?? [])
+        : [],
   );
 
   const gitRunner = {
@@ -72,7 +78,16 @@ function createHarness(options: HarnessOptions): {
       if (!probe) throw new Error(`missing terminal probe for ${target.slug}`);
       return probe;
     }),
-    directoryExists: vi.fn(async (path: string) => path.endsWith('/shared')),
+    probeAuthoritativeCompletedRef: vi.fn(async (target) =>
+      options.authoritativeProbes
+        ? (options.authoritativeProbes[target.slug] ?? null)
+        : null,
+    ),
+    directoryExists: vi.fn(
+      async (path: string) =>
+        path.endsWith('/shared') ||
+        (path.endsWith('/synced') && !!options.syncedProjects?.length),
+    ),
     readProjectMetadata: vi.fn(async (projectPath: string) => {
       const projectName = projectPath.split('/').at(-1) ?? projectPath;
       return (
@@ -341,6 +356,7 @@ describe('oat project list', () => {
       listProjects: async () => [projectSummary('local-row')],
       listSyncedRecords: async () => [],
       probeSyncedTerminalRefs: vi.fn(),
+      probeAuthoritativeCompletedRef: vi.fn(async () => null),
       directoryExists: async (path) => path.endsWith('/shared'),
       readProjectMetadata: async () => ({
         kind: 'implementation',
@@ -377,10 +393,10 @@ describe('oat project list', () => {
         {
           kind: 'recorded-terminal',
           name: 'legacy-complete',
-          terminalState: 'legacy-completion',
+          terminalState: 'authoritative-completion',
           recommendation: {
             skill: 'none',
-            reason: expect.stringContaining('legacy terminal cleanup'),
+            reason: expect.stringContaining('completed ref is authoritative'),
           },
         },
       ],
@@ -441,6 +457,68 @@ describe('oat project list', () => {
       ],
     });
   });
+
+  it('lets completed authority override a stale active discovery record', async () => {
+    const active = {
+      ...completedRecord('stale-record'),
+      status: 'active' as const,
+      completedAt: null,
+      archiveSnapshot: undefined,
+      archiveSourceRefSha: undefined,
+    };
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      syncedRecords: [active],
+      authoritativeProbes: {
+        'stale-record': terminalProbe('stale-record', 'completed-only'),
+      },
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [
+        {
+          kind: 'recorded-terminal',
+          name: 'stale-record',
+          terminalState: 'authoritative-completion',
+          recommendation: {
+            skill: 'none',
+            reason: expect.stringContaining('completed ref is authoritative'),
+          },
+        },
+      ],
+    });
+  });
+
+  it.each([
+    ['both', 'recorded-terminal'],
+    ['wrong-sha', 'terminal-invalid'],
+  ] as const)(
+    'reconciles a stale materialized checkout against %s terminal refs',
+    async (state, expectedKind) => {
+      const probe = terminalProbe('stale-checkout', state);
+      if (state === 'wrong-sha') probe.activeSha = 'b'.repeat(40);
+      const { command, capture } = createHarness({
+        cwd: '/repo',
+        syncedProjects: [projectSummary('stale-checkout')],
+        authoritativeProbes: { 'stale-checkout': probe },
+      });
+
+      await runCommand(command, [], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        projects: [
+          {
+            kind: expectedKind,
+            name: 'stale-checkout',
+            checkout: state === 'both' ? 'present' : 'invalid',
+            recommendation: { skill: 'none' },
+          },
+        ],
+      });
+    },
+  );
 
   it('omits completed-only and matching aliases from remote discovery', async () => {
     const sameSha = 'a'.repeat(40);

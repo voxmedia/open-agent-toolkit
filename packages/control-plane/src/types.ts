@@ -160,8 +160,8 @@ export type ProjectListRow =
       name: string;
       path: string;
       scope: 'synced';
-      checkout: 'absent';
-      terminalState: 'legacy-completion';
+      checkout: 'absent' | 'present';
+      terminalState: 'legacy-completion' | 'authoritative-completion';
       archiveSnapshot: string | null;
       phase: null;
       phaseStatus: null;

@@ -16,7 +16,7 @@ import {
   addLinkedWorktree,
   createSyncedFixture,
 } from '@test-support/synced-fixture';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { defaultGitRunner, type GitRunner } from './git';
 import { buildSyncedRecord, writeSyncedRecord } from './record';
@@ -2995,6 +2995,82 @@ describe('synced checkout removal', () => {
       expect(
         git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
       ).not.toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('leases matching active-alias deletion and retains an advanced ref before cleanup', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'leased-alias-prune',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      const pushed = await pushSynced(target, defaultGitRunner, {});
+      const sourceSha = pushed.sha;
+      const completedRef = completedSyncedRefName(target.slug);
+      git(target.projectPath, [
+        'push',
+        '-q',
+        target.remote,
+        `${sourceSha}:${completedRef}`,
+      ]);
+      const recordPath = join(target.syncedRoot, `${target.slug}.json`);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(target.slug, new Date('2026-08-31T00:00:00Z')),
+      );
+      await writeFile(join(target.projectPath, 'advanced.md'), 'new work\n');
+      git(target.projectPath, ['add', 'advanced.md']);
+      git(target.projectPath, ['commit', '-q', '-m', 'advance active alias']);
+      const advancedSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+
+      let raced = false;
+      const racingRunner = {
+        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
+          if (
+            !raced &&
+            args[0][0] === 'push' &&
+            args[0].includes(`--force-with-lease=${target.ref}:${sourceSha}`)
+          ) {
+            raced = true;
+            git(target.projectPath, [
+              'push',
+              '-q',
+              '--force',
+              target.remote,
+              `${advancedSha}:${target.ref}`,
+            ]);
+          }
+          return defaultGitRunner.run(...args);
+        }),
+      };
+
+      await expect(
+        pruneSynced(target, racingRunner, {
+          force: true,
+          commit: false,
+          expectedActiveAliasSha: sourceSha,
+        }),
+      ).rejects.toThrow(/active alias .* advanced .* retained/i);
+
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(access(recordPath)).resolves.toBeUndefined();
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).toContain(advancedSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]),
+      ).toContain(sourceSha);
     } finally {
       await fixture.cleanup();
     }

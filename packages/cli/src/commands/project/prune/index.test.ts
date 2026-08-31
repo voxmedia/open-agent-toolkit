@@ -284,6 +284,108 @@ describe('prune command integration', () => {
     }
   });
 
+  it('retains an active alias that advances after terminal inspection', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'terminal-prune-race';
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      const pushed = await pushSynced(target, defaultGitRunner, {});
+      const sourceSha = pushed.sha;
+      const completedRef = `refs/oat/completed/${slug}`;
+      execFileSync(
+        'git',
+        ['push', '-q', 'origin', `${sourceSha}:${completedRef}`],
+        { cwd: fixture.cloneA },
+      );
+      const recordPath = syncedRecordPath(target.syncedRoot, slug);
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-31T00:00:00Z')),
+      );
+      await writeFile(join(target.projectPath, 'advanced.md'), 'new work\n');
+      execFileSync('git', ['add', 'advanced.md'], { cwd: target.projectPath });
+      execFileSync('git', ['commit', '-q', '-m', 'advance active ref'], {
+        cwd: target.projectPath,
+      });
+      const advancedSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: target.projectPath,
+        encoding: 'utf8',
+      }).trim();
+      let raced = false;
+      const raceAfterInspection = vi.fn(
+        async (...args: Parameters<typeof pruneSynced>) => {
+          if (!raced) {
+            raced = true;
+            execFileSync(
+              'git',
+              [
+                'push',
+                '-q',
+                '--force',
+                'origin',
+                `${advancedSha}:${target.ref}`,
+              ],
+              { cwd: target.projectPath },
+            );
+          }
+          return pruneSynced(...args);
+        },
+      );
+      const capture = createLoggerCapture();
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        pruneSynced: raceAfterInspection,
+        processEnv: {},
+      });
+
+      await run(command, [slug, '--force', '--no-commit']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toMatch(/active alias .* advanced .* retained/i);
+      expect(raceAfterInspection).toHaveBeenCalledWith(
+        expect.objectContaining({ slug }),
+        expect.anything(),
+        {
+          force: true,
+          commit: false,
+          expectedActiveAliasSha: sourceSha,
+        },
+      );
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(access(recordPath)).resolves.toBeUndefined();
+      expect(
+        execFileSync('git', ['ls-remote', 'origin', target.ref], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).toContain(advancedSha);
+      expect(
+        execFileSync('git', ['ls-remote', 'origin', completedRef], {
+          cwd: fixture.cloneA,
+          encoding: 'utf8',
+        }),
+      ).toContain(sourceSha);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('removes the checkout, refs, and record in one parent commit', async () => {
     const fixture = await createSyncedFixture();
     try {

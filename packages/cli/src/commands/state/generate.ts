@@ -1,8 +1,11 @@
 import { execSync } from 'node:child_process';
 import { readdir, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
-import { classifyLegacySyncedRecord } from '@commands/project/list';
+import {
+  classifyLegacySyncedRecord,
+  probeAuthoritativeCompletedRef,
+} from '@commands/project/list';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
@@ -459,73 +462,97 @@ async function listAvailableProjects(
   projectsRoot: string,
   gitRunner: GitRunner,
 ): Promise<ProjectListSections> {
-  try {
-    const lines: string[] = [];
-    const decompositions: string[] = [];
-    const materializedSynced = new Set<string>();
-    for (const scope of ['shared', 'synced', 'local'] as const) {
-      const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, scope);
-      let entries;
-      try {
-        entries = await readdir(scopeRoot, { withFileTypes: true });
-      } catch {
-        continue;
-      }
-      for (const dir of entries.filter((entry) => entry.isDirectory())) {
-        const stateFile = join(scopeRoot, dir.name, 'state.md');
-        if (await fileExists(stateFile)) {
-          if (scope === 'synced') materializedSynced.add(dir.name);
-          const phase =
-            (await parseFrontmatterField(stateFile, 'oat_phase')) || 'unknown';
-          const phaseStatus =
-            (await parseFrontmatterField(stateFile, 'oat_phase_status')) ||
-            'in_progress';
-          const kind =
-            (await parseFrontmatterField(stateFile, 'oat_kind')) ||
-            'implementation';
-          const line = `- **${dir.name}** - ${phase}`;
-          if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
-            decompositions.push(line);
-          } else {
-            lines.push(line);
+  const lines: string[] = [];
+  const decompositions: string[] = [];
+  const materializedSynced = new Set<string>();
+  for (const scope of ['shared', 'synced', 'local'] as const) {
+    const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, scope);
+    let entries;
+    try {
+      entries = await readdir(scopeRoot, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const dir of entries.filter((entry) => entry.isDirectory())) {
+      const stateFile = join(scopeRoot, dir.name, 'state.md');
+      if (await fileExists(stateFile)) {
+        if (scope === 'synced') {
+          materializedSynced.add(dir.name);
+          const target = buildSyncTarget(repoRoot, projectsRoot, dir.name);
+          const terminal = await probeAuthoritativeCompletedRef(
+            target,
+            gitRunner,
+          );
+          if (terminal) {
+            const row = classifyLegacySyncedRecord(
+              {
+                schemaVersion: 1,
+                slug: dir.name,
+                scope: 'synced',
+                ref: target.ref,
+                remote: 'origin',
+                status: 'active',
+                createdAt: new Date(0).toISOString(),
+                completedAt: null,
+              },
+              target.projectPath,
+              terminal,
+            );
+            lines.push(`- **${dir.name}** - ${row.recommendation.reason}`);
+            continue;
           }
+        }
+        const phase =
+          (await parseFrontmatterField(stateFile, 'oat_phase')) || 'unknown';
+        const phaseStatus =
+          (await parseFrontmatterField(stateFile, 'oat_phase_status')) ||
+          'in_progress';
+        const kind =
+          (await parseFrontmatterField(stateFile, 'oat_kind')) ||
+          'implementation';
+        const line = `- **${dir.name}** - ${phase}`;
+        if (isTerminalCoordinationProject(kind, phase, phaseStatus)) {
+          decompositions.push(line);
+        } else {
+          lines.push(line);
         }
       }
     }
+  }
 
-    const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
-    const records = await listSyncedRecords(syncedRoot);
-    for (const record of records) {
-      if (materializedSynced.has(record.slug)) continue;
-      const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
-      const probe = record.archiveSourceRefSha
+  const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+  const records = await listSyncedRecords(syncedRoot);
+  for (const record of records) {
+    if (materializedSynced.has(record.slug)) continue;
+    const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
+    const authoritative = await probeAuthoritativeCompletedRef(
+      target,
+      gitRunner,
+    );
+    const probe =
+      authoritative ??
+      (record.archiveSourceRefSha
         ? await probeSyncedTerminalRefs(
             target,
             record.archiveSourceRefSha,
             gitRunner,
           )
-        : undefined;
-      const row = classifyLegacySyncedRecord(record, target.projectPath, probe);
-      lines.push(
-        row.kind === 'recorded-absent'
-          ? `- **${record.slug}** - checkout absent; oat project pull ${record.slug}`
-          : `- **${record.slug}** - ${row.recommendation.reason}`,
-      );
-    }
-
-    return {
-      active: lines.length > 0 ? lines.join('\n') : '*(No projects found)*',
-      decompositions:
-        decompositions.length > 0
-          ? decompositions.join('\n')
-          : '*(No decompositions found)*',
-    };
-  } catch {
-    return {
-      active: '*(No projects directory found)*',
-      decompositions: '*(No decompositions found)*',
-    };
+        : undefined);
+    const row = classifyLegacySyncedRecord(record, target.projectPath, probe);
+    lines.push(
+      row.kind === 'recorded-absent'
+        ? `- **${record.slug}** - checkout absent; oat project pull ${record.slug}`
+        : `- **${record.slug}** - ${row.recommendation.reason}`,
+    );
   }
+
+  return {
+    active: lines.length > 0 ? lines.join('\n') : '*(No projects found)*',
+    decompositions:
+      decompositions.length > 0
+        ? decompositions.join('\n')
+        : '*(No decompositions found)*',
+  };
 }
 
 function buildDashboardMarkdown(
@@ -656,6 +683,39 @@ export async function generateStateDashboard(
   const hasProjects = await hasAnyProjects(join(repoRoot, projectsRoot));
 
   const project = await readActiveProject(repoRoot);
+  let terminalNextStep: { step: string; reason: string } | null = null;
+  if (project.status === 'active' && project.path) {
+    const activePath = resolve(repoRoot, project.path);
+    const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+    if (dirname(activePath) === syncedRoot) {
+      const target = buildSyncTarget(repoRoot, projectsRoot, project.name);
+      const terminal = await probeAuthoritativeCompletedRef(target, gitRunner);
+      if (terminal) {
+        const row = classifyLegacySyncedRecord(
+          {
+            schemaVersion: 1,
+            slug: project.name,
+            scope: 'synced',
+            ref: target.ref,
+            remote: 'origin',
+            status: 'active',
+            createdAt: new Date(0).toISOString(),
+            completedAt: null,
+          },
+          activePath,
+          terminal,
+        );
+        project.status =
+          row.kind === 'terminal-invalid'
+            ? 'terminal ref mismatch'
+            : 'terminal cleanup pending';
+        terminalNextStep = {
+          step: 'oat-project-complete',
+          reason: row.recommendation.reason,
+        };
+      }
+    }
+  }
 
   let state: ProjectState | null = null;
   if (project.status === 'active') {
@@ -664,7 +724,8 @@ export async function generateStateDashboard(
 
   const knowledge = await readKnowledgeStatus(repoRoot);
   const staleness = calculateStaleness(knowledge, git, repoRoot, today);
-  const nextStep = computeNextStep(project, hasProjects, state);
+  const nextStep =
+    terminalNextStep ?? computeNextStep(project, hasProjects, state);
 
   const projectsList = await listAvailableProjects(
     repoRoot,

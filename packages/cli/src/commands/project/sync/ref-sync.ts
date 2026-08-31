@@ -1408,7 +1408,11 @@ export async function deleteCompletedSyncedRefForPrune(
 export async function pruneSynced(
   target: SyncTarget,
   git: GitRunner,
-  options: { force: boolean; commit: boolean },
+  options: {
+    force: boolean;
+    commit: boolean;
+    expectedActiveAliasSha?: string;
+  },
 ): Promise<PruneResult> {
   await assertCanonicalSyncTargetIdentity(target);
   const scopeRelativeSyncedRoot = relative(
@@ -1514,17 +1518,51 @@ export async function pruneSynced(
     }
   }
 
-  try {
-    await git.run(['push', target.remote, `:${target.ref}`], {
-      cwd: target.repoRoot,
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    const forceFlag = options.force ? ' --force' : '';
-    throw new CliError(
-      `Unable to delete remote ref ${target.ref}; no local checkouts were removed. Restore access to ${target.remote}, then retry oat project prune ${shellQuote(target.slug)}${forceFlag}. ${detail}`,
-      2,
+  if (options.expectedActiveAliasSha) {
+    const expectedSha = options.expectedActiveAliasSha;
+    const deletion = await git.run(
+      [
+        'push',
+        `--force-with-lease=${target.ref}:${expectedSha}`,
+        target.remote,
+        `:${target.ref}`,
+      ],
+      { cwd: target.repoRoot, allowFailure: true },
     );
+    const afterDeletion = await probeTerminalRefs(target, expectedSha, git);
+    if (
+      afterDeletion.activeSha === null &&
+      afterDeletion.completedSha === expectedSha
+    ) {
+      // A rejected transport may still have applied the deletion. The
+      // authoritative postcondition is safe, so cleanup may continue.
+    } else if (
+      afterDeletion.activeSha !== null &&
+      afterDeletion.activeSha !== expectedSha
+    ) {
+      throw new CliError(
+        `Explicit prune stopped because active alias ${target.ref} advanced from observed ${expectedSha} to ${afterDeletion.activeSha}; the advanced active ref, all checkouts, the discovery record, and completed history were retained. Reconcile the terminal ref mismatch before retrying.`,
+        1,
+      );
+    } else {
+      throw new CliError(
+        `Unable to safely delete matching active alias ${target.ref} at ${expectedSha}; no local checkouts or discovery records were removed and completed history was retained. Restore access to ${target.remote}, verify both terminal refs, and retry explicit prune: ${deletion.stderr || deletion.stdout || 'terminal postcondition was not established'}`,
+        2,
+      );
+    }
+  } else {
+    try {
+      await git.run(['push', target.remote, `:${target.ref}`], {
+        cwd: target.repoRoot,
+      });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      const forceFlag = options.force ? ' --force' : '';
+      throw new CliError(
+        `Unable to delete remote ref ${target.ref}; no local checkouts were removed. Restore access to ${target.remote}, then retry oat project prune ${shellQuote(target.slug)}${forceFlag}. ${detail}`,
+        2,
+      );
+    }
   }
 
   try {

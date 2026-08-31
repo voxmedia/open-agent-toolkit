@@ -52,7 +52,11 @@ interface ProjectPruneDependencies {
   pruneSynced: (
     target: SyncTarget,
     git: GitRunner,
-    options: { force: boolean; commit: boolean },
+    options: {
+      force: boolean;
+      commit: boolean;
+      expectedActiveAliasSha?: string;
+    },
   ) => Promise<PruneResult>;
   readProjectState: (
     target: SyncTarget,
@@ -244,6 +248,9 @@ async function runPrune(
         : await dependencies.pruneSynced(target, dependencies.gitRunner, {
             force: options.force,
             commit: options.commit,
+            ...(terminal?.state === 'both' && terminal.activeSha
+              ? { expectedActiveAliasSha: terminal.activeSha }
+              : {}),
           });
     const completedDeletion = terminalRef
       ? await dependencies.deleteCompletedSyncedRefForPrune(
