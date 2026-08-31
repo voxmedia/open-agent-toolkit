@@ -187,7 +187,8 @@ packages/cli/src/commands/pjm/remote/store.test.ts.
 
 ### Task p01-t07: Preserve simultaneous operation intents
 
-**Implementation:** in progress
+**Implementation:** completed in
+`8319af27338dc2abbf2ce5e88dba6f77ffa0b41d`
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/store.ts and
 packages/cli/src/commands/pjm/remote/store.test.ts.
@@ -201,6 +202,8 @@ packages/cli/src/commands/pjm/remote/store.test.ts.
 5. Commit: feat(p01-t07): preserve concurrent remote intents
 
 ### Task p01-t08: Add backward-compatible association codec
+
+**Implementation:** in progress
 
 **Files:** Create packages/cli/src/commands/pjm/remote/association.ts and its
 test; modify packages/cli/src/commands/backlog/new.ts and new.test.ts.

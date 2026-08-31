@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t07
+oat_current_task_id: p01-t08
 oat_generated: false
 ---
 
@@ -176,8 +176,15 @@ passed after a pre-commit caught-error-cause correction.
 
 ### Task p01-t07: Preserve simultaneous operation intents
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8319af27338dc2abbf2ce5e88dba6f77ffa0b41d
+
+**Outcome:** Operation-directory scans now preserve and surface every active
+journal for a binding, and a binding reread plus authoritative journal scan
+derives concurrent-intent conflicts without claiming a lock.
+
+**Verification:** Focused store suite passed (6 tests), including two concurrent
+writers; CLI type-check and lint passed.
 
 ---
 
@@ -308,7 +315,8 @@ Chronological log of implementation progress.
 - [x] p01-t04: Define strict remote record schemas - b67d6e45097049687de95cca2c5fdce9497e5049
 - [x] p01-t05: Resolve portable and operational storage locations - 56ed685b95af7663bddbbb7998119efe055ff895
 - [x] p01-t06: Persist remote records atomically - c4cc34e687d3df0cc1eff2b19368c790f5603346
-- [ ] p01-t07: Preserve simultaneous operation intents - in progress
+- [x] p01-t07: Preserve simultaneous operation intents - 8319af27338dc2abbf2ce5e88dba6f77ffa0b41d
+- [ ] p01-t08: Add backward-compatible association codec - in progress
 
 **What changed (high level):**
 
@@ -322,6 +330,8 @@ Chronological log of implementation progress.
 - Added deterministic portable/local/shared storage location resolution across
   clones and worktrees.
 - Added restart-safe atomic persistence and guarded operation transitions.
+- Added journal-derived concurrent-intent detection that cannot lose a second
+  writer behind a stale binding hint.
 
 **Decisions:**
 
