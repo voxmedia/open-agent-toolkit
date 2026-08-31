@@ -277,6 +277,9 @@ packages/cli/src/commands/pjm/remote/purpose-policy.test.ts.
 
 ### Task p02-t02: Project local backlog and project content safely
 
+**Implementation:** completed in
+`222d6e7986557d34b06479eb6e7c8dcb1bb3edaa`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/local-projection.ts and
 packages/cli/src/commands/pjm/remote/local-projection.test.ts.
 

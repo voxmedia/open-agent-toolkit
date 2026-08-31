@@ -281,6 +281,21 @@ type-check, and lint passed.
 
 ### Task p02-t02: Project local backlog and project content safely
 
+**Status:** completed
+**Commit:** 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
+
+**Outcome:** Added explicit backlog and project projection variants. Backlog
+projection selects only title, priority, and the unique Description section;
+project projection accepts only caller-supplied publication fields. Stable
+source revisions exclude observation time and all detailed project artifacts.
+
+**Verification:** Local-projection suite passed (4 tests); CLI format/build,
+type-check, and lint passed.
+
+---
+
+### Task p02-t03: Redact and bound retained remote snapshots
+
 **Status:** pending
 **Commit:** -
 
@@ -497,6 +512,7 @@ Chronological log of implementation progress.
 - [x] p01-t09: Add foundational remote doctor checks - 373839ef12a713d18fd5e1422cbcf02dfbebff17
 - [x] p01-t10: Persist pre-create binding intent - cd6608947699b6431216fa8364b67729b7583866
 - [x] p02-t01: Compose binding-purpose policy by intersection - f7a8dc493557e619d8004aaa52a0ce47bdaf7263
+- [x] p02-t02: Project local backlog and project content safely - 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
 
 **What changed (high level):**
 
