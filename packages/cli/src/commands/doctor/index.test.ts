@@ -1844,7 +1844,21 @@ config_file = "agents/${roleName}.toml"
 
     await runDoctor(command, { scope: 'user', globalArgs: ['--json'] });
 
-    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const payload = capture.jsonPayloads[0] as {
+      checks: DoctorCheck[];
+      packEvidence: {
+        status: string;
+        items: Array<{
+          pack: string;
+          realizedPlacement: string;
+          diagnostics: Array<{
+            code: string;
+            affectedAssets: string[];
+            recovery: Array<{ command?: string }>;
+          }>;
+        }>;
+      };
+    };
     const packCheck = payload.checks.find(
       (check) => check.name === 'user:pack_state',
     );
@@ -1863,6 +1877,24 @@ config_file = "agents/${roleName}.toml"
     // command is offered and the check itself does not warn.
     expect(packCheck?.fix).toBeUndefined();
     expect(packCheck?.status).toBe('pass');
+    const evidence = payload.packEvidence.items.find(
+      ({ pack }) => pack === 'research',
+    );
+    expect(payload.packEvidence.status).toBe('partial');
+    expect(evidence).toMatchObject({
+      realizedPlacement: 'user',
+      diagnostics: [
+        expect.objectContaining({
+          code: 'provider-materialization-missing',
+          affectedAssets: ['~/.agents/agents/skeptical-evaluator.md'],
+          recovery: [
+            expect.objectContaining({
+              command: 'oat tools install research --scope project',
+            }),
+          ],
+        }),
+      ],
+    });
   });
 
   it('warns about duplicate cross-scope packs and offers migration', async () => {
@@ -2055,7 +2087,16 @@ config_file = "agents/${roleName}.toml"
 
     await runDoctor(command, { globalArgs: ['--json'] });
 
-    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const payload = capture.jsonPayloads[0] as {
+      checks: DoctorCheck[];
+      packEvidence: {
+        items: Array<{
+          pack: string;
+          realizedPlacement: string;
+          diagnostics: Array<{ code: string }>;
+        }>;
+      };
+    };
     const packCheck = payload.checks.find(
       (check) => check.name === 'project:pack_state',
     );
@@ -2064,6 +2105,15 @@ config_file = "agents/${roleName}.toml"
     expect(packCheck?.fix).toContain(
       'oat tools update --pack docs --scope project',
     );
+    expect(
+      payload.packEvidence.items.find(({ pack }) => pack === 'docs'),
+    ).toMatchObject({
+      realizedPlacement: 'none',
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: 'declared-only' }),
+        expect.objectContaining({ code: 'partial-placement' }),
+      ]),
+    });
   });
 
   it('warns when managed pack inventory cannot be computed', async () => {

@@ -31,6 +31,12 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
+import {
   attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
@@ -1003,9 +1009,9 @@ function createPackDuplicationCheck(
 async function createPackStateChecks(
   scopeRoots: Map<ConcreteScope, string>,
   dependencies: DoctorDependencies,
-): Promise<DoctorCheck[]> {
+): Promise<{ checks: DoctorCheck[]; evidence: PackEvidenceBlockV1 }> {
   if (scopeRoots.size === 0) {
-    return [];
+    return { checks: [], evidence: packEvidenceBlock([]) };
   }
 
   const roots: PackPathRoots = {
@@ -1016,6 +1022,7 @@ async function createPackStateChecks(
   };
 
   let findings: PackStateFinding[];
+  let inventories: PackInventory[];
   try {
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const userRoot = scopeRoots.get('user');
@@ -1032,7 +1039,7 @@ async function createPackStateChecks(
             ),
           )
       : false;
-    const inventories = attributeSharedOwnerDiagnostics(
+    inventories = attributeSharedOwnerDiagnostics(
       await Promise.all(
         PACK_NAMES.map((pack) =>
           dependencies.inventoryPack({
@@ -1046,18 +1053,32 @@ async function createPackStateChecks(
     );
     findings = collectPackStateFindings(inventories);
   } catch (error) {
-    return [
-      {
-        name: 'packs:inventory',
-        description: 'Managed pack inventory availability',
-        status: 'warn',
-        message:
-          error instanceof Error
-            ? `Unable to inventory managed packs: ${error.message}`
-            : 'Unable to inventory managed packs.',
-        fix: 'Run `pnpm build` and rerun `oat doctor`.',
-      },
-    ];
+    const detail =
+      error instanceof Error
+        ? `Unable to inventory managed packs: ${error.message}`
+        : 'Unable to inventory managed packs.';
+    const evidence = packEvidenceBlock(
+      PACK_NAMES.map((pack) =>
+        unavailablePackEvidence({
+          pack,
+          scopes: [...scopeRoots.keys()],
+          reason: detail,
+          roots,
+        }),
+      ),
+    );
+    return {
+      checks: [
+        {
+          name: 'packs:inventory',
+          description: 'Managed pack inventory availability',
+          status: 'warn',
+          message: evidence.diagnostics[0]?.detail ?? detail,
+          fix: 'Run `pnpm build` and rerun `oat doctor`.',
+        },
+      ],
+      evidence,
+    };
   }
 
   const checks: DoctorCheck[] = [];
@@ -1067,7 +1088,14 @@ async function createPackStateChecks(
   if (scopeRoots.has('project') && scopeRoots.has('user')) {
     checks.push(createPackDuplicationCheck(findings, roots));
   }
-  return checks;
+  return {
+    checks,
+    evidence: packEvidenceBlock(
+      inventories.map((canonical) =>
+        projectRenderablePackEvidence(canonical, roots),
+      ),
+    ),
+  };
 }
 
 function createScopeUnavailableCheck(
@@ -1352,10 +1380,15 @@ async function runDoctorCommand(
     checks.push(...scopeChecks);
   }
 
-  checks.push(...(await createPackStateChecks(scopeRoots, dependencies)));
+  const packState = await createPackStateChecks(scopeRoots, dependencies);
+  checks.push(...packState.checks);
 
   if (context.json) {
-    context.logger.json({ scope: context.scope, checks });
+    context.logger.json({
+      scope: context.scope,
+      checks,
+      packEvidence: packState.evidence,
+    });
   } else {
     context.logger.info(formatDoctorResults(checks));
   }

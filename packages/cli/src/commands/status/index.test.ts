@@ -2009,6 +2009,13 @@ describe('createStatusCommand', () => {
           unavailableScopes: string[];
           pjm: { state: string; recovery: string | null } | null;
         };
+        packEvidence: {
+          items: Array<{
+            pack: string;
+            realizedPlacement: string;
+            diagnostics: Array<{ code: string }>;
+          }>;
+        };
       };
 
       const utility = payload.packs.states.find(
@@ -2025,6 +2032,11 @@ describe('createStatusCommand', () => {
         recovery: 'oat tools update --pack utility --scope project',
       });
       expect(payload.packs.unavailableScopes).toEqual([]);
+      expect(
+        payload.packEvidence.items.find(({ pack }) => pack === 'utility'),
+      ).toMatchObject({
+        realizedPlacement: 'project',
+      });
     });
 
     it('reports duplicate cross-scope packs with a migration recovery command', async () => {
@@ -2213,6 +2225,14 @@ describe('createStatusCommand', () => {
           states: unknown[];
           unavailableScopes: string[];
         };
+        packEvidence: {
+          status: string;
+          items: Array<{
+            pack: string;
+            realizedPlacement: string;
+            diagnostics: Array<{ code: string; detail: string }>;
+          }>;
+        };
       };
       expect(payload.packs.availability).toMatchObject({
         status: 'unavailable',
@@ -2225,6 +2245,18 @@ describe('createStatusCommand', () => {
       });
       expect(payload.packs.states).toEqual([]);
       expect(payload.packs.unavailableScopes).toEqual(['project']);
+      expect(payload.packEvidence.status).toBe('partial');
+      expect(
+        payload.packEvidence.items.find(({ pack }) => pack === 'workflows'),
+      ).toMatchObject({
+        realizedPlacement: 'unknown',
+        diagnostics: [
+          expect.objectContaining({
+            code: 'inventory-unavailable',
+            detail: 'cannot read ~/.agents/skills/oat-project-new',
+          }),
+        ],
+      });
       expect(JSON.stringify(payload)).not.toContain('/tmp/home');
     });
 

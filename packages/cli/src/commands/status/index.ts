@@ -41,6 +41,12 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
+import {
   attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
@@ -171,6 +177,7 @@ interface StatusPackReport {
   states: StatusPackState[];
   unavailableScopes: ConcreteScope[];
   pjm: StatusPjmState | null;
+  evidence: PackEvidenceBlockV1;
 }
 
 function unavailablePackReport(
@@ -208,6 +215,18 @@ function unavailablePackReport(
     states: [],
     unavailableScopes,
     pjm: null,
+    evidence: packEvidenceBlock(
+      PACK_NAMES.map((pack) =>
+        unavailablePackEvidence({
+          pack,
+          scopes: Object.keys(roots).map((key) =>
+            key === 'projectRoot' ? 'project' : 'user',
+          ),
+          reason: detail,
+          roots,
+        }),
+      ),
+    ),
   };
 }
 
@@ -216,6 +235,7 @@ interface StatusJsonPayload {
   reports: DriftReport[];
   summary: StatusSummary;
   packs: StatusPackReport;
+  packEvidence: PackEvidenceBlockV1;
   remediation?: string;
 }
 
@@ -615,6 +635,7 @@ async function collectPackReport(
       states: [],
       unavailableScopes,
       pjm: null,
+      evidence: packEvidenceBlock([]),
     };
   }
 
@@ -641,6 +662,11 @@ async function collectPackReport(
   const states = inventories
     .map((inventory) => toStatusPackState(inventory, roots))
     .filter((state): state is StatusPackState => state !== null);
+  const evidence = packEvidenceBlock(
+    inventories.map((canonical) =>
+      projectRenderablePackEvidence(canonical, roots),
+    ),
+  );
 
   const projectRoot = scopeRoots.get('project');
   if (!projectRoot) {
@@ -649,6 +675,7 @@ async function collectPackReport(
       states,
       unavailableScopes,
       pjm: null,
+      evidence,
     };
   }
 
@@ -668,6 +695,7 @@ async function collectPackReport(
       repoRoot: formatPackPath(adoption.repoRoot, roots),
       recovery: adoption.recovery,
     },
+    evidence,
   };
 }
 
@@ -1071,6 +1099,7 @@ async function runStatusCommand(
       reports,
       summary,
       packs: packReport,
+      packEvidence: packReport.evidence,
     };
     if (!context.interactive && summary.stray > 0) {
       payload.remediation = DEFAULT_REMEDIATION;
