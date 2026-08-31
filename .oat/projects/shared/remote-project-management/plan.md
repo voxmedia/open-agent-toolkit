@@ -1040,6 +1040,7 @@ commands, exit codes, and cache/live-execution evidence.
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md | -             | manual-1          | cursor         |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md | -             | manual-2          | cursor         |
 | plan   | artifact | passed          | 2026-08-31 | -                                                    | -             | structured-auto-3 | codex:sol-high |
+| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T021338Z.md   | -             | -                 | -              |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
