@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 2 received; fixes pending
+**Status:** review round 2 fixes complete; round 3 pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -403,6 +403,21 @@ unchanged`, making the source-qualified recovery record contradictory.
 - `apps/oat-docs/docs/provider-sync/commands.md` is accepted as one
   mechanically derived p03-t04 documentation boundary; no production scope is
   expanded.
+
+### Review Round 2 Fix
+
+- Commit: `c8ff68a82f9fd8beef352bd45da7a429ff5c2d11`
+- Human extension output now joins immutable plans to actual results; legacy
+  aggregate-only counts remain unattributed and cannot generate named refresh
+  advice; provider help/reference and user-scope summaries are accurate.
+- `packages/cli/src/commands/help-snapshots.test.ts` was authorized after the
+  first full test exposed exactly two stale inline snapshots. Only those two
+  provider-set snapshots changed.
+- Verification: focused 3 files / 128 tests, expanded phase 20 files / 501
+  tests, CLI lint/type-check/format, `pnpm check`, live help,
+  `git diff --check`, and full `pnpm test` pass.
+- A pre-commit full run had one unrelated smoke failure; the no-edit smoke rerun
+  passed 140/140 and the authoritative post-commit full run passed completely.
 
 ---
 
@@ -672,6 +687,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: attempted; complete orchestration evidence is in the artifact
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Review-fix continuation — round 2
+
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `c8ff68a82f9fd8beef352bd45da7a429ff5c2d11`
+- Outcome: all one Important, one Medium, and two Minor findings corrected;
+  focused 128, expanded phase 501, and full repository tests passed
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -793,6 +817,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture      | Round-1 review finding | recorded; no production expansion |
 | p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                | Mechanically derived full-suite fixture | p03-t01 behavior       | recovery attempt 1/10 reserved    |
 | p03 review r2 | plan file union  | p03-t04 named command source/tests only  | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                       | Mechanically derived docs reference     | Round-2 review finding | recorded; no production expansion |
+| p03 review r2 | plan file union  | provider help source changed             | Added adjacent `packages/cli/src/commands/help-snapshots.test.ts` for the two mechanically stale provider-set inline snapshots                                          | Mechanically derived snapshot fixture   | Full test gate         | recorded; no production expansion |
 
 ## Test Results
 
