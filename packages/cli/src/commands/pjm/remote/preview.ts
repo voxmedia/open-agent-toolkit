@@ -27,8 +27,9 @@ export interface BuildBindingPreviewInput {
     contentHash: string;
   };
   capability: {
-    transport: string;
-    catalogFingerprint: string;
+    surfaceKind: 'connector' | 'configured-cli';
+    evidenceDigest: string;
+    semanticCapabilities: string[];
     context: Record<string, string>;
   };
   policy: Record<string, unknown>;

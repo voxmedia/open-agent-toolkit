@@ -98,7 +98,7 @@ export type RemoteOperationState = RemoteOperationRecord['state'];
 export interface RemoteOperationTransition {
   state: RemoteOperationState;
   updatedAt: string;
-  transport?: RemoteOperationRecord['transport'];
+  selectedExecution?: RemoteOperationRecord['selectedExecution'];
   outcome?: RemoteOperationOutcome;
   appendStep?: RemoteOperationStep;
   verification?: FieldVerification[];
@@ -214,7 +214,7 @@ export class RemoteSyncStore {
     const parsed = PlannedBindingCreateSchema.parse(intent);
     await this.createOperation({
       recordType: 'operation',
-      schemaVersion: 1,
+      schemaVersion: 2,
       operationId: parsed.operationId,
       correlationId: parsed.operationId,
       bindingId: parsed.bindingId,
@@ -230,7 +230,7 @@ export class RemoteSyncStore {
         bindingId: parsed.bindingId,
         provider: parsed.provider,
         providerContext: parsed.providerContext,
-        capabilityDigest: 'unprobed',
+        capabilityEvidenceDigest: 'unprobed',
         revisionDigest: 'unbound',
         policyDigest: parsed.provenanceToken,
       },
@@ -244,8 +244,7 @@ export class RemoteSyncStore {
       approval: null,
       createdAt: parsed.createdAt,
       updatedAt: parsed.createdAt,
-      transport: null,
-      selectedTransport: null,
+      selectedExecution: null,
       attempts: [],
       observations: [],
       verification: [],
@@ -305,8 +304,8 @@ export class RemoteSyncStore {
       ...current,
       state: update.state,
       updatedAt: update.updatedAt,
-      ...(update.transport !== undefined
-        ? { transport: update.transport }
+      ...(update.selectedExecution !== undefined
+        ? { selectedExecution: update.selectedExecution }
         : {}),
       ...(update.outcome !== undefined ? { outcome: update.outcome } : {}),
       ...(update.verification !== undefined

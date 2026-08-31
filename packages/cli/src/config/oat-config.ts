@@ -945,18 +945,10 @@ export interface OatPjmRemoteSharedConfig {
   };
 }
 
-export interface OatPjmRemoteTransportConfig {
-  transports?: Partial<Record<OatPjmRemoteProvider, string[]>>;
-}
-
 export interface OatPjmConfig {
   initialized?: boolean;
   schemaVersion?: number;
   remote?: OatPjmRemoteSharedConfig;
-}
-
-export interface OatPjmTransportConfig {
-  remote?: OatPjmRemoteTransportConfig;
 }
 
 const PJM_REMOTE_PROVIDERS = ['github', 'linear', 'jira'] as const;
@@ -1029,7 +1021,7 @@ function normalizePjmConfig(
   if (isRecord(value.remote)) {
     if ('transports' in value.remote) {
       throw new CliError(
-        'pjm.remote.transports is owned by local or user config; shared config accepts only policy and storage.',
+        'pjm.remote.transports is retired; host agents discover live execution capabilities at operation time.',
         2,
       );
     }
@@ -1283,32 +1275,22 @@ function collectUnknownPjmRemoteKeys(
   }
 }
 
-function normalizePjmTransportConfig(
-  value: unknown,
-): OatPjmTransportConfig | undefined {
-  if (!isRecord(value) || !isRecord(value.remote)) return undefined;
-  for (const forbidden of ['policy', 'storage', 'schemaVersion'] as const) {
-    if (forbidden in value.remote) {
+function assertNoLocalPjmRemoteConfig(value: unknown): void {
+  if (!isRecord(value) || !isRecord(value.remote)) return;
+  if ('transports' in value.remote) {
+    throw new CliError(
+      'pjm.remote.transports is retired; host agents discover live execution capabilities at operation time.',
+      2,
+    );
+  }
+  for (const sharedKey of ['policy', 'storage', 'schemaVersion'] as const) {
+    if (sharedKey in value.remote) {
       throw new CliError(
-        `pjm.remote.${forbidden} is owned by shared config; local and user config accept only transports.`,
+        `pjm.remote.${sharedKey} is owned by shared config; local and user config cannot define remote policy or storage.`,
         2,
       );
     }
   }
-  if (!isRecord(value.remote.transports)) return undefined;
-  const transports: NonNullable<OatPjmRemoteTransportConfig['transports']> = {};
-  for (const provider of PJM_REMOTE_PROVIDERS) {
-    const candidate = value.remote.transports[provider];
-    if (!Array.isArray(candidate)) continue;
-    const values = candidate.filter(
-      (transport): transport is string =>
-        typeof transport === 'string' && transport.trim().length > 0,
-    );
-    transports[provider] = [
-      ...new Set(values.map((transport) => transport.trim())),
-    ];
-  }
-  return { remote: { transports } };
 }
 
 export interface OatConfig {
@@ -1333,7 +1315,6 @@ export interface OatLocalConfig {
   activeIdea?: string | null;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
-  pjm?: OatPjmTransportConfig;
 }
 
 export interface UserConfig {
@@ -1343,7 +1324,6 @@ export interface UserConfig {
   tools?: OatToolsConfig;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
-  pjm?: OatPjmTransportConfig;
 }
 
 export interface ActiveProjectResolution {
@@ -1656,11 +1636,7 @@ function normalizeOatLocalConfig(
     next.workflow = workflow;
   }
 
-  const pjm = normalizePjmTransportConfig(parsed.pjm);
-  if (pjm) {
-    next.pjm = pjm;
-  }
-
+  assertNoLocalPjmRemoteConfig(parsed.pjm);
   return next;
 }
 
@@ -1896,11 +1872,7 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
     next.workflow = workflow;
   }
 
-  const pjm = normalizePjmTransportConfig(parsed.pjm);
-  if (pjm) {
-    next.pjm = pjm;
-  }
-
+  assertNoLocalPjmRemoteConfig(parsed.pjm);
   return next;
 }
 

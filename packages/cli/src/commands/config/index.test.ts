@@ -671,7 +671,7 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('sets, gets, lists, dumps, and describes closed PJM remote config keys', async () => {
+  it('sets, gets, lists, dumps, and describes closed PJM remote policy keys', async () => {
     const root = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
     tempDirs.push(home);
@@ -685,26 +685,17 @@ describe('oat config', () => {
     ]);
     expect(process.exitCode).toBe(0);
 
-    const userSet = createHarness({ cwd: root, home });
-    await runCommand(userSet.command, [
-      'set',
-      'pjm.remote.transports.linear',
-      '["mcp","linear-cli","mcp"]',
-      '--user',
-    ]);
-    expect(process.exitCode).toBe(0);
-
     const getHarness = createHarness({ cwd: root, home });
     await runCommand(
       getHarness.command,
-      ['get', 'pjm.remote.transports.linear'],
+      ['get', 'pjm.remote.policy.description'],
       ['--json'],
     );
     expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
-      key: 'pjm.remote.transports.linear',
-      value: ['mcp', 'linear-cli'],
-      source: 'user',
+      key: 'pjm.remote.policy.description',
+      value: 'managed-section',
+      source: 'shared',
     });
 
     const listHarness = createHarness({ cwd: root, home });
@@ -712,9 +703,7 @@ describe('oat config', () => {
     expect(listHarness.capture.info[0]).toContain(
       'pjm.remote.policy.description',
     );
-    expect(listHarness.capture.info[0]).toContain(
-      'pjm.remote.transports.linear',
-    );
+    expect(listHarness.capture.info[0]).not.toContain('pjm.remote.transports');
 
     const dumpHarness = createHarness({ cwd: root, home });
     await runCommand(dumpHarness.command, ['dump'], ['--json']);
@@ -725,26 +714,21 @@ describe('oat config', () => {
           value: 'managed-section',
           source: 'shared',
         },
-        'pjm.remote.transports.linear': {
-          value: ['mcp', 'linear-cli'],
-          source: 'user',
-        },
       },
     });
 
     const describeHarness = createHarness({ cwd: root, home });
     await runCommand(
       describeHarness.command,
-      ['describe', 'pjm.remote.transports.linear'],
+      ['describe', 'pjm.remote.policy.description'],
       ['--json'],
     );
     expect(describeHarness.capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       entries: [
         expect.objectContaining({
-          key: 'pjm.remote.transports.linear',
-          scope: 'repo local or user',
-          type: 'string[]',
+          key: 'pjm.remote.policy.description',
+          scope: 'shared repo',
         }),
       ],
     });
@@ -753,15 +737,15 @@ describe('oat config', () => {
   it('rejects PJM remote writes on non-owning config surfaces', async () => {
     const root = await createRepoRoot();
 
-    const sharedTransport = createHarness({ cwd: root });
-    await runCommand(sharedTransport.command, [
+    const retiredExecutionKey = createHarness({ cwd: root });
+    await runCommand(retiredExecutionKey.command, [
       'set',
       'pjm.remote.transports.github',
-      '["gh"]',
-      '--shared',
+      '["legacy"]',
+      '--local',
     ]);
     expect(process.exitCode).toBe(1);
-    expect(sharedTransport.capture.error[0]).toMatch(/local.*user/i);
+    expect(retiredExecutionKey.capture.error[0]).toMatch(/Unknown config key/i);
 
     process.exitCode = undefined;
     const localPolicy = createHarness({ cwd: root });

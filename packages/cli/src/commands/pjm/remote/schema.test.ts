@@ -217,6 +217,13 @@ describe('remote record schemas', () => {
     });
 
     expect(state.snapshot?.contentRedacted).toBe(true);
+    expect(state.schemaVersion).toBe(2);
+    expect(state.capability).toMatchObject({
+      schemaVersion: 2,
+      surfaceKind: 'legacy-observation',
+      availability: 'unsupported-or-unresolved',
+      semanticCapabilities: [],
+    });
     expect(() =>
       RemoteBindingStateSchema.parse({
         ...state,
@@ -329,6 +336,13 @@ describe('remote record schemas', () => {
       op_operation_123: 'verified',
       op_operation_456: 'blocked',
     });
+    expect(operation.schemaVersion).toBe(2);
+    expect(operation).not.toHaveProperty('transport');
+    expect(operation).not.toHaveProperty('selectedTransport');
+    expect(operation.selectedExecution).toMatchObject({
+      surfaceKind: 'legacy-observation',
+      semanticCapabilities: [],
+    });
     expect(() =>
       RemoteOperationRecordSchema.parse({
         ...operation,
@@ -338,12 +352,12 @@ describe('remote record schemas', () => {
     expect(() =>
       RemoteOperationRecordSchema.parse({
         ...operation,
-        selectedTransport: {
-          ...operation.selectedTransport!,
+        selectedExecution: {
+          ...operation.selectedExecution!,
           context: { host: 'other.example.test' },
         },
       }),
-    ).toThrow(/transport context/i);
+    ).toThrow(/execution context/i);
     expect(() =>
       RemoteBatchRecordSchema.parse({
         ...batch,

@@ -107,9 +107,7 @@ type PjmRemoteConfigKey =
   | `pjm.remote.policy.authority.operations.${OatPjmRemoteOperationClass}`
   | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.description`
   | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.authority.default`
-  | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.authority.operations.${OatPjmRemoteOperationClass}`
-  | 'pjm.remote.transports'
-  | `pjm.remote.transports.${OatPjmRemoteProvider}`;
+  | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.authority.operations.${OatPjmRemoteOperationClass}`;
 
 type ConfigKey =
   | 'activeIdea'
@@ -227,10 +225,6 @@ const PJM_REMOTE_CONFIG_KEYS: PjmRemoteConfigKey[] = [
         `pjm.remote.policy.providers.${provider}.authority.operations.${operation}` as const,
     ),
   ]),
-  'pjm.remote.transports',
-  ...PJM_REMOTE_PROVIDERS.map(
-    (provider) => `pjm.remote.transports.${provider}` as const,
-  ),
 ];
 
 interface ConfigCommandDependencies {
@@ -340,61 +334,42 @@ const KEY_ORDER: ConfigKey[] = [
 
 const PJM_REMOTE_CONFIG_CATALOG: ConfigCatalogEntry[] =
   PJM_REMOTE_CONFIG_KEYS.map((key) => {
-    const transport = key.startsWith('pjm.remote.transports');
-    const aggregate =
-      key === 'pjm.remote' ||
-      key === 'pjm.remote.policy' ||
-      key === 'pjm.remote.transports';
+    const aggregate = key === 'pjm.remote' || key === 'pjm.remote.policy';
     const schemaVersion = key === 'pjm.remote.schemaVersion';
     const storage = key === 'pjm.remote.storage.state';
     const authority = key.includes('.authority.');
     const description = key.endsWith('.description');
-    const type = transport
-      ? aggregate
-        ? 'object'
-        : 'string[]'
-      : schemaVersion
-        ? 'literal 1'
-        : storage
-          ? 'local | shared'
-          : authority
-            ? 'read-only | user-approved | user-authorized | autonomous'
-            : description
-              ? 'none | managed-section | replace'
-              : 'object';
+    const type = schemaVersion
+      ? 'literal 1'
+      : storage
+        ? 'local | shared'
+        : authority
+          ? 'read-only | user-approved | user-authorized | autonomous'
+          : description
+            ? 'none | managed-section | replace'
+            : 'object';
     return {
       key,
-      group: transport
-        ? 'PJM Remote Transport Preferences'
-        : 'PJM Remote Shared Policy',
-      file: transport
-        ? '.oat/config.local.json or ~/.oat/config.json'
-        : '.oat/config.json',
-      scope: transport ? 'repo local or user' : 'shared repo',
+      group: 'PJM Remote Shared Policy',
+      file: '.oat/config.json',
+      scope: 'shared repo',
       type,
-      defaultValue:
-        key === 'pjm.remote.transports.github'
-          ? '["gh"]'
-          : key === 'pjm.remote.transports.linear' ||
-              key === 'pjm.remote.transports.jira'
-            ? '["mcp"]'
-            : schemaVersion
-              ? '1'
-              : storage
-                ? 'local'
-                : authority
-                  ? 'read-only'
-                  : description
-                    ? 'none'
-                    : 'unset',
+      defaultValue: schemaVersion
+        ? '1'
+        : storage
+          ? 'local'
+          : authority
+            ? 'read-only'
+            : description
+              ? 'none'
+              : 'unset',
       mutability: aggregate || schemaVersion ? 'read-only' : 'read/write',
       owningCommand:
         aggregate || schemaVersion
           ? 'individual child keys'
-          : `oat config set ${key} <value> --${transport ? 'local|user' : 'shared'}`,
-      description: transport
-        ? 'Ordered, duplicate-free transport preference owned by local or user config.'
-        : 'Repository-owned remote storage or mutation policy; local and user config cannot broaden it.',
+          : `oat config set ${key} <value> --shared`,
+      description:
+        'Repository-owned remote storage or mutation policy; host execution is discovered live and cannot broaden it.',
     };
   });
 
@@ -1265,12 +1240,6 @@ function isPjmRemoteConfigKey(key: ConfigKey): key is PjmRemoteConfigKey {
   return key.startsWith('pjm.remote');
 }
 
-function isPjmRemoteTransportKey(
-  key: ConfigKey,
-): key is Extract<PjmRemoteConfigKey, `pjm.remote.transports${string}`> {
-  return key.startsWith('pjm.remote.transports');
-}
-
 function isDispatchCeilingProviderKey(
   value: string,
 ): value is WorkflowDispatchProviderConfigKey {
@@ -1493,13 +1462,7 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
   }
 
   if (isPjmRemoteConfigKey(key)) {
-    if (isPjmRemoteTransportKey(key)) {
-      if (surface !== 'local' && surface !== 'user') {
-        throw new Error(
-          `Cannot set '${key}' at '${surface}' scope. PJM remote transports can only be set at local or user scope.`,
-        );
-      }
-    } else if (surface !== 'shared') {
+    if (surface !== 'shared') {
       throw new Error(
         `Cannot set '${key}' at '${surface}' scope. PJM remote policy and storage can only be set at shared scope.`,
       );
@@ -1572,9 +1535,6 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
 function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
   if (key === 'updateNotifications') {
     return 'user';
-  }
-  if (isPjmRemoteTransportKey(key)) {
-    return 'local';
   }
   if (
     key === 'explainers.defaults.style' ||
@@ -2046,28 +2006,6 @@ function formatResolvedValue(value: unknown): string | null {
   return String(value);
 }
 
-function parsePjmRemoteTransportList(
-  key: ConfigKey,
-  rawValue: string,
-): string[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(rawValue);
-  } catch {
-    throw new Error(`Invalid value for ${key}: expected a JSON string array.`);
-  }
-  if (
-    !Array.isArray(parsed) ||
-    !parsed.every(
-      (transport): transport is string =>
-        typeof transport === 'string' && transport.trim().length > 0,
-    )
-  ) {
-    throw new Error(`Invalid value for ${key}: expected a JSON string array.`);
-  }
-  return [...new Set(parsed.map((transport) => transport.trim()))];
-}
-
 function defaultPjmRemoteSharedConfig(): OatPjmRemoteSharedConfig {
   return {
     schemaVersion: 1,
@@ -2088,7 +2026,6 @@ function applyPjmRemoteSharedValue(
   if (
     key === 'pjm.remote' ||
     key === 'pjm.remote.policy' ||
-    key === 'pjm.remote.transports' ||
     key === 'pjm.remote.schemaVersion'
   ) {
     throw new Error(
@@ -2290,46 +2227,6 @@ async function setConfigValue(
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
 
   if (isPjmRemoteConfigKey(key)) {
-    if (isPjmRemoteTransportKey(key)) {
-      if (key === 'pjm.remote.transports') {
-        throw new Error(
-          `Config key '${key}' is read-only; set one provider transport list at a time.`,
-        );
-      }
-      const provider = key.slice(
-        'pjm.remote.transports.'.length,
-      ) as OatPjmRemoteProvider;
-      const transports = parsePjmRemoteTransportList(key, rawValue);
-      if (effectiveSurface === 'user') {
-        const config = await dependencies.readUserConfig(userConfigDir);
-        await dependencies.writeUserConfig(userConfigDir, {
-          ...config,
-          pjm: {
-            remote: {
-              transports: {
-                ...config.pjm?.remote?.transports,
-                [provider]: transports,
-              },
-            },
-          },
-        });
-        return { key, value: transports, source: 'user' };
-      }
-      const config = await dependencies.readOatLocalConfig(repoRoot);
-      await dependencies.writeOatLocalConfig(repoRoot, {
-        ...config,
-        pjm: {
-          remote: {
-            transports: {
-              ...config.pjm?.remote?.transports,
-              [provider]: transports,
-            },
-          },
-        },
-      });
-      return { key, value: transports, source: 'local' };
-    }
-
     const config = await dependencies.readOatConfig(repoRoot);
     const remote = applyPjmRemoteSharedValue(config.pjm?.remote, key, rawValue);
     await dependencies.writeOatConfig(repoRoot, {

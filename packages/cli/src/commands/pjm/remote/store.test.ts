@@ -65,7 +65,7 @@ function metadata(bindingId = 'bnd_binding_123'): RemoteBindingMetadata {
 function bindingState(bindingId = 'bnd_binding_123'): RemoteBindingState {
   return {
     recordType: 'binding-state',
-    schemaVersion: 1,
+    schemaVersion: 2,
     bindingId,
     provider: 'github',
     metadataUpdatedAt: timestamp,
@@ -95,7 +95,7 @@ function operation(
 ): RemoteOperationRecord {
   return {
     recordType: 'operation',
-    schemaVersion: 1,
+    schemaVersion: 2,
     operationId,
     correlationId: `corr_${operationId}`,
     bindingId,
@@ -111,7 +111,7 @@ function operation(
       bindingId,
       provider: 'github',
       providerContext: { host: 'github.com', repositoryId: 'repo-123' },
-      capabilityDigest: 'sha256:capability',
+      capabilityEvidenceDigest: 'sha256:capability',
       revisionDigest: 'sha256:revision',
       policyDigest: 'sha256:policy',
     },
@@ -122,8 +122,7 @@ function operation(
     approval: null,
     createdAt: timestamp,
     updatedAt: timestamp,
-    transport: null,
-    selectedTransport: null,
+    selectedExecution: null,
     attempts: [],
     observations: [],
     verification: [],

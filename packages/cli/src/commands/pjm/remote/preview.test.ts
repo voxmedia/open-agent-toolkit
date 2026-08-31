@@ -26,8 +26,9 @@ const baseInput: BuildBindingPreviewInput = {
     contentHash: 'sha256:remote',
   },
   capability: {
-    transport: 'gh',
-    catalogFingerprint: 'sha256:catalog',
+    surfaceKind: 'connector',
+    evidenceDigest: 'sha256:capability',
+    semanticCapabilities: ['read', 'update'],
     context: { host: 'github.com', owner: 'voxmedia', repositoryId: 'repo-1' },
   },
   policy: {
@@ -111,7 +112,7 @@ describe('binding previews and approvals', () => {
       {
         capability: {
           ...baseInput.capability,
-          catalogFingerprint: 'sha256:changed',
+          evidenceDigest: 'sha256:changed',
         },
       },
     ],

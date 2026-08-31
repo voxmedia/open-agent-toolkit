@@ -253,22 +253,21 @@ const CoreIssueSchema = z
   })
   .strict();
 
-const CapabilityReferenceSchema = z
+const CurrentCapabilityReferenceSchema = z
   .object({
     provider: ProviderSchema,
-    transport: z.string().min(1).max(255),
+    surfaceKind: z.enum(['connector', 'configured-cli', 'legacy-observation']),
     context: RemoteAccountContextSchema,
-    capabilityDigest: z.string().min(1).max(512),
+    evidenceDigest: z.string().min(1).max(512),
+    semanticCapabilities: z.array(z.string().min(1).max(128)).max(32),
   })
   .strict();
 
-const CapabilitySnapshotSchema = z
+const CurrentCapabilitySnapshotSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
     provider: ProviderSchema,
-    transport: z.string().min(1).max(255),
-    transportVersion: z.string().max(255).nullable(),
-    catalogFingerprint: z.string().min(1).max(512),
+    surfaceKind: z.enum(['connector', 'configured-cli', 'legacy-observation']),
     context: RemoteAccountContextSchema,
     availability: z.enum([
       'available',
@@ -276,10 +275,18 @@ const CapabilitySnapshotSchema = z
       'unsupported-or-unresolved',
     ]),
     permissions: z.enum(['known', 'unknown']),
+    semanticCapabilities: z.array(z.string().min(1).max(128)).max(32),
     observedAt: TimestampSchema,
     evidenceDigest: z.string().min(1).max(512),
   })
   .strict();
+
+const CapabilitySnapshotSchema: z.ZodType<
+  z.infer<typeof CurrentCapabilitySnapshotSchema>
+> = z.preprocess(
+  migrateLegacyCapabilitySnapshot,
+  CurrentCapabilitySnapshotSchema,
+) as z.ZodType<z.infer<typeof CurrentCapabilitySnapshotSchema>>;
 
 const RemoteRevisionSchema = z
   .object({
@@ -296,7 +303,10 @@ const RemoteSnapshotCommonShape = {
   bindingId: StableIdSchema,
   provider: ProviderSchema,
   observedAt: TimestampSchema,
-  observedBy: CapabilityReferenceSchema,
+  observedBy: z.preprocess(
+    migrateLegacyCapabilityReference,
+    CurrentCapabilityReferenceSchema,
+  ),
   identity: RemoteIdentitySchema,
   revision: RemoteRevisionSchema,
   issue: CoreIssueSchema,
@@ -652,10 +662,10 @@ const LocalIssueProjectionSchema = z
   })
   .strict();
 
-export const RemoteBindingStateSchema = z
+const CurrentRemoteBindingStateSchema = z
   .object({
     recordType: z.literal('binding-state'),
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
     bindingId: StableIdSchema,
     provider: ProviderSchema,
     metadataUpdatedAt: TimestampSchema,
@@ -701,6 +711,13 @@ export const RemoteBindingStateSchema = z
       });
     }
   });
+
+export const RemoteBindingStateSchema: z.ZodType<
+  z.infer<typeof CurrentRemoteBindingStateSchema>
+> = z.preprocess(
+  migrateLegacyBindingState,
+  CurrentRemoteBindingStateSchema,
+) as z.ZodType<z.infer<typeof CurrentRemoteBindingStateSchema>>;
 
 export const RemoteOperationOutcomeSchema = z
   .object({
@@ -773,7 +790,7 @@ const OperationAttemptSchema = z
     attemptId: StableIdSchema,
     startedAt: TimestampSchema,
     completedAt: TimestampSchema.nullable(),
-    transport: CapabilityReferenceSchema,
+    execution: CurrentCapabilityReferenceSchema,
     requestDigest: z.string().min(1).max(512),
     receiptDigest: z.string().min(1).max(512).nullable(),
   })
@@ -802,16 +819,16 @@ const OperationPreviewSchema = z
     bindingId: StableIdSchema,
     provider: ProviderSchema,
     providerContext: RemoteAccountContextSchema,
-    capabilityDigest: z.string().min(1).max(512),
+    capabilityEvidenceDigest: z.string().min(1).max(512),
     revisionDigest: z.string().min(1).max(512),
     policyDigest: z.string().min(1).max(512),
   })
   .strict();
 
-export const RemoteOperationRecordSchema = z
+const CurrentRemoteOperationRecordSchema = z
   .object({
     recordType: z.literal('operation'),
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
     operationId: StableIdSchema,
     correlationId: StableIdSchema,
     bindingId: StableIdSchema,
@@ -849,11 +866,7 @@ export const RemoteOperationRecordSchema = z
     approval: ApprovalEvidenceSchema.nullable(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
-    transport: z
-      .object({ id: z.string().min(1).max(255), provider: ProviderSchema })
-      .strict()
-      .nullable(),
-    selectedTransport: CapabilityReferenceSchema.nullable(),
+    selectedExecution: CurrentCapabilityReferenceSchema.nullable(),
     attempts: z.array(OperationAttemptSchema).max(32),
     observations: z.array(ExternalObservationSchema).max(64),
     verification: z.array(FieldVerificationSchema).max(64),
@@ -1061,25 +1074,25 @@ export const RemoteOperationRecordSchema = z
       });
     }
     if (
-      record.selectedTransport &&
-      record.selectedTransport.provider !== record.provider
+      record.selectedExecution &&
+      record.selectedExecution.provider !== record.provider
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['selectedTransport', 'provider'],
-        message: 'Selected transport provider must match operation provider.',
+        path: ['selectedExecution', 'provider'],
+        message: 'Selected execution provider must match operation provider.',
       });
     }
     if (
-      record.selectedTransport &&
-      JSON.stringify(record.selectedTransport.context) !==
+      record.selectedExecution &&
+      JSON.stringify(record.selectedExecution.context) !==
         JSON.stringify(record.providerContext)
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['selectedTransport', 'context'],
+        path: ['selectedExecution', 'context'],
         message:
-          'Selected transport context must match operation provider context.',
+          'Selected execution context must match operation provider context.',
       });
     }
     if (record.createIntent) {
@@ -1123,6 +1136,13 @@ export const RemoteOperationRecordSchema = z
       }
     }
   });
+
+export const RemoteOperationRecordSchema: z.ZodType<
+  z.infer<typeof CurrentRemoteOperationRecordSchema>
+> = z.preprocess(
+  migrateLegacyOperationRecord,
+  CurrentRemoteOperationRecordSchema,
+) as z.ZodType<z.infer<typeof CurrentRemoteOperationRecordSchema>>;
 
 const RemoteBatchMemberSchema = z
   .object({
@@ -1190,6 +1210,85 @@ export function assertRecordIdMatchesFilename(
       `Remote record filename '${filenameId}' does not match stable ID '${recordId}'.`,
     );
   }
+}
+
+function migrateLegacyCapabilityReference(value: unknown): unknown {
+  if (!isPlainRecord(value) || !('transport' in value)) return value;
+  return {
+    provider: value.provider,
+    surfaceKind: 'legacy-observation',
+    context: value.context,
+    evidenceDigest: value.capabilityDigest,
+    semanticCapabilities: [],
+  };
+}
+
+function migrateLegacyCapabilitySnapshot(value: unknown): unknown {
+  if (!isPlainRecord(value) || !('transport' in value)) return value;
+  return {
+    schemaVersion: 2,
+    provider: value.provider,
+    surfaceKind: 'legacy-observation',
+    context: value.context,
+    availability: 'unsupported-or-unresolved',
+    permissions: 'unknown',
+    semanticCapabilities: [],
+    observedAt: value.observedAt,
+    evidenceDigest: value.evidenceDigest,
+  };
+}
+
+function migrateLegacyBindingState(value: unknown): unknown {
+  if (!isPlainRecord(value) || value.recordType !== 'binding-state')
+    return value;
+  if (value.schemaVersion !== 1) return value;
+  return {
+    ...value,
+    schemaVersion: 2,
+    capability: migrateLegacyCapabilitySnapshot(value.capability),
+  };
+}
+
+function migrateLegacyOperationRecord(value: unknown): unknown {
+  if (!isPlainRecord(value) || value.recordType !== 'operation') return value;
+  if (value.schemaVersion !== 1) return value;
+  const preview = isPlainRecord(value.preview)
+    ? {
+        ...value.preview,
+        capabilityEvidenceDigest:
+          value.preview.capabilityEvidenceDigest ??
+          value.preview.capabilityDigest,
+      }
+    : value.preview;
+  if (isPlainRecord(preview)) delete preview.capabilityDigest;
+  const selectedExecution = migrateLegacyCapabilityReference(
+    value.selectedExecution ?? value.selectedTransport,
+  );
+  const attempts = Array.isArray(value.attempts)
+    ? value.attempts.map((attempt) => {
+        if (!isPlainRecord(attempt)) return attempt;
+        const execution = migrateLegacyCapabilityReference(
+          attempt.execution ?? attempt.transport,
+        );
+        const migrated: Record<string, unknown> = { ...attempt, execution };
+        delete migrated.transport;
+        return migrated;
+      })
+    : value.attempts;
+  const migrated: Record<string, unknown> = {
+    ...value,
+    schemaVersion: 2,
+    preview,
+    selectedExecution,
+    attempts,
+  };
+  delete migrated.transport;
+  delete migrated.selectedTransport;
+  return migrated;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export type RemoteAlias = z.infer<typeof RemoteAliasSchema>;

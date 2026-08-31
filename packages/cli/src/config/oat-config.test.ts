@@ -632,26 +632,34 @@ describe('oat-config', () => {
     },
   );
 
-  it('reads transport preferences from local and user PJM config', async () => {
+  it('rejects retired execution preferences from local and user PJM config', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));
     tempDirs.push(userConfigDir);
 
-    await writeOatLocalConfig(repoRoot, {
-      version: 1,
-      pjm: { remote: { transports: { github: ['gh'], linear: [] } } },
-    });
-    await writeUserConfig(userConfigDir, {
-      version: 1,
-      pjm: { remote: { transports: { jira: ['mcp', 'acli'] } } },
-    });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: { remote: { transports: { github: ['legacy'] } } },
+      }),
+      'utf8',
+    );
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: { remote: { transports: { jira: ['legacy'] } } },
+      }),
+      'utf8',
+    );
 
-    await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
-      pjm: { remote: { transports: { github: ['gh'], linear: [] } } },
-    });
-    await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
-      pjm: { remote: { transports: { jira: ['mcp', 'acli'] } } },
-    });
+    await expect(readOatLocalConfig(repoRoot)).rejects.toThrow(
+      /retired.*discover live/i,
+    );
+    await expect(readUserConfig(userConfigDir)).rejects.toThrow(
+      /retired.*discover live/i,
+    );
   });
 
   it('rejects transport config on the shared surface', async () => {
@@ -666,7 +674,7 @@ describe('oat-config', () => {
     );
 
     await expect(readOatConfig(repoRoot)).rejects.toThrow(
-      /pjm\.remote\.transports.*local or user/i,
+      /pjm\.remote\.transports.*retired/i,
     );
   });
 
