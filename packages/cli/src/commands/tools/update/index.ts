@@ -15,11 +15,16 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  type AutoSyncResult,
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
+import {
+  evaluatePackLifecycleOutcome,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
@@ -33,6 +38,7 @@ import {
   type UpdateTarget,
   type UpdateResult,
   type UpdateToolsDependencies,
+  failedUpdateLifecycleOutcomes,
   updateTools,
 } from './update-tools';
 
@@ -131,14 +137,33 @@ export function createToolsUpdateCommand(
 
       const scopes = resolveConcreteScopes(context.scope);
       const dryRun = opts.dryRun ?? false;
-      const result = await updateTools(
-        target,
-        scopes,
-        context.cwd,
-        context.home,
-        dryRun,
-        dependencies,
-      );
+      let result: UpdateResult;
+      try {
+        result = await updateTools(
+          target,
+          scopes,
+          context.cwd,
+          context.home,
+          dryRun,
+          dependencies,
+        );
+      } catch (error) {
+        if (target.kind === 'name') throw error;
+        const lifecycle = failedUpdateLifecycleOutcomes(target, scopes, error);
+        const message = error instanceof Error ? error.message : String(error);
+        if (context.json) {
+          logger.json({
+            target: describeTarget(target),
+            dryRun,
+            result: createEmptyUpdateResult(),
+            lifecycle,
+          });
+        } else {
+          logger.error(`Pack update failed: ${message}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
       const assetsRoot = dryRun ? null : await dependencies.resolveAssetsRoot();
 
       if (!dryRun && shouldBackfillWorkflowGitignore(result)) {
@@ -235,6 +260,7 @@ export function createToolsUpdateCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
+      const syncResults: AutoSyncResult[] = [];
       if (!dryRun && opts.sync !== false) {
         for (const scope of scopes) {
           const installedCanonicalPaths = [
@@ -248,24 +274,33 @@ export function createToolsUpdateCommand(
             (tool) => tool.scope === scope,
           );
           if (!updatedAtScope && installedCanonicalPaths.length === 0) continue;
-          await autoSync(
-            [scope],
-            context.cwd,
-            context.home,
-            logger,
-            syncDependencies,
-            { installedCanonicalPaths },
+          syncResults.push(
+            await autoSync(
+              [scope],
+              context.cwd,
+              context.home,
+              logger,
+              syncDependencies,
+              { installedCanonicalPaths },
+            ),
           );
         }
       }
+      const lifecycle = finalizeUpdateLifecycle(result.lifecycle, syncResults);
+      const legacyResult = { ...result };
+      delete legacyResult.lifecycle;
 
       if (context.json) {
         logger.json({
           target: describeTarget(target),
           dryRun,
-          result,
+          result: legacyResult,
           ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+          ...(lifecycle ? { lifecycle } : {}),
         });
+        if (lifecycle?.some(({ status }) => status !== 'complete')) {
+          process.exitCode = 1;
+        }
         return;
       }
 
@@ -310,7 +345,52 @@ export function createToolsUpdateCommand(
       if (result.updated.length === 0 && result.assetRefreshes.length === 0) {
         logger.info('No tools to update.');
       }
+      for (const outcome of lifecycle ?? []) {
+        if (outcome.status === 'complete') continue;
+        logger.warn(
+          `Pack ${outcome.selection.pack} update ${outcome.status}: ${outcome.recovery.map(({ message }) => message).join('; ')}`,
+        );
+        process.exitCode = 1;
+      }
     });
+}
+
+function createEmptyUpdateResult(): UpdateResult {
+  return {
+    updated: [],
+    current: [],
+    newer: [],
+    notInstalled: [],
+    notBundled: [],
+    assetRefreshes: [],
+    plans: [],
+  };
+}
+
+function finalizeUpdateLifecycle(
+  lifecycle: PackLifecycleOutcome[] | undefined,
+  syncResults: readonly AutoSyncResult[],
+): PackLifecycleOutcome[] | undefined {
+  if (!lifecycle || syncResults.length === 0) return lifecycle;
+  return lifecycle.map((outcome) => {
+    const relevant = syncResults.filter(({ scopes }) =>
+      scopes.some((scope) => outcome.selection.targetScopes.includes(scope)),
+    );
+    if (relevant.length === 0) return outcome;
+    return evaluatePackLifecycleOutcome({
+      selection: outcome.selection,
+      lifecycle: outcome.canonical.results,
+      sync: {
+        scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
+        status: relevant.every(({ synced }) => synced) ? 'complete' : 'failed',
+        providers: [],
+        ...(relevant.find(({ error }) => error)?.error
+          ? { error: relevant.find(({ error }) => error)!.error! }
+          : {}),
+      },
+      finalEvidence: outcome.finalEvidence,
+    });
+  });
 }
 
 /**

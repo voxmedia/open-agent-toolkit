@@ -1,5 +1,10 @@
 import { join } from 'node:path';
 
+import {
+  projectPackEvidence,
+  type PackScopeFacts,
+} from '@commands/tools/shared/pack-evidence';
+import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -71,6 +76,7 @@ export interface RemoveResult {
   }>;
   packOutcomes: PackRemovalOutcome[];
   notInstalled: string[];
+  lifecycle?: PackLifecycleOutcome[];
 }
 
 function matchesTarget(tool: ToolInfo, target: RemoveTarget): boolean {
@@ -385,5 +391,84 @@ export async function removeTools(
     retainedOwnerData,
     packOutcomes,
     notInstalled: [],
+    lifecycle: removalLifecycleOutcomes(
+      selectedPacks(target),
+      scopes,
+      packOutcomes,
+      dryRun,
+    ),
   };
+}
+
+function removalLifecycleOutcomes(
+  packs: readonly PackName[],
+  scopes: readonly ConcreteScope[],
+  outcomes: readonly PackRemovalOutcome[],
+  dryRun: boolean,
+): PackLifecycleOutcome[] {
+  return packs.map((pack) => {
+    const removedScopes = outcomes
+      .filter((outcome) => outcome.pack === pack && outcome.removed)
+      .map(({ scope }) => scope);
+    const facts: PackScopeFacts[] = scopes.map((scope) => ({
+      scope,
+      intent: {
+        pack,
+        scope,
+        enabled: false,
+        source: 'none',
+        configPath: `${scope === 'project' ? '<project>' : '~'}/.oat/config.json`,
+        diagnostics: [],
+      },
+      inventory: { state: 'available', source: 'pack-inventory' },
+      completeness: 'absent',
+      health: 'absent',
+      realization: 'absent',
+    }));
+    return {
+      schemaVersion: 1,
+      selection: {
+        pack,
+        requested:
+          scopes.includes('project') && scopes.includes('user')
+            ? 'both'
+            : scopes[0]!,
+        retainedRealizedScopes: removedScopes,
+        targetScopes: scopes,
+      },
+      canonical: {
+        status: removedScopes.length > 0 && !dryRun ? 'applied' : 'unchanged',
+        results: [],
+      },
+      sync: { scopes: [], status: 'not-run', providers: [] },
+      finalEvidence: projectPackEvidence({ canonical: null, scopes: facts }),
+      status: 'complete',
+      recovery: [],
+    };
+  });
+}
+
+export function failedRemovalLifecycleOutcomes(
+  target: Exclude<RemoveTarget, { kind: 'name' }>,
+  scopes: readonly ConcreteScope[],
+  error: unknown,
+): PackLifecycleOutcome[] {
+  const message = error instanceof Error ? error.message : String(error);
+  return selectedPacks(target).map((pack) => ({
+    schemaVersion: 1,
+    selection: {
+      pack,
+      requested:
+        scopes.includes('project') && scopes.includes('user')
+          ? 'both'
+          : scopes[0]!,
+      retainedRealizedScopes: [],
+      targetScopes: scopes,
+    },
+    canonical: { status: 'failed', results: [] },
+    sync: { scopes: [], status: 'not-run', providers: [] },
+    finalEvidence: null,
+    status: 'failed',
+    recovery: [{ code: 'canonical-apply-failed', message }],
+  }));
 }

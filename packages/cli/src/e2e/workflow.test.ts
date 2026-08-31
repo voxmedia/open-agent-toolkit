@@ -241,6 +241,25 @@ describe('e2e workflow', () => {
       const result = await runCli(root, ['sync', ...scopeArgs]);
 
       expect(result.exitCode).toBe(0);
+      const preview = await runCli(
+        root,
+        [
+          'tools',
+          'remove',
+          '--pack',
+          'core',
+          '--dry-run',
+          '--no-sync',
+          '--json',
+          ...scopeArgs,
+        ],
+        ['--json'],
+      );
+      expect(preview.exitCode).toBe(0);
+      expect(JSON.parse(preview.stdout).lifecycle[0].selection).toMatchObject({
+        pack: 'core',
+        targetScopes: ['user'],
+      });
       await expect(
         lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
       ).resolves.toBeDefined();

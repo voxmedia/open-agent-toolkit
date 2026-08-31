@@ -1074,6 +1074,27 @@ describe('CLI command integration', () => {
       const sync = await runCli(root, ['sync', '--scope', 'user']);
       expect(sync.exitCode).toBe(0);
 
+      for (const scopeArgs of [['--scope', 'user'], ['--scope=user']]) {
+        const preview = await runCli(
+          root,
+          [
+            'tools',
+            'remove',
+            '--pack',
+            'core',
+            '--dry-run',
+            '--no-sync',
+            '--json',
+            ...scopeArgs,
+          ],
+          ['--json'],
+        );
+        expect(preview.exitCode).toBe(0);
+        expect(JSON.parse(preview.stdout).lifecycle[0].selection).toMatchObject(
+          { pack: 'core', targetScopes: ['user'] },
+        );
+      }
+
       // Skills materialize through user path mappings.
       await expect(
         lstat(join(userRoot, '.claude', 'skills', 'skill-one')),

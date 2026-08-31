@@ -483,6 +483,20 @@ describe('updateTools', () => {
       expect(serializePackReconcilePlan(applied.plans[0]!)).toBe(
         serializePackReconcilePlan(dryRun.plans[0]!),
       );
+      expect(dryRun.lifecycle).toMatchObject([
+        {
+          schemaVersion: 1,
+          status: 'complete',
+          selection: { pack: 'docs', targetScopes: ['user'] },
+        },
+      ]);
+      expect(applied.lifecycle).toMatchObject([
+        {
+          status: 'complete',
+          canonical: { status: 'applied' },
+          finalEvidence: { realizedPlacement: 'user' },
+        },
+      ]);
       await expect(
         inventoryScopedPack({
           pack: 'docs',

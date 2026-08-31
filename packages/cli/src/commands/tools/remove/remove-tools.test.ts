@@ -53,6 +53,7 @@ import { createToolsRemoveCommand } from './index';
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,
+  failedRemovalLifecycleOutcomes,
   removeTools,
 } from './remove-tools';
 
@@ -243,6 +244,19 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toContain(
       '/project/.agents/skills/oat-idea-ideate',
     );
+    expect(result.lifecycle).toMatchObject([
+      {
+        schemaVersion: 1,
+        status: 'complete',
+        selection: {
+          pack: 'ideas',
+          targetScopes: ['project'],
+          retainedRealizedScopes: ['project'],
+        },
+        canonical: { status: 'applied' },
+        finalEvidence: { realizedPlacement: 'none' },
+      },
+    ]);
   });
 
   it('removes the brainstorm pack and its skill directory', async () => {
@@ -460,6 +474,7 @@ describe('removeTools', () => {
     expect(result.removed).toHaveLength(1);
     expect(deps.removedDirs).toHaveLength(0);
     expect(deps.removedFiles).toHaveLength(0);
+    expect(result).not.toHaveProperty('lifecycle');
   });
 
   it('errors when tool name not found in any scope', async () => {
@@ -476,6 +491,27 @@ describe('removeTools', () => {
 
     expect(result.notInstalled).toEqual(['nonexistent']);
     expect(result.removed).toHaveLength(0);
+  });
+
+  it('normalizes a pack removal failure into structured lifecycle evidence', () => {
+    expect(
+      failedRemovalLifecycleOutcomes(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        new Error('managed assets remain'),
+      ),
+    ).toMatchObject([
+      {
+        status: 'failed',
+        selection: { pack: 'docs', targetScopes: ['user'] },
+        recovery: [
+          {
+            code: 'canonical-apply-failed',
+            message: 'managed assets remain',
+          },
+        ],
+      },
+    ]);
   });
 
   it('removes tools across multiple scopes', async () => {
