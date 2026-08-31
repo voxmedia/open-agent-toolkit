@@ -555,15 +555,16 @@ git commit -m "test(p03-t05): assert artifact-missing recovery contract"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed  | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
-| p02    | code     | passed  | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
-| p03    | code     | passed  | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
-| final  | code     | passed  | 2026-08-31 | reviews/archived/code-final-review-2026-08-31T000201Z.md    | 659547363032fd9f41eefadc947bb0496fe7457f | auto       | -                             |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                             |
-| plan   | artifact | passed  | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed   | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
+| p02    | code     | passed   | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
+| p03    | code     | passed   | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
+| final  | code     | passed   | 2026-08-31 | reviews/archived/code-final-review-2026-08-31T000201Z.md    | 659547363032fd9f41eefadc947bb0496fe7457f | auto       | -                             |
+| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                             |
+| plan   | artifact | passed   | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| final  | code     | received | 2026-08-31 | reviews/final-review-2026-08-31T000938Z.md                  | 659547363032fd9f41eefadc947bb0496fe7457f | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
