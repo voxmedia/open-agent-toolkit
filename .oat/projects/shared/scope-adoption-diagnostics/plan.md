@@ -768,6 +768,7 @@ codes after both remote-review fixes are committed.
 | plan           | artifact | fixes_completed | 2026-08-30 | -                                                             | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 | final          | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md`         | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
 | github-pr #249 | code     | fixes_completed | 2026-08-31 | `reviews/archived/remote-pr-249-review-2026-08-31T040842Z.md` | 5b5e6837eac12695ae38d7d99cee96f095b97ae1 | -          | -                             |
+| final          | code     | received        | 2026-08-31 | `reviews/final-review-2026-08-31T043238Z.md`                  | 1b24f8b1eb9a2064219e422faacd560378c1c1fc | manual     | -                             |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
