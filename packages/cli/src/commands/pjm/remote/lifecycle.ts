@@ -175,6 +175,13 @@ export function baselineRevisionDigest(baseline: LifecycleBaseline): string {
   return semanticDigest(baseline);
 }
 
+export async function publishUnboundBinding<T>(
+  input: T,
+  dependencies: { createAndBind(value: T): Promise<unknown> },
+): Promise<unknown> {
+  return dependencies.createAndBind(input);
+}
+
 export type MutationAuthorityEvidence =
   | { mode: 'read-only' }
   | {

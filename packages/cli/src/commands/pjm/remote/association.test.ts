@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findDanglingAssociatedIssueBindings,
   isAssociationAuthorizing,
+  materializeBoundAssociation,
   parseAssociatedIssues,
   serializeAssociatedIssues,
 } from './association';
@@ -72,5 +73,27 @@ describe('associated issue compatibility codec', () => {
       findDanglingAssociatedIssueBindings(refs, new Set(['bnd_binding_123'])),
     ).toEqual(['bnd_binding_456']);
     expect(refs.every((ref) => !isAssociationAuthorizing(ref))).toBe(true);
+  });
+
+  it('materializes one compact canonical association after verified creation', () => {
+    const refs = materializeBoundAssociation(
+      parseAssociatedIssues(['legacy-ref']),
+      {
+        type: 'linear',
+        ref: 'ENG-1',
+        bindingId: 'bnd_binding_123',
+      },
+    );
+    expect(serializeAssociatedIssues(refs)).toEqual([
+      'legacy-ref',
+      { type: 'linear', ref: 'ENG-1', binding: 'bnd_binding_123' },
+    ]);
+    expect(() =>
+      materializeBoundAssociation(refs, {
+        type: 'linear',
+        ref: 'ENG-1',
+        bindingId: 'bnd_binding_123',
+      }),
+    ).toThrow(/already exists/);
   });
 });

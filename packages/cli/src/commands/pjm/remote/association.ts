@@ -76,6 +76,31 @@ export function isAssociationAuthorizing(_ref: AssociatedIssueRef): false {
   return false;
 }
 
+export function materializeBoundAssociation(
+  existing: readonly AssociatedIssueRef[],
+  input: { type: string; ref: string; bindingId: string },
+): AssociatedIssueRef[] {
+  if (
+    existing.some(
+      (entry) =>
+        entry.kind === 'reference' && entry.bindingId === input.bindingId,
+    )
+  ) {
+    throw new Error(
+      `Association for binding '${input.bindingId}' already exists.`,
+    );
+  }
+  return [
+    ...existing,
+    {
+      kind: 'reference',
+      type: input.type,
+      ref: input.ref,
+      bindingId: input.bindingId,
+    },
+  ];
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

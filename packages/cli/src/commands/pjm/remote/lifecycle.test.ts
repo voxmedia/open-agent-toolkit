@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   intakeRemoteIssue,
   publishBinding,
+  publishUnboundBinding,
   reconcileRemoteBinding,
   refreshBinding,
   type LifecycleBinding,
@@ -232,6 +233,13 @@ function createMutationHarness() {
 }
 
 describe('remote lifecycle mutations', () => {
+  it('delegates unbound publication to the create-and-bind transaction', async () => {
+    const createAndBind = vi.fn(async () => ({ status: 'pending' }));
+    await expect(
+      publishUnboundBinding({ target: 'item-1' }, { createAndBind }),
+    ).resolves.toEqual({ status: 'pending' });
+    expect(createAndBind).toHaveBeenCalledWith({ target: 'item-1' });
+  });
   it('persists intent, pre-reads, attempts once, and verifies pinned readback', async () => {
     const harness = createMutationHarness();
     await expect(

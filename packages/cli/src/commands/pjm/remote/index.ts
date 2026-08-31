@@ -22,6 +22,11 @@ export interface RemoteCommandRequest {
   bindingId?: string;
   providerRef?: string;
   backlogId?: string;
+  createTarget?: {
+    provider: string;
+    localKind: 'backlog' | 'project';
+    localId: string;
+  };
   observationStdin?: boolean;
   storage?: {
     repositoryFingerprint: string;
@@ -207,10 +212,16 @@ function addBindingCommand(
   dependencies: PjmRemoteCommandDependencies,
   mutation: boolean,
 ): void {
-  const command = parent
-    .command(name)
-    .description(description)
-    .requiredOption('--binding <id>', 'Remote binding ID');
+  const command = parent.command(name).description(description);
+  if (name === 'publish') {
+    command
+      .option('--binding <id>', 'Existing remote binding ID')
+      .option('--provider <provider>', 'Provider for a new remote issue')
+      .option('--to-backlog <id>', 'Local backlog item to publish')
+      .option('--to-project <id>', 'Local project to publish');
+  } else {
+    command.requiredOption('--binding <id>', 'Remote binding ID');
+  }
   if (mutation) {
     command
       .option(
@@ -223,10 +234,37 @@ function addBindingCommand(
   }
   command.action(
     async (options: Record<string, string>, commander: Command) => {
+      const createTargets = [options.toBacklog, options.toProject].filter(
+        Boolean,
+      );
+      if (name === 'publish') {
+        const usesBinding = Boolean(options.binding);
+        const usesCreateTarget = createTargets.length > 0;
+        if (usesBinding === usesCreateTarget || createTargets.length > 1) {
+          throw new Error(
+            'Publish requires exactly one existing binding or one local create target.',
+          );
+        }
+        if (usesCreateTarget && !options.provider) {
+          throw new Error('Publishing an unbound target requires a provider.');
+        }
+        if (usesBinding && options.provider) {
+          throw new Error(
+            'Provider is only valid for an unbound publish target.',
+          );
+        }
+      }
       const request: Omit<RemoteCommandRequest, 'projectRoot'> = {
         operation: name,
         bindingId: options.binding,
       };
+      if (options.toBacklog || options.toProject) {
+        request.createTarget = {
+          provider: options.provider!,
+          localKind: options.toBacklog ? 'backlog' : 'project',
+          localId: (options.toBacklog ?? options.toProject)!,
+        };
+      }
       if (mutation) request.authority = parseAuthority(options);
       await execute(request, commander, dependencies);
     },

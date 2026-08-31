@@ -127,6 +127,66 @@ describe('pjm remote command family', () => {
     },
   );
 
+  it.each([
+    ['--to-backlog', 'item-1', 'backlog'],
+    ['--to-project', 'project-1', 'project'],
+  ] as const)(
+    'routes an unbound %s publish through the create-binding lifecycle',
+    async (targetOption, localId, localKind) => {
+      const { root, requests } = harness();
+      await root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--provider',
+        'provider-a',
+        targetOption,
+        localId,
+        '--instruction-digest',
+        'sha256:instruction',
+      ]);
+      expect(requests[0]).toMatchObject({
+        operation: 'publish',
+        bindingId: undefined,
+        createTarget: { provider: 'provider-a', localKind, localId },
+      });
+    },
+  );
+
+  it('fails closed for ambiguous or incomplete unbound publish targets', async () => {
+    const ambiguous = harness();
+    await expect(
+      ambiguous.root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--binding',
+        'bnd-1',
+        '--provider',
+        'provider-a',
+        '--to-backlog',
+        'item-1',
+        '--instruction-digest',
+        'sha256:instruction',
+      ]),
+    ).rejects.toThrow(/exactly one/);
+    const missingProvider = harness();
+    await expect(
+      missingProvider.root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--to-project',
+        'project-1',
+        '--instruction-digest',
+        'sha256:instruction',
+      ]),
+    ).rejects.toThrow(/requires a provider/);
+  });
+
   it('fails closed for absent adoption and missing mutation authority', async () => {
     const absent = harness('absent');
     await absent.root.parseAsync([
