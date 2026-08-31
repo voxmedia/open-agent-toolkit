@@ -28,7 +28,7 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | review   | 5     | 5/5       |
+| Phase 3 | blocked  | 5     | 5/5       |
 | Phase 4 | pending  | 5     | 0/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 4 pending after verified bounded fixes
+**Status:** blocked after terminal review round 4; operator disposition required
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -612,6 +612,24 @@ high confidence. The original commit remains the source authority.
   The final full run replayed the immediately prior live CLI 316-file / 4,757-
   test result and ran smoke 140/140, skills 586/586, and release 39 pass plus
   one skip live.
+
+### Review Round 4 — Terminal Governance Boundary
+
+- Artifact: `reviews/p03-review-2026-08-31T223136Z.md`
+- Reviewed head: `4ddd2e4dcf42ccc5e8fe2252bcb4168fff24dc3c`
+- Verdict: changes requested; 0 Critical, 1 Important, 0 Medium, 0 Minor.
+- Reconnaissance: attempted through one bounded read-only intelligent-recon
+  lane; the artifact records complete orchestration evidence.
+- Both round-3 Important findings and every earlier p03 review finding are
+  fixed. Expanded p03 passed 20 files / 504 tests, focused sync passed 61/61,
+  and the live invalid JSON-scope reproduction failed before writes.
+- Remaining blocker: every production provider refresh policy is `unknown`.
+  The design and plan require either one defensible sourced non-unknown policy
+  or an explicit HiLL decision accepting and durably recording the
+  first-release FR7 limitation. Neither exists, while current bookkeeping
+  overstates p03-t05 as sourced and complete.
+- This operator-authorized round 4 is terminal. No fifth automatic correction
+  or p04 launch is authorized; operator disposition is required.
 
 ---
 

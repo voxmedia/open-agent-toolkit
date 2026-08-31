@@ -1,7 +1,10 @@
 ---
 oat_current_task: p04-t01
 oat_last_commit: cb8156ab27a864e86fafcd857f7d98ecbb8266c1
-oat_blockers: []
+oat_blockers:
+  - task_id: p03
+    reason: terminal High review round 4 found no sourced non-unknown production refresh policy and no recorded HiLL acceptance of the FR7 first-release limitation
+    since: 2026-08-31
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -92,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T22:17:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T22:36:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,10 +111,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 round-3 fixes are complete at `cb8156ab27`. Invalid
-provider scopes now fail before resolution or writes, and core human apply
-output renders actual or explicitly unknown outcomes. Fresh independent High
-review round 4 is next; Phase 4 remains gated until it passes.
+Implementation - Phase 3 is blocked after terminal High review round 4. Both
+authorized round-3 defects are fixed, but every production refresh policy is
+still `unknown`; the design requires either one sourced non-unknown policy or
+an explicit HiLL decision accepting the first-release FR7 limitation. Phase 4
+remains gated pending operator disposition.
 
 ## Artifacts
 
