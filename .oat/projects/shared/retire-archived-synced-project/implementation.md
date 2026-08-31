@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -19,31 +19,31 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p01   | pending | 2     | 0/2       |
-| p02   | pending | 3     | 0/3       |
-| p03   | pending | 3     | 0/3       |
-| p04   | pending | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 2     | 2/2       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 3     | 0/3       |
+| p04   | pending     | 2     | 0/2       |
 
-**Total:** 0/10 tasks completed
+**Total:** 2/10 tasks completed
 
 ---
 
 ## Phase 1: Terminal Ref and Transition Foundation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress — review fixes
+**Started:** 2026-08-31
 
 ### Task p01-t01: Define completed synced-ref identity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c2fdaf291c43128ad0b3fbc7f8374bc681b78b8b
 
 ### Task p01-t02: Implement idempotent active-to-completed ref transition
 
-**Status:** pending
-**Commit:** -
+**Status:** completed — review fixes pending
+**Commit:** ce631f78b9ebdce4746ec2f1614ffb30362c3ddf
 
 ---
 
@@ -114,11 +114,37 @@ oat_generated: false
 
 _Orchestration runs from `oat-project-implement` are appended here._
 
+### Run 1 — p01 implementation and review
+
+- Phase base: `5eebcd7e2fa02311a3d0efb91b3162b890ec96bf`
+- Implementation request: `e487529f-de41-4e91-9a35-005eca4af1c0`
+- Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Implementation outcome: `DONE_WITH_CONCERNS` accepted as phase success; the
+  only concern is the planned p04 lockstep version bump.
+- Task commits: `c2fdaf291c43128ad0b3fbc7f8374bc681b78b8b`,
+  `ce631f78b9ebdce4746ec2f1614ffb30362c3ddf`
+- Verification: 123/123 phase tests, `pnpm check`, `pnpm type-check`,
+  `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, and
+  `pnpm build:docs` passed. Release version gates remain intentionally pending
+  p04-t02.
+- Implementation dispatch: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Review request: `0972b10d-cd3e-4af9-b680-82e5e008eb08`
+- Review target: `oat-reviewer-gpt-5-6-sol-high`
+- Review artifact: `reviews/p01-review-2026-08-31T052034Z.md`
+- Review result: blocked — 1 Critical, 1 Important, 0 Medium, 0 Minor.
+- Review dispatch: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Review reconnaissance: not attempted.
+- Fix iterations: 0 of 2 used; bounded fix continuation is next.
+- Optional nested dispatches: none.
+- Outstanding items: lease both remote ref mutations and fetch/verify the
+  completed object before local completed-ref reconciliation.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
 
-Implementation initialized at `p01-t01`; no phase worker has been dispatched yet.
+Phase p01 implementation completed in two commits. Its first independent review
+found two blocking defects; bounded fix continuation is pending.
 
 ## Deviations from Plan / Design
 
