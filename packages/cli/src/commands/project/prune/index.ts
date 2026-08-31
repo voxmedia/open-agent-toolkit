@@ -242,16 +242,15 @@ async function runPrune(
     context.logger.warn(
       `Pruning ${target.slug} removes ${removedRefs}; pinned links will stop resolving. Durable local/S3 archives are preserved.`,
     );
-    const result =
-      terminal?.state === 'completed-only'
-        ? { status: 'pruned' as const, lifecycleCommit: null }
-        : await dependencies.pruneSynced(target, dependencies.gitRunner, {
-            force: options.force,
-            commit: options.commit,
-            ...(terminal?.state === 'both' && terminal.activeSha
-              ? { expectedActiveAliasSha: terminal.activeSha }
-              : {}),
-          });
+    const result = await dependencies.pruneSynced(
+      target,
+      dependencies.gitRunner,
+      {
+        force: options.force,
+        commit: options.commit,
+        ...(terminal ? { expectedActiveAliasSha: terminal.expectedSha } : {}),
+      },
+    );
     const completedDeletion = terminalRef
       ? await dependencies.deleteCompletedSyncedRefForPrune(
           target,

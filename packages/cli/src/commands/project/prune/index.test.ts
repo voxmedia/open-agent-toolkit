@@ -1,12 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import {
-  access,
-  mkdir,
-  readFile,
-  realpath,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { access, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -23,7 +16,6 @@ import {
   pruneSynced,
   pullSynced,
   pushSynced,
-  removeSyncedCheckout,
 } from '@commands/project/sync/ref-sync';
 import { syncedRecordPath } from '@commands/shared/project-scope';
 import {
@@ -167,7 +159,7 @@ describe('createProjectPruneCommand', () => {
     }
   });
 
-  it('deletes a completed-only terminal ref without invoking active prune', async () => {
+  it('cleans interrupted local state before deleting a completed-only terminal ref', async () => {
     const setup = harness('# archived state\n');
     setup.inspectTerminalRefs.mockResolvedValueOnce({
       state: 'completed-only',
@@ -180,12 +172,41 @@ describe('createProjectPruneCommand', () => {
 
     await run(setup.command, ['demo', '--force']);
 
-    expect(setup.pruneSynced).not.toHaveBeenCalled();
+    expect(setup.pruneSynced).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'demo' }),
+      expect.anything(),
+      {
+        force: true,
+        commit: true,
+        expectedActiveAliasSha: 'a'.repeat(40),
+      },
+    );
     expect(setup.deleteCompletedSyncedRefForPrune).toHaveBeenCalledOnce();
     expect(setup.capture.warn[0]).toContain(
       'Durable local/S3 archives are preserved',
     );
     expect(process.exitCode).toBe(0);
+  });
+
+  it('retains the completed ref when interrupted local cleanup fails', async () => {
+    const setup = harness('# archived state\n');
+    setup.inspectTerminalRefs.mockResolvedValueOnce({
+      state: 'completed-only',
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      expectedSha: 'a'.repeat(40),
+      activeSha: null,
+      completedSha: 'a'.repeat(40),
+    });
+    setup.pruneSynced.mockRejectedValueOnce(
+      new Error('interrupted local cleanup failed'),
+    );
+
+    await run(setup.command, ['demo', '--force']);
+
+    expect(setup.deleteCompletedSyncedRefForPrune).not.toHaveBeenCalled();
+    expect(setup.capture.error[0]).toContain('local cleanup failed');
+    expect(process.exitCode).toBe(2);
   });
 
   it('deletes a matching active alias and completed ref through explicit prune', async () => {
@@ -224,7 +245,7 @@ describe('createProjectPruneCommand', () => {
 });
 
 describe('prune command integration', () => {
-  it('removes matching terminal aliases while preserving the durable archive', async () => {
+  it('retries completed-only cleanup before deleting terminal history', async () => {
     const fixture = await createSyncedFixture();
     try {
       const slug = 'terminal-prune';
@@ -242,9 +263,14 @@ describe('prune command integration', () => {
         ['push', '-q', 'origin', `${sourceSha}:refs/oat/completed/${slug}`],
         { cwd: fixture.cloneA },
       );
-      await removeSyncedCheckout(target, defaultGitRunner, { force: true });
       const recordPath = syncedRecordPath(target.syncedRoot, slug);
-      await rm(recordPath, { force: true });
+      await writeSyncedRecord(
+        recordPath,
+        buildSyncedRecord(slug, new Date('2026-08-31T00:00:00Z')),
+      );
+      execFileSync('git', ['push', '-q', 'origin', `:${target.ref}`], {
+        cwd: fixture.cloneA,
+      });
       const archivePath = join(
         fixture.cloneA,
         '.oat/projects/archived',
@@ -254,7 +280,54 @@ describe('prune command integration', () => {
       await mkdir(dirname(archivePath), { recursive: true });
       await writeFile(archivePath, '# durable archive\n');
 
-      const command = createProjectPruneCommand({
+      const capture = createLoggerCapture();
+      const interruptedCleanup = vi.fn(
+        async (..._args: Parameters<typeof pruneSynced>) => {
+          throw new Error('injected local cleanup interruption');
+        },
+      );
+      const interruptedCommand = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        pruneSynced: interruptedCleanup,
+        processEnv: {},
+      });
+      await run(interruptedCommand, [slug, '--force', '--no-commit']);
+
+      expect(process.exitCode).toBe(2);
+      expect(capture.error[0]).toContain('local cleanup interruption');
+      await expect(access(target.projectPath)).resolves.toBeUndefined();
+      await expect(access(recordPath)).resolves.toBeUndefined();
+      expect(
+        (
+          await defaultGitRunner.run(
+            ['show-ref', '--verify', '--quiet', target.ref],
+            { cwd: fixture.cloneA, allowFailure: true },
+          )
+        ).code,
+      ).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          ['ls-remote', 'origin', `refs/oat/completed/${slug}`],
+          {
+            cwd: fixture.cloneA,
+            encoding: 'utf8',
+          },
+        ),
+      ).toContain(sourceSha);
+
+      process.exitCode = undefined;
+      const retryCommand = createProjectPruneCommand({
         buildCommandContext: (options: GlobalOptions): CommandContext => ({
           scope: 'project',
           dryRun: false,
@@ -268,9 +341,19 @@ describe('prune command integration', () => {
         resolveProjectRoot: async () => fixture.cloneA,
         processEnv: {},
       });
-      await run(command, [slug, '--force', '--no-commit']);
+      await run(retryCommand, [slug, '--force', '--no-commit']);
 
       expect(process.exitCode).toBe(0);
+      await expect(access(target.projectPath)).rejects.toThrow();
+      await expect(access(recordPath)).rejects.toThrow();
+      expect(
+        (
+          await defaultGitRunner.run(
+            ['show-ref', '--verify', '--quiet', target.ref],
+            { cwd: fixture.cloneA, allowFailure: true },
+          )
+        ).code,
+      ).toBe(1);
       expect(
         execFileSync(
           'git',
