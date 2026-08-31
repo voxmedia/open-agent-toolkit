@@ -322,6 +322,19 @@ check exited 0.
 **Next:** Obtain another narrowed final decision review before replacing the
 stale exit-gate generation.
 
+### Final Decision Re-review Passed
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T013431Z.md`
+**Reviewed head:** `c56ba6995a90eab7b1d06c2c79b016ca9940e54f`
+
+The independent decision review verified p03-t09 as complete, revalidated the
+p03-t07 tokenizer and p03-t08 migrated estimate, and found zero Critical,
+Important, Medium, or Minor findings. Reconnaissance was not attempted.
+
+**Next:** Start a replacement configured exit-gate generation from this exact
+reviewed implementation basis.
+
 ---
 
 ## Orchestration Runs
