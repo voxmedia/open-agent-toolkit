@@ -376,6 +376,9 @@ packages/cli/src/commands/pjm/remote/preview.test.ts.
 
 ### Task p02-t08: Implement operation and substep state reduction
 
+**Implementation:** completed in
+`2e7496aab1941d017696bdaa513cf16ab5bd7666`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/operation-state.ts and
 packages/cli/src/commands/pjm/remote/operation-state.test.ts.
 

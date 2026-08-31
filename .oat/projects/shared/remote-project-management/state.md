@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t08
-oat_last_commit: 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
+oat_current_task: p02-t09
+oat_last_commit: 2e7496aab1941d017696bdaa513cf16ab5bd7666
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T13:28:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T13:33:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,8 +40,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 is in progress. Projection through reconciliation,
-effective authority, and digest-bound preview/approval layers are complete.
+Implementation — Phase 2 is in progress. Safety layers through digest-bound
+approval and restart-safe operation/substep state reduction are complete.
 
 ## Artifacts
 
@@ -91,6 +91,7 @@ effective authority, and digest-bound preview/approval layers are complete.
 - ✓ p02-t05 classified governed fields with pure three-way reconciliation
 - ✓ p02-t06 resolved exact fail-closed authority with source traces
 - ✓ p02-t07 bound previews and approvals to every load-bearing input
+- ✓ p02-t08 enforced terminal-safe operation and composite substep reduction
 
 ## Blockers
 
@@ -98,4 +99,4 @@ None.
 
 ## Next Milestone
 
-Implement p02-t08 remote operation and composite substep state reduction.
+Implement p02-t09 read-back postcondition verification and retry blocking.

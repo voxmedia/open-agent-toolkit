@@ -376,6 +376,23 @@ and lint passed.
 
 ### Task p02-t08: Implement operation and substep state reduction
 
+**Status:** completed
+**Commit:** 2e7496aab1941d017696bdaa513cf16ab5bd7666
+
+**Outcome:** Added the exact terminal-safe operation transition graph for
+parents and substeps plus deterministic ordered composite reduction. Verified
+substeps remain completed, only dependency-ready never-attempted steps may
+continue, and adverse outcomes after any verified effect reduce to partial with
+reconciliation required.
+
+**Verification:** Operation-state suite passed (11 tests, including the full
+parent/substep transition matrix); CLI format/build, type-check, and lint
+passed.
+
+---
+
+### Task p02-t09: Verify postconditions and block blind retries
+
 **Status:** pending
 **Commit:** -
 
@@ -598,6 +615,7 @@ Chronological log of implementation progress.
 - [x] p02-t05: Classify three-way field reconciliation - 6e4533d0b1fad24aa6fe735788786fee500fd0a6
 - [x] p02-t06: Resolve effective remote authority exactly - 6032d969ef102012e658bd788565ca1596553bb0
 - [x] p02-t07: Bind previews and approvals to load-bearing inputs - 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
+- [x] p02-t08: Implement operation and substep state reduction - 2e7496aab1941d017696bdaa513cf16ab5bd7666
 
 **What changed (high level):**
 
