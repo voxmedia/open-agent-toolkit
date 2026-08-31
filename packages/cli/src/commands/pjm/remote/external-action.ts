@@ -24,6 +24,11 @@ const SemanticFieldNameSchema = z
   .min(1)
   .max(64)
   .regex(/^[A-Za-z][A-Za-z0-9_-]*$/);
+const DurableActionIdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/);
 const ProviderSchema = z.enum(['github', 'linear', 'jira']);
 const SemanticOperationSchema = z.enum([
   'read',
@@ -38,8 +43,8 @@ const SemanticOperationSchema = z.enum([
 export const ExternalObservationEnvelopeSchema = z
   .object({
     schemaVersion: z.literal(1),
-    operationId: z.string().min(1).max(128),
-    stepId: z.string().min(1).max(128),
+    operationId: DurableActionIdSchema,
+    stepId: DurableActionIdSchema,
     actionDigest: z.string().min(1).max(512),
     observedAt: z.string().datetime({ offset: true }),
     surfaceKind: z.enum(['connector', 'configured-cli']),
@@ -80,20 +85,25 @@ export interface ExternalActionEnvelope {
   semanticOperation: z.infer<typeof SemanticOperationSchema>;
   context: z.infer<typeof RemoteAccountContextSchema>;
   intent: Record<string, unknown>;
-  expectedObservation: { fields: string[]; requireIdentity: boolean };
+  expectedObservation: {
+    fields: string[];
+    requireIdentity: boolean;
+    stableId: string | null;
+    capabilityEvidenceDigest: string;
+  };
   outboundSafety: {
     projectionDigest: string;
     resultDigest: string;
   } | null;
 }
 
-const ScalarSchema = z.union([
-  z.string().max(1_048_576),
-  z.number(),
-  z.boolean(),
-  z.null(),
-]);
-const ProjectionSchema = z.record(ScalarSchema);
+const WritablePlanningFieldsSchema = z
+  .object({
+    title: z.string().max(8_192).optional(),
+    description: z.string().max(1_048_576).nullable().optional(),
+    priority: z.string().max(255).nullable().optional(),
+  })
+  .strict();
 const IdentityIntentSchema = z
   .object({
     stableId: z.string().min(1).max(512),
@@ -131,14 +141,14 @@ const ActionIntentSchemas: Record<
           scope: z.enum(['shared', 'synced', 'local']),
         })
         .strict(),
-      fields: ProjectionSchema,
+      fields: WritablePlanningFieldsSchema,
       provenanceToken: z.string().min(1).max(512),
     })
     .strict(),
   update: z
     .object({
       stableId: z.string().min(1).max(512).nullable().optional(),
-      fields: ProjectionSchema,
+      fields: WritablePlanningFieldsSchema,
     })
     .strict(),
   transition: z
@@ -162,8 +172,8 @@ export type ExternalObservationEnvelope = z.infer<
 const ExternalActionBaseSchema = z
   .object({
     schemaVersion: z.literal(1),
-    operationId: z.string().min(1).max(128),
-    stepId: z.string().min(1).max(128),
+    operationId: DurableActionIdSchema,
+    stepId: DurableActionIdSchema,
     actionDigest: z.string().min(1).max(512),
     provider: ProviderSchema,
     semanticOperation: SemanticOperationSchema,
@@ -173,6 +183,8 @@ const ExternalActionBaseSchema = z
       .object({
         fields: z.array(SemanticFieldNameSchema).max(64),
         requireIdentity: z.boolean(),
+        stableId: z.string().min(1).max(512).nullable().optional(),
+        capabilityEvidenceDigest: z.string().min(1).max(512).optional(),
       })
       .strict(),
     outboundSafety: z
@@ -243,11 +255,20 @@ export function buildExternalAction(input: {
   const intent = ActionIntentSchemas[input.semanticOperation].parse(
     input.intent,
   );
+  if (
+    (input.semanticOperation === 'create' ||
+      input.semanticOperation === 'update') &&
+    canonicalJson(intent.fields) !== canonicalJson(input.projection)
+  ) {
+    throw new Error(
+      'Mutation action writable fields must exactly match its gated projection.',
+    );
+  }
   const expectedFields = input.expectedObservation.fields.map((field) =>
     SemanticFieldNameSchema.parse(field),
   );
   if (
-    expectedFields.length !== input.expectedObservation.fields.length ||
+    new Set(expectedFields).size !== expectedFields.length ||
     expectedFields.length > 64
   ) {
     throw new Error(
@@ -273,6 +294,9 @@ export function buildExternalAction(input: {
     expectedObservation: {
       ...input.expectedObservation,
       fields: expectedFields,
+      stableId: input.expectedObservation.stableId,
+      capabilityEvidenceDigest:
+        input.expectedObservation.capabilityEvidenceDigest,
     },
     outboundSafety,
   };
@@ -289,7 +313,7 @@ export function acceptExternalObservation(input: {
   action: ExternalActionEnvelope;
   observation: unknown;
   acceptedStepDigests?: ReadonlySet<string>;
-}): ExternalObservationEnvelope {
+}): AcceptedExternalObservationEnvelope {
   const bytes = Buffer.byteLength(JSON.stringify(input.observation), 'utf8');
   if (bytes > MAX_OBSERVATION_BYTES)
     throw new Error('External observation exceeds the size limit.');
@@ -312,6 +336,12 @@ export function acceptExternalObservation(input: {
   ) {
     throw new Error('External observation provider context is mismatched.');
   }
+  if (
+    observation.capabilityEvidenceDigest !==
+    input.action.expectedObservation.capabilityEvidenceDigest
+  ) {
+    throw new Error('External observation capability evidence is mismatched.');
+  }
   const expected = new Set(input.action.expectedObservation.fields);
   const actual = Object.keys(observation.outcome.fields);
   if (actual.some((field) => !expected.has(field))) {
@@ -325,6 +355,13 @@ export function acceptExternalObservation(input: {
     throw new Error('External observation is missing required identity.');
   }
   if (
+    input.action.expectedObservation.stableId !== null &&
+    observation.outcome.identity?.stableId !==
+      input.action.expectedObservation.stableId
+  ) {
+    throw new Error('External observation stable identity is mismatched.');
+  }
+  if (
     observation.outcome.identity?.aliases.some((value) =>
       containsSensitiveContentSignal(value),
     ) ||
@@ -333,19 +370,27 @@ export function acceptExternalObservation(input: {
   ) {
     throw new Error('External observation identity evidence is unsafe.');
   }
+  const suppressedFields: string[] = [];
   const fields = Object.fromEntries(
     actual.map((field) => {
       const value = observation.outcome.fields[field] ?? null;
-      return [
-        field,
+      const suppressed =
         typeof value === 'string' &&
-        containsSensitiveContentSignalInValue(value)
-          ? WHOLE_FIELD_SUPPRESSION_MARKER
-          : value,
-      ];
+        containsSensitiveContentSignalInValue(value);
+      if (suppressed) suppressedFields.push(field);
+      return [field, suppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : value];
     }),
   );
-  return { ...observation, outcome: { ...observation.outcome, fields } };
+  return {
+    ...observation,
+    outcome: { ...observation.outcome, fields, suppressedFields },
+  };
+}
+
+export interface AcceptedExternalObservationEnvelope extends ExternalObservationEnvelope {
+  outcome: ExternalObservationEnvelope['outcome'] & {
+    suppressedFields: string[];
+  };
 }
 
 function assertDepth(value: unknown, depth: number): void {

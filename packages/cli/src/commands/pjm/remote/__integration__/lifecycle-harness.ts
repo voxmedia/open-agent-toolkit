@@ -147,6 +147,8 @@ export class LifecycleHarness {
         expectedObservation: {
           fields: Object.keys(input.projection),
           requireIdentity: true,
+          stableId: null,
+          capabilityEvidenceDigest: input.capabilityEvidenceDigest,
         },
         persistedPreview: {
           projectionDigest: safety.projectionDigest,

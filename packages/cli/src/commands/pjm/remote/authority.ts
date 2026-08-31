@@ -4,6 +4,13 @@ import type {
   OatPjmRemoteOperationClass,
 } from '@config/oat-config';
 
+import {
+  validatePreviewApproval,
+  type BindingPreview,
+  type PreviewApproval,
+} from './preview';
+import { semanticDigest } from './provider';
+
 interface AuthorityLayerInput {
   default?: unknown;
   operations?: Partial<Record<OatPjmRemoteOperationClass, unknown>>;
@@ -52,6 +59,84 @@ export interface EffectiveRemotePolicy {
     'replace-description' | 'destructive' | 'identity-resolution'
   >;
   findings: string[];
+}
+
+export type ProductionMutationInvocation =
+  | { kind: 'interactive'; invocationId: string; evidenceDigest: string }
+  | {
+      kind: 'workflow';
+      invocationId: string;
+      workflowId: string;
+      revision: string;
+    };
+
+export function validateProductionMutationAuthority(input: {
+  effective: OatPjmRemoteMutationAuthority;
+  invocation: ProductionMutationInvocation;
+  expectedInvocationDigest: string;
+  preview: BindingPreview;
+  approval: PreviewApproval | null;
+  expectedWorkflow: { workflowId: string; revision: string };
+  now: string;
+  approvalMaxAgeMs: number;
+}): {
+  authority: { effective: OatPjmRemoteMutationAuthority; sourceDigest: string };
+  approval: PreviewApproval | null;
+} {
+  if (input.effective === 'read-only') {
+    throw new Error('Remote mutation is read-only under current policy.');
+  }
+  if (input.effective === 'user-authorized') {
+    if (
+      input.invocation.kind !== 'interactive' ||
+      input.invocation.evidenceDigest !== input.expectedInvocationDigest
+    ) {
+      throw new Error(
+        'Explicit invocation evidence does not authorize this mutation.',
+      );
+    }
+    return {
+      authority: {
+        effective: input.effective,
+        sourceDigest: input.expectedInvocationDigest,
+      },
+      approval: null,
+    };
+  }
+  if (input.effective === 'user-approved') {
+    if (
+      !input.approval ||
+      !validatePreviewApproval(input.preview, input.approval, {
+        now: input.now,
+        maxAgeMs: input.approvalMaxAgeMs,
+      }).valid
+    ) {
+      throw new Error('Fresh approval does not match the current preview.');
+    }
+    return {
+      authority: {
+        effective: input.effective,
+        sourceDigest: semanticDigest(input.approval),
+      },
+      approval: input.approval,
+    };
+  }
+  if (
+    input.invocation.kind !== 'workflow' ||
+    input.invocation.workflowId !== input.expectedWorkflow.workflowId ||
+    input.invocation.revision !== input.expectedWorkflow.revision
+  ) {
+    throw new Error(
+      'Autonomous mutation requires current active-workflow authority.',
+    );
+  }
+  return {
+    authority: {
+      effective: input.effective,
+      sourceDigest: semanticDigest(input.expectedWorkflow),
+    },
+    approval: null,
+  };
 }
 
 const OPERATIONS: readonly OatPjmRemoteOperationClass[] = [

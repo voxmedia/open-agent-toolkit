@@ -41,7 +41,6 @@ export interface BuildBindingPreviewInput {
     title: string;
     description: string | null;
     priority: string | null;
-    sourceRevision: string;
   };
   outboundSafety: OutboundProjectionSafetyResult;
   operationClass: OatPjmRemoteOperationClass;

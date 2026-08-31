@@ -21,6 +21,7 @@ const intent: BindingCreateIntent = {
   previewDigest: 'sha256:preview',
   projectionDigest: safety.projectionDigest,
   safetyResultDigest: safety.resultDigest,
+  capabilityEvidenceDigest: 'sha256:capability',
   provenanceToken: 'oat-binding:bnd_create_001',
 };
 

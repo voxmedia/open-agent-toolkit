@@ -106,6 +106,26 @@ describe('sanitizeRemoteSnapshot', () => {
     ]);
   });
 
+  it('consumes bounded upstream whole-field suppression evidence exactly once', () => {
+    const input = rawSnapshot();
+    input.issue.description = WHOLE_FIELD_SUPPRESSION_MARKER;
+    const result = sanitizeRemoteSnapshot(input, {
+      suppressedCoreFields: ['description'],
+    });
+    expect(result.redactions).toEqual([
+      {
+        field: { kind: 'core', name: 'description' },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      },
+    ]);
+    expect(() =>
+      sanitizeRemoteSnapshot(input, {
+        suppressedCoreFields: ['description', 'description'],
+      }),
+    ).toThrow(/unique/i);
+  });
+
   it('suppresses all four core fields for bracketed and multi-segment signals', () => {
     const input = rawSnapshot();
     input.issue.title = '[api-key] title-private-tail';

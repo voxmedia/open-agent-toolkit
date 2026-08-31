@@ -21,6 +21,8 @@ const action = buildExternalAction({
   expectedObservation: {
     fields: ['title', 'description'],
     requireIdentity: true,
+    stableId: 'issue-1',
+    capabilityEvidenceDigest: 'sha256:capability',
   },
   persistedPreview: {
     projectionDigest: safety.projectionDigest,
@@ -81,7 +83,12 @@ describe('external action protocol', () => {
       semanticOperation: 'create' as const,
       context,
       intent: {},
-      expectedObservation: { fields: ['title'], requireIdentity: true },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
       persistedPreview: {
         projectionDigest: safety.projectionDigest,
         safetyResultDigest: safety.resultDigest,
@@ -140,6 +147,55 @@ describe('external action protocol', () => {
     ).toThrow(/unrecognized/i);
   });
 
+  it('requires the exact closed writable projection before action digesting', () => {
+    expect(() =>
+      buildExternalAction({
+        ...action,
+        intent: {
+          stableId: 'issue-1',
+          fields: { ...projection, priority: 'high' },
+        },
+        persistedPreview: {
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        projection,
+        outboundSafety: safety,
+      }),
+    ).toThrow(/exactly match/i);
+    const revisionProjection = { ...projection, sourceRevision: 'rev-1' };
+    const revisionSafety = assessOutboundProjectionSafety(revisionProjection, {
+      assessedAt: '2026-08-31T12:00:00.000Z',
+    });
+    expect(() =>
+      buildExternalAction({
+        ...action,
+        intent: { stableId: 'issue-1', fields: revisionProjection },
+        persistedPreview: {
+          projectionDigest: revisionSafety.projectionDigest,
+          safetyResultDigest: revisionSafety.resultDigest,
+        },
+        projection: revisionProjection,
+        outboundSafety: revisionSafety,
+      }),
+    ).toThrow(/unrecognized/i);
+    expect(() =>
+      buildExternalAction({
+        ...action,
+        expectedObservation: {
+          ...action.expectedObservation,
+          fields: ['title', 'title'],
+        },
+        persistedPreview: {
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        projection,
+        outboundSafety: safety,
+      }),
+    ).toThrow(/unique and bounded/i);
+  });
+
   it('enforces the observation field and identity contract and suppresses whole sensitive fields', () => {
     expect(() =>
       acceptExternalObservation({
@@ -172,6 +228,29 @@ describe('external action protocol', () => {
     expect(accepted.outcome.fields.title).toBe(
       '[SUPPRESSED:SENSITIVE-CONTENT]',
     );
+    expect(accepted.outcome.suppressedFields).toEqual(['title']);
+  });
+
+  it('pins stable identity and capability evidence across read-back', () => {
+    expect(() =>
+      acceptExternalObservation({
+        action,
+        observation: observation({
+          capabilityEvidenceDigest: 'sha256:other-capability',
+        }),
+      }),
+    ).toThrow(/capability evidence/i);
+    expect(() =>
+      acceptExternalObservation({
+        action,
+        observation: observation({
+          outcome: {
+            ...observation().outcome,
+            identity: { stableId: 'issue-2', aliases: [] },
+          },
+        }),
+      }),
+    ).toThrow(/stable identity/i);
   });
 
   it.each([

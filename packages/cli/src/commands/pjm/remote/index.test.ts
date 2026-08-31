@@ -363,7 +363,21 @@ describe('pjm remote command family', () => {
     const root = new Command().name('oat').option('--json');
     root.exitOverride();
     root.addCommand(
-      createPjmRemoteCommand({ resolveProjectRoot: async () => repo }),
+      createPjmRemoteCommand({
+        resolveProjectRoot: async () => repo,
+        run: createProductionRemoteRunner({
+          now: () => '2026-08-31T12:00:00.000Z',
+          readObservationStdin: async () => ({
+            provider: 'linear',
+            context: { workspaceId: 'workspace-1' },
+            surfaceKind: 'connector',
+            availability: 'available',
+            semanticCapabilities: ['read'],
+            evidenceDigest: 'sha256:live-capability',
+            observedAt: '2026-08-31T12:00:00.000Z',
+          }),
+        }),
+      }),
     );
     const stdout = vi
       .spyOn(process.stdout, 'write')
@@ -376,6 +390,7 @@ describe('pjm remote command family', () => {
       'refresh',
       '--binding',
       'bnd_live_001',
+      '--capability-evidence-stdin',
     ]);
     const rendered = String(stdout.mock.calls.at(-1)?.[0]);
     expect(rendered).toContain('"status":"pending"');
@@ -402,7 +417,7 @@ describe('pjm remote command family', () => {
           identity: { stableId: 'issue-1', aliases: ['ITEM-1'] },
           fields: {
             title: 'Remote title',
-            description: 'Remote description',
+            description: 'Authorization: Bearer refresh-private-tail',
             priority: null,
             status: 'open',
           },
@@ -425,26 +440,44 @@ describe('pjm remote command family', () => {
     });
     await expect(store.readBindingState('bnd_live_001')).resolves.toMatchObject(
       {
-        snapshot: { issue: { title: 'Remote title' } },
+        snapshot: {
+          issue: {
+            title: 'Remote title',
+            description: '[SUPPRESSED:SENSITIVE-CONTENT]',
+          },
+          contentRedacted: true,
+        },
       },
     );
   });
 
   it('persists an intake target before emitting its semantic read action', async () => {
     const { repo, store } = await adoptedRepository();
+    const readObservationStdin = vi.fn().mockResolvedValue({
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read'],
+      evidenceDigest: 'sha256:intake-capability',
+      observedAt: '2026-08-31T12:00:00.000Z',
+    });
     const runner = createProductionRemoteRunner({
       now: () => '2026-08-31T12:00:00.000Z',
       randomId: vi
         .fn()
         .mockReturnValueOnce('intake-operation')
         .mockReturnValueOnce('intake-binding')
-        .mockReturnValueOnce('intake-step'),
+        .mockReturnValueOnce('intake-step')
+        .mockReturnValueOnce('intake-snapshot'),
+      readObservationStdin,
     });
     const result = await runner({
       operation: 'intake',
       projectRoot: repo,
       providerRef: 'linear:issue-1',
       backlogId: 'item-1',
+      capabilityEvidenceStdin: true,
     });
     expect(result).toMatchObject({
       status: 'pending',
@@ -454,12 +487,53 @@ describe('pjm remote command family', () => {
         intent: { localTarget: { id: 'item-1' } },
       },
     });
+    const action = result.externalAction!;
+    expect(action.context).toEqual({ workspaceId: 'workspace-1' });
+    readObservationStdin.mockResolvedValueOnce({
+      schemaVersion: 1,
+      operationId: action.operationId,
+      stepId: action.stepId,
+      actionDigest: action.actionDigest,
+      observedAt: '2026-08-31T12:01:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:intake-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-1', aliases: ['ITEM-1'] },
+        fields: {
+          title: 'Intake title',
+          description: 'api key intake-private-tail',
+          priority: null,
+          status: 'open',
+        },
+        revisionDigest: 'sha256:intake-revision',
+        diagnosticCode: null,
+      },
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: action.operationId,
+        observationStdin: true,
+      }),
+    ).resolves.toMatchObject({ status: 'ok', persisted: true });
+    await expect(
+      store.readBindingState('bnd_intake-binding'),
+    ).resolves.toMatchObject({
+      snapshot: {
+        issue: { description: '[SUPPRESSED:SENSITIVE-CONTENT]' },
+        contentRedacted: true,
+      },
+    });
     await expect(
       store.readOperation('op_intake-operation'),
     ).resolves.toMatchObject({
       lifecycleOperation: 'intake',
       bindingId: 'bnd_intake-binding',
-      state: 'pending',
+      state: 'verified',
     });
   });
 
@@ -567,14 +641,20 @@ describe('pjm remote command family', () => {
       intent: { stableId: 'issue-live-1' },
     });
     const readAction = pendingRead.externalAction!;
-    readObservationStdin.mockResolvedValueOnce({
+    await expect(
+      store.readAction(createAction.operationId, createAction.stepId),
+    ).resolves.toEqual(createAction);
+    await expect(
+      store.readAction(readAction.operationId, readAction.stepId),
+    ).resolves.toEqual(readAction);
+    readObservationStdin.mockResolvedValue({
       schemaVersion: 1,
       operationId: readAction.operationId,
       stepId: readAction.stepId,
       actionDigest: readAction.actionDigest,
       observedAt: '2026-08-31T12:02:00.000Z',
       surfaceKind: 'connector',
-      capabilityEvidenceDigest: 'sha256:live-read-capability',
+      capabilityEvidenceDigest: 'sha256:live-create-capability',
       provider: 'linear',
       context: { workspaceId: 'workspace-1' },
       outcome: {
@@ -593,6 +673,14 @@ describe('pjm remote command family', () => {
         observationStdin: true,
       }),
     ).resolves.toMatchObject({ status: 'ok', persisted: true });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: readAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow(/terminal|replay/i);
     await expect(
       store.readBindingMetadata('bnd_create-binding'),
     ).resolves.toMatchObject({
@@ -711,7 +799,7 @@ describe('pjm remote command family', () => {
       semanticOperation: 'read',
     });
     const readAction = prepared.externalAction!;
-    readObservationStdin.mockResolvedValueOnce({
+    readObservationStdin.mockResolvedValue({
       schemaVersion: 1,
       operationId: readAction.operationId,
       stepId: readAction.stepId,
@@ -734,6 +822,51 @@ describe('pjm remote command family', () => {
         diagnosticCode: null,
       },
     });
+    await writeFile(
+      join(repo, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        pjm: {
+          initialized: true,
+          schemaVersion: 1,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: { default: 'read-only' },
+            },
+          },
+        },
+      })}\n`,
+    );
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: readAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow(/policy or authority drifted/i);
+    await writeFile(
+      join(repo, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        pjm: {
+          initialized: true,
+          schemaVersion: 1,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { 'update-fields': 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
     await expect(
       runner({
         operation: 'operation-continue',
@@ -758,6 +891,20 @@ describe('pjm remote command family', () => {
       proposedPaths: ['.oat/repo/pjm/remote/state'],
       apply: false,
     };
+    await expect(
+      runner({
+        operation: 'storage-transition',
+        projectRoot: repo,
+        storage: { ...storage, configTarget: 'caller-selected.json' },
+      }),
+    ).rejects.toThrow(/repository-owned target/i);
+    await expect(
+      runner({
+        operation: 'storage-transition',
+        projectRoot: repo,
+        storage: { ...storage, proposedPaths: ['caller-selected-state'] },
+      }),
+    ).rejects.toThrow(/repository-owned storage paths/i);
     await expect(
       runner({ operation: 'storage-transition', projectRoot: repo, storage }),
     ).resolves.toMatchObject({ status: 'needs-review', persisted: true });

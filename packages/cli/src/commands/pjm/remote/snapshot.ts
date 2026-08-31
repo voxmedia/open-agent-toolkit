@@ -32,6 +32,7 @@ export interface SanitizableRemoteSnapshot {
 
 export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
+  suppressedCoreFields?: readonly CoreSnapshotField[];
 }
 
 const CORE_SNAPSHOT_FIELD_COUNT = 4;
@@ -50,18 +51,37 @@ export function sanitizeRemoteSnapshot(
   options: SnapshotSanitizationOptions = {},
 ): RemoteSnapshotRecord {
   const redactions: RemoteSnapshotRecord['redactions'] = [];
+  const suppressedCoreFields = validateSuppressedCoreFields(
+    options.suppressedCoreFields ?? [],
+  );
   const issue = {
-    title: sanitizeCoreField('title', input.issue.title, redactions),
+    title: sanitizeCoreField(
+      'title',
+      input.issue.title,
+      redactions,
+      suppressedCoreFields,
+    ),
     description: sanitizeCoreField(
       'description',
       input.issue.description,
       redactions,
+      suppressedCoreFields,
     ),
     priority:
       input.issue.priority === null
         ? null
-        : sanitizeCoreField('priority', input.issue.priority, redactions),
-    status: sanitizeCoreField('status', input.issue.status, redactions),
+        : sanitizeCoreField(
+            'priority',
+            input.issue.priority,
+            redactions,
+            suppressedCoreFields,
+          ),
+    status: sanitizeCoreField(
+      'status',
+      input.issue.status,
+      redactions,
+      suppressedCoreFields,
+    ),
   };
 
   const extensions = sanitizeExtensions(
@@ -94,7 +114,21 @@ function sanitizeCoreField(
   field: CoreSnapshotField,
   value: string,
   redactions: RemoteSnapshotRecord['redactions'],
+  suppressedCoreFields: ReadonlySet<CoreSnapshotField>,
 ): string {
+  if (suppressedCoreFields.has(field)) {
+    if (value !== WHOLE_FIELD_SUPPRESSION_MARKER) {
+      throw new Error(
+        `Suppressed snapshot field '${field}' must contain only the suppression marker.`,
+      );
+    }
+    redactions.push({
+      field: { kind: 'core', name: field },
+      reason: 'sensitive-content',
+      representation: 'whole-field-marker',
+    });
+    return value;
+  }
   if (!containsSensitiveContentSignal(value)) return value;
 
   redactions.push({
@@ -103,6 +137,27 @@ function sanitizeCoreField(
     representation: 'whole-field-marker',
   });
   return WHOLE_FIELD_SUPPRESSION_MARKER;
+}
+
+function validateSuppressedCoreFields(
+  fields: readonly CoreSnapshotField[],
+): ReadonlySet<CoreSnapshotField> {
+  const allowed = new Set<CoreSnapshotField>([
+    'title',
+    'description',
+    'priority',
+    'status',
+  ]);
+  if (
+    fields.length > CORE_SNAPSHOT_FIELD_COUNT ||
+    new Set(fields).size !== fields.length ||
+    fields.some((field) => !allowed.has(field))
+  ) {
+    throw new Error(
+      'Suppressed snapshot fields must be unique bounded core fields.',
+    );
+  }
+  return new Set(fields);
 }
 
 function sanitizeExtensions(

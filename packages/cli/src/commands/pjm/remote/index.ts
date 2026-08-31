@@ -7,6 +7,7 @@ import { Command } from 'commander';
 
 import { resolvePjmAdoption } from '../adoption';
 import { renderRemoteCommand, type RemoteCommandEnvelope } from './output';
+import type { PreviewApproval } from './preview';
 import { createProductionRemoteRunner } from './service';
 
 export type RemoteLifecycleOperation =
@@ -31,6 +32,7 @@ export interface RemoteCommandRequest {
   };
   observationStdin?: boolean;
   capabilityEvidenceStdin?: boolean;
+  mutationApproval?: PreviewApproval;
   storage?: {
     repositoryFingerprint: string;
     configTarget: string;
@@ -77,14 +79,23 @@ export function createPjmRemoteCommand(
     .command('intake <provider-ref>')
     .description('Intake a remote issue into a local backlog target')
     .requiredOption('--to-backlog <id>', 'Local backlog item ID')
+    .option(
+      '--capability-evidence-stdin',
+      'Read one sanitized live capability evidence object from stdin',
+    )
     .action(
       async (
         providerRef: string,
-        options: { toBacklog: string },
+        options: { toBacklog: string; capabilityEvidenceStdin: boolean },
         command: Command,
       ) => {
         await execute(
-          { operation: 'intake', providerRef, backlogId: options.toBacklog },
+          {
+            operation: 'intake',
+            providerRef,
+            backlogId: options.toBacklog,
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
+          },
           command,
           dependencies,
         );
@@ -200,12 +211,10 @@ function addBindingCommand(
   } else {
     command.requiredOption('--binding <id>', 'Remote binding ID');
   }
-  if (name !== 'refresh') {
-    command.option(
-      '--capability-evidence-stdin',
-      'Read one sanitized live capability evidence object from stdin',
-    );
-  }
+  command.option(
+    '--capability-evidence-stdin',
+    'Read one sanitized live capability evidence object from stdin',
+  );
   command.action(
     async (options: Record<string, string>, commander: Command) => {
       const createTargets = [options.toBacklog, options.toProject].filter(

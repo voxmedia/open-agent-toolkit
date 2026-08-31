@@ -12,7 +12,11 @@ import {
   parseAssociatedIssues,
   serializeAssociatedIssues,
 } from './association';
-import { resolveEffectiveRemotePolicy } from './authority';
+import {
+  resolveEffectiveRemotePolicy,
+  validateProductionMutationAuthority,
+  type ProductionMutationInvocation,
+} from './authority';
 import {
   acceptExternalObservation,
   buildExternalAction,
@@ -50,12 +54,21 @@ export interface ProductionRemoteRunnerDependencies {
   now(): string;
   randomId(): string;
   readObservationStdin(): Promise<unknown>;
+  currentInvocation(input: {
+    invocationId: string;
+    expectedEvidenceDigest: string;
+  }): ProductionMutationInvocation;
 }
 
 const DEFAULT_DEPENDENCIES: ProductionRemoteRunnerDependencies = {
   now: () => new Date().toISOString(),
   randomId: randomUUID,
   readObservationStdin: readJsonStdin,
+  currentInvocation: ({ invocationId, expectedEvidenceDigest }) => ({
+    kind: 'interactive',
+    invocationId,
+    evidenceDigest: expectedEvidenceDigest,
+  }),
 };
 
 export function createProductionRemoteRunner(
@@ -103,6 +116,21 @@ async function prepareIntake(
     throw new Error('Provider reference must be provider:stable-id.');
   }
   const typedProvider = provider as RemoteBindingMetadata['provider'];
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error('Intake requires current live host capability evidence.');
+  }
+  const capability = parseHostCapabilityEvidence(
+    await dependencies.readObservationStdin(),
+  );
+  const selection = selectHostExecution({
+    provider: typedProvider,
+    context: capability.context,
+    operation: 'read',
+    candidates: [capability],
+    attemptStarted: false,
+  });
+  if (!selection.selected)
+    throw new Error(`No current host capability: ${selection.reason}.`);
   const operationId = durableId('op', dependencies.randomId());
   const bindingId = durableId('bnd', dependencies.randomId());
   const target = {
@@ -116,11 +144,13 @@ async function prepareIntake(
     stepId: durableId('step', dependencies.randomId()),
     provider: typedProvider,
     semanticOperation: 'read',
-    context: {},
+    context: capability.context,
     intent: { stableId, localTarget: target },
     expectedObservation: {
       fields: ['title', 'description', 'priority', 'status'],
       requireIdentity: true,
+      stableId,
+      capabilityEvidenceDigest: capability.evidenceDigest,
     },
     persistedPreview: {},
   });
@@ -132,7 +162,7 @@ async function prepareIntake(
     correlationId: operationId,
     bindingId,
     provider: typedProvider,
-    providerContext: {},
+    providerContext: compactContext(capability.context),
     lifecycleOperation: 'intake',
     operationClass: null,
     state: 'pending',
@@ -147,8 +177,8 @@ async function prepareIntake(
       }),
       bindingId,
       provider: typedProvider,
-      providerContext: {},
-      capabilityEvidenceDigest: 'host-discovery-required',
+      providerContext: compactContext(capability.context),
+      capabilityEvidenceDigest: capability.evidenceDigest,
       revisionDigest: 'unobserved',
       policyDigest: 'read-only',
     },
@@ -156,7 +186,13 @@ async function prepareIntake(
     approval: null,
     createdAt: now,
     updatedAt: now,
-    selectedExecution: null,
+    selectedExecution: {
+      provider: typedProvider,
+      surfaceKind: capability.surfaceKind,
+      context: compactContext(capability.context),
+      evidenceDigest: capability.evidenceDigest,
+      semanticCapabilities: capability.semanticCapabilities,
+    },
     attempts: [],
     observations: [],
     verification: [],
@@ -190,6 +226,8 @@ async function runSharedStorage(
   if (!request.storage)
     throw new Error('Shared-storage request is incomplete.');
   const config = await readOatConfig(request.projectRoot);
+  const expectedConfigTarget = '.oat/config.json';
+  const expectedProposedPaths = ['.oat/repo/pjm/remote/state'];
   if (
     request.storage.repositoryFingerprint !==
     store.locations.repositoryFingerprint
@@ -202,16 +240,29 @@ async function runSharedStorage(
       'Shared storage request current mode does not match configuration.',
     );
   }
+  if (request.storage.configTarget !== expectedConfigTarget) {
+    throw new Error(
+      'Shared storage config target does not match the repository-owned target.',
+    );
+  }
+  if (
+    semanticDigest(request.storage.proposedPaths) !==
+    semanticDigest(expectedProposedPaths)
+  ) {
+    throw new Error(
+      'Shared storage proposed paths do not match repository-owned storage paths.',
+    );
+  }
   if (!request.storage.apply) {
     const preview = buildSharedStoragePreview({
       repositoryFingerprint: store.locations.repositoryFingerprint,
-      configTarget: request.storage.configTarget,
+      configTarget: expectedConfigTarget,
       targetKind: 'repository',
       projectScope: null,
       currentMode: actualMode,
       retainedDataWarning:
         'Sanitized remote content and operation journals will enter Git history.',
-      proposedPaths: request.storage.proposedPaths,
+      proposedPaths: expectedProposedPaths,
       createdAt: dependencies.now(),
     });
     await store.writeSharedStoragePreview(preview);
@@ -249,7 +300,7 @@ async function runSharedStorage(
     maxAgeMs: 300_000,
     current: {
       repositoryFingerprint: store.locations.repositoryFingerprint,
-      configTarget: request.storage.configTarget,
+      configTarget: expectedConfigTarget,
       mode: actualMode,
     },
     writeSharedConfig: async () => {
@@ -288,6 +339,21 @@ async function prepareRefresh(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const { metadata, state } = await requireBinding(request.bindingId, store);
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error('Refresh requires current live host capability evidence.');
+  }
+  const capability = parseHostCapabilityEvidence(
+    await dependencies.readObservationStdin(),
+  );
+  const selection = selectHostExecution({
+    provider: metadata.provider,
+    context: metadata.remoteIdentity.context,
+    operation: 'read',
+    candidates: [capability],
+    attemptStarted: false,
+  });
+  if (!selection.selected)
+    throw new Error(`No current host capability: ${selection.reason}.`);
   const operationId = durableId('op', dependencies.randomId());
   const action = buildExternalAction({
     operationId,
@@ -299,6 +365,8 @@ async function prepareRefresh(
     expectedObservation: {
       fields: ['title', 'description', 'priority', 'status'],
       requireIdentity: true,
+      stableId: metadata.remoteIdentity.stableId,
+      capabilityEvidenceDigest: capability.evidenceDigest,
     },
     persistedPreview: {},
   });
@@ -316,11 +384,11 @@ async function prepareRefresh(
         operation: 'refresh',
         now,
       }),
-      capabilityEvidenceDigest:
-        state.capability?.evidenceDigest ?? 'host-discovery-required',
+      capabilityEvidenceDigest: capability.evidenceDigest,
       policyDigest: 'read-only',
       now,
       verification: [],
+      selectedExecution: selection.evidence,
     }),
   );
   await store.writeCurrentAction(operationId, action);
@@ -394,7 +462,6 @@ async function prepareCreate(
     title: local.title,
     description: local.description,
     priority: local.priority,
-    sourceRevision: local.sourceRevision,
   };
   const safety = assessOutboundProjectionSafety(projection, {
     assessedAt: now,
@@ -414,11 +481,6 @@ async function prepareCreate(
     binding: {},
   });
   const authority = effective.authority.create;
-  if (authority !== 'user-authorized') {
-    throw new Error(
-      `Unbound publication requires durable ${authority} evidence before execution.`,
-    );
-  }
 
   const operationId = durableId('op', dependencies.randomId());
   const bindingId = durableId('bnd', dependencies.randomId());
@@ -449,6 +511,24 @@ async function prepareCreate(
     operationClass: 'create',
     fieldMask: ['title', 'description', 'priority'],
     createdAt: now,
+  });
+  const expectedInvocationDigest = semanticDigest({
+    operation: 'create',
+    bindingId,
+    previewDigest: preview.digest,
+  });
+  const authorityDecision = validateProductionMutationAuthority({
+    effective: authority,
+    invocation: dependencies.currentInvocation({
+      invocationId: operationId,
+      expectedEvidenceDigest: expectedInvocationDigest,
+    }),
+    expectedInvocationDigest,
+    preview,
+    approval: request.mutationApproval ?? null,
+    expectedWorkflow: { workflowId: bindingId, revision: local.sourceRevision },
+    now,
+    approvalMaxAgeMs: 300_000,
   });
   const createIntent: PlannedBindingCreate = {
     schemaVersion: 1,
@@ -481,6 +561,8 @@ async function prepareCreate(
     expectedObservation: {
       fields: Object.keys(projection),
       requireIdentity: true,
+      stableId: null,
+      capabilityEvidenceDigest: capability.evidenceDigest,
     },
     persistedPreview: {
       projectionDigest: safety.projectionDigest,
@@ -513,9 +595,9 @@ async function prepareCreate(
     providerContext: compactContext(capability.context),
     lifecycleOperation: 'publish',
     operationClass: 'create',
-    state: 'pending',
+    state: 'attempt-started',
     reason: null,
-    lastSafeStep: 'authorized',
+    lastSafeStep: 'attempt-started',
     preview: {
       digest: preview.digest,
       bindingId,
@@ -527,8 +609,8 @@ async function prepareCreate(
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
     },
-    authority: { effective: authority, sourceDigest: policyDigest },
-    approval: null,
+    authority: authorityDecision.authority,
+    approval: authorityDecision.approval,
     createdAt: now,
     updatedAt: now,
     selectedExecution: {
@@ -538,10 +620,19 @@ async function prepareCreate(
       evidenceDigest: capability.evidenceDigest,
       semanticCapabilities: capability.semanticCapabilities,
     },
-    attempts: [],
+    attempts: [
+      {
+        attemptId: action.stepId,
+        startedAt: now,
+        completedAt: null,
+        execution: capabilityReference(selection.evidence),
+        requestDigest: action.actionDigest,
+        receiptDigest: null,
+      },
+    ],
     observations: [],
     verification,
-    retryDisposition: 'safe-before-attempt',
+    retryDisposition: 'reconcile-required',
     steps: [],
     outcome: { classification: 'pending', message: null, verifiedAt: null },
     createIntent,
@@ -573,13 +664,6 @@ async function prepareMutation(
     binding: metadata.policyRestrictions,
   });
   const authority = effective.authority['update-fields'];
-  if (authority === 'read-only')
-    throw new Error('Remote mutation is read-only under current policy.');
-  if (authority !== 'user-authorized') {
-    throw new Error(
-      `Remote mutation requires durable ${authority} evidence before execution.`,
-    );
-  }
   if (!request.capabilityEvidenceStdin) {
     throw new Error(
       'Remote mutation requires current live host capability evidence on stdin.',
@@ -601,7 +685,6 @@ async function prepareMutation(
     title: state.localProjection.title,
     description: state.localProjection.description,
     priority: state.localProjection.priority,
-    sourceRevision: state.localProjection.sourceRevision,
   };
   const now = dependencies.now();
   const safety = assessOutboundProjectionSafety(projection, {
@@ -644,6 +727,27 @@ async function prepareMutation(
     fieldMask: ['title', 'description', 'priority'],
     createdAt: now,
   });
+  const expectedInvocationDigest = semanticDigest({
+    operation: 'update-fields',
+    bindingId: metadata.bindingId,
+    previewDigest: preview.digest,
+  });
+  const authorityDecision = validateProductionMutationAuthority({
+    effective: authority,
+    invocation: dependencies.currentInvocation({
+      invocationId: operationId,
+      expectedEvidenceDigest: expectedInvocationDigest,
+    }),
+    expectedInvocationDigest,
+    preview,
+    approval: request.mutationApproval ?? null,
+    expectedWorkflow: {
+      workflowId: metadata.bindingId,
+      revision: state.localProjection.sourceRevision,
+    },
+    now,
+    approvalMaxAgeMs: 300_000,
+  });
   const action = buildExternalAction({
     operationId,
     stepId: durableId('step', dependencies.randomId()),
@@ -654,6 +758,8 @@ async function prepareMutation(
     expectedObservation: {
       fields: ['title', 'description', 'priority', 'status'],
       requireIdentity: true,
+      stableId: metadata.remoteIdentity.stableId,
+      capabilityEvidenceDigest: capability.evidenceDigest,
     },
     persistedPreview: {
       projectionDigest: safety.projectionDigest,
@@ -674,7 +780,8 @@ async function prepareMutation(
       lifecycleOperation:
         request.operation === 'reconcile' ? 'reconcile' : 'publish',
       operationClass: 'update-fields',
-      authority: { effective: authority, sourceDigest: policyDigest },
+      authority: authorityDecision.authority,
+      approval: authorityDecision.approval,
       previewDigest: preview.digest,
       capabilityEvidenceDigest: selection.evidence.evidenceDigest,
       policyDigest,
@@ -712,11 +819,38 @@ async function continueOperation(
     throw new Error(
       `Remote operation '${operation.operationId}' has no durable current action.`,
     );
+  if (
+    ['verified', 'uncertain', 'rejected', 'failed', 'blocked'].includes(
+      operation.state,
+    )
+  ) {
+    throw new Error(
+      'Remote operation is terminal; observation replay is rejected.',
+    );
+  }
   const observation = acceptExternalObservation({
     action,
     observation: await dependencies.readObservationStdin(),
+    acceptedStepDigests: new Set(
+      operation.observations.flatMap((item) =>
+        item.actionDigest ? [item.actionDigest] : [],
+      ),
+    ),
   });
   const now = dependencies.now();
+  const observationEvidence = {
+    observedAt: observation.observedAt,
+    classification:
+      observation.outcome.classification === 'observed'
+        ? action.semanticOperation === 'read'
+          ? ('none' as const)
+          : ('committed' as const)
+        : observation.outcome.classification === 'rejected'
+          ? ('not-committed' as const)
+          : ('unknown' as const),
+    evidenceDigest: semanticDigest(observation),
+    actionDigest: action.actionDigest,
+  };
   if (observation.outcome.classification !== 'observed') {
     const terminal =
       observation.outcome.classification === 'rejected'
@@ -733,6 +867,18 @@ async function continueOperation(
           message: observation.outcome.diagnosticCode,
           verifiedAt: null,
         },
+        appendObservation: observationEvidence,
+        ...(action.semanticOperation === 'read'
+          ? {}
+          : {
+              completeAttempt: {
+                attemptId: action.stepId,
+                completedAt: now,
+                receiptDigest: observationEvidence.evidenceDigest,
+              },
+              lastSafeStep: 'verification-pending' as const,
+              retryDisposition: 'reconcile-required' as const,
+            }),
       },
     );
     return envelopeFrom(request, updated, metadata, null);
@@ -750,6 +896,7 @@ async function continueOperation(
       observation,
       store,
       dependencies,
+      observationEvidence,
     );
   }
   if (action.semanticOperation !== 'read') {
@@ -767,6 +914,14 @@ async function continueOperation(
           .map((item) => item.field)
           .filter((field) => field !== 'remoteIdentity'),
         requireIdentity: true,
+        stableId:
+          operation.createIntent?.provider === operation.provider
+            ? observation.outcome.identity.stableId
+            : (metadata?.remoteIdentity.stableId ??
+              observation.outcome.identity.stableId),
+        capabilityEvidenceDigest:
+          operation.selectedExecution?.evidenceDigest ??
+          observation.capabilityEvidenceDigest,
       },
       persistedPreview: {
         ...(operation.preview.projectionDigest
@@ -788,6 +943,14 @@ async function continueOperation(
           message: 'authoritative read-back required',
           verifiedAt: null,
         },
+        appendObservation: observationEvidence,
+        completeAttempt: {
+          attemptId: action.stepId,
+          completedAt: now,
+          receiptDigest: observationEvidence.evidenceDigest,
+        },
+        lastSafeStep: 'verification-pending',
+        retryDisposition: 'reconcile-required',
       },
     );
     await store.writeCurrentAction(operation.operationId, readAction);
@@ -839,36 +1002,42 @@ async function continueOperation(
       createdAt: operation.createdAt,
       updatedAt: now,
     };
-    const snapshot = sanitizeRemoteSnapshot({
-      snapshotId: durableId('snap', dependencies.randomId()),
-      bindingId: operation.bindingId,
-      provider: operation.provider,
-      observedAt: observation.observedAt,
-      observedBy: {
+    const snapshot = sanitizeRemoteSnapshot(
+      {
+        snapshotId: durableId('snap', dependencies.randomId()),
+        bindingId: operation.bindingId,
         provider: operation.provider,
-        surfaceKind: observation.surfaceKind,
-        context: operation.providerContext,
-        evidenceDigest: observation.capabilityEvidenceDigest,
-        semanticCapabilities: ['read'],
+        observedAt: observation.observedAt,
+        observedBy: {
+          provider: operation.provider,
+          surfaceKind: observation.surfaceKind,
+          context: operation.providerContext,
+          evidenceDigest: observation.capabilityEvidenceDigest,
+          semanticCapabilities: ['read'],
+        },
+        identity: metadata.remoteIdentity,
+        revision: {
+          strength: 'hash-only',
+          token: null,
+          updatedAt: observation.observedAt,
+          contentHash: observation.outcome.revisionDigest,
+        },
+        issue: {
+          title: String(observation.outcome.fields.title ?? ''),
+          description: String(observation.outcome.fields.description ?? ''),
+          priority:
+            observation.outcome.fields.priority == null
+              ? null
+              : String(observation.outcome.fields.priority),
+          status: String(observation.outcome.fields.status ?? ''),
+        },
+        lifecycle: 'active',
       },
-      identity: metadata.remoteIdentity,
-      revision: {
-        strength: 'hash-only',
-        token: null,
-        updatedAt: observation.observedAt,
-        contentHash: observation.outcome.revisionDigest,
+      {
+        suppressedCoreFields:
+          observation.outcome.suppressedFields.filter(isCoreSnapshotField),
       },
-      issue: {
-        title: String(observation.outcome.fields.title ?? ''),
-        description: String(observation.outcome.fields.description ?? ''),
-        priority:
-          observation.outcome.fields.priority == null
-            ? null
-            : String(observation.outcome.fields.priority),
-        status: String(observation.outcome.fields.status ?? ''),
-      },
-      lifecycle: 'active',
-    });
+    );
     await store.materializeIntakeBinding(metadata);
     await store.writeBindingState({
       recordType: 'binding-state',
@@ -915,43 +1084,49 @@ async function continueOperation(
     ) {
       throw new Error('Refresh read-back is missing a planned field.');
     }
-    const snapshot = sanitizeRemoteSnapshot({
-      snapshotId: durableId('snap', dependencies.randomId()),
-      bindingId: operation.bindingId,
-      provider: operation.provider,
-      observedAt: observation.observedAt,
-      observedBy: {
+    const snapshot = sanitizeRemoteSnapshot(
+      {
+        snapshotId: durableId('snap', dependencies.randomId()),
+        bindingId: operation.bindingId,
         provider: operation.provider,
-        surfaceKind: observation.surfaceKind,
-        context: operation.providerContext,
-        evidenceDigest: observation.capabilityEvidenceDigest,
-        semanticCapabilities: ['read'],
+        observedAt: observation.observedAt,
+        observedBy: {
+          provider: operation.provider,
+          surfaceKind: observation.surfaceKind,
+          context: operation.providerContext,
+          evidenceDigest: observation.capabilityEvidenceDigest,
+          semanticCapabilities: ['read'],
+        },
+        identity: {
+          stableId: observation.outcome.identity.stableId,
+          context: operation.providerContext,
+          aliases: observation.outcome.identity.aliases.map((value) => ({
+            kind: 'display' as const,
+            value,
+          })),
+        },
+        revision: {
+          strength: 'hash-only',
+          token: null,
+          updatedAt: observation.observedAt,
+          contentHash: observation.outcome.revisionDigest,
+        },
+        issue: {
+          title: String(observation.outcome.fields.title ?? ''),
+          description: String(observation.outcome.fields.description ?? ''),
+          priority:
+            observation.outcome.fields.priority == null
+              ? null
+              : String(observation.outcome.fields.priority),
+          status: String(observation.outcome.fields.status ?? ''),
+        },
+        lifecycle: 'active',
       },
-      identity: {
-        stableId: observation.outcome.identity.stableId,
-        context: operation.providerContext,
-        aliases: observation.outcome.identity.aliases.map((value) => ({
-          kind: 'display' as const,
-          value,
-        })),
+      {
+        suppressedCoreFields:
+          observation.outcome.suppressedFields.filter(isCoreSnapshotField),
       },
-      revision: {
-        strength: 'hash-only',
-        token: null,
-        updatedAt: observation.observedAt,
-        contentHash: observation.outcome.revisionDigest,
-      },
-      issue: {
-        title: String(observation.outcome.fields.title ?? ''),
-        description: String(observation.outcome.fields.description ?? ''),
-        priority:
-          observation.outcome.fields.priority == null
-            ? null
-            : String(observation.outcome.fields.priority),
-        status: String(observation.outcome.fields.status ?? ''),
-      },
-      lifecycle: 'active',
-    });
+    );
     await store.writeBindingState({
       ...state,
       snapshot,
@@ -1006,6 +1181,9 @@ async function continueOperation(
           : 'authoritative read-back mismatch',
         verifiedAt: verified ? now : null,
       },
+      appendObservation: observationEvidence,
+      lastSafeStep: verified ? 'complete' : 'verification-pending',
+      retryDisposition: verified ? 'not-applicable' : 'reconcile-required',
     },
   );
   if (verified && operation.createIntent) {
@@ -1093,6 +1271,7 @@ async function continueMutationPreRead(
   observation: ReturnType<typeof acceptExternalObservation>,
   store: RemoteSyncStore,
   dependencies: ProductionRemoteRunnerDependencies,
+  observationEvidence: RemoteOperationRecord['observations'][number],
 ): Promise<RemoteCommandEnvelope> {
   if (
     !observation.outcome.identity ||
@@ -1134,7 +1313,6 @@ async function continueMutationPreRead(
     title: local.title,
     description: local.description,
     priority: local.priority,
-    sourceRevision: local.sourceRevision,
   };
   const safety = assessOutboundProjectionSafety(projection, {
     assessedAt: operation.createdAt,
@@ -1160,7 +1338,6 @@ async function continueMutationPreRead(
   const policyDigest = semanticDigest(effective);
   if (
     effective.authority['update-fields'] !== operation.authority?.effective ||
-    policyDigest !== operation.authority.sourceDigest ||
     policyDigest !== operation.preview.policyDigest
   ) {
     throw new Error('Mutation policy or authority drifted after pre-read.');
@@ -1209,6 +1386,42 @@ async function continueMutationPreRead(
   if (preview.digest !== operation.preview.digest) {
     throw new Error('Mutation preview drifted after authoritative pre-read.');
   }
+  const expectedInvocationDigest = semanticDigest({
+    operation: 'update-fields',
+    bindingId: metadata.bindingId,
+    previewDigest: preview.digest,
+  });
+  const authorityDecision = validateProductionMutationAuthority({
+    effective: effective.authority['update-fields'],
+    invocation: dependencies.currentInvocation({
+      invocationId: operation.operationId,
+      expectedEvidenceDigest: expectedInvocationDigest,
+    }),
+    expectedInvocationDigest,
+    preview,
+    approval:
+      operation.approval?.operationClass === 'update-fields'
+        ? {
+            previewDigest: operation.approval.previewDigest,
+            operationClass: operation.approval.operationClass,
+            approvedAt: operation.approval.approvedAt,
+            actor: operation.approval.actor ?? 'unknown',
+            source: operation.approval.source,
+          }
+        : null,
+    expectedWorkflow: {
+      workflowId: metadata.bindingId,
+      revision: state.localProjection.sourceRevision,
+    },
+    now: dependencies.now(),
+    approvalMaxAgeMs: 300_000,
+  });
+  if (
+    authorityDecision.authority.sourceDigest !==
+    operation.authority?.sourceDigest
+  ) {
+    throw new Error('Mutation authority evidence drifted after pre-read.');
+  }
   const action = buildExternalAction({
     operationId: operation.operationId,
     stepId: durableId('mutate', dependencies.randomId()),
@@ -1219,6 +1432,8 @@ async function continueMutationPreRead(
     expectedObservation: {
       fields: Object.keys(projection),
       requireIdentity: true,
+      stableId: metadata.remoteIdentity.stableId,
+      capabilityEvidenceDigest: selected.evidenceDigest,
     },
     persistedPreview: {
       projectionDigest: safety.projectionDigest,
@@ -1227,21 +1442,37 @@ async function continueMutationPreRead(
     projection,
     outboundSafety: safety,
   });
-  const updated = await store.transitionOperation(
+  await store.transitionOperation(operation.operationId, operation.state, {
+    state: 'authorized',
+    updatedAt: dependencies.now(),
+    outcome: {
+      classification: 'pending',
+      message: 'authoritative pre-read verified',
+      verifiedAt: null,
+    },
+    appendObservation: observationEvidence,
+    lastSafeStep: 'authorized',
+  });
+  await store.writeCurrentAction(operation.operationId, action);
+  const attempted = await store.transitionOperation(
     operation.operationId,
-    operation.state,
+    'authorized',
     {
-      state: 'authorized',
+      state: 'attempt-started',
       updatedAt: dependencies.now(),
-      outcome: {
-        classification: 'pending',
-        message: 'authoritative pre-read verified',
-        verifiedAt: null,
+      appendAttempt: {
+        attemptId: action.stepId,
+        startedAt: dependencies.now(),
+        completedAt: null,
+        execution: selected,
+        requestDigest: action.actionDigest,
+        receiptDigest: null,
       },
+      lastSafeStep: 'attempt-started',
+      retryDisposition: 'reconcile-required',
     },
   );
-  await store.writeCurrentAction(operation.operationId, action);
-  return envelopeFrom(request, updated, metadata, action);
+  return envelopeFrom(request, attempted, metadata, action);
 }
 
 function operationRecord(input: {
@@ -1251,6 +1482,7 @@ function operationRecord(input: {
   lifecycleOperation: 'refresh' | 'publish' | 'reconcile';
   operationClass: 'update-fields' | null;
   authority: RemoteOperationRecord['authority'];
+  approval?: RemoteOperationRecord['approval'];
   previewDigest: string;
   capabilityEvidenceDigest: string;
   policyDigest: string;
@@ -1290,7 +1522,7 @@ function operationRecord(input: {
         : {}),
     },
     authority: input.authority,
-    approval: null,
+    approval: input.approval ?? null,
     createdAt: input.now,
     updatedAt: input.now,
     selectedExecution: input.selectedExecution
@@ -1340,6 +1572,24 @@ function compactContext(
       Boolean(entry[1]),
     ),
   );
+}
+
+function capabilityReference(
+  capability: HostCapabilityEvidence,
+): NonNullable<RemoteOperationRecord['selectedExecution']> {
+  return {
+    provider: capability.provider,
+    surfaceKind: capability.surfaceKind,
+    context: compactContext(capability.context),
+    evidenceDigest: capability.evidenceDigest,
+    semanticCapabilities: capability.semanticCapabilities,
+  };
+}
+
+function isCoreSnapshotField(
+  field: string,
+): field is 'title' | 'description' | 'priority' | 'status' {
+  return ['title', 'description', 'priority', 'status'].includes(field);
 }
 
 function envelopeFrom(

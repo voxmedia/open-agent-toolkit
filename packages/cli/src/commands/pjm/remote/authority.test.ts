@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEffectiveRemotePolicy } from './authority';
+import {
+  resolveEffectiveRemotePolicy,
+  validateProductionMutationAuthority,
+} from './authority';
+import { assessOutboundProjectionSafety } from './outbound-projection-safety';
+import { buildBindingPreview } from './preview';
 
 describe('resolveEffectiveRemotePolicy', () => {
   it('defaults every operation and description to fail-closed built-ins', () => {
@@ -183,5 +188,121 @@ describe('resolveEffectiveRemotePolicy', () => {
     expect(ordinary.authority['update-fields']).toBe('autonomous');
     expect(replacement.authority['update-fields']).toBe('user-approved');
     expect(replacement.hardFloors).toContain('replace-description');
+  });
+});
+
+describe('validateProductionMutationAuthority', () => {
+  const projection = { title: 'Title', description: null, priority: null };
+  const safety = assessOutboundProjectionSafety(projection, {
+    assessedAt: '2026-08-31T12:00:00.000Z',
+  });
+  const preview = buildBindingPreview({
+    binding: { bindingId: 'bnd-1', provider: 'linear', purposes: [] },
+    target: { stableId: 'issue-1', context: { workspaceId: 'workspace-1' } },
+    baseline: null,
+    revision: {
+      strength: 'hash-only',
+      token: null,
+      updatedAt: null,
+      contentHash: 'sha256:revision',
+    },
+    capability: {
+      surfaceKind: 'connector',
+      evidenceDigest: 'sha256:capability',
+      semanticCapabilities: ['update'],
+      context: { workspaceId: 'workspace-1' },
+    },
+    policy: {},
+    projection,
+    outboundSafety: safety,
+    operationClass: 'update-fields',
+    fieldMask: ['title', 'description', 'priority'],
+    createdAt: '2026-08-31T12:00:00.000Z',
+  });
+  const base = {
+    expectedInvocationDigest: 'sha256:invocation',
+    preview,
+    approval: null,
+    expectedWorkflow: { workflowId: 'workflow-1', revision: 'rev-1' },
+    now: '2026-08-31T12:01:00.000Z',
+    approvalMaxAgeMs: 300_000,
+  };
+
+  it('enforces all four configured authority modes', () => {
+    expect(() =>
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'read-only',
+        invocation: {
+          kind: 'interactive',
+          invocationId: 'inv-1',
+          evidenceDigest: base.expectedInvocationDigest,
+        },
+      }),
+    ).toThrow(/read-only/);
+    expect(
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'user-authorized',
+        invocation: {
+          kind: 'interactive',
+          invocationId: 'inv-1',
+          evidenceDigest: base.expectedInvocationDigest,
+        },
+      }).authority.sourceDigest,
+    ).toBe(base.expectedInvocationDigest);
+    expect(() =>
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'user-approved',
+        invocation: {
+          kind: 'interactive',
+          invocationId: 'inv-1',
+          evidenceDigest: base.expectedInvocationDigest,
+        },
+      }),
+    ).toThrow(/fresh approval/i);
+    expect(
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'user-approved',
+        approval: {
+          previewDigest: preview.digest,
+          operationClass: 'update-fields',
+          approvedAt: base.now,
+          actor: 'operator-1',
+          source: 'interactive-preview',
+        },
+        invocation: {
+          kind: 'interactive',
+          invocationId: 'inv-1',
+          evidenceDigest: base.expectedInvocationDigest,
+        },
+      }).approval?.actor,
+    ).toBe('operator-1');
+    expect(
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'autonomous',
+        invocation: {
+          kind: 'workflow',
+          invocationId: 'inv-1',
+          workflowId: 'workflow-1',
+          revision: 'rev-1',
+        },
+      }).authority.effective,
+    ).toBe('autonomous');
+    expect(() =>
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'autonomous',
+        invocation: {
+          kind: 'workflow',
+          invocationId: 'inv-1',
+          workflowId: 'workflow-1',
+          revision: 'drifted',
+        },
+      }),
+    ).toThrow(/active-workflow/);
   });
 });

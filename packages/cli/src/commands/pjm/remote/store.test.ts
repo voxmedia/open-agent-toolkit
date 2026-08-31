@@ -11,6 +11,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { buildExternalAction } from './external-action';
 import type {
   RemoteBindingMetadata,
   RemoteBindingState,
@@ -438,6 +439,89 @@ describe('RemoteSyncStore', () => {
     await expect(store.createOperation(operation())).rejects.toThrow(
       /already exists/i,
     );
+  });
+
+  it('keeps actions and mutation evidence append-only across a filesystem restart', async () => {
+    const { store } = await createStore();
+    const action = buildExternalAction({
+      operationId: 'op_operation_123',
+      stepId: 'step_mutate_123',
+      provider: 'github',
+      semanticOperation: 'read',
+      context: { host: 'github.com', repositoryId: 'repo-123' },
+      intent: { stableId: 'issue-node-123' },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: 'issue-node-123',
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {},
+    });
+    await store.createOperation({
+      ...operation(),
+      state: 'authorized',
+      lastSafeStep: 'authorized',
+      selectedExecution: {
+        provider: 'github',
+        surfaceKind: 'connector',
+        context: { host: 'github.com', repositoryId: 'repo-123' },
+        evidenceDigest: 'sha256:capability',
+        semanticCapabilities: ['update'],
+      },
+    });
+    await store.writeCurrentAction(action.operationId, action);
+    await store.transitionOperation(action.operationId, 'authorized', {
+      state: 'attempt-started',
+      updatedAt: '2026-08-31T00:01:00.000Z',
+      appendAttempt: {
+        attemptId: action.stepId,
+        startedAt: '2026-08-31T00:01:00.000Z',
+        completedAt: null,
+        execution: (await store.readOperation(action.operationId))!
+          .selectedExecution!,
+        requestDigest: action.actionDigest,
+        receiptDigest: null,
+      },
+      lastSafeStep: 'attempt-started',
+      retryDisposition: 'reconcile-required',
+    });
+    const observation = {
+      observedAt: '2026-08-31T00:02:00.000Z',
+      classification: 'committed' as const,
+      evidenceDigest: 'sha256:receipt',
+      actionDigest: action.actionDigest,
+    };
+    await store.transitionOperation(action.operationId, 'attempt-started', {
+      state: 'verification-pending',
+      updatedAt: observation.observedAt,
+      appendObservation: observation,
+      completeAttempt: {
+        attemptId: action.stepId,
+        completedAt: observation.observedAt,
+        receiptDigest: observation.evidenceDigest,
+      },
+      lastSafeStep: 'verification-pending',
+      retryDisposition: 'reconcile-required',
+    });
+    expect(await store.readAction(action.operationId, action.stepId)).toEqual(
+      action,
+    );
+    await expect(
+      store.transitionOperation(action.operationId, 'verification-pending', {
+        state: 'verification-pending',
+        updatedAt: observation.observedAt,
+        appendObservation: observation,
+      }),
+    ).rejects.toThrow(/duplicate/i);
+    await expect(
+      store.readOperation(action.operationId),
+    ).resolves.toMatchObject({
+      lastSafeStep: 'verification-pending',
+      retryDisposition: 'reconcile-required',
+      attempts: [{ completedAt: observation.observedAt }],
+      observations: [observation],
+    });
   });
 
   it('requires expected state transitions and rejects duplicate steps', async () => {

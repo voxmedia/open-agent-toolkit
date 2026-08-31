@@ -780,7 +780,9 @@ const AuthorityDecisionSchema = z
 const ApprovalEvidenceSchema = z
   .object({
     previewDigest: z.string().min(1).max(512),
+    operationClass: OperationClassSchema.optional(),
     approvedAt: TimestampSchema,
+    actor: z.string().min(1).max(255).optional(),
     source: z.string().min(1).max(255),
   })
   .strict();
@@ -801,6 +803,7 @@ const ExternalObservationSchema = z
     observedAt: TimestampSchema,
     classification: z.enum(['none', 'committed', 'not-committed', 'unknown']),
     evidenceDigest: z.string().min(1).max(512),
+    actionDigest: z.string().min(1).max(512).optional(),
   })
   .strict();
 

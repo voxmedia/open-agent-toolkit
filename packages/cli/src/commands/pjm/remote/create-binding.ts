@@ -23,6 +23,7 @@ export interface BindingCreateIntent {
   previewDigest: string;
   projectionDigest: string;
   safetyResultDigest: string;
+  capabilityEvidenceDigest: string;
   provenanceToken: string;
 }
 
@@ -97,6 +98,8 @@ export async function createAndBindRemoteIssue(
       expectedObservation: {
         fields: Object.keys(input.intent.projection),
         requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: input.intent.capabilityEvidenceDigest,
       },
       persistedPreview: input.intent,
       projection: input.intent.projection,
@@ -151,6 +154,8 @@ export async function createAndBindRemoteIssue(
       expectedObservation: {
         fields: Object.keys(input.intent.projection),
         requireIdentity: true,
+        stableId: observation.outcome.identity.stableId,
+        capabilityEvidenceDigest: input.intent.capabilityEvidenceDigest,
       },
       persistedPreview: {},
     });

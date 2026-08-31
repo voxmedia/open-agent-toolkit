@@ -367,6 +367,8 @@ export async function publishBinding(
     expectedObservation: {
       fields: Object.keys(input.projection),
       requireIdentity: true,
+      stableId: input.binding.snapshot?.identity.stableId ?? null,
+      capabilityEvidenceDigest: selection.evidence.evidenceDigest,
     },
     persistedPreview: input.preview,
     projection: recomputed.projection,

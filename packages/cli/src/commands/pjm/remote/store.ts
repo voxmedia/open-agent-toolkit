@@ -17,6 +17,7 @@ import {
   parseExternalAction,
   type ExternalActionEnvelope,
 } from './external-action';
+import { transitionRemoteOperation } from './operation-state';
 import {
   PlannedBindingCreateSchema,
   RemoteBatchRecordSchema,
@@ -110,6 +111,15 @@ export interface RemoteOperationTransition {
   outcome?: RemoteOperationOutcome;
   appendStep?: RemoteOperationStep;
   verification?: FieldVerification[];
+  lastSafeStep?: RemoteOperationRecord['lastSafeStep'];
+  retryDisposition?: RemoteOperationRecord['retryDisposition'];
+  appendAttempt?: RemoteOperationRecord['attempts'][number];
+  completeAttempt?: {
+    attemptId: string;
+    completedAt: string;
+    receiptDigest: string;
+  };
+  appendObservation?: RemoteOperationRecord['observations'][number];
 }
 
 export interface ConcurrentOperationIntentInspection {
@@ -239,10 +249,42 @@ export class RemoteSyncStore {
         'External action operationId does not match its durable path.',
       );
     }
+    const evidencePath = join(
+      this.locations.operational.operationsDir,
+      `${operationId}.${parsed.stepId}.action`,
+    );
+    try {
+      await this.#exclusiveWrite(evidencePath, parsed);
+    } catch (error) {
+      const existing = await this.readAction(operationId, parsed.stepId);
+      if (!existing || !isDeepStrictEqual(existing, parsed)) throw error;
+    }
     await this.#atomicWrite(
       join(this.locations.operational.operationsDir, `${operationId}.action`),
       parsed,
     );
+  }
+
+  async readAction(
+    operationId: string,
+    stepId: string,
+  ): Promise<ExternalActionEnvelope | null> {
+    try {
+      return parseExternalAction(
+        JSON.parse(
+          await this.#dependencies.filesystem.readFile(
+            join(
+              this.locations.operational.operationsDir,
+              `${operationId}.${stepId}.action`,
+            ),
+            'utf8',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (isFilesystemError(error, 'ENOENT')) return null;
+      throw error;
+    }
   }
 
   async readSharedStoragePreview(): Promise<SharedStoragePreview | null> {
@@ -383,6 +425,51 @@ export class RemoteSyncStore {
         `Remote operation '${operationId}' expected state '${expectedState}' but found '${current.state}'.`,
       );
     }
+    if (
+      current.operationClass !== null &&
+      update.state !== current.state &&
+      (current.attempts.length > 0 ||
+        update.appendAttempt !== undefined ||
+        update.appendObservation !== undefined)
+    ) {
+      transitionRemoteOperation(current.state, update.state);
+    }
+    if (
+      update.appendAttempt &&
+      current.attempts.some(
+        (attempt) => attempt.attemptId === update.appendAttempt!.attemptId,
+      )
+    ) {
+      throw new Error('Remote operation attempt evidence is a duplicate.');
+    }
+    if (
+      update.appendObservation?.actionDigest &&
+      current.observations.some(
+        (item) => item.actionDigest === update.appendObservation!.actionDigest,
+      )
+    ) {
+      throw new Error('Remote operation observation evidence is a duplicate.');
+    }
+    let attempts = update.appendAttempt
+      ? [...current.attempts, update.appendAttempt]
+      : current.attempts;
+    if (update.completeAttempt) {
+      const index = attempts.findIndex(
+        (attempt) => attempt.attemptId === update.completeAttempt!.attemptId,
+      );
+      if (index < 0 || attempts[index]!.completedAt) {
+        throw new Error('Remote operation attempt completion is stale.');
+      }
+      attempts = attempts.map((attempt, attemptIndex) =>
+        attemptIndex === index
+          ? {
+              ...attempt,
+              completedAt: update.completeAttempt!.completedAt,
+              receiptDigest: update.completeAttempt!.receiptDigest,
+            }
+          : attempt,
+      );
+    }
     const next = RemoteOperationRecordSchema.parse({
       ...current,
       state: update.state,
@@ -394,6 +481,16 @@ export class RemoteSyncStore {
       ...(update.verification !== undefined
         ? { verification: update.verification }
         : {}),
+      ...(update.lastSafeStep !== undefined
+        ? { lastSafeStep: update.lastSafeStep }
+        : {}),
+      ...(update.retryDisposition !== undefined
+        ? { retryDisposition: update.retryDisposition }
+        : {}),
+      attempts,
+      observations: update.appendObservation
+        ? [...current.observations, update.appendObservation]
+        : current.observations,
       steps: update.appendStep
         ? [...current.steps, update.appendStep]
         : current.steps,
