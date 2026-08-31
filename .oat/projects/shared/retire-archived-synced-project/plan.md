@@ -355,6 +355,8 @@ git commit -m "feat(p02-t03): integrate synced archive retirement"
 - Modify: `packages/cli/src/commands/project/list.ts`
 - Modify: `packages/cli/src/commands/project/list.test.ts`
 - Modify: `packages/cli/src/commands/project/list.integration.test.ts`
+- Modify: `packages/cli/src/commands/state/generate.ts`
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
 
 **Step 1: Add classification tests**
 
@@ -362,12 +364,15 @@ Cover active absent records, complete archived legacy records, complete records
 without an archive snapshot, recordless completed refs, both active/completed
 refs during recovery, and fully retired projects. Legacy complete rows must
 never recommend pull; use a precise archive-retry/migration diagnosis where
-cleanup remains pending. Fully retired projects must not appear as active.
+cleanup remains pending. Fully retired projects must not appear as active. Add
+dashboard-generation cases proving that fully retired projects remain omitted
+and that a visible legacy terminal state renders the same cleanup diagnosis
+rather than a continuation recommendation.
 
 Run:
 
 ```bash
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.test.ts src/commands/project/list.integration.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.test.ts src/commands/project/list.integration.test.ts src/commands/state/generate.test.ts
 ```
 
 Expected: legacy records are incorrectly classified as `recorded-absent` before
@@ -377,12 +382,14 @@ implementation.
 
 Add only the row/type data needed to distinguish active absence, legacy
 completion awaiting retirement, invalid recovery, and active remote discovery.
-Do not enumerate `refs/oat/completed/*` as active projects.
+Do not enumerate `refs/oat/completed/*` as active projects. Route terminal
+classification into dashboard generation so legacy cleanup uses the same
+diagnosis while fully retired recordless projects stay absent.
 
 **Step 3: Format**
 
 ```bash
-pnpm exec oxfmt --write packages/control-plane/src/types.ts packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts
+pnpm exec oxfmt --write packages/control-plane/src/types.ts packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts
 ```
 
 **Step 4: Verify**
@@ -394,7 +401,7 @@ Expected: list JSON/text contracts distinguish terminal and active states.
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane/src/types.ts packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts
+git add packages/control-plane/src/types.ts packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts
 git commit -m "fix(p03-t01): classify completed synced records"
 ```
 
