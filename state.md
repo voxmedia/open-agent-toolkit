@@ -45,9 +45,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -66,25 +66,25 @@ oat_implement_exit_gate:
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/f773b10d-084e-4ed4-990b-2a1fb3dcaedd.json
   gate_run_id: f773b10d-084e-4ed4-990b-2a1fb3dcaedd
   envelope_status: ok
-  artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
+  artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/archived/final-review-2026-08-31T000938Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'sha256:b3c34b431bd138c0ae5e23fae2a08a23d997d38a3c7d4c8570060ea6612dee47'
   receive_source_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
   receive_archived_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/archived/final-review-2026-08-31T000938Z.md
   receive_event_identity: 'final|code|final-review-2026-08-31T000938Z.md'
   receive_pre_head: bc492f76adef0f79f0173fa10566974ee34c0953
-  receive_commit: null
+  receive_commit: f9d5bc5054db19633e1ec649d139a242f3a775c2
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-31T00:12:26Z'
+  updated_at: '2026-08-31T00:13:34Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:12:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:13:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -130,7 +130,8 @@ The configured implementation exit gate is next.
 - ✓ Full-project review received: 0 Critical, 0 Important, 2 Medium, 1 Minor
 - ✓ Bounded final-review fixes completed at p03-t04 and p03-t05
 - ✓ Independent final re-review passed with zero findings
-- ⧗ Configured implementation exit gate next
+- ✓ Configured implementation exit gate passed and receive completed durably
+- ⧗ Configured post-implementation sequence next
 
 ## Blockers
 
@@ -138,5 +139,5 @@ None
 
 ## Next Milestone
 
-Execute the configured implementation exit gate, then continue the configured
-post-implementation sequence toward the final-phase HiLL checkpoint.
+Continue the configured post-implementation sequence toward the final-phase
+HiLL checkpoint; the configured implementation exit gate is allowed and fresh.
