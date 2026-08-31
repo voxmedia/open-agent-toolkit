@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 8     | 5/8       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 8     | 8/8       |
 
-**Total:** 9/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
 ## Phase 1: Configuration Contract Core
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -205,6 +205,47 @@ and repository check passed before and after the source commit.
 
 ---
 
+### Task p03-t06: Align active planning surfaces on the combined owner
+
+**Status:** completed
+**Commit:** 259b511621c07d4c22805802b30af16d7be6bfbe
+
+**Outcome:** The active review-gate-integrity discovery and roadmap now name
+the completed combined project as the sole owner of both delivered backlog
+items and link their archived records.
+
+**Verification:** Stale scaffold names, plural quick-project wording, and the
+removed active BL-260726 link are absent; formatting and `git diff --check`
+passed.
+
+---
+
+### Task p03-t07: Preserve single-quoted backslashes in validation
+
+**Status:** completed
+**Commit:** ecefc1d0f0ead2030a059864f65870f8c5959147
+
+**Outcome:** The configured-command tokenizer now preserves all characters
+literally inside single quotes, preventing malformed escaped command tokens
+from manufacturing a canonical gate-review prefix.
+
+**Verification:** The focused 36-test validator suite and CLI type-check
+passed, including both false-positive prefixes and a literal prompt backslash.
+
+---
+
+### Task p03-t08: Restore the migrated backlog estimate
+
+**Status:** completed
+**Commit:** 74da4bca17c5d3575e0908f72e070c42a8ac4018
+
+**Outcome:** The archived BL-260726 record again preserves main's migrated
+`scope_estimate: M` without changing terminal state or combined ownership.
+
+**Verification:** Backlog index regeneration and every PJM doctor check passed.
+
+---
+
 ### Review Received: final reconciliation
 
 **Date:** 2026-08-31
@@ -219,7 +260,7 @@ and repository check passed before and after the source commit.
 
 **New tasks added:** p03-t06, p03-t07, p03-t08
 
-**Status:** `fixes_added`
+**Status:** `fixes_completed` (awaiting final re-review)
 
 **Finding dispositions:**
 
@@ -231,9 +272,12 @@ and repository check passed before and after the source commit.
 - m2 (`artifact_alignment_required`): restore main's migrated `M` scope
   estimate on the archived backlog record in p03-t08.
 
-**Next:** Complete all three bounded fixes, run proportionate verification,
-and obtain a new independent final review before replacing the stale exit-gate
-generation.
+**Post-fix verification:** Repository check, type-check, test, build, lint, and
+format all exited 0. The initial parallel test/build attempt exposed a shared
+asset-bundling race; the affected test gate was rerun sequentially and exited 0.
+
+**Next:** Obtain a new independent final review before replacing the stale
+exit-gate generation.
 
 ---
 
