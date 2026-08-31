@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260826-emit-the-dispatch-stamp-from.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
+oat_external_plan_date: '2026-08-31'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260826-emit-the-dispatch-stamp-from
@@ -28,7 +28,9 @@ created: '2026-08-30T23:49:30Z'
 > [!IMPORTANT]
 > **Execution status: READY.** The selected contract is an additive
 > `dispatchStamp` string beside `dispatchReport` when report context is
-> requested. It does not add a second formatting CLI mode or alter stamp grammar.
+> requested. PR #249 removed an unrelated manifest-pack assertion from one
+> shared test file but did not change resolver/report/stamp behavior. This plan
+> does not add a second formatting CLI mode or alter stamp grammar.
 
 ## Outcome
 
@@ -42,7 +44,7 @@ running an out-of-tree TypeScript shim or reconstructing fields by hand.
 - Source backlog item:
   [BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the dispatch-ceiling resolver](../../pjm/backlog/items/BL-260826-emit-the-dispatch-stamp-from.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
 - Verified evidence:
   - `packages/cli/src/commands/project/dispatch-ceiling/index.ts:2758-2775`
     builds a `DispatchReportV1` only when both report scope and action are
@@ -67,6 +69,9 @@ running an out-of-tree TypeScript shim or reconstructing fields by hand.
     introduced Dispatch Report V1.
   - [PR #218 — docs(pjm): close wave 2 in the execution program ledger](https://github.com/voxmedia/open-agent-toolkit/pull/218)
     filed this residual item.
+  - PR #249 changed `bundle-consistency.test.ts` only by removing an unrelated
+    duplicated scope/ownership assertion. The file remains a valid shipped-skill
+    contract seam, and issue #211 remains open.
 
 ## Dependencies
 
@@ -84,7 +89,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/commands/project/dispatch-ceiling packages/cli/src/providers/identity .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- packages/cli/src/commands/project/dispatch-ceiling packages/cli/src/providers/identity .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
 ```
 
 If another change added a stamp mode/field, changed report eligibility, or
@@ -245,7 +250,7 @@ Revalidate against current `origin/main`, the source backlog item, linked
 decision, issue #211 and related backlog items, resolver/report/stamp code,
 canonical call sites, and tests when a dependency lands, substantial time
 passes, main advances materially from
-`845462e78468265c7e2e2b2f6c64731472731ecb`, cited contracts or intent change,
+`2c6005d64f45a19e8b9eedbc977959b066d3eda0`, cited contracts or intent change,
 another PR implements part of the outcome, or a load-bearing claim cannot be
 reproduced.
 

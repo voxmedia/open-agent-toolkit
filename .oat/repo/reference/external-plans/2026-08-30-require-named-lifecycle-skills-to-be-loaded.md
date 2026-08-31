@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
+oat_external_plan_date: '2026-08-31'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260718-mandatory-skill-load-clause
@@ -26,9 +26,10 @@ created: '2026-08-30T23:49:30Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!IMPORTANT]
-> **Execution status: READY.** PR #190 and the in-flight gate-contract project
-> are revalidation/coordination dependencies, not current execution blockers.
-> Repeat the bounded call-site sweep if either changes first.
+> **Execution status: READY.** The bounded call-site sweep was repeated after
+> gate-contract PR #246 merged; it changed gate-command clauses but did not add
+> named-skill load requirements or invalidate intentional inline fallbacks.
+> PR #190 remains an open soft revalidation dependency.
 
 ## Outcome
 
@@ -43,7 +44,7 @@ PR, or review steps, and a corpus test prevents new bare execution pointers.
 - Source backlog item:
   [BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for lifecycle steps that name skills](../../pjm/backlog/items/BL-260718-mandatory-skill-load-clause.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
 - Verified evidence:
   - `.agents/skills/oat-project-implement/SKILL.md:22-39` already establishes
     mandatory ordered loading for dispatch support skills.
@@ -61,9 +62,13 @@ PR, or review steps, and a corpus test prevents new bare execution pointers.
     `.agents/skills/oat-project-complete/SKILL.md:406` contain intentional
     host-capability fallbacks that must remain valid when they execute the same
     synthesis contract inline.
-  - `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts:649`
-    already reads lifecycle closeout surfaces but does not enforce named-skill
-    loading.
+  - `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts:699-723`
+    already reads the implementation closeout surface but does not enforce
+    named-skill loading.
+  - [PR #246 — Harden gate execution contracts](https://github.com/voxmedia/open-agent-toolkit/pull/246)
+    updated gate sections in discover/quick-start and added lifecycle gate
+    assertions to the focused contract test. The named execution pointers and
+    load/fallback classification remain unsatisfied and in scope.
 - Related project/PR:
   - [review-plan-workflow](../../../projects/shared/review-plan-workflow/state.md)
     and [PR #190 — ReviewPlan Stage A compatibility release](https://github.com/voxmedia/open-agent-toolkit/pull/190)
@@ -71,10 +76,10 @@ PR, or review steps, and a corpus test prevents new bare execution pointers.
 
 ## Dependencies
 
-| Type              | Dependency                                                                                                                                                                                                                                                               | Required state                                                                                                    | Current state                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Soft integration  | [PR #190](https://github.com/voxmedia/open-agent-toolkit/pull/190) / [review-plan-workflow](../../../projects/shared/review-plan-workflow/state.md)                                                                                                                      | If its head or disposition changes first, sweep the landed/terminal diff and preserve any new execution pointers. | Open draft at `81a51d2d845afd7fdafc03f75eec009007ea135a`.           |
-| Soft coordination | `gate-execution-contract-hardening`, consolidating [BL-260726-validate-structured-output](../../pjm/backlog/items/BL-260726-validate-structured-output.md) and [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md) | Re-run the sweep if its lifecycle-skill changes land first; do not overwrite its gate-contract edits.             | In flight outside this baseline; no ownership of this backlog item. |
+| Type                   | Dependency                                                                                                                                          | Required state                                                                                                    | Current state                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Soft integration       | [PR #190](https://github.com/voxmedia/open-agent-toolkit/pull/190) / [review-plan-workflow](../../../projects/shared/review-plan-workflow/state.md) | If its head or disposition changes first, sweep the landed/terminal diff and preserve any new execution pointers. | Open draft at `81a51d2d845afd7fdafc03f75eec009007ea135a`.                                    |
+| Satisfied revalidation | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Re-run the bounded sweep after merge and preserve its structured-command and lifecycle-gate edits.                | Satisfied; the delivered gate clauses are adjacent, compatible, and remain owned by PR #246. |
 
 There are no unsatisfied hard dependencies.
 
@@ -84,12 +89,12 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/skills/oat-project-implement .agents/skills/oat-project-autonomous .agents/skills/oat-project-quick-start .agents/skills/oat-project-next .agents/skills/oat-project-complete .agents/skills/oat-project-pr-final .agents/skills/oat-project-review-receive .agents/skills/oat-project-revise .agents/skills/oat-project-discover .agents/skills/create-oat-skill packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/src/validation/skills.test.ts
+git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- .agents/skills/oat-project-implement .agents/skills/oat-project-autonomous .agents/skills/oat-project-quick-start .agents/skills/oat-project-next .agents/skills/oat-project-complete .agents/skills/oat-project-pr-final .agents/skills/oat-project-review-receive .agents/skills/oat-project-revise .agents/skills/oat-project-discover .agents/skills/create-oat-skill packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/src/validation/skills.test.ts
 ```
 
-Also inspect PR #190's terminal diff and the integrated gate-project diff if
-either resolved after planning. New execution pointers or changed fallback
-semantics require plan refresh before edits.
+Also inspect PR #190's terminal diff if it resolves after this refresh. New
+execution pointers or changed fallback semantics require plan refresh before
+edits.
 
 ## Repository conventions
 
@@ -233,8 +238,8 @@ skill tests independently so Turbo cache replay is not the only evidence.
 
 Stop and report instead of improvising when:
 
-- PR #190 or the gate project changed a cited execution boundary and the sweep
-  has not been repeated;
+- PR #190 changes a cited execution boundary and the sweep has not been
+  repeated;
 - a candidate is ambiguous between executor operation and user-facing advice;
 - a required host fallback cannot preserve the named skill's semantics;
 - the change would alter lifecycle order, gate behavior, or approval policy;
@@ -244,11 +249,11 @@ Stop and report instead of improvising when:
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, PR #190 and
-its project, the gate-contract project, all cited canonical skills, and focused
-tests when either dependency changes, substantial time passes, main advances
-materially from `845462e78468265c7e2e2b2f6c64731472731ecb`, cited contracts or intent
-change, another PR implements part of the outcome, or a load-bearing current
-miss cannot be reproduced.
+its project, all cited canonical skills, and focused tests when that soft
+dependency changes, substantial time passes, main advances materially from
+`2c6005d64f45a19e8b9eedbc977959b066d3eda0`, cited contracts or intent change,
+another PR implements part of the outcome, or a load-bearing current miss
+cannot be reproduced.
 
 Refresh or supersede the plan before executing stale call-site classifications.
 

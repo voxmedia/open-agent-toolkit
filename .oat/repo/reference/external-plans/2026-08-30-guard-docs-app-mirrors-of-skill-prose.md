@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260818-extend-guarded-prose-contract.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
+oat_external_plan_date: '2026-08-31'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260818-extend-guarded-prose-contract
@@ -42,7 +42,7 @@ proves the docs copy is genuinely covered.
 - Source backlog item:
   [BL-260818-extend-guarded-prose-contract — Extend guarded-prose tests to docs-app mirrors](../../pjm/backlog/items/BL-260818-extend-guarded-prose-contract.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
 - Verified evidence:
   - `.agents/skills/explainer-kit/tests/contracts.test.mjs:767-776` reads only
     `references/extension-contract.md` for the complete receipt-v2 / immutable
@@ -74,7 +74,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/references/extension-contract.md apps/oat-docs/docs/workflows/skills/explainer-kit.md apps/oat-docs/index.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/references/extension-contract.md apps/oat-docs/docs/workflows/skills/explainer-kit.md apps/oat-docs/index.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 If the docs passage was replaced by a canonical cross-link or the contract no
@@ -197,7 +197,7 @@ Stop and report instead of improvising when:
 
 Revalidate against current `origin/main`, the source backlog item, PR #196, the
 canonical reference, docs mirror, and focused contract test when main advances
-materially from `845462e78468265c7e2e2b2f6c64731472731ecb`, either passage or
+materially from `2c6005d64f45a19e8b9eedbc977959b066d3eda0`, either passage or
 its ownership changes, another PR adds mirror coverage, or the current gap
 cannot be reproduced. Refresh or supersede stale mappings before execution.
 

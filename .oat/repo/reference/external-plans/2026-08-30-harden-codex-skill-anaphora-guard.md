@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260827-harden-the-codex-skill-below.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
+oat_external_plan_date: '2026-08-31'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260827-harden-the-codex-skill-below
@@ -42,7 +42,7 @@ independently classifies the selected model as a direct-API specialist route.
 - Source backlog item:
   [BL-260827-harden-the-codex-skill-below — Harden below-floor guard against paraphrase and anaphora](../../pjm/backlog/items/BL-260827-harden-the-codex-skill-below.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
 - Verified evidence:
   - `.agents/skills/codex-skill/tests/codex-skill-contract.test.mjs:109-144`
     selects only clauses containing the literal “below the route” before
@@ -77,7 +77,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/skills/codex-skill/SKILL.md .agents/skills/codex-skill/tests/codex-skill-contract.test.mjs .agents/skills/subagent-orchestration/references/provider-codex.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- .agents/skills/codex-skill/SKILL.md .agents/skills/codex-skill/tests/codex-skill-contract.test.mjs .agents/skills/subagent-orchestration/references/provider-codex.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 If the below-floor/direct-API paragraph changed, rerun the mutation against the
@@ -200,7 +200,7 @@ Stop and report instead of improvising when:
 Revalidate against current `origin/main`, the source backlog item, PRs #222 and
 #223, the Wave 4 summary, live codex-skill prose, provider-Codex reference, and
 focused test when main advances materially from
-`845462e78468265c7e2e2b2f6c64731472731ecb`, any policy wording changes, the
+`2c6005d64f45a19e8b9eedbc977959b066d3eda0`, any policy wording changes, the
 broad guard project begins, or the escaped mutation cannot be reproduced.
 Refresh or supersede stale clause relationships before execution.
 
