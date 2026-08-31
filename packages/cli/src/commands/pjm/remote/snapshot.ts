@@ -1,3 +1,4 @@
+import { redactCredentialAssignments } from './credential-safety';
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
   MAX_REMOTE_DESCRIPTION_BYTES,
@@ -29,10 +30,6 @@ export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
 }
 
-const QUOTED_CREDENTIAL_ASSIGNMENT =
-  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)(["'])((?:\\[\s\S]|\5\5|(?!\5)[\s\S])*)\5/gim;
-const CREDENTIAL_ASSIGNMENT =
-  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)([^\s,;}]+)/gim;
 const AUTHORIZATION_HEADER =
   /(\bAuthorization\s*:\s*(?:Bearer|Basic)\s+)([^\s]+)/gi;
 const STANDALONE_CREDENTIAL =
@@ -148,35 +145,13 @@ function sanitizeExtensions(
 }
 
 function redactCredentials(value: string): string {
-  return value
-    .replace(
-      QUOTED_CREDENTIAL_ASSIGNMENT,
-      (
-        _match,
-        leading: string,
-        keyQuote: string,
-        name: string,
-        operator: string,
-        valueQuote: string,
-      ) =>
-        `${leading}${keyQuote}${name}${keyQuote}${operator}${valueQuote}${REDACTION_MARKER}${valueQuote}`,
-    )
-    .replace(
+  return redactCredentialAssignments(
+    value.replace(
       AUTHORIZATION_HEADER,
       (_match, prefix: string) => `${prefix}${REDACTION_MARKER}`,
-    )
-    .replace(
-      CREDENTIAL_ASSIGNMENT,
-      (
-        _match,
-        leading: string,
-        keyQuote: string,
-        name: string,
-        operator: string,
-      ) =>
-        `${leading}${keyQuote}${name}${keyQuote}${operator}${REDACTION_MARKER}`,
-    )
-    .replace(STANDALONE_CREDENTIAL, REDACTION_MARKER);
+    ),
+    REDACTION_MARKER,
+  ).replace(STANDALONE_CREDENTIAL, REDACTION_MARKER);
 }
 
 function containsCredential(value: unknown, key?: string): boolean {

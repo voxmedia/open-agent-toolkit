@@ -169,6 +169,54 @@ STATUS_SECRET_SUFFIX"}`;
     });
   });
 
+  it('redacts punctuation-delimited assignments across retained core fields', () => {
+    const input = rawSnapshot();
+    input.issue.title = '(password=SECRET_TITLE_PAREN)';
+    input.issue.description = '!api_key=SECRET_DESCRIPTION_BANG!';
+    input.issue.priority = '<access_token=SECRET_PRIORITY_ANGLE>';
+    input.issue.status = '.authorization=SECRET_STATUS_PERIOD';
+
+    const result = sanitizeRemoteSnapshot(input);
+    const serialized = JSON.stringify(result);
+
+    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
+    expect(serialized).not.toMatch(
+      /SECRET_TITLE_PAREN|SECRET_DESCRIPTION_BANG|SECRET_PRIORITY_ANGLE|SECRET_STATUS_PERIOD/,
+    );
+    expect(result).toMatchObject({
+      contentRedacted: true,
+      redactionCount: 4,
+      redactions: [
+        { field: 'title', reason: 'credential' },
+        { field: 'description', reason: 'credential' },
+        { field: 'priority', reason: 'credential' },
+        { field: 'status', reason: 'credential' },
+      ],
+    });
+  });
+
+  it('does not treat credential-key substrings embedded in identifiers as assignments', () => {
+    const input = rawSnapshot();
+    input.issue.title = 'compassword=value';
+    input.issue.description = 'api_keychain=value';
+    input.issue.priority = 'access_tokenizer=value';
+    input.issue.status = 'authorization_code=value';
+
+    const result = sanitizeRemoteSnapshot(input);
+
+    expect(result.issue).toEqual({
+      title: input.issue.title,
+      description: input.issue.description,
+      priority: input.issue.priority,
+      status: input.issue.status,
+    });
+    expect(result.contentRedacted).toBe(false);
+    expect(result.redactionCount).toBe(0);
+  });
+
   it('drops allowlisted extensions containing credentials and marks the snapshot incomplete', () => {
     const input = rawSnapshot();
     input.extensions.workflow = {
@@ -182,6 +230,21 @@ STATUS_SECRET_SUFFIX"}`;
     expect(result.extensions).toEqual({ github: { estimate: 3 } });
     expect(result.contentRedacted).toBe(true);
     expect(JSON.stringify(result)).not.toContain('ghp_');
+  });
+
+  it('drops allowlisted extensions with punctuation-delimited assignments', () => {
+    const input = rawSnapshot();
+    input.extensions.workflow = {
+      note: '(password=SECRET_EXTENSION_PAREN)',
+    };
+
+    const result = sanitizeRemoteSnapshot(input, {
+      allowedExtensionKeys: ['estimate', 'workflow'],
+    });
+
+    expect(result.extensions).toEqual({ github: { estimate: 3 } });
+    expect(result.contentRedacted).toBe(true);
+    expect(JSON.stringify(result)).not.toContain('SECRET_EXTENSION_PAREN');
   });
 
   it('fails closed on oversized descriptions and provider extensions', () => {

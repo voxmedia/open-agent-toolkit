@@ -178,6 +178,10 @@ describe('binding previews and approvals', () => {
     ['quoted authorization key', '{"authorization":"Bearer auth-secret"}'],
     ['unquoted YAML key', 'access_token: yaml-preview-secret'],
     ['unquoted config key', 'password = config-preview-secret'],
+    ['parenthesized key', '(password=paren-preview-secret)'],
+    ['bang-delimited key', '!api_key=bang-preview-secret!'],
+    ['angle-delimited key', '<access_token=angle-preview-secret>'],
+    ['period-delimited key', '.secret=period-preview-secret'],
   ])('redacts %s from concise preview fields', (_fixture, title) => {
     const preview = buildBindingPreview({
       ...baseInput,
@@ -190,6 +194,26 @@ describe('binding previews and approvals', () => {
     });
     expect(JSON.stringify(preview)).not.toContain(title);
   });
+
+  it.each([
+    ['compassword=value', 'compassword=value'],
+    ['api_keychain=value', 'api_keychain=value'],
+    ['access_tokenizer=value', 'access_tokenizer=value'],
+    ['authorization_code=value', 'authorization_code=value'],
+  ])(
+    'renders ordinary identifier substring %s unchanged',
+    (_fixture, title) => {
+      const preview = buildBindingPreview({
+        ...baseInput,
+        projection: { ...baseInput.projection, title },
+      });
+
+      expect(preview.renderedFields.title).toEqual({
+        kind: 'value',
+        value: title,
+      });
+    },
+  );
 
   it('accepts only fresh, matching, non-secret approval evidence', () => {
     const preview = buildBindingPreview(baseInput);
@@ -254,6 +278,14 @@ describe('binding previews and approvals', () => {
     ],
     ['unquoted YAML source', 'source', 'access_token: approval-yaml-secret'],
     ['unquoted config actor', 'actor', 'password = approval-config-secret'],
+    ['parenthesized source', 'source', '(api_key=approval-paren-secret)'],
+    ['bang-delimited actor', 'actor', '!password=approval-bang-secret!'],
+    [
+      'angle-delimited source',
+      'source',
+      '<access_token=approval-angle-secret>',
+    ],
+    ['period-delimited actor', 'actor', '.secret=approval-period-secret'],
   ] as const)(
     'rejects %s as unsafe approval evidence',
     (_fixture, field, value) => {
@@ -273,6 +305,33 @@ describe('binding previews and approvals', () => {
           maxAgeMs: 10 * 60_000,
         }),
       ).toEqual({ valid: false, reason: 'unsafe-evidence' });
+    },
+  );
+
+  it.each([
+    ['actor', 'compassword=value'],
+    ['source', 'api_keychain=value'],
+    ['actor', 'access_tokenizer=value'],
+    ['source', 'authorization_code=value'],
+  ] as const)(
+    'accepts ordinary identifier substrings in approval %s',
+    (field, value) => {
+      const preview = buildBindingPreview(baseInput);
+      const approval = {
+        previewDigest: preview.digest,
+        operationClass: 'update-fields' as const,
+        approvedAt: timestamp,
+        actor: 'user-123',
+        source: 'interactive-confirmation',
+        [field]: value,
+      };
+
+      expect(
+        validatePreviewApproval(preview, approval, {
+          now: '2026-08-31T12:05:00.000Z',
+          maxAgeMs: 10 * 60_000,
+        }),
+      ).toEqual({ valid: true, reason: null });
     },
   );
 });
