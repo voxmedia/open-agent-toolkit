@@ -72,6 +72,10 @@ The final focused suite passed 417/417 and all timeout-affected files passed 250
 
 Exact pnpm test retry exited 1 with 4593/4599 passing and six timeout-only failures across four Git-heavy files; the failure set again changed and shrank, with no assertion failure. p04-t02 remains blocked.
 
+### 2026-08-31 · structural · oat-project-implement · p04
+
+Phase p04 passed High review with zero findings at 89a74da25cfb8e870b74645d760feeb6bb03996a after one authorized concurrency-only recovery; reviewer reconnaissance launch was attempted but rejected at the host thread limit, so the primary reviewer reconciled inline. Artifact: reviews/archived/p04-review-2026-08-31T002514Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

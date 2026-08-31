@@ -625,7 +625,7 @@ at the final reviewed head.
 | p01    | code     | passed          | 2026-08-30 | `reviews/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
 | p02    | code     | passed          | 2026-08-30 | `reviews/p02-review-2026-08-30T224248Z.md`           | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
 | p03    | code     | passed          | 2026-08-30 | `reviews/p03-review-2026-08-30T225845Z.md`           | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
-| p04    | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
+| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`  | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
 | final  | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
 | spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
