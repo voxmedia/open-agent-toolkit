@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 306bdd9dc0f862021ef049f019b9f0f7d6579599
+oat_last_commit: a13b3b4a8981e85d763354f98edcec1ce5c55e84
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -39,8 +39,8 @@ oat_generated: false
 
 Implementation — Phase 1 completed p01-t01 through p01-t10 and passed
 phase-wide verification after origin/main incorporated PR #249's four-worker
-Vitest cap. The user authorized one operator-extension fix/review cycle for the
-two terminal Critical findings. Phase 2 has not started.
+Vitest cap. The operator-extension fix is committed and independently verified;
+its fresh Phase 1 review is next. Phase 2 has not started.
 
 ## Artifacts
 
@@ -81,13 +81,14 @@ two terminal Critical findings. Phase 2 has not started.
 - ✓ p01-t10 persisted pre-create intent and gated portable metadata on durable
   remote identity verification
 - ✓ Phase 1 tasks complete and phase-wide verification passed
-- ⧗ Phase 1 operator-extension fix/review cycle authorized and in progress
+- ✓ Phase 1 operator-extension fix committed as `a13b3b4a8`
+- ⧗ Fresh independent operator-extension review pending
 
 ## Blockers
 
-None requiring user input. The authorized Phase 1 extension must pass before
-Phase 2 can begin.
+None requiring user input. The authorized Phase 1 review must pass before Phase
+2 can begin.
 
 ## Next Milestone
 
-Complete the one-cycle Phase 1 operator extension and fresh independent review.
+Run the fresh independent Phase 1 operator-extension review.

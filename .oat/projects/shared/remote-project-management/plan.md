@@ -1235,7 +1235,7 @@ in-scope implementation files when a gate exposes a project defect.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation         | Gate Target              |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ------------------ | ------------------------ |
-| p01    | code     | fixes_added     | 2026-08-31 | reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md | 306bdd9dc0f862021ef049f019b9f0f7d6579599 | operator-extension | codex:sol-high           |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md | a13b3b4a8981e85d763354f98edcec1ce5c55e84 | operator-extension | codex:sol-high           |
 | p02    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
 | p03    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
 | p04    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
