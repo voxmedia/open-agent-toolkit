@@ -60,6 +60,10 @@ Phase p02 blocked after exhausting 2 review-fix iterations; final artifact: revi
 
 Phase p02 remains blocked after operator-authorized review-fix iteration 3/3; fresh review artifact reviews/p02-code-rereview-r4-2026-08-31T123548Z.md reports 3 Critical and 2 Important findings.
 
+### 2026-08-31 · structural · oat-project-implement · p-rev1
+
+Terminal review passed at 841a7164a with 0 findings after 3 review-fix iterations; reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md closes p-rev1 and the complete p02 blocking history.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
