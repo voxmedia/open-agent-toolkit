@@ -627,6 +627,8 @@ git commit -m "feat(p03-t03): materialize user pack agents"
 - Modify: `packages/cli/src/commands/tools/shared/scan-tools.test.ts`
 - Modify: `packages/cli/scripts/bundle-inputs.mjs`
 - Modify: `packages/cli/scripts/bundle-assets.sh`
+- Create: `.claude/skills/recon`
+- Create: `.cursor/skills/recon`
 
 **Step 1: Add failing pack and bundle assertions**
 
@@ -661,7 +663,22 @@ to remove test-only directories and fixtures. Add contract checks for packaged
 runtime helpers, installed-root dependency loading, and the generic-role
 fallback.
 
-**Step 4: Format and verify**
+**Step 4: Refresh repository provider views**
+
+After registering the canonical skill, run the source CLI against project scope
+and verify both committed provider skill views resolve back to the canonical
+directory:
+
+```bash
+pnpm run cli:source -- sync --scope project
+test "$(readlink .claude/skills/recon)" = "../../.agents/skills/recon"
+test "$(readlink .cursor/skills/recon)" = "../../.agents/skills/recon"
+```
+
+User-scope behavior remains covered with injected temporary roots; this step
+must not mutate the maintainer's user-scope provider views.
+
+**Step 5: Format and verify**
 
 Run:
 
@@ -675,10 +692,10 @@ pnpm oat:validate-skills
 Expected: canonical and bundled inventories agree and research installation
 delivers all standalone recon capabilities at either supported scope.
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
-git add packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/src/commands/init/tools/shared/pack-metadata.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/init/tools/research/install-research.ts packages/cli/src/commands/init/tools/research/install-research.test.ts packages/cli/src/commands/init/tools/research/index.ts packages/cli/src/commands/init/tools/research/index.test.ts packages/cli/src/commands/tools/shared/scan-tools.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/scripts/bundle-assets.sh
+git add packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/src/commands/init/tools/shared/pack-metadata.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/init/tools/research/install-research.ts packages/cli/src/commands/init/tools/research/install-research.test.ts packages/cli/src/commands/init/tools/research/index.ts packages/cli/src/commands/init/tools/research/index.test.ts packages/cli/src/commands/tools/shared/scan-tools.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/scripts/bundle-assets.sh .claude/skills/recon .cursor/skills/recon
 git commit -m "feat(p03-t04): ship recon in research pack"
 ```
 
@@ -780,8 +797,10 @@ pnpm format
 
 Expected: package tests execute rather than replaying only cached results; all
 skill, smoke, release, lint, and formatting checks pass. New bundle-tier tests
-must inject temporary user, scope, and assets roots; do not override `HOME` or
-read the maintainer's installed templates.
+must inject temporary user, scope, and assets roots and must not read the
+maintainer's installed templates. The implementation harness intentionally
+leaves process `HOME` unchanged under its governing safety rule; injected roots
+are the evidence-grade isolation mechanism for this plan.
 
 **Step 3: Run the CI gates in repository order**
 
@@ -820,17 +839,17 @@ git commit -m "chore(p04-t02): prepare recon release"
 
 ## Reviews
 
-| Scope     | Type     | Status   | Date       | Artifact                                             | Reviewed Head | Invocation              | Gate Target |
-| --------- | -------- | -------- | ---------- | ---------------------------------------------------- | ------------- | ----------------------- | ----------- |
-| p01       | code     | pending  | -          | -                                                    | -             | -                       | -           |
-| p02       | code     | pending  | -          | -                                                    | -             | -                       | -           |
-| p03       | code     | pending  | -          | -                                                    | -             | -                       | -           |
-| p04       | code     | pending  | -          | -                                                    | -             | -                       | -           |
-| final     | code     | pending  | -          | -                                                    | -             | -                       | -           |
-| spec      | artifact | pending  | -          | -                                                    | -             | -                       | -           |
-| design    | artifact | passed   | 2026-08-31 | `reviews/design-self-review-2026-08-31T005342Z.md`   | -             | independent-self-review | -           |
-| plan-self | artifact | passed   | 2026-08-31 | `reviews/plan-self-review-2026-08-31T011150Z.md`     | -             | independent-self-review | -           |
-| plan      | artifact | received | 2026-08-31 | `reviews/artifact-plan-review-2026-08-31T011757Z.md` | -             | -                       | -           |
+| Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01       | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p02       | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p03       | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p04       | code     | pending         | -          | -                                                             | -             | -          | -           |
+| final     | code     | pending         | -          | -                                                             | -             | -          | -           |
+| spec      | artifact | pending         | -          | -                                                             | -             | -          | -           |
+| design    | artifact | passed          | 2026-08-31 | `reviews/design-self-review-2026-08-31T005342Z.md`            | -             | -          | -           |
+| plan-self | artifact | passed          | 2026-08-31 | `reviews/plan-self-review-2026-08-31T011150Z.md`              | -             | -          | -           |
+| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -             | -          | -           |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
