@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01-t02
-oat_last_commit: 26264a2c8ed2fc0289473a81d0f296ceb764cb76
+oat_last_commit: 3d0f106597f80f5f3c22b96d89670028b89444b5
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -119,7 +119,9 @@ Implement - p01 contract revision authorized; fix and review in progress
 - ✓ p01 review round 2 fixed the unsafe non-atomic fallback deletion
 - ✗ p01 review round 3 found one remaining atomic no-op Critical
 - ✓ Operator accepted completed-ref authority and same-SHA active aliases
-- → Fresh bounded p01 fix/review generation authorized
+- ✓ Revised terminal receipt implementation passed 128 focused tests
+- → Fresh review found a torn probe and unleased prune deletion; fix round 1
+  is in progress
 
 ## Blockers
 

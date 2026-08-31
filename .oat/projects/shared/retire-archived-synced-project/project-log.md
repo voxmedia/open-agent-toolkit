@@ -52,6 +52,10 @@ Phase outcome blocked after 2 fix iterations and 3 review rounds; remaining Crit
 
 Operator approved completed-ref authority: completed-only and matching active/completed refs are terminal; same-SHA active is an inert alias; differing SHAs remain a hard mismatch. Plan revised and a fresh bounded p01 fix/review generation authorized.
 
+### 2026-08-31 · structural · oat-project-implement · p01-revision-review-r1
+
+Fresh p01 revision review at 3d0f106597f80f5f3c22b96d89670028b89444b5 blocked with one Critical torn two-process remote-ref observation and one Important unleased completed-ref prune deletion. Focused tests remained 128/128; bounded fix round 1 authorized by the active generation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

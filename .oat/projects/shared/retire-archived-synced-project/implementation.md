@@ -168,6 +168,13 @@ _Orchestration runs from `oat-project-implement` are appended here._
   physical-active-deletion requirement.
 - Fresh fix iterations: 0 of 2 used; review rounds: 0 of 3 used.
 - Authorization: user explicitly approved updating the plan and proceeding.
+- Revision implementation commit:
+  `3d0f106597f80f5f3c22b96d89670028b89444b5`.
+- Revision review artifact: `reviews/p01-review-2026-08-31T120543Z.md`.
+- Revision review result: blocked — 1 Critical torn remote-ref observation and
+  1 Important unleased explicit-prune deletion.
+- Independent verification: 128/128 focused tests passed before review.
+- Fresh fix iterations: 1 of 2 in progress; review rounds: 1 of 3 used.
 
 <!-- orchestration-runs-end -->
 
