@@ -92,6 +92,10 @@ Observation: configured gate run 09b87ee3-2fde-4ed4-b863-67d2365a2e79 accepted c
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
 
+### 2026-08-31 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/scope-adoption-diagnostics/references/project-retro.md evidence_used=archived-review-markdown,decision-records,gate-receipts,git-history,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=active-review-markdown,host-resource-telemetry,oat-execution-learnings,raw-gate-logs promotions=0 upstream=0 apply=skipped filing=skipped
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
