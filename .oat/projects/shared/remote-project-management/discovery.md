@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-08-30
+oat_last_updated: 2026-08-31
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ Cross-provider findings:
 - **Transports are capabilities, not the domain model.** REST, GraphQL, MCP, and CLI surfaces vary by provider and environment. The shared contract must describe semantic operations and negotiate available capabilities.
 - **Current state alone is insufficient.** Safe reconciliation needs the last-agreed state, current local state, current remote state, and durable operation evidence.
 - **Remote writes may have uncertain or partial outcomes.** A failed or interrupted command must not be blindly retried. Receipts and reconciliation must prevent duplicates and false success claims.
-- **Concurrency matters.** Durable state alone is insufficient if concurrent agents can advance stale recovery state. Receipt advancement needs a single-writer or compare-and-swap guarantee.
+- **Concurrent writers can race.** V1 does not add locking or a shared coordinator for this uncommon case. It reduces risk through a fresh remote read, preview, one write attempt, post-write verification, and a hard stop after an uncertain outcome.
 - **Comments and assignees are remote-only information.** They may improve an agent's understanding of a backlog item, but they are not synchronized OAT fields.
 - **GitHub development automation is a separate authority.** Branch, pull-request, and merge activity may drive tracker status where a provider integration supports it; OAT should not duplicate those transitions by default.
 
@@ -164,39 +164,141 @@ Implementation may be incremental, but the project is not complete until all thr
 
 ### Source of truth
 
-**Working answer:** There is no single whole-record source of truth. Authority is scoped by binding purpose, field, and operation. OAT owns local discovery and execution artifacts; remote planning systems own human/team coordination; GitHub integrations may own delivery-driven status transitions.
+**Working answer:** There is no single whole-record source of truth. Authority is scoped by binding purpose, field, and operation. OAT owns local discovery and execution artifacts; remote planning systems own human/team coordination; provider automation may own delivery-driven transitions, while OAT may also perform a transition when the user explicitly requests one.
 
-**Status:** Directionally agreed; exact field ownership remains open.
+**Status:** Confirmed; the shared-field and mutation-authority policies below define the remaining boundaries.
 
 ### Offline behavior
 
 **Working answer:** Local OAT workflows must remain useful without remote access. Network absence cannot block local backlog or project work, and pending remote intent must never be presented as completed remote work.
 
-**Status:** Directionally agreed.
+**Status:** Confirmed.
 
 ### Provider scope
 
 **Working answer:** GitHub Issues, Linear, and Jira Cloud are all deliverables. They may coexist on one local item or project.
 
-**Status:** Directionally agreed.
+**Status:** Confirmed.
 
 ### Comments and assignees
 
-**Working answer:** OAT backlog items do not synchronize comments, discussion history, or assignees. Remote discussion may be read as informational evidence and distilled into better backlog content. An outbound completion annotation is a separate, explicitly governed operation rather than comment synchronization.
+**Working answer:** OAT backlog items do not synchronize comments, discussion history, or assignees, and the default offline snapshot does not retain them. Remote discussion may be fetched on demand as informational evidence and distilled into better backlog content. An outbound completion annotation is a separate, explicitly governed operation rather than comment synchronization.
 
-**Status:** Directionally agreed.
+**Status:** Confirmed.
 
 ### Synchronization trigger
 
 **Working answer:** Start with explicit intake, publish, refresh, reconcile, and closeout operations. Automatic background synchronization and webhooks are not initial requirements.
 
-**Status:** Directionally supported; exact command/skill UX remains open.
+**Status:** Confirmed at the lifecycle-operation level; exact command and skill UX is a design concern.
 
 ### Authentication and transport
 
-**Working answer:** OAT core must not store credentials in version-controlled files. Adapters may use configured MCP, provider APIs/SDKs, or installed CLIs according to capabilities and policy, but transport-specific behavior cannot define the shared domain contract.
+**Working answer:** OAT core must not store credentials in version-controlled files. Every provider has a user-configurable ordered transport preference, and OAT chooses the first available transport that satisfies the requested capability and effective mutation authority. GitHub defaults to the installed `gh` CLI. Linear and Jira default to MCP/connector OAuth because that is the easiest setup; users may prefer an already-installed community Linear CLI or official Atlassian `acli`. OAT supports external CLIs without bundling or installing them. Fallback is allowed before mutation, but after a write attempt or uncertain outcome OAT must reconcile before changing transports. Transport-specific behavior cannot define the shared domain contract.
 
-**Status:** Directionally supported; provider-specific precedence and credential configuration remain open.
+**Status:** User confirmed the provider-specific defaults and configurable fallback order on 2026-08-30. A first-party Linear GraphQL transport is not an initial baseline and remains deferred unless later capability analysis proves it necessary.
+
+### Remaining discovery scope
+
+**Working answer:** Resolve all five remaining policy areas before the discovery checkpoint: normalized fields and authority, binding semantics, baselines and concurrent recovery, remote lifecycle and reconciliation scope, and transport and approval policy. Work through them in that order, beginning with the smallest viable shared field contract.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Planning field contract
+
+**Working answer:** The v1 shared reconciliation contract is intentionally small: title and explicitly governed description content. Priority may participate only when a binding advertises a safe mapping. Status is governed separately as lifecycle policy; labels, due dates, estimates, and provider-native types remain local or provider-specific extensions.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Shared-field authority
+
+**Working answer:** Binding purpose supplies safe authority defaults with explicit per-binding overrides. A `source` binding defaults to remote ownership for shared fields; a `planning` binding uses three-way reconciliation; `delivery` and `reference` bindings do not write shared fields by default. Neither local nor remote state wins globally.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Binding purposes
+
+**Working answer:** One durable remote binding may declare multiple purposes when the same record genuinely serves more than one role. This is supported as an uncommon, explicit case; ordinary flows should default to one purpose per binding. Each purpose retains independently governed behavior, and combining purposes must not create implicit synchronization or lifecycle authority.
+
+**Status:** User confirmed on 2026-08-30 and noted that multi-purpose bindings should not be treated as common.
+
+### Remote description ownership
+
+**Working answer:** Remote description writes are configurable rather than governed by one universal ownership rule. The policy has three outcome modes: (1) OAT may replace the complete remote description, but every such write always requires previewed user approval; (2) OAT may update only an explicit OAT-managed section while preserving surrounding remote content; or (3) OAT never updates the remote description. The policy belongs in the PJM remote configuration surface. Exact setting names and representation remain design questions.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Unconfigured description policy
+
+**Working answer:** When no PJM remote description policy is configured, OAT fails closed and never updates the remote description. Read and intake behavior remain available. A description write requires an explicit configured policy, and complete replacement still requires user approval for every write.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Description-policy precedence
+
+**Working answer:** The PJM remote configuration supplies a repository default and optional provider-specific overrides. An individual remote binding may only tighten the effective policy toward less authority: complete replacement may become managed-section or no-update, and managed-section may become no-update. A binding cannot loosen repository or provider policy. Complete replacement always requires previewed user approval regardless of configuration scope.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Remote description retention
+
+**Working answer:** Local retention is independent from remote write authority. A sync-down retains the complete last-observed remote description so agents have the ticket context locally and can continue useful work offline. In managed-section mode, content outside the OAT-managed section remains locally available but remote-owned and is never written back by OAT. The full remote snapshot and the writable reconciliation baseline are therefore distinct concepts.
+
+**Status:** User corrected and confirmed this requirement on 2026-08-30.
+
+### Offline read depth
+
+**Working answer:** Sync-down retains a bounded core issue snapshot: durable identity and aliases, title, complete description, status and other core provider fields, and revision/freshness evidence. Comments, activity history, and assignees are not part of the default offline snapshot; they may be fetched on demand as read-only evidence when remote access is available.
+
+**Status:** User selected the simpler core-issue scope on 2026-08-30.
+
+### Remote mutation safety
+
+**Working answer:** V1 uses a simple guarded write flow: refresh remote state, preview the proposed change against the observed revision, perform one write attempt, and read the record back to verify the result. An uncertain outcome blocks blind retry and requires reconciliation. V1 does not add locks, leases, a shared coordinator, or a designated-writer system; truly simultaneous writers remain an accepted risk rather than a claimed prevention guarantee.
+
+**Status:** User confirmed the simpler policy on 2026-08-30 after rejecting proactive coordination as overkill.
+
+### Remote status transitions
+
+**Working answer:** V1 supports policy-governed status transitions across GitHub, Linear, and Jira when the provider exposes a valid transition. Status is never propagated automatically between bindings or changed merely because local project phase changed. The effective authority mode determines whether a transition is forbidden, directly user-authorized, previewed for user approval, or permitted autonomously within an active workflow. Every transition is verified against resulting remote state. Existing provider automation may continue to operate.
+
+**Status:** Superseded on 2026-08-30 by the configurable remote-mutation authority model below.
+
+### Remote mutation authority
+
+**Working answer:** Remote mutation authority is configured by provider and operation class under the PJM remote policy surface. The repository default is `read-only`. Provider policy may broaden authority to `user-authorized` (an explicit user instruction is sufficient), `user-approved` (fresh approval is required after preview), or `autonomous` (standing authority within an otherwise authorized active workflow). An individual binding may only tighten the effective mode. Autonomous authority does not enable background synchronization, webhooks, or transitive provider-to-provider propagation. Complete-description replacement and destructive operations such as deletion retain a non-configurable `user-approved` floor.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Reconciliation scope
+
+**Working answer:** Each remote binding is the atomic unit for baselines, conflicts, authority, receipts, and outcomes. Item-, project-, repository-, or reviewed-batch operations may orchestrate multiple bindings and present a consolidated preview, but every binding advances or remains uncertain independently. OAT does not claim an all-or-nothing transaction across providers.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Missing and changed remote records
+
+**Working answer:** OAT preserves the binding and complete local core-issue snapshot when a remote record is archived, moved, deleted, inaccessible, or temporarily unavailable. It records the observed condition and stops writes rather than treating a generic not-found response as proof of deletion. Verified moves may retain durable identity and update aliases; archived records become read-only. Relink, detach, or recreate is an explicit policy-governed resolution, never an automatic response.
+
+**Status:** User confirmed on 2026-08-30.
+
+### Creation provenance and duplicate recovery
+
+**Working answer:** Every remote create begins with a durable local intent. OAT prefers provider-native provenance metadata when the provider and permissions support it. Otherwise it may include a visible OAT origin link only when the effective remote-content policy permits that write. It never hides markers in human content or bypasses description ownership. After an uncertain create, OAT searches and reconciles using the available provenance before any retry.
+
+**Status:** User confirmed the capability-layered policy on 2026-08-30.
+
+### Project closeout
+
+**Working answer:** Local project completion evaluates every remote binding independently. `source` and `planning` purposes may propose completion evidence or provider-valid transitions when the effective mutation authority permits them; `delivery` normally defers to provider-native development automation; `reference` remains untouched. A multi-purpose binding produces one combined action for its remote record. Multi-binding closeout is a reviewed batch of independent outcomes rather than an all-or-nothing transaction.
+
+**Status:** User confirmed the per-binding policy on 2026-08-30.
+
+### Completion annotations
+
+**Working answer:** V1 includes one-way outbound completion annotations as a distinct closeout operation. An annotation is permitted only when the binding's effective mutation authority allows it, is verified after the write, and does not imply comment synchronization or local retention of the remote discussion thread.
+
+**Status:** User confirmed inclusion with policy on 2026-08-30.
 
 ## Solution Space
 
@@ -222,24 +324,28 @@ Implementation may be incremental, but the project is not complete until all thr
 
 **Approach:** Multi-provider bindings with explicit profiles and deliberate OAT-mediated operations.
 **Rationale:** The user needs GitHub issue reporting, Linear personal/business planning, and Jira workplace planning to coexist. Per-binding policies preserve those roles without automatic transitive mirroring.
-**User validated:** Directionally yes; final approval remains the discovery HiLL checkpoint.
+**User validated:** Yes; approved at the discovery HiLL checkpoint on 2026-08-30.
 
-## Working Agreements
+## Key Decisions
 
-1. **All three providers are deliverables:** GitHub Issues, Linear, and Jira Cloud must each validate the shared model.
-2. **Local-first operation:** Local search, capture, promotion, and project work must remain useful without remote access.
-3. **Multiple bindings:** A local item or project may link to several remote records serving different purposes.
-4. **Provider-independent profiles:** `source`, `planning`, `delivery`, and `reference` are the initial role vocabulary.
-5. **Independent reconciliation:** Baselines, conflicts, capabilities, and receipts are scoped per binding.
-6. **No transitive mirroring:** A change in one provider does not automatically write to another provider.
-7. **No comment or assignee synchronization:** Discussion may inform local content, but it remains remote-only.
-8. **Preview-first remote writes:** Conflicts, lifecycle transitions, closeout annotations, and uncertain retries require explicit policy and evidence.
-
-These are discovery working agreements, not finalized design decisions.
+1. **All three providers validate one shared model:** GitHub Issues, Linear, and Jira Cloud are complementary deliverables rather than mutually exclusive tracker choices.
+2. **Local-first with bounded remote snapshots:** Local PJM remains fully useful offline. Sync-down retains the complete core issue, including the full description, but not comments, activity history, or assignees by default.
+3. **Bindings carry explicit purposes:** `source`, `planning`, `delivery`, and `reference` are the initial vocabulary. Multiple purposes on one binding are supported as an uncommon explicit case.
+4. **The shared planning-field contract stays small:** Title and policy-governed description content reconcile across providers. Priority participates only when a safe mapping is advertised; other provider concepts remain extensions or lifecycle policy.
+5. **Description ownership is configurable:** The effective mode is complete replacement, managed section, or no remote update. The unconfigured default is no update; complete replacement always requires previewed user approval.
+6. **Remote mutation authority is configurable by operation:** The repository default is `read-only`; provider policy may broaden to `user-authorized`, `user-approved`, or `autonomous`; a binding may only tighten authority. Destructive actions and complete-description replacement retain a `user-approved` floor.
+7. **Synchronization is deliberate:** Intake, publish, refresh, reconcile, and closeout are explicit lifecycle operations. V1 has no background synchronization, webhooks, or automatic provider-to-provider propagation.
+8. **A binding is the atomic reconciliation unit:** Item, project, repository, and batch operations may orchestrate bindings, but each binding retains its own baseline, authority, receipt, and outcome.
+9. **V1 accepts rare simultaneous-writer races:** Remote mutations refresh, preview as required by policy, write once, and verify by read-back. Uncertain outcomes stop and reconcile; V1 adds no locking or shared coordinator.
+10. **Remote disappearance preserves evidence:** Missing, moved, archived, deleted, inaccessible, and unavailable records keep their binding and local snapshot until an explicit relink, detach, or recreate decision.
+11. **Creation provenance is capability-layered:** OAT always retains a local intent, prefers provider-native provenance, and uses a visible origin link only when content policy permits it.
+12. **Closeout is per binding:** Purpose and mutation authority determine annotations and transitions. V1 includes policy-authorized completion annotations but does not synchronize discussion threads.
+13. **Transport defaults optimize setup and remain configurable:** GitHub defaults to `gh`; Linear and Jira default to MCP/connector OAuth. Users may prefer installed external Linear or Atlassian CLIs through provider-specific ordered fallbacks. OAT does not bundle provider CLIs or switch transports blindly after a write attempt.
 
 ## Constraints
 
 - Must not break or weaken existing local PJM workflows.
+- Discovery is proceeding against the repository knowledge snapshot generated on 2026-08-19 despite exceeding the configured freshness thresholds; current-code claims derived from that snapshot require revalidation before implementation.
 - Must work well when remote access, credentials, MCP tools, or provider CLIs are unavailable.
 - Credentials and credential values must never enter tracked artifacts, logs, receipts, or previews.
 - Agent sessions are ephemeral; correctness cannot depend on one long-running in-memory process.
@@ -252,43 +358,48 @@ These are discovery working agreements, not finalized design decisions.
 - One local item may have multiple bindings, including multiple bindings to the same provider.
 - Provider-to-provider propagation must be an explicit OAT-mediated operation, never an automatic transitive side effect.
 
+## Success Criteria
+
+- Users can configure zero, one, or several providers without weakening local-only PJM workflows.
+- GitHub Issues, Linear, and Jira Cloud each pressure-test the same binding, authority, snapshot, reconciliation, receipt, and closeout concepts.
+- Sync-down leaves agents with a complete core-issue snapshot for useful offline work while excluding discussion history and assignees by default.
+- Shared fields reconcile per binding without erasing provider-native semantics or silently choosing a winner for same-field conflicts.
+- Description ownership and every remote mutation class obey the resolved repository, provider, and tightening-only binding policies.
+- Reads and writes use an available, configured transport with the required capability; external CLIs remain optional and separately installed.
+- Remote writes never report success from command exit alone, never retry an uncertain outcome blindly, and retain enough evidence for authoritative reconciliation.
+- Missing or changed remote identities preserve local evidence and require explicit resolution rather than automatic deletion or recreation.
+- Project closeout can produce verified, policy-authorized transitions and completion annotations independently for the appropriate bindings.
+
+## Out of Scope
+
+- Continuously running synchronization daemons, webhooks, or automatic background polling.
+- Automatic transitive mirroring among GitHub, Linear, and Jira.
+- Comment-thread, activity-history, or assignee synchronization and default offline retention.
+- Turning OAT plan tasks into remote subtasks by default.
+- Jira Server or Data Center support.
+- Distributed locking, leases, or a shared coordinator for independent-machine writers in V1.
+- Bundling or automatically installing `gh`, community Linear CLIs, or Atlassian `acli`.
+- Bypassing configured mutation authority, including autonomous destructive actions or complete-description replacement.
+
+## Deferred Ideas
+
+- A first-party Linear GraphQL transport if later capability analysis proves MCP and external CLI coverage insufficient.
+- Optional broader offline retention for remote comments, activity, and assignees.
+- Broader normalized planning fields after all three providers demonstrate stable mappings.
+- Provider-neutral distributed coordination if real concurrent-writer demand justifies the infrastructure.
+- Background or webhook-driven synchronization after event identity, ordering, loop prevention, and administrative controls are proven.
+
 ## Open Questions
 
-### Normalized fields and authority
+The outcome-level discovery questions are resolved. Design must determine:
 
-- Which exact fields participate in a `planning` reconciliation: title, description, status, priority, labels, due date, estimate, or a smaller set?
-- Which fields have fixed ownership defaults, and which are configurable per binding?
-- Are provider-native labels, types, and statuses retained only as extensions or projected into normalized OAT values?
-- Is OAT `scope_estimate` always local, optionally mapped, or part of the normalized contract?
-
-### Binding semantics
-
-- Are `source`, `planning`, `delivery`, and `reference` the right profile names and complete enough?
-- Can one binding have multiple purposes, or should purposes be separate policy facets?
-- Does relationship metadata belong directly in `associated_issues`, or should that remain a compact index into richer binding records?
-- How should a reference-only association be prevented from triggering PR-title linkage, closeout, or remote status changes?
-
-### Baselines, receipts, and concurrency
-
-- Where do last-agreed snapshots, hashes, provider revisions, pending intents, and receipts live?
-- Which normalized values must be stored in full versus by stable hash?
-- What single-writer, lock, or compare-and-swap mechanism prevents concurrent agents from replaying an uncertain operation?
-- How are partial multi-item and multi-binding failures resumed without advancing successful or uncertain bindings incorrectly?
-
-### Remote lifecycle and reconciliation
-
-- How are remote deletion, archival, transfer, move, permission loss, and provider outage distinguished?
-- What duplicate markers or searches are reliable for each provider before intake and publish?
-- How much remote content must be copied locally to support useful offline search without mirroring discussion history?
-- When one project satisfies several remote issues, which bindings receive completion evidence and which may transition?
-- Should one reconcile operation target a binding, backlog item, project, repository, or reviewed batch?
-
-### Transport and approval policy
-
-- What is the precedence between MCP, direct API/SDK, and CLI when several transports are available?
-- Which capabilities require a stable API even if an interactive MCP or CLI can perform them?
-- What approval is required for create, update, transition, close, comment/annotation, relink, and retry operations?
-- Should completion annotations be part of the first release or deferred until core reconciliation is proven?
+- the storage boundary between compact `associated_issues` links and richer binding, snapshot, receipt, and capability records;
+- the exact PJM remote configuration schema for description ownership, mutation authority, provider transport order, and tightening-only binding overrides;
+- the representation and retention of full remote snapshots, writable baselines, provider revisions, hashes, pending intents, attempts, and receipts;
+- safe managed-section boundaries for Markdown providers and Jira ADF;
+- provider-specific priority, status, and extension mappings without broadening the common field contract;
+- live capability probing and equivalent-safety fallback checks for MCP and external CLI transports;
+- the preview, batch, partial-failure, and reconciliation user experience.
 
 ## Assumptions
 
@@ -298,6 +409,8 @@ These are discovery working agreements, not finalized design decisions.
 - Remote access is intermittent rather than guaranteed.
 - GitHub Issues may serve as source, planning tracker, or both.
 - Linear and Jira may coexist with GitHub reporting and delivery integrations.
+- Provider connectors and external CLIs may be unavailable or expose different capabilities across users and environments.
+- Independent machines may race on the same remote record in V1; the product does not claim a distributed single-writer guarantee.
 
 ## Risks
 
@@ -314,7 +427,7 @@ These are discovery working agreements, not finalized design decisions.
 - **Duplicate remote writes:** Network loss, partial bulk results, stale agents, or concurrent retries could create duplicate issues.
   - **Likelihood:** Medium
   - **Impact:** High
-  - **Mitigation ideas:** Persist uncertainty before mutation, use deterministic payload identity, reconcile authoritatively, and make receipt advancement concurrency-safe.
+  - **Mitigation ideas:** Persist uncertainty before mutation, use deterministic payload identity, reconcile authoritatively, never retry an uncertain operation blindly, and document simultaneous writers as an accepted v1 limitation.
 
 - **Accidental lifecycle changes:** A reference-only issue ID in a PR title or an incorrect status mapping could close the wrong work.
   - **Likelihood:** Medium
@@ -333,12 +446,4 @@ These are discovery working agreements, not finalized design decisions.
 
 ## Next Steps
 
-Discovery remains **in progress**. Before specification:
-
-1. Define a candidate normalized field set and default authority policy for each binding profile.
-2. Sketch the conceptual binding, baseline, pending-operation, receipt, and capability records without committing to storage layout.
-3. Pressure-test those concepts against the representative GitHub-only, GitHub-to-Linear, GitHub-to-Jira, offline, conflict, deletion, and uncertain-write scenarios.
-4. Decide the minimum approval and postcondition-verification policy for every remote mutation class.
-5. Review the resulting choices with the user and complete the discovery HiLL checkpoint before moving to specification.
-
-Spec-driven mode: continue to `oat-project-spec` only after the discovery questions are resolved and the discovery checkpoint is explicitly approved.
+Outcome-level discovery questions are resolved. The remaining lifecycle steps are the required project-scope confirmation, discovery HiLL approval, configured discovery gate, and transition to design/specification.
