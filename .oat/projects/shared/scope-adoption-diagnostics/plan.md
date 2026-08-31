@@ -688,6 +688,7 @@ git commit -m "fix(p04-t03): align terminal review summaries"
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md`  | -                                        | -          | -                             |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md`  | -                                        | -          | -                             |
 | plan   | artifact | fixes_completed | 2026-08-30 | -                                                     | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final  | code     | received        | 2026-08-30 | `reviews/final-review-2026-08-31T013235Z.md`          | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
