@@ -26,7 +26,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:46:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:48:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,24 +92,23 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Plan drafted — awaiting confirmation and review setup
+**Status:** Ready for implementation
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Plan - Seven phases and thirty stable tasks drafted from the approved design;
-managed High is persisted and the first plan-review findings are resolved.
-The plan breakdown is confirmed, optional phase-gate review is disabled, and
-the clean plan artifact re-review and configured gate passed. The two minor
-gate findings were aligned directly; final plan completion is pending.
+Planning - Ready for implementation. Seven sequential phases and thirty stable
+tasks cover the approved spec and design. Managed High is persisted, optional
+phase-gate review is disabled, and both the bounded artifact-review loop and
+configured Fable plan gate passed.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
-- **Plan:** `plan.md` (drafted — confirmation/review pending)
+- **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -131,7 +130,8 @@ gate findings were aligned directly; final plan completion is pending.
 - ✓ Optional phase-gate review disabled by user choice
 - ✓ Clean plan artifact review passed
 - ✓ Configured plan gate passed and review received
-- ⧗ Final plan completion commit
+- ✓ Plan complete
+- ⧗ Awaiting implementation
 
 ## Blockers
 
@@ -139,4 +139,6 @@ None
 
 ## Next Milestone
 
-Mark and commit the plan complete.
+Run `oat-project-implement`. Phase p01 first proves that the diagnostics
+predecessor is accepted, landed, and present in branch ancestry before any
+shared-source implementation begins.
