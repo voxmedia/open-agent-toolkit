@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t06
-oat_last_commit: 6e4533d0b1fad24aa6fe735788786fee500fd0a6
+oat_current_task: p02-t07
+oat_last_commit: 6032d969ef102012e658bd788565ca1596553bb0
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T13:15:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T13:22:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -41,7 +41,7 @@ oat_generated: false
 ## Current Phase
 
 Implementation — Phase 2 is in progress. The projection, snapshot, managed
-content, purpose-policy, and pure three-way reconciliation layers are complete.
+content, purpose, reconciliation, and effective-authority layers are complete.
 
 ## Artifacts
 
@@ -89,6 +89,7 @@ content, purpose-policy, and pure three-way reconciliation layers are complete.
 - ✓ p02-t03 sanitized bounded remote snapshots before retention or display
 - ✓ p02-t04 preserved surrounding Markdown through fail-closed managed regions
 - ✓ p02-t05 classified governed fields with pure three-way reconciliation
+- ✓ p02-t06 resolved exact fail-closed authority with source traces
 
 ## Blockers
 
@@ -96,4 +97,4 @@ None.
 
 ## Next Milestone
 
-Implement p02-t06 exact effective mutation authority and trace evidence.
+Implement p02-t07 digest-bound previews and approval validation.

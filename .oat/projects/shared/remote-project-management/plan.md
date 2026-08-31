@@ -343,6 +343,9 @@ packages/cli/src/commands/pjm/remote/reconcile.test.ts.
 
 ### Task p02-t06: Resolve effective remote authority exactly
 
+**Implementation:** completed in
+`6032d969ef102012e658bd788565ca1596553bb0`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/authority.ts and
 packages/cli/src/commands/pjm/remote/authority.test.ts.
 
