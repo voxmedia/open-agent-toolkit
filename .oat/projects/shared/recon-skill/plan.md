@@ -1033,6 +1033,96 @@ git add .agents/skills/recon
 git commit -m "fix(prev2-t01): bind complete approved dispatch projection"
 ```
 
+### Task prev2-t02: (review) Bind terminal receipts to the accepted child and fresh catalog recheck
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Reproduce receipt-chain drift**
+
+Add direct failing mutations for accepted- and completed-receipt handle drift,
+manifest and receipt `approvedAt` drift, and a catalog recheck copied from or
+not chronologically later than the original pre-approval observation.
+
+**Step 2: Bind the existing receipt chain**
+
+Inside the existing receipt validator, require manifest and
+approved/accepted/completed approval timestamps to match, require accepted and
+completed launch-acceptance records to be identical, and require the catalog
+recheck to be a distinct observation after approval and before launch
+acceptance. Preserve the existing exact projection, evidence, topology, and
+artifact bindings; add no retry or lifecycle abstraction.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs
+node --test .agents/skills/oat-dispatch-subagents/tests/approval-contract.test.mjs .agents/skills/recon/tests/*.test.mjs
+```
+
+Expected: every handle, approval-time, and copied/non-fresh catalog mutation
+fails closed while the complete valid packet fixtures remain publishable.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/recon
+git commit -m "fix(prev2-t02): bind accepted receipt chain"
+```
+
+### Task prev2-t03: (review) Validate canonical projection array values
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Isolate schema-value failures**
+
+Rebind the manifest and all four receipts for each 22-axis deletion so the test
+proves the projection schema itself rejects the omission. Add direct invalid
+array-value cases for null or empty strings, duplicates, and unstable ordering.
+
+**Step 2: Enforce the existing canonical array contract**
+
+Require `writable_roots`, `escalate_when`, and `candidates_considered` entries
+to be non-empty strings and enforce the canonical stable sorted-set rule where
+the dispatch record schema declares set semantics. Keep validation within the
+existing projection validator; add no generic collection framework.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test .agents/skills/recon/tests/integrity-contracts.test.mjs
+node --test .agents/skills/oat-dispatch-subagents/tests/approval-contract.test.mjs .agents/skills/recon/tests/*.test.mjs
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm test:skills
+pnpm oat:validate-skills
+pnpm lint
+pnpm format
+```
+
+Expected: all 22 deletion cases isolate structural rejection, invalid canonical
+array members/order/duplicates fail, and the complete recon and skill suites
+remain green.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/recon
+git commit -m "fix(prev2-t03): validate canonical projection arrays"
+```
+
 ## Reviews
 
 | Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
@@ -1043,6 +1133,7 @@ git commit -m "fix(prev2-t01): bind complete approved dispatch projection"
 | p04       | code     | passed          | 2026-08-31 | `reviews/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -           |
 | p-rev1    | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -           |
 | final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`         | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -           |
+| final     | code     | fixes_added     | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`         | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -           |
 | spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -           |
@@ -1076,10 +1167,11 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Phase 4: 2 tasks — documentation, lockstep release packaging, and full gates.
 - Revision 1: 2 tasks — simplify the validation design and centralize packet
   validation/publication behind one normalized run graph.
-- Revision 2: 1 task — bind packet validation and receipts to the complete
-  canonical user-approved dispatch projection.
+- Revision 2: 3 tasks — bind packet validation and receipts to the complete
+  canonical user-approved dispatch projection, accepted child, fresh catalog
+  recheck, and normative projection values.
 
-**Total: 14 tasks**
+**Total: 16 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

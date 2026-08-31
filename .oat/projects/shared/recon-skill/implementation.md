@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: null
+oat_current_task_id: prev2-t02
 oat_generated: false
 oat_template: false
 ---
@@ -18,16 +18,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status          | Tasks | Completed |
-| ------------ | --------------- | ----- | --------- |
-| Phase 1      | passed          | 1     | 1/1       |
-| Phase 2      | passed          | 4     | 4/4       |
-| Phase 3      | passed          | 4     | 4/4       |
-| Phase 4      | passed          | 2     | 2/2       |
-| Phase p-rev1 | passed          | 2     | 2/2       |
-| Phase p-rev2 | fixes_completed | 1     | 1/1       |
+| Phase        | Status  | Tasks | Completed |
+| ------------ | ------- | ----- | --------- |
+| Phase 1      | passed  | 1     | 1/1       |
+| Phase 2      | passed  | 4     | 4/4       |
+| Phase 3      | passed  | 4     | 4/4       |
+| Phase 4      | passed  | 2     | 2/2       |
+| Phase p-rev1 | passed  | 2     | 2/2       |
+| Phase p-rev2 | pending | 3     | 1/3       |
 
-**Total:** 14/14 tasks completed
+**Total:** 14/16 tasks completed
 
 ## Task Status
 
@@ -74,6 +74,8 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Task      | Status    | Commit      |
 | --------- | --------- | ----------- |
 | prev2-t01 | completed | `4ef59b004` |
+| prev2-t02 | pending   | -           |
+| prev2-t03 | pending   | -           |
 
 ## Orchestration Runs
 
@@ -1177,6 +1179,38 @@ the configured exit gate.
 - The final review event is now `fixes_completed`; a fresh independent final
   re-review is required before the configured exit gate may run.
 
+### Review Received: final re-review 2
+
+**Date:** 2026-08-31
+**Review artifact:**
+`reviews/archived/final-review-2026-08-31T225932Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `prev2-t02`, `prev2-t03`
+
+**Finding dispositions:**
+
+- C1 (`code_fix_required`): accepted and completed receipt handles,
+  post-prepared approval times, and the catalog recheck are not yet causally
+  bound. Task `prev2-t02` adds those comparisons inside the existing receipt
+  validator and fresh-time mutations.
+- I1 (`code_fix_required`): canonical projection arrays validate presence but
+  not normative values; `writable_roots: [null]` can be globally rebound and
+  published. Task `prev2-t03` adds non-empty string and sorted-set validation
+  and makes the 22 deletion tests isolate schema rejection.
+
+**Design drift / artifact alignment notes:** None. Both findings enforce the
+existing canonical dispatch and recon contracts.
+
+**Next:** Execute `prev2-t02` and `prev2-t03`, then run the third and terminal
+fresh final review before the configured exit gate.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -1304,5 +1338,6 @@ automatic discovery, quick-start, analyze, or deep-research integration was
 added. Those broader integrations remain separate backlog items. Final review
 then found one Critical approval-binding gap. Bounded task `prev2-t01` now
 retains and validates the complete canonical projection with exhaustive
-deletion and receipt-mutation coverage; closeout remains in progress until a
-fresh final re-review passes.
+deletion and receipt-mutation coverage. Fresh re-review found remaining receipt
+causality/freshness and projection-value gaps, now queued as `prev2-t02` and
+`prev2-t03`; closeout remains in progress until the terminal re-review passes.
