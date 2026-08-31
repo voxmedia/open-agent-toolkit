@@ -714,7 +714,7 @@ describe('archived synced completion transaction', () => {
       await expect(
         archiveProjectOnCompletion(options, {
           timestamp: () => '2026-08-28T12:01:00Z',
-          removeSyncedCheckout: vi.fn(async () => {
+          afterLifecycleCommit: vi.fn(async () => {
             throw new Error('injected post-lifecycle interruption');
           }),
         }),
