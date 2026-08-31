@@ -6,7 +6,21 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
-import { resolveSyncedTarget } from '@commands/project/sync/resolve-target';
+import {
+  buildSyncTarget,
+  classifyRemoteRefLookup,
+  type SyncTarget,
+} from '@commands/project/sync/ref-sync';
+import {
+  probeSyncedTerminalRefs,
+  resolveSyncedTarget,
+} from '@commands/project/sync/resolve-target';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  completedSyncedRefName,
+  resolveProjectScope,
+  resolveScopeRoot,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
@@ -23,7 +37,9 @@ interface ProjectLinksOptions {
 interface ProjectLinksDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveProjectsRoot: typeof resolveProjectsRoot;
   resolveSyncedTarget: typeof resolveSyncedTarget;
+  resolveLinksTarget: typeof resolveLinksTarget;
   computeLinksInput: typeof computeLinksInput;
   gitRunner: GitRunner;
   processEnv: NodeJS.ProcessEnv;
@@ -33,7 +49,9 @@ interface ProjectLinksDependencies {
 const DEFAULT_DEPENDENCIES: ProjectLinksDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveProjectsRoot,
   resolveSyncedTarget,
+  resolveLinksTarget,
   computeLinksInput,
   gitRunner: defaultGitRunner,
   processEnv: process.env,
@@ -61,6 +79,106 @@ function normalizeDurableSummaryPath(
   return repositoryRelative.split(sep).join('/');
 }
 
+interface ResolvedLinksTarget {
+  target: SyncTarget;
+  ref: string;
+}
+
+function linksSlug(
+  repoRoot: string,
+  projectsRoot: string,
+  pathOrSlug: string,
+): string | null {
+  if (!pathOrSlug.includes('/') && !pathOrSlug.includes('\\')) {
+    return pathOrSlug;
+  }
+  const absolute = isAbsolute(pathOrSlug)
+    ? resolve(pathOrSlug)
+    : resolve(repoRoot, pathOrSlug);
+  const sharedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'shared');
+  if (resolveProjectScope(absolute, sharedRoot, repoRoot) !== 'synced') {
+    return null;
+  }
+  const child = relative(
+    resolveScopeRoot(repoRoot, projectsRoot, 'synced'),
+    absolute,
+  );
+  return child && !child.includes(sep) ? child : null;
+}
+
+export async function resolveLinksTarget(
+  repoRoot: string,
+  projectsRoot: string,
+  pathOrSlug: string | undefined,
+  env: NodeJS.ProcessEnv,
+  git: GitRunner,
+  resolveTarget: typeof resolveSyncedTarget,
+): Promise<ResolvedLinksTarget> {
+  let resolved: SyncTarget | null = null;
+  let resolutionError: unknown;
+  try {
+    resolved = await resolveTarget(
+      { repoRoot, env },
+      pathOrSlug,
+      { gitRunner: git },
+      { allowMissingCheckout: true },
+    );
+  } catch (error) {
+    resolutionError = error;
+    if (
+      !(error instanceof CliError) ||
+      error.exitCode !== 1 ||
+      !error.message.startsWith('No synced project named ')
+    ) {
+      throw error;
+    }
+  }
+
+  const slug = pathOrSlug
+    ? linksSlug(repoRoot, projectsRoot, pathOrSlug)
+    : resolved?.slug;
+  if (!slug) {
+    if (resolutionError) throw resolutionError;
+    throw new CliError('No synced project is available for link rendering.', 1);
+  }
+  const target = resolved ?? buildSyncTarget(repoRoot, projectsRoot, slug);
+  const completedRef = completedSyncedRefName(slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, completedRef],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (
+    classifyRemoteRefLookup(lookup, target.remote, completedRef) === 'absent'
+  ) {
+    if (resolutionError) throw resolutionError;
+    return { target, ref: target.ref };
+  }
+  const rows = lookup.stdout.split('\n').filter(Boolean);
+  const [sha, ref] = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    rows.length !== 1 ||
+    ref !== completedRef ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(sha ?? '')
+  ) {
+    throw new CliError(
+      `Unable to verify terminal links for ${slug}: origin returned a malformed completed-ref advertisement.`,
+      2,
+    );
+  }
+  const probe = await probeSyncedTerminalRefs(target, sha!, git);
+  if (probe.state === 'wrong-sha') {
+    throw new CliError(
+      `Cannot refresh links for ${slug}: active ${probe.activeRef} is ${probe.activeSha ?? 'absent'} while completed ${probe.completedRef} is ${probe.completedSha ?? 'absent'}. Repair the terminal ref mismatch first.`,
+      1,
+    );
+  }
+  if (probe.state === 'completed-only' || probe.state === 'both') {
+    return { target, ref: completedRef };
+  }
+  if (resolutionError) throw resolutionError;
+  return { target, ref: target.ref };
+}
+
 async function runLinks(
   context: CommandContext,
   pathOrSlug: string | undefined,
@@ -69,11 +187,17 @@ async function runLinks(
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const target = await dependencies.resolveSyncedTarget(
-      { repoRoot, env: dependencies.processEnv },
+    const projectsRoot = await dependencies.resolveProjectsRoot(
+      repoRoot,
+      dependencies.processEnv,
+    );
+    const { target, ref } = await dependencies.resolveLinksTarget(
+      repoRoot,
+      projectsRoot,
       pathOrSlug,
-      {},
-      { allowMissingCheckout: true },
+      dependencies.processEnv,
+      dependencies.gitRunner,
+      dependencies.resolveSyncedTarget,
     );
     const input = await dependencies.computeLinksInput(
       target,
@@ -84,6 +208,7 @@ async function runLinks(
           options.durableSummary,
         ),
         now: dependencies.now(),
+        ref,
       },
     );
     const markdown = renderLinksBlock(input);

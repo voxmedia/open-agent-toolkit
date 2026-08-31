@@ -1,6 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import {
+  access,
+  mkdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -16,6 +23,7 @@ import {
   pruneSynced,
   pullSynced,
   pushSynced,
+  removeSyncedCheckout,
 } from '@commands/project/sync/ref-sync';
 import { syncedRecordPath } from '@commands/shared/project-scope';
 import {
@@ -44,10 +52,17 @@ function harness(state: string) {
     lifecycleCommit: 'a'.repeat(40),
   }));
   const resolveSyncedTarget = vi.fn(async () => target);
+  const inspectTerminalRefs = vi.fn(async () => null);
+  const deleteCompletedSyncedRefForPrune = vi.fn(async () => ({
+    completedRef: 'refs/oat/completed/demo',
+    deleted: true,
+  }));
   return {
     capture,
     pruneSynced: pruneSyncedMock,
     resolveSyncedTarget,
+    inspectTerminalRefs,
+    deleteCompletedSyncedRefForPrune,
     command: createProjectPruneCommand({
       buildCommandContext: (options: GlobalOptions): CommandContext => ({
         scope: 'project',
@@ -60,7 +75,10 @@ function harness(state: string) {
         logger: capture.logger,
       }),
       resolveProjectRoot: async () => '/repo',
+      resolveProjectsRoot: async () => '.oat/projects/shared',
       resolveSyncedTarget,
+      inspectTerminalRefs,
+      deleteCompletedSyncedRefForPrune,
       pruneSynced: pruneSyncedMock,
       readProjectState: async () => state,
       gitRunner: { run: vi.fn() },
@@ -148,9 +166,124 @@ describe('createProjectPruneCommand', () => {
       await fixture.cleanup();
     }
   });
+
+  it('deletes a completed-only terminal ref without invoking active prune', async () => {
+    const setup = harness('# archived state\n');
+    setup.inspectTerminalRefs.mockResolvedValueOnce({
+      state: 'completed-only',
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      expectedSha: 'a'.repeat(40),
+      activeSha: null,
+      completedSha: 'a'.repeat(40),
+    });
+
+    await run(setup.command, ['demo', '--force']);
+
+    expect(setup.pruneSynced).not.toHaveBeenCalled();
+    expect(setup.deleteCompletedSyncedRefForPrune).toHaveBeenCalledOnce();
+    expect(setup.capture.warn[0]).toContain(
+      'Durable local/S3 archives are preserved',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('deletes a matching active alias and completed ref through explicit prune', async () => {
+    const setup = harness('# archived state\n');
+    setup.inspectTerminalRefs.mockResolvedValueOnce({
+      state: 'both',
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      expectedSha: 'a'.repeat(40),
+      activeSha: 'a'.repeat(40),
+      completedSha: 'a'.repeat(40),
+    });
+
+    await run(setup.command, ['demo', '--force']);
+
+    expect(setup.pruneSynced).toHaveBeenCalledOnce();
+    expect(setup.deleteCompletedSyncedRefForPrune).toHaveBeenCalledOnce();
+    expect(setup.capture.warn[0]).toContain(
+      'refs/oat/projects/demo and refs/oat/completed/demo',
+    );
+  });
+
+  it('retains both refs when terminal inspection reports a mismatch', async () => {
+    const setup = harness('# archived state\n');
+    setup.inspectTerminalRefs.mockRejectedValueOnce(
+      new Error('Repair the terminal ref mismatch before retrying'),
+    );
+
+    await run(setup.command, ['demo', '--force']);
+
+    expect(setup.pruneSynced).not.toHaveBeenCalled();
+    expect(setup.deleteCompletedSyncedRefForPrune).not.toHaveBeenCalled();
+    expect(setup.capture.error[0]).toContain('terminal ref mismatch');
+    expect(process.exitCode).toBe(2);
+  });
 });
 
 describe('prune command integration', () => {
+  it('removes matching terminal aliases while preserving the durable archive', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const slug = 'terminal-prune';
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        slug,
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await writeFile(join(target.projectPath, 'state.md'), '# state\n');
+      const pushed = await pushSynced(target, defaultGitRunner, {});
+      const sourceSha = pushed.sha;
+      execFileSync(
+        'git',
+        ['push', '-q', 'origin', `${sourceSha}:refs/oat/completed/${slug}`],
+        { cwd: fixture.cloneA },
+      );
+      await removeSyncedCheckout(target, defaultGitRunner, { force: true });
+      const recordPath = syncedRecordPath(target.syncedRoot, slug);
+      await rm(recordPath, { force: true });
+      const archivePath = join(
+        fixture.cloneA,
+        '.oat/projects/archived',
+        slug,
+        'state.md',
+      );
+      await mkdir(dirname(archivePath), { recursive: true });
+      await writeFile(archivePath, '# durable archive\n');
+
+      const command = createProjectPruneCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: fixture.cloneA,
+          home: '/home',
+          interactive: false,
+          logger: createLoggerCapture().logger,
+        }),
+        resolveProjectRoot: async () => fixture.cloneA,
+        processEnv: {},
+      });
+      await run(command, [slug, '--force', '--no-commit']);
+
+      expect(process.exitCode).toBe(0);
+      expect(
+        execFileSync(
+          'git',
+          ['ls-remote', 'origin', target.ref, `refs/oat/completed/${slug}`],
+          { cwd: fixture.cloneA, encoding: 'utf8' },
+        ).trim(),
+      ).toBe('');
+      expect(await readFile(archivePath, 'utf8')).toBe('# durable archive\n');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('removes the checkout, refs, and record in one parent commit', async () => {
     const fixture = await createSyncedFixture();
     try {

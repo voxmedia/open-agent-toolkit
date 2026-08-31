@@ -10,6 +10,7 @@ import {
 export interface ComputeLinksOptions {
   durableSummaryPath?: string;
   now: Date;
+  ref?: string;
 }
 
 export async function computeLinksInput(
@@ -17,12 +18,13 @@ export async function computeLinksInput(
   git: GitRunner,
   options: ComputeLinksOptions,
 ): Promise<LinksInput> {
-  await git.run(['fetch', target.remote, `+${target.ref}:${target.ref}`], {
+  const selectedRef = options.ref ?? target.ref;
+  await git.run(['fetch', target.remote, `+${selectedRef}:${selectedRef}`], {
     cwd: target.repoRoot,
   });
   const [sha, tree, origin] = await Promise.all([
-    git.run(['rev-parse', target.ref], { cwd: target.repoRoot }),
-    git.run(['ls-tree', '--name-only', target.ref], { cwd: target.repoRoot }),
+    git.run(['rev-parse', selectedRef], { cwd: target.repoRoot }),
+    git.run(['ls-tree', '--name-only', selectedRef], { cwd: target.repoRoot }),
     git.run(['remote', 'get-url', target.remote], { cwd: target.repoRoot }),
   ]);
   const treeNames = new Set(
@@ -37,7 +39,7 @@ export async function computeLinksInput(
   return {
     slug: target.slug,
     sha: sha.stdout,
-    ref: target.ref,
+    ref: selectedRef,
     originUrl: origin.stdout,
     present,
     ...(options.durableSummaryPath
