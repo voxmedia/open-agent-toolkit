@@ -209,15 +209,42 @@ function createMutationHarness() {
       observedRevisionDigest: 'sha256:observed',
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
+      policyDigest: 'sha256:policy',
+      capabilityEvidenceDigest: 'sha256:capability',
+      createdAt: now,
     },
-    authority: {
-      mode: 'user-approved' as const,
-      approvalPreviewDigest: 'sha256:preview',
-    },
+  };
+  const capability = {
+    provider: 'linear' as const,
+    context: readHarness.binding.context,
+    surfaceKind: 'connector' as const,
+    availability: 'available' as const,
+    semanticCapabilities: ['update' as const],
+    evidenceDigest: 'sha256:capability',
+    observedAt: now,
   };
   const dependencies = {
     store: { persistPlanned, markAttemptStarted, markTerminal },
     preRead: vi.fn(async () => ({ revisionDigest: 'sha256:observed' })),
+    resolveCurrentAuthority: vi.fn(async () => ({
+      effective: 'user-authorized' as const,
+      sourceDigest: 'sha256:policy',
+      instructionDigest: 'sha256:invocation',
+    })),
+    currentInvocation: vi.fn(async () => ({
+      kind: 'interactive' as const,
+      invocationId: 'invocation-1',
+      evidenceDigest: 'sha256:invocation',
+    })),
+    recomputeAfterPreRead: vi.fn(async () => ({
+      projection,
+      outboundSafety: safety,
+      previewDigest: 'sha256:preview',
+      policyDigest: 'sha256:policy',
+      capabilityCandidates: [capability],
+    })),
+    now: () => '2026-08-31T12:01:00.000Z',
+    approvalMaxAgeMs: 300_000,
     execute,
     readBack,
   };
@@ -252,70 +279,93 @@ describe('remote lifecycle mutations', () => {
   });
 
   it.each([
-    [{ mode: 'read-only' as const }, /read-only/],
+    [
+      { effective: 'read-only' as const, sourceDigest: 'sha256:policy' },
+      /read-only/,
+    ],
     [
       {
-        mode: 'user-authorized' as const,
-        instructionDigest: 'sha256:wrong',
-        expectedInstructionDigest: 'sha256:expected',
+        effective: 'user-authorized' as const,
+        sourceDigest: 'sha256:policy',
+        instructionDigest: 'sha256:other',
       },
       /instruction/,
     ],
     [
-      { mode: 'user-approved' as const, approvalPreviewDigest: 'sha256:stale' },
+      { effective: 'user-approved' as const, sourceDigest: 'sha256:policy' },
       /approval/,
     ],
     [
       {
-        mode: 'autonomous' as const,
-        workflowId: 'workflow-1',
-        workflowRevision: 'rev-1',
-        active: false,
+        effective: 'autonomous' as const,
+        sourceDigest: 'sha256:policy',
+        activeWorkflow: { workflowId: 'other', revision: 'rev-1' },
       },
       /active-workflow/,
     ],
   ])(
-    'blocks absent or stale caller authority %#',
+    'blocks absent or stale authoritative evidence %#',
     async (authority, message) => {
       const harness = createMutationHarness();
+      harness.dependencies.resolveCurrentAuthority.mockResolvedValueOnce(
+        authority,
+      );
       await expect(
-        publishBinding({ ...harness.input, authority }, harness.dependencies),
+        publishBinding(harness.input, harness.dependencies),
       ).rejects.toThrow(message);
       expect(harness.persistPlanned).not.toHaveBeenCalled();
       expect(harness.execute).not.toHaveBeenCalled();
     },
   );
 
-  it('allows matching explicit instruction and current autonomous workflow evidence', async () => {
-    const instruction = createMutationHarness();
-    await expect(
-      publishBinding(
-        {
-          ...instruction.input,
-          authority: {
-            mode: 'user-authorized',
-            instructionDigest: 'sha256:instruction',
-            expectedInstructionDigest: 'sha256:instruction',
-          },
-        },
-        instruction.dependencies,
-      ),
-    ).resolves.toMatchObject({ status: 'verified' });
+  it('allows matching current autonomous workflow evidence', async () => {
     const autonomous = createMutationHarness();
+    autonomous.dependencies.resolveCurrentAuthority.mockResolvedValueOnce({
+      effective: 'autonomous',
+      sourceDigest: 'sha256:policy',
+      activeWorkflow: { workflowId: 'workflow-1', revision: 'rev-1' },
+    });
+    autonomous.dependencies.currentInvocation.mockResolvedValueOnce({
+      kind: 'workflow',
+      invocationId: 'invocation-1',
+      workflowId: 'workflow-1',
+      revision: 'rev-1',
+    });
     await expect(
-      publishBinding(
-        {
-          ...autonomous.input,
-          authority: {
-            mode: 'autonomous',
-            workflowId: 'workflow-1',
-            workflowRevision: 'rev-1',
-            active: true,
-          },
-        },
-        autonomous.dependencies,
-      ),
+      publishBinding(autonomous.input, autonomous.dependencies),
     ).resolves.toMatchObject({ status: 'verified' });
+  });
+
+  it('rejects projection, policy, and capability drift after pre-read', async () => {
+    for (const change of [
+      { projection: { title: 'changed' } },
+      { policyDigest: 'sha256:changed' },
+      { capabilityCandidates: [] },
+    ]) {
+      const harness = createMutationHarness();
+      harness.dependencies.recomputeAfterPreRead.mockResolvedValueOnce({
+        projection: harness.input.projection,
+        outboundSafety: harness.input.outboundSafety,
+        previewDigest: harness.input.preview.digest,
+        policyDigest: harness.input.preview.policyDigest,
+        capabilityCandidates: [
+          {
+            provider: 'linear',
+            context: harness.input.binding.context,
+            surfaceKind: 'connector',
+            availability: 'available',
+            semanticCapabilities: ['update'],
+            evidenceDigest: 'sha256:capability',
+            observedAt: now,
+          },
+        ],
+        ...change,
+      });
+      await expect(
+        publishBinding(harness.input, harness.dependencies),
+      ).rejects.toThrow(/drift|capability|stale/i);
+      expect(harness.execute).not.toHaveBeenCalled();
+    }
   });
 
   it('blocks stale revisions and conflicts without a host attempt or transitive propagation', async () => {

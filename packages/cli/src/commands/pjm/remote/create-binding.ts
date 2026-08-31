@@ -29,7 +29,12 @@ export interface BindingCreateIntent {
 export interface CreateBindingDependencies {
   reserveIntent(intent: BindingCreateIntent): Promise<void>;
   readIntent(operationId: string): Promise<BindingCreateIntent | null>;
+  readAction(operationId: string): Promise<ExternalActionEnvelope | null>;
   recordAction(
+    operationId: string,
+    action: ExternalActionEnvelope,
+  ): Promise<void>;
+  recordVerificationPending(
     operationId: string,
     action: ExternalActionEnvelope,
   ): Promise<void>;
@@ -64,7 +69,7 @@ export async function createAndBindRemoteIssue(
   input: {
     intent: BindingCreateIntent;
     safety: OutboundProjectionSafetyResult | null;
-    continuation?: { action: ExternalActionEnvelope; observation: unknown };
+    continuation?: { observation: unknown };
   },
   dependencies: CreateBindingDependencies,
 ): Promise<CreateBindingResult> {
@@ -108,8 +113,12 @@ export async function createAndBindRemoteIssue(
   ) {
     throw new Error('Create continuation does not match the persisted intent.');
   }
+  const durableAction = await dependencies.readAction(input.intent.operationId);
+  if (!durableAction) {
+    throw new Error('Create continuation has no durable current action.');
+  }
   const observation = acceptExternalObservation({
-    action: input.continuation.action,
+    action: durableAction,
     observation: input.continuation.observation,
   });
   if (observation.outcome.classification === 'rejected') {
@@ -124,6 +133,36 @@ export async function createAndBindRemoteIssue(
     return { status: 'uncertain', bindingId: null };
   }
   dependencies.crash?.('after-observation');
+  if (durableAction.semanticOperation === 'create') {
+    if (
+      observation.outcome.classification !== 'observed' ||
+      !observation.outcome.identity
+    ) {
+      await dependencies.recordTerminal(input.intent.operationId, 'uncertain');
+      return { status: 'uncertain', bindingId: null };
+    }
+    const readAction = buildExternalAction({
+      operationId: input.intent.operationId,
+      stepId: `verify_${input.intent.operationId}`,
+      provider: input.intent.provider,
+      semanticOperation: 'read',
+      context: input.intent.context,
+      intent: { stableId: observation.outcome.identity.stableId },
+      expectedObservation: {
+        fields: Object.keys(input.intent.projection),
+        requireIdentity: true,
+      },
+      persistedPreview: {},
+    });
+    await dependencies.recordVerificationPending(
+      input.intent.operationId,
+      readAction,
+    );
+    return { status: 'pending', action: readAction };
+  }
+  if (durableAction.semanticOperation !== 'read') {
+    throw new Error('Create continuation durable action is not current.');
+  }
   for (const [field, expected] of Object.entries(input.intent.projection)) {
     if (observation.outcome.fields[field] !== expected) {
       await dependencies.recordTerminal(input.intent.operationId, 'uncertain');

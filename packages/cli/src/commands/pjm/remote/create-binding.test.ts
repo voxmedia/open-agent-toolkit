@@ -35,8 +35,13 @@ function harness(
       persisted = value;
     }),
     readIntent: vi.fn(async () => persisted),
+    readAction: vi.fn(async () => currentAction),
     recordAction: vi.fn(async () => {
       calls.push('action');
+    }),
+    recordVerificationPending: vi.fn(async (_operationId, action) => {
+      calls.push('verification-pending');
+      currentAction = action;
     }),
     recordTerminal: vi.fn(async () => {
       calls.push('terminal');
@@ -51,6 +56,13 @@ function harness(
       if (point === crashAt) throw new Error(`crash:${point}`);
     },
   };
+  let currentAction: Awaited<ReturnType<typeof prepare>>['action'] | null =
+    null;
+  const recordAction = dependencies.recordAction;
+  dependencies.recordAction = vi.fn(async (operationId, action) => {
+    currentAction = action;
+    await recordAction(operationId, action);
+  });
   return {
     dependencies,
     calls,
@@ -133,17 +145,31 @@ describe('initial remote binding creation', () => {
     }
   });
 
-  it('verifies create readback, then materializes binding before compact association', async () => {
+  it('persists verification-pending and a distinct read before materialization', async () => {
     const h = harness();
     h.setPersisted(intent);
     const pending = await prepare(h);
+    const verificationPending = await createAndBindRemoteIssue(
+      {
+        intent,
+        safety,
+        continuation: {
+          observation: observation(pending.action),
+        },
+      },
+      h.dependencies,
+    );
+    expect(verificationPending.status).toBe('pending');
+    if (verificationPending.status !== 'pending')
+      throw new Error('expected read');
+    expect(verificationPending.action.semanticOperation).toBe('read');
+    expect(h.calls).not.toContain('materialize');
     const result = await createAndBindRemoteIssue(
       {
         intent,
         safety,
         continuation: {
-          action: pending.action,
-          observation: observation(pending.action),
+          observation: observation(verificationPending.action),
         },
       },
       h.dependencies,
@@ -163,7 +189,6 @@ describe('initial remote binding creation', () => {
           intent,
           safety,
           continuation: {
-            action: pending.action,
             observation: observation(pending.action, classification),
           },
         },
@@ -189,20 +214,34 @@ describe('initial remote binding creation', () => {
         return;
       }
       h.setPersisted(intent);
-      const pending = await prepare();
-      await expect(
-        createAndBindRemoteIssue(
-          {
-            intent,
-            safety,
-            continuation: {
-              action: pending.action,
-              observation: observation(pending.action),
+      const pending = await prepare(h);
+      const firstContinuation = createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: observation(pending.action) },
+        },
+        h.dependencies,
+      );
+      if (crashAt === 'after-observation') {
+        await expect(firstContinuation).rejects.toThrow(/crash/);
+      } else {
+        const verificationPending = await firstContinuation;
+        if (verificationPending.status !== 'pending')
+          throw new Error('expected verification read');
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: {
+                observation: observation(verificationPending.action),
+              },
             },
-          },
-          h.dependencies,
-        ),
-      ).rejects.toThrow(/crash/);
+            h.dependencies,
+          ),
+        ).rejects.toThrow(/crash/);
+      }
       if (crashAt === 'after-materialize')
         expect(h.calls).toContain('materialize');
       expect(h.calls).not.toContain('association');

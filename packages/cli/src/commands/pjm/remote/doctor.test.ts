@@ -274,7 +274,7 @@ describe('runRemoteDoctorChecks', () => {
           observedAt: timestamp,
           observedBy: {
             provider: 'github',
-            transport: 'gh',
+            transport: 'legacy-native-surface',
             context: divergentContext,
             capabilityDigest: 'sha256:capability',
           },

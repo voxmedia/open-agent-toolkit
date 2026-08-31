@@ -1,9 +1,12 @@
+import { z } from 'zod';
+
 import {
   contextsEqual,
   type ProviderContext,
   type RemoteProvider,
   type SemanticOperation,
 } from './provider';
+import { RemoteAccountContextSchema } from './schema';
 
 export type HostSurfaceKind = 'connector' | 'configured-cli';
 
@@ -19,6 +22,41 @@ export interface HostCapabilityEvidence {
   semanticCapabilities: SemanticOperation[];
   evidenceDigest: string;
   observedAt: string;
+}
+
+const HostCapabilityEvidenceSchema = z
+  .object({
+    provider: z.enum(['github', 'linear', 'jira']),
+    context: RemoteAccountContextSchema,
+    surfaceKind: z.enum(['connector', 'configured-cli']),
+    availability: z.enum([
+      'available',
+      'authorization-required',
+      'unsupported-or-unresolved',
+      'disabled',
+    ]),
+    semanticCapabilities: z
+      .array(
+        z.enum([
+          'read',
+          'read-discussion',
+          'search-duplicates',
+          'create',
+          'update',
+          'transition',
+          'annotate',
+        ]),
+      )
+      .max(32),
+    evidenceDigest: z.string().min(1).max(512),
+    observedAt: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+export function parseHostCapabilityEvidence(
+  value: unknown,
+): HostCapabilityEvidence {
+  return HostCapabilityEvidenceSchema.parse(value);
 }
 
 export type HostExecutionSelection =

@@ -7,6 +7,7 @@ import { Command } from 'commander';
 
 import { resolvePjmAdoption } from '../adoption';
 import { renderRemoteCommand, type RemoteCommandEnvelope } from './output';
+import { createProductionRemoteRunner } from './service';
 
 export type RemoteLifecycleOperation =
   | 'intake'
@@ -20,6 +21,7 @@ export interface RemoteCommandRequest {
   operation: RemoteLifecycleOperation;
   projectRoot: string;
   bindingId?: string;
+  operationId?: string;
   providerRef?: string;
   backlogId?: string;
   createTarget?: {
@@ -28,6 +30,7 @@ export interface RemoteCommandRequest {
     localId: string;
   };
   observationStdin?: boolean;
+  capabilityEvidenceStdin?: boolean;
   storage?: {
     repositoryFingerprint: string;
     configTarget: string;
@@ -35,10 +38,7 @@ export interface RemoteCommandRequest {
     proposedPaths: string[];
     apply: boolean;
   };
-  authority?:
-    | { kind: 'explicit-instruction'; digest: string }
-    | { kind: 'fresh-approval'; digest: string }
-    | { kind: 'active-workflow'; workflowId: string; revision: string };
+  storageApprovalDigest?: string;
 }
 
 export interface PjmRemoteCommandDependencies {
@@ -62,23 +62,7 @@ const DEFAULT_DEPENDENCIES: PjmRemoteCommandDependencies = {
         ? 'partial'
         : 'absent';
   },
-  async run(request) {
-    return {
-      schemaVersion: 1,
-      status: 'pending',
-      operation: request.operation,
-      projectRoot: request.projectRoot,
-      persisted: true,
-      results: [],
-      externalAction: null,
-      recovery: [
-        {
-          code: 'host-capability-required',
-          instruction: 'Continue through the oat-pjm-remote host workflow.',
-        },
-      ],
-    };
-  },
+  run: createProductionRemoteRunner(),
 };
 
 export function createPjmRemoteCommand(
@@ -112,21 +96,18 @@ export function createPjmRemoteCommand(
     'publish',
     'Publish one selected remote binding',
     dependencies,
-    true,
   );
   addBindingCommand(
     remote,
     'refresh',
     'Refresh one remote binding without mutation',
     dependencies,
-    false,
   );
   addBindingCommand(
     remote,
     'reconcile',
     'Reconcile one remote binding',
     dependencies,
-    true,
   );
 
   remote
@@ -166,9 +147,7 @@ export function createPjmRemoteCommand(
               proposedPaths: options.proposedPath,
               apply: options.apply ?? false,
             },
-            authority: options.approvalDigest
-              ? { kind: 'fresh-approval', digest: options.approvalDigest }
-              : undefined,
+            storageApprovalDigest: options.approvalDigest,
           },
           command,
           dependencies,
@@ -193,7 +172,7 @@ export function createPjmRemoteCommand(
         await execute(
           {
             operation: 'operation-continue',
-            bindingId: options.operation,
+            operationId: options.operation,
             observationStdin: options.observationStdin,
           },
           command,
@@ -210,7 +189,6 @@ function addBindingCommand(
   name: 'publish' | 'refresh' | 'reconcile',
   description: string,
   dependencies: PjmRemoteCommandDependencies,
-  mutation: boolean,
 ): void {
   const command = parent.command(name).description(description);
   if (name === 'publish') {
@@ -222,15 +200,11 @@ function addBindingCommand(
   } else {
     command.requiredOption('--binding <id>', 'Remote binding ID');
   }
-  if (mutation) {
-    command
-      .option(
-        '--instruction-digest <digest>',
-        'Exact user-instruction evidence',
-      )
-      .option('--approval-digest <digest>', 'Fresh preview-approval evidence')
-      .option('--workflow-id <id>', 'Active workflow ID')
-      .option('--workflow-revision <revision>', 'Active workflow revision');
+  if (name !== 'refresh') {
+    command.option(
+      '--capability-evidence-stdin',
+      'Read one sanitized live capability evidence object from stdin',
+    );
   }
   command.action(
     async (options: Record<string, string>, commander: Command) => {
@@ -257,6 +231,7 @@ function addBindingCommand(
       const request: Omit<RemoteCommandRequest, 'projectRoot'> = {
         operation: name,
         bindingId: options.binding,
+        capabilityEvidenceStdin: Boolean(options.capabilityEvidenceStdin),
       };
       if (options.toBacklog || options.toProject) {
         request.createTarget = {
@@ -265,36 +240,9 @@ function addBindingCommand(
           localId: (options.toBacklog ?? options.toProject)!,
         };
       }
-      if (mutation) request.authority = parseAuthority(options);
       await execute(request, commander, dependencies);
     },
   );
-}
-
-function parseAuthority(
-  options: Record<string, string>,
-): RemoteCommandRequest['authority'] {
-  const candidates = [
-    options.instructionDigest,
-    options.approvalDigest,
-    options.workflowId,
-  ].filter(Boolean);
-  if (candidates.length !== 1) {
-    throw new Error(
-      'Remote mutation requires exactly one caller authority evidence source.',
-    );
-  }
-  if (options.instructionDigest)
-    return { kind: 'explicit-instruction', digest: options.instructionDigest };
-  if (options.approvalDigest)
-    return { kind: 'fresh-approval', digest: options.approvalDigest };
-  if (!options.workflowRevision)
-    throw new Error('Active workflow authority requires a workflow revision.');
-  return {
-    kind: 'active-workflow',
-    workflowId: options.workflowId!,
-    revision: options.workflowRevision,
-  };
 }
 
 async function execute(

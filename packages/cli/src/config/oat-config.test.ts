@@ -668,7 +668,9 @@ describe('oat-config', () => {
       join(repoRoot, '.oat', 'config.json'),
       JSON.stringify({
         version: 1,
-        pjm: { remote: { transports: { github: ['gh'] } } },
+        pjm: {
+          remote: { transports: { github: ['legacy-native-surface'] } },
+        },
       }),
       'utf8',
     );

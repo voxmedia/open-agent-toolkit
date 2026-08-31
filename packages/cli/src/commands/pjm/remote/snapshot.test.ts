@@ -23,9 +23,10 @@ function rawSnapshot() {
     observedAt: timestamp,
     observedBy: {
       provider: 'github' as const,
-      transport: 'gh',
+      surfaceKind: 'connector' as const,
       context,
-      capabilityDigest: 'sha256:capability',
+      evidenceDigest: 'sha256:capability',
+      semanticCapabilities: ['read'],
     },
     identity: {
       stableId: 'issue-node-123',

@@ -326,9 +326,10 @@ describe('RemoteSyncStore', () => {
         observedAt: timestamp,
         observedBy: {
           provider: 'github',
-          transport: 'gh',
+          surfaceKind: 'connector',
           context: { host: 'github.com', repositoryId: 'repo-123' },
-          capabilityDigest: 'sha256:capability',
+          evidenceDigest: 'sha256:capability',
+          semanticCapabilities: ['read'],
         },
         identity: {
           stableId: 'issue-node-123',
@@ -376,7 +377,7 @@ describe('RemoteSyncStore', () => {
           observedAt: timestamp,
           observedBy: {
             provider: 'github',
-            transport: 'gh',
+            transport: 'legacy-native-surface',
             context: { host: 'github.com', repositoryId: 'repo-123' },
             capabilityDigest: 'sha256:capability',
           },

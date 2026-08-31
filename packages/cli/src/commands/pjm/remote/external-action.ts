@@ -3,13 +3,27 @@ import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 import {
+  containsSensitiveContentSignal,
+  containsSensitiveContentSignalInValue,
+} from './credential-safety';
+import {
   requireCurrentOutboundSafety,
   type OutboundProjection,
   type OutboundProjectionSafetyResult,
 } from './outbound-projection-safety';
-import { RemoteAccountContextSchema } from './schema';
+import {
+  RemoteAccountContextSchema,
+  WHOLE_FIELD_SUPPRESSION_MARKER,
+} from './schema';
 
+const MAX_ACTION_BYTES = 65_536;
 const MAX_OBSERVATION_BYTES = 65_536;
+const MAX_VALUE_DEPTH = 6;
+const SemanticFieldNameSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z][A-Za-z0-9_-]*$/);
 const ProviderSchema = z.enum(['github', 'linear', 'jira']);
 const SemanticOperationSchema = z.enum([
   'read',
@@ -21,7 +35,7 @@ const SemanticOperationSchema = z.enum([
   'annotate',
 ]);
 
-const ExternalObservationEnvelopeSchema = z
+export const ExternalObservationEnvelopeSchema = z
   .object({
     schemaVersion: z.literal(1),
     operationId: z.string().min(1).max(128),
@@ -73,9 +87,117 @@ export interface ExternalActionEnvelope {
   } | null;
 }
 
+const ScalarSchema = z.union([
+  z.string().max(1_048_576),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+const ProjectionSchema = z.record(ScalarSchema);
+const IdentityIntentSchema = z
+  .object({
+    stableId: z.string().min(1).max(512),
+    localTarget: z
+      .object({
+        kind: z.literal('backlog'),
+        scope: z.literal('shared'),
+        id: z.string().min(1).max(255),
+        path: z.string().min(1).max(4_096),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+const ActionIntentSchemas: Record<
+  ExternalActionEnvelope['semanticOperation'],
+  z.ZodType<Record<string, unknown>>
+> = {
+  read: IdentityIntentSchema,
+  'read-discussion': z
+    .object({
+      stableId: z.string().min(1).max(512),
+      cursor: z.string().max(512).optional(),
+    })
+    .strict(),
+  'search-duplicates': z
+    .object({ query: z.string().min(1).max(8_192) })
+    .strict(),
+  create: z
+    .object({
+      target: z
+        .object({
+          kind: z.enum(['backlog', 'project']),
+          id: z.string().min(1).max(255),
+          scope: z.enum(['shared', 'synced', 'local']),
+        })
+        .strict(),
+      fields: ProjectionSchema,
+      provenanceToken: z.string().min(1).max(512),
+    })
+    .strict(),
+  update: z
+    .object({
+      stableId: z.string().min(1).max(512).nullable().optional(),
+      fields: ProjectionSchema,
+    })
+    .strict(),
+  transition: z
+    .object({
+      stableId: z.string().min(1).max(512),
+      transition: z.string().min(1).max(255),
+    })
+    .strict(),
+  annotate: z
+    .object({
+      stableId: z.string().min(1).max(512),
+      body: z.string().max(1_048_576),
+    })
+    .strict(),
+};
+
 export type ExternalObservationEnvelope = z.infer<
   typeof ExternalObservationEnvelopeSchema
 >;
+
+const ExternalActionBaseSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    operationId: z.string().min(1).max(128),
+    stepId: z.string().min(1).max(128),
+    actionDigest: z.string().min(1).max(512),
+    provider: ProviderSchema,
+    semanticOperation: SemanticOperationSchema,
+    context: RemoteAccountContextSchema,
+    intent: z.record(z.unknown()),
+    expectedObservation: z
+      .object({
+        fields: z.array(SemanticFieldNameSchema).max(64),
+        requireIdentity: z.boolean(),
+      })
+      .strict(),
+    outboundSafety: z
+      .object({
+        projectionDigest: z.string().min(1).max(512),
+        resultDigest: z.string().min(1).max(512),
+      })
+      .strict()
+      .nullable(),
+  })
+  .strict();
+
+export function parseExternalAction(value: unknown): ExternalActionEnvelope {
+  if (Buffer.byteLength(JSON.stringify(value), 'utf8') > MAX_ACTION_BYTES) {
+    throw new Error('External action exceeds the size limit.');
+  }
+  const action = ExternalActionBaseSchema.parse(value);
+  assertDepth(action.intent, 0);
+  ActionIntentSchemas[action.semanticOperation].parse(action.intent);
+  const { actionDigest, ...body } = action;
+  if (digest(body) !== actionDigest) {
+    throw new Error('External action digest is stale or mismatched.');
+  }
+  return action as ExternalActionEnvelope;
+}
 
 export function buildExternalAction(input: {
   operationId: string;
@@ -117,6 +239,29 @@ export function buildExternalAction(input: {
       resultDigest: input.outboundSafety.resultDigest,
     };
   }
+  assertDepth(input.intent, 0);
+  const intent = ActionIntentSchemas[input.semanticOperation].parse(
+    input.intent,
+  );
+  const expectedFields = input.expectedObservation.fields.map((field) =>
+    SemanticFieldNameSchema.parse(field),
+  );
+  if (
+    expectedFields.length !== input.expectedObservation.fields.length ||
+    expectedFields.length > 64
+  ) {
+    throw new Error(
+      'External action expected fields must be unique and bounded.',
+    );
+  }
+  if (
+    mutation &&
+    expectedFields.some((field) => !Object.hasOwn(input.projection!, field))
+  ) {
+    throw new Error(
+      'Mutation action expected fields must match its projection.',
+    );
+  }
   const actionWithoutDigest = {
     schemaVersion: 1 as const,
     operationId: input.operationId,
@@ -124,10 +269,19 @@ export function buildExternalAction(input: {
     provider: input.provider,
     semanticOperation: SemanticOperationSchema.parse(input.semanticOperation),
     context: RemoteAccountContextSchema.parse(input.context),
-    intent: input.intent,
-    expectedObservation: input.expectedObservation,
+    intent,
+    expectedObservation: {
+      ...input.expectedObservation,
+      fields: expectedFields,
+    },
     outboundSafety,
   };
+  if (
+    Buffer.byteLength(canonicalJson(actionWithoutDigest), 'utf8') >
+    MAX_ACTION_BYTES
+  ) {
+    throw new Error('External action exceeds the size limit.');
+  }
   return { ...actionWithoutDigest, actionDigest: digest(actionWithoutDigest) };
 }
 
@@ -158,7 +312,47 @@ export function acceptExternalObservation(input: {
   ) {
     throw new Error('External observation provider context is mismatched.');
   }
-  return observation;
+  const expected = new Set(input.action.expectedObservation.fields);
+  const actual = Object.keys(observation.outcome.fields);
+  if (actual.some((field) => !expected.has(field))) {
+    throw new Error('External observation contains an unexpected field.');
+  }
+  if (
+    observation.outcome.classification === 'observed' &&
+    input.action.expectedObservation.requireIdentity &&
+    !observation.outcome.identity
+  ) {
+    throw new Error('External observation is missing required identity.');
+  }
+  if (
+    observation.outcome.identity?.aliases.some((value) =>
+      containsSensitiveContentSignal(value),
+    ) ||
+    (observation.outcome.diagnosticCode &&
+      containsSensitiveContentSignal(observation.outcome.diagnosticCode))
+  ) {
+    throw new Error('External observation identity evidence is unsafe.');
+  }
+  const fields = Object.fromEntries(
+    actual.map((field) => {
+      const value = observation.outcome.fields[field] ?? null;
+      return [
+        field,
+        typeof value === 'string' &&
+        containsSensitiveContentSignalInValue(value)
+          ? WHOLE_FIELD_SUPPRESSION_MARKER
+          : value,
+      ];
+    }),
+  );
+  return { ...observation, outcome: { ...observation.outcome, fields } };
+}
+
+function assertDepth(value: unknown, depth: number): void {
+  if (depth > MAX_VALUE_DEPTH)
+    throw new Error('External action exceeds the depth limit.');
+  if (!value || typeof value !== 'object') return;
+  for (const item of Object.values(value)) assertDepth(item, depth + 1);
 }
 
 function digest(value: unknown): string {

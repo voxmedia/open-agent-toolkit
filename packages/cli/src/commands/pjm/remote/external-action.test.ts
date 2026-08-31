@@ -59,9 +59,18 @@ describe('external action protocol', () => {
       projectionDigest: safety.projectionDigest,
       resultDigest: safety.resultDigest,
     });
-    expect(JSON.stringify(action)).not.toMatch(
-      /toolName|catalogFingerprint|nativeRequest/,
-    );
+    expect(Object.keys(action).sort()).toEqual([
+      'actionDigest',
+      'context',
+      'expectedObservation',
+      'intent',
+      'operationId',
+      'outboundSafety',
+      'provider',
+      'schemaVersion',
+      'semanticOperation',
+      'stepId',
+    ]);
   });
 
   it('rejects missing, blocked, stale, and mismatched mutation safety evidence', () => {
@@ -112,11 +121,64 @@ describe('external action protocol', () => {
     ).toBe('observed');
   });
 
+  it('rejects open or native action intent shapes', () => {
+    expect(() =>
+      buildExternalAction({
+        ...action,
+        intent: {
+          stableId: 'issue-1',
+          fields: projection,
+          invocation: { executable: 'forbidden-native-surface' },
+        },
+        persistedPreview: {
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        projection,
+        outboundSafety: safety,
+      }),
+    ).toThrow(/unrecognized/i);
+  });
+
+  it('enforces the observation field and identity contract and suppresses whole sensitive fields', () => {
+    expect(() =>
+      acceptExternalObservation({
+        action,
+        observation: observation({
+          outcome: {
+            ...observation().outcome,
+            fields: { title: 'Safe', unexpected: 'synthetic-token-signal' },
+          },
+        }),
+      }),
+    ).toThrow(/unexpected field/);
+    expect(() =>
+      acceptExternalObservation({
+        action,
+        observation: observation({
+          outcome: { ...observation().outcome, identity: null },
+        }),
+      }),
+    ).toThrow(/required identity/);
+    const accepted = acceptExternalObservation({
+      action,
+      observation: observation({
+        outcome: {
+          ...observation().outcome,
+          fields: { title: 'Authorization: Bearer synthetic-secret-value' },
+        },
+      }),
+    });
+    expect(accepted.outcome.fields.title).toBe(
+      '[SUPPRESSED:SENSITIVE-CONTENT]',
+    );
+  });
+
   it.each([
     [observation({ stepId: 'old-step' }), /stale|mismatched/],
     [observation({ provider: 'jira' }), /provider context/],
     [observation({ context: { workspaceId: 'other' } }), /provider context/],
-    [observation({ nativeRequest: { command: 'forbidden' } }), /unrecognized/i],
+    [observation({ unexpectedInvocation: { opaque: true } }), /unrecognized/i],
     [observation({ catalog: ['forbidden'] }), /unrecognized/i],
   ])(
     'rejects stale, mismatched, or native durable evidence %#',

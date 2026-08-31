@@ -1,13 +1,144 @@
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+
+import { readOatConfig } from '@config/oat-config';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createPjmRemoteCommand, type RemoteCommandRequest } from './index';
+import { resolveLocalProjection } from './local-projection';
+import type { RemoteBindingMetadata, RemoteBindingState } from './schema';
+import { createProductionRemoteRunner } from './service';
+import { sanitizeRemoteSnapshot } from './snapshot';
+import { resolveRemoteStorageLocations } from './storage-locator';
+import { RemoteSyncStore } from './store';
 
 const previousExitCode = process.exitCode;
-afterEach(() => {
+const tempDirs: string[] = [];
+afterEach(async () => {
   process.exitCode = previousExitCode;
   vi.restoreAllMocks();
+  await Promise.all(
+    tempDirs.map((path) => rm(path, { recursive: true, force: true })),
+  );
+  tempDirs.length = 0;
 });
+
+async function adoptedRepository() {
+  const repo = await mkdtemp(join(tmpdir(), 'oat-remote-live-'));
+  tempDirs.push(repo);
+  execFileSync('git', ['init', '--quiet'], { cwd: repo });
+  await mkdir(join(repo, '.oat'), { recursive: true });
+  await writeFile(
+    join(repo, '.oat', 'config.json'),
+    `${JSON.stringify({ pjm: { initialized: true } })}\n`,
+  );
+  const locations = resolveRemoteStorageLocations({
+    repoRoot: repo,
+    gitCommonDir: join(repo, '.git'),
+    repositoryIdentity: `local-repository:${resolve(repo)}`,
+    stateStorage: 'local',
+    target: { kind: 'backlog', scope: 'shared', path: null },
+  });
+  return { repo, store: new RemoteSyncStore(locations) };
+}
+
+async function materializeFixtureBinding(store: RemoteSyncStore) {
+  const timestamp = '2026-08-31T12:00:00.000Z';
+  const metadata: RemoteBindingMetadata = {
+    recordType: 'binding-metadata',
+    schemaVersion: 1,
+    bindingId: 'bnd_live_001',
+    provider: 'linear',
+    target: {
+      kind: 'backlog',
+      scope: 'shared',
+      id: 'item-1',
+      path: '.oat/repo/pjm/backlog/items/item-1.md',
+    },
+    remoteIdentity: {
+      stableId: 'issue-1',
+      context: { workspaceId: 'workspace-1' },
+      aliases: [],
+    },
+    identityHistory: [],
+    purposes: ['source'],
+    policyRestrictions: {},
+    publicationProjection: {
+      title: 'frontmatter',
+      description: 'description-section',
+      priority: 'frontmatter',
+    },
+    provenanceToken: 'oat-binding:bnd_live_001',
+    lifecycle: 'active',
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  const operationId = 'op_create_live_001';
+  await store.createBindingIntent({
+    schemaVersion: 1,
+    bindingId: metadata.bindingId,
+    operationId,
+    provider: metadata.provider,
+    target: metadata.target,
+    publicationProjection: metadata.publicationProjection,
+    providerContext: metadata.remoteIdentity.context,
+    purposes: metadata.purposes,
+    policyRestrictions: metadata.policyRestrictions,
+    provenanceToken: metadata.provenanceToken,
+    createdAt: timestamp,
+  });
+  await store.transitionOperation(operationId, 'planned', {
+    state: 'verified',
+    updatedAt: timestamp,
+    verification: [
+      {
+        field: 'remoteIdentity',
+        expectedHash: 'sha256:verified',
+        observedHash: 'sha256:verified',
+        status: 'verified',
+      },
+    ],
+    outcome: {
+      classification: 'verified',
+      message: 'verified',
+      verifiedAt: timestamp,
+    },
+  });
+  await store.materializeVerifiedBinding(operationId, metadata, {
+    provider: 'linear',
+    stableId: 'issue-1',
+    verifiedAt: timestamp,
+    evidenceDigest: 'sha256:verified',
+  });
+  const state: RemoteBindingState = {
+    recordType: 'binding-state',
+    schemaVersion: 2,
+    bindingId: metadata.bindingId,
+    provider: metadata.provider,
+    metadataUpdatedAt: timestamp,
+    localProjection: {
+      title: 'Local title',
+      description: 'Local description',
+      priority: null,
+      source: 'backlog-description',
+      sourceRevision: 'sha256:local',
+      observedAt: timestamp,
+    },
+    snapshot: null,
+    baseline: null,
+    capability: null,
+    contentRedacted: false,
+    lifecycle: 'active',
+    lifecycleCondition: 'active',
+    activeOperationIds: [],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  await store.writeBindingState(state);
+}
 
 function harness(adoption: 'complete' | 'partial' | 'absent' = 'complete') {
   const requests: RemoteCommandRequest[] = [];
@@ -92,40 +223,27 @@ describe('pjm remote command family', () => {
     ]);
     expect(continuation.requests[0]).toMatchObject({
       operation: 'operation-continue',
-      bindingId: 'op-1',
+      operationId: 'op-1',
       observationStdin: true,
     });
   });
 
-  it.each([
-    [
-      ['--instruction-digest', 'sha256:instruction'],
-      { kind: 'explicit-instruction', digest: 'sha256:instruction' },
-    ],
-    [
-      ['--approval-digest', 'sha256:approval'],
-      { kind: 'fresh-approval', digest: 'sha256:approval' },
-    ],
-    [
-      ['--workflow-id', 'workflow-1', '--workflow-revision', 'rev-1'],
-      { kind: 'active-workflow', workflowId: 'workflow-1', revision: 'rev-1' },
-    ],
-  ] as const)(
-    'passes exact mutation authority evidence %#',
-    async (args, authority) => {
-      const { root, requests } = harness();
-      await root.parseAsync([
+  it('does not accept caller-self-attested mutation authority fields', async () => {
+    const { root, requests } = harness();
+    await expect(
+      root.parseAsync([
         'node',
         'oat',
         'remote',
         'publish',
         '--binding',
         'bnd-1',
-        ...args,
-      ]);
-      expect(requests[0]?.authority).toEqual(authority);
-    },
-  );
+        '--instruction-digest',
+        'sha256:self-attested',
+      ]),
+    ).rejects.toThrow(/unknown option|process\.exit/);
+    expect(requests).toEqual([]);
+  });
 
   it.each([
     ['--to-backlog', 'item-1', 'backlog'],
@@ -143,8 +261,6 @@ describe('pjm remote command family', () => {
         'provider-a',
         targetOption,
         localId,
-        '--instruction-digest',
-        'sha256:instruction',
       ]);
       expect(requests[0]).toMatchObject({
         operation: 'publish',
@@ -168,8 +284,6 @@ describe('pjm remote command family', () => {
         'provider-a',
         '--to-backlog',
         'item-1',
-        '--instruction-digest',
-        'sha256:instruction',
       ]),
     ).rejects.toThrow(/exactly one/);
     const missingProvider = harness();
@@ -181,13 +295,11 @@ describe('pjm remote command family', () => {
         'publish',
         '--to-project',
         'project-1',
-        '--instruction-digest',
-        'sha256:instruction',
       ]),
     ).rejects.toThrow(/requires a provider/);
   });
 
-  it('fails closed for absent adoption and missing mutation authority', async () => {
+  it('fails closed for absent adoption', async () => {
     const absent = harness('absent');
     await absent.root.parseAsync([
       'node',
@@ -199,18 +311,6 @@ describe('pjm remote command family', () => {
     ]);
     expect(absent.requests).toEqual([]);
     expect(process.exitCode).toBe(2);
-    const missing = harness();
-    await expect(
-      missing.root.parseAsync([
-        'node',
-        'oat',
-        'remote',
-        'publish',
-        '--binding',
-        'bnd-1',
-      ]),
-    ).rejects.toThrow(/exactly one/);
-    expect(missing.requests).toEqual([]);
   });
 
   it('uses JSON dependencies from global options', async () => {
@@ -227,6 +327,454 @@ describe('pjm remote command family', () => {
     expect(process.stdout.write).toHaveBeenCalledWith(
       expect.stringContaining('"status":"pending"'),
     );
+  });
+
+  it('uses the production runner and truthfully rejects a nonexistent binding', async () => {
+    const { repo } = await adoptedRepository();
+    const root = new Command().name('oat').option('--json');
+    root.exitOverride();
+    root.addCommand(
+      createPjmRemoteCommand({ resolveProjectRoot: async () => repo }),
+    );
+    const stdout = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    await root.parseAsync([
+      'node',
+      'oat',
+      '--json',
+      'remote',
+      'refresh',
+      '--binding',
+      'bnd_missing_001',
+    ]);
+    expect(process.exitCode).toBe(2);
+    expect(stdout).toHaveBeenCalledWith(
+      expect.stringContaining('does not exist'),
+    );
+    expect(stdout).not.toHaveBeenCalledWith(
+      expect.stringContaining('"persisted":true'),
+    );
+  });
+
+  it('uses the production runner to persist a semantic refresh handoff', async () => {
+    const { repo, store } = await adoptedRepository();
+    await materializeFixtureBinding(store);
+    const root = new Command().name('oat').option('--json');
+    root.exitOverride();
+    root.addCommand(
+      createPjmRemoteCommand({ resolveProjectRoot: async () => repo }),
+    );
+    const stdout = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    await root.parseAsync([
+      'node',
+      'oat',
+      '--json',
+      'remote',
+      'refresh',
+      '--binding',
+      'bnd_live_001',
+    ]);
+    const rendered = String(stdout.mock.calls.at(-1)?.[0]);
+    expect(rendered).toContain('"status":"pending"');
+    expect(rendered).toContain('"semanticOperation":"read"');
+    expect(rendered).toContain('"persisted":true');
+    const active = await store.listActiveOperations('bnd_live_001');
+    expect(active).toHaveLength(1);
+    const action = await store.readCurrentAction(active[0]!.operationId);
+    expect(action).toMatchObject({ semanticOperation: 'read' });
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:02:00.000Z',
+      readObservationStdin: async () => ({
+        schemaVersion: 1,
+        operationId: action!.operationId,
+        stepId: action!.stepId,
+        actionDigest: action!.actionDigest,
+        observedAt: '2026-08-31T12:01:00.000Z',
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:live-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: { stableId: 'issue-1', aliases: ['ITEM-1'] },
+          fields: {
+            title: 'Remote title',
+            description: 'Remote description',
+            priority: null,
+            status: 'open',
+          },
+          revisionDigest: 'sha256:remote-revision',
+          diagnosticCode: null,
+        },
+      }),
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: action!.operationId,
+        observationStdin: true,
+      }),
+    ).resolves.toMatchObject({
+      status: 'ok',
+      persisted: true,
+      externalAction: null,
+    });
+    await expect(store.readBindingState('bnd_live_001')).resolves.toMatchObject(
+      {
+        snapshot: { issue: { title: 'Remote title' } },
+      },
+    );
+  });
+
+  it('persists an intake target before emitting its semantic read action', async () => {
+    const { repo, store } = await adoptedRepository();
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:00:00.000Z',
+      randomId: vi
+        .fn()
+        .mockReturnValueOnce('intake-operation')
+        .mockReturnValueOnce('intake-binding')
+        .mockReturnValueOnce('intake-step'),
+    });
+    const result = await runner({
+      operation: 'intake',
+      projectRoot: repo,
+      providerRef: 'linear:issue-1',
+      backlogId: 'item-1',
+    });
+    expect(result).toMatchObject({
+      status: 'pending',
+      persisted: true,
+      externalAction: {
+        semanticOperation: 'read',
+        intent: { localTarget: { id: 'item-1' } },
+      },
+    });
+    await expect(
+      store.readOperation('op_intake-operation'),
+    ).resolves.toMatchObject({
+      lifecycleOperation: 'intake',
+      bindingId: 'bnd_intake-binding',
+      state: 'pending',
+    });
+  });
+
+  it('uses the production runner for create, authoritative read-back, and binding materialization', async () => {
+    const { repo, store } = await adoptedRepository();
+    await mkdir(join(repo, '.oat', 'repo', 'pjm', 'backlog', 'items'), {
+      recursive: true,
+    });
+    const backlogPath = join(
+      repo,
+      '.oat',
+      'repo',
+      'pjm',
+      'backlog',
+      'items',
+      'item-live.md',
+    );
+    await writeFile(
+      backlogPath,
+      '---\ntitle: Live item\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nPublish me.\n',
+    );
+    await writeFile(
+      join(repo, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        pjm: {
+          initialized: true,
+          schemaVersion: 1,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
+    const readObservationStdin = vi.fn().mockResolvedValue({
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['create'],
+      evidenceDigest: 'sha256:live-create-capability',
+      observedAt: '2026-08-31T12:00:00.000Z',
+    });
+    const randomId = vi
+      .fn()
+      .mockReturnValueOnce('create-operation')
+      .mockReturnValueOnce('create-binding')
+      .mockReturnValueOnce('create-step')
+      .mockReturnValueOnce('verify-step')
+      .mockReturnValueOnce('association-write');
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:00:00.000Z',
+      randomId,
+      readObservationStdin,
+    });
+    const created = await runner({
+      operation: 'publish',
+      projectRoot: repo,
+      createTarget: {
+        provider: 'linear',
+        localKind: 'backlog',
+        localId: 'item-live',
+      },
+      capabilityEvidenceStdin: true,
+    });
+    expect(created).toMatchObject({
+      status: 'pending',
+      externalAction: { semanticOperation: 'create' },
+    });
+    const createAction = created.externalAction!;
+    const fields = createAction.intent.fields as Record<string, string | null>;
+    readObservationStdin.mockResolvedValueOnce({
+      schemaVersion: 1,
+      operationId: createAction.operationId,
+      stepId: createAction.stepId,
+      actionDigest: createAction.actionDigest,
+      observedAt: '2026-08-31T12:01:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:live-create-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-live-1', aliases: ['LIVE-1'] },
+        fields,
+        revisionDigest: 'sha256:create-attempt',
+        diagnosticCode: null,
+      },
+    });
+    const pendingRead = await runner({
+      operation: 'operation-continue',
+      projectRoot: repo,
+      operationId: createAction.operationId,
+      observationStdin: true,
+    });
+    expect(pendingRead.externalAction).toMatchObject({
+      semanticOperation: 'read',
+      intent: { stableId: 'issue-live-1' },
+    });
+    const readAction = pendingRead.externalAction!;
+    readObservationStdin.mockResolvedValueOnce({
+      schemaVersion: 1,
+      operationId: readAction.operationId,
+      stepId: readAction.stepId,
+      actionDigest: readAction.actionDigest,
+      observedAt: '2026-08-31T12:02:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:live-read-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-live-1', aliases: ['LIVE-1'] },
+        fields,
+        revisionDigest: 'sha256:authoritative-read',
+        diagnosticCode: null,
+      },
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: readAction.operationId,
+        observationStdin: true,
+      }),
+    ).resolves.toMatchObject({ status: 'ok', persisted: true });
+    await expect(
+      store.readBindingMetadata('bnd_create-binding'),
+    ).resolves.toMatchObject({
+      remoteIdentity: { stableId: 'issue-live-1' },
+    });
+    await expect(readFile(backlogPath, 'utf8')).resolves.toContain(
+      'binding: bnd_create-binding',
+    );
+  });
+
+  it('uses a live pre-read before constructing a production update action', async () => {
+    const { repo, store } = await adoptedRepository();
+    await materializeFixtureBinding(store);
+    const targetPath = join(
+      repo,
+      '.oat',
+      'repo',
+      'pjm',
+      'backlog',
+      'items',
+      'item-1.md',
+    );
+    await mkdir(join(targetPath, '..'), { recursive: true });
+    const content =
+      '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n';
+    await writeFile(targetPath, content);
+    const state = (await store.readBindingState('bnd_live_001'))!;
+    const localProjection = resolveLocalProjection({
+      target: {
+        kind: 'backlog',
+        path: '.oat/repo/pjm/backlog/items/item-1.md',
+        content,
+      },
+      observedAt: '2026-08-31T12:00:00.000Z',
+    });
+    await store.writeBindingState({
+      ...state,
+      localProjection,
+      snapshot: sanitizeRemoteSnapshot({
+        snapshotId: 'snap_live_001',
+        bindingId: 'bnd_live_001',
+        provider: 'linear',
+        observedAt: '2026-08-31T12:00:00.000Z',
+        observedBy: {
+          provider: 'linear',
+          surfaceKind: 'connector',
+          context: { workspaceId: 'workspace-1' },
+          evidenceDigest: 'sha256:prior-read',
+          semanticCapabilities: ['read'],
+        },
+        identity: {
+          stableId: 'issue-1',
+          context: { workspaceId: 'workspace-1' },
+          aliases: [],
+        },
+        revision: {
+          strength: 'hash-only',
+          token: null,
+          updatedAt: '2026-08-31T12:00:00.000Z',
+          contentHash: 'sha256:remote-current',
+        },
+        issue: {
+          title: 'Remote title',
+          description: 'Remote description',
+          priority: null,
+          status: 'open',
+        },
+        lifecycle: 'active',
+      }),
+    });
+    await writeFile(
+      join(repo, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        pjm: {
+          initialized: true,
+          schemaVersion: 1,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { 'update-fields': 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
+    const readObservationStdin = vi.fn().mockResolvedValue({
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read', 'update'],
+      evidenceDigest: 'sha256:live-update-capability',
+      observedAt: '2026-08-31T12:00:00.000Z',
+    });
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:00:00.000Z',
+      randomId: vi
+        .fn()
+        .mockReturnValueOnce('update-operation')
+        .mockReturnValueOnce('preread-step')
+        .mockReturnValueOnce('mutation-step'),
+      readObservationStdin,
+    });
+    const prepared = await runner({
+      operation: 'publish',
+      projectRoot: repo,
+      bindingId: 'bnd_live_001',
+      capabilityEvidenceStdin: true,
+    });
+    expect(prepared.externalAction).toMatchObject({
+      semanticOperation: 'read',
+    });
+    const readAction = prepared.externalAction!;
+    readObservationStdin.mockResolvedValueOnce({
+      schemaVersion: 1,
+      operationId: readAction.operationId,
+      stepId: readAction.stepId,
+      actionDigest: readAction.actionDigest,
+      observedAt: '2026-08-31T12:01:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:live-update-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-1', aliases: ['LIVE-1'] },
+        fields: {
+          title: 'Remote title',
+          description: 'Remote description',
+          priority: null,
+          status: 'open',
+        },
+        revisionDigest: 'sha256:remote-current',
+        diagnosticCode: null,
+      },
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: readAction.operationId,
+        observationStdin: true,
+      }),
+    ).resolves.toMatchObject({
+      status: 'pending',
+      externalAction: { semanticOperation: 'update' },
+    });
+  });
+
+  it('persists and freshly approves a production shared-storage preview', async () => {
+    const { repo, store } = await adoptedRepository();
+    let current = '2026-08-31T12:00:00.000Z';
+    const runner = createProductionRemoteRunner({ now: () => current });
+    const storage = {
+      repositoryFingerprint: store.locations.repositoryFingerprint,
+      configTarget: '.oat/config.json',
+      currentMode: 'local' as const,
+      proposedPaths: ['.oat/repo/pjm/remote/state'],
+      apply: false,
+    };
+    await expect(
+      runner({ operation: 'storage-transition', projectRoot: repo, storage }),
+    ).resolves.toMatchObject({ status: 'needs-review', persisted: true });
+    const preview = await store.readSharedStoragePreview();
+    expect(preview?.digest).toMatch(/^sha256:/);
+    current = '2026-08-31T12:01:00.000Z';
+    await expect(
+      runner({
+        operation: 'storage-transition',
+        projectRoot: repo,
+        storage: { ...storage, apply: true },
+        storageApprovalDigest: preview!.digest,
+      }),
+    ).resolves.toMatchObject({ status: 'ok', persisted: true });
+    await expect(readOatConfig(repo)).resolves.toMatchObject({
+      pjm: { remote: { storage: { state: 'shared' } } },
+    });
   });
 
   it('wires shared-storage preview and approved apply requests', async () => {
@@ -259,7 +807,7 @@ describe('pjm remote command family', () => {
       'sha256:preview',
     ]);
     expect(apply.requests[0]).toMatchObject({
-      authority: { kind: 'fresh-approval', digest: 'sha256:preview' },
+      storageApprovalDigest: 'sha256:preview',
       storage: { apply: true },
     });
   });

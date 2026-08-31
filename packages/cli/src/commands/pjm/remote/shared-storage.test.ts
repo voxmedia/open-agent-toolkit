@@ -41,7 +41,11 @@ describe('shared operational storage', () => {
         approval: {
           previewDigest: preview.digest,
           approvedAt: '2026-08-31T12:01:00.000Z',
+          actor: 'operator-1',
+          source: 'interactive-preview',
         },
+        now: '2026-08-31T12:02:00.000Z',
+        maxAgeMs: 300_000,
         current: {
           repositoryFingerprint: preview.repositoryFingerprint,
           configTarget: preview.configTarget,
@@ -64,6 +68,8 @@ describe('shared operational storage', () => {
       applySharedStorageTransition({
         preview,
         approval: null,
+        now: '2026-08-31T12:02:00.000Z',
+        maxAgeMs: 300_000,
         current,
         writeSharedConfig,
       }),
@@ -74,7 +80,11 @@ describe('shared operational storage', () => {
         approval: {
           previewDigest: 'sha256:stale',
           approvedAt: '2026-08-31T12:01:00.000Z',
+          actor: 'operator-1',
+          source: 'interactive-preview',
         },
+        now: '2026-08-31T12:02:00.000Z',
+        maxAgeMs: 300_000,
         current,
         writeSharedConfig,
       }),
@@ -85,13 +95,51 @@ describe('shared operational storage', () => {
         approval: {
           previewDigest: preview.digest,
           approvedAt: '2026-08-31T12:01:00.000Z',
+          actor: 'operator-1',
+          source: 'interactive-preview',
         },
+        now: '2026-08-31T12:02:00.000Z',
+        maxAgeMs: 300_000,
         current: { ...current, mode: 'shared' },
         writeSharedConfig,
       }),
     ).rejects.toThrow(/changed/);
     expect(writeSharedConfig).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['not-a-time', '2026-08-31T12:02:00.000Z', 300_000, /invalid time/],
+    ['2026-08-31T12:03:00.000Z', '2026-08-31T12:02:00.000Z', 300_000, /future/],
+    [
+      '2026-08-31T12:01:00.000Z',
+      '2026-08-31T13:00:00.000Z',
+      300_000,
+      /expired/,
+    ],
+  ])(
+    'rejects malformed, future, and replayed approvals %#',
+    async (approvedAt, now, maxAgeMs, message) => {
+      await expect(
+        applySharedStorageTransition({
+          preview,
+          approval: {
+            previewDigest: preview.digest,
+            approvedAt,
+            actor: 'operator-1',
+            source: 'interactive-preview',
+          },
+          now,
+          maxAgeMs,
+          current: {
+            repositoryFingerprint: preview.repositoryFingerprint,
+            configTarget: preview.configTarget,
+            mode: preview.currentMode,
+          },
+          writeSharedConfig: vi.fn(),
+        }),
+      ).rejects.toThrow(message);
+    },
+  );
 
   it('rejects local project targets', () => {
     expect(() =>

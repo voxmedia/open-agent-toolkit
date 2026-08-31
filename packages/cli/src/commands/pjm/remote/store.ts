@@ -14,6 +14,10 @@ import { isDeepStrictEqual } from 'node:util';
 import type { z } from 'zod';
 
 import {
+  parseExternalAction,
+  type ExternalActionEnvelope,
+} from './external-action';
+import {
   PlannedBindingCreateSchema,
   RemoteBatchRecordSchema,
   RemoteBindingMetadataSchema,
@@ -31,6 +35,10 @@ import {
   type PlannedBindingCreate,
   type VerifiedDurableRemoteIdentity,
 } from './schema';
+import {
+  parseSharedStoragePreview,
+  type SharedStoragePreview,
+} from './shared-storage';
 import type { RemoteStorageLocations } from './storage-locator';
 
 export interface RemoteStoreFileHandle {
@@ -198,6 +206,81 @@ export class RemoteSyncStore {
       operationId,
       RemoteOperationRecordSchema,
     );
+  }
+
+  async readCurrentAction(
+    operationId: string,
+  ): Promise<ExternalActionEnvelope | null> {
+    try {
+      return parseExternalAction(
+        JSON.parse(
+          await this.#dependencies.filesystem.readFile(
+            join(
+              this.locations.operational.operationsDir,
+              `${operationId}.action`,
+            ),
+            'utf8',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (isFilesystemError(error, 'ENOENT')) return null;
+      throw error;
+    }
+  }
+
+  async writeCurrentAction(
+    operationId: string,
+    action: ExternalActionEnvelope,
+  ): Promise<void> {
+    const parsed = parseExternalAction(action);
+    if (parsed.operationId !== operationId) {
+      throw new Error(
+        'External action operationId does not match its durable path.',
+      );
+    }
+    await this.#atomicWrite(
+      join(this.locations.operational.operationsDir, `${operationId}.action`),
+      parsed,
+    );
+  }
+
+  async readSharedStoragePreview(): Promise<SharedStoragePreview | null> {
+    try {
+      return parseSharedStoragePreview(
+        JSON.parse(
+          await this.#dependencies.filesystem.readFile(
+            join(
+              this.locations.operational.root,
+              'shared-storage-preview.json',
+            ),
+            'utf8',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (isFilesystemError(error, 'ENOENT')) return null;
+      throw error;
+    }
+  }
+
+  async writeSharedStoragePreview(
+    preview: SharedStoragePreview,
+  ): Promise<void> {
+    await this.#atomicWrite(
+      join(this.locations.operational.root, 'shared-storage-preview.json'),
+      parseSharedStoragePreview(preview),
+    );
+  }
+
+  async materializeIntakeBinding(record: RemoteBindingMetadata): Promise<void> {
+    const parsed = RemoteBindingMetadataSchema.parse(record);
+    const path = join(
+      this.locations.portable.bindingsDir,
+      `${parsed.bindingId}.json`,
+    );
+    assertRecordIdMatchesFilename(path, parsed.bindingId);
+    await this.#exclusiveWrite(path, parsed);
   }
 
   async createOperation(record: RemoteOperationRecord): Promise<void> {

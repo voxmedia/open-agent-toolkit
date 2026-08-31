@@ -34,9 +34,10 @@ const timestamp = '2026-08-31T00:00:00.000Z';
 const providerContext = identity.context;
 const capabilityReference = {
   provider: 'github' as const,
-  transport: 'gh',
+  surfaceKind: 'connector' as const,
   context: providerContext,
-  capabilityDigest: 'sha256:capability',
+  evidenceDigest: 'sha256:capability',
+  semanticCapabilities: ['read', 'update'],
 };
 const revision = {
   strength: 'token' as const,
@@ -197,14 +198,13 @@ describe('remote record schemas', () => {
       snapshot,
       baseline,
       capability: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         provider: 'github',
-        transport: 'gh',
-        transportVersion: '2.0.0',
-        catalogFingerprint: 'sha256:catalog',
+        surfaceKind: 'connector',
         context: providerContext,
         availability: 'available',
         permissions: 'known',
+        semanticCapabilities: ['read', 'update'],
         observedAt: timestamp,
         evidenceDigest: 'sha256:probe-evidence',
       },
@@ -220,9 +220,9 @@ describe('remote record schemas', () => {
     expect(state.schemaVersion).toBe(2);
     expect(state.capability).toMatchObject({
       schemaVersion: 2,
-      surfaceKind: 'legacy-observation',
-      availability: 'unsupported-or-unresolved',
-      semanticCapabilities: [],
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read', 'update'],
     });
     expect(() =>
       RemoteBindingStateSchema.parse({
@@ -247,7 +247,13 @@ describe('remote record schemas', () => {
     ).toThrow(/capability context/i);
   });
 
-  it('parses governed operations, batches, and independent outcomes', () => {
+  it('migrates a generic legacy-native-surface operation and parses independent outcomes', () => {
+    const legacyCapabilityReference = {
+      provider: 'github' as const,
+      transport: 'legacy-native-surface',
+      context: providerContext,
+      capabilityDigest: 'sha256:legacy-capability',
+    };
     const operation = RemoteOperationRecordSchema.parse({
       recordType: 'operation',
       schemaVersion: 1,
@@ -278,14 +284,14 @@ describe('remote record schemas', () => {
       },
       createdAt: '2026-08-31T00:00:00.000Z',
       updatedAt: '2026-08-31T00:00:00.000Z',
-      transport: { id: 'gh', provider: 'github' },
-      selectedTransport: capabilityReference,
+      transport: { id: 'legacy-native-surface', provider: 'github' },
+      selectedTransport: legacyCapabilityReference,
       attempts: [
         {
           attemptId: 'attempt_update_123',
           startedAt: timestamp,
           completedAt: null,
-          transport: capabilityReference,
+          transport: legacyCapabilityReference,
           requestDigest: 'sha256:request',
           receiptDigest: null,
         },
