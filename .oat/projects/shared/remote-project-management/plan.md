@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Configured oat-project-plan gate cannot authenticate claude-fable-skip-permissions; refresh Claude OAuth or update the gate target configuration.
 oat_last_updated: 2026-08-30
 oat_phase: plan
 oat_phase_status: in_progress
@@ -46,7 +47,10 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
       explicitly confirms parallel execution.
 - [x] Resolve and preserve the project dispatch policy at high.
 - [x] Complete the structured plan self-review.
-- [ ] Pass the configured external plan review gate.
+- [x] Pass a corroborated external fallback gate on
+      cursor-gpt-5-6-sol-xhigh with zero findings.
+- [ ] Pass the configured provider-neutral external plan gate (blocked by the
+      selected Claude target's expired OAuth session).
 
 ## Dependency Topology
 
@@ -1211,7 +1215,7 @@ in-scope implementation files when a gate exposes a project defect.
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md        | -             | manual-2          | cursor                   |
 | plan   | artifact | passed          | 2026-08-31 | -                                                           | -             | structured-auto-3 | codex:sol-high           |
 | plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T022727Z.md          | -             | -                 | -                        |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
