@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:cb8f1ea5cbd6ba4a1bb7234b2f28948c18d3cb9e38bdc52ece069e9d2c049bef'
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: 'Configured target claude-fable-skip-permissions was accepted, then failed before review because the Claude OAuth session expired and could not be refreshed; the branch-local gate route returned no JSON.'
-  updated_at: '2026-08-31T00:52:36Z'
+  failure: 'Configured target claude-fable-skip-permissions was accepted, then failed before review because the Claude OAuth session expired and could not be refreshed; Thomas retired this failed generation and explicitly selected the one-time cursor-fable-5-xhigh gate override.'
+  updated_at: '2026-08-31T01:15:50Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null

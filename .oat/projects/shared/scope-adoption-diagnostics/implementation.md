@@ -373,6 +373,12 @@ review after the artifact-only alignment; continue to configured closeout.
 - Resume: restore Claude authentication, then run `oat-project-implement` to
   reconcile and retry this persisted gate generation
 
+**Operator recovery:** On 2026-08-30, Thomas explicitly retired the failed
+Claude generation and selected the one-time `cursor-fable-5-xhigh` gate target.
+The failed run remains preserved above and consumed no remediation attempt; the
+Cursor run starts a new persisted closeout generation without changing the
+repository's reusable default gate configuration.
+
 ## Test Results
 
 | Phase | Tests Run                           | Passed | Failed | Coverage                                             |
