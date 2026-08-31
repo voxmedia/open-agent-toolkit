@@ -1133,7 +1133,7 @@ git commit -m "fix(prev2-t03): validate canonical projection arrays"
 | p04       | code     | passed          | 2026-08-31 | `reviews/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -           |
 | p-rev1    | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -           |
 | final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`         | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -           |
-| final     | code     | fixes_added     | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`         | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -           |
+| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`         | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -           |
 | spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -           |

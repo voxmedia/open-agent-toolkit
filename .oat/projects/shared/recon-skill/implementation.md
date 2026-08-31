@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: prev2-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,16 +18,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status  | Tasks | Completed |
-| ------------ | ------- | ----- | --------- |
-| Phase 1      | passed  | 1     | 1/1       |
-| Phase 2      | passed  | 4     | 4/4       |
-| Phase 3      | passed  | 4     | 4/4       |
-| Phase 4      | passed  | 2     | 2/2       |
-| Phase p-rev1 | passed  | 2     | 2/2       |
-| Phase p-rev2 | pending | 3     | 1/3       |
+| Phase        | Status          | Tasks | Completed |
+| ------------ | --------------- | ----- | --------- |
+| Phase 1      | passed          | 1     | 1/1       |
+| Phase 2      | passed          | 4     | 4/4       |
+| Phase 3      | passed          | 4     | 4/4       |
+| Phase 4      | passed          | 2     | 2/2       |
+| Phase p-rev1 | passed          | 2     | 2/2       |
+| Phase p-rev2 | fixes_completed | 3     | 3/3       |
 
-**Total:** 14/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ## Task Status
 
@@ -74,8 +74,8 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Task      | Status    | Commit      |
 | --------- | --------- | ----------- |
 | prev2-t01 | completed | `4ef59b004` |
-| prev2-t02 | pending   | -           |
-| prev2-t03 | pending   | -           |
+| prev2-t02 | completed | `b2c462b58` |
+| prev2-t03 | completed | `47564e838` |
 
 ## Orchestration Runs
 
@@ -792,6 +792,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   artifact, generic schema framework, or state machine
 - Dispatch: request_id=recon-skill-prev2-implementation-20260831T2205Z scope=p-rev2 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p-rev2 terminal-cycle fixes
+
+- Original request ID: `recon-skill-prev2-implementation-20260831T2205Z`
+- Continuation event: `recon-skill-prev2-fix-r2-20260831T2305Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: execute only prev2-t02 and prev2-t03, one commit per task
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Task commits: `b2c462b5825b97fe8082535d4cebe795e24a7eaa` and
+  `47564e838317288bedac43c3ca022d8542289d16`
+- RED evidence: 9/9 receipt-chain mutations remained publishable; 12/12
+  invalid canonical array mutations remained publishable
+- GREEN evidence: receipt focus 54/54, integrity 25/25, combined
+  recon/dispatch 160/160, CLI validation 164/164, and skill suite 746/746
+- Recovery attempts: 0; optional nested dispatches: none
+- Overengineering assessment: causal comparisons remain in the existing
+  receipt validator and one narrow canonical string-set helper serves the three
+  normative arrays; no new lifecycle or schema framework
+- Dispatch: request_id=recon-skill-prev2-implementation-20260831T2205Z continuation_event=recon-skill-prev2-fix-r2-20260831T2305Z scope=p-rev2-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -1208,8 +1230,20 @@ the configured exit gate.
 **Design drift / artifact alignment notes:** None. Both findings enforce the
 existing canonical dispatch and recon contracts.
 
-**Next:** Execute `prev2-t02` and `prev2-t03`, then run the third and terminal
+**Next:** `prev2-t02` and `prev2-t03` are complete. Run the third and terminal
 fresh final review before the configured exit gate.
+
+### 2026-08-31 - p-rev2 terminal-cycle fixes completed
+
+- `prev2-t02` binds approved/accepted/completed timestamps, accepted and
+  completed child handles, and a distinct catalog recheck strictly between
+  approval and launch acceptance.
+- `prev2-t03` enforces non-empty canonical sorted string sets for all three
+  normative arrays; every deletion case now rebinds all receipts and asserts a
+  projection-structure error.
+- Root verification passes 64/64 load-bearing focused tests. The latest final
+  review event is `fixes_completed`; the third and terminal fresh independent
+  review is next.
 
 ## Deviations from Plan / Design
 
@@ -1338,6 +1372,7 @@ automatic discovery, quick-start, analyze, or deep-research integration was
 added. Those broader integrations remain separate backlog items. Final review
 then found one Critical approval-binding gap. Bounded task `prev2-t01` now
 retains and validates the complete canonical projection with exhaustive
-deletion and receipt-mutation coverage. Fresh re-review found remaining receipt
-causality/freshness and projection-value gaps, now queued as `prev2-t02` and
-`prev2-t03`; closeout remains in progress until the terminal re-review passes.
+deletion and receipt-mutation coverage. Fresh re-review then found remaining
+receipt causality/freshness and projection-value gaps. Tasks `prev2-t02` and
+`prev2-t03` now close those paths with direct RED/GREEN mutations; closeout
+remains in progress until the terminal re-review passes.
