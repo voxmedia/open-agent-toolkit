@@ -91,6 +91,11 @@ export function validateArtifactReference(reference, path = '$') {
   return errors;
 }
 
+function validateExactReference(reference, path, errors, extra = []) {
+  errors.push(...validateArtifactReference(reference, path));
+  closedObject(reference, new Set(['path', 'digest', ...extra]), errors, path);
+}
+
 function requiredString(value, key, errors, path = '$') {
   if (typeof value?.[key] !== 'string' || value[key].length === 0) {
     errors.push(
@@ -115,6 +120,29 @@ function requiredArray(value, key, errors, path = '$') {
   }
 }
 
+function requiredObject(value, key, errors, path = '$') {
+  if (!isObject(value?.[key])) {
+    errors.push(
+      issue(
+        'MISSING_REQUIRED_FIELD',
+        `${key} must be an object`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
+function closedObject(value, allowed, errors, path = '$') {
+  if (!isObject(value)) return;
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) {
+      errors.push(
+        issue('UNKNOWN_FIELD', `Unexpected field ${key}`, `${path}.${key}`),
+      );
+    }
+  }
+}
+
 function duplicateIds(values, path, errors) {
   const seen = new Set();
   for (const [index, value] of values.entries()) {
@@ -133,11 +161,40 @@ function duplicateIds(values, path, errors) {
 }
 
 function validateManifest(value, errors) {
+  closedObject(
+    value,
+    new Set([
+      'kind',
+      'schemaVersion',
+      'run',
+      'request',
+      'sources',
+      'execution',
+      'stages',
+      'artifacts',
+      'gaps',
+    ]),
+    errors,
+  );
   if (!isObject(value.run)) {
     errors.push(
       issue('MISSING_REQUIRED_FIELD', 'run must be an object', '$.run'),
     );
   } else {
+    closedObject(
+      value.run,
+      new Set([
+        'id',
+        'topic',
+        'status',
+        'requestedProfile',
+        'achievedProfile',
+        'createdAt',
+        'updatedAt',
+      ]),
+      errors,
+      '$.run',
+    );
     requiredString(value.run, 'id', errors, '$.run');
     requiredString(value.run, 'topic', errors, '$.run');
     if (
@@ -180,19 +237,209 @@ function validateManifest(value, errors) {
   requiredArray(value, 'stages', errors);
   requiredArray(value, 'artifacts', errors);
   requiredArray(value, 'gaps', errors);
+  requiredObject(value, 'request', errors);
+  requiredObject(value, 'execution', errors);
+  if (isObject(value.request)) {
+    closedObject(
+      value.request,
+      new Set([
+        'objective',
+        'questions',
+        'includedScope',
+        'excludedScope',
+        'contextReferences',
+        'outputPath',
+      ]),
+      errors,
+      '$.request',
+    );
+    requiredString(value.request, 'objective', errors, '$.request');
+    requiredString(value.request, 'outputPath', errors, '$.request');
+    for (const key of [
+      'questions',
+      'includedScope',
+      'excludedScope',
+      'contextReferences',
+    ]) {
+      requiredArray(value.request, key, errors, '$.request');
+    }
+  }
+  if (isObject(value.execution)) {
+    closedObject(
+      value.execution,
+      new Set(['approvalEnvelope', 'approvalFingerprint']),
+      errors,
+      '$.execution',
+    );
+    requiredObject(value.execution, 'approvalEnvelope', errors, '$.execution');
+    requiredString(
+      value.execution,
+      'approvalFingerprint',
+      errors,
+      '$.execution',
+    );
+  }
   if (Array.isArray(value.sources))
     duplicateIds(value.sources, '$.sources', errors);
   if (Array.isArray(value.stages))
     duplicateIds(value.stages, '$.stages', errors);
   if (Array.isArray(value.gaps)) duplicateIds(value.gaps, '$.gaps', errors);
   for (const [index, reference] of (value.artifacts ?? []).entries()) {
-    errors.push(
-      ...validateArtifactReference(reference, `$.artifacts[${index}]`),
+    validateExactReference(reference, `$.artifacts[${index}]`, errors);
+  }
+  for (const [index, source] of (value.sources ?? []).entries()) {
+    for (const key of [
+      'kind',
+      'id',
+      'authority',
+      'observedAt',
+      'validationState',
+    ]) {
+      requiredString(source, key, errors, `$.sources[${index}]`);
+    }
+    if (typeof source.available !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'available must be a boolean',
+          `$.sources[${index}].available`,
+        ),
+      );
+    }
+    const common = [
+      'kind',
+      'id',
+      'available',
+      'authority',
+      'observedAt',
+      'validationState',
+    ];
+    const kindKeys = {
+      repository: ['root', 'revision', 'dirty', 'contentHashes'],
+      file: ['path', 'contentHash'],
+      url: ['url', 'capturePath', 'captureDigest', 'validatorState'],
+      'command-output': [
+        'argv',
+        'cwd',
+        'exitStatus',
+        'outputPath',
+        'outputDigest',
+        'environmentNames',
+      ],
+      'connected-resource': [
+        'system',
+        'resourceId',
+        'resourceVersion',
+        'retrievalToken',
+        'capturePath',
+        'captureDigest',
+      ],
+    }[source.kind];
+    if (!kindKeys) {
+      errors.push(
+        issue(
+          'INVALID_SOURCE_KIND',
+          'Unknown source kind',
+          `$.sources[${index}].kind`,
+        ),
+      );
+    } else {
+      closedObject(
+        source,
+        new Set([...common, ...kindKeys]),
+        errors,
+        `$.sources[${index}]`,
+      );
+      if (source.kind === 'url' && isObject(source.validatorState)) {
+        closedObject(
+          source.validatorState,
+          new Set(['etag', 'lastModified', 'capturePath', 'captureDigest']),
+          errors,
+          `$.sources[${index}].validatorState`,
+        );
+      }
+    }
+  }
+  for (const [index, gap] of (value.gaps ?? []).entries()) {
+    requiredString(gap, 'id', errors, `$.gaps[${index}]`);
+    requiredString(gap, 'code', errors, `$.gaps[${index}]`);
+    requiredString(gap, 'message', errors, `$.gaps[${index}]`);
+    if (typeof gap.material !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'material must be a boolean',
+          `$.gaps[${index}].material`,
+        ),
+      );
+    }
+    closedObject(
+      gap,
+      new Set(['id', 'code', 'message', 'material']),
+      errors,
+      `$.gaps[${index}]`,
+    );
+  }
+  for (const [index, stage] of (value.stages ?? []).entries()) {
+    requiredString(stage, 'id', errors, `$.stages[${index}]`);
+    requiredString(stage, 'mode', errors, `$.stages[${index}]`);
+    requiredString(stage, 'status', errors, `$.stages[${index}]`);
+    requiredArray(stage, 'artifactIds', errors, `$.stages[${index}]`);
+    if (!['complete', 'failed', 'omitted'].includes(stage.status)) {
+      errors.push(
+        issue(
+          'INVALID_STAGE_STATUS',
+          'Unknown stage status',
+          `$.stages[${index}].status`,
+        ),
+      );
+    }
+    if (
+      stage.kind !== 'recon.stage-result' ||
+      stage.schemaVersion !== SCHEMA_VERSION
+    ) {
+      errors.push(
+        issue(
+          'INVALID_STAGE_RESULT',
+          'Expected recon.stage-result version 1',
+          `$.stages[${index}]`,
+        ),
+      );
+    }
+    closedObject(
+      stage,
+      new Set([
+        'kind',
+        'schemaVersion',
+        'id',
+        'mode',
+        'status',
+        'artifactIds',
+        'message',
+      ]),
+      errors,
+      `$.stages[${index}]`,
     );
   }
 }
 
 function validateLedger(value, errors) {
+  closedObject(
+    value,
+    new Set([
+      'kind',
+      'schemaVersion',
+      'runId',
+      'revision',
+      'inputArtifacts',
+      'synthesis',
+      'evidence',
+      'claims',
+      'unresolvedQuestions',
+      'transitions',
+    ]),
+    errors,
+  );
   requiredString(value, 'runId', errors);
   if (!Number.isInteger(value.revision) || value.revision < 1) {
     errors.push(
@@ -211,18 +458,47 @@ function validateLedger(value, errors) {
   ]) {
     requiredArray(value, key, errors);
   }
+  requiredArray(value, 'transitions', errors);
+  requiredObject(value, 'synthesis', errors);
+  if (isObject(value.synthesis)) {
+    requiredString(value.synthesis, 'answer', errors, '$.synthesis');
+    for (const key of ['keyClaimIds', 'caveats', 'unresolvedQuestionIds']) {
+      requiredArray(value.synthesis, key, errors, '$.synthesis');
+    }
+    closedObject(
+      value.synthesis,
+      new Set(['answer', 'keyClaimIds', 'caveats', 'unresolvedQuestionIds']),
+      errors,
+      '$.synthesis',
+    );
+  }
   for (const key of ['evidence', 'claims', 'unresolvedQuestions']) {
     if (Array.isArray(value[key])) duplicateIds(value[key], `$.${key}`, errors);
   }
   for (const [index, reference] of (value.inputArtifacts ?? []).entries()) {
-    errors.push(
-      ...validateArtifactReference(reference, `$.inputArtifacts[${index}]`),
-    );
+    validateExactReference(reference, `$.inputArtifacts[${index}]`, errors);
   }
   for (const [index, evidence] of (value.evidence ?? []).entries()) {
+    closedObject(
+      evidence,
+      new Set([
+        'id',
+        'sourceId',
+        'locator',
+        'displayExcerpt',
+        'observedAt',
+        'contentHash',
+        'locatorValidation',
+        'provenance',
+        'redaction',
+      ]),
+      errors,
+      `$.evidence[${index}]`,
+    );
     requiredString(evidence, 'id', errors, `$.evidence[${index}]`);
     requiredString(evidence, 'sourceId', errors, `$.evidence[${index}]`);
     requiredString(evidence, 'displayExcerpt', errors, `$.evidence[${index}]`);
+    requiredString(evidence, 'observedAt', errors, `$.evidence[${index}]`);
     if (!isObject(evidence.locator)) {
       errors.push(
         issue(
@@ -231,6 +507,44 @@ function validateLedger(value, errors) {
           `$.evidence[${index}].locator`,
         ),
       );
+    } else {
+      const locatorKeys = {
+        repository: ['kind', 'path', 'revision', 'lineStart', 'lineEnd'],
+        file: ['kind', 'path', 'lineStart', 'lineEnd'],
+        url: ['kind', 'url', 'retrievedAt', 'fragment', 'validatorToken'],
+        'command-output': [
+          'kind',
+          'artifactPath',
+          'lineStart',
+          'lineEnd',
+          'commandDigest',
+        ],
+        'connected-resource': [
+          'kind',
+          'system',
+          'resourceId',
+          'resourceVersion',
+          'retrievalToken',
+          'fieldOrSection',
+          'retrievedAt',
+        ],
+      }[evidence.locator.kind];
+      if (!locatorKeys) {
+        errors.push(
+          issue(
+            'INVALID_LOCATOR',
+            'Unknown locator kind',
+            `$.evidence[${index}].locator.kind`,
+          ),
+        );
+      } else {
+        closedObject(
+          evidence.locator,
+          new Set(locatorKeys),
+          errors,
+          `$.evidence[${index}].locator`,
+        );
+      }
     }
     if (!locatorStates.includes(evidence.locatorValidation?.status)) {
       errors.push(
@@ -241,14 +555,42 @@ function validateLedger(value, errors) {
         ),
       );
     }
-    errors.push(
-      ...validateArtifactReference(
-        evidence.provenance,
-        `$.evidence[${index}].provenance`,
-      ),
+    if (isObject(evidence.locatorValidation)) {
+      closedObject(
+        evidence.locatorValidation,
+        new Set(['status', 'validatedAt']),
+        errors,
+        `$.evidence[${index}].locatorValidation`,
+      );
+      requiredString(
+        evidence.locatorValidation,
+        'validatedAt',
+        errors,
+        `$.evidence[${index}].locatorValidation`,
+      );
+    }
+    validateExactReference(
+      evidence.provenance,
+      `$.evidence[${index}].provenance`,
+      errors,
     );
   }
   for (const [index, claim] of (value.claims ?? []).entries()) {
+    closedObject(
+      claim,
+      new Set([
+        'id',
+        'statement',
+        'status',
+        'evidence',
+        'qualifications',
+        'reviewIds',
+        'derivedFrom',
+        'challenges',
+      ]),
+      errors,
+      `$.claims[${index}]`,
+    );
     requiredString(claim, 'id', errors, `$.claims[${index}]`);
     requiredString(claim, 'statement', errors, `$.claims[${index}]`);
     if (!claimStates.includes(claim.status)) {
@@ -265,21 +607,27 @@ function validateLedger(value, errors) {
       'qualifications',
       'reviewIds',
       'derivedFrom',
+      'challenges',
     ]) {
       requiredArray(claim, key, errors, `$.claims[${index}]`);
     }
     for (const [referenceIndex, reference] of (
       claim.derivedFrom ?? []
     ).entries()) {
-      errors.push(
-        ...validateArtifactReference(
-          reference,
-          `$.claims[${index}].derivedFrom[${referenceIndex}]`,
-        ),
+      validateExactReference(
+        reference,
+        `$.claims[${index}].derivedFrom[${referenceIndex}]`,
+        errors,
       );
     }
   }
   for (const [index, transition] of (value.transitions ?? []).entries()) {
+    closedObject(
+      transition,
+      new Set(['claimId', 'from', 'to']),
+      errors,
+      `$.transitions[${index}]`,
+    );
     if (!legalTransitions.has(`${transition.from}:${transition.to}`)) {
       errors.push(
         issue(
@@ -290,9 +638,53 @@ function validateLedger(value, errors) {
       );
     }
   }
+  const claimIds = new Set((value.claims ?? []).map((claim) => claim.id));
+  const lastTransitionByClaim = new Map();
+  for (const transition of value.transitions ?? []) {
+    if (!claimIds.has(transition.claimId)) {
+      errors.push(
+        issue(
+          'UNKNOWN_TRANSITION_CLAIM',
+          `Transition references unknown claim ${transition.claimId}`,
+          '$.transitions',
+        ),
+      );
+    }
+    lastTransitionByClaim.set(transition.claimId, transition);
+  }
+  for (const claim of value.claims ?? []) {
+    if (lastTransitionByClaim.get(claim.id)?.to !== claim.status) {
+      errors.push(
+        issue(
+          'CLAIM_TRANSITION_MISMATCH',
+          `Final transition does not establish ${claim.id} as ${claim.status}`,
+          `claim:${claim.id}`,
+        ),
+      );
+    }
+  }
 }
 
 function validateDossier(value, errors) {
+  closedObject(
+    value,
+    new Set([
+      'kind',
+      'schemaVersion',
+      'runId',
+      'waveId',
+      'laneId',
+      'mode',
+      'outcome',
+      'allowedInputs',
+      'excludedInputs',
+      'findings',
+      'uncertainty',
+      'contradictions',
+      'gaps',
+    ]),
+    errors,
+  );
   for (const key of ['runId', 'waveId', 'laneId', 'mode', 'outcome']) {
     requiredString(value, key, errors);
   }
@@ -309,6 +701,286 @@ function validateDossier(value, errors) {
   ]) {
     requiredArray(value, key, errors);
   }
+}
+
+function validateReviewBriefArtifact(value, errors) {
+  for (const key of ['id', 'runId', 'mode', 'createdAt']) {
+    requiredString(value, key, errors);
+  }
+  requiredArray(value, 'excludedInputs', errors);
+  if (value.mode === 'verify') {
+    requiredArray(value, 'claims', errors);
+    requiredArray(value, 'sources', errors);
+    closedObject(
+      value,
+      new Set([
+        'kind',
+        'schemaVersion',
+        'id',
+        'runId',
+        'mode',
+        'createdAt',
+        'excludedInputs',
+        'claims',
+        'sources',
+      ]),
+      errors,
+    );
+    for (const [index, claim] of (value.claims ?? []).entries()) {
+      requiredString(claim, 'id', errors, `$.claims[${index}]`);
+      requiredString(claim, 'statement', errors, `$.claims[${index}]`);
+      requiredArray(claim, 'evidence', errors, `$.claims[${index}]`);
+      closedObject(
+        claim,
+        new Set(['id', 'statement', 'evidence']),
+        errors,
+        `$.claims[${index}]`,
+      );
+      for (const [evidenceIndex, evidence] of (
+        claim.evidence ?? []
+      ).entries()) {
+        for (const key of ['id', 'sourceId', 'displayExcerpt']) {
+          requiredString(
+            evidence,
+            key,
+            errors,
+            `$.claims[${index}].evidence[${evidenceIndex}]`,
+          );
+        }
+        requiredObject(
+          evidence,
+          'locator',
+          errors,
+          `$.claims[${index}].evidence[${evidenceIndex}]`,
+        );
+        closedObject(
+          evidence,
+          new Set(['id', 'sourceId', 'displayExcerpt', 'locator']),
+          errors,
+          `$.claims[${index}].evidence[${evidenceIndex}]`,
+        );
+      }
+    }
+  } else if (value.mode === 'adversary') {
+    requiredObject(value, 'scope', errors);
+    requiredArray(value, 'questions', errors);
+    requiredArray(value, 'provisionalStatements', errors);
+    closedObject(
+      value,
+      new Set([
+        'kind',
+        'schemaVersion',
+        'id',
+        'runId',
+        'mode',
+        'createdAt',
+        'excludedInputs',
+        'scope',
+        'questions',
+        'provisionalStatements',
+      ]),
+      errors,
+    );
+    closedObject(
+      value.scope,
+      new Set(['included', 'excluded']),
+      errors,
+      '$.scope',
+    );
+    for (const key of ['included', 'excluded']) {
+      requiredArray(value.scope, key, errors, '$.scope');
+    }
+    for (const [index, statement] of (
+      value.provisionalStatements ?? []
+    ).entries()) {
+      requiredString(
+        statement,
+        'id',
+        errors,
+        `$.provisionalStatements[${index}]`,
+      );
+      requiredString(
+        statement,
+        'statement',
+        errors,
+        `$.provisionalStatements[${index}]`,
+      );
+      closedObject(
+        statement,
+        new Set(['id', 'statement']),
+        errors,
+        `$.provisionalStatements[${index}]`,
+      );
+    }
+  } else {
+    errors.push(
+      issue('INVALID_REVIEW_MODE', 'Unknown review brief mode', '$.mode'),
+    );
+  }
+}
+
+function validateReviewResult(value, errors) {
+  for (const key of ['id', 'runId', 'reviewKind', 'reviewerLane', 'status']) {
+    requiredString(value, key, errors);
+  }
+  for (const key of [
+    'permittedInputs',
+    'excludedInputs',
+    'dispositions',
+    'newEvidence',
+    'coverageFindings',
+    'unresolvedIssues',
+  ]) {
+    requiredArray(value, key, errors);
+  }
+  if (
+    !['semantic', 'adversarial', 'coverage', 'reconciliation'].includes(
+      value.reviewKind,
+    )
+  ) {
+    errors.push(
+      issue(
+        'INVALID_REVIEW_KIND',
+        'Unknown review result kind',
+        '$.reviewKind',
+      ),
+    );
+  }
+  if (!['complete', 'failed'].includes(value.status)) {
+    errors.push(
+      issue('INVALID_REVIEW_STATUS', 'Unknown review status', '$.status'),
+    );
+  }
+  if (value.reviewKind === 'reconciliation') {
+    requiredObject(value, 'inputLedger', errors);
+    if (isObject(value.inputLedger)) {
+      validateExactReference(value.inputLedger, '$.inputLedger', errors, [
+        'revision',
+      ]);
+      if (!Number.isInteger(value.inputLedger.revision)) {
+        errors.push(
+          issue(
+            'INVALID_REVISION',
+            'input ledger revision must be an integer',
+            '$.inputLedger.revision',
+          ),
+        );
+      }
+    }
+    if (!Number.isInteger(value.outputRevision)) {
+      errors.push(
+        issue(
+          'INVALID_REVISION',
+          'outputRevision must be an integer',
+          '$.outputRevision',
+        ),
+      );
+    }
+    requiredArray(value, 'incorporatedReviewIds', errors);
+    requiredArray(value, 'transitions', errors);
+  } else {
+    validateExactReference(value.brief, '$.brief', errors);
+  }
+  for (const [index, reference] of (value.permittedInputs ?? []).entries()) {
+    validateExactReference(reference, `$.permittedInputs[${index}]`, errors);
+  }
+  for (const [index, disposition] of (value.dispositions ?? []).entries()) {
+    requiredString(disposition, 'claimId', errors, `$.dispositions[${index}]`);
+    requiredString(
+      disposition,
+      'disposition',
+      errors,
+      `$.dispositions[${index}]`,
+    );
+    closedObject(
+      disposition,
+      new Set(['claimId', 'disposition']),
+      errors,
+      `$.dispositions[${index}]`,
+    );
+  }
+  const common = [
+    'kind',
+    'schemaVersion',
+    'id',
+    'runId',
+    'reviewKind',
+    'reviewerLane',
+    'status',
+    'permittedInputs',
+    'excludedInputs',
+    'dispositions',
+    'newEvidence',
+    'coverageFindings',
+    'unresolvedIssues',
+  ];
+  closedObject(
+    value,
+    new Set(
+      value.reviewKind === 'reconciliation'
+        ? [
+            ...common,
+            'inputLedger',
+            'outputRevision',
+            'incorporatedReviewIds',
+            'transitions',
+          ]
+        : [...common, 'brief'],
+    ),
+    errors,
+  );
+}
+
+function validateDispatchReceipt(value, errors) {
+  for (const key of ['id', 'state']) requiredString(value, key, errors);
+  requiredObject(value, 'selection', errors);
+  requiredObject(value, 'approvalEnvelope', errors);
+  requiredString(value, 'fingerprint', errors);
+  if (!['prepared', 'approved', 'accepted'].includes(value.state)) {
+    errors.push(
+      issue('INVALID_DISPATCH_STATE', 'Unknown dispatch state', '$.state'),
+    );
+  }
+  if (value.state === 'accepted')
+    requiredObject(value, 'acceptedEnvelope', errors);
+  closedObject(
+    value,
+    new Set([
+      'kind',
+      'schemaVersion',
+      'id',
+      'state',
+      'selection',
+      'approvalEnvelope',
+      'fingerprint',
+      'acceptedEnvelope',
+    ]),
+    errors,
+  );
+}
+
+function validateStageResult(value, errors) {
+  for (const key of ['id', 'mode', 'status'])
+    requiredString(value, key, errors);
+  requiredArray(value, 'artifactIds', errors);
+  if (!['complete', 'failed', 'omitted'].includes(value.status)) {
+    errors.push(
+      issue('INVALID_STAGE_STATUS', 'Unknown stage status', '$.status'),
+    );
+  }
+  closedObject(
+    value,
+    new Set([
+      'kind',
+      'schemaVersion',
+      'id',
+      'mode',
+      'status',
+      'artifactIds',
+      'message',
+    ]),
+    errors,
+  );
 }
 
 export function validateArtifactShape(value) {
@@ -340,5 +1012,11 @@ export function validateArtifactShape(value) {
   if (value.kind === 'recon.packet-manifest') validateManifest(value, errors);
   if (value.kind === 'recon.claim-ledger') validateLedger(value, errors);
   if (value.kind === 'recon.raw-dossier') validateDossier(value, errors);
+  if (value.kind === 'recon.review-brief')
+    validateReviewBriefArtifact(value, errors);
+  if (value.kind === 'recon.review-result') validateReviewResult(value, errors);
+  if (value.kind === 'recon.dispatch-receipt')
+    validateDispatchReceipt(value, errors);
+  if (value.kind === 'recon.stage-result') validateStageResult(value, errors);
   return { valid: errors.length === 0, errors };
 }

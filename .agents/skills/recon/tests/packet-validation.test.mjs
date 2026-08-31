@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdtemp,
+  mkdir,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -41,6 +50,7 @@ function stagesFor(profile) {
     id: `stage-${index + 1}`,
     mode,
     status: 'complete',
+    artifactIds: [],
   }));
 }
 
@@ -63,8 +73,9 @@ async function makePacket({
   await mkdir(join(packetRoot, 'reviews'), { recursive: true });
   await mkdir(sourceRoot, { recursive: true });
 
-  const sourcePath = join(sourceRoot, 'source.txt');
+  let sourcePath = join(sourceRoot, 'source.txt');
   await cp(new URL('source.txt', fixtureRoot), sourcePath);
+  sourcePath = await realpath(sourcePath);
   const dossierPath = join(packetRoot, 'raw', 'dossiers', 'dossier-1.json');
   await writeJson(dossierPath, {
     kind: 'recon.raw-dossier',
@@ -96,7 +107,7 @@ async function makePacket({
       authority: 'contract-enforced',
       observedAt: '2026-08-31T00:00:00.000Z',
       validationState: 'pinned',
-      root: sourceRoot,
+      root: await realpath(sourceRoot),
       revision: 'abc123',
       dirty: false,
       contentHashes: { 'source.txt': await hashFile(sourcePath) },
@@ -206,7 +217,7 @@ async function makePacket({
     kind: 'recon.claim-ledger',
     schemaVersion: 1,
     runId: 'run-1',
-    revision: 1,
+    revision: profile === 'quick' ? 1 : 2,
     inputArtifacts: [dossierRef],
     synthesis: {
       answer: 'The fixture contains alpha evidence.',
@@ -239,6 +250,140 @@ async function makePacket({
       },
     ],
   };
+  const reviewArtifacts = [];
+  const reviewPaths = new Map();
+  if (profile !== 'quick') {
+    const priorLedger = structuredClone(ledger);
+    priorLedger.revision = 1;
+    priorLedger.claims[0].status = 'supported';
+    priorLedger.claims[0].reviewIds = [];
+    priorLedger.transitions[0] = {
+      claimId: 'claim-1',
+      from: 'provisional',
+      to: 'supported',
+    };
+    const priorPath = join(packetRoot, 'raw', 'drafts', 'claims-v1.json');
+    await mkdir(join(packetRoot, 'raw', 'drafts'), { recursive: true });
+    await writeJson(priorPath, priorLedger);
+    const priorRef = {
+      path: 'raw/drafts/claims-v1.json',
+      digest: await hashFile(priorPath),
+    };
+    ledger.inputArtifacts.push(priorRef);
+    reviewArtifacts.push(priorRef);
+
+    const verifyBrief = {
+      kind: 'recon.review-brief',
+      schemaVersion: 1,
+      id: 'brief-verify',
+      runId: 'run-1',
+      mode: 'verify',
+      createdAt: '2026-08-31T00:03:00.000Z',
+      excludedInputs: ['prior_reasoning'],
+      claims: [],
+      sources: [],
+    };
+    const adversaryBrief = {
+      kind: 'recon.review-brief',
+      schemaVersion: 1,
+      id: 'brief-adversary',
+      runId: 'run-1',
+      mode: 'adversary',
+      createdAt: '2026-08-31T00:03:00.000Z',
+      excludedInputs: ['prior_reasoning'],
+      scope: { included: ['fixture'], excluded: [] },
+      questions: ['What evidence exists?'],
+      provisionalStatements: [],
+    };
+    for (const [name, brief] of [
+      ['verify', verifyBrief],
+      ['adversary', adversaryBrief],
+    ]) {
+      const path = join(packetRoot, 'reviews', 'briefs', `${name}.json`);
+      await mkdir(join(packetRoot, 'reviews', 'briefs'), { recursive: true });
+      await writeJson(path, brief);
+      const ref = {
+        path: `reviews/briefs/${name}.json`,
+        digest: await hashFile(path),
+      };
+      reviewPaths.set(`brief-${name}`, { path, value: brief, ref });
+      reviewArtifacts.push(ref);
+    }
+    const resultSpecs = [
+      ['review-semantic', 'semantic', 'brief-verify', 'affirmed'],
+      ['review-adversarial', 'adversarial', 'brief-adversary', 'unchallenged'],
+      ['review-coverage', 'coverage', 'brief-adversary', 'covered'],
+    ];
+    for (const [id, reviewKind, briefId, disposition] of resultSpecs) {
+      const brief = reviewPaths.get(briefId);
+      const value = {
+        kind: 'recon.review-result',
+        schemaVersion: 1,
+        id,
+        runId: 'run-1',
+        reviewKind,
+        reviewerLane: `lane-${reviewKind}`,
+        status: 'complete',
+        brief: { ...brief.ref },
+        permittedInputs: [{ ...brief.ref }],
+        excludedInputs: ['prior_reasoning'],
+        dispositions: [{ claimId: 'claim-1', disposition }],
+        newEvidence: [],
+        coverageFindings: [],
+        unresolvedIssues: [],
+      };
+      const path = join(packetRoot, 'reviews', `${reviewKind}.json`);
+      await writeJson(path, value);
+      const ref = {
+        path: `reviews/${reviewKind}.json`,
+        digest: await hashFile(path),
+      };
+      reviewPaths.set(id, { path, value, ref });
+      reviewArtifacts.push(ref);
+    }
+    const reconciliation = {
+      kind: 'recon.review-result',
+      schemaVersion: 1,
+      id: 'review-reconciliation',
+      runId: 'run-1',
+      reviewKind: 'reconciliation',
+      reviewerLane: 'lane-reconciliation',
+      status: 'complete',
+      inputLedger: { ...priorRef, revision: 1 },
+      outputRevision: 2,
+      incorporatedReviewIds: [
+        'review-semantic',
+        'review-adversarial',
+        'review-coverage',
+      ],
+      transitions: structuredClone(ledger.transitions),
+      permittedInputs: [
+        priorRef,
+        ...reviewArtifacts.filter((ref) => ref.path.startsWith('reviews/')),
+      ],
+      excludedInputs: [],
+      dispositions: [],
+      newEvidence: [],
+      coverageFindings: [],
+      unresolvedIssues: [],
+    };
+    const reconciliationPath = join(
+      packetRoot,
+      'reviews',
+      'reconciliation.json',
+    );
+    await writeJson(reconciliationPath, reconciliation);
+    const ref = {
+      path: 'reviews/reconciliation.json',
+      digest: await hashFile(reconciliationPath),
+    };
+    reviewPaths.set('review-reconciliation', {
+      path: reconciliationPath,
+      value: reconciliation,
+      ref,
+    });
+    reviewArtifacts.push(ref);
+  }
   const claimsPath = join(packetRoot, 'claims.json');
   await writeJson(claimsPath, ledger);
   const claimsRef = {
@@ -279,8 +424,20 @@ async function makePacket({
       approvalEnvelope,
       approvalFingerprint: hashCanonicalJson(approvalEnvelope),
     },
-    stages: stagesFor(profile),
-    artifacts: [claimsRef, dossierRef],
+    stages: stagesFor(profile).map((stage) => ({
+      ...stage,
+      artifactIds:
+        stage.mode === 'semantic-verification'
+          ? ['review-semantic']
+          : stage.mode === 'adversarial'
+            ? ['review-adversarial']
+            : stage.mode === 'coverage'
+              ? ['review-coverage']
+              : stage.mode === 'reconciliation'
+                ? ['review-reconciliation']
+                : [],
+    })),
+    artifacts: [claimsRef, dossierRef, ...reviewArtifacts],
     gaps: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
@@ -294,6 +451,7 @@ async function makePacket({
     claimsPath,
     manifest,
     ledger,
+    reviewPaths,
   };
 }
 
@@ -303,6 +461,13 @@ async function persist(packet) {
     (artifact) => artifact.path === 'claims.json',
   );
   if (claimRef) claimRef.digest = await hashFile(packet.claimsPath);
+  await writeJson(packet.manifestPath, packet.manifest);
+}
+
+async function persistReview(packet, id, { updateManifest = true } = {}) {
+  const review = packet.reviewPaths.get(id);
+  await writeJson(review.path, review.value);
+  if (updateManifest) review.ref.digest = await hashFile(review.path);
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
@@ -326,17 +491,40 @@ for (const profile of ['quick', 'standard', 'thorough']) {
   });
 }
 
+for (const sourceKind of [
+  'repository',
+  'url',
+  'command-output',
+  'connected-resource',
+]) {
+  test(`valid ${sourceKind} locator reopens its exact source identity`, async () => {
+    const packet = await makePacket({ sourceKind });
+    const result = await validatePacket(packet.packetRoot);
+    assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  });
+}
+
 test('valid lower-assurance packet publishes as an honest partial', async () => {
   const packet = await makePacket({ profile: 'standard', status: 'partial' });
   packet.manifest.stages = stagesFor('quick');
   packet.manifest.run.achievedProfile = 'quick';
   packet.ledger.claims[0].status = 'supported';
   packet.ledger.claims[0].reviewIds = [];
-  packet.ledger.transitions[0].to = 'supported';
+  packet.ledger.transitions[0] = {
+    claimId: 'claim-1',
+    from: 'provisional',
+    to: 'supported',
+  };
+  packet.reviewPaths.get('review-reconciliation').value.transitions =
+    structuredClone(packet.ledger.transitions);
+  packet.reviewPaths.get('review-reconciliation').value.incorporatedReviewIds =
+    [];
+  await persistReview(packet, 'review-reconciliation');
   packet.manifest.gaps.push({
     id: 'gap-1',
     code: 'PASS_OMITTED',
     message: 'Independent review did not complete.',
+    material: true,
   });
   await persist(packet);
   const result = await validatePacket(packet.packetRoot);
@@ -493,4 +681,233 @@ test('structural failure removes a stale packet entry point', async () => {
   assert.equal(result.valid, false);
   await assert.rejects(readFile(join(packet.packetRoot, 'packet.md'), 'utf8'));
   assert.equal(basename(result.packetRoot), basename(packet.packetRoot));
+});
+
+test('verified claims require unique complete typed review results bound to immutable briefs', async () => {
+  const missing = await makePacket({ profile: 'standard' });
+  missing.ledger.claims[0].reviewIds[0] = 'review-missing';
+  await persist(missing);
+  await expectInvalid(missing, 'MISSING_INDEPENDENT_REVIEW');
+
+  const duplicate = await makePacket({ profile: 'standard' });
+  duplicate.ledger.claims[0].reviewIds = [
+    'review-semantic',
+    'review-semantic',
+    'review-coverage',
+  ];
+  await persist(duplicate);
+  await expectInvalid(duplicate, 'DUPLICATE_REVIEW_ID');
+
+  const wrongKind = await makePacket({ profile: 'standard' });
+  wrongKind.reviewPaths.get('review-semantic').value.reviewKind = 'coverage';
+  await persistReview(wrongKind, 'review-semantic');
+  await expectInvalid(wrongKind, 'REVIEW_KIND_MISMATCH');
+
+  const wrongBrief = await makePacket({ profile: 'standard' });
+  wrongBrief.reviewPaths.get('review-semantic').value.brief.digest =
+    `sha256:${'0'.repeat(64)}`;
+  await persistReview(wrongBrief, 'review-semantic');
+  await expectInvalid(wrongBrief, 'REVIEW_BRIEF_MISMATCH');
+
+  const failed = await makePacket({ profile: 'standard' });
+  failed.reviewPaths.get('review-semantic').value.status = 'failed';
+  await persistReview(failed, 'review-semantic');
+  await expectInvalid(failed, 'INCOMPLETE_INDEPENDENT_REVIEW');
+
+  const disposition = await makePacket({ profile: 'standard' });
+  disposition.reviewPaths.get(
+    'review-adversarial',
+  ).value.dispositions[0].disposition = 'challenged';
+  await persistReview(disposition, 'review-adversarial');
+  await expectInvalid(disposition, 'REVIEW_DISPOSITION_MISMATCH');
+
+  const tampered = await makePacket({ profile: 'standard' });
+  tampered.reviewPaths
+    .get('review-coverage')
+    .value.unresolvedIssues.push('tampered without manifest rehash');
+  await persistReview(tampered, 'review-coverage', { updateManifest: false });
+  await expectInvalid(tampered, 'ARTIFACT_DIGEST_MISMATCH');
+});
+
+test('closed schemas reject incomplete declared artifacts and missing ledger sections', async () => {
+  const packet = await makePacket({ profile: 'standard' });
+  delete packet.ledger.synthesis;
+  await persist(packet);
+  await expectInvalid(packet, 'MISSING_REQUIRED_FIELD');
+
+  const result = await makePacket({ profile: 'standard' });
+  delete result.reviewPaths.get('review-semantic').value.permittedInputs;
+  await persistReview(result, 'review-semantic');
+  await expectInvalid(result, 'MISSING_REQUIRED_FIELD');
+});
+
+test('reconciliation binds the prior ledger revision and exact transitions', async () => {
+  const revision = await makePacket({ profile: 'standard' });
+  revision.reviewPaths.get('review-reconciliation').value.inputLedger.revision =
+    2;
+  await persistReview(revision, 'review-reconciliation');
+  await expectInvalid(revision, 'RECONCILIATION_REVISION_MISMATCH');
+
+  const transitions = await makePacket({ profile: 'standard' });
+  transitions.reviewPaths.get('review-reconciliation').value.transitions = [];
+  await persistReview(transitions, 'review-reconciliation');
+  await expectInvalid(transitions, 'RECONCILIATION_TRANSITION_MISMATCH');
+});
+
+test('only exact and redacted-exact locator states are assurance eligible', async () => {
+  for (const state of ['stale', 'invalid']) {
+    const packet = await makePacket();
+    packet.ledger.evidence[0].locatorValidation.status = state;
+    await persist(packet);
+    await expectInvalid(packet, 'CLAIM_ASSURANCE_INVALID');
+  }
+
+  const retained = await makePacket();
+  retained.ledger.evidence[0].locatorValidation.status = 'stale';
+  retained.ledger.claims[0].status = 'provisional';
+  retained.ledger.transitions[0] = {
+    claimId: 'claim-1',
+    from: 'unsupported',
+    to: 'provisional',
+  };
+  await persist(retained);
+  const result = await validatePacket(retained.packetRoot);
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+});
+
+test('locators bind exact source identity, observation time, and version tokens', async () => {
+  const file = await makePacket();
+  file.ledger.evidence[0].locator.path = join(file.sourceRoot, 'other.txt');
+  await persist(file);
+  await expectInvalid(file, 'SOURCE_IDENTITY_MISMATCH');
+
+  const repository = await makePacket({ sourceKind: 'repository' });
+  repository.ledger.evidence[0].locator.revision = 'def456';
+  await persist(repository);
+  await expectInvalid(repository, 'SOURCE_VERSION_MISMATCH');
+
+  const url = await makePacket({ sourceKind: 'url' });
+  url.ledger.evidence[0].locator.url = 'https://example.test/other';
+  await persist(url);
+  await expectInvalid(url, 'SOURCE_VERSION_MISMATCH');
+
+  const urlTime = await makePacket({ sourceKind: 'url' });
+  urlTime.ledger.evidence[0].locator.retrievedAt = '2026-08-30T00:00:00.000Z';
+  await persist(urlTime);
+  await expectInvalid(urlTime, 'SOURCE_VERSION_MISMATCH');
+
+  const command = await makePacket({ sourceKind: 'command-output' });
+  command.ledger.evidence[0].locator.artifactPath = 'raw/captures/other.txt';
+  await persist(command);
+  await expectInvalid(command, 'SOURCE_VERSION_MISMATCH');
+
+  const commandIdentity = await makePacket({ sourceKind: 'command-output' });
+  commandIdentity.ledger.evidence[0].locator.commandDigest = `sha256:${'0'.repeat(64)}`;
+  await persist(commandIdentity);
+  await expectInvalid(commandIdentity, 'SOURCE_VERSION_MISMATCH');
+
+  const connected = await makePacket({ sourceKind: 'connected-resource' });
+  connected.ledger.evidence[0].locator.system = 'other';
+  await persist(connected);
+  await expectInvalid(connected, 'SOURCE_VERSION_MISMATCH');
+
+  const connectedTime = await makePacket({
+    sourceKind: 'connected-resource',
+  });
+  connectedTime.ledger.evidence[0].locator.retrievedAt =
+    '2026-08-30T00:00:00.000Z';
+  await persist(connectedTime);
+  await expectInvalid(connectedTime, 'SOURCE_VERSION_MISMATCH');
+});
+
+test('whole-file locators are supported but half-specified ranges are rejected', async () => {
+  const whole = await makePacket();
+  delete whole.ledger.evidence[0].locator.lineStart;
+  delete whole.ledger.evidence[0].locator.lineEnd;
+  whole.ledger.evidence[0].displayExcerpt = 'beta context';
+  whole.ledger.evidence[0].contentHash = hashCanonicalJson('beta context');
+  await persist(whole);
+  assert.equal((await validatePacket(whole.packetRoot)).valid, true);
+
+  const half = await makePacket();
+  delete half.ledger.evidence[0].locator.lineEnd;
+  await persist(half);
+  await expectInvalid(half, 'INVALID_LOCATOR_RANGE');
+});
+
+test('URL validator-state locators reopen a pinned snapshot and reject token drift', async () => {
+  const packet = await makePacket({ sourceKind: 'url' });
+  const source = packet.manifest.sources[0];
+  source.validatorState = {
+    etag: '"fixture-v1"',
+    capturePath: source.capturePath,
+    captureDigest: source.captureDigest,
+  };
+  delete source.capturePath;
+  delete source.captureDigest;
+  packet.ledger.evidence[0].locator.validatorToken = hashCanonicalJson({
+    etag: '"fixture-v1"',
+    lastModified: null,
+  });
+  await persist(packet);
+  const valid = await validatePacket(packet.packetRoot);
+  assert.equal(valid.valid, true, JSON.stringify(valid, null, 2));
+
+  packet.ledger.evidence[0].locator.validatorToken = hashCanonicalJson({
+    etag: '"fixture-v2"',
+    lastModified: null,
+  });
+  await persist(packet);
+  await expectInvalid(packet, 'SOURCE_VERSION_MISMATCH');
+});
+
+test('managed packet and source paths reject ancestor and final-component symlinks', async () => {
+  const artifact = await makePacket();
+  const dossierPath = join(
+    artifact.packetRoot,
+    'raw',
+    'dossiers',
+    'dossier-1.json',
+  );
+  const outside = join(artifact.sourceRoot, 'outside.json');
+  await cp(dossierPath, outside);
+  await rm(dossierPath);
+  await symlink(outside, dossierPath);
+  await expectInvalid(artifact, 'SYMLINK_ESCAPE');
+
+  const capture = await makePacket({ sourceKind: 'url' });
+  const captureDirectory = join(capture.packetRoot, 'raw', 'captures');
+  const realDirectory = join(capture.sourceRoot, 'captures');
+  await mkdir(realDirectory);
+  await cp(join(captureDirectory, 'url.txt'), join(realDirectory, 'url.txt'));
+  await rm(captureDirectory, { recursive: true });
+  await symlink(realDirectory, captureDirectory);
+  await expectInvalid(capture, 'SYMLINK_ESCAPE');
+});
+
+test('material gaps permit honest same-profile partial but never complete publication', async () => {
+  const partial = await makePacket({ status: 'partial' });
+  partial.manifest.gaps.push({
+    id: 'gap-material',
+    code: 'COVERAGE_GAP',
+    message: 'A material scope gap remains.',
+    material: true,
+  });
+  await writeJson(partial.manifestPath, partial.manifest);
+  const partialResult = await validatePacket(partial.packetRoot);
+  assert.equal(
+    partialResult.valid,
+    true,
+    JSON.stringify(partialResult, null, 2),
+  );
+
+  const complete = await makePacket();
+  complete.manifest.gaps.push({
+    id: 'gap-material',
+    code: 'COVERAGE_GAP',
+    message: 'A material scope gap remains.',
+    material: true,
+  });
+  await writeJson(complete.manifestPath, complete.manifest);
+  await expectInvalid(complete, 'MATERIAL_GAP_REQUIRES_PARTIAL');
 });

@@ -198,3 +198,57 @@ test('parent handoff is directory-only and never leaks dossier contents', async 
   );
   assert.equal(result.directory, injectedRoots.packetRoot);
 });
+
+for (const reviewKind of ['semantic', 'adversarial', 'coverage']) {
+  test(`missing ${reviewKind} review result blocks verified publication`, async () => {
+    const injectedRoots = await roots();
+    const result = await runFakeRecon({
+      profile: 'standard',
+      missingReviewResult: reviewKind,
+      roots: injectedRoots,
+    });
+    assert.equal(result.status, 'failed');
+    assert.equal(result.reason, 'STRUCTURAL_VALIDATION_FAILED');
+    await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
+  });
+}
+
+test('tampered review result blocks verified publication', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    tamperReviewResult: 'semantic',
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'failed');
+  assert.equal(result.reason, 'STRUCTURAL_VALIDATION_FAILED');
+  await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
+});
+
+test('standard workflow emits all typed review results and reconciles revision one into two', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: injectedRoots });
+  for (const reviewKind of ['semantic', 'adversarial', 'coverage']) {
+    const result = JSON.parse(
+      await readFile(
+        join(injectedRoots.packetRoot, 'reviews', `${reviewKind}.json`),
+        'utf8',
+      ),
+    );
+    assert.equal(result.reviewKind, reviewKind);
+    assert.equal(result.status, 'complete');
+    assert.equal(result.dispositions[0].claimId, 'claim-1');
+  }
+  const reconciliation = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'reviews', 'reconciliation.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(reconciliation.inputLedger.revision, 1);
+  assert.equal(reconciliation.outputRevision, 2);
+  assert.deepEqual(
+    reconciliation.incorporatedReviewIds.sort(),
+    ['review-adversarial', 'review-coverage', 'review-semantic'].sort(),
+  );
+});

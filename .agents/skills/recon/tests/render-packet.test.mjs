@@ -82,6 +82,16 @@ test('structural validation failure leaves no packet entry point', async () => {
   await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 });
 
+test('render construction failure removes a previously published packet', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  fixture.ledger.synthesis.keyClaimIds = null;
+  await fixture.persist();
+  await assert.rejects(renderPacket(fixture.packetRoot));
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
+});
+
 test('consumer handoff contains only directory and compact status', async () => {
   const fixture = await createPacketFixture({ profile: 'quick' });
   tempRoots.push(fixture.tempRoot);

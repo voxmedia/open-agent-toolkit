@@ -5,6 +5,10 @@ import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { validateArtifactShape } from './lib/contracts.mjs';
+import {
+  assertSafeExistingPath,
+  assertSafeOutputPath,
+} from './lib/safe-path.mjs';
 
 export function validateArtifactValue(value) {
   return validateArtifactShape(value);
@@ -32,9 +36,14 @@ export async function validateArtifactFile(path) {
 
 export async function quarantineInvalidArtifact(path, packetRoot, result) {
   if (result.valid) return null;
-  const quarantineRoot = join(resolve(packetRoot), 'raw', 'quarantine');
+  const root = resolve(packetRoot);
+  await assertSafeExistingPath(root, resolve(path));
+  const quarantineRoot = join(root, 'raw', 'quarantine');
+  await assertSafeOutputPath(root, quarantineRoot);
   await mkdir(quarantineRoot, { recursive: true });
   const target = join(quarantineRoot, `${basename(path)}.invalid`);
+  await assertSafeOutputPath(root, target);
+  await assertSafeOutputPath(root, `${target}.failure.json`);
   await rename(path, target);
   await writeFile(
     `${target}.failure.json`,

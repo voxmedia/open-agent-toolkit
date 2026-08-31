@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
 import { issue, isObject } from './lib/contracts.mjs';
+import { assertSafeOutputPath } from './lib/safe-path.mjs';
 
 const commonKeys = [
   'kind',
@@ -252,22 +253,10 @@ export function validateReviewBrief(brief) {
   return { valid: errors.length === 0, errors };
 }
 
-function containsPath(root, candidate) {
-  const fromRoot = relative(root, candidate);
-  return (
-    fromRoot === '' ||
-    (!fromRoot.startsWith(`..${sep}`) &&
-      fromRoot !== '..' &&
-      !isAbsolute(fromRoot))
-  );
-}
-
 export async function writeReviewBrief({ packetRoot, outputPath, brief }) {
   const root = resolve(packetRoot);
   const target = resolve(outputPath);
-  if (!containsPath(root, target)) {
-    throw new Error('Review brief output escapes the packet directory');
-  }
+  await assertSafeOutputPath(root, target);
   const result = validateReviewBrief(brief);
   if (!result.valid) {
     throw new Error(

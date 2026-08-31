@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdir, readFile, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
@@ -159,4 +159,29 @@ test('brief validation rejects selective-blind contract violations', async () =>
   assert.ok(
     result.errors.some((error) => error.code === 'BLINDNESS_VIOLATION'),
   );
+});
+
+test('brief output rejects symlinked ancestors before creating a new file', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const outside = join(fixture.tempRoot, 'outside');
+  await mkdir(outside);
+  const linked = join(fixture.packetRoot, 'reviews', 'linked');
+  await symlink(outside, linked);
+  const brief = createReviewBrief({
+    mode: 'verify',
+    id: 'brief-symlink',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+  });
+  await assert.rejects(
+    writeReviewBrief({
+      packetRoot: fixture.packetRoot,
+      outputPath: join(linked, 'new.json'),
+      brief,
+    }),
+    /symlink/i,
+  );
+  await assert.rejects(readFile(join(outside, 'new.json'), 'utf8'));
 });

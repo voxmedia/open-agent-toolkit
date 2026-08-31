@@ -1,10 +1,6 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
-import {
-  createReviewBrief,
-  writeReviewBrief,
-} from '../../scripts/create-review-brief.mjs';
 import {
   canonicalJson,
   hashCanonicalJson,
@@ -201,44 +197,21 @@ export async function runFakeRecon(options = {}) {
   }
 
   if (requestedProfile !== 'quick' && !degraded) {
-    for (const mode of ['verify', 'adversary']) {
-      const brief = createReviewBrief({
-        mode,
-        id: `brief-${mode}`,
-        createdAt: '2026-08-31T00:03:00.000Z',
-        manifest: fixture.manifest,
-        ledger: fixture.ledger,
-      });
-      const reference = await writeReviewBrief({
-        packetRoot: roots.packetRoot,
-        outputPath: join(roots.packetRoot, 'reviews', 'briefs', `${mode}.json`),
-        brief,
-      });
-      fixture.manifest.artifacts.push(reference);
+    for (const relativePath of [
+      'reviews/briefs/verify.json',
+      'reviews/briefs/adversary.json',
+      'reviews/semantic.json',
+      'reviews/adversarial.json',
+      'reviews/coverage.json',
+      'reviews/reconciliation.json',
+    ]) {
+      const validation = await validateArtifactFile(
+        join(roots.packetRoot, relativePath),
+      );
+      if (!validation.valid) {
+        throw new Error(`Invalid fake review artifact: ${relativePath}`);
+      }
     }
-    const reconciliationPath = join(
-      roots.packetRoot,
-      'reviews',
-      'reconciliation.json',
-    );
-    await writeJson(reconciliationPath, {
-      kind: 'recon.review-result',
-      schemaVersion: 1,
-      id: 'review-reconciliation',
-      mode: 'reconcile',
-      status: 'complete',
-      inputRevision: 1,
-      outputRevision: fixture.ledger.revision,
-    });
-    const reconciliationValidation =
-      await validateArtifactFile(reconciliationPath);
-    if (!reconciliationValidation.valid) {
-      throw new Error('Invalid fake reconciliation result');
-    }
-    fixture.manifest.artifacts.push({
-      path: 'reviews/reconciliation.json',
-      digest: await hashFile(reconciliationPath),
-    });
   }
 
   if (options.workerFailure) {
@@ -246,6 +219,7 @@ export async function runFakeRecon(options = {}) {
       id: 'gap-worker-failure',
       code: 'PASS_FAILED',
       message: `${options.workerFailure} failed after accepted launch; no replacement was dispatched.`,
+      material: true,
     });
   }
 
@@ -277,6 +251,7 @@ export async function runFakeRecon(options = {}) {
       code: 'PASS_FAILED',
       message:
         'Invalid compiler output was quarantined; the last valid ledger was preserved.',
+      material: true,
     });
   }
 
@@ -301,7 +276,39 @@ export async function runFakeRecon(options = {}) {
   }
 
   await fixture.persist();
-  const result = await renderPacket(roots.packetRoot);
+  if (options.missingReviewResult) {
+    await rm(
+      join(roots.packetRoot, 'reviews', `${options.missingReviewResult}.json`),
+    );
+  }
+  if (options.tamperReviewResult) {
+    const path = join(
+      roots.packetRoot,
+      'reviews',
+      `${options.tamperReviewResult}.json`,
+    );
+    const value = JSON.parse(await readFile(path, 'utf8'));
+    value.unresolvedIssues.push('tampered after manifest digest');
+    await writeJson(path, value);
+  }
+  let result;
+  try {
+    result = await renderPacket(roots.packetRoot);
+  } catch (error) {
+    if (options.missingReviewResult || options.tamperReviewResult) {
+      await writeFailure(
+        roots.packetRoot,
+        'STRUCTURAL_VALIDATION_FAILED',
+        'The review result set failed integrity validation.',
+      );
+      return stopped(
+        roots.packetRoot,
+        'failed',
+        'STRUCTURAL_VALIDATION_FAILED',
+      );
+    }
+    throw error;
+  }
   if (options.invalidOutput) {
     return { ...result, quarantinedPath, ledgerPreserved };
   }

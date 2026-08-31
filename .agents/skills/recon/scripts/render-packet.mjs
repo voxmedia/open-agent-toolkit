@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { hashFile } from './lib/canonical-json.mjs';
+import { assertSafeOutputPath } from './lib/safe-path.mjs';
 import { validatePacket } from './validate-packet.mjs';
 
 function escapeInline(value) {
@@ -165,47 +166,48 @@ function claimCounts(ledger) {
 
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
-  const validation = await validatePacket(packetRoot, {
-    removePublishedOnFailure: true,
-  });
-  if (!validation.valid || !validation.publishable) {
-    throw new Error(
-      `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
-    );
-  }
-  const [manifest, ledger] = await Promise.all([
-    readFile(join(packetRoot, 'manifest.json'), 'utf8').then(JSON.parse),
-    readFile(join(packetRoot, 'claims.json'), 'utf8').then(JSON.parse),
-  ]);
-  const document = renderPacketDocument(manifest, ledger);
   const target = join(packetRoot, 'packet.md');
   const temporary = join(packetRoot, `.packet.md.${process.pid}.tmp`);
   try {
+    const validation = await validatePacket(packetRoot, {
+      removePublishedOnFailure: true,
+    });
+    if (!validation.valid || !validation.publishable) {
+      throw new Error(
+        `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
+      );
+    }
+    const [manifest, ledger] = await Promise.all([
+      readFile(join(packetRoot, 'manifest.json'), 'utf8').then(JSON.parse),
+      readFile(join(packetRoot, 'claims.json'), 'utf8').then(JSON.parse),
+    ]);
+    const document = renderPacketDocument(manifest, ledger);
+    await assertSafeOutputPath(packetRoot, temporary);
+    await assertSafeOutputPath(packetRoot, target);
     await writeFile(temporary, document, { encoding: 'utf8', flag: 'wx' });
     await rename(temporary, target);
+    return {
+      directory: packetRoot,
+      status: manifest.run.status,
+      requestedProfile: validation.requestedProfile,
+      achievedProfile: validation.achievedProfile,
+      claimCounts: claimCounts(ledger),
+      gapCount: manifest.gaps.length,
+      failedOrOmittedPasses: [
+        ...manifest.stages
+          .filter((stage) => stage.status !== 'complete')
+          .map((stage) => stage.mode),
+        ...manifest.gaps
+          .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
+          .map((gap) => gap.code),
+      ],
+      digest: await hashFile(target),
+    };
   } catch (error) {
     await rm(temporary, { force: true });
     await rm(target, { force: true });
     throw error;
   }
-
-  return {
-    directory: packetRoot,
-    status: manifest.run.status,
-    requestedProfile: validation.requestedProfile,
-    achievedProfile: validation.achievedProfile,
-    claimCounts: claimCounts(ledger),
-    gapCount: manifest.gaps.length,
-    failedOrOmittedPasses: [
-      ...manifest.stages
-        .filter((stage) => stage.status !== 'complete')
-        .map((stage) => stage.mode),
-      ...manifest.gaps
-        .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
-        .map((gap) => gap.code),
-    ],
-    digest: await hashFile(target),
-  };
 }
 
 async function main(argv) {

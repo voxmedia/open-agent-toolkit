@@ -51,9 +51,11 @@ execution axis in the approval envelope.
 - discriminated `sources`;
 - `execution`: exact approval envelope, fingerprint, and immutable dispatch
   receipt references;
-- `stages`: `recon.stage-result` records;
+- `stages`: `recon.stage-result` records whose `artifactIds` bind completed
+  review passes to hashed result artifacts;
 - `artifacts`: direct references; and
-- `gaps`: categorical omitted, unavailable, stale, or failed work.
+- `gaps`: categorical omitted, unavailable, stale, or failed work, each with an
+  explicit boolean `material` classification.
 
 Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`,
 or `failed`. The validator—not a worker—derives achieved profile.
@@ -68,7 +70,9 @@ All source descriptors carry `kind`, stable `id`, `available`, `authority`,
 - `file`: canonical path and content hash. Locator: path and optional line
   start/end.
 - `url`: canonical URL plus persisted capture path/digest or explicit validator
-  state. Locator: URL, retrieval time, optional fragment.
+  state containing an ETag or last-modified value and a pinned validation
+  snapshot path/digest. Locator: URL, retrieval time, optional fragment, and
+  the canonical validator-state token when that alternative is used.
 - `command-output`: canonical argv, cwd, exit status, output path/digest, and
   names-only environment metadata. Locator: output path, line range, command
   digest.
@@ -78,7 +82,9 @@ All source descriptors carry `kind`, stable `id`, `available`, `authority`,
 
 Missing minimum provenance makes evidence ineligible for `supported` or
 `verified`. Path escape, digest change, version drift, shifted lines, or excerpt
-mismatch invalidates the locator.
+mismatch invalidates the locator. Only `exact` and `redacted-exact` states are
+assurance-eligible. Managed packet, capture, repository, and output paths reject
+both ancestor and final-component symlinks before reads, hashes, or writes.
 
 ## Claim Ledger
 
@@ -97,9 +103,13 @@ Claim states are categorical:
 - `unsupported`: no valid support remains.
 
 Quick packets never contain `verified` claims. Standard and thorough claims need
-recorded independent semantic, adversarial, and coverage reviews. A material
+recorded independent semantic, adversarial, and coverage reviews. Every review
+ID resolves to a unique, complete, typed, hashed result bound to the exact
+immutable brief digest and the claim's required disposition. A material
 unresolved challenge prevents verification. Review workers propose; only a
-reconciler writes a new ledger candidate.
+reconciler writes a new ledger candidate. Reconciliation binds the prior ledger
+reference and revision, the next revision, the incorporated review IDs, and the
+exact canonical claim transitions.
 
 ## Evidence and Secret Redaction
 
@@ -117,9 +127,12 @@ nor a digest of the sensitive span. Diagnostics must never echo the span.
 - `recon.raw-dossier`: assignment identity, mode, inputs/exclusions, findings,
   uncertainty, contradictions, gaps, and outcome.
 - `recon.review-brief`: immutable selective-blind projection and digest.
-- `recon.review-result`: review kind, lane, brief digest, dispositions, new
-  evidence, gaps, unresolved issues, and outcome.
-- `recon.stage-result`: stable stage ID, mode, status, and safe diagnostics.
+- `recon.review-result`: review kind, lane, exact brief reference,
+  permitted/excluded inputs, dispositions, new evidence, coverage findings,
+  unresolved issues, and completion status. Reconciliation results replace the
+  brief reference with prior-ledger and revision bindings.
+- `recon.stage-result`: stable stage ID, mode, status, artifact IDs, and safe
+  diagnostics.
 - `recon.dispatch-receipt`: immutable prepared, approved, accepted, or terminal
   dispatch evidence.
 
@@ -141,6 +154,10 @@ It validates schemas, IDs, references, containment, hashes, source reopening,
 locators, approval fingerprint, legal transitions, assurance, and requested vs
 achieved profile. Structural failure removes any stale `packet.md`. Only a
 valid `complete` or honest `partial` packet is publishable.
+
+`complete` requires the requested profile and no material gap. `partial` is
+valid when either a lower profile was achieved or at least one material gap is
+declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. It writes a temporary sibling and atomically promotes

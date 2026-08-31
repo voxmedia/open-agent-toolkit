@@ -184,16 +184,20 @@ Run `scripts/validate-artifact.mjs` on every candidate, then
 candidates under `raw/`; never promote shared artifacts in place and never
 overwrite the last valid ledger.
 
-Derive the achieved profile from completed valid stages. Do not accept a worker
-or manifest assertion of achievement. A `quick` run can reach `supported` but
-never `verified`. Unresolved material challenge prevents verification.
+Derive the achieved profile from completed stages whose required typed,
+digest-bound artifacts validate. Do not accept a worker or manifest assertion
+of achievement. A `quick` run can reach `supported` but never `verified`.
+`verified` claims require unique complete semantic, adversarial, and coverage
+results bound to immutable briefs and correct claim dispositions. Unresolved
+material challenge prevents verification.
 
 Render `packet.md` with `scripts/render-packet.mjs` only from the final validated
-manifest and ledger. Publish through a temporary sibling followed by atomic
-promotion. A complete run meets the requested profile. An honest partial
-records requested profile, achieved profile, failed or omitted passes, coverage
-gaps, and claim downgrades. A structural failure publishes no `packet.md` and
-leaves a safe failure record.
+manifest and ledger. Publish through a symlink-safe temporary sibling followed
+by atomic promotion. A complete run meets the requested profile and has no
+material gap. An honest partial records requested profile, achieved profile,
+failed or omitted passes, material coverage gaps, and claim downgrades; a
+same-profile partial is valid when a material gap remains. A structural failure
+publishes no `packet.md` and leaves a safe failure record.
 
 ### Step 8: Return the Directory-Only Handoff
 
