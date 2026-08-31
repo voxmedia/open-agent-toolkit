@@ -20,9 +20,25 @@ const ALLOWED_TOP_LEVEL_DIRECTORIES = new Set([
   'analysis',
   'reviews',
 ]);
-// A human-facing `README.md` at the repo-reference root is benign, so it is an
-// allowed top-level file alongside the canonical `AGENTS.md` (F5).
-const ALLOWED_TOP_LEVEL_FILES = new Set(['AGENTS.md', 'README.md']);
+// Human/provider-facing companions to the canonical `AGENTS.md` are benign.
+// Pointer correctness remains the responsibility of `oat instructions
+// validate`; PJM doctor only classifies the repository layout.
+const ALLOWED_TOP_LEVEL_FILES = new Set([
+  'AGENTS.md',
+  'CLAUDE.md',
+  'README.md',
+]);
+// `project-observations.md` is the documented append-only project-log ledger.
+// The remaining names have dedicated migration/duplicate checks below, so the
+// loose-reference classifier must not report them a second time.
+const ALLOWED_REFERENCE_FILES = new Set([
+  'AGENTS.md',
+  'CLAUDE.md',
+  'project-observations.md',
+  'decision-record.md',
+  'roadmap.md',
+  'current-state.md',
+]);
 const LEGACY_MONOLITHS = ['reference/decision-record.md'] as const;
 
 async function pathExists(path: string): Promise<boolean> {
@@ -342,13 +358,7 @@ export async function runPjmDoctorChecks(
   );
   const looseReferenceFiles = referenceEntries
     .filter((name) => name.endsWith('.md'))
-    .filter(
-      (name) =>
-        name !== 'AGENTS.md' &&
-        name !== 'decision-record.md' &&
-        name !== 'roadmap.md' &&
-        name !== 'current-state.md',
-    )
+    .filter((name) => !ALLOWED_REFERENCE_FILES.has(name))
     .map((name) => `reference/${name}`);
   checks.push({
     name: 'pjm:loose_reference_files',

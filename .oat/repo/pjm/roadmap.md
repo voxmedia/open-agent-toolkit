@@ -16,7 +16,8 @@ and title so this map remains readable without a board lookup.
 - **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts** — Build adaptive idle-kill and early-artifact semantics on the shipped scope-aware hard budgets, transcript liveness evidence, and correlated timeout recovery.
 - **BL-260729-implement-reviewplan-first: Implement ReviewPlan-first reviewer workflow** — Finish QA/dogfood and reconcile draft PR #190 before opening another broad review implementation lane. Project: review-plan-workflow.
 - **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** — Highest-priority review-efficiency safety net; repair ledger-only findings without spending another quality-review cycle. Project: review-gate-integrity.
-- **BL-260829-unified-agent-provider-root: Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references** — Implementation and all repository/review gates are complete on the project branch; keep active until merge, then archive the backlog item. Project: agent-provider-root.
+- **BL-260829-make-tool-pack-scope-selection: Make tool-pack scope, provider reachability, and dispatch state truthful** — Revalidate the active project against shipped PRs #227, #240, and #242, then advance its layered scope/provider state model without reopening the shipped provider-root contract. Project: tool-pack-scope-provider-truthfulness.
+- **BL-260827-correct-scope-and-adoption: Correct scope and adoption diagnostics** — Execute the active bounded diagnostics project while preserving the umbrella project's ownership of provider materialization and dispatch truthfulness. Project: scope-adoption-diagnostics.
 
 ## Next (Planned)
 
@@ -24,9 +25,6 @@ and title so this map remains readable without a board lookup.
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **BL-260830-migrate-the-legacy-pjm: Migrate the legacy PJM reference layout** — After PR #240 merges, use the prepared dedicated-branch handoff to reconcile duplicate reference content, migrate the legacy decision monolith losslessly, and clear the four known layout warning classes. Project: legacy-pjm-reference-layout-cleanup.
-- **BL-260829-make-tool-pack-scope-selection: Make tool-pack scope, provider reachability, and dispatch state truthful** — Implement the urgent state/provider contract after the agent-root design boundary is agreed; include provider × scope × content-type reachability, folder-level symlink preference, AGENTS.md guidance, restart notices, and fallback provenance. Project: tool-pack-scope-provider-truthfulness.
-- **BL-260827-correct-scope-and-adoption: Correct scope and adoption diagnostics** — Align PJM migration eligibility, provider-aware user-agent materialization, shared-owner attribution, and failure rendering as a bounded diagnostic slice of the scope/provider project. Project: scope-adoption-diagnostics.
 - **BL-260724-support-provider-directory: Support provider directory symlinks as full collection sync** — Prefer collection-level links until real divergence, then fall back safely to per-entry sync. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260828-add-project-level-oat-guidance: Add project-level OAT guidance prompt during init and workflow installation** — Add the explicit project-adoption prompt and managed AGENTS.md section without coupling it to user-scope pack placement. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260829-order-phase-bookkeeping-before: Order phase bookkeeping before per-phase review dispatch** — Prevent stale implementation/state ledgers from generating repeat Important findings before review dispatch. Project: review-gate-integrity.
@@ -48,9 +46,9 @@ and title so this map remains readable without a board lookup.
 - **BL-260719-add-pinned-recon-agents: Add pinned recon agents for reusable orchestration** — Define provider-neutral, read-only pinned recon roles that dispatch by task-class floor across review and non-review workflows without recursively reusing full reviewers.
 - **BL-260728-additional-visual-workflows: Additional visual workflows** — Evaluate diff review, plan review, fact-check, dashboard, complex table, and richer composition workflows now that golden unattended recap quality is restored.
 
-## Sequencing map (2026-08-29)
+## Sequencing map (2026-08-30)
 
-This is the current execution model after PR #231 merged. It separates project
+This is the current execution model after PRs #240, #242, and #243 merged. It separates project
 boundaries from implementation order: discovery and design can overlap, while
 shared skill, ratchet, and review-artifact files should not be changed by
 parallel implementation lanes.
@@ -59,27 +57,24 @@ parallel implementation lanes.
 
 1. Finish/dogfood **BL-260729-implement-reviewplan-first** (Implement
    ReviewPlan-first reviewer workflow) and reconcile PR #190 with current main.
-2. Merge **BL-260829-unified-agent-provider-root** (Unified AGENT_PROVIDER_ROOT
-   binding for portable skill and agent references) after final HiLL and PR
-   review; its implementation and repository gates are complete.
-3. Let
+2. Let
    **BL-260829-make-tool-pack-scope-selection** (Make tool-pack scope, provider
-   reachability, and dispatch state truthful) consume that contract for
-   canonical fallback provenance. The scope/provider project may continue
-   discovery/design while the root project is in design, but implementation
-   should coordinate through the shared agent/ratchet surfaces.
-4. Within the review/gate lane, implement **BL-260829-order-phase-bookkeeping-before**
+   reachability, and dispatch state truthful) consume PR #242's shipped
+   provider-root contract for canonical fallback provenance. Coordinate its
+   active worktree with the active scope-adoption diagnostics worktree on
+   shared inventory and diagnostics surfaces.
+3. Within the review/gate lane, implement **BL-260829-order-phase-bookkeeping-before**
    (Order phase bookkeeping before per-phase review dispatch) before
    **BL-260711-skip-re-review-for-bookkeeping** (Skip re-review for
    bookkeeping-only review findings). The former prevents avoidable findings;
    the latter remains the highest-priority safety net for unavoidable ledger
    repairs and other lifecycle-only findings.
-5. After the scope/provider state model is stable, run
+4. After the scope/provider state model is stable, run
    **BL-260724-support-provider-directory** (Support provider directory
    symlinks as full collection sync) and **BL-260828-add-project-level-oat-guidance**
    (Add project-level OAT guidance prompt during init and workflow installation)
    as parallel subtracks where file ownership permits.
-6. After ReviewPlan/event identity, sequence
+5. After ReviewPlan/event identity, sequence
    **BL-260820-emit-source-qualified** (Emit source-qualified provenance
    envelopes for review and gate receipts), then
    **BL-260820-track-pr-closeout-evidence** (Track PR-closeout evidence
@@ -97,7 +92,7 @@ flowchart TD
   PE --> CF["closeout freshness / fail-closed\nBL-260820-track-pr-closeout-evidence + BL-260806"]
   PB["prevent stale phase bookkeeping\nBL-260829-order-phase-bookkeeping-before"] --> NR["no re-review for bookkeeping\nBL-260711-skip-re-review-for-bookkeeping"]
   EI --> NR
-  AR["agent-provider-root\nBL-260829-unified-agent-provider-root"] -. "canonical fallback contract" .-> SP["scope/provider truthfulness\nBL-260829-make-tool-pack-scope-selection"]
+  AR["shipped provider-root contract\nPR #242 / archived BL-260829"] -. "canonical fallback contract" .-> SP["scope/provider truthfulness\nBL-260829-make-tool-pack-scope-selection"]
   SP --> SY["collection symlink adoption\nBL-260724-support-provider-directory"]
   SP --> AG["project OAT guidance\nBL-260828-add-project-level-oat-guidance"]
   RP -. "shared review surfaces" .-> HG["headless no-yield + structured output\nquick projects"]
@@ -114,23 +109,23 @@ is **Track PR-closeout evidence freshness against the current head**;
 configured closeout snapshot is absent**; **BL-260829-order-phase-bookkeeping-before**
 is **Order phase bookkeeping before per-phase review dispatch**; **BL-260711**
 is **BL-260711-skip-re-review-for-bookkeeping — Skip re-review for
-bookkeeping-only review findings**; **BL-260829-unified-agent-provider-root** is
-**Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**;
+bookkeeping-only review findings**; the archived
+**BL-260829-unified-agent-provider-root** shipped the **Unified
+AGENT_PROVIDER_ROOT binding for portable skill and agent references** in PR #242;
 **BL-260829-make-tool-pack-scope-selection** is **Make tool-pack scope,
 provider reachability, and dispatch state truthful**; **BL-260724** is **BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**; **BL-260828** is **BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**; and **BL-260720** is **BL-260720-add-oat-project-complete-auto — Add oat-project-complete-auto companion skill for autonomous closeouts**.
 
-## Project grouping and workflow modes (2026-08-29)
+## Project grouping and workflow modes (2026-08-30)
 
 This is a current planning view of the OAT reliability and distribution cluster,
 not an exhaustive project catalog. Revalidate the grouping, ownership, and mode
-recommendations after PR #190 is reconciled, the PR #231 follow-up design is
-reviewed, and the first implementation plans are written. A solid edge below
+recommendations after PR #190 is reconciled and the active scope/provider and
+diagnostics projects complete their current planning work. A solid edge below
 means primary backlog ownership. A dashed edge means a supporting relationship
 or shared surface; it does not transfer ownership.
 
 | Project                                 | Current / recommended mode                                          | Primary backlog items                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Why this mode and boundary                                                                                                                                                                                                                                                    |
 | --------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent-provider-root`                   | **Spec-driven** (promoted)                                          | **BL-260829-unified-agent-provider-root — Unified AGENT_PROVIDER_ROOT binding for portable skill and agent references**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Architectural contract spanning skill-to-agent references, dependency binding, loaded-tier eligibility, and ratchet tests. It must settle the canonical root representation before the provider/materialization project consumes it.                                          |
 | `tool-pack-scope-provider-truthfulness` | **Spec-driven**                                                     | **BL-260829-make-tool-pack-scope-selection — Make tool-pack scope, provider reachability, and dispatch state truthful**; **BL-260724-support-provider-directory — Support provider directory symlinks as full collection sync**; **BL-260826-populate-native-subagent — Populate native subagent runtime identity from provider transcript metadata**; **BL-260828-add-project-level-oat-guidance — Add project-level OAT guidance prompt during init and workflow installation**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Cross-cutting scope/provider/content-type state, collection symlink adoption, AGENTS.md behavior, restart visibility, picker truthfulness, and fallback provenance. The umbrella owns integration; diagnostics remain a separate bounded project.                             |
 | `scope-adoption-diagnostics`            | **Quick start** (existing)                                          | **BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | A bounded diagnostic slice with a complete quick-workflow plan. It feeds the scope/provider state model but should not absorb provider materialization or agent-root implementation.                                                                                          |
 | `review-plan-workflow`                  | **Spec-driven recommended; currently quick-origin and in progress** | **BL-260729-implement-reviewplan-first — Implement ReviewPlan-first reviewer workflow**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | The implementation is already tied to PR #190, so do not reset it midstream. Its cross-cutting review artifact and dispatch contract merits spec-driven treatment if it is resumed as a new project or promoted at a safe reconciliation boundary.                            |
@@ -143,15 +138,12 @@ or shared surface; it does not transfer ownership.
 flowchart TD
   ROOT["OAT reliability and distribution cluster"]
 
-  ROOT --> AR["agent-provider-root\nSPEC-DRIVEN"]
-  AR --> B56["BL-260829-unified-agent-provider-root"]
-
   ROOT --> SP["tool-pack-scope-provider-truthfulness\nSPEC-DRIVEN"]
   SP --> B55["BL-260829-make-tool-pack-scope-selection"]
   SP --> B20["BL-260724-support-provider-directory"]
   SP --> B44["BL-260826-populate-native-subagent"]
   SP --> B54["BL-260828-add-project-level-oat-guidance"]
-  AR -. "canonical reference contract" .-> SP
+  AR["PR #242\nSHIPPED PROVIDER-ROOT CONTRACT"] -. "canonical reference contract" .-> SP
 
   SP -. "bounded diagnostic input" .-> SAD["scope-adoption-diagnostics\nQUICK START"]
   SAD --> B47["BL-260827-correct-scope-and-adoption"]
@@ -176,10 +168,9 @@ flowchart TD
   GE --> B23["BL-260726-validate-structured-output"]
 ```
 
-The intended implementation shape is therefore four substantial tracks plus
-two bounded companions: (1) the agent-root contract, (2) the scope/provider
-truth umbrella, (3) the review-plan workflow, and (4) review/gate integrity;
-the diagnostics project is the remaining bounded companion; the combined
-gate-execution-contract project is complete. The first two substantial tracks are sequential at
-implementation time but can overlap during discovery/design; the bounded
-companions can proceed in parallel when they do not touch shared artifacts.
+The intended implementation shape is therefore three substantial active tracks
+plus one bounded active companion: (1) the scope/provider truth umbrella, (2)
+the review-plan workflow, and (3) review/gate integrity; diagnostics is the
+remaining bounded companion. PR #242 is a shipped prerequisite, and the
+combined gate-execution-contract project is complete. The active tracks can
+proceed in parallel when they do not touch shared artifacts.

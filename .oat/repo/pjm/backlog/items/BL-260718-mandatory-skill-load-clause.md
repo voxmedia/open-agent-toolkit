@@ -11,9 +11,10 @@ labels:
   - dx
 assignee: null
 created: 2026-07-18T19:59:12.099Z
-updated: 2026-07-18T19:59:12.099Z
+updated: 2026-08-30T23:55:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-require-named-lifecycle-skills-to-be-loaded.md
 ---
 
 ## Description

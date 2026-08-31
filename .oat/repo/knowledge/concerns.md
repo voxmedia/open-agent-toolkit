@@ -1,65 +1,101 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-08-19
-oat_source_head_sha: e0408f4676a7b84e4240b4c568b78265f1d5cd0a
-oat_source_main_merge_base_sha: 6f443c0843d75b704168b8ca739b5bcf7f406f07
+oat_generated_at: 2026-08-30
+oat_source_head_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
+oat_source_main_merge_base_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
 # Codebase Concerns
 
-**Analysis Date:** 2026-08-19
+**Analysis Date:** 2026-08-30
 
 ## Tech Debt
 
-**CI does not run the repository lint and format commands:**
+**Concentrated CLI command implementations:**
 
-- Issue: Root scripts define `pnpm lint` and `pnpm format`, but the CI job runs neither. The repository guidance explicitly says those checks are manual for changes under `tools/smoke` or `.agents/skills`.
-- Files: `package.json`, `.github/workflows/ci.yml`, `AGENTS.md`, `apps/oat-docs/docs/contributing/code.md`
-- Impact: A pull request can be green in CI while failing repository-wide lint or formatting checks that contributors were expected to run locally.
-- Fix approach: The current control is documented manual execution; no CI step or other automated status check covers these commands.
+- Issue: Several production command modules combine parsing, policy resolution, filesystem/Git coordination, process execution, and presentation in single files: `packages/cli/src/commands/gate/index.ts` (3,882 lines), `packages/cli/src/commands/project/dispatch-ceiling/index.ts` (3,049 lines), `packages/cli/src/commands/config/index.ts` (3,012 lines), and `packages/cli/src/commands/project/archive/archive-utils.ts` (2,071 lines).
+- Files: `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Impact: A change to one policy or command path can require reasoning across many unrelated helpers and increases review and regression-detection cost. This is a maintainability risk, not a confirmed functional defect.
+- Current mitigation: Same-path unit tests exist for each listed module (for example, `packages/cli/src/commands/gate/index.test.ts` and `packages/cli/src/commands/project/archive/archive-utils.test.ts`).
 
-**Release publication lists are duplicated in workflow shell loops:**
+## Known Bugs
 
-- Issue: The five public package names are repeated in both the dry-run and publish workflows, while the authoritative package contracts are implemented separately in `tools/release/validate-public-packages.ts`.
-- Files: `.github/workflows/release-dry-run.yml`, `.github/workflows/release.yml`, `tools/release/validate-public-packages.ts`, `AGENTS.md`
-- Impact: Adding or removing a public package requires synchronized edits across validation and both workflow loops; a stale loop can build or validate a package without publishing it.
-- Fix approach: The package list is currently maintained in separate workflow and TypeScript locations; no generated or checked linkage is present.
+**Archive path suffix can theoretically collide:**
+
+- Symptoms: A second archive path is formed by adding a timestamp-derived suffix, but the suffixed candidate is not checked for existence before it is returned.
+- Files: `packages/cli/src/commands/project/archive/archive-utils.ts`, `.oat/repo/reference/project-summaries/20260401-archive-sync-closeout-config.md`
+- Trigger: Two archive completions target an existing base archive directory and receive the same timestamp-derived suffix. `resolveUniqueArchivePath` only checks the base path, then returns `${archivePath}-${suffix}` at `packages/cli/src/commands/project/archive/archive-utils.ts`.
+- Workaround: The current project summary records this as a deferred, theoretical collision finding; no further current workaround is documented in repository source.
+
+## Security Considerations
+
+**Dependency audit backlog:**
+
+- Risk: `pnpm audit --json` run against the current lockfile reported 1 critical, 39 high, 50 moderate, and 9 low findings. The critical finding is Vitest arbitrary file read/execution when its UI server is listening; high findings include Next.js, Vite, Rollup, Sharp, PostCSS, and transitive parser/rendering packages.
+- Files: `packages/cli/package.json`, `apps/oat-docs/package.json`, `packages/docs-theme/package.json`, `pnpm-lock.yaml`
+- Current mitigation: Vitest is a development dependency in `packages/cli/package.json`; the affected Next.js and Fumadocs/Vite dependency chain belongs to the docs app in `apps/oat-docs/package.json`. The audited dependencies remain present in the current lockfile.
+- Current state: No dependency-audit or Dependabot configuration was detected in `.github/workflows/`, `package.json`, `pnpm-workspace.yaml`, or `tools/`. The risk of an individual advisory depends on whether the affected server or build tool is exposed and on its input trust boundary.
+
+**Mermaid SVG injection boundary depends on trusted content:**
+
+- Risk: The docs theme inserts Mermaid-generated SVG with `dangerouslySetInnerHTML`; the component explicitly assumes trusted chart definitions. If chart text becomes user-controlled, the trust boundary changes and the renderer's advisory history becomes directly relevant.
+- Files: `packages/docs-theme/src/mermaid.tsx`, `packages/docs-theme/package.json`, `apps/oat-docs/app/[[...slug]]/page.tsx`
+- Current mitigation: Charts originate from repository Markdown through `packages/docs-transforms/src/remark-mermaid.ts`, and the comment in `packages/docs-theme/src/mermaid.tsx` documents the trusted-content assumption.
+- Current state: No runtime sanitizer is applied to the generated SVG in `packages/docs-theme/src/mermaid.tsx`; the audit also reports multiple Mermaid and DOMPurify advisories through `packages/docs-theme/package.json`.
 
 ## Performance Bottlenecks
 
-**Branch checkout hook reinstalls dependencies unconditionally:**
+**Client-side Mermaid rendering has no error or size boundary:**
 
-- Problem: The `post-checkout` script comment says installation is conditional on package changes, but the script always runs `pnpm install --frozen-lockfile`.
-- Files: `tools/git-hooks/post-checkout`, `tools/git-hooks/README.md`
-- Cause: There is no changed-path or lockfile comparison in the hook before invoking pnpm.
-- Improvement path: Not detected; every checkout currently pays the dependency-install command cost, subject to pnpm cache state.
+- Problem: Each chart is dynamically imported and rendered in a React effect. Rendering is not guarded with `try/catch`, request cancellation cannot stop `mermaid.render`, and no chart-size or rendering-time limit is present.
+- Files: `packages/docs-theme/src/mermaid.tsx`, `packages/docs-transforms/src/remark-mermaid.ts`
+- Cause: The entire Mermaid source string is passed directly from the Markdown transform to `mermaid.render`, then the rendered SVG is retained in component state.
+- Current state: This is a fragile performance concern for unusually large or pathological diagrams, rather than evidence of a measured production slowdown. Current audit output includes Mermaid infinite-loop/DoS advisories affecting the dependency chain declared in `packages/docs-theme/package.json`.
 
 ## Fragile Areas
 
-**Repository and release jobs use different Node major versions:**
+**Docs Mermaid component:**
 
-- Files: `.nvmrc`, `package.json`, `.github/workflows/ci.yml`, `.github/workflows/release-dry-run.yml`, `.github/workflows/release.yml`, `apps/oat-docs/docs/contributing/code.md`
-- Why fragile: General CI uses the `.nvmrc` Node 22.17.0 toolchain, while release dry-run and publish use Node 24. The package engine accepts both, so release-only runtime differences are not exercised by the normal CI job.
-- Safe modification: Release documentation describes this as an intentional npm/trusted-publishing split, but no cross-major runtime job is present in `.github/workflows/ci.yml`.
-- Test coverage: CI executes the full test/build sequence on Node 22 only; Node 24 is exercised by release workflows.
+- Files: `packages/docs-theme/src/mermaid.tsx`, `packages/docs-transforms/src/remark-mermaid.ts`, `apps/oat-docs/app/[[...slug]]/page.tsx`
+- Why fragile: The component uses module-level initialization state, reinitializes on theme changes, starts an async render through `void render()`, and inserts generated SVG. A render rejection is not handled locally, and async completion races are addressed only by suppressing `setSvg` after unmount.
+- Safe modification: Preserve the client-only rendering path and the trusted-chart assumption, and verify both theme-change and failed-render behavior because these mechanisms reside in `packages/docs-theme/src/mermaid.tsx`.
+- Test coverage: No `*.test.*` or `*.spec.*` files were detected under `packages/docs-theme/`; `packages/docs-transforms/src/remark-mermaid.ts` also has no same-module test, while sibling transforms have `packages/docs-transforms/src/remark-links.test.ts` and `packages/docs-transforms/src/remark-tabs.test.ts`.
 
-**Git hook failures are deliberately non-blocking or hidden:**
+## Scaling Limits
 
-- Files: `package.json`, `tools/git-hooks/pre-commit`, `tools/git-hooks/manage-hooks.js`, `apps/oat-docs/docs/contributing/hooks-and-safety.md`
-- Why fragile: The package `prepare` script suppresses hook setup errors with `|| true`, and the pre-commit OAT status check also suppresses its exit status. The documentation confirms that drift warnings never fail a commit.
-- Safe modification: This is the documented contributor-hook policy; local hook installation or drift checks cannot be treated as a reliable enforcement boundary.
-- Test coverage: No CI job verifies that each contributor has successfully installed or enabled the managed hooks.
+**Measured capacity limits:**
+
+- Current capacity: Not detected. No throughput, concurrency, payload-size, or resource-limit benchmark/configuration was found in the inspected docs and CLI runtime paths: `apps/oat-docs/package.json`, `packages/docs-theme/src/mermaid.tsx`, and `packages/cli/src/commands/gate/index.ts`.
+- Limit: The absent measurements prevent quantifying the maximum safe diagram complexity or command/gate concurrency from repository evidence.
+- Current state: CI covers check, type-check, tests, builds, release validation, and docs build in `.github/workflows/ci.yml`; it does not establish runtime capacity bounds.
+
+## Dependencies at Risk
+
+**Docs-site runtime and build dependency chain:**
+
+- Risk: The current audit identifies multiple high-severity advisories under the dependency trees rooted at `next`, `fumadocs-mdx`/Vite, and Mermaid/DOMPurify.
+- Files: `apps/oat-docs/package.json`, `packages/docs-theme/package.json`, `pnpm-lock.yaml`
+- Impact: The docs site is built and deployed from `apps/oat-docs/` by `.github/workflows/deploy-docs.yml`; vulnerabilities in its runtime, dev server, renderer, or build chain can affect local development and deployed-docs operations according to the advisory-specific exposure conditions.
+- Current state: Dependency ranges are declared with caret ranges in `apps/oat-docs/package.json` and `packages/docs-theme/package.json`; the lockfile selects the installed transitive set audited above.
+
+## Missing Critical Features
+
+**Automated dependency-vulnerability gate:**
+
+- Problem: A reproducible `pnpm audit --json` returns security findings, while repository CI only invokes quality, type, test, build, release-validation, and docs-build commands.
+- Files: `package.json`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `.github/workflows/release-dry-run.yml`
+- Blocks: Current CI does not fail or report on the dependency-audit result; security finding disposition is therefore outside the checked workflow.
 
 ## Test Coverage Gaps
 
-**Coverage collection is opt-in and has no detected threshold gate:**
+**Mermaid transform and browser rendering failure paths:**
 
-- What's not tested: The root `pnpm test` command runs Vitest without coverage, and only the CLI package exposes a separate `test:coverage` script.
-- Files: `package.json`, `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-transforms/package.json`, `.github/workflows/ci.yml`
-- Risk: The required CI test gate verifies passing assertions but does not measure or enforce coverage for unexercised command, package, or integration paths.
-- Priority: Medium
+- What's not tested: No direct unit test is present for `remarkMermaid`, the `Mermaid` component's rejected dynamic import/render, theme reinitialization, or generated-SVG insertion behavior.
+- Files: `packages/docs-transforms/src/remark-mermaid.ts`, `packages/docs-theme/src/mermaid.tsx`, `packages/docs-transforms/src/remark-links.test.ts`, `packages/docs-transforms/src/remark-tabs.test.ts`
+- Risk: Regressions in Markdown-to-chart conversion, client render failure handling, or theme changes can pass the existing sibling-transform tests and the static docs build without exercising browser-side behavior.
+- Priority: Medium. This is verified as a direct-test gap; end-to-end coverage elsewhere was not detected during this audit.
 
 ---
 
-_Concerns audit: 2026-08-19_
+_Concerns audit: 2026-08-30_

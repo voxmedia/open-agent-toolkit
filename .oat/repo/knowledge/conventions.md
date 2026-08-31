@@ -1,116 +1,120 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-08-19
-oat_source_head_sha: e0408f4676a7b84e4240b4c568b78265f1d5cd0a
-oat_source_main_merge_base_sha: 6f443c0843d75b704168b8ca739b5bcf7f406f07
+oat_generated_at: 2026-08-30
+oat_source_head_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
+oat_source_main_merge_base_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
 oat_warning: 'GENERATED FILE - Do not edit manually. Regenerate with oat-repo-knowledge-index'
 ---
 
-<!--
-Vendored from: https://github.com/glittercowboy/get-shit-done
-License: MIT
-Original: agents/gsd-codebase-mapper.md (embedded template)
-Modified: 2026-01-27 - Adapted for OAT (added frontmatter)
--->
-
 # Coding Conventions
 
-**Analysis Date:** 2026-08-19
+**Analysis Date:** 2026-08-30
 
 ## Naming Patterns
 
 **Files:**
 
-- TypeScript files use lowercase kebab-case names such as `create-program.ts`, `tool-bundle-update-guard.ts`, and matching `.test.ts` files in `packages/cli/src/app/`.
-- Package entry/barrel modules are named `index.ts`, for example `packages/cli/src/manifest/index.ts` and `packages/docs-transforms/src/index.ts`.
+- TypeScript source files use lowercase kebab-case names such as `packages/cli/src/commands/backlog/regenerate-index.ts` and `packages/cli/src/commands/backlog/shared/generate-id.ts`.
+- Tests are co-located and use role suffixes: `*.test.ts`, `*.integration.test.ts`, and `*.readdir-order.test.ts`; grouped test helpers may live below `__tests__/`, as in `packages/cli/src/projects/split/__tests__/validation.test.ts`.
+- Command registration boundaries commonly use `index.ts`, while dedicated implementation files retain descriptive names; this is prescribed and exemplified by `apps/oat-docs/docs/contributing/design-principles.md` and `packages/cli/src/commands/backlog/index.ts`.
 
 **Functions:**
 
-- Functions and variables use camelCase, including `createBacklogItem`, `normalizeInputs`, and `renderBacklogItem` in `packages/cli/src/commands/backlog/new.ts:95-227`.
-- Boolean predicates commonly use `is`, `has`, or `detect` prefixes, such as `isProjectStatePhase` in `packages/cli/src/commands/shared/frontmatter.ts:52-66` and `detectBoundaryTier` in `packages/control-plane/src/recommender/boundary.ts`.
+- Functions use camelCase and usually verb-led names: `fileExists`, `copyDirectory`, and `atomicWriteJson` in `packages/cli/src/fs/io.ts`; command factories use `createXCommand`, for example `createBacklogCommand` in `packages/cli/src/commands/backlog/index.ts`.
+- Async functions declare `Promise<...>` return types in production code, for example `resolveProjectRoot(cwd: string): Promise<string>` in `packages/cli/src/fs/paths.ts`.
 
 **Variables:**
 
-- Constants use `UPPER_SNAKE_CASE` for fixed values (`PRIORITIES`, `SCOPES`, and `SCOPE_ESTIMATES` in `packages/cli/src/commands/backlog/new.ts:14-18`).
-- Local variables and options are camelCase; options are represented by named interfaces such as `CreateBacklogItemOptions` in `packages/cli/src/commands/backlog/new.ts:20-31`.
+- Local variables use camelCase; constants use camelCase for values (`DEFAULT_DEPENDENCIES` is an exception for a module-level constant object) and UPPER_SNAKE_CASE for environment/configuration constants such as `OAT_ASSETS_DIR` in `packages/cli/vitest.config.ts`.
+- Boolean predicates read as questions, such as `isFile`, `isAbsolute`, and `isConsumer` in `packages/cli/src/fs/io.ts` and `packages/cli/src/e2e/workflow.test.ts`.
 
 **Types:**
 
-- Interfaces, classes, and type aliases use PascalCase (`CreateBacklogItemResult`, `CliLogger`, and `ProjectState` in `packages/cli/src/commands/backlog/new.ts:33-44`, `packages/cli/src/ui/logger.ts:3-10`, and `packages/control-plane/src/types.ts:84-113`).
-- Literal unions are frequently derived from `as const` arrays, as shown by `ProjectStateKind` and `ProjectStatePhase` in `packages/cli/src/commands/shared/frontmatter.ts:6-49`.
+- Interfaces and classes are PascalCase (`CommandContext`, `CliLogger`, `CliError`), while unions use expressive PascalCase aliases such as `LinkStrategy`; see `packages/cli/src/app/command-context.ts`, `packages/cli/src/ui/logger.ts`, and `packages/cli/src/fs/io.ts`.
+- Narrow string unions and derived types model finite states, for example `ScopeSelectionMode` in `packages/cli/src/app/command-context.ts` and `BacklogItemStatus` in `packages/cli/src/commands/backlog/shared/item-status.ts`.
 
 ## Code Style
 
 **Formatting:**
 
-- `oxfmt` is the formatter, with 80-column output, two spaces, no tabs, semicolons, single quotes, trailing commas, and sorted imports in `.oxfmtrc.jsonc:1-27`.
-- Package `check` and `format` scripts run `oxfmt --check`, for example `packages/cli/package.json:32-39` and `packages/docs-transforms/package.json:28-35`.
+- `oxfmt` is the formatter. `.oxfmtrc.jsonc` sets 80-column output, two spaces, semicolons, single quotes, trailing commas, and parenthesized arrow parameters.
+- Imports are automatically sorted by the formatter (`"sortImports": {}` in `.oxfmtrc.jsonc`); staged TypeScript, JSON, and Markdown files are formatted through `.lintstagedrc.mjs`.
 
 **Linting:**
 
-- `oxlint` enables TypeScript rules and treats correctness/suspicious categories as errors in `.oxlintrc.json:1-38`.
-- The repository explicitly checks `prefer-const`, `prefer-template`, smart `eqeqeq`, empty blocks, shadowing, floating promises, misused promises, and unnecessary type constraints in `.oxlintrc.json:14-31`.
-- Test files receive overrides that permit explicit `any` and unsafe optional chaining in `.oxlintrc.json:32-44`; package scripts exclude tests from the type-aware production lint pass, as in `packages/cli/package.json:32-39`.
+- `oxlint` runs correctness and suspicious categories as errors and enables TypeScript rules in `.oxlintrc.json`; `prefer-const`, `prefer-template`, strict equality, and no-floating/misused-promises are enforced there.
+- `any` is a warning in production but explicitly permitted in `*.test.ts` and `*.spec.ts` overrides in `.oxlintrc.json`.
+- Package scripts apply an additional type-aware `oxlint` pass to production sources while excluding tests, for example `packages/cli/package.json`.
 
 ## Import Organization
 
 **Order:**
 
-1. Node built-ins are first, followed by a blank line (`node:fs/promises`, `node:path`) in `packages/cli/src/commands/backlog/new.ts:1-3`.
-2. External packages and configured workspace aliases follow (`@commands/...`, `yaml`) in `packages/cli/src/commands/backlog/new.ts:4-5`.
-3. Local relative imports are last, as in `packages/cli/src/commands/backlog/new.ts:7-12`.
-4. Type-only dependencies use explicit `import type`, as in `packages/control-plane/src/project.ts:13-18` and `packages/docs-transforms/src/remark-links.ts:3-4`.
+1. Node built-in imports, for example `node:fs/promises` in `packages/cli/src/fs/io.ts`.
+2. External package imports, for example `vitest` in `packages/cli/src/fs/io.test.ts`.
+3. Workspace aliases, for example `@config/oat-config` in `packages/cli/src/config/resolve.test.ts`.
+4. Same-directory relative imports, for example `./resolve` in `packages/cli/src/config/resolve.test.ts`.
 
 **Path Aliases:**
 
-- The CLI defines domain aliases such as `@commands/*`, `@providers/*`, `@engine/*`, `@manifest/*`, and `@ui/*` in `packages/cli/tsconfig.json:7-20`; Vitest mirrors those aliases in `packages/cli/vitest.config.ts:7-23`.
-- Relative extension style differs by package: CLI and control-plane imports commonly omit `.js` (`packages/cli/src/commands/backlog/new.ts:7-12`, `packages/control-plane/src/project.ts:4-18`), while docs packages use `.js` (`packages/docs-transforms/src/index.ts:4-10`).
+- CLI aliases include `@app`, `@commands`, `@config`, `@engine`, `@errors`, `@fs`, `@providers`, `@shared`, `@ui`, and `@validation`, defined in `packages/cli/tsconfig.json` and mirrored for test resolution in `packages/cli/vitest.config.ts`.
+- Same-directory imports use `./...`; `apps/oat-docs/docs/contributing/design-principles.md` specifies aliases for paths outside the current directory and prohibits parent-relative and catch-all aliases.
 
 ## Error Handling
 
 **Patterns:**
 
-- Input validation throws descriptive `Error` instances before filesystem mutation, for example `normalizeInputs` in `packages/cli/src/commands/backlog/new.ts:111-189`.
-- Filesystem errors are inspected by `code`; expected `ENOENT` cases are normalized while unexpected errors are rethrown in `packages/cli/src/commands/backlog/new.ts:51-65` and `packages/cli/src/commands/backlog/new.ts:76-93`.
-- Command-facing failures use the typed `CliError` with an explicit exit code in `packages/cli/src/errors/cli-error.ts:1-9`.
-- Multi-step mutations use rollback with `Promise.allSettled` and preserve both original and rollback failures using `AggregateError` in `packages/cli/src/commands/backlog/new.ts:253-274`.
+- User/actionable and runtime failures use `CliError`, whose exit code is constrained to `1 | 2` in `packages/cli/src/errors/cli-error.ts`.
+- Command handlers convert `unknown` errors to user-facing messages, select JSON or human output, and set `process.exitCode`; see `reportError` in `packages/cli/src/commands/backlog/index.ts`.
+- Filesystem predicate helpers deliberately catch expected access/missing-file failures and return `false`, as implemented by `fileExists` and `dirExists` in `packages/cli/src/fs/io.ts`.
+- Fallback behavior remains explicit: `createSymlink` calls an optional error callback, removes the unusable link, copies the target, and returns `'copy'` in `packages/cli/src/fs/io.ts`.
 
 ## Logging
 
-**Framework:** `chalk` plus direct `process.stdout`/`process.stderr` writes in `packages/cli/src/ui/logger.ts:1-30`.
+**Framework:** Centralized `CliLogger` in `packages/cli/src/ui/logger.ts`.
 
 **Patterns:**
 
-- Production code depends on the `CliLogger` interface (`debug`, `info`, `warn`, `error`, `success`, and `json`) defined in `packages/cli/src/ui/logger.ts:3-10`.
-- Human output is colorized and routed by severity; JSON mode suppresses human messages and emits structured error records in `packages/cli/src/ui/logger.ts:32-76`.
-- Commands commonly receive logger/context dependencies and tests capture messages through `createLoggerCapture` in `packages/cli/src/commands/__tests__/helpers.ts:3-49`.
+- Command contexts construct the logger once through `buildCommandContext` in `packages/cli/src/app/command-context.ts`.
+- Human output uses `info`, `warn`, `error`, `success`, and verbose-only `debug`; JSON mode suppresses human messages and emits JSON through `json` or an error payload in `packages/cli/src/ui/logger.ts`.
+- CLI design guidance says command handlers use this logger instead of direct `console` calls in `apps/oat-docs/docs/contributing/design-principles.md`.
 
 ## Comments
 
 **When to Comment:**
 
-- Comments explain non-obvious invariants, compatibility behavior, or safety boundaries, such as argv normalization in `packages/cli/src/index.ts:24-37` and rollback semantics in `packages/cli/src/commands/backlog/new.ts:255-273`.
-- Tests also document why an assertion protects a contract, as in the timezone explanation in `packages/cli/src/commands/shared/frontmatter.test.ts:43-49`.
+- Comments explain non-obvious behavior, constraints, or safety rationale. `packages/cli/src/fs/io.ts` documents why `chmod` follows `writeFile` and why symlink targets are made relative.
+- Test configuration documents environment isolation: `packages/cli/vitest.config.ts` explains neutralizing ambient `OAT_ASSETS_DIR`.
 
 **JSDoc/TSDoc:**
 
-- Public or complex APIs use TSDoc for semantics and constraints, for example `parseGeneratedTime` in `packages/cli/src/commands/shared/frontmatter.ts:116-130` and capability types in `packages/cli/src/review-remote/capability-probe.ts:1-83`.
-- JSDoc is not present on every function; short, local helpers such as `normalizeChoice` in `packages/cli/src/commands/backlog/new.ts:95-109` are self-describing.
+- TSDoc is used for exported contracts when semantics need explanation, such as the multi-mode `ScopeSelectionMode` documentation in `packages/cli/src/app/command-context.ts`; routine exported functions rely on clear types and names, as in `packages/cli/src/fs/io.ts`.
 
 ## Function Design
 
-**Size:** No explicit maximum-size rule is configured. Larger operations are decomposed into focused helpers (`pathExists`, `resolveBacklogTemplate`, `normalizeInputs`, and `renderBacklogItem`) in `packages/cli/src/commands/backlog/new.ts:51-225`.
+**Size:**
 
-**Parameters:** Related inputs are grouped in options interfaces, and seams for filesystem/command behavior are represented by dependency interfaces such as `CreateBacklogItemDependencies` in `packages/cli/src/commands/backlog/new.ts:41-49`.
+- Commands are intended to be thin orchestration layers; `apps/oat-docs/docs/contributing/design-principles.md` directs business logic to domain modules. `packages/cli/src/commands/backlog/index.ts` delegates to dependency functions and command-specific modules.
 
-**Return Values:** Functions use explicit Promise and object result types, nullable values for absent data (`parseFrontmatterField` in `packages/cli/src/commands/shared/frontmatter.ts:132-155`), and discriminated result objects in validation modules such as `packages/cli/src/validation/project-state.ts:67-87`.
+**Parameters:**
+
+- Public operations use typed options/dependency objects for multi-input behavior, for example `ResolveEffectiveConfigDependencies` in `packages/cli/src/config/resolve.ts` and the optional `filter` callback in `packages/cli/src/fs/io.ts`.
+- Defaults are expressed in parameters or module-level dependency objects, such as `sourceRoot = src` and `DEFAULT_DEPENDENCIES` in `packages/cli/src/fs/io.ts` and `packages/cli/src/config/resolve.ts`.
+
+**Return Values:**
+
+- Operations return explicit values or typed result objects rather than side-channel data: `createSymlink` returns `Promise<LinkStrategy>` and config resolution returns `Promise<ResolvedConfig>` in `packages/cli/src/fs/io.ts` and `packages/cli/src/config/resolve.ts`.
 
 ## Module Design
 
-**Exports:** Modules generally use named exports; public package entry points re-export selected APIs from barrel files such as `packages/cli/src/manifest/index.ts:1-11`, `packages/control-plane/src/index.ts:1-3`, and `packages/docs-config/src/index.ts:1-3`.
+**Exports:**
 
-**Barrel Files:** Domain directories use `index.ts` to expose stable public surfaces (`packages/cli/src/providers/codex/index.ts:1-5` and `packages/cli/src/validation/index.ts:1-8`). Default exports are used for app/config integration where required, including `apps/oat-docs/next.config.js` and `packages/cli/vitest.config.ts:25-30`.
+- Modules predominantly use named exports for functions, types, interfaces, and classes, as shown by `packages/cli/src/fs/io.ts` and `packages/cli/src/providers/identity/dispatch-report.ts`.
+
+**Barrel Files:**
+
+- Barrels are used at module boundaries, for example `packages/cli/src/fs/index.ts` re-exports filesystem APIs and `packages/cli/src/commands/backlog/index.ts` exposes the command factory. Dedicated domain files retain their named exports.
 
 ---
 
-_Convention analysis: 2026-08-19_
+_Convention analysis: 2026-08-30_

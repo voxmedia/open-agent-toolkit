@@ -158,7 +158,7 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
   `06f49fb0` (0.2.36); wave-close PRs #216, #218, #221, #223. Coverage
   invariant: 5 plans in the indexes, 5 rows, all `done`.
 - **Program recap: generated, NOT published.** Manifest
-  `.oat/repo/explainers/2026-08-19-defect-wave-program-recap/manifest.json`,
+  `.oat/repo/reference/explainers/2026-08-19-defect-wave-program-recap/manifest.json`,
   run `run-2200b576-00c1-4803-8a1a-e3563c96d4e2`, recipe `program-recap@1`,
   outcome `built-durable` (artifact commit `776d4d1a`, attestation
   `10d0756f`; supplied fact base

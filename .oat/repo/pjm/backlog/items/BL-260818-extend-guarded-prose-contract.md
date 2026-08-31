@@ -11,9 +11,10 @@ labels:
   - explainer-kit
 assignee: null
 created: 2026-08-18T00:00:46.965Z
-updated: 2026-08-18T00:00:46.965Z
+updated: 2026-08-31T00:11:26Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-guard-docs-app-mirrors-of-skill-prose.md
 ---
 
 ## Description
