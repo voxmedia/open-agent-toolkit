@@ -393,6 +393,29 @@ archive destination, `final|code|final-review-2026-08-31T000938Z.md` event,
 handoff correlation, and pre-receive project-ref head are persisted before
 review receipt begins.
 
+### Configured Exit Gate Review Received
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T000938Z.md`
+**Gate run:** `f773b10d-084e-4ed4-990b-2a1fb3dcaedd`
+**Gate target:** `claude-fable-skip-permissions`
+**Threshold result:** passed (`0` Critical, `0` Important, `0` Medium, `1`
+Minor)
+
+**Judgment-sweep disposition:**
+
+- Minor — tokenizer single-quote backslash fidelity: defer outside this
+  project's bounded direct-prefix validation contract. The configured command
+  is persisted and executed byte-for-byte, the fixed `oat --json gate review`
+  prefix classification is unaffected, the config owner is trusted, and the
+  lightweight design explicitly excludes a general typed shell parser. Revisit
+  if configured-command validation expands beyond the direct lifecycle prefix,
+  becomes a security boundary, or general wrapper/pipeline integrity enters an
+  approved project scope.
+
+No fix task or substantive implementation mutation is created by this passing
+gate sweep.
+
 ---
 
 ## Implementation Log
