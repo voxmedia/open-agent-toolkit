@@ -31,6 +31,7 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
   type InventoryPackInput,
@@ -48,6 +49,7 @@ import {
   type DispatchMatrixCellRef,
   type DispatchMatrixSource,
 } from '@config/dispatch-matrix';
+import type { SyncConfig } from '@config/index';
 import {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
@@ -57,6 +59,7 @@ import {
   readUserConfig,
   type UserConfig,
 } from '@config/oat-config';
+import { resolveUserSyncConfig } from '@config/user-sync-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
@@ -80,6 +83,10 @@ import {
   createDispatchValidationPassContext,
   validateDispatchMatrixRefs,
 } from '@providers/identity/dispatch-validation';
+import {
+  getConfigAwareAdapters,
+  type ProviderAdapter,
+} from '@providers/shared';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
@@ -103,6 +110,13 @@ interface DoctorDependencies {
   >;
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
+  resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
+  getAdapters: () => ProviderAdapter[];
+  getConfigAwareAdapters: (
+    adapters: ProviderAdapter[],
+    scopeRoot: string,
+    config: SyncConfig,
+  ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -297,6 +311,15 @@ function createDependencies(): DoctorDependencies {
     checkProviders: checkProvidersDefault,
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
+    resolveUserSyncConfig,
+    getAdapters: () => [
+      claudeAdapter,
+      cursorAdapter,
+      codexAdapter,
+      copilotAdapter,
+      geminiAdapter,
+    ],
+    getConfigAwareAdapters,
     readOatConfig,
     readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
@@ -800,22 +823,6 @@ function collectPackStateFindings(
     for (const scoped of inventory.scopes) {
       const { scope } = scoped;
       if (!hasScopedPackPlacementEvidence(scoped)) {
-        const sharedPresent = scoped.assets.filter(
-          (asset) =>
-            asset.definition.sharedOwner !== undefined &&
-            asset.status !== 'missing',
-        );
-        if (sharedPresent.length > 0) {
-          findings.push({
-            pack: inventory.pack,
-            scope,
-            code: 'shared-owner-observation',
-            detail:
-              'shared managed assets are present without pack ownership evidence',
-            paths: sharedPresent.map(({ path }) => path),
-            recovery: null,
-          });
-        }
         continue;
       }
 
@@ -899,7 +906,18 @@ function collectPackStateFindings(
             pack: inventory.pack,
             scope,
             code: 'user-agent-unmaterialized',
-            detail: `${diagnostic.paths.length} user-scope agent(s) reach no provider; user-scope agent materialization is limited to the bundled managed role files, so install this pack at project scope to use them`,
+            detail: `${diagnostic.paths.length} user-scope agent(s) lack native provider-role materialization; canonical instruction reads are unaffected, and active Codex or Cursor materialization supplies only the bundled managed roles, so install this pack at project scope to materialize the affected agents`,
+            paths: diagnostic.paths,
+            recovery: null,
+          });
+          continue;
+        }
+        if (diagnostic.code === 'shared-owner-observation') {
+          findings.push({
+            pack: inventory.pack,
+            scope,
+            code: 'shared-owner-observation',
+            detail: diagnostic.message,
             paths: diagnostic.paths,
             recovery: null,
           });
@@ -964,10 +982,10 @@ function createScopedPackStateCheck(
     name: `${scope}:pack_state`,
     description: 'Managed pack completeness and drift',
     status: recoveries.length > 0 ? 'warn' : 'pass',
-    message: scoped
-      .map((finding) => formatPackFinding(finding, roots))
-      .join('; '),
-    fix: recoveries.length > 0 ? recoveries.join('; ') : undefined,
+    message: `Findings:\n${scoped
+      .map((finding) => `  - ${formatPackFinding(finding, roots)}`)
+      .join('\n')}`,
+    fix: recoveries.length > 0 ? recoveries.join('\n  Fix: ') : undefined,
   };
 }
 
@@ -991,10 +1009,10 @@ function createPackDuplicationCheck(
     name: 'packs:scope_duplication',
     description: 'Cross-scope pack duplication',
     status: 'warn',
-    message: duplicates
-      .map((finding) => formatPackFinding(finding, roots))
-      .join('; '),
-    fix: uniqueRecoveries(duplicates).join('; '),
+    message: `Findings:\n${duplicates
+      .map((finding) => `  - ${formatPackFinding(finding, roots)}`)
+      .join('\n')}`,
+    fix: uniqueRecoveries(duplicates).join('\n  Fix: '),
   };
 }
 
@@ -1016,9 +1034,30 @@ async function createPackStateChecks(
   let findings: PackStateFinding[];
   try {
     const assetsRoot = await dependencies.resolveAssetsRoot();
-    const inventories = await Promise.all(
-      PACK_NAMES.map((pack) =>
-        dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
+    const userRoot = scopeRoots.get('user');
+    const userManagedRoleMaterialization = userRoot
+      ? await dependencies
+          .getConfigAwareAdapters(
+            dependencies.getAdapters(),
+            userRoot,
+            await dependencies.resolveUserSyncConfig(join(userRoot, '.oat')),
+          )
+          .then(({ activeAdapters }) =>
+            activeAdapters.some(
+              ({ name }) => name === 'codex' || name === 'cursor',
+            ),
+          )
+      : false;
+    const inventories = attributeSharedOwnerDiagnostics(
+      await Promise.all(
+        PACK_NAMES.map((pack) =>
+          dependencies.inventoryPack({
+            pack,
+            assetsRoot,
+            ...roots,
+            ...(userRoot ? { userManagedRoleMaterialization } : {}),
+          }),
+        ),
       ),
     );
     findings = collectPackStateFindings(inventories);

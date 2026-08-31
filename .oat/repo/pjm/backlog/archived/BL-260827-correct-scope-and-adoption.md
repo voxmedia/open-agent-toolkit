@@ -1,7 +1,7 @@
 ---
 id: BL-260827-correct-scope-and-adoption
 title: Correct scope and adoption diagnostics
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - user-scope
 assignee: null
 created: 2026-08-27T21:29:49.762Z
-updated: 2026-08-27T21:29:49.762Z
+updated: '2026-08-30T23:04:38Z'
 associated_issues: []
 external_plans: []
 ---

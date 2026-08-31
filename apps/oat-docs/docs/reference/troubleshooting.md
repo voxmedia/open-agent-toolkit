@@ -167,11 +167,29 @@ Both commands report managed pack state with a scoped recovery command:
   place and your edits are gone. The finding is informational and carries no
   recovery command for exactly that reason.
 - `user-agent-unmaterialized` — the pack installed canonical agents into
-  `~/.agents/agents/`, but user scope materializes no provider view for them
-  beyond the bundled managed role files. `oat tools update` cannot fix this.
-  Install the pack at project scope (`oat tools install <pack> --scope project`)
-  when you need its agents. See
+  `~/.agents/agents/`, but active native Codex/Cursor adapters materialize only
+  the bundled managed role files at user scope. Other pack-owned agents remain
+  unmaterialized; when neither adapter is active, the managed roles do too.
+  Provider access to canonical instructions through loaded, user, and project
+  reads is a separate contract and does not clear this native-role finding.
+  `oat tools update` cannot fix it. Install the pack at project scope
+  (`oat tools install <pack> --scope project`) when you need its native roles. See
   [Tool packs](../cli-utilities/tool-packs.md) for the full limitation.
+
+## `status` or `doctor` reports `packs:inventory`
+
+OAT could not read the canonical managed-pack inventory. `oat status` keeps the
+rest of the report available and returns `packs.availability.status` as
+`unavailable` in JSON, with an empty `packs.states` array and a structured
+diagnostic. `oat doctor` emits the same condition as a warning instead of
+stopping its other checks. Reported project and home paths remain redacted.
+
+Rebuild the CLI workspace, then rerun the command named in the diagnostic:
+
+```bash
+pnpm build
+oat status # or: oat doctor
+```
 
 ## `status` or `doctor` reports `legacy-false-conflict`
 

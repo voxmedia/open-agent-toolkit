@@ -88,11 +88,13 @@ async function runCli(
     // it when the top-level command is a scope consumer so that non-consumer
     // commands do not receive an unrecognised flag. Insert after the subcommand
     // tokens (all tokens before the first flag) so it is parsed on the right
-    // command.
+    // command. An explicit caller-supplied scope in either supported syntax
+    // always wins.
     const topLevelCommand = args[0];
     const isConsumer =
       topLevelCommand !== undefined &&
-      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand) &&
+      !args.some((arg) => arg === '--scope' || arg.startsWith('--scope='));
 
     let finalArgs: string[];
     if (isConsumer) {
@@ -220,6 +222,34 @@ describe('e2e workflow', () => {
 
     if (stdinDescriptor) {
       Object.defineProperty(process.stdin, 'isTTY', stdinDescriptor);
+    }
+  });
+
+  it.each([
+    ['separate', ['--scope', 'user']],
+    ['joined', ['--scope=user']],
+  ])('respects an explicit %s user scope', async (_syntax, scopeArgs) => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-e2e-user-scope-'));
+    tempDirs.push(root, userRoot);
+    await mkdir(join(userRoot, '.claude'), { recursive: true });
+    await seedCanonical(userRoot);
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(root, ['sync', ...scopeArgs]);
+
+      expect(result.exitCode).toBe(0);
+      await expect(
+        lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(root, '.claude', 'skills', 'skill-one')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
     }
   });
 

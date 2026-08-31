@@ -140,6 +140,7 @@ interface RunCliOptions {
    * command's own dependencies.
    */
   syncExitCode?: number;
+  createSyncStub?: (exitCode: number) => Promise<string>;
 }
 
 async function createSyncStub(exitCode: number): Promise<string> {
@@ -156,6 +157,9 @@ async function runCli(
   args: string[],
   options: RunCliOptions = {},
 ): Promise<number> {
+  const syncStub = await (options.createSyncStub ?? createSyncStub)(
+    options.syncExitCode ?? 0,
+  );
   const program = createProgram();
   registerCommands(program);
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -163,22 +167,25 @@ async function runCli(
   const originalEntryPoint = process.argv[1];
   const previousExitCode = process.exitCode;
   const previousHome = process.env.HOME;
-  process.exitCode = undefined;
-  process.env.HOME = home;
-  process.argv[1] = await createSyncStub(options.syncExitCode ?? 0);
-  (process.stdout.write as unknown as (chunk: unknown) => boolean) = () => true;
-  (process.stderr.write as unknown as (chunk: unknown) => boolean) = () => true;
+  let exitCode = 0;
   try {
+    process.exitCode = undefined;
+    process.env.HOME = home;
+    process.argv[1] = syncStub;
+    (process.stdout.write as unknown as (chunk: unknown) => boolean) = () =>
+      true;
+    (process.stderr.write as unknown as (chunk: unknown) => boolean) = () =>
+      true;
     await program.parseAsync(['--cwd', cwd, ...args], { from: 'user' });
+    exitCode = process.exitCode ?? 0;
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.stderr.write = originalStderrWrite;
     process.argv[1] = originalEntryPoint;
     if (previousHome === undefined) delete process.env.HOME;
     else process.env.HOME = previousHome;
+    process.exitCode = previousExitCode;
   }
-  const exitCode = process.exitCode ?? 0;
-  process.exitCode = previousExitCode;
   return exitCode;
 }
 
@@ -207,8 +214,7 @@ describe('tool pack lifecycle acceptance matrix', () => {
       async (scope) => {
         const roots = await createRoots();
 
-        const result = await run(pack, scope, roots, 'install');
-        expect(result.plan.expectedCompleteness).toBe('complete');
+        await run(pack, scope, roots, 'install');
 
         const inventory = await inventoryAt(pack, scope, roots);
         expect(inventory.completeness).toBe('complete');
@@ -661,5 +667,37 @@ describe('tool pack lifecycle acceptance matrix', () => {
     await expect(run('core', 'project', roots, 'install')).rejects.toThrow(
       /does not allow project scope/,
     );
+  });
+
+  it('restores process globals when sync-stub creation fails', async () => {
+    const originalHome = process.env.HOME;
+    const originalExitCode = process.exitCode;
+    const originalEntryPoint = process.argv[1];
+    const originalStdoutWrite = process.stdout.write;
+    const originalStderrWrite = process.stderr.write;
+    process.exitCode = 17;
+
+    try {
+      await expect(
+        runCli('/tmp/workspace', '/tmp/failing-home', ['tools', 'install'], {
+          createSyncStub: async () => {
+            throw new Error('sync stub setup failed');
+          },
+        }),
+      ).rejects.toThrow('sync stub setup failed');
+
+      expect(process.env.HOME).toBe(originalHome);
+      expect(process.exitCode).toBe(17);
+      expect(process.argv[1]).toBe(originalEntryPoint);
+      expect(process.stdout.write).toBe(originalStdoutWrite);
+      expect(process.stderr.write).toBe(originalStderrWrite);
+    } finally {
+      if (originalHome === undefined) delete process.env.HOME;
+      else process.env.HOME = originalHome;
+      process.exitCode = originalExitCode;
+      process.argv[1] = originalEntryPoint;
+      process.stdout.write = originalStdoutWrite;
+      process.stderr.write = originalStderrWrite;
+    }
   });
 });

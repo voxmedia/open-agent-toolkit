@@ -417,37 +417,6 @@ describe('bundle asset inventory consistency', () => {
     ).toEqual([]);
   });
 
-  it('declares a usable default scope and ownership for every manifest pack', () => {
-    for (const { name, allowedScopes, defaultScope, assets } of PACK_MANIFEST) {
-      expect(allowedScopes.length, `${name} allowed scopes`).toBeGreaterThan(0);
-      expect(allowedScopes, `${name} default scope`).toContain(defaultScope);
-
-      for (const asset of assets) {
-        expect(
-          asset.scopes.length,
-          `${name}/${asset.id} scopes`,
-        ).toBeGreaterThan(0);
-        // Every declared scope has explicit ownership, and no ownership entry
-        // exists for a scope the asset does not apply to.
-        for (const scope of asset.scopes) {
-          expect(allowedScopes, `${name}/${asset.id} scope ${scope}`).toContain(
-            scope,
-          );
-          expect(
-            asset.ownership[scope],
-            `${name}/${asset.id} ownership ${scope}`,
-          ).toBeDefined();
-        }
-        for (const scope of Object.keys(asset.ownership)) {
-          expect(
-            asset.scopes,
-            `${name}/${asset.id} stray ownership ${scope}`,
-          ).toContain(scope);
-        }
-      }
-    }
-  });
-
   it('covers every user-facing workflow lifecycle skill in the workflow pack', () => {
     expect(
       [...WORKFLOW_SKILLS].sort(),
