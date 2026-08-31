@@ -399,6 +399,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   existing ineligible-audit branch and requires no new abstraction
 - Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p-rev1 fix round 2
+
+- Original request ID: `recon-skill-prev1-implementation-20260831`
+- Continuation event: `recon-skill-prev1-fix-r2-20260831T1537Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: bounded correction of the one Important round-2 finding inside
+  prev1-t02's existing validator/test boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `259a1e73dc98d39aab73006402f66f957dd1c27d`
+- Finding disposition: ineligible audit sources now canonicalize and retain
+  every existing filesystem source/working-directory identity before assurance
+  eligibility branching
+- Verification: RED 36/36; focused 55/55; recon 135/135; CLI 164/164; skill
+  suite 730/730; canonical validation, lint, format, CLI type-check, and
+  `pnpm check` pass
+- Optional nested dispatches: none
+- Dispatch: scope=p-rev1-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -595,6 +618,18 @@ context before p02 can advance.
   before eligibility branching plus stale/invalid/unavailable mutations for
   the five existing source discriminators. No design expansion is authorized.
 
+### 2026-08-31 - p-rev1 review fixes round 2 completed
+
+- The original revision handle added append-only fix commit `259a1e73d`,
+  changing only the existing validator and render mutation suite.
+- Filesystem identity retention now precedes assurance eligibility for stale,
+  invalid, and unavailable repository, file, URL capture, command-output, and
+  connected-resource audit sources, including command working directories.
+- Root validation confirms the 36-case new RED matrix, focused 55/55 suite,
+  complete 135/135 recon suite, bounded two-file commit, and clean worktree.
+- A final fresh independent p-rev1 re-review is next; this is review-fix round
+  2 of the configured maximum 3.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -627,6 +662,9 @@ source artifact and follow-up disposition.
 - After p-rev1 fix round 1, focused identity/receipt/render coverage passes
   40/40 and the complete recon suite passes 99/99; CLI validation passes
   164/164 and the complete skill suite passes 694/694.
+- After p-rev1 fix round 2, focused audit-identity/render coverage passes 55/55
+  and the complete recon suite passes 135/135; CLI validation passes 164/164
+  and the complete skill suite passes 730/730.
 
 ## Final Summary (for PR/docs)
 

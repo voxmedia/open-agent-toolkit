@@ -1,6 +1,6 @@
 ---
 oat_current_task: prev1-t01
-oat_last_commit: 784cfaba271e080598d6c829c317651461558cc5
+oat_last_commit: 259a1e73dc98d39aab73006402f66f957dd1c27d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev1 - bounded fix for ineligible audit path identity
+Revision p-rev1 - awaiting final fresh independent re-review
 
 ## Artifacts
 
@@ -118,15 +118,17 @@ Revision p-rev1 - bounded fix for ineligible audit path identity
 - ✓ One bounded append-only fix closed publication-root and receipt-drift gaps
 - ✓ Fresh independent re-review closed receipt drift and all five round-4
   assurance bypasses
-- ⧗ One Important residual remains: ineligible audit source paths must retain
+- ✓ One Important residual required ineligible audit source paths to retain
   canonical identities before eligibility branching
+- ✓ Bounded two-file fix covers stale, invalid, and unavailable variants
+- ⧗ Final fresh independent re-review is next
 
 ## Blockers
 
-One Important p-rev1 re-review finding remains assigned to the bounded fix
-loop; no design expansion or external blocker is present.
+None. The remaining p-rev1 finding has a bounded fix and awaits independent
+re-review.
 
 ## Next Milestone
 
-Close ineligible-audit path identity retention and obtain one fresh independent
-p-rev1 re-review
+Obtain the final fresh independent p-rev1 re-review against the complete p02
+safety history
