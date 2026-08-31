@@ -352,6 +352,11 @@ limit are persisted in `state.md` before launch. The immutable reviewed basis
 is the clean final decision-review head above; rolling freshness begins at the
 same head and fingerprint.
 
+**Launch intent:** Attempt `6fe59c01-f819-421b-be80-d471c03542cb` was persisted
+at `2026-08-31T01:37:31Z` with its closeout-owned structured result receipt
+selected before process start. No replacement launch is permitted unless
+durable evidence proves this attempt was not accepted.
+
 ---
 
 ## Orchestration Runs
