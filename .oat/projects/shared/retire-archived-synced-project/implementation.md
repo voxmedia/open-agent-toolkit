@@ -400,6 +400,12 @@ _Orchestration runs from `oat-project-implement` are appended here._
 The operator explicitly agreed to this deferral. With no deferred Mediums and
 the sole Minor dispositioned, the final gate review event is passed.
 
+The receive receipt reconciles archived artifact
+`reviews/archived/final-review-2026-08-31T232653Z.md`, the exact final/code
+Reviews event, and bookkeeping commit `237597d94`. Configured exit-gate run
+`42a1a4fe-e3a4-4830-8fbc-474ba966613d` is therefore allowed with disposition
+`passed`.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log

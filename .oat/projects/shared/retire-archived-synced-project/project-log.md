@@ -136,6 +136,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important with one receive-eligible Minor finding. Receive intent is persisted and bound; final-scope review policy requires the operator to choose convert or defer before the event can pass.
 
+### 2026-08-31 · structural · oat-project-implement · exit-gate-passed
+
+Claude Fable gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important. Minor m1 was explicitly deferred with rationale; archived artifact, Reviews event, and receive commit 237597d94 reconcile, so the configured exit gate is allowed/passed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

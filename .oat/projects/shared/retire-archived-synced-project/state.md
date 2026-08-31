@@ -43,9 +43,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f
   resolved_command: >-
     oat --json gate review --project "$PROJECT_PATH" --review-type code
@@ -77,7 +77,7 @@ oat_implement_exit_gate:
     non-blocking findings (minor=1). Run oat-project-review-receive for
     .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
     to disposition them before marking the final review row passed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     gate_run_id: 42a1a4fe-e3a4-4830-8fbc-474ba966613d
     handoff: >-
@@ -94,29 +94,29 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-08-31T232653Z.md
   receive_pre_head: 5eced927eac74618c41a5316ab5bab62d15052d1
-  receive_commit: null
+  receive_commit: 237597d9463f019aed0829cf69ac1c7b80075204
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-31T23:31:15Z'
+  updated_at: '2026-08-31T23:51:18Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:31:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:51:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** final review passed; Claude Fable exit gate pending launch
+**Status:** final review and configured Claude Fable exit gate passed
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - configured Claude Fable exit gate
+Implement - post-p04 closeout checkpoint
 
 ## Artifacts
 
@@ -165,7 +165,9 @@ Implement - configured Claude Fable exit gate
 - ✓ Gate run `42a1a4fe-e3a4-4830-8fbc-474ba966613d` accepted with a unique correlated run marker
 - ✓ Structured gate result persisted: passed at Important with one Minor finding and eligible handoff
 - ✓ Receive intent bound to the exact source artifact, collision-free archive path, and Reviews event
-- → Obtain the required final-scope Minor disposition, complete receive, then evaluate the post-p04 HiLL checkpoint
+- ✓ Operator deferred Minor `m1`; receive commit and archived artifact reconciled
+- ✓ Configured Claude Fable exit gate allowed with disposition `passed`
+- → Resolve the closeout sequence and request the post-p04 HiLL approval
 
 ## Blockers
 
