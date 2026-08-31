@@ -55,6 +55,7 @@ import {
   type RemoveTarget,
   type RemoveToolsDependencies,
   failedRemovalLifecycleOutcomes,
+  removalLifecycleOutcomes,
   removeTools,
 } from './remove-tools';
 
@@ -266,9 +267,8 @@ describe('removeTools', () => {
       }),
     ];
     const deps = createDeps({ project: tools });
-    let inventoryCalls = 0;
     deps.inventoryScopedPack = async ({ pack, scope }) =>
-      lifecycleInventory(pack as 'ideas', scope, inventoryCalls++ === 0);
+      lifecycleInventory(pack as 'ideas', scope, true);
 
     const result = await removeTools(
       { kind: 'pack', pack: 'ideas' },
@@ -284,19 +284,7 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toContain(
       '/project/.agents/skills/oat-idea-ideate',
     );
-    expect(result.lifecycle).toMatchObject([
-      {
-        schemaVersion: 1,
-        status: 'complete',
-        selection: {
-          pack: 'ideas',
-          targetScopes: ['project'],
-          retainedRealizedScopes: [],
-        },
-        canonical: { status: 'applied' },
-        finalEvidence: { realizedPlacement: 'none' },
-      },
-    ]);
+    expect(result.lifecycle).toEqual([]);
   });
 
   it('removes the brainstorm pack and its skill directory', async () => {
@@ -545,16 +533,8 @@ describe('removeTools', () => {
       project: [createTool({ scope: 'project' })],
       user: [createTool({ scope: 'user' })],
     });
-    let phase: 'before' | 'after' = 'before';
-    let calls = 0;
     deps.inventoryScopedPack = async ({ pack, scope }) => {
-      calls += 1;
-      if (calls > 2) phase = 'after';
-      return lifecycleInventory(
-        pack as 'ideas',
-        scope,
-        phase === 'before' || scope === 'user',
-      );
+      return lifecycleInventory(pack as 'ideas', scope, true);
     };
 
     const result = await removeTools(
@@ -566,12 +546,109 @@ describe('removeTools', () => {
       deps,
     );
 
-    expect(result.lifecycle).toMatchObject([
+    const lifecycle = removalLifecycleOutcomes(
+      ['ideas'],
+      ['project', 'user'],
+      result.packOutcomes,
+      false,
+      [
+        lifecycleInventory('ideas', 'project', false),
+        lifecycleInventory('ideas', 'user', true),
+      ],
+    );
+    expect(lifecycle).toMatchObject([
       {
+        status: 'partial',
         selection: { retainedRealizedScopes: ['user'] },
         finalEvidence: { realizedPlacement: 'user' },
+        recovery: [
+          {
+            message: expect.stringContaining('--pack ideas --scope user'),
+          },
+        ],
       },
     ]);
+  });
+
+  it('reports post-write disabled intent in command lifecycle evidence', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await materialize(
+      join(scopeRoot, '.agents', 'skills', 'oat-idea-new'),
+      true,
+    );
+    await writeScopedPackIntent({
+      pack: 'ideas',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    const deps = filesystemDeps(scopeRoot);
+    deps.inventoryScopedPack = async ({ pack, scope, scopeRoot: root }) => {
+      const intent = await readScopedPackIntent({
+        pack,
+        scope,
+        scopeRoot: root,
+      });
+      const present = await pathExists(
+        join(root, '.agents', 'skills', 'oat-idea-new'),
+      );
+      return {
+        ...lifecycleInventory('ideas', scope, present),
+        intent,
+      };
+    };
+    const stdout: string[] = [];
+    const write = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation((chunk) => {
+        stdout.push(String(chunk));
+        return true;
+      });
+    try {
+      const program = new Command()
+        .name('oat')
+        .option('--json')
+        .option('--scope <scope>')
+        .option('--cwd <path>')
+        .exitOverride();
+      const tools = new Command('tools');
+      tools.addCommand(
+        createToolsRemoveCommand(deps, { runSync: async () => {} }),
+      );
+      program.addCommand(tools);
+      await program.parseAsync(
+        [
+          '--json',
+          '--scope',
+          'user',
+          '--cwd',
+          scopeRoot,
+          'tools',
+          'remove',
+          '--pack',
+          'ideas',
+          '--no-sync',
+        ],
+        { from: 'user' },
+      );
+    } finally {
+      write.mockRestore();
+    }
+
+    const payload = JSON.parse(stdout.join('')) as {
+      lifecycle: Array<{
+        status: string;
+        finalEvidence: {
+          scopes: Array<{ intent: { enabled: boolean; source: string } }>;
+        };
+      }>;
+    };
+    expect(payload.lifecycle[0]).toMatchObject({
+      status: 'complete',
+      finalEvidence: {
+        scopes: [{ intent: { enabled: false, source: 'none' } }],
+      },
+    });
   });
 
   it('errors when tool name not found in any scope', async () => {

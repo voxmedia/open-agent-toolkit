@@ -33,6 +33,7 @@ import {
 import {
   getConfigAwareAdapters,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
@@ -78,6 +79,7 @@ interface HarnessOptions {
     version: string | null;
   }>;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   userSyncConfigProviders?: SyncConfig['providers'];
   oatConfig?: OatConfig;
   oatConfigError?: Error;
@@ -370,8 +372,16 @@ function createHarness(options: HarnessOptions = {}): {
       ...DEFAULT_SYNC_CONFIG,
       providers: options.userSyncConfigProviders ?? {},
     })),
+    loadSyncConfig: vi.fn(async () => DEFAULT_SYNC_CONFIG),
     getAdapters: () => adapters,
     getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     readOatConfig: vi.fn(async () => {
       if (options.oatConfigError) {
         throw options.oatConfigError;
@@ -506,6 +516,34 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('providers');
     expect(capture.info[0]).toContain('claude@2.0.0');
+  });
+
+  it('uses registry-only provider context for doctor detection', async () => {
+    const adapter: ProviderAdapter = {
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+      detectVersion: async () => '9.9.9',
+    };
+    const { command, capture } = createHarness({
+      providers: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('registry-only@9.9.9');
   });
 
   it('reports an invalid projects.defaultScope as a failing check', async () => {

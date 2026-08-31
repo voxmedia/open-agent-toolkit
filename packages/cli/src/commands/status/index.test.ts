@@ -36,7 +36,7 @@ import {
   type CodexExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
 import type { CursorExtensionPlan } from '@providers/cursor/codec/sync-extension';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import {
   getAdoptionSources,
   getConfigAwareAdapters,
@@ -51,6 +51,7 @@ import { createStatusCommand } from './index';
 
 interface TestHarnessOptions {
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   manifestEntries?: ManifestEntry[];
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
@@ -488,6 +489,13 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
     getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     getSyncMappings: vi.fn(getSyncMappings),
     getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {
@@ -591,6 +599,47 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.info[0]).toContain('in_sync');
+  });
+
+  it('uses a registry-only provider context for status reachability', async () => {
+    const adapter: ProviderAdapter = {
+      ...createAdapter(),
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      projectMappings: [
+        {
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.registry-only/skills',
+          nativeRead: false,
+        },
+      ],
+    };
+    const { command, detectStrays } = createHarness({
+      adapters: [],
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(detectStrays).toHaveBeenCalledWith(
+      'registry-only',
+      '/tmp/workspace/.registry-only/skills',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
   it('reports drifted entries with reasons', async () => {

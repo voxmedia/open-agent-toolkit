@@ -55,7 +55,11 @@ import {
   type DispatchMatrixCellRef,
   type DispatchMatrixSource,
 } from '@config/dispatch-matrix';
-import type { SyncConfig } from '@config/index';
+import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  type SyncConfig,
+} from '@config/index';
 import {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
@@ -115,6 +119,7 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
+  loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
@@ -315,6 +320,9 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     resolveUserSyncConfig,
+    async loadSyncConfig(configPath) {
+      return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+    },
     getAdapters: () => getProviderRegistrations().map(({ adapter }) => adapter),
     getConfigAwareAdapters,
     resolveProviderScopeContext,
@@ -1016,6 +1024,7 @@ function createPackDuplicationCheck(
 
 async function createPackStateChecks(
   scopeRoots: Map<ConcreteScope, string>,
+  providerContexts: Map<ConcreteScope, ProviderScopeContext>,
   dependencies: DoctorDependencies,
 ): Promise<{ checks: DoctorCheck[]; evidence: PackEvidenceBlockV1 }> {
   if (scopeRoots.size === 0) {
@@ -1039,13 +1048,7 @@ async function createPackStateChecks(
           const config = await dependencies.resolveUserSyncConfig(
             join(userRoot, '.oat'),
           );
-          const providerContext = dependencies.resolveProviderScopeContext
-            ? await dependencies.resolveProviderScopeContext({
-                scope: 'user',
-                scopeRoot: userRoot,
-                config,
-              })
-            : null;
+          const providerContext = providerContexts.get('user') ?? null;
           const activeProviders = providerContext
             ? providerContext.activeProviders
             : await dependencies
@@ -1148,6 +1151,7 @@ async function runChecksForScope(
   scopeRoot: string,
   userConfigDir: string,
   dependencies: DoctorDependencies,
+  providerContext?: ProviderScopeContext,
 ): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
 
@@ -1210,7 +1214,15 @@ async function runChecksForScope(
       : 'Use copy strategy or grant symlink permissions.',
   });
 
-  const providers = await dependencies.checkProviders(scopeRoot);
+  const providers = providerContext
+    ? await Promise.all(
+        providerContext.registrations.map(async ({ adapter }) => ({
+          name: adapter.name,
+          detected: providerContext.detectedProviders.includes(adapter.name),
+          version: adapter.detectVersion ? await adapter.detectVersion() : null,
+        })),
+      )
+    : await dependencies.checkProviders(scopeRoot);
   const detectedCount = providers.filter(
     (provider) => provider.detected,
   ).length;
@@ -1387,6 +1399,7 @@ async function runDoctorCommand(
   const checks: DoctorCheck[] = [];
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = new Map<ConcreteScope, string>();
+  const providerContexts = new Map<ConcreteScope, ProviderScopeContext>();
 
   for (const scope of scopes) {
     let scopeRoot: string;
@@ -1402,16 +1415,36 @@ async function runDoctorCommand(
       throw error;
     }
     scopeRoots.set(scope, scopeRoot);
+    const providerContext = dependencies.resolveProviderScopeContext
+      ? await dependencies.resolveProviderScopeContext({
+          scope,
+          scopeRoot,
+          config:
+            scope === 'user'
+              ? await dependencies.resolveUserSyncConfig(
+                  join(context.home, '.oat'),
+                )
+              : await dependencies.loadSyncConfig(
+                  join(scopeRoot, '.oat', 'sync', 'config.json'),
+                ),
+        })
+      : undefined;
+    if (providerContext) providerContexts.set(scope, providerContext);
     const scopeChecks = await runChecksForScope(
       scope,
       scopeRoot,
       join(context.home, '.oat'),
       dependencies,
+      providerContext,
     );
     checks.push(...scopeChecks);
   }
 
-  const packState = await createPackStateChecks(scopeRoots, dependencies);
+  const packState = await createPackStateChecks(
+    scopeRoots,
+    providerContexts,
+    dependencies,
+  );
   checks.push(...packState.checks);
 
   if (context.json) {
@@ -1439,7 +1472,8 @@ export function createDoctorCommand(
   if (
     overrides.resolveProviderScopeContext === undefined &&
     (overrides.getAdapters !== undefined ||
-      overrides.getConfigAwareAdapters !== undefined)
+      overrides.getConfigAwareAdapters !== undefined ||
+      overrides.checkProviders !== undefined)
   ) {
     dependencies.resolveProviderScopeContext = undefined;
   }

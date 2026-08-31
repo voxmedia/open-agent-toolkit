@@ -145,7 +145,7 @@ interface ManagedPackRemovalPlan {
   presentPacks: PackName[];
 }
 
-function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
+export function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
   return target.kind === 'pack'
     ? [target.pack]
     : PACK_MANIFEST.map(({ name }) => name);
@@ -408,20 +408,7 @@ export async function removeTools(
 
   const finalInventories = dryRun
     ? plans.flatMap(({ beforeInventories }) => beforeInventories)
-    : deps.inventoryScopedPack
-      ? await Promise.all(
-          plans.flatMap((plan) =>
-            selectedPacks(target).map((pack) =>
-              deps.inventoryScopedPack!({
-                pack,
-                scope: plan.scope,
-                scopeRoot: plan.scopeRoot,
-                assetsRoot,
-              }),
-            ),
-          ),
-        )
-      : [];
+    : [];
 
   return {
     removed,
@@ -439,7 +426,7 @@ export async function removeTools(
   };
 }
 
-function removalLifecycleOutcomes(
+export function removalLifecycleOutcomes(
   packs: readonly PackName[],
   scopes: readonly ConcreteScope[],
   outcomes: readonly PackRemovalOutcome[],
@@ -461,8 +448,33 @@ function removalLifecycleOutcomes(
     const removed = outcomes.some(
       (outcome) => outcome.pack === pack && outcome.removed,
     );
+    const inventoriedScopes = new Set(
+      packInventories.map(({ scope }) => scope),
+    );
+    const inventoryVerified =
+      finalEvidence !== null &&
+      finalEvidence.unknownScopes.length === 0 &&
+      scopes.every((scope) => inventoriedScopes.has(scope));
+    const remainingScopes = finalEvidence
+      ? scopes.filter((scope) =>
+          finalEvidence.knownRealizedScopes.includes(scope),
+        )
+      : [...scopes];
     const verified =
-      finalEvidence !== null && finalEvidence.unknownScopes.length === 0;
+      inventoryVerified && (dryRun || remainingScopes.length === 0);
+    const recovery = !inventoryVerified
+      ? [
+          {
+            code: 'final-inventory-unverified' as const,
+            message: `Re-run status for ${pack}; final removal state could not be verified`,
+          },
+        ]
+      : !dryRun && remainingScopes.length > 0
+        ? remainingScopes.map((scope) => ({
+            code: 'canonical-verification-failed' as const,
+            message: `Removal remains incomplete for ${pack} at ${scope} scope; rerun oat tools remove --pack ${pack} --scope ${scope}`,
+          }))
+        : [];
     return {
       schemaVersion: 1,
       selection: {
@@ -480,15 +492,8 @@ function removalLifecycleOutcomes(
       },
       sync: { scopes: [], status: 'not-run', providers: [] },
       finalEvidence,
-      status: verified ? 'complete' : 'failed',
-      recovery: verified
-        ? []
-        : [
-            {
-              code: 'final-inventory-unverified',
-              message: `Re-run status for ${pack}; final removal state could not be verified`,
-            },
-          ],
+      status: verified ? 'complete' : inventoryVerified ? 'partial' : 'failed',
+      recovery,
     };
   });
 }

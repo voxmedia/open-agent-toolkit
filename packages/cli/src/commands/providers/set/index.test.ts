@@ -11,7 +11,7 @@ import {
   loadSyncConfig as defaultLoadSyncConfig,
   saveSyncConfig as defaultSaveSyncConfig,
 } from '@config/index';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,6 +23,7 @@ interface HarnessOptions {
   cwd?: string;
   home?: string;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
 }
 
 interface RunArgs {
@@ -69,6 +70,13 @@ function createHarness(options: HarnessOptions = {}): {
       ],
     loadSyncConfig: defaultLoadSyncConfig,
     saveSyncConfig: defaultSaveSyncConfig,
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
   });
 
   return {
@@ -181,6 +189,35 @@ describe('oat providers set', () => {
 
     expect(process.exitCode).toBe(1);
     expect(capture.error[0]).toContain('Unknown providers');
+  });
+
+  it('accepts a provider registered only through the scope context', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+    const adapter = createAdapter('registry-only');
+    const { command } = createHarness({
+      cwd: root,
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: [],
+        detectedProviders: [],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runCommand(command, {
+      commandArgs: ['--scope', 'project', '--enabled', 'registry-only'],
+    });
+
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+    );
+    expect(config.providers['registry-only'].enabled).toBe(true);
+    expect(process.exitCode).toBe(0);
   });
 
   it('rejects providers present in both enabled and disabled lists', async () => {

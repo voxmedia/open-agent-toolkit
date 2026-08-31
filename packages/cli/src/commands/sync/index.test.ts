@@ -36,6 +36,7 @@ import {
 import type {
   ConfigAwareAdaptersResult,
   ProviderAdapter,
+  ProviderScopeContext,
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { ConcreteScope, Scope } from '@shared/types';
@@ -47,6 +48,7 @@ import type { SyncMaterializationExtension } from './sync.types';
 
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   plans?: SyncPlan[];
   executeResults?: SyncResult[];
   codexExtensionPlans?: CodexExtensionPlan[];
@@ -372,6 +374,13 @@ function createHarness(options: HarnessOptions = {}): {
       : vi.fn(async () => []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
@@ -470,6 +479,26 @@ describe('createSyncCommand', () => {
       '\nDry-run only: no filesystem changes were made.',
     );
     expect(capture.info).toContain('Run without --dry-run to apply changes.');
+  });
+
+  it('routes a registry-only provider context into sync planning', async () => {
+    const adapter = createAdapter('registry-only');
+    const { command, computeSyncPlan } = createHarness({
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runSyncCommand(command, ['--dry-run']);
+
+    expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([adapter]);
   });
 
   it('dry-run no-op: shows no changes to apply guidance', async () => {

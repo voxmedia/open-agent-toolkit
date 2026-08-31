@@ -228,19 +228,38 @@ async function maybeResolveProviderMismatches(
     providers,
   });
 
-  const resolution = await dependencies.getConfigAwareAdapters(
-    adapters,
-    scopeRoot,
-    savedConfig,
-  );
+  const providerContext = dependencies.resolveProviderScopeContext
+    ? await dependencies.resolveProviderScopeContext({
+        scope,
+        scopeRoot,
+        config: savedConfig,
+      })
+    : undefined;
+  const resolution = providerContext
+    ? undefined
+    : await dependencies.getConfigAwareAdapters(
+        adapters,
+        scopeRoot,
+        savedConfig,
+      );
 
   return {
     config: savedConfig,
     mismatches: {
-      detectedUnset: resolution.detectedUnset,
-      detectedDisabled: resolution.detectedDisabled,
+      detectedUnset: [
+        ...(providerContext?.mismatches.detectedUnset ??
+          resolution!.detectedUnset),
+      ],
+      detectedDisabled: [
+        ...(providerContext?.mismatches.detectedDisabled ??
+          resolution!.detectedDisabled),
+      ],
     },
-    activeAdapters: resolution.activeAdapters,
+    activeAdapters: providerContext
+      ? providerContext.registrations
+          .map(({ adapter }) => adapter)
+          .filter(({ name }) => providerContext.activeProviders.includes(name))
+      : resolution!.activeAdapters,
   };
 }
 

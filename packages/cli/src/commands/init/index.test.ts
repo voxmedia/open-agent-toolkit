@@ -27,7 +27,7 @@ import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
 import { codexAdapter } from '@providers/codex';
 import { cursorAdapter } from '@providers/cursor';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -48,6 +48,7 @@ interface HarnessOptions {
   useDefaultCollectStrays?: boolean;
   useDefaultEnsureCanonicalDirs?: boolean;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
   userKnownStrays?: string[];
@@ -319,6 +320,13 @@ function createHarness(options: HarnessOptions = {}): {
       detectedUnset: options.configAwareActiveAdapterNames ?? ['claude'],
       detectedDisabled: [],
     })),
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     getHookInstallInfo,
     configureLocalHooksPath,
@@ -602,6 +610,36 @@ describe('createInitCommand', () => {
     const activeAdapters = collectStrays.mock
       .calls[0]?.[4] as ProviderAdapter[];
     expect(activeAdapters.map((adapter) => adapter.name)).toEqual(['claude']);
+  });
+
+  it('uses a registry-only provider context for project stray scanning', async () => {
+    const adapter: ProviderAdapter = {
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+    const { command, collectStrays } = createHarness({
+      interactive: false,
+      hookInstalled: true,
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const activeAdapters = collectStrays.mock
+      .calls[0]?.[4] as ProviderAdapter[];
+    expect(activeAdapters.map(({ name }) => name)).toEqual(['registry-only']);
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {

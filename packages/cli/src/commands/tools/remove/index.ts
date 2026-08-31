@@ -29,7 +29,9 @@ import {
   type RemoveTarget,
   type RemoveToolsDependencies,
   failedRemovalLifecycleOutcomes,
+  removalLifecycleOutcomes,
   removeTools,
+  selectedPacks,
 } from './remove-tools';
 
 const defaultDependencies: RemoveToolsDependencies = {
@@ -182,6 +184,37 @@ export function createToolsRemoveCommand(
               enabled: false,
             });
           }
+        }
+        if (dependencies.inventoryScopedPack) {
+          const assetsRoot = await dependencies.resolveAssetsRoot();
+          const finalInventories = (
+            await Promise.all(
+              scopes.map(async (scope) => {
+                const scopeRoot = await dependencies.resolveScopeRoot(
+                  scope,
+                  context.cwd,
+                  context.home,
+                );
+                return Promise.all(
+                  selectedPacks(target).map((pack) =>
+                    dependencies.inventoryScopedPack!({
+                      pack,
+                      scope,
+                      scopeRoot,
+                      assetsRoot,
+                    }),
+                  ),
+                );
+              }),
+            )
+          ).flat();
+          result.lifecycle = removalLifecycleOutcomes(
+            selectedPacks(target),
+            scopes,
+            result.packOutcomes,
+            false,
+            finalInventories,
+          );
         }
       }
 

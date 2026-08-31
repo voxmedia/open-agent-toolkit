@@ -184,4 +184,35 @@ describe('provider registry', () => {
       expect(context.configSource).not.toContain('/tmp/user');
     },
   );
+
+  it('detects each adapter exactly once and derives all scope evidence from that read', async () => {
+    const enabled = registration('enabled', false);
+    const disabled = registration('disabled', true);
+    const unset = registration('unset', true);
+    const enabledDetect = vi.spyOn(enabled.adapter, 'detect');
+    const disabledDetect = vi.spyOn(disabled.adapter, 'detect');
+    const unsetDetect = vi.spyOn(unset.adapter, 'detect');
+
+    const context = await resolveProviderScopeContext({
+      scope: 'project',
+      scopeRoot: '/tmp/project',
+      config: config({
+        enabled: { enabled: true },
+        disabled: { enabled: false },
+      }),
+      registrations: [enabled, disabled, unset],
+    });
+
+    expect(enabledDetect).toHaveBeenCalledTimes(1);
+    expect(disabledDetect).toHaveBeenCalledTimes(1);
+    expect(unsetDetect).toHaveBeenCalledTimes(1);
+    expect(context).toMatchObject({
+      activeProviders: ['enabled', 'unset'],
+      detectedProviders: ['disabled', 'unset'],
+      mismatches: {
+        detectedUnset: ['unset'],
+        detectedDisabled: ['disabled'],
+      },
+    });
+  });
 });

@@ -11,7 +11,6 @@ import { geminiAdapter } from '@providers/gemini';
 import type { ConcreteScope, ContentType } from '@shared/types';
 
 import type { ProviderAdapter } from './adapter.types';
-import { getConfigAwareAdapters } from './adapter.utils';
 import type { MaterializationExtension } from './materialization-extension';
 
 export type ProviderProjectionMode =
@@ -220,25 +219,25 @@ export async function resolveProviderScopeContext(input: {
 }): Promise<ProviderScopeContext> {
   const registrations = input.registrations ?? getProviderRegistrations();
   validateProviderRegistrations(registrations);
-  const result = await getConfigAwareAdapters(
-    registrations.map(({ adapter }) => adapter),
-    input.scopeRoot,
-    input.config,
+  const detection = await Promise.all(
+    registrations.map(async ({ adapter }) => ({
+      adapter,
+      detected: await adapter.detect(input.scopeRoot),
+    })),
   );
-  const detectedProviders = (
-    await Promise.all(
-      registrations.map(async ({ adapter }) => ({
-        name: adapter.name,
-        detected: await adapter.detect(input.scopeRoot),
-      })),
-    )
-  )
+  const detectedProviders = detection
     .filter(({ detected }) => detected)
-    .map(({ name }) => name);
-  const active = new Set(result.activeAdapters.map(({ name }) => name));
-  const activation = registrations.map(({ adapter }) => {
+    .map(({ adapter }) => adapter.name);
+  const active = new Set<string>();
+  const detectedUnset: string[] = [];
+  const detectedDisabled: string[] = [];
+  const activation = detection.map(({ adapter, detected }) => {
     const configured = input.config.providers[adapter.name]?.enabled;
-    const isActive = active.has(adapter.name);
+    const isActive =
+      configured === true || (configured === undefined && detected);
+    if (isActive) active.add(adapter.name);
+    if (configured === undefined && detected) detectedUnset.push(adapter.name);
+    if (configured === false && detected) detectedDisabled.push(adapter.name);
     const source: ProviderActivationSource =
       configured === true
         ? 'config-enabled'
@@ -274,8 +273,8 @@ export async function resolveProviderScopeContext(input: {
       .filter((name) => active.has(name)),
     detectedProviders,
     mismatches: {
-      detectedUnset: result.detectedUnset,
-      detectedDisabled: result.detectedDisabled,
+      detectedUnset,
+      detectedDisabled,
     },
     activation,
     registrations,
