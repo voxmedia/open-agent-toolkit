@@ -77,23 +77,34 @@ oat_implement_exit_gate:
     non-blocking findings (minor=1). Run oat-project-review-receive for
     .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
     to disposition them before marking the final review row passed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation:
+    gate_run_id: 42a1a4fe-e3a4-4830-8fbc-474ba966613d
+    handoff: >-
+      Gate passed at the important threshold with one Minor finding and requires
+      oat-project-review-receive before closeout.
+    source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
+    scope: final
+    type: code
+    source_filename: final-review-2026-08-31T232653Z.md
+  receive_source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
+  receive_archived_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/archived/final-review-2026-08-31T232653Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-08-31T232653Z.md
+  receive_pre_head: 5eced927eac74618c41a5316ab5bab62d15052d1
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T23:29:31Z'
+  updated_at: '2026-08-31T23:30:36Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:29:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:30:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -153,7 +164,8 @@ Implement - configured Claude Fable exit gate
 - ✓ Claude Fable gate launch intent and durable result receipt persisted
 - ✓ Gate run `42a1a4fe-e3a4-4830-8fbc-474ba966613d` accepted with a unique correlated run marker
 - ✓ Structured gate result persisted: passed at Important with one Minor finding and eligible handoff
-- → Persist receive intent, disposition the Minor finding, then evaluate the post-p04 HiLL checkpoint
+- ✓ Receive intent bound to the exact source artifact, collision-free archive path, and Reviews event
+- → Obtain the required final-scope Minor disposition, complete receive, then evaluate the post-p04 HiLL checkpoint
 
 ## Blockers
 

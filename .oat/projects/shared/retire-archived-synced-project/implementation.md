@@ -375,6 +375,11 @@ _Orchestration runs from `oat-project-implement` are appended here._
   the Important threshold with 0 Critical, 0 Important, 0 Medium, and 1 Minor;
   the non-null handoff is receive-eligible and must be dispositioned before the
   exit gate can become allowed.
+- Receive intent is bound to source artifact
+  `reviews/final-review-2026-08-31T232653Z.md`, its collision-free archived
+  destination, and the exact final/code/source-filename Reviews event. Final
+  scope requires an explicit operator disposition for Minor `m1` before the
+  receive bookkeeping can mark the event passed.
 
 <!-- orchestration-runs-end -->
 

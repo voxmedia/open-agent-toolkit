@@ -132,6 +132,10 @@ Resolved a fresh configured exit-gate generation for available target claude-fab
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
 
+### 2026-08-31 · structural · oat-project-implement · exit-gate-minor-disposition-required
+
+Gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important with one receive-eligible Minor finding. Receive intent is persisted and bound; final-scope review policy requires the operator to choose convert or defer before the event can pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
