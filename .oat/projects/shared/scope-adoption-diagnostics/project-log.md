@@ -80,6 +80,10 @@ Phase p04 passed High review with zero findings at 89a74da25cfb8e870b74645d760fe
 
 Final High review returned PASS with one Minor artifact-alignment finding; p04-t03 resolved the three current summaries in e920d77c1, and Thomas explicitly waived a redundant second review before configured closeout.
 
+### 2026-08-31 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
