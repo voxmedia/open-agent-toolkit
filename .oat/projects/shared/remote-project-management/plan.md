@@ -1,10 +1,7 @@
 ---
 oat_status: complete
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - task_id: p01
-    reason: 'Independent Phase 1 review exhausted its three-cycle governance cap with two Critical findings: malformed recognized provider policy shapes can preserve permissive authority, and operation lifecycle/composite invariants remain unsafe.'
-    since: 2026-08-31
+oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_phase: plan
 oat_phase_status: complete
@@ -1236,24 +1233,24 @@ in-scope implementation files when a gate exposes a project defect.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation        | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ----------------- | ------------------------ |
-| p01    | code     | received        | 2026-08-31 | reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md | 306bdd9dc0f862021ef049f019b9f0f7d6579599 | auto-3            | codex:sol-high           |
-| p02    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p03    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p04    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p05    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p06    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p07    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| p08    | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| final  | code     | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| spec   | artifact | pending         | -          | -                                                            | -                                        | -                 | -                        |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md         | -                                        | manual-1          | cursor                   |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md         | -                                        | manual-2          | cursor                   |
-| plan   | artifact | passed          | 2026-08-31 | -                                                            | -                                        | structured-auto-3 | codex:sol-high           |
-| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md  | -                                        | gate              | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md  | -                                        | gate              | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md  | -                                        | -                 | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                     | Reviewed Head                            | Invocation         | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------- | ------------------ | ------------------------ |
+| p01    | code     | fixes_added     | 2026-08-31 | reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md | 306bdd9dc0f862021ef049f019b9f0f7d6579599 | operator-extension | codex:sol-high           |
+| p02    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p03    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p04    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p05    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p06    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p07    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| p08    | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| final  | code     | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| spec   | artifact | pending         | -          | -                                                            | -                                        | -                  | -                        |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md         | -                                        | manual-1           | cursor                   |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md         | -                                        | manual-2           | cursor                   |
+| plan   | artifact | passed          | 2026-08-31 | -                                                            | -                                        | structured-auto-3  | codex:sol-high           |
+| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md  | -                                        | gate               | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md  | -                                        | gate               | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md  | -                                        | -                  | -                        |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.

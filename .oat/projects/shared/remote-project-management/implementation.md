@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01
-    reason: 'Independent Phase 1 review exhausted its three-cycle governance cap with two Critical findings: malformed recognized provider policy shapes can preserve permissive authority, and operation lifecycle/composite invariants remain unsafe.'
-    since: 2026-08-31
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -27,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 10    | 10/10     |
-| Phase 2 | pending | 9     | 0/9       |
-| Phase 3 | pending | 12    | 0/12      |
-| Phase 4 | pending | 11    | 0/11      |
-| Phase 5 | pending | 9     | 0/9       |
-| Phase 6 | pending | 10    | 0/10      |
-| Phase 7 | pending | 10    | 0/10      |
-| Phase 8 | pending | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 10    | 10/10     |
+| Phase 2 | pending     | 9     | 0/9       |
+| Phase 3 | pending     | 12    | 0/12      |
+| Phase 4 | pending     | 11    | 0/11      |
+| Phase 5 | pending     | 9     | 0/9       |
+| Phase 6 | pending     | 10    | 0/10      |
+| Phase 7 | pending     | 10    | 0/10      |
+| Phase 8 | pending     | 6     | 0/6       |
 
 **Total:** 10/77 tasks completed
 
@@ -44,7 +41,7 @@ oat_generated: false
 
 ## Phase 1: Domain, Configuration, and Persistence
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-03-15
 
 ### Phase Summary
@@ -424,8 +421,25 @@ continuation_events:
   keys can still be discarded while a permissive repository default survives;
   operation lifecycle/composite cross-field rules still admit contradictory or
   destructive mutation evidence.
-- Review-fix retry usage: 2/2; review governance cycles: 3/3.
-- Phase outcome: `BLOCKED`; Phase 2 did not start.
+- Review-fix retry usage at the stop: 2/2; review governance cycles: 3/3.
+- Phase outcome at the stop: `BLOCKED`; Phase 2 did not start.
+
+#### Operator-authorized review extension
+
+- Authorization: the user explicitly authorized continuation after the
+  three-cycle terminal stop.
+- Scope: exactly one additional bounded fix/review cycle for the two Critical
+  findings in
+  `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md`.
+- Retry accounting: `oat_orchestration_retry_limit` increased from 2 to 3;
+  prior usage remains 2 and is not reset.
+- Governance exception: one fourth independent review is authorized for this
+  extension only. It does not authorize further cycles, a target change, or
+  Phase 2 execution before a passing Phase 1 review.
+- Exact implementation and reviewer targets remain
+  `oat-phase-implementer-gpt-5-6-sol-high` and
+  `oat-reviewer-gpt-5-6-sol-high`.
+- Status: operator-extension fix pending.
 
 <!-- orchestration-runs-end -->
 
@@ -477,16 +491,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Obtain operator direction before any additional Phase 1 repair beyond the
-  exhausted review-fix cap; do not begin Phase 2 while the terminal Critical
-  findings remain.
+- Complete the authorized third bounded fix and fourth independent review; do
+  not begin Phase 2 unless the review passes.
 
 **Blockers:**
 
-- The final Phase 1 review found two Critical gaps after two bounded fix rounds:
-  recognized-provider policy shape validation can still fail open, and
-  operation lifecycle/composite invariants remain unsafe. Review governance is
-  exhausted at 3/3 cycles.
+- None requiring user input. The two Critical findings are the bounded scope of
+  the authorized operator extension.
 
 **Session End:** 2026-08-31T04:59:16Z
 
