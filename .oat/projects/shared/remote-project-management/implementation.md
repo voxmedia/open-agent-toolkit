@@ -272,10 +272,10 @@ reconciliation, exact authority resolution, preview-bound approvals,
 terminal-safe operation reduction, and postcondition verification that blocks
 blind retries.
 
-**Verification:** Combined Phase 2 suite passed 79/79; format, CLI type-check,
-lint, check, and build passed; the uncached full CLI suite passed 326 files and
-4,794 tests with 0 cached tasks. Root independently reran the 79-test phase
-suite.
+**Verification:** After the first bounded review-fix round, the combined Phase
+2 suite passed 82/82; format, CLI type-check, lint, check, and build passed; the
+uncached full CLI suite passed 326 files and 4,797 tests with 0 cached tasks.
+Before review, root independently reran the then-current 79-test phase suite.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -438,6 +438,24 @@ format/build, type-check, and lint passed.
   strict p01 persistence schema while retaining source and source-revision
   evidence. Root validated immutable history and cleared only the completed
   pending marker; usage remains 1/10.
+
+---
+
+### Review Fix Round 1
+
+- Review artifact:
+  `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`
+- Findings addressed: 1 Critical and 2 Important.
+- Fix commit: `bbbb3857cc793eb9a6def31e75cf6af65cccfa9f`
+- Boundary: snapshot redaction, preview approval binding, and postcondition
+  verification only; the two nonblocking Medium findings remain untouched.
+- Outcome: quoted credential-shaped values no longer survive retained snapshot
+  fields; approvals cannot predate or detach from a preview instance; accepted
+  mutations with wholly mismatched readback now require reconciliation.
+- Verification: focused affected suites 26/26; combined Phase 2 suite 82/82;
+  CLI type-check, lint, check, and build passed; uncached full CLI 4,797/4,797
+  with 0 cached tasks.
+- Recovery usage remains 1/10 with `pending_attempt: null`.
 
 ---
 
@@ -657,13 +675,15 @@ floor_satisfaction: satisfied
 launch_status: accepted
 child_outcome: done
 phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
-phase_head: c5be765e5fdabf175643994e93a2b5540e8fb1e4
+phase_head: bbbb3857cc793eb9a6def31e75cf6af65cccfa9f
 recovery_usage: 1/10
 pending_attempt: null
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
     reason: bounded fixes for Phase 2 round-1 Critical and Important review findings
     target: oat-phase-implementer-gpt-5-6-sol-high
+    outcome: done
+    commit: bbbb3857cc793eb9a6def31e75cf6af65cccfa9f
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
