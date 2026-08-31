@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
@@ -12,8 +12,8 @@ oat_generated: false
 **Started:** 2026-08-30 21:48 UTC
 **Last Updated:** 2026-08-30
 
-> `oat_current_task_id` points to the next plan task. Implementation is running
-> sequentially with the managed High dispatch ceiling.
+> Implementation completed sequentially with the managed High dispatch ceiling;
+> `oat_current_task_id` is cleared.
 
 ## Progress Overview
 
@@ -429,7 +429,8 @@ implementation head. The p04 review passed, and the initial final review passed
 product and release behavior with only `m1`, now resolved by `p04-t03`. Final
 reviewer verdict was PASS, and Thomas explicitly waived a redundant second
 review on 2026-08-30 after the artifact-only alignment. Configured closeout
-gates and approval remain.
+gates, approval, and the post-approval retro are complete; PR #249 remains open
+for human review.
 
 ## Explainer Outcome
 
