@@ -12,11 +12,6 @@ export interface LocalProjection {
   source: 'backlog-description' | 'explicit-project-publication';
   sourceRevision: string;
   observedAt: string;
-  evidence: {
-    targetKind: 'backlog' | 'project';
-    sourcePath: string;
-    selectedFields: string[];
-  };
 }
 
 interface BacklogProjectionTarget {
@@ -97,15 +92,6 @@ function resolveBacklogProjection(
     source: selected.source,
     sourceRevision: hashSelectedProjection(selected),
     observedAt,
-    evidence: {
-      targetKind: 'backlog',
-      sourcePath: target.path,
-      selectedFields: [
-        'frontmatter.title',
-        'frontmatter.priority',
-        'Description',
-      ],
-    },
   };
 }
 
@@ -133,15 +119,6 @@ function resolveProjectProjection(
     source: selected.source,
     sourceRevision: hashSelectedProjection(selected),
     observedAt,
-    evidence: {
-      targetKind: 'project',
-      sourcePath: target.path,
-      selectedFields: [
-        'publication.title',
-        'publication.description',
-        'publication.priority',
-      ],
-    },
   };
 }
 

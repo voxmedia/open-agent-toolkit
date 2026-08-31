@@ -42,18 +42,17 @@ Never publish this section.
       priority: 'high',
       source: 'backlog-description',
       observedAt,
-      evidence: {
-        targetKind: 'backlog',
-        sourcePath: '.oat/repo/pjm/backlog/remote-sync.md',
-        selectedFields: [
-          'frontmatter.title',
-          'frontmatter.priority',
-          'Description',
-        ],
-      },
     });
     expect(result.description).not.toContain('Implementation Notes');
     expect(result.sourceRevision).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(Object.keys(result)).toEqual([
+      'title',
+      'description',
+      'priority',
+      'source',
+      'sourceRevision',
+      'observedAt',
+    ]);
   });
 
   it('requires unambiguous backlog frontmatter and Description ownership', () => {
@@ -107,14 +106,6 @@ Never publish this section.
       description: 'A deliberately published project summary.',
       priority: 'medium',
       source: 'explicit-project-publication',
-      evidence: {
-        targetKind: 'project',
-        selectedFields: [
-          'publication.title',
-          'publication.description',
-          'publication.priority',
-        ],
-      },
     });
     expect(JSON.stringify(result)).not.toMatch(
       /PRIVATE (DISCOVERY|SPEC|DESIGN|PLAN|IMPLEMENTATION|REVIEW)/,
@@ -149,5 +140,11 @@ Never publish this section.
 
     expect(second.sourceRevision).toBe(first.sourceRevision);
     expect(changed.sourceRevision).not.toBe(first.sourceRevision);
+    expect(
+      resolveLocalProjection({
+        ...base,
+        target: { ...base.target, path: '.oat/projects/shared/other' },
+      }).sourceRevision,
+    ).not.toBe(first.sourceRevision);
   });
 });
