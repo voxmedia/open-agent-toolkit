@@ -200,6 +200,22 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   expanded recon suite passes 62/62
 - Dispatch: scope=p02-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p02 review round 2
+
+- Request ID: `recon-skill-p02-rereview-20260831T0625Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: read the complete p02 implementation and fix range and write only
+  the timestamped re-review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p02-code-rereview-2026-08-31T062204Z.md`
+- Findings: 4 Critical, 2 Important, 0 Medium, 0 Minor
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -269,6 +285,18 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   retained locator variants now have executable coverage.
 - Root validation confirmed the expanded 62/62 recon suite and bounded fix
   range. A fresh independent re-review is next.
+
+### 2026-08-31 - p02 review round 2 received
+
+- Fresh independent re-review confirmed the first fix closed realpath safety,
+  retained locator variants, and stale-render cleanup, while finding four
+  Critical and two Important remaining assurance gaps.
+- The second bounded fix must bind claim-bearing briefs, every stage to typed
+  artifacts and accepted receipts, source eligibility, reconciliation to the
+  prior ledger, material coverage results, and the fake workflow to production
+  projection/reconciliation helpers.
+- This consumes the second and final configured phase review-fix iteration; a
+  fresh passing re-review is required to advance.
 
 ## Deviations from Plan / Design
 
