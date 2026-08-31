@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: eed80d5ab6b297d19da4569ca9963e25fd53b57d
+oat_last_commit: 831e110beff1aa8065926409f4819fec834cfc3c
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,9 +40,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 tasks and two bounded review-fix rounds are complete.
-The operator authorized exactly one additional fix/review cycle for the
-remaining Critical credential-safety finding. Phase 3 has not started.
+Implementation — Phase 2 tasks and the operator-authorized third review-fix
+round are complete. Phase-wide verification passed; the single authorized
+fourth independent review is next. Phase 3 has not started.
 
 ## Artifacts
 
@@ -99,15 +99,14 @@ remaining Critical credential-safety finding. Phase 3 has not started.
 - ✓ Phase 2 review round 2 Critical findings fixed in `eed80d5ab`
 - ⚠ Phase 2 final normal review blocked with 1 Critical and 2 Medium findings
 - ⧗ One additional bounded Phase 2 fix/review cycle authorized
+- ✓ Operator-extension credential-boundary fix committed as `831e110be`
 
 ## Blockers
 
-None. The remaining Phase 2 finding has an operator-authorized bounded repair;
-the fourth review remains the terminal governance boundary.
+None. The fourth Phase 2 review remains the terminal governance boundary.
 
 ## Next Milestone
 
-Execute the operator-authorized Phase 2 credential-boundary fix and fourth
-independent review. Before any Phase 3 dispatch, amend the future-phase
-artifacts to preserve the runtime-discovered MCP/CLI boundary confirmed on
-2026-08-31.
+Run the operator-authorized fourth independent Phase 2 review. Before any Phase
+3 dispatch, amend the future-phase artifacts to preserve the
+runtime-discovered MCP/CLI boundary confirmed on 2026-08-31.

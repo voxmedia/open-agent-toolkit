@@ -272,11 +272,11 @@ reconciliation, exact authority resolution, preview-bound approvals,
 terminal-safe operation reduction, and postcondition verification that blocks
 blind retries.
 
-**Verification:** After the second bounded review-fix round, the combined Phase
-2 suite passed 91/91; format, CLI type-check, lint, check, and build passed; the
-uncached full CLI suite passed 326 files and 4,806 tests with 0 cached tasks.
-Before the first review, root independently reran the then-current 79-test
-phase suite.
+**Verification:** After the operator-extension review-fix round, the combined
+Phase 2 suite passed 110/110; format, CLI type-check, lint, check, and build
+passed; the uncached full CLI suite passed 327 files and 4,838 tests with 0
+cached tasks. Before the first review, root independently reran the then-current
+79-test phase suite.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -474,6 +474,24 @@ format/build, type-check, and lint passed.
 - Verification: focused snapshot/preview suites 26/26; combined Phase 2 suite
   91/91; CLI format, type-check, lint, check, and build passed; uncached full
   CLI 4,806/4,806 with 0 cached tasks.
+- Recovery usage remains 1/10 with `pending_attempt: null`.
+
+---
+
+### Review Fix Round 3 — Operator Extension
+
+- Review artifact:
+  `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`
+- Finding addressed: 1 Critical and 0 Important.
+- Fix commit: `831e110beff1aa8065926409f4819fec834cfc3c`
+- Boundary: one shared credential-assignment scanner and its snapshot/preview
+  consumers/regressions; the two nonblocking Medium findings remain untouched.
+- Outcome: credential keys after ordinary punctuation are detected when not
+  embedded in identifiers; snapshots and previews remove credential bytes,
+  and approval actor/source evidence fails closed.
+- Verification: focused credential/snapshot/preview suites 58/58; combined
+  Phase 2 suite 110/110; CLI format, type-check, lint, check, and build passed;
+  uncached full CLI 4,838/4,838 with 0 cached tasks.
 - Recovery usage remains 1/10 with `pending_attempt: null`.
 
 ---
@@ -694,12 +712,12 @@ floor_satisfaction: satisfied
 launch_status: accepted
 child_outcome: done
 phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
-phase_head: eed80d5ab6b297d19da4569ca9963e25fd53b57d
+phase_head: 831e110beff1aa8065926409f4819fec834cfc3c
 recovery_usage: 1/10
 pending_attempt: null
 review_cycles: 3/4
-review_fix_loops: 2/3
-phase_outcome: operator-fix-authorized
+review_fix_loops: 3/3
+phase_outcome: operator-review-pending
 terminal_review_artifact: reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
@@ -715,6 +733,8 @@ continuation_events:
   - id: review-fix-p02-r3-20260831T1515Z
     reason: operator-authorized bounded fix for the terminal Phase 2 credential-boundary finding
     target: oat-phase-implementer-gpt-5-6-sol-high
+    outcome: done
+    commit: 831e110beff1aa8065926409f4819fec834cfc3c
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
