@@ -317,7 +317,29 @@ describe('RemoteSyncStore', () => {
 
   it('requires expected state transitions and rejects duplicate steps', async () => {
     const { store } = await createStore();
-    await store.createOperation(operation());
+    const annotationStep = {
+      stepId: 'step_annotate_123',
+      semanticOperation: 'annotate' as const,
+      state: 'planned' as const,
+      actionDigest: 'sha256:annotation-step',
+      previewDigest: 'sha256:preview',
+      authority: {
+        effective: 'user-approved' as const,
+        sourceDigest: 'sha256:policy',
+      },
+      approvalRequirement: 'fresh-approval' as const,
+      approval: null,
+      attempts: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt' as const,
+    };
+    await store.createOperation({
+      ...operation(),
+      lifecycleOperation: 'closeout',
+      operationClass: 'composite',
+      authority: null,
+      steps: [annotationStep],
+    });
     await expect(
       store.transitionOperation('op_operation_123', 'authorized', {
         state: 'attempt-started',
@@ -326,8 +348,8 @@ describe('RemoteSyncStore', () => {
     ).rejects.toThrow(/expected.*authorized.*found.*planned/i);
 
     const step = {
-      stepId: 'step_update_123',
-      semanticOperation: 'update-fields' as const,
+      stepId: 'step_transition_123',
+      semanticOperation: 'transition' as const,
       state: 'authorized' as const,
       actionDigest: 'sha256:step',
       previewDigest: 'sha256:preview',

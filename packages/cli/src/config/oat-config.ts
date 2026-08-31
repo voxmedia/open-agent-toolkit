@@ -1141,72 +1141,109 @@ function assertClosedPjmRemoteSharedConfig(
   value: Record<string, unknown>,
   configPath: string,
 ): void {
-  const unknownPaths: string[] = [];
+  const findings: string[] = [];
   collectUnknownPjmRemoteKeys(
     value,
     ['schemaVersion', 'storage', 'policy'],
     'pjm.remote',
-    unknownPaths,
+    findings,
   );
-  if (isRecord(value.storage)) {
+  if (
+    'storage' in value &&
+    collectPjmRemoteExpectedObject(
+      value.storage,
+      'pjm.remote.storage',
+      findings,
+    )
+  ) {
     collectUnknownPjmRemoteKeys(
       value.storage,
       ['state'],
       'pjm.remote.storage',
-      unknownPaths,
+      findings,
     );
   }
-  if (isRecord(value.policy)) {
+  if (
+    'policy' in value &&
+    collectPjmRemoteExpectedObject(value.policy, 'pjm.remote.policy', findings)
+  ) {
     collectUnknownPjmRemoteKeys(
       value.policy,
       ['description', 'authority', 'providers'],
       'pjm.remote.policy',
-      unknownPaths,
+      findings,
     );
-    collectUnknownPjmRemoteAuthorityKeys(
-      value.policy.authority,
-      'pjm.remote.policy.authority',
-      unknownPaths,
-    );
-    if (isRecord(value.policy.providers)) {
+    if ('authority' in value.policy) {
+      collectPjmRemoteAuthorityFindings(
+        value.policy.authority,
+        'pjm.remote.policy.authority',
+        findings,
+      );
+    }
+    if (
+      'providers' in value.policy &&
+      collectPjmRemoteExpectedObject(
+        value.policy.providers,
+        'pjm.remote.policy.providers',
+        findings,
+      )
+    ) {
       collectUnknownPjmRemoteKeys(
         value.policy.providers,
         PJM_REMOTE_PROVIDERS,
         'pjm.remote.policy.providers',
-        unknownPaths,
+        findings,
       );
       for (const provider of PJM_REMOTE_PROVIDERS) {
+        if (!(provider in value.policy.providers)) continue;
         const providerPolicy = value.policy.providers[provider];
-        if (!isRecord(providerPolicy)) continue;
+        if (
+          !collectPjmRemoteExpectedObject(
+            providerPolicy,
+            `pjm.remote.policy.providers.${provider}`,
+            findings,
+          )
+        ) {
+          continue;
+        }
         collectUnknownPjmRemoteKeys(
           providerPolicy,
           ['description', 'authority'],
           `pjm.remote.policy.providers.${provider}`,
-          unknownPaths,
+          findings,
         );
-        collectUnknownPjmRemoteAuthorityKeys(
-          providerPolicy.authority,
-          `pjm.remote.policy.providers.${provider}.authority`,
-          unknownPaths,
-        );
+        if ('authority' in providerPolicy) {
+          collectPjmRemoteAuthorityFindings(
+            providerPolicy.authority,
+            `pjm.remote.policy.providers.${provider}.authority`,
+            findings,
+          );
+        }
       }
     }
   }
-  if (unknownPaths.length === 0) return;
+  if (findings.length === 0) return;
   throw new CliError(
-    `Unknown PJM remote policy field${unknownPaths.length === 1 ? '' : 's'} in ${configPath}: ${unknownPaths.join(', ')}. Repair the named field paths before running any remote mutation.`,
+    `Invalid PJM remote policy structure in ${configPath}: ${findings.join(', ')}. Repair the named field paths before running any remote mutation.`,
     2,
   );
 }
 
-function collectUnknownPjmRemoteAuthorityKeys(
+function collectPjmRemoteAuthorityFindings(
   value: unknown,
   path: string,
   findings: string[],
 ): void {
-  if (!isRecord(value)) return;
+  if (!collectPjmRemoteExpectedObject(value, path, findings)) return;
   collectUnknownPjmRemoteKeys(value, ['default', 'operations'], path, findings);
-  if (isRecord(value.operations)) {
+  if (
+    'operations' in value &&
+    collectPjmRemoteExpectedObject(
+      value.operations,
+      `${path}.operations`,
+      findings,
+    )
+  ) {
     collectUnknownPjmRemoteKeys(
       value.operations,
       PJM_REMOTE_OPERATION_CLASSES,
@@ -1214,6 +1251,24 @@ function collectUnknownPjmRemoteAuthorityKeys(
       findings,
     );
   }
+}
+
+function collectPjmRemoteExpectedObject(
+  value: unknown,
+  path: string,
+  findings: string[],
+): value is Record<string, unknown> {
+  if (isRecord(value) && !Array.isArray(value)) return true;
+  findings.push(
+    `${path} (expected object, received ${describePjmRemoteStructure(value)})`,
+  );
+  return false;
+}
+
+function describePjmRemoteStructure(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  return typeof value;
 }
 
 function collectUnknownPjmRemoteKeys(

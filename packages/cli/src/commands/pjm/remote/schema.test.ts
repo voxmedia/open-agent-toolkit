@@ -233,7 +233,7 @@ describe('remote record schemas', () => {
     ).toThrow(/capability context/i);
   });
 
-  it('parses operations, unique substeps, batches, and independent outcomes', () => {
+  it('parses governed operations, batches, and independent outcomes', () => {
     const operation = RemoteOperationRecordSchema.parse({
       recordType: 'operation',
       schemaVersion: 1,
@@ -285,25 +285,7 @@ describe('remote record schemas', () => {
       ],
       verification: [],
       retryDisposition: 'reconcile-required',
-      steps: [
-        {
-          stepId: 'step_update_123',
-          semanticOperation: 'update-fields',
-          state: 'attempt-started',
-          actionDigest: 'sha256:action',
-          previewDigest: 'sha256:preview',
-          authority,
-          approvalRequirement: 'fresh-approval',
-          approval: {
-            previewDigest: 'sha256:preview',
-            approvedAt: timestamp,
-            source: 'test approval',
-          },
-          attempts: ['attempt_update_123'],
-          verification: [],
-          retryDisposition: 'reconcile-required',
-        },
-      ],
+      steps: [],
       outcome: { classification: 'pending', message: null, verifiedAt: null },
     });
     const batch = RemoteBatchRecordSchema.parse({
@@ -340,12 +322,6 @@ describe('remote record schemas', () => {
       op_operation_123: 'verified',
       op_operation_456: 'blocked',
     });
-    expect(() =>
-      RemoteOperationRecordSchema.parse({
-        ...operation,
-        steps: [operation.steps[0], operation.steps[0]],
-      }),
-    ).toThrow(/duplicate stepId/i);
     expect(() =>
       RemoteOperationRecordSchema.parse({
         ...operation,
@@ -479,7 +455,93 @@ describe('remote record schemas', () => {
         ...mutation,
         steps: [composite.steps[0]],
       }),
-    ).toThrow(/mutation class/i);
+    ).toThrow(/non-composite.*substeps/i);
+    for (const lifecycleOperation of [
+      'intake',
+      'refresh',
+      'discussion',
+    ] as const) {
+      expect(() =>
+        RemoteOperationRecordSchema.parse({
+          ...mutation,
+          lifecycleOperation,
+          operationClass: 'delete',
+        }),
+      ).toThrow(/read-only lifecycle/i);
+    }
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...mutation,
+        lifecycleOperation: 'publish',
+        operationClass: 'transition',
+      }),
+    ).toThrow(/lifecycle.*mutation class/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...mutation,
+        lifecycleOperation: 'reconcile',
+        operationClass: 'annotate',
+      }),
+    ).toThrow(/lifecycle.*mutation class/i);
+    for (const semanticOperation of [
+      'create',
+      'update-fields',
+      'delete',
+      'relink',
+      'detach',
+      'recreate',
+    ] as const) {
+      expect(() =>
+        RemoteOperationRecordSchema.parse({
+          ...composite,
+          steps: [
+            {
+              ...composite.steps[0],
+              semanticOperation,
+            },
+          ],
+        }),
+      ).toThrow(/composite.*annotate.*transition/i);
+    }
+    for (const [step, duplicateStepId] of [
+      [composite.steps[0], 'step_annotate_456'],
+      [composite.steps[1], 'step_transition_456'],
+    ] as const) {
+      expect(() =>
+        RemoteOperationRecordSchema.parse({
+          ...composite,
+          steps: [step, { ...step, stepId: duplicateStepId }],
+        }),
+      ).toThrow(
+        new RegExp(`duplicate composite.*${step.semanticOperation}`, 'i'),
+      );
+    }
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...composite,
+        steps: [composite.steps[1], composite.steps[0]],
+      }),
+    ).toThrow(/annotation.*precede.*transition/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...mutation,
+        approval: {
+          previewDigest: 'sha256:wrong-preview',
+          approvedAt: timestamp,
+          source: 'test approval',
+        },
+      }),
+    ).toThrow(/approval.*preview digest/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...composite,
+        approval: {
+          previewDigest: 'sha256:governance-preview',
+          approvedAt: timestamp,
+          source: 'test approval',
+        },
+      }),
+    ).toThrow(/composite.*parent approval/i);
   });
 
   it('rejects unsupported independent schema versions and unstable IDs', () => {

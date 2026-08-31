@@ -56,6 +56,20 @@ const LifecycleConditionSchema = z.enum([
   'deleted-confirmed',
   'temporarily-unavailable',
 ]);
+const READ_ONLY_LIFECYCLE_OPERATIONS = new Set([
+  'intake',
+  'refresh',
+  'discussion',
+]);
+const ALLOWED_MUTATION_CLASSES_BY_LIFECYCLE: Readonly<
+  Record<string, ReadonlySet<z.infer<typeof OperationClassSchema>>>
+> = {
+  publish: new Set(['create', 'update-fields']),
+  reconcile: new Set(['update-fields', 'transition', 'delete']),
+  relink: new Set(['relink']),
+  detach: new Set(['detach']),
+  recreate: new Set(['recreate']),
+};
 
 export const RemoteAliasSchema = z
   .object({
@@ -558,35 +572,36 @@ export const RemoteOperationRecordSchema = z
   })
   .strict()
   .superRefine((record, context) => {
-    const readOnlyLifecycleOperations = new Set([
-      'intake',
-      'refresh',
-      'discussion',
-    ]);
-    if (record.operationClass === null) {
-      if (!readOnlyLifecycleOperations.has(record.lifecycleOperation)) {
+    const isReadOnlyLifecycle = READ_ONLY_LIFECYCLE_OPERATIONS.has(
+      record.lifecycleOperation,
+    );
+    if (isReadOnlyLifecycle) {
+      if (record.operationClass !== null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['lifecycleOperation'],
+          path: ['operationClass'],
           message:
-            'Read-only operation lifecycle must be intake, refresh, or discussion.',
+            'Read-only lifecycle operations require operationClass null.',
         });
       }
-      if (record.authority !== null) {
+      if (record.operationClass === null && record.authority !== null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['authority'],
           message: 'Read-only operations must not retain mutation authority.',
         });
       }
-      if (record.approval !== null) {
+      if (record.operationClass === null && record.approval !== null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['approval'],
           message: 'Read-only operations must not retain mutation approval.',
         });
       }
-      if (record.attempts.length > 0 || record.steps.length > 0) {
+      if (
+        record.operationClass === null &&
+        (record.attempts.length > 0 || record.steps.length > 0)
+      ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['attempts'],
@@ -594,52 +609,124 @@ export const RemoteOperationRecordSchema = z
             'Read-only operations must not retain mutation attempts or substeps.',
         });
       }
-    } else if (record.operationClass === 'composite') {
-      if (record.lifecycleOperation !== 'closeout') {
+    } else if (record.lifecycleOperation === 'closeout') {
+      if (record.operationClass !== 'composite') {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['lifecycleOperation'],
-          message: 'Composite operation lifecycle must be closeout.',
+          path: ['operationClass'],
+          message:
+            'Closeout lifecycle operations require operationClass composite.',
         });
       }
-      if (record.authority !== null) {
+      if (record.operationClass === 'composite' && record.authority !== null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['authority'],
           message: 'Composite parent authority must be null.',
         });
       }
-      if (record.approval !== null) {
+      if (record.operationClass === 'composite' && record.approval !== null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['approval'],
           message: 'Composite parent approval must be null.',
         });
       }
-      if (record.steps.length === 0) {
+      if (record.operationClass === 'composite' && record.steps.length === 0) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['steps'],
           message: 'Composite operations require authoritative substeps.',
         });
       }
+      if (record.operationClass === 'composite') {
+        const semanticOperations = new Set<string>();
+        for (const [index, step] of record.steps.entries()) {
+          if (!['annotate', 'transition'].includes(step.semanticOperation)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['steps', index, 'semanticOperation'],
+              message:
+                'Composite closeout substeps must be annotate or transition.',
+            });
+          }
+          if (semanticOperations.has(step.semanticOperation)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['steps', index, 'semanticOperation'],
+              message: `Duplicate composite ${step.semanticOperation} substep.`,
+            });
+          }
+          semanticOperations.add(step.semanticOperation);
+        }
+        if (
+          record.steps[0]?.semanticOperation === 'transition' &&
+          record.steps[1]?.semanticOperation === 'annotate'
+        ) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['steps'],
+            message: 'Composite closeout annotation must precede transition.',
+          });
+        }
+      }
     } else {
-      if (record.authority === null) {
+      if (record.operationClass === null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifecycleOperation'],
+          message:
+            'Read-only operation class is valid only for intake, refresh, or discussion lifecycle.',
+        });
+      } else if (record.operationClass === 'composite') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifecycleOperation'],
+          message: 'Composite operation lifecycle must be closeout.',
+        });
+      } else if (
+        !ALLOWED_MUTATION_CLASSES_BY_LIFECYCLE[record.lifecycleOperation]?.has(
+          record.operationClass,
+        )
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['operationClass'],
+          message: `Lifecycle '${record.lifecycleOperation}' does not allow mutation class '${record.operationClass}'.`,
+        });
+      }
+      if (record.operationClass !== null && record.authority === null) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['authority'],
           message: 'Mutation operations require an authority decision.',
         });
       }
-      for (const [index, step] of record.steps.entries()) {
-        if (step.semanticOperation !== record.operationClass) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['steps', index, 'semanticOperation'],
-            message:
-              'Ordinary operation substeps must match the parent mutation class.',
-          });
-        }
+      if (record.steps.length > 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['steps'],
+          message: 'Non-composite operations must not contain substeps.',
+        });
+      }
+    }
+    if (
+      record.approval &&
+      record.approval.previewDigest !== record.preview.digest
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['approval', 'previewDigest'],
+        message: 'Operation approval preview digest must match the preview.',
+      });
+    }
+    for (const [index, step] of record.steps.entries()) {
+      if (step.approval && step.approval.previewDigest !== step.previewDigest) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['steps', index, 'approval', 'previewDigest'],
+          message: 'Substep approval preview digest must match its preview.',
+        });
       }
     }
     const seen = new Set<string>();
