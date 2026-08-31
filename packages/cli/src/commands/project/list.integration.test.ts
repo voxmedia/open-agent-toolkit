@@ -155,8 +155,9 @@ describe('oat project list coordination integration', () => {
   });
 
   it('lists materialized and recorded-absent projects across all scopes', async () => {
-    const root = await createWorkspace();
-    tempDirs.push(root);
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
     await writeStateFile(root, 'shared-project', {
       oat_phase: 'plan',
       oat_phase_status: 'complete',
@@ -397,5 +398,40 @@ describe('oat project list coordination integration', () => {
         terminalState: 'ref-sha-mismatch',
       }),
     );
+  });
+
+  it('fails closed instead of listing an active synced checkout when terminal lookup is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const slug = 'unreachable-terminal-lookup';
+    const created = await runCli(fixture.cloneA, [
+      'project',
+      'new',
+      slug,
+      '--no-dashboard',
+      '--json',
+    ]);
+    expect(created.exitCode).toBe(0);
+    git(fixture.cloneA, [
+      'remote',
+      'set-url',
+      'origin',
+      join(fixture.rootDir, 'missing-origin.git'),
+    ]);
+
+    const listed = await runCli(fixture.cloneA, ['project', 'list', '--json']);
+
+    expect(listed.exitCode).toBe(2);
+    const payload = JSON.parse(listed.stdout) as {
+      status: string;
+      message: string;
+      projects?: unknown[];
+    };
+    expect(payload.status).toBe('error');
+    expect(payload.message).toContain(
+      `Unable to verify whether origin/refs/oat/completed/${slug} exists`,
+    );
+    expect(payload.message).toContain('missing-origin.git');
+    expect(payload.projects).toBeUndefined();
   });
 });

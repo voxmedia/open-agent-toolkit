@@ -6,13 +6,17 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import type { SyncedProjectRecord } from '@commands/project/sync/record';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import type { SyncedTerminalRefProbe } from '@commands/project/sync/resolve-target';
 import { CliError } from '@errors/cli-error';
 import type { ProjectSummary } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createProjectListCommand } from './list';
+import {
+  createProjectListCommand,
+  probeAuthoritativeCompletedRef,
+} from './list';
 
 interface HarnessOptions {
   cwd: string;
@@ -28,6 +32,8 @@ interface HarnessOptions {
   syncedRecords?: SyncedProjectRecord[];
   terminalProbes?: Record<string, SyncedTerminalRefProbe>;
   authoritativeProbes?: Record<string, SyncedTerminalRefProbe | null>;
+  authoritativeLookup?: { code: number; stdout: string; stderr: string };
+  useRealAuthoritativeProbe?: boolean;
   resolveError?: Error;
 }
 
@@ -47,11 +53,15 @@ function createHarness(options: HarnessOptions): {
   );
 
   const gitRunner = {
-    run: vi.fn(async () => ({
-      code: 0,
-      stdout: options.remoteOutput ?? '',
-      stderr: '',
-    })),
+    run: vi.fn(async () =>
+      options.authoritativeLookup
+        ? options.authoritativeLookup
+        : {
+            code: 0,
+            stdout: options.remoteOutput ?? '',
+            stderr: '',
+          },
+    ),
   };
   const command = createProjectListCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -78,11 +88,13 @@ function createHarness(options: HarnessOptions): {
       if (!probe) throw new Error(`missing terminal probe for ${target.slug}`);
       return probe;
     }),
-    probeAuthoritativeCompletedRef: vi.fn(async (target) =>
-      options.authoritativeProbes
-        ? (options.authoritativeProbes[target.slug] ?? null)
-        : null,
-    ),
+    probeAuthoritativeCompletedRef: options.useRealAuthoritativeProbe
+      ? probeAuthoritativeCompletedRef
+      : vi.fn(async (target) =>
+          options.authoritativeProbes
+            ? (options.authoritativeProbes[target.slug] ?? null)
+            : null,
+        ),
     directoryExists: vi.fn(
       async (path: string) =>
         path.endsWith('/shared') ||
@@ -489,6 +501,54 @@ describe('oat project list', () => {
         },
       ],
     });
+  });
+
+  it.each([
+    ['unreachable', 'fatal: Could not resolve host: example.invalid'],
+    [
+      'authentication-failing',
+      'fatal: Authentication failed for remote repository',
+    ],
+  ])(
+    'fails closed when the completed-ref lookup is %s',
+    async (_failure, stderr) => {
+      const { command, capture } = createHarness({
+        cwd: '/repo',
+        syncedProjects: [projectSummary('lookup-failure')],
+        useRealAuthoritativeProbe: true,
+        authoritativeLookup: { code: 128, stdout: '', stderr },
+      });
+
+      await runCommand(command, [], ['--json']);
+
+      const payload = capture.jsonPayloads[0] as {
+        status: string;
+        message: string;
+      };
+      expect(payload).toEqual({
+        status: 'error',
+        message: expect.stringContaining(
+          'Unable to verify whether origin/refs/oat/completed/lookup-failure exists (exit 128)',
+        ),
+      });
+      expect(payload.message).toContain(stderr);
+      expect(payload).not.toHaveProperty('projects');
+      expect(process.exitCode).toBe(2);
+    },
+  );
+
+  it('treats only the verified missing-ref result as completed-ref absence', async () => {
+    const target = buildSyncTarget(
+      '/repo',
+      '.oat/projects/shared',
+      'verified-absent',
+    );
+
+    await expect(
+      probeAuthoritativeCompletedRef(target, {
+        run: async () => ({ code: 2, stdout: '', stderr: '' }),
+      }),
+    ).resolves.toBeNull();
   });
 
   it.each([

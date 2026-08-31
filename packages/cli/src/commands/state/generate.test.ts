@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -27,6 +27,12 @@ function terminalGitRunner(rows: string[]): GitRunner {
         ? { code: 0, stdout: selected.join('\n'), stderr: '' }
         : { code: 2, stdout: '', stderr: '' };
     },
+  };
+}
+
+function failingTerminalGitRunner(stderr: string): GitRunner {
+  return {
+    run: async () => ({ code: 128, stdout: '', stderr }),
   };
 }
 
@@ -410,6 +416,33 @@ describe('generateStateDashboard', () => {
       '**stale-record** - completed ref is authoritative',
     );
     expect(dashboard).not.toContain('oat project pull stale-record');
+  });
+
+  it('fails dashboard generation closed when completed authority cannot be authenticated', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    await writeStateFile(root, '.oat/projects/synced/auth-failure', {
+      oat_phase: 'implement',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'quick',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/synced/auth-failure',
+    });
+
+    await expect(
+      generateStateDashboard({
+        repoRoot: root,
+        today: '2026-08-31',
+        git: mockGit,
+        gitRunner: failingTerminalGitRunner(
+          'fatal: Authentication failed for remote repository',
+        ),
+      }),
+    ).rejects.toThrow(
+      /Unable to verify whether origin\/refs\/oat\/completed\/auth-failure exists \(exit 128\).*Authentication failed/,
+    );
+    await expect(access(join(root, '.oat', 'state.md'))).rejects.toThrow();
   });
 
   it('reconciles a stale active synced checkout before dashboard recommendations', async () => {

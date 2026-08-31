@@ -19,7 +19,10 @@ import {
   listSyncedRecords,
   type SyncedProjectRecord,
 } from '@commands/project/sync/record';
-import { buildSyncTarget } from '@commands/project/sync/ref-sync';
+import {
+  buildSyncTarget,
+  classifyRemoteRefLookup,
+} from '@commands/project/sync/ref-sync';
 import {
   probeSyncedTerminalRefs,
   type SyncedTerminalRefProbe,
@@ -344,7 +347,9 @@ export async function probeAuthoritativeCompletedRef(
     ['ls-remote', '--exit-code', target.remote, completedRef],
     { cwd: target.repoRoot, allowFailure: true },
   );
-  if (lookup.code !== 0) {
+  if (
+    classifyRemoteRefLookup(lookup, target.remote, completedRef) === 'absent'
+  ) {
     return null;
   }
   const rows = lookup.stdout.split('\n').filter(Boolean);
