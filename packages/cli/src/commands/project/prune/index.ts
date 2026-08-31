@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, isAbsolute, join, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -9,16 +9,29 @@ import {
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
 import {
+  buildSyncTarget,
+  classifyRemoteRefLookup,
+  deleteCompletedSyncedRefForPrune,
   pruneSynced,
   type PruneResult,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
-import { resolveSyncedTarget } from '@commands/project/sync/resolve-target';
+import {
+  probeSyncedTerminalRefs,
+  resolveSyncedTarget,
+  type SyncedTerminalRefProbe,
+} from '@commands/project/sync/resolve-target';
 import {
   getFrontmatterBlock,
   parseFrontmatterScalarFields,
 } from '@commands/shared/frontmatter';
-import { syncedRecordPath } from '@commands/shared/project-scope';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  completedSyncedRefName,
+  resolveProjectScope,
+  resolveScopeRoot,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
@@ -32,15 +45,23 @@ interface ProjectPruneOptions {
 interface ProjectPruneDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveProjectsRoot: typeof resolveProjectsRoot;
   resolveSyncedTarget: typeof resolveSyncedTarget;
+  inspectTerminalRefs: typeof inspectTerminalRefs;
+  deleteCompletedSyncedRefForPrune: typeof deleteCompletedSyncedRefForPrune;
   pruneSynced: (
     target: SyncTarget,
     git: GitRunner,
-    options: { force: boolean; commit: boolean },
+    options: {
+      force: boolean;
+      commit: boolean;
+      expectedActiveAliasSha?: string;
+    },
   ) => Promise<PruneResult>;
   readProjectState: (
     target: SyncTarget,
     git: GitRunner,
+    ref?: string,
   ) => Promise<string | null>;
   gitRunner: GitRunner;
   processEnv: NodeJS.ProcessEnv;
@@ -49,6 +70,7 @@ interface ProjectPruneDependencies {
 export async function readPruneProjectState(
   target: SyncTarget,
   git: GitRunner,
+  ref = target.ref,
 ): Promise<string | null> {
   try {
     return await readFile(join(target.projectPath, 'state.md'), 'utf8');
@@ -56,12 +78,12 @@ export async function readPruneProjectState(
     // A completed or not-yet-pulled project may have no checkout.
   }
 
-  const fetched = await git.run(
-    ['fetch', target.remote, `+${target.ref}:${target.ref}`],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
+  const fetched = await git.run(['fetch', target.remote, `+${ref}:${ref}`], {
+    cwd: target.repoRoot,
+    allowFailure: true,
+  });
   if (fetched.code === 0) {
-    const shown = await git.run(['show', `${target.ref}:state.md`], {
+    const shown = await git.run(['show', `${ref}:state.md`], {
       cwd: target.repoRoot,
       allowFailure: true,
     });
@@ -85,7 +107,10 @@ export async function readPruneProjectState(
 const DEFAULT_DEPENDENCIES: ProjectPruneDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveProjectsRoot,
   resolveSyncedTarget,
+  inspectTerminalRefs,
+  deleteCompletedSyncedRefForPrune,
   pruneSynced,
   readProjectState: readPruneProjectState,
   gitRunner: defaultGitRunner,
@@ -99,6 +124,61 @@ function hasOpenPr(state: string | null): boolean {
   return parsed.valid && parsed.values.oat_pr_status === 'open';
 }
 
+function pruneSlug(
+  repoRoot: string,
+  projectsRoot: string,
+  pathOrSlug: string,
+): string | null {
+  if (!pathOrSlug.includes('/') && !pathOrSlug.includes('\\')) {
+    return pathOrSlug;
+  }
+  const absolute = isAbsolute(pathOrSlug)
+    ? resolve(pathOrSlug)
+    : resolve(repoRoot, pathOrSlug);
+  const scope = resolveProjectScope(
+    absolute,
+    resolveScopeRoot(repoRoot, projectsRoot, 'shared'),
+    repoRoot,
+  );
+  return scope === 'synced' ? basename(absolute) : null;
+}
+
+export async function inspectTerminalRefs(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<SyncedTerminalRefProbe | null> {
+  const completedRef = completedSyncedRefName(target.slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, completedRef],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (
+    classifyRemoteRefLookup(lookup, target.remote, completedRef) === 'absent'
+  ) {
+    return null;
+  }
+  const rows = lookup.stdout.split('\n').filter(Boolean);
+  const [sha, ref] = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    rows.length !== 1 ||
+    ref !== completedRef ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(sha ?? '')
+  ) {
+    throw new CliError(
+      `Unable to verify terminal refs for ${target.slug}: origin returned a malformed completed-ref advertisement.`,
+      2,
+    );
+  }
+  const probe = await probeSyncedTerminalRefs(target, sha!, git);
+  if (probe.state === 'wrong-sha') {
+    throw new CliError(
+      `Refusing destructive prune for ${target.slug}: active ${probe.activeRef} is ${probe.activeSha ?? 'absent'} while completed ${probe.completedRef} is ${probe.completedSha ?? 'absent'}. Repair the terminal ref mismatch before retrying; both refs were retained.`,
+      1,
+    );
+  }
+  return probe;
+}
+
 async function runPrune(
   context: CommandContext,
   pathOrSlug: string | undefined,
@@ -107,18 +187,44 @@ async function runPrune(
 ): Promise<void> {
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const target = await dependencies.resolveSyncedTarget(
-      { repoRoot, env: dependencies.processEnv },
-      pathOrSlug,
-      { gitRunner: dependencies.gitRunner },
-      {
-        allowMissingCheckout: true,
-        allowStagedPruneDeletion: true,
-      },
+    const projectsRoot = await dependencies.resolveProjectsRoot(
+      repoRoot,
+      dependencies.processEnv,
     );
+    let target: SyncTarget;
+    try {
+      target = await dependencies.resolveSyncedTarget(
+        { repoRoot, env: dependencies.processEnv },
+        pathOrSlug,
+        { gitRunner: dependencies.gitRunner },
+        {
+          allowMissingCheckout: true,
+          allowStagedPruneDeletion: true,
+        },
+      );
+    } catch (error) {
+      const slug = pathOrSlug
+        ? pruneSlug(repoRoot, projectsRoot, pathOrSlug)
+        : null;
+      if (
+        !slug ||
+        !(error instanceof CliError) ||
+        error.exitCode !== 1 ||
+        !error.message.startsWith('No synced project named ')
+      ) {
+        throw error;
+      }
+      target = buildSyncTarget(repoRoot, projectsRoot, slug);
+    }
+    const terminal = await dependencies.inspectTerminalRefs(
+      target,
+      dependencies.gitRunner,
+    );
+    const terminalRef = terminal?.completedRef;
     const state = await dependencies.readProjectState(
       target,
       dependencies.gitRunner,
+      terminalRef,
     );
     if (!options.force && hasOpenPr(state)) {
       throw new CliError(
@@ -127,15 +233,36 @@ async function runPrune(
       );
     }
 
+    const removedRefs =
+      terminal?.state === 'completed-only'
+        ? terminal.completedRef
+        : terminalRef
+          ? `${target.ref} and ${terminalRef}`
+          : target.ref;
     context.logger.warn(
-      `Pruning ${target.slug} removes ${target.ref}; pinned links will stop resolving.`,
+      `Pruning ${target.slug} removes ${removedRefs}; pinned links will stop resolving. Durable local/S3 archives are preserved.`,
     );
-    const result = await dependencies.pruneSynced(
-      target,
-      dependencies.gitRunner,
-      { force: options.force, commit: options.commit },
-    );
-    const payload = { ...result, ref: target.ref };
+    const result =
+      terminal?.state === 'completed-only'
+        ? { status: 'pruned' as const, lifecycleCommit: null }
+        : await dependencies.pruneSynced(target, dependencies.gitRunner, {
+            force: options.force,
+            commit: options.commit,
+            ...(terminal?.state === 'both' && terminal.activeSha
+              ? { expectedActiveAliasSha: terminal.activeSha }
+              : {}),
+          });
+    const completedDeletion = terminalRef
+      ? await dependencies.deleteCompletedSyncedRefForPrune(
+          target,
+          dependencies.gitRunner,
+        )
+      : null;
+    const payload = {
+      ...result,
+      ref: target.ref,
+      completedRef: completedDeletion?.completedRef ?? null,
+    };
     if (context.json) context.logger.json(payload);
     else context.logger.info(`Pruned synced project ${target.slug}.`);
     process.exitCode = 0;

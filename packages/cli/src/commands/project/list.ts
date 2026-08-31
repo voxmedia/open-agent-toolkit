@@ -15,10 +15,19 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
-import { listSyncedRecords } from '@commands/project/sync/record';
+import {
+  listSyncedRecords,
+  type SyncedProjectRecord,
+} from '@commands/project/sync/record';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
+import {
+  probeSyncedTerminalRefs,
+  type SyncedTerminalRefProbe,
+} from '@commands/project/sync/resolve-target';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
+  completedSyncedRefName,
   PROJECT_SCOPES,
   resolveScopeRoot,
   type ProjectScope,
@@ -42,6 +51,8 @@ interface ProjectListDependencies {
   ) => Promise<string>;
   listProjects: (projectsRoot: string) => Promise<ProjectSummary[]>;
   listSyncedRecords: typeof listSyncedRecords;
+  probeSyncedTerminalRefs: typeof probeSyncedTerminalRefs;
+  probeAuthoritativeCompletedRef: typeof probeAuthoritativeCompletedRef;
   directoryExists: (path: string) => Promise<boolean>;
   readProjectMetadata: (projectPath: string) => Promise<ProjectListMetadata>;
   processEnv: NodeJS.ProcessEnv;
@@ -66,6 +77,8 @@ const DEFAULT_DEPENDENCIES: ProjectListDependencies = {
   resolveProjectsRoot,
   listProjects,
   listSyncedRecords,
+  probeSyncedTerminalRefs,
+  probeAuthoritativeCompletedRef,
   directoryExists,
   readProjectMetadata,
   processEnv: process.env,
@@ -152,7 +165,13 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
           : '—'
         : project.kind === 'recorded-invalid'
           ? 'restore record from Git'
-          : `oat project pull ${project.name}`,
+          : project.kind === 'recorded-terminal'
+            ? project.archiveSnapshot
+              ? 'retry completion cleanup'
+              : 'retry archive completion'
+            : project.kind === 'terminal-invalid'
+              ? 'repair terminal ref mismatch'
+              : `oat project pull ${project.name}`,
   }));
 
   const widths = {
@@ -200,6 +219,167 @@ function formatProjectTable(projects: ProjectListRow[]): string[] {
   );
 
   return [header, divider, ...lines];
+}
+
+const ARCHIVE_RETRY_REASON =
+  'archive snapshot is incomplete; retry oat-project-complete before retiring terminal state';
+const RETIREMENT_RETRY_REASON =
+  'archive is durable but legacy terminal cleanup remains; retry oat-project-complete';
+const AUTHORITATIVE_COMPLETION_REASON =
+  'completed ref is authoritative; remove the stale local checkout or active record with oat-project-complete';
+
+function terminalMismatchReason(
+  activeSha: string | null,
+  completedSha: string | null,
+  expectedSha?: string,
+): string {
+  return `terminal ref SHA mismatch: active ${activeSha ?? 'absent'}, completed ${completedSha ?? 'absent'}${expectedSha ? `, expected archived source ${expectedSha}` : ''}; repair the ref mismatch before retrying completion or prune`;
+}
+
+export function classifyLegacySyncedRecord(
+  record: SyncedProjectRecord,
+  path: string,
+  probe?: SyncedTerminalRefProbe,
+): Extract<
+  ProjectListRow,
+  { kind: 'recorded-absent' | 'recorded-terminal' | 'terminal-invalid' }
+> {
+  if (probe?.state === 'wrong-sha') {
+    return {
+      kind: 'terminal-invalid',
+      name: record.slug,
+      path,
+      scope: 'synced',
+      checkout: 'invalid',
+      terminalState: 'ref-sha-mismatch',
+      activeRef: probe.activeRef,
+      completedRef: probe.completedRef,
+      activeSha: probe.activeSha,
+      completedSha: probe.completedSha,
+      expectedSha: probe.expectedSha,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: 'complete',
+      progress: null,
+      recommendation: {
+        skill: 'none',
+        reason: terminalMismatchReason(
+          probe.activeSha,
+          probe.completedSha,
+          probe.expectedSha,
+        ),
+      },
+    };
+  }
+
+  if (probe?.state === 'completed-only' || probe?.state === 'both') {
+    return {
+      kind: 'recorded-terminal',
+      name: record.slug,
+      path,
+      scope: 'synced',
+      checkout: 'absent',
+      terminalState: 'authoritative-completion',
+      archiveSnapshot: record.archiveSnapshot ?? null,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: 'complete',
+      progress: null,
+      recommendation: {
+        skill: 'none',
+        reason: AUTHORITATIVE_COMPLETION_REASON,
+      },
+    };
+  }
+
+  if (record.status === 'complete') {
+    return {
+      kind: 'recorded-terminal',
+      name: record.slug,
+      path,
+      scope: 'synced',
+      checkout: 'absent',
+      terminalState: 'legacy-completion',
+      archiveSnapshot: record.archiveSnapshot ?? null,
+      phase: null,
+      phaseStatus: null,
+      workflowMode: null,
+      lifecycle: 'complete',
+      progress: null,
+      recommendation: {
+        skill: 'none',
+        reason: record.archiveSnapshot
+          ? RETIREMENT_RETRY_REASON
+          : ARCHIVE_RETRY_REASON,
+      },
+    };
+  }
+
+  return {
+    kind: 'recorded-absent',
+    name: record.slug,
+    path,
+    scope: 'synced',
+    checkout: 'absent',
+    phase: null,
+    phaseStatus: null,
+    workflowMode: null,
+    lifecycle: null,
+    progress: null,
+    recommendation: {
+      skill: 'oat project pull',
+      reason: 'checkout absent',
+    },
+  };
+}
+
+export async function probeAuthoritativeCompletedRef(
+  target: ReturnType<typeof buildSyncTarget>,
+  git: GitRunner,
+): Promise<SyncedTerminalRefProbe | null> {
+  const completedRef = completedSyncedRefName(target.slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, completedRef],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (lookup.code !== 0) {
+    return null;
+  }
+  const rows = lookup.stdout.split('\n').filter(Boolean);
+  const [sha, ref] = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    rows.length !== 1 ||
+    ref !== completedRef ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(sha ?? '')
+  ) {
+    throw new CliError(
+      `Unable to reconcile completed authority for ${target.slug}: origin returned a malformed completed-ref advertisement.`,
+      2,
+    );
+  }
+  return probeSyncedTerminalRefs(target, sha!, git);
+}
+
+function classifyMaterializedTerminalRow(
+  row: Extract<ProjectListRow, { kind: 'materialized' }>,
+  probe: SyncedTerminalRefProbe,
+): ProjectListRow {
+  const record: SyncedProjectRecord = {
+    schemaVersion: 1,
+    slug: row.name,
+    scope: 'synced',
+    ref: probe.activeRef,
+    remote: 'origin',
+    status: 'active',
+    createdAt: new Date(0).toISOString(),
+    completedAt: null,
+  };
+  const classified = classifyLegacySyncedRecord(record, row.path, probe);
+  return classified.kind === 'recorded-terminal'
+    ? { ...classified, checkout: 'present' }
+    : classified;
 }
 
 function displayPath(repoRoot: string, absolutePath: string): string {
@@ -251,13 +431,6 @@ async function collectProjectRows(
       );
     }
     if (root.scope === 'synced') {
-      const materialized = new Set(
-        rows
-          .filter(
-            (row) => row.scope === 'synced' && row.kind === 'materialized',
-          )
-          .map((row) => row.name),
-      );
       const records = await dependencies.listSyncedRecords(root.path, {
         onInvalid: (path, error) => {
           const message =
@@ -299,24 +472,48 @@ async function collectProjectRows(
           );
         },
       });
+      for (const row of rows.filter(
+        (
+          candidate,
+        ): candidate is Extract<ProjectListRow, { kind: 'materialized' }> =>
+          candidate.scope === 'synced' && candidate.kind === 'materialized',
+      )) {
+        const target = buildSyncTarget(repoRoot, projectsRoot, row.name);
+        const probe = await dependencies.probeAuthoritativeCompletedRef(
+          target,
+          dependencies.gitRunner,
+        );
+        if (!probe) continue;
+        const index = rows.indexOf(row);
+        rows[index] = classifyMaterializedTerminalRow(row, probe);
+      }
+      const represented = new Set(
+        rows.filter((row) => row.scope === 'synced').map((row) => row.name),
+      );
       for (const record of records) {
-        if (!materialized.has(record.slug)) {
-          rows.push({
-            kind: 'recorded-absent',
-            name: record.slug,
-            path: displayPath(repoRoot, join(root.path, record.slug)),
-            scope: 'synced',
-            checkout: 'absent',
-            phase: null,
-            phaseStatus: null,
-            workflowMode: null,
-            lifecycle: null,
-            progress: null,
-            recommendation: {
-              skill: 'oat project pull',
-              reason: 'checkout absent',
-            },
-          });
+        if (!represented.has(record.slug)) {
+          const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
+          const authoritative =
+            await dependencies.probeAuthoritativeCompletedRef(
+              target,
+              dependencies.gitRunner,
+            );
+          const probe =
+            authoritative ??
+            (record.archiveSourceRefSha
+              ? await dependencies.probeSyncedTerminalRefs(
+                  target,
+                  record.archiveSourceRefSha,
+                  dependencies.gitRunner,
+                )
+              : undefined);
+          rows.push(
+            classifyLegacySyncedRecord(
+              record,
+              displayPath(repoRoot, join(root.path, record.slug)),
+              probe,
+            ),
+          );
         }
       }
     }
@@ -335,7 +532,7 @@ async function appendRemoteRows(
   dependencies: ProjectListDependencies,
 ): Promise<ProjectListRow[]> {
   const remote = await dependencies.gitRunner.run(
-    ['ls-remote', 'origin', 'refs/oat/projects/*'],
+    ['ls-remote', 'origin', 'refs/oat/projects/*', 'refs/oat/completed/*'],
     { cwd: repoRoot, allowFailure: true },
   );
   if (remote.code !== 0) {
@@ -347,18 +544,75 @@ async function appendRemoteRows(
   const localSlugs = new Set(
     rows.filter((row) => row.scope === 'synced').map((row) => row.name),
   );
+  const refs = new Map<
+    string,
+    {
+      activeRef?: string;
+      activeSha?: string;
+      completedRef?: string;
+      completedSha?: string;
+    }
+  >();
   for (const line of remote.stdout.split('\n')) {
-    const [, ref] = line.trim().split(/\s+/);
-    if (!ref?.startsWith('refs/oat/projects/')) continue;
-    const name = ref.slice('refs/oat/projects/'.length);
-    if (!name || localSlugs.has(name)) continue;
+    const [sha, ref] = line.trim().split(/\s+/);
+    const activePrefix = 'refs/oat/projects/';
+    const completedPrefix = 'refs/oat/completed/';
+    const prefix = ref?.startsWith(activePrefix)
+      ? activePrefix
+      : ref?.startsWith(completedPrefix)
+        ? completedPrefix
+        : null;
+    if (!sha || !ref || !prefix) continue;
+    const name = ref.slice(prefix.length);
+    if (!name) continue;
+    const entry = refs.get(name) ?? {};
+    if (prefix === activePrefix) {
+      entry.activeRef = ref;
+      entry.activeSha = sha;
+    } else {
+      entry.completedRef = ref;
+      entry.completedSha = sha;
+    }
+    refs.set(name, entry);
+  }
+  for (const [name, refState] of refs) {
+    if (localSlugs.has(name) || !refState.activeRef) continue;
+    if (refState.completedRef && refState.completedSha === refState.activeSha) {
+      continue;
+    }
+    if (refState.completedRef && refState.completedSha && refState.activeSha) {
+      rows.push({
+        kind: 'terminal-invalid',
+        name,
+        scope: 'synced',
+        checkout: 'invalid',
+        terminalState: 'ref-sha-mismatch',
+        activeRef: refState.activeRef,
+        completedRef: refState.completedRef,
+        activeSha: refState.activeSha,
+        completedSha: refState.completedSha,
+        phase: null,
+        phaseStatus: null,
+        workflowMode: null,
+        lifecycle: 'complete',
+        progress: null,
+        recommendation: {
+          skill: 'none',
+          reason: terminalMismatchReason(
+            refState.activeSha,
+            refState.completedSha,
+          ),
+        },
+      });
+      continue;
+    }
     rows.push({
       kind: 'remote',
       name,
       scope: 'synced',
       origin: 'remote',
       checkout: 'absent',
-      ref,
+      ref: refState.activeRef,
       phase: null,
       phaseStatus: null,
       workflowMode: null,

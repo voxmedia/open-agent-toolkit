@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { GitRunner } from '@commands/project/sync/git';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -14,6 +15,20 @@ const mockGit: GitOperations = {
   isGitRepo: () => true,
   diffFileCount: () => 0,
 };
+
+function terminalGitRunner(rows: string[]): GitRunner {
+  return {
+    run: async (args: string[]) => {
+      const refs = args.filter((arg) => arg.startsWith('refs/oat/'));
+      const selected = rows.filter((row) =>
+        refs.some((ref) => row.endsWith(`\t${ref}`)),
+      );
+      return selected.length
+        ? { code: 0, stdout: selected.join('\n'), stderr: '' }
+        : { code: 2, stdout: '', stderr: '' };
+    },
+  };
+}
 
 async function createTempRepo(): Promise<string> {
   const dir = join(
@@ -321,6 +336,130 @@ describe('generateStateDashboard', () => {
     const dashboard = await readFile(result.dashboardPath, 'utf8');
     expect(dashboard).toContain('**proj-a** - discovery');
     expect(dashboard).toContain('**proj-b** - implement');
+  });
+
+  it('renders legacy terminal cleanup without a continuation recommendation', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const syncedRoot = join(root, '.oat', 'projects', 'synced');
+    await mkdir(syncedRoot, { recursive: true });
+    await writeFile(
+      join(syncedRoot, 'legacy-terminal.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'legacy-terminal',
+        scope: 'synced',
+        ref: 'refs/oat/projects/legacy-terminal',
+        remote: 'origin',
+        status: 'complete',
+        createdAt: '2026-08-30T00:00:00.000Z',
+        completedAt: '2026-08-31T00:00:00.000Z',
+        archiveSnapshot: 'legacy-terminal',
+        archiveSourceRefSha: 'a'.repeat(40),
+      })}\n`,
+      'utf8',
+    );
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+      gitRunner: terminalGitRunner([
+        `${'a'.repeat(40)}\trefs/oat/projects/legacy-terminal`,
+        `${'a'.repeat(40)}\trefs/oat/completed/legacy-terminal`,
+      ]),
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain(
+      '**legacy-terminal** - completed ref is authoritative',
+    );
+    expect(dashboard).not.toContain('oat project pull legacy-terminal');
+  });
+
+  it('lets completed authority replace stale active-record dashboard guidance', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const syncedRoot = join(root, '.oat', 'projects', 'synced');
+    await mkdir(syncedRoot, { recursive: true });
+    await writeFile(
+      join(syncedRoot, 'stale-record.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'stale-record',
+        scope: 'synced',
+        ref: 'refs/oat/projects/stale-record',
+        remote: 'origin',
+        status: 'active',
+        createdAt: '2026-08-30T00:00:00.000Z',
+        completedAt: null,
+      })}\n`,
+      'utf8',
+    );
+    const sha = 'a'.repeat(40);
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+      gitRunner: terminalGitRunner([`${sha}\trefs/oat/completed/stale-record`]),
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain(
+      '**stale-record** - completed ref is authoritative',
+    );
+    expect(dashboard).not.toContain('oat project pull stale-record');
+  });
+
+  it('reconciles a stale active synced checkout before dashboard recommendations', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    await writeStateFile(root, '.oat/projects/synced/stale-checkout', {
+      oat_phase: 'implement',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'quick',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/synced/stale-checkout',
+    });
+    const sha = 'a'.repeat(40);
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+      gitRunner: terminalGitRunner([
+        `${sha}\trefs/oat/projects/stale-checkout`,
+        `${sha}\trefs/oat/completed/stale-checkout`,
+      ]),
+    });
+
+    expect(result.projectStatus).toBe('terminal cleanup pending');
+    expect(result.recommendedStep).toBe('oat-project-complete');
+    expect(result.recommendedReason).toContain(
+      'completed ref is authoritative',
+    );
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain(
+      '**stale-checkout** - completed ref is authoritative',
+    );
+    expect(dashboard).not.toContain('**stale-checkout** - implement');
+  });
+
+  it('omits fully retired recordless terminal projects from the dashboard', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).not.toContain('retired-recordless');
+    expect(dashboard).toContain('*(No projects found)*');
   });
 
   it('groups completed coordination parents into a Decompositions section', async () => {

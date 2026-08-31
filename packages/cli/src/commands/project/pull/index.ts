@@ -1,9 +1,12 @@
+import { isAbsolute, relative, resolve, sep } from 'node:path';
+
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import { readSyncedRecord } from '@commands/project/sync/record';
 import {
   abortSynced as defaultAbortSynced,
   commitRecordChange as defaultCommitRecordChange,
@@ -14,11 +17,21 @@ import {
   type PullResult,
   type AdoptionRecordState,
   type SyncTarget,
+  buildSyncTarget,
+  classifyRemoteRefLookup,
 } from '@commands/project/sync/ref-sync';
 import {
+  probeSyncedTerminalRefs,
   resolveSyncedTarget,
   type ResolvedSyncTarget,
 } from '@commands/project/sync/resolve-target';
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  completedSyncedRefName,
+  resolveProjectScope,
+  resolveScopeRoot,
+  syncedRecordPath,
+} from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
@@ -34,6 +47,8 @@ interface ProjectPullOptions {
 interface ProjectPullDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  resolveProjectsRoot: typeof resolveProjectsRoot;
+  guardSyncedTerminalTarget: typeof guardSyncedTerminalTarget;
   resolveSyncedTarget: typeof resolveSyncedTarget;
   pullSynced: (
     target: SyncTarget,
@@ -66,6 +81,8 @@ interface ProjectPullDependencies {
 const DEFAULT_DEPENDENCIES: ProjectPullDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveProjectsRoot,
+  guardSyncedTerminalTarget,
   resolveSyncedTarget,
   pullSynced: defaultPullSynced,
   pullChildren: defaultPullChildren,
@@ -78,6 +95,119 @@ const DEFAULT_DEPENDENCIES: ProjectPullDependencies = {
 
 function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+function slugForTerminalGuard(
+  repoRoot: string,
+  projectsRoot: string,
+  pathOrSlug: string | undefined,
+): string | null {
+  if (!pathOrSlug) return null;
+  if (!pathOrSlug.includes('/') && !pathOrSlug.includes('\\')) {
+    return pathOrSlug;
+  }
+  const absolute = isAbsolute(pathOrSlug)
+    ? resolve(pathOrSlug)
+    : resolve(repoRoot, pathOrSlug);
+  const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+  if (
+    resolveProjectScope(
+      absolute,
+      resolveScopeRoot(repoRoot, projectsRoot, 'shared'),
+      repoRoot,
+    ) !== 'synced'
+  ) {
+    return null;
+  }
+  const child = relative(syncedRoot, absolute);
+  return child && !child.includes(sep) ? child : null;
+}
+
+function terminalActionError(
+  slug: string,
+  action: 'pull' | 'open',
+  state: 'completed-only' | 'both',
+  completedRef: string,
+  sha: string,
+): CliError {
+  const alias =
+    state === 'both'
+      ? ' The matching active ref is only a stale terminal alias and is ignored.'
+      : '';
+  return new CliError(
+    `Synced project ${slug} is already archived at ${completedRef}@${sha} and cannot be ${action === 'pull' ? 'pulled' : 'opened'}.${alias} Inspect the durable archive, or use oat project prune ${shellQuote(slug)} only to intentionally remove retained terminal ref reachability.`,
+    1,
+  );
+}
+
+export async function guardSyncedTerminalTarget(
+  repoRoot: string,
+  projectsRoot: string,
+  pathOrSlug: string | undefined,
+  action: 'pull' | 'open',
+  git: GitRunner,
+): Promise<void> {
+  const slug = slugForTerminalGuard(repoRoot, projectsRoot, pathOrSlug);
+  if (!slug) return;
+  const target = buildSyncTarget(repoRoot, projectsRoot, slug);
+  const record = await readSyncedRecord(
+    syncedRecordPath(target.syncedRoot, slug),
+  );
+  if (record?.status === 'complete') {
+    if (record.archiveSourceRefSha) {
+      const probe = await probeSyncedTerminalRefs(
+        target,
+        record.archiveSourceRefSha,
+        git,
+      );
+      if (probe.state === 'wrong-sha') {
+        throw new CliError(
+          `Invalid terminal refs for ${slug}: active ${probe.activeRef} is ${probe.activeSha ?? 'absent'}, completed ${probe.completedRef} is ${probe.completedSha ?? 'absent'}, expected archived source ${record.archiveSourceRefSha}. Repair the ref mismatch before retrying completion or prune; the project was not ${action === 'pull' ? 'pulled' : 'opened'}.`,
+          1,
+        );
+      }
+    }
+    const detail = record.archiveSnapshot
+      ? 'Its durable archive exists, but legacy terminal cleanup is still pending.'
+      : 'Its archive snapshot metadata is incomplete.';
+    throw new CliError(
+      `Synced project ${slug} has a legacy complete record and cannot be ${action === 'pull' ? 'pulled' : 'opened'}. ${detail} Retry oat-project-complete to finish archive retirement; do not rematerialize the checkout.`,
+      1,
+    );
+  }
+
+  const completedRef = completedSyncedRefName(slug);
+  const lookup = await git.run(
+    ['ls-remote', '--exit-code', target.remote, completedRef],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (
+    classifyRemoteRefLookup(lookup, target.remote, completedRef) === 'absent'
+  ) {
+    return;
+  }
+  const rows = lookup.stdout.split('\n').filter(Boolean);
+  const [sha, advertisedRef] = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    rows.length !== 1 ||
+    advertisedRef !== completedRef ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(sha ?? '')
+  ) {
+    throw new CliError(
+      `Unable to verify terminal identity for ${slug}: origin returned a malformed completed-ref advertisement.`,
+      2,
+    );
+  }
+  const probe = await probeSyncedTerminalRefs(target, sha!, git);
+  if (probe.state === 'wrong-sha') {
+    throw new CliError(
+      `Invalid terminal refs for ${slug}: active ${probe.activeRef} is ${probe.activeSha ?? 'absent'}, completed ${probe.completedRef} is ${probe.completedSha ?? 'absent'}, expected ${sha}. Repair the ref mismatch before retrying completion or prune; the project was not ${action === 'pull' ? 'pulled' : 'opened'}.`,
+      1,
+    );
+  }
+  if (probe.state === 'completed-only' || probe.state === 'both') {
+    throw terminalActionError(slug, action, probe.state, completedRef, sha!);
+  }
 }
 
 function reportPullResult(
@@ -175,11 +305,40 @@ async function runPull(
       );
     }
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const target: ResolvedSyncTarget = await dependencies.resolveSyncedTarget(
-      { repoRoot, env: dependencies.processEnv },
-      pathOrSlug,
-      {},
-      { allowMissingCheckout: !options.continue && !options.abort },
+    const projectsRoot = await dependencies.resolveProjectsRoot(
+      repoRoot,
+      dependencies.processEnv,
+    );
+    let target: ResolvedSyncTarget;
+    try {
+      target = await dependencies.resolveSyncedTarget(
+        { repoRoot, env: dependencies.processEnv },
+        pathOrSlug,
+        {},
+        { allowMissingCheckout: !options.continue && !options.abort },
+      );
+    } catch (error) {
+      if (
+        error instanceof CliError &&
+        error.exitCode === 1 &&
+        error.message.startsWith('No synced project named ')
+      ) {
+        await dependencies.guardSyncedTerminalTarget(
+          repoRoot,
+          projectsRoot,
+          pathOrSlug,
+          'pull',
+          dependencies.gitRunner,
+        );
+      }
+      throw error;
+    }
+    await dependencies.guardSyncedTerminalTarget(
+      repoRoot,
+      projectsRoot,
+      pathOrSlug ?? target.projectPath,
+      'pull',
+      dependencies.gitRunner,
     );
     const targetArg = pathOrSlug ?? target.projectPath;
     if (options.abort) {

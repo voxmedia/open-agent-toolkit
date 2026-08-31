@@ -34,6 +34,7 @@ interface HarnessOptions {
   materializeOnPull?: boolean;
   remoteOnly?: boolean;
   resolveError?: Error;
+  terminalError?: Error;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -42,6 +43,7 @@ function createHarness(options: HarnessOptions): {
   pushSynced: ReturnType<typeof vi.fn>;
   pullSynced: ReturnType<typeof vi.fn>;
   commitRecordChange: ReturnType<typeof vi.fn>;
+  guardSyncedTerminalTarget: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const pushSynced = vi.fn(async () => ({
@@ -67,6 +69,9 @@ function createHarness(options: HarnessOptions): {
     };
   });
   const commitRecordChange = vi.fn(async () => ({ sha: 'c'.repeat(40) }));
+  const guardSyncedTerminalTarget = vi.fn(async () => {
+    if (options.terminalError) throw options.terminalError;
+  });
 
   const command = createProjectOpenCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -80,6 +85,7 @@ function createHarness(options: HarnessOptions): {
       logger: capture.logger,
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
+    guardSyncedTerminalTarget,
     pushSynced,
     pullSynced,
     commitRecordChange,
@@ -125,6 +131,7 @@ function createHarness(options: HarnessOptions): {
     pushSynced,
     pullSynced,
     commitRecordChange,
+    guardSyncedTerminalTarget,
   };
 }
 
@@ -308,6 +315,49 @@ describe('oat project open', () => {
     expect(localConfig.activeProject).toBe('.oat/projects/synced/recorded');
     expect(process.exitCode).toBe(0);
   });
+
+  it.each(['terminal-record', '.oat/projects/synced/terminal-record'])(
+    'blocks terminal synced project %s before materialization',
+    async (input) => {
+      const root = await createRepoRoot();
+      await mkdir(join(root, '.oat/projects/synced'), { recursive: true });
+      await writeFile(
+        join(root, '.oat/projects/synced/terminal-record.json'),
+        `${JSON.stringify({
+          schemaVersion: 1,
+          slug: 'terminal-record',
+          scope: 'synced',
+          ref: 'refs/oat/projects/terminal-record',
+          remote: 'origin',
+          status: 'active',
+          createdAt: '2026-08-31T00:00:00.000Z',
+          completedAt: null,
+        })}\n`,
+        'utf8',
+      );
+      const setup = createHarness({
+        cwd: root,
+        materializeOnPull: true,
+        terminalError: new CliError(
+          'Synced project terminal-record is already archived and cannot be opened.',
+          1,
+        ),
+      });
+
+      await runCommand(setup.command, [input]);
+
+      expect(setup.guardSyncedTerminalTarget).toHaveBeenCalledWith(
+        root,
+        '.oat/projects/shared',
+        input,
+        'open',
+        expect.anything(),
+      );
+      expect(setup.pullSynced).not.toHaveBeenCalled();
+      expect(setup.capture.error[0]).toContain('cannot be opened');
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('adopts an origin-only synced project before opening it', async () => {
     const root = await createRepoRoot();
