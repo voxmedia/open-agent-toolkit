@@ -632,6 +632,36 @@ oat pjm doctor --json
 git commit -m "docs(p03-t08): preserve archived scope estimate"
 ```
 
+### Task p03-t09: Remove residual standalone-project guidance
+
+**Review finding:** I1 follow-up
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-gate-integrity/discovery.md`
+
+**Step 1: Reconcile all remaining future-project statements**
+
+Update Questions 3 and 4, Option C, and the out-of-scope list to record the
+completed combined `gate-execution-contract-hardening` disposition. Preserve
+PR #190 as historical compatibility input and keep general review/gate
+integrity outside the delivered configuration/runtime seam.
+
+**Step 2: Strengthen the ownership absence check**
+
+Confirm the active discovery contains no residual singular, linked, or
+standalone quick-project phrasing that could direct recreation of the absorbed
+scaffolds.
+
+**Step 3: Verify and commit**
+
+```bash
+rg -n "quick project|linked quick project|standalone quick project|gate-headless-no-yield|gate-structured-output-contract" .oat/projects/shared/review-gate-integrity/discovery.md
+pnpm exec oxfmt .oat/projects/shared/review-gate-integrity/discovery.md
+git diff --check
+git commit -m "docs(p03-t09): finish combined owner reconciliation"
+```
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
@@ -645,7 +675,7 @@ git commit -m "docs(p03-t08): preserve archived scope estimate"
 | plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
 | final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T000938Z.md         | 659547363032fd9f41eefadc947bb0496fe7457f | gate       | claude-fable-skip-permissions |
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T010800Z.md         | 3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e | auto       | -                             |
-| final  | code     | received        | 2026-08-31 | reviews/final-review-2026-08-31T012845Z.md                  | 74da4bca17c5d3575e0908f72e070c42a8ac4018 | auto       | -                             |
+| final  | code     | fixes_added     | 2026-08-31 | reviews/archived/final-review-2026-08-31T012845Z.md         | 74da4bca17c5d3575e0908f72e070c42a8ac4018 | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -657,10 +687,10 @@ git commit -m "docs(p03-t08): preserve archived scope estimate"
 - Phase 1: 2 tasks — pure configured-command contract and canonical skill
   alignment
 - Phase 2: 2 tasks — cause-specific runtime diagnosis and no-yield prompt
-- Phase 3: 8 tasks — configuration enforcement, end-to-end proof, release
+- Phase 3: 9 tasks — configuration enforcement, end-to-end proof, release
   closeout, and bounded final-review and reconciliation repairs
 
-**Total: 12 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge after every task, review, and gate is complete.
 

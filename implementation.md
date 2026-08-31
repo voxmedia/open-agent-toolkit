@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t09
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 8     | 8/8       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 9     | 8/9       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/13 tasks completed
 
 ---
 
@@ -133,7 +133,7 @@ awaited headless completion and forbids background tasks, monitors, or waiters.
 
 ## Phase 3: Integrated Gate Execution Contract
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-08-30
 
 ### Task p03-t01: Enforce validation before gate config writes
@@ -278,6 +278,31 @@ asset-bundling race; the affected test gate was rerun sequentially and exited 0.
 
 **Next:** Obtain a new independent final review before replacing the stale
 exit-gate generation.
+
+### Review Received: final decision re-review
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T012845Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p03-t09
+
+**Status:** `fixes_added`
+
+**Finding disposition:**
+
+- I1 follow-up (`artifact_alignment_required`): reconcile four remaining
+  future standalone-project statements in the active review-gate-integrity
+  discovery and strengthen the absence check in p03-t09.
+
+**Next:** Complete p03-t09 and obtain another narrowed final decision review
+before replacing the stale exit-gate generation.
 
 ---
 
