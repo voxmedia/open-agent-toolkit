@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p03-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 9     | 8/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 9     | 9/9       |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
@@ -133,7 +133,7 @@ awaited headless completion and forbids background tasks, monitors, or waiters.
 
 ## Phase 3: Integrated Gate Execution Contract
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-30
 
 ### Task p03-t01: Enforce validation before gate config writes
@@ -246,6 +246,21 @@ passed, including both false-positive prefixes and a literal prompt backslash.
 
 ---
 
+### Task p03-t09: Remove residual standalone-project guidance
+
+**Status:** completed
+**Commit:** c56ba6995a90eab7b1d06c2c79b016ca9940e54f
+
+**Outcome:** Questions 3 and 4, Option C, and the out-of-scope list now record
+the configuration and no-yield slices as delivered by the sole combined owner
+while preserving PR #190 and general integrity boundaries.
+
+**Verification:** The strengthened ownership search returns no superseded
+scaffold name or singular, linked, or standalone quick-project phrase;
+formatting, `git diff --check`, and repository check passed.
+
+---
+
 ### Review Received: final reconciliation
 
 **Date:** 2026-08-31
@@ -293,7 +308,7 @@ exit-gate generation.
 
 **New tasks added:** p03-t09
 
-**Status:** `fixes_added`
+**Status:** `fixes_completed` (awaiting final decision re-review)
 
 **Finding disposition:**
 
@@ -301,8 +316,11 @@ exit-gate generation.
   future standalone-project statements in the active review-gate-integrity
   discovery and strengthen the absence check in p03-t09.
 
-**Next:** Complete p03-t09 and obtain another narrowed final decision review
-before replacing the stale exit-gate generation.
+**Post-fix verification:** The stronger ownership absence check and repository
+check exited 0.
+
+**Next:** Obtain another narrowed final decision review before replacing the
+stale exit-gate generation.
 
 ---
 
