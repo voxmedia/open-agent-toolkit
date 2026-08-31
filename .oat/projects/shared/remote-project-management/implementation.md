@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01
+    reason: 'Independent Phase 1 review exhausted its three-cycle governance cap with two Critical findings: malformed recognized provider policy shapes can preserve permissive authority, and operation lifecycle/composite invariants remain unsafe.'
+    since: 2026-08-31
 oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -24,16 +27,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 10    | 10/10     |
-| Phase 2 | pending   | 9     | 0/9       |
-| Phase 3 | pending   | 12    | 0/12      |
-| Phase 4 | pending   | 11    | 0/11      |
-| Phase 5 | pending   | 9     | 0/9       |
-| Phase 6 | pending   | 10    | 0/10      |
-| Phase 7 | pending   | 10    | 0/10      |
-| Phase 8 | pending   | 6     | 0/6       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | blocked | 10    | 10/10     |
+| Phase 2 | pending | 9     | 0/9       |
+| Phase 3 | pending | 12    | 0/12      |
+| Phase 4 | pending | 11    | 0/11      |
+| Phase 5 | pending | 9     | 0/9       |
+| Phase 6 | pending | 10    | 0/10      |
+| Phase 7 | pending | 10    | 0/10      |
+| Phase 8 | pending | 6     | 0/6       |
 
 **Total:** 10/77 tasks completed
 
@@ -41,7 +44,7 @@ oat_generated: false
 
 ## Phase 1: Domain, Configuration, and Persistence
 
-**Status:** completed
+**Status:** blocked
 **Started:** 2026-03-15
 
 ### Phase Summary
@@ -343,6 +346,12 @@ continuation_events:
   - id: implement-p01-20260831T0410Z-context-1
     reason: missing authoritative recovery ledger
     target: oat-phase-implementer-gpt-5-6-sol-high
+  - id: review-fix-p01-r1-20260831T0542Z
+    reason: bounded fixes for round-1 Critical and Important review findings
+    target: oat-phase-implementer-gpt-5-6-sol-high
+  - id: review-fix-p01-r2-20260831T0625Z
+    reason: bounded fixes for round-2 Critical and Important review findings
+    target: oat-phase-implementer-gpt-5-6-sol-high
 ```
 
 **Dispatch stamp:** Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
@@ -397,6 +406,27 @@ continuation_events:
 - Disposition: resolved by upstream integration; no project repair was needed,
   and recovery usage remains 0/10 with `pending_attempt: null`.
 
+#### Independent review and bounded fixes
+
+| Round | Request                          | Target                                                | Artifact                                                       | Findings                          | Outcome                                  |
+| ----- | -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
+| 1     | `review-p01-20260831T052706Z`    | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-review-2026-08-31T052706Z.md`       | 2 Critical, 2 Important, 3 Medium | blocked; same-handle fix `7b927ed8a`     |
+| 2     | `review-p01-r2-20260831T060131Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-rereview-2026-08-31T060131Z.md`     | 2 Critical, 1 Important, 3 Medium | blocked; same-handle fix `306bdd9dc`     |
+| 3     | `review-p01-r3-20260831T063219Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md` | 2 Critical, 0 Important, 3 Medium | terminal blocked; governance cap reached |
+
+- Every reviewer reported `**Reconnaissance:** not-attempted`; no review
+  artifact contains a `## Review Orchestration` section.
+- Round 1 fixed fail-closed known-value policy handling, durable evidence
+  schemas, create-journal coupling, and default Git-common-dir doctor routing.
+- Round 2 fixed unknown-key config rejection, operation-class representation,
+  and provider/context divergence diagnostics.
+- Terminal Critical findings: malformed values at recognized provider policy
+  keys can still be discarded while a permissive repository default survives;
+  operation lifecycle/composite cross-field rules still admit contradictory or
+  destructive mutation evidence.
+- Review-fix retry usage: 2/2; review governance cycles: 3/3.
+- Phase outcome: `BLOCKED`; Phase 2 did not start.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -447,12 +477,16 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the independent Phase 1 review, then begin Phase 2 if it passes.
+- Obtain operator direction before any additional Phase 1 repair beyond the
+  exhausted review-fix cap; do not begin Phase 2 while the terminal Critical
+  findings remain.
 
 **Blockers:**
 
-- None. PR #249's worker cap resolved the live full-CLI timeout class after
-  origin/main was merged.
+- The final Phase 1 review found two Critical gaps after two bounded fix rounds:
+  recognized-provider policy shape validation can still fail open, and
+  operation lifecycle/composite invariants remain unsafe. Review governance is
+  exhausted at 3/3 cycles.
 
 **Session End:** 2026-08-31T04:59:16Z
 
@@ -478,10 +512,10 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                   | Passed                                 | Failed | Coverage |
-| ----- | ----------------------------------------------------------- | -------------------------------------- | ------ | -------- |
-| 1     | Focused, format, types, lint, build, post-merge full CLI x1 | 417 focused; full CLI 4,688; all gates | 0      | passed   |
-| 2     | -                                                           | -                                      | -      | -        |
+| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage                            |
+| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | ----------------------------------- |
+| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 426 focused; full CLI 4,697; all gates | 0      | verification passed; review blocked |
+| 2     | -                                                                                    | -                                      | -      | -                                   |
 
 ## Final Summary (for PR/docs)
 

@@ -1,7 +1,10 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: cd6608947699b6431216fa8364b67729b7583866
-oat_blockers: []
+oat_last_commit: 306bdd9dc0f862021ef049f019b9f0f7d6579599
+oat_blockers:
+  - task_id: p01
+    reason: 'Independent Phase 1 review exhausted its three-cycle governance cap with two Critical findings: malformed recognized provider policy shapes can preserve permissive authority, and operation lifecycle/composite invariants remain unsafe.'
+    since: 2026-08-31
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -24,7 +27,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:25:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T11:54:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -38,7 +41,8 @@ oat_generated: false
 
 Implementation — Phase 1 completed p01-t01 through p01-t10 and passed
 phase-wide verification after origin/main incorporated PR #249's four-worker
-Vitest cap. Independent review is next; Phase 2 has not started.
+Vitest cap. Independent review exhausted its three-cycle governance cap with
+two Critical findings. Phase 2 has not started.
 
 ## Artifacts
 
@@ -79,12 +83,15 @@ Vitest cap. Independent review is next; Phase 2 has not started.
 - ✓ p01-t10 persisted pre-create intent and gated portable metadata on durable
   remote identity verification
 - ✓ Phase 1 tasks complete and phase-wide verification passed
+- ⚠ Phase 1 independent review blocked after two bounded fix rounds
 
 ## Blockers
 
-None.
+- Phase p01: the third and final permitted review found two Critical gaps in
+  fail-closed recognized-provider config validation and operation
+  lifecycle/composite governance. See
+  `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md`.
 
 ## Next Milestone
 
-Run the independent Phase 1 implementation review, then begin Phase 2 if it
-passes.
+Direction is required before any additional Phase 1 repair or Phase 2 work.
