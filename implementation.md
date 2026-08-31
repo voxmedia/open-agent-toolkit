@@ -388,6 +388,11 @@ envelope. Run, project, invocation, and artifact correlation all matched;
 Important threshold with 0 Critical, 0 Important, 0 Medium, and 1 Minor
 finding. The result is persisted before receive disposition.
 
+**Receive intent:** The gate review's exact source artifact, collision-free
+archive destination, `final|code|final-review-2026-08-31T000938Z.md` event,
+handoff correlation, and pre-receive project-ref head are persisted before
+review receipt begins.
+
 ---
 
 ## Implementation Log

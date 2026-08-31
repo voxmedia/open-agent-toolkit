@@ -68,23 +68,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'sha256:b3c34b431bd138c0ae5e23fae2a08a23d997d38a3c7d4c8570060ea6612dee47'
+  receive_source_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
+  receive_archived_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/archived/final-review-2026-08-31T000938Z.md
+  receive_event_identity: 'final|code|final-review-2026-08-31T000938Z.md'
+  receive_pre_head: bc492f76adef0f79f0173fa10566974ee34c0953
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T00:11:57Z'
+  updated_at: '2026-08-31T00:12:26Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:11:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:12:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
