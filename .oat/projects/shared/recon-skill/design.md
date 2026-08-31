@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-30
+oat_last_updated: 2026-08-31
 oat_generated: false
-oat_template: true
+oat_template: false
 oat_template_name: design
 ---
 
@@ -75,19 +75,27 @@ catalog observation, provider-neutral model selection, exact launch controls,
 acceptance evidence, and recovery. It needs one backwards-compatible
 selection-only operation for recon:
 
-1. `prepare` validates a homogeneous wave request, observes the live launch
-   context, and returns a no-launch dispatch record.
-2. `recon` combines the prepared records into a run-level execution manifest
-   containing the exact provider, model, effort, reasoning mode, service tier,
-   route, role, lane counts, concurrency, authority, deadlines, and retry caps.
-3. The user approves that manifest once before any worker starts.
-4. `execute` accepts only the approval-bound prepared record. If an exact axis
+1. `recon` classifies every required and conditionally allowed wave before
+   selection, records each wave's task class and minimum floor, and computes
+   the maximum floor for the run.
+2. `prepare` resolves one exact target that satisfies that run-wide floor,
+   validates each homogeneous wave pinned to the target, observes the live
+   launch context, and returns no-launch dispatch records.
+3. `recon` combines those records into a run-level execution manifest
+   containing the per-wave classes and floors, run maximum floor, exact
+   provider, model, effort, reasoning mode, service tier, route, role, lane
+   counts, concurrency, authority, deadlines, and retry caps.
+4. The user approves that manifest once before any worker starts.
+5. `execute` accepts only the approval-bound prepared record. If an exact axis
    or relevant catalog fact has materially changed, it returns for reapproval
    instead of substituting a model, effort, route, or provider.
 
-All waves in a run use the same approved model and effort. Profiles may change
-lane count and pass topology, but they do not silently raise model cost. A
-different model or effort requires a new manifest and explicit approval.
+All waves in a run use the same approved model and effort, selected at or above
+the maximum floor. If no single available target meets every wave floor, the
+controller must offer a different run profile or stop; it cannot weaken a pass.
+Profiles may change lane count and pass topology, but they do not silently
+raise model cost. A different model or effort requires a new manifest and
+explicit approval.
 
 ### Artifact Pipeline and Isolation
 
@@ -99,7 +107,9 @@ inputs it reviewed.
 
 - Mapping and gathering lanes write bounded dossiers under `raw/`.
 - A synthesis lane compiles dossiers into provisional canonical claims.
-- Mechanical validation checks schemas, source reachability, and locator shape.
+- Mechanical validation independently reopens each pinned source, resolves the
+  typed locator, matches the cited excerpt or content, and compares required
+  snapshots or hashes in addition to checking schema and locator shape.
 - Standard and thorough profiles add selectively blind semantic verification,
   adversarial challenge, coverage review, and—in thorough mode—redundant
   independent passes and contradiction resolution.
@@ -121,7 +131,22 @@ at `.agents/agents/recon-worker.md` provides the common worker invariants; pass
 roles remain assignment modes rather than separate agents or nested skills.
 Both assets are distributed through the existing research tool pack, which
 retains user- and project-scope installation and declares the utility-owned
-`oat-dispatch-subagents` and `subagent-orchestration` skills as dependencies.
+`oat-dispatch-subagents` and `subagent-orchestration` skills as same-scope
+dependencies. Pack metadata gains dependency declarations plus persisted
+direct intent and `requiredBy` leases. Installation and update reconcile each
+dependency idempotently; removal releases the research lease and removes a
+dependency only when no direct intent or other lease remains.
+
+User-scope provider sync is extended from its current hard-coded role set to
+materialize installed, managed pack-owned agents declared eligible for user
+scope. It discovers those roles from current pack inventory, validates them
+against the bundled definition, and applies the existing provider projection
+rules. Conflicting canonical or provider destinations fail without overwrite.
+Removal withdraws a provider projection only when no installed pack or direct
+managed-role intent retains the canonical agent. This makes `recon-worker`
+available for the research pack's default user-scope installation while
+preserving the generic-role fallback for providers that cannot express the
+role contract.
 
 The selection-only contract is added to `oat-dispatch-subagents` and its record
 schema rather than duplicated inside `recon`. The utility pack retains
@@ -154,19 +179,30 @@ directory, then caller-approved fallback order. It refuses a destination that
 would escape or overwrite an existing run directory.
 
 It inventories source capabilities without mutating them, records unavailable
-sources, and pins the observable evidence boundary. Repository sources record
-revision, dirty state, relevant content hashes, and observation time; URLs and
-connected systems record stable identifiers, retrieval time, and available
-locator semantics. Preflight creates the directory skeleton and initial
-manifest, but not `packet.md`.
+sources, and pins the observable evidence boundary. Every lane receives an
+authority envelope with distinct `readSources`, approved read-only tools or
+pre-captured command artifacts, and `writePaths` restricted to its unique
+packet artifact. Its enforcement level is explicit: `provider-enforced`,
+`contract-enforced`, or `unavailable`. Provider enforcement is preferred;
+local repository and file investigation may use the audited worker contract
+with a sole declared output path when the native host shares filesystem
+permissions. Mutation-capable source tools are blocked unless the provider or
+tool interface enforces read-only access. An optional strict mode requires
+provider enforcement for every lane. The controller never broadens authority
+silently. Repository sources record revision, dirty state, relevant content
+hashes, and observation time; URLs and connected systems record stable
+identifiers, retrieval time, and available locator semantics. Preflight creates
+the directory skeleton and initial manifest, but not `packet.md`.
 
 ### Profile and Lane Planner
 
 The planner expands `quick`, `standard`, or `thorough` into a pass graph and
 partitions the declared scope into non-overlapping lanes. Mechanical inventory
-drives the initial lane count. The approval manifest records exact planned
-lanes plus explicit caps for conditional work such as contradiction resolution;
-the controller cannot exceed that envelope without reapproval.
+drives the initial lane count. It classifies every required and conditional
+pass, computes the maximum task-class floor, and requests one target that meets
+that floor. The approval manifest records exact planned lanes plus explicit
+caps for conditional work such as contradiction resolution; the controller
+cannot exceed that envelope without reapproval.
 
 All worker passes share the approved model and effort. A profile changes
 redundancy, review topology, and maximum concurrency—not the model tier.
@@ -232,6 +268,23 @@ packet is complete or partial. The normal consumer contract is the directory
 path. Raw dossier contents and worker transcripts are not copied into the
 parent response.
 
+### Pack Dependency and Agent Distribution
+
+The research pack declares same-scope dependencies on the two utility-owned
+dispatch skills. Pack lifecycle state distinguishes direct installation intent
+from transitive `requiredBy` leases. Install, update, and migration acquire or
+move the research lease idempotently; removal releases only that lease and
+removes a dependency only when neither direct intent nor another pack lease
+remains. Dependency assets keep their utility ownership and are never copied
+into the research manifest as duplicate assets.
+
+User provider sync derives eligible managed agent files from installed pack
+inventory rather than a hard-coded filename list. The pack manifest marks
+`recon-worker` as user-materializable; sync validates its bundled source and
+projects it through the existing provider adapters. Conflicting destinations
+fail closed, and removal retains a provider projection while any installed
+pack or direct managed-role intent still owns the canonical agent.
+
 ## Data Models
 
 ### Packet Directory Contract
@@ -244,6 +297,7 @@ Every structurally publishable run has the same top-level shape:
 ├── manifest.json
 ├── claims.json
 ├── reviews/
+│   ├── briefs/
 │   ├── locator-validation.json
 │   ├── semantic/
 │   ├── adversarial/
@@ -305,20 +359,35 @@ scope, caller context references, selected profile, and confirmed output path.
 It does not copy large caller content when a stable path or resource identifier
 is available.
 
-`ExecutionEnvelope` references the prepared dispatch records and records the
-exact selected provider, model, effort, reasoning mode, service tier, route,
-role selector, planned lanes, conditional lane caps, concurrency, authority,
-deadlines, and retry policy. Approval stores the SHA-256 fingerprint of the
-canonical envelope and its approval time. Execution is valid only while that
-fingerprint still matches; dispatch receipts are separate immutable artifacts
-referenced by path and digest.
+`ExecutionEnvelope` references the prepared dispatch records and records each
+wave's task class and minimum floor, the run maximum floor, the exact selected
+provider, model, effort, reasoning mode, service tier, route, role selector,
+planned lanes, conditional lane caps, concurrency, per-lane authority,
+provider enforcement capability, deadlines, and retry policy. Approval stores
+the SHA-256 fingerprint of the canonical envelope and its approval time.
+Execution is valid only while that fingerprint still matches; dispatch
+receipts are separate immutable artifacts referenced by path and digest.
 
 ### Sources and Evidence Locators
 
-Each `SourceDescriptor` declares a stable source ID, source kind, availability,
-authority boundary, observation time, and locator semantics. Repository
-descriptors additionally preserve canonical root, revision, dirty state, and
-relevant snapshot or content hashes.
+`SourceDescriptor` is a discriminated union. Every variant carries a stable
+source ID, availability, authority boundary, observation time, and validation
+state, plus the minimum reopenable provenance for its source kind:
+
+- `repository`: canonical root, revision, dirty state, and relevant snapshot or
+  content hashes.
+- `file`: canonical path and content hash.
+- `url`: canonical URL plus a persisted capture path and digest, or an explicit
+  validator state such as an ETag and last-modified value.
+- `command-output`: canonical argv, working directory, exit status, output
+  artifact and digest, and names-only redacted environment metadata.
+- `connected-resource`: system, resource identifier, resource version or
+  retrieval token, and a capture digest when the provider cannot reopen that
+  version directly.
+
+When a source cannot supply the minimum provenance required to reopen and
+validate an exact locator, the gap is explicit and its evidence cannot advance
+a claim to `supported` or `verified`.
 
 Evidence is normalized into records in the claim ledger:
 
@@ -327,9 +396,18 @@ interface EvidenceRecord {
   id: string;
   sourceId: string;
   locator: EvidenceLocator;
-  excerpt: string;
+  displayExcerpt: string;
   observedAt: string;
   contentHash?: string;
+  locatorValidation: {
+    status: 'exact' | 'redacted-exact' | 'stale' | 'invalid';
+    validatedAt: string;
+  };
+  redaction?: {
+    applied: true;
+    categories: string[];
+    originalPersisted: false;
+  };
   provenance: ArtifactReference;
 }
 
@@ -371,8 +449,15 @@ type EvidenceLocator =
 
 Repository and file locators resolve against their `SourceDescriptor`, allowing
 the manifest to carry the canonical root while claims retain concise exact
-paths and lines. Unsupported source types may be added only through a new
-versioned locator variant, not an untyped string.
+paths and lines. Validation reopens the pinned source, resolves the locator,
+matches the normalized source span or captured content, and compares required
+source and evidence digests. When a secret is detected, validation occurs
+transiently before persistence; the record stores a redacted display excerpt,
+`redacted-exact` disposition, and no digest of the sensitive span. A shifted
+range, stale capture, version mismatch, or wrong excerpt is locator-invalid and
+downgrades the affected claim.
+Unsupported source types may be added only through a new versioned locator
+variant, not an untyped string.
 
 ### Canonical Claim Ledger
 
@@ -440,12 +525,20 @@ allowed inputs, findings with evidence records, gaps, contradictions, and lane
 outcome. It contains no global confidence score and cannot directly establish a
 canonical claim state.
 
+The controller derives immutable, mode-specific `ReviewBrief` artifacts rather
+than passing the ledger directly to reviewers. A verification brief contains
+only claim IDs and statements, cited excerpts, typed locators, and the source
+descriptors needed to reopen them. An adversarial brief contains the declared
+scope, questions, and provisional claim statements. Neither projection exposes
+dossier paths, compiler reasoning, synthesis prose, provenance artifact
+references, or prior review identifiers.
+
 Each review artifact records its review kind, reviewer lane, permitted and
-excluded inputs, digests of artifacts actually reviewed, completion status,
-claim-level dispositions, newly discovered evidence, coverage findings, and
-unresolved issues. The permitted/excluded input list is evidence that the
-selective-blind contract was constructed correctly; it does not claim stronger
-filesystem isolation than the provider supplied.
+excluded inputs, the digest of the exact `ReviewBrief` reviewed, completion
+status, claim-level dispositions, newly discovered evidence, coverage
+findings, and unresolved issues. The brief and permitted/excluded input list
+are evidence that the selective-blind contract was constructed correctly; they
+do not claim stronger filesystem isolation than the provider supplied.
 
 ### Consumer Packet
 
@@ -466,11 +559,13 @@ artifacts. It does not inline or require the raw dossiers.
 ### Preflight and Approval Failures
 
 Malformed requests, unsafe or pre-existing destinations, unresolved source
-authority, and missing required dispatch capabilities fail before worker
-launch. The run may retain an initial manifest and `raw/failure.json` for
-diagnosis, but it does not publish `packet.md`. Missing optional sources are
-recorded as capability gaps and reduce achievable coverage; a missing source
-that makes the objective impossible fails the run.
+authority, unavailable contract or provider enforcement, mutation-capable
+source access without a read-only boundary, and missing required dispatch
+capabilities fail before worker launch. Strict mode also fails when a lane has
+only contract enforcement. The run may retain an initial manifest and
+`raw/failure.json` for diagnosis, but it does not publish `packet.md`. Missing
+optional sources are recorded as capability gaps and reduce achievable
+coverage; a missing source that makes the objective impossible fails the run.
 
 An unapproved or changed execution envelope stays in `awaiting-approval` and
 launches nothing. A pre-start dispatch rejection may be re-prepared within the
@@ -497,11 +592,13 @@ artifact path escaping the packet directory are structural failures.
 
 Workers never broaden permissions or request credentials to recover missing
 evidence. Permission failures and unavailable connected systems are recorded
-as gaps. If a repository revision, file hash, URL capture, or connected
-resource changes between gathering and verification, affected evidence is
-marked stale and its claims become `contested` or `unresolved`. Recapture is
-allowed only when it fits the approved envelope; otherwise the run publishes a
-partial packet or fails when no valid base remains.
+as gaps. If a repository revision, file hash, URL capture, command artifact,
+or connected resource changes between gathering and verification, or if the
+cited excerpt no longer matches the resolved locator, affected evidence is
+marked stale or invalid and its claims become `contested`, `unresolved`, or
+`unsupported`. Recapture is allowed only when it fits the approved envelope;
+otherwise the run publishes a partial packet or fails when no valid base
+remains.
 
 Evidence excerpts are minimal and redact detected credentials, tokens, and
 secret values before persistence. Redaction is recorded without copying the
@@ -559,12 +656,21 @@ Unit tests use checked-in fixtures and invoke the bundled scripts directly:
   variants.
 - Claim-state transition rules, including quick packets being unable to reach
   `verified` and contested evidence preventing verification.
+- Exact locator validation for reopened pinned sources, including wrong
+  excerpts, shifted line ranges, changed URL captures, changed command output,
+  and changed connected-resource versions.
+- Discriminated source descriptors, including incomplete URL, command, and
+  connected-resource provenance that must produce a gap or claim downgrade.
 - Canonical execution-envelope serialization, stable approval fingerprints,
   and tamper detection.
+- Mode-specific review-brief projection and digest fixtures proving dossier
+  provenance, synthesis reasoning, and prior review identifiers are absent.
 - Deterministic `packet.md` rendering from identical manifests and ledgers.
 - Structural failures leaving no publishable `packet.md`.
 - Redaction fixtures proving secret values do not reach persisted artifacts or
-  diagnostics.
+  diagnostics, while `redacted-exact` evidence remains eligible according to
+  its transient locator-validation disposition and persists no sensitive-span
+  digest.
 
 ### Dispatch Contract Tests
 
@@ -572,16 +678,20 @@ Unit tests use checked-in fixtures and invoke the bundled scripts directly:
 approval-bound execution, exact-axis comparison, catalog drift, pre-start
 rejection, post-acceptance non-replacement, and homogeneous recon-wave records.
 Tests assert that a changed provider, model, effort, route, role, service tier,
-or execution cap returns for reapproval.
+or execution cap returns for reapproval. Mixed task-class fixtures prove that
+all waves are pinned to one target satisfying the maximum floor and that a run
+fails preparation when no one target can satisfy every planned pass.
 
 ### Tool-Pack Lifecycle Tests
 
 Research-pack tests verify that install, update, inventory, migration, removal,
 and provider sync manage both `recon` and `recon-worker` at user and project
-scope. Dependency tests ensure research installation resolves the utility-owned
-dispatch pair without duplicating ownership, and that research removal
-preserves independently installed utility assets. CLI help, pack documentation,
-bundle inventory, and generated provider views must remain consistent.
+scope. Provider-sync tests cover declared user-agent discovery, projection,
+collision refusal, and removal retention. Dependency tests cover direct intent,
+multiple `requiredBy` leases, idempotent reconciliation, same-scope migration,
+and release of the research lease while preserving independently installed or
+otherwise required utility assets. CLI help, pack documentation, bundle
+inventory, and generated provider views must remain consistent.
 
 ### Workflow Integration Tests
 
@@ -600,6 +710,9 @@ model calls. Scenarios include:
 - Dispatch-axis drift blocking execution pending reapproval.
 - Invalid compiler or review output remaining quarantined while the last valid
   ledger survives.
+- Contract-enforced local file recon on a native shared-permission host, strict
+  mode refusal without provider enforcement, and mutation-capable source tools
+  refusing an unsafe mode before launch.
 - Structural failure producing a failure record and no consumer packet.
 - The parent handoff returning only the directory path and compact status, with
   no raw dossier contents.
