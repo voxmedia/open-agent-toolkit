@@ -346,8 +346,8 @@ evidence complete at reviewed head
 
 **Deferred Findings (Medium):** None.
 
-**Next:** Execute `p04-t03` through `oat-project-implement`, then re-review the
-final fix range.
+**Outcome:** Resolved by `p04-t03`. Thomas explicitly waived a redundant second
+review after the artifact-only alignment; continue to configured closeout.
 
 <!-- orchestration-runs-end -->
 
