@@ -505,10 +505,17 @@ export async function completeMigrationSourceRemoval(
     retainedAssets: sourceRetentions,
     retainedDependencyAssetIds,
   });
+  const priorReleasedDependencyPaths = (destination.dependencyLifecycles ?? [])
+    .filter(
+      ({ request }) =>
+        request.scope === preview.from &&
+        request.dependency?.lease === 'release',
+    )
+    .flatMap(({ plan }) => plan.changedCanonicalPaths);
+  let dependencyLifecycles: PackLifecycleResult[] = [];
 
   try {
-    const dependencyLifecycles =
-      (await dependencies.releaseDependencies?.()) ?? [];
+    dependencyLifecycles = (await dependencies.releaseDependencies?.()) ?? [];
     const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
       sourcePlan,
       input.sourceRoot,
@@ -521,6 +528,7 @@ export async function completeMigrationSourceRemoval(
     const removedCanonicalPaths = [
       ...new Set([
         ...sourcePlan.changedCanonicalPaths,
+        ...priorReleasedDependencyPaths,
         ...dependencyLifecycles.flatMap(
           ({ plan }) => plan.changedCanonicalPaths,
         ),
@@ -566,6 +574,27 @@ export async function completeMigrationSourceRemoval(
       ],
     };
   } catch (error) {
+    const releasedDependencyPaths = [
+      ...new Set([
+        ...priorReleasedDependencyPaths,
+        ...dependencyLifecycles.flatMap(
+          ({ plan }) => plan.changedCanonicalPaths,
+        ),
+      ]),
+    ];
+    let dependencySyncFailure: string | null = null;
+    if (releasedDependencyPaths.length > 0) {
+      try {
+        await dependencies.sync?.({
+          scope: preview.from,
+          action: 'remove',
+          canonicalPaths: releasedDependencyPaths,
+        });
+      } catch (syncError) {
+        dependencySyncFailure =
+          syncError instanceof Error ? syncError.message : String(syncError);
+      }
+    }
     let sourceInventory = sourceBefore;
     let inventoryFailure: string | null = null;
     try {
@@ -590,13 +619,32 @@ export async function completeMigrationSourceRemoval(
       status: 'source-removal-failed',
       destinationInventory: destination.destinationInventory,
       sourceInventory,
+      dependencyLifecycles: [
+        ...(destination.dependencyLifecycles ?? []),
+        ...dependencyLifecycles,
+      ],
       recovery: [
         `Source removal failed: ${detail}`,
+        ...(dependencySyncFailure
+          ? [
+              `Dependency provider sync failed: ${dependencySyncFailure}`,
+              `Retry provider sync: ${
+                pendingSyncState(
+                  preview,
+                  preview.from,
+                  'remove',
+                  releasedDependencyPaths,
+                ).command
+              }`,
+            ]
+          : []),
         `Remaining source paths: ${remaining.length > 0 ? remaining.join(', ') : 'inventory unavailable'}`,
         ...(inventoryFailure
           ? [`Source re-inventory failed: ${inventoryFailure}`]
           : []),
-        migrationRetry(preview),
+        dependencySyncFailure
+          ? `After provider sync, ${migrationRetry(preview)}`
+          : migrationRetry(preview),
       ],
     };
   }

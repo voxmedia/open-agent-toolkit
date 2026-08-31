@@ -1936,13 +1936,7 @@ describe('createSyncCommand', () => {
       );
       expect(first.computeSyncPlan).toHaveBeenCalledWith(
         expect.objectContaining({
-          canonical: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'oat-phase-implementer.md',
-              type: 'agent',
-            }),
-            expect.objectContaining({ name: 'oat-reviewer.md', type: 'agent' }),
-          ]),
+          canonical: [],
         }),
       );
 
@@ -2234,24 +2228,25 @@ describe('createSyncCommand', () => {
   });
 
   describe('scoped provider materialization', () => {
-    it('feeds installed user-materializable pack agents to standard provider planning', async () => {
-      const adapter = createScopedAdapter();
+    it('feeds installed user-materializable pack agents only to extension planning', async () => {
+      const adapter = createCodexAdapter();
       const packAgent = createAgentCanonicalEntry(
         'eligible-pack-agent.md',
         '/tmp/home',
       );
-      const { command, computeSyncPlan } = createHarness({
-        adapters: [adapter],
-        configAwareResults: [
-          {
-            activeAdapters: [adapter],
-            detectedUnset: [],
-            detectedDisabled: [],
-          },
-        ],
-        canonicalEntriesByScope: { user: [] },
-        bundledManagedAgents: [packAgent],
-      });
+      const { command, computeSyncPlan, computeCodexProjectExtensionPlan } =
+        createHarness({
+          adapters: [adapter],
+          configAwareResults: [
+            {
+              activeAdapters: [adapter],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+          ],
+          canonicalEntriesByScope: { user: [] },
+          bundledManagedAgents: [packAgent],
+        });
 
       await runSyncCommand(command, {
         globalArgs: ['--scope', 'user'],
@@ -2261,8 +2256,14 @@ describe('createSyncCommand', () => {
       expect(computeSyncPlan).toHaveBeenCalledWith(
         expect.objectContaining({
           scope: 'user',
-          canonical: [packAgent],
+          canonical: [],
         }),
+      );
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        '/tmp/home',
+        [packAgent],
+        undefined,
+        { userConfigDir: '/tmp/home/.oat' },
       );
     });
 

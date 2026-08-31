@@ -20,7 +20,10 @@ import {
   inventoryScopedPack,
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
-import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
+import {
+  reconcilePackDependencyLifecycles,
+  reconcilePackLifecycle,
+} from '@commands/tools/shared/pack-lifecycle';
 import {
   resolveSharedOwnerRetentions,
   type PackReconcileOperation,
@@ -247,6 +250,14 @@ async function installDestination(
 ): Promise<PackMigrationOutcome> {
   const destinationRoot = roots[preview.to];
   return executeMigrationDestination(preview, destinationRoot, {
+    acquireDependencies: async () =>
+      reconcilePackDependencyLifecycles({
+        pack: preview.pack,
+        scope: preview.to,
+        scopeRoot: destinationRoot,
+        assetsRoot: roots.assets,
+        action: 'migrate-destination',
+      }),
     applyDependencies: {
       copyDirectory: overrides.copyDirectory ?? copyDirWithStatus,
       copyFile: copyFileWithStatus,
@@ -284,6 +295,14 @@ async function removeSource(
     destination,
     { confirmation, sourceRoot, assetsRoot: roots.assets },
     {
+      releaseDependencies: async () =>
+        reconcilePackDependencyLifecycles({
+          pack: preview.pack,
+          scope: preview.from,
+          scopeRoot: sourceRoot,
+          assetsRoot: roots.assets,
+          action: 'remove',
+        }),
       inventory: async () => inventoryAt(preview.pack, preview.from, roots),
       applyDependencies: {
         removePath,
@@ -740,6 +759,68 @@ describe('pack migration integration', () => {
     await expect(inventoryAt('ideas', 'user', roots)).resolves.toMatchObject({
       completeness: 'complete',
       intent: { enabled: true },
+    });
+  });
+
+  it('cleans released dependency provider paths before retrying a failed source root apply', async () => {
+    const roots = await createRoots();
+    const syncCalls: SyncCall[] = [];
+    await installSource('research', 'project', roots);
+    const preview = await previewMigration(
+      'research',
+      'project',
+      'user',
+      roots,
+    );
+    const destination = await installDestination(preview, roots, syncCalls);
+    const failed = await removeSource(
+      destination,
+      roots,
+      syncCalls,
+      'confirmed',
+      async () => {
+        throw new Error('injected source root apply failure');
+      },
+    );
+
+    expect(failed).toMatchObject({
+      status: 'source-removal-failed',
+      sourceInventory: {
+        completeness: 'complete',
+        intent: { direct: true },
+      },
+    });
+    expect(failed.recovery).toContainEqual(
+      expect.stringContaining(
+        'tools migrate --pack research --from project --to user',
+      ),
+    );
+    const dependencyPaths = [
+      '.agents/skills/oat-dispatch-subagents',
+      '.agents/skills/subagent-orchestration',
+    ];
+    expect(
+      syncCalls
+        .filter(
+          ({ scope, action }) => scope === 'project' && action === 'remove',
+        )
+        .flatMap(({ paths }) => paths),
+    ).toEqual(expect.arrayContaining(dependencyPaths));
+
+    const recovered = await removeSource(failed, roots, syncCalls, 'confirmed');
+    expect(recovered.status).toBe('migrated');
+    expect(
+      syncCalls
+        .filter(
+          ({ scope, action }) => scope === 'project' && action === 'remove',
+        )
+        .at(-1)?.paths,
+    ).toEqual(expect.arrayContaining(dependencyPaths));
+    await expect(
+      inventoryAt('research', 'project', roots),
+    ).resolves.toMatchObject({
+      completeness: 'absent',
+      intent: { direct: false },
     });
   });
 });

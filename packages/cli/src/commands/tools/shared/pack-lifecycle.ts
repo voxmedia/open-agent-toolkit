@@ -102,11 +102,31 @@ export async function reconcilePackLifecycles(
   const inventory = dependencies.inventory ?? inventoryScopedPack;
   const plan = dependencies.plan ?? planPackReconcile;
   const expanded = expandPackLifecycleRequests(requests, getDefinition);
+  const initialInventories = new Map<string, ScopedPackInventory>();
+  const finalLeaseConsumers = new Map<string, PackName[]>();
+  for (const request of expanded) {
+    if (!request.dependency) continue;
+    const key = lifecycleInventoryKey(request);
+    let consumers = finalLeaseConsumers.get(key);
+    if (!consumers) {
+      const inventoried = await inventory(request);
+      initialInventories.set(key, inventoried);
+      consumers = [...inventoried.intent.requiredBy];
+    }
+    const nextConsumers = new Set(consumers);
+    if (request.dependency.lease === 'acquire') {
+      nextConsumers.add(request.dependency.requiredBy);
+    } else {
+      nextConsumers.delete(request.dependency.requiredBy);
+    }
+    finalLeaseConsumers.set(key, [...nextConsumers].sort());
+  }
   const projectedLeaseConsumers = new Map<string, PackName[]>();
   const planned: PackLifecycleResult[] = [];
   for (const request of expanded) {
     const key = lifecycleInventoryKey(request);
-    const inventoried = await inventory(request);
+    const inventoried =
+      initialInventories.get(key) ?? (await inventory(request));
     const projectedConsumers = projectedLeaseConsumers.get(key);
     const before = projectedConsumers
       ? {
@@ -134,11 +154,8 @@ export async function reconcilePackLifecycles(
               }),
           })
         : [];
-    const retainedConsumers = before.intent.requiredBy.filter(
-      (consumer) =>
-        request.dependency?.lease !== 'release' ||
-        consumer !== request.dependency.requiredBy,
-    );
+    const retainedConsumers =
+      finalLeaseConsumers.get(key) ?? before.intent.requiredBy;
     const reconcilePlan = plan({
       ...request,
       inventory: before,

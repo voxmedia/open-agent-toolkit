@@ -289,7 +289,7 @@ async function computePlans(
       dependencies.loadSyncConfig(configPath),
       dependencies.scanCanonical(scopeRoot, scope),
     ]);
-    const providerCanonical =
+    const materializationCanonical =
       scope === 'user'
         ? [
             ...canonical,
@@ -298,7 +298,7 @@ async function computePlans(
         : canonical;
     if (canonicalFilter?.mode === 'remove') {
       const existing = new Set(
-        providerCanonical.map(({ canonicalPath }) =>
+        canonical.map(({ canonicalPath }) =>
           relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
         ),
       );
@@ -334,7 +334,7 @@ async function computePlans(
     );
 
     const plan = await dependencies.computeSyncPlan({
-      canonical: providerCanonical,
+      canonical,
       adapters: resolved.activeAdapters,
       manifest,
       scope,
@@ -353,7 +353,7 @@ async function computePlans(
       enabledExtensions.map((extension) =>
         extension.computePlan({
           scopeRoot,
-          canonicalEntries: providerCanonical,
+          canonicalEntries: materializationCanonical,
           allowedCanonicalPaths: canonicalFilter?.paths,
           options: { userConfigDir: join(context.home, '.oat') },
         }),
@@ -373,7 +373,7 @@ async function computePlans(
       scopeRoot,
       manifestPath,
       manifest,
-      canonical: providerCanonical,
+      canonical,
       activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,

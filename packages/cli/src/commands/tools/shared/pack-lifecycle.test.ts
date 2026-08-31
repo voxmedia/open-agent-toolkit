@@ -377,4 +377,85 @@ describe('production pack lifecycle', () => {
       );
     }
   });
+
+  it('converges mixed dependency transfer batches independent of root request order', async () => {
+    const assetsRoot = await resolveAssetsRoot();
+    const selected = [
+      'skill:oat-dispatch-subagents',
+      'skill:subagent-orchestration',
+    ];
+    const brainstorm: PackDefinition = {
+      ...getPackDefinition('brainstorm'),
+      dependencies: [{ pack: 'utility', scope: 'same', assets: selected }],
+    };
+    const getDefinition = (pack: PackName) =>
+      pack === 'brainstorm' ? brainstorm : getPackDefinition(pack);
+
+    const run = async (installFirst: boolean) => {
+      const scopeRoot = await temporaryRoot('oat-lifecycle-mixed-');
+      const base = {
+        scope: 'user' as const,
+        scopeRoot,
+        assetsRoot,
+      };
+      await reconcilePackLifecycles(
+        [{ ...base, pack: 'research', action: 'install' }],
+        { dependencies: { getDefinition } },
+      );
+      const removeResearch = {
+        ...base,
+        pack: 'research' as const,
+        action: 'remove' as const,
+      };
+      const installBrainstorm = {
+        ...base,
+        pack: 'brainstorm' as const,
+        action: 'install' as const,
+      };
+      await reconcilePackLifecycles(
+        installFirst
+          ? [installBrainstorm, removeResearch]
+          : [removeResearch, installBrainstorm],
+        { dependencies: { getDefinition } },
+      );
+
+      const [utility, research, installedBrainstorm] = await Promise.all([
+        inventoryScopedPack({ ...base, pack: 'utility' }),
+        inventoryScopedPack({ ...base, pack: 'research' }),
+        inventoryScopedPack({ ...base, pack: 'brainstorm' }),
+      ]);
+      return {
+        utility: {
+          completeness: utility.completeness,
+          direct: utility.intent.direct,
+          requiredBy: utility.intent.requiredBy,
+          selectedStatuses: utility.assets
+            .filter(({ definition }) => selected.includes(definition.id))
+            .map(({ status }) => status),
+        },
+        research: {
+          completeness: research.completeness,
+          direct: research.intent.direct,
+        },
+        brainstorm: {
+          completeness: installedBrainstorm.completeness,
+          direct: installedBrainstorm.intent.direct,
+        },
+      };
+    };
+
+    const removeThenInstall = await run(false);
+    const installThenRemove = await run(true);
+    expect(removeThenInstall).toEqual(installThenRemove);
+    expect(removeThenInstall).toEqual({
+      utility: {
+        completeness: 'partial',
+        direct: false,
+        requiredBy: ['brainstorm'],
+        selectedStatuses: ['current', 'current'],
+      },
+      research: { completeness: 'absent', direct: false },
+      brainstorm: { completeness: 'complete', direct: true },
+    });
+  });
 });
