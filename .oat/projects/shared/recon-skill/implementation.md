@@ -592,6 +592,33 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   simulator is present or needed
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p03 fix round 2
+
+- Original request ID: `recon-skill-p03-implementation-20260831T1710Z`
+- Continuation event: `recon-skill-p03-fix-r2-20260831T1920Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: bounded correction of the one Critical and two Important round-2
+  findings in existing sync/lifecycle/migration boundaries
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commits: `6ce3bb9c7a0461bace49159a9d1b70168d384952` and root-directed
+  pre-review correction `c3d9da4ccb9e76006df5bfafb40abd9b65817b1e`
+- Finding dispositions: ordinary planning excludes bundle-root built-ins but
+  includes contained installed agents; final batch consumers drive dependency
+  retention; migration root-failure cleanup synchronizes and retains released
+  dependency paths for retry
+- Root correction: strengthened real Claude coverage after detecting that the
+  first fix commit excluded installed agents from ordinary planning together
+  with bundled roles; prior commit was preserved
+- Verification: exact sync 3/3, lifecycle 8/8, migration 30/30, complete Phase
+  3 surface 741/741, CLI type-check, lint, format, and diff checks pass
+- Optional nested dispatches: none
+- Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z continuation_event=recon-skill-p03-fix-r2-20260831T1920Z scope=p03-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -876,6 +903,23 @@ context before p02 can advance.
 - The second bounded fix remains within existing Phase 3 sync,
   lifecycle/migration, and test boundaries. Fresh re-review is required.
 
+### 2026-08-31 - p03 review fixes round 2 completed
+
+- The original p03 implementer added append-only fix commit `6ce3bb9c7` for
+  the three round-2 findings, then root pre-review inspection found that its
+  sync partition also excluded installed scope-root agents from ordinary
+  Claude planning.
+- A second append-only correction `c3d9da4cc` now uses containment-safe
+  partitioning: installed user agents enter ordinary planning, bundle-root
+  built-ins remain extension-only, and the complete set reaches Codex/Cursor
+  extensions. Real integration asserts Claude receives `recon-worker`.
+- Final lease consumers now drive dependency retention for both mixed request
+  orders, while ordered lease writes and one global preflight remain.
+  Migration failure cleanup synchronizes released dependency paths immediately
+  and retains them across the advertised retry.
+- Exact reviewer commands and the complete 741/741 Phase 3 surface pass, along
+  with CLI type-check, lint, format, and diff checks. Fresh re-review is next.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -936,6 +980,9 @@ context before p02 can advance.
 - Phase 3 review round 2 passes 576/576 changed-surface tests and all three
   prior regressions, while isolated real user-sync integration fails 3/3 and
   direct probes reproduce the two adjacent lifecycle/retry findings.
+- After p03 fix round 2 and the pre-review correction, exact real sync passes
+  3/3, lifecycle 8/8, migration 30/30, and the complete Phase 3 surface
+  741/741; CLI type-check, lint, format, and diff checks pass.
 
 ## Final Summary (for PR/docs)
 
