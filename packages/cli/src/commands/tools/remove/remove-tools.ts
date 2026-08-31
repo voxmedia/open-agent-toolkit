@@ -547,7 +547,6 @@ export function failedPostRemovalLifecycleOutcomes(
       stage === 'intent-write'
         ? 'durable intent update failed'
         : 'final inventory failed';
-    const recoveryScope = pack === failedPack ? failedScope : scopes[0]!;
     return {
       schemaVersion: 1,
       selection: {
@@ -566,12 +565,10 @@ export function failedPostRemovalLifecycleOutcomes(
       sync: { scopes: [], status: 'not-run', providers: [] },
       finalEvidence: null,
       status: 'failed',
-      recovery: [
-        {
-          code: 'final-inventory-unverified',
-          message: `Canonical removal was already applied for ${pack}, but ${stageLabel} at ${failedScope} scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${recoveryScope}`,
-        },
-      ],
+      recovery: scopes.map((scope) => ({
+        code: 'final-inventory-unverified',
+        message: `Canonical removal was already applied for ${pack}, but ${stageLabel} for ${failedPack} at ${failedScope} scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${scope}`,
+      })),
     };
   });
 }

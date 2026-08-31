@@ -776,7 +776,7 @@ describe('removeTools', () => {
               recovery: [
                 {
                   message: expect.stringContaining(
-                    `${expectedStage} at project scope`,
+                    `${expectedStage} for ideas at project scope`,
                   ),
                 },
               ],
@@ -815,6 +815,139 @@ describe('removeTools', () => {
       },
     ]);
   });
+
+  for (const stage of ['intent-write', 'final-inventory'] as const) {
+    for (const json of [false, true]) {
+      it(`covers every pack and scope after later ${stage} failure in ${json ? 'JSON' : 'human'} mode`, async () => {
+        const deps = createDeps({
+          project: [
+            createTool({ scope: 'project' }),
+            createTool({
+              name: 'oat-docs-analyze',
+              pack: 'docs',
+              scope: 'project',
+            }),
+          ],
+          user: [
+            createTool({ scope: 'user' }),
+            createTool({
+              name: 'oat-docs-analyze',
+              pack: 'docs',
+              scope: 'user',
+            }),
+          ],
+        });
+        let inventoryCalls = 0;
+        deps.writeScopedPackIntent = async ({ pack, scope }) => {
+          if (stage === 'intent-write' && pack === 'docs' && scope === 'user') {
+            throw new Error('later intent failure');
+          }
+        };
+        deps.inventoryScopedPack = async ({ pack, scope }) => {
+          inventoryCalls += 1;
+          if (
+            stage === 'final-inventory' &&
+            inventoryCalls > 16 &&
+            pack === 'docs' &&
+            scope === 'user'
+          ) {
+            throw new Error('later inventory failure');
+          }
+          return {
+            ...lifecycleInventory('ideas', scope, true),
+            pack,
+            intent: {
+              ...lifecycleInventory('ideas', scope, true).intent,
+              pack,
+            },
+          };
+        };
+        const stdout: string[] = [];
+        const stderr: string[] = [];
+        const stdoutWrite = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation((chunk) => {
+            stdout.push(String(chunk));
+            return true;
+          });
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation((chunk) => {
+            stderr.push(String(chunk));
+            return true;
+          });
+        const previousExitCode = process.exitCode;
+        try {
+          process.exitCode = 0;
+          const program = new Command()
+            .name('oat')
+            .option('--json')
+            .option('--scope <scope>')
+            .option('--cwd <path>')
+            .exitOverride();
+          const tools = new Command('tools');
+          tools.addCommand(
+            createToolsRemoveCommand(deps, { runSync: async () => {} }),
+          );
+          program.addCommand(tools);
+          await program.parseAsync(
+            [
+              ...(json ? ['--json'] : []),
+              '--scope',
+              'all',
+              '--cwd',
+              '/project',
+              'tools',
+              'remove',
+              '--all',
+              '--no-sync',
+            ],
+            { from: 'user' },
+          );
+
+          expect(process.exitCode).toBe(1);
+          const packs = [
+            'core',
+            'ideas',
+            'docs',
+            'workflows',
+            'utility',
+            'project-management',
+            'research',
+            'brainstorm',
+          ];
+          const expectedCommands = packs.flatMap((pack) =>
+            ['project', 'user'].map(
+              (scope) => `oat tools remove --pack ${pack} --scope ${scope}`,
+            ),
+          );
+          if (json) {
+            const payload = JSON.parse(stdout.join('')) as {
+              lifecycle: Array<{
+                selection: { pack: string };
+                recovery: Array<{ message: string }>;
+              }>;
+            };
+            const recoveryCommands = payload.lifecycle.flatMap(({ recovery }) =>
+              recovery.map(({ message }) =>
+                message.slice(message.indexOf('Rerun ') + 6),
+              ),
+            );
+            expect(recoveryCommands).toEqual(expectedCommands);
+          } else {
+            const output = `${stdout.join('')} ${stderr.join('')}`;
+            for (const command of expectedCommands) {
+              expect(output).toContain(`Rerun ${command}`);
+            }
+          }
+        } finally {
+          process.exitCode = previousExitCode;
+          stdoutWrite.mockRestore();
+          stderrWrite.mockRestore();
+        }
+      });
+    }
+  }
 
   it('removes tools across multiple scopes', async () => {
     const deps = createDeps({
