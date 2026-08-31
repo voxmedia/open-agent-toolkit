@@ -218,7 +218,7 @@ describe('oat providers set', () => {
     expect(capture.error[0]).toContain('No provider updates requested');
   });
 
-  it('rejects non-project scope', async () => {
+  it('rejects aggregate scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
 
@@ -229,21 +229,28 @@ describe('oat providers set', () => {
     });
 
     expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only supports project scope');
+    expect(capture.error[0]).toContain('requires one concrete scope');
   });
 
-  it('rejects user scope', async () => {
+  it('writes provider enablement at user scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
 
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, resolveScopeRoot } = createHarness({ cwd: root });
 
     await runCommand(command, {
       commandArgs: ['--scope', 'user', '--enabled', 'claude'],
     });
 
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only supports project scope');
+    expect(process.exitCode).toBe(0);
+    expect(resolveScopeRoot).toHaveBeenCalledWith(
+      'user',
+      expect.objectContaining({ scope: 'user' }),
+    );
+    const config = await defaultLoadSyncConfig(
+      join(root, '.oat', 'sync', 'config.json'),
+    );
+    expect(config.providers.claude?.enabled).toBe(true);
   });
 
   it('preserves existing provider strategy when updating enabled', async () => {

@@ -10,21 +10,14 @@ import {
   type SyncConfig,
   saveSyncConfig,
 } from '@config/index';
-import { resolveProjectRoot } from '@fs/paths';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
-import { geminiAdapter } from '@providers/gemini';
+import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { getProviderRegistrations } from '@providers/shared';
 import { Command } from 'commander';
 
 interface ProvidersSetOptions {
   enabled?: string;
   disabled?: string;
 }
-
-const PROJECT_SCOPE_ONLY_MESSAGE =
-  'oat providers set only supports project scope. Remove --scope or pass --scope project.';
 
 function parseCsvList(raw?: string): string[] {
   if (!raw) {
@@ -51,16 +44,10 @@ function createDependencies(): ProvidersSetDependencies {
         return resolveProjectRoot(context.cwd);
       }
 
-      throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
+      return resolveScopeRoot(scope, context.cwd, context.home);
     },
     getAdapters() {
-      return [
-        claudeAdapter,
-        cursorAdapter,
-        codexAdapter,
-        copilotAdapter,
-        geminiAdapter,
-      ];
+      return getProviderRegistrations().map(({ adapter }) => adapter);
     },
     async loadSyncConfig(configPath) {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
@@ -104,8 +91,10 @@ async function runProvidersSetCommand(
   dependencies: ProvidersSetDependencies,
 ): Promise<void> {
   try {
-    if (context.scope !== 'project') {
-      throw new Error(PROJECT_SCOPE_ONLY_MESSAGE);
+    if (context.scope === 'all') {
+      throw new Error(
+        'oat providers set requires one concrete scope. Pass --scope project or --scope user.',
+      );
     }
 
     const enabledProviders = parseCsvList(options.enabled);
@@ -138,7 +127,8 @@ async function runProvidersSetCommand(
       );
     }
 
-    const scopeRoot = await dependencies.resolveScopeRoot('project', context);
+    const scope = context.scope;
+    const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
     const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
     const config = await dependencies.loadSyncConfig(configPath);
     const updated = buildUpdatedConfig(
@@ -151,7 +141,7 @@ async function runProvidersSetCommand(
     if (context.json) {
       context.logger.json({
         status: 'ok',
-        scope: 'project',
+        scope,
         configPath,
         enabled: enabledProviders,
         disabled: disabledProviders,
@@ -183,9 +173,7 @@ export function createProvidersSetCommand(
     ...overrides,
   };
 
-  // Default to 'project' scope: providers set only supports project scope, so
-  // a bare `oat providers set --enabled X` should succeed without requiring
-  // an explicit --scope project flag.
+  // Default to project scope for compatibility; user scope is explicit.
   return withScopeOption(new Command('set'), 'project')
     .description('Enable or disable project providers in sync config')
     .option('--enabled <providers>', 'Comma-separated providers to enable')

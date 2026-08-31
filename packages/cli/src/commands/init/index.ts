@@ -89,23 +89,19 @@ import {
   saveManifest,
 } from '@manifest/manager';
 import type { Manifest } from '@manifest/manifest.types';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import {
   applyCodexProjectExtensionPlan,
   computeCodexProjectExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import {
   applyCursorProjectExtensionPlan,
   computeCursorProjectExtensionPlan,
 } from '@providers/cursor/codec/sync-extension';
-import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
+  getProviderRegistrations,
   type MaterializationPlan,
   type PathMapping,
   type ProviderAdapter,
@@ -134,13 +130,7 @@ const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
 function getDefaultAdapters(): ProviderAdapter[] {
-  return [
-    claudeAdapter,
-    cursorAdapter,
-    codexAdapter,
-    copilotAdapter,
-    geminiAdapter,
-  ];
+  return getProviderRegistrations().map(({ adapter }) => adapter);
 }
 
 interface InitOptions extends GlobalOptions {

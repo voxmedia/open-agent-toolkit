@@ -86,23 +86,19 @@ import {
 } from '@fs/paths';
 import type { Manifest } from '@manifest/index';
 import { loadManifest, saveManifest } from '@manifest/manager';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import {
   applyCodexProjectExtensionPlan,
   type CodexExtensionPlan,
   computeCodexProjectExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import {
   applyCursorProjectExtensionPlan,
   computeCursorProjectExtensionPlan,
   type CursorExtensionPlan,
 } from '@providers/cursor/codec/sync-extension';
-import { geminiAdapter } from '@providers/gemini';
 import {
   getConfigAwareAdapters,
+  getProviderRegistrations,
   getSyncMappings,
   type PathMapping,
   type MaterializationPlan,
@@ -362,13 +358,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   scanCanonical,
   scanBundledManagedAgents,
   getAdapters() {
-    return [
-      claudeAdapter,
-      cursorAdapter,
-      codexAdapter,
-      copilotAdapter,
-      geminiAdapter,
-    ];
+    return getProviderRegistrations().map(({ adapter }) => adapter);
   },
   getConfigAwareAdapters,
   getSyncMappings,

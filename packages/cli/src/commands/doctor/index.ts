@@ -64,13 +64,8 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import { CURSOR_MODEL_PIN_MAPPINGS } from '@providers/cursor/codec/catalog';
-import { geminiAdapter } from '@providers/gemini';
 import {
   diagnoseCursorMaterializedModels,
   validateMatrixCell,
@@ -85,6 +80,7 @@ import {
 } from '@providers/identity/dispatch-validation';
 import {
   getConfigAwareAdapters,
+  getProviderRegistrations,
   type ProviderAdapter,
 } from '@providers/shared';
 import type { ConcreteScope } from '@shared/types';
@@ -208,13 +204,7 @@ async function checkSymlinkSupportDefault(
 async function checkProvidersDefault(
   scopeRoot: string,
 ): Promise<Array<{ name: string; detected: boolean; version: string | null }>> {
-  const adapters = [
-    claudeAdapter,
-    cursorAdapter,
-    codexAdapter,
-    copilotAdapter,
-    geminiAdapter,
-  ];
+  const adapters = getProviderRegistrations().map(({ adapter }) => adapter);
 
   return Promise.all(
     adapters.map(async (adapter) => ({
@@ -312,13 +302,7 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     resolveUserSyncConfig,
-    getAdapters: () => [
-      claudeAdapter,
-      cursorAdapter,
-      codexAdapter,
-      copilotAdapter,
-      geminiAdapter,
-    ],
+    getAdapters: () => getProviderRegistrations().map(({ adapter }) => adapter),
     getConfigAwareAdapters,
     readOatConfig,
     readOatConfigForDefaultScopeRepair,

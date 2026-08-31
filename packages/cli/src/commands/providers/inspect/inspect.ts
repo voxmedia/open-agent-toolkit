@@ -18,12 +18,7 @@ import {
   resolveScopeRoot,
 } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
-import { geminiAdapter } from '@providers/gemini';
-import { getSyncMappings } from '@providers/shared';
+import { getProviderRegistrations, getSyncMappings } from '@providers/shared';
 import { formatProviderDetails } from '@ui/output';
 import { Command } from 'commander';
 
@@ -46,13 +41,7 @@ function createDependencies(): ProvidersInspectDependencies {
       return resolveScopeRoot(scope, context.cwd, context.home);
     },
     getAdapters() {
-      return [
-        claudeAdapter,
-        cursorAdapter,
-        codexAdapter,
-        copilotAdapter,
-        geminiAdapter,
-      ];
+      return getProviderRegistrations().map(({ adapter }) => adapter);
     },
     getSyncMappings,
     loadManifest,

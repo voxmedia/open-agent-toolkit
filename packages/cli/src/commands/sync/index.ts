@@ -27,15 +27,9 @@ import {
 import { CliError } from '@errors/index';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
-import { codexMaterializationExtension } from '@providers/codex/codec/sync-extension';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
-import { cursorMaterializationExtension } from '@providers/cursor/codec/sync-extension';
-import { geminiAdapter } from '@providers/gemini';
 import {
   getConfigAwareAdapters,
+  getProviderRegistrations,
   toMaterializationOperations,
   type ProviderAdapter,
 } from '@providers/shared';
@@ -71,23 +65,16 @@ function defaultDependencies(): SyncCommandDependencies {
     scanCanonical,
     scanBundledManagedAgents,
     getAdapters() {
-      return [
-        claudeAdapter,
-        cursorAdapter,
-        codexAdapter,
-        copilotAdapter,
-        geminiAdapter,
-      ];
+      return getProviderRegistrations().map(({ adapter }) => adapter);
     },
     getConfigAwareAdapters,
     selectProvidersWithAbort: selectManyWithAbort,
     computeSyncPlan,
     executeSyncPlan,
     getMaterializationExtensions() {
-      return [
-        codexMaterializationExtension,
-        cursorMaterializationExtension,
-      ] as SyncCommandDependencies['getMaterializationExtensions'] extends () => infer T
+      return getProviderRegistrations().flatMap(
+        ({ extensions }) => extensions,
+      ) as SyncCommandDependencies['getMaterializationExtensions'] extends () => infer T
         ? T
         : never;
     },
