@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 oat_template: false
 ---
@@ -18,15 +18,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status | Tasks | Completed |
-| ------------ | ------ | ----- | --------- |
-| Phase 1      | passed | 1     | 1/1       |
-| Phase 2      | passed | 4     | 4/4       |
-| Phase 3      | passed | 4     | 4/4       |
-| Phase 4      | passed | 2     | 2/2       |
-| Phase p-rev1 | passed | 2     | 2/2       |
+| Phase        | Status  | Tasks | Completed |
+| ------------ | ------- | ----- | --------- |
+| Phase 1      | passed  | 1     | 1/1       |
+| Phase 2      | passed  | 4     | 4/4       |
+| Phase 3      | passed  | 4     | 4/4       |
+| Phase 4      | passed  | 2     | 2/2       |
+| Phase p-rev1 | passed  | 2     | 2/2       |
+| Phase p-rev2 | pending | 1     | 0/1       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/14 tasks completed
 
 ## Task Status
 
@@ -67,6 +68,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | --------- | --------- | ----------- |
 | prev1-t01 | completed | `9e8a92e48` |
 | prev1-t02 | completed | `8fe8c43df` |
+
+### Phase p-rev2: Revision 2 — Bind the Complete Approved Dispatch Projection
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev2-t01 | pending | -      |
 
 ## Orchestration Runs
 
@@ -1101,6 +1108,35 @@ context before p02 can advance.
 - All 13 planned and revision tasks are complete. Final lifecycle review and
   the configured implementation exit gate remain before HiLL approval.
 
+### Review Received: final
+
+**Date:** 2026-08-31
+**Review artifact:**
+`reviews/archived/final-review-2026-08-31T220007Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `prev2-t01`
+
+**Finding disposition:**
+
+- C1 (`code_fix_required`): agreed. Packet validation retains a reduced
+  approval envelope, so its assurance claim does not prove the approved wave
+  floors, lane authority, controls, payloads, and catalog identity survived
+  execution. Revision p-rev2 will reuse the existing canonical prepared
+  projection at the existing packet boundary and add axis-by-axis mutations.
+
+**Design drift / artifact alignment notes:** None. The implementation must be
+corrected to meet the existing discovery, design, and dispatch contracts.
+
+**Next:** Execute `prev2-t01` via `oat-project-implement`, then run a fresh final
+independent review before the configured exit gate.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -1210,7 +1246,7 @@ The primary shipped surfaces are `.agents/skills/recon`,
 code in `packages/cli`, the research pack manifest and bundled assets, and the
 recon documentation under `apps/oat-docs/docs`.
 
-Verification includes the complete repository CI gate sequence, a fresh
+Verification through p04 includes the complete repository CI gate sequence, a fresh
 4625/4625 forced workspace test run with no Turbo cache hits, 742/742 skill
 tests, 140/140 smoke tests, release validation for all five `0.2.51` packages,
 canonical skill validation, lint, format, type checking, builds, docs generation
@@ -1218,4 +1254,6 @@ and a 73-page docs build. Independent terminal phase reviews passed p01, p02
 through revision p-rev1, p03, and p04. Review fixes stayed inside existing
 contracts and lifecycle seams; no generalized transaction/state framework or
 automatic discovery, quick-start, analyze, or deep-research integration was
-added. Those broader integrations remain separate backlog items.
+added. Those broader integrations remain separate backlog items. Final review
+then found one Critical approval-binding gap, now queued as bounded task
+`prev2-t01`; closeout remains in progress until that fix and re-review pass.

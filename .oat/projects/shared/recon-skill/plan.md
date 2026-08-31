@@ -977,6 +977,62 @@ git add .agents/skills/recon/scripts .agents/skills/recon/tests
 git commit -m "refactor(prev1-t02): centralize recon packet validation"
 ```
 
+## Phase p-rev2: Revision 2 — Bind the Complete Approved Dispatch Projection
+
+### Task prev2-t01: (review) Bind packets to the complete approved dispatch projection
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Reproduce the approval-binding gap**
+
+Add direct mutations that independently delete or change every dispatch axis
+omitted by the reduced fixture: per-wave task classes and floors, lane scopes,
+authorization scope and writable roots, fallback/context controls, payload
+digests, run maximum floor, pinned target, and live catalog identity/fingerprint.
+Prove each mutation currently remains publishable or is not represented.
+
+**Step 2: Bind the existing canonical prepared projection**
+
+Reuse or narrowly normalize the existing `oat-dispatch-approval/v1` prepared
+projection in `manifest.execution` and each immutable
+prepared/approved/accepted/completed receipt. Validate its canonical
+fingerprint, approval evidence, catalog recheck, run maximum floor, pinned
+target, and every per-wave/lane class, scope, authority, writable root,
+execution control, and payload digest at the existing normalized packet
+boundary. Do not create another profile, dispatch engine, persisted artifact,
+or generalized approval abstraction.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+node --test .agents/skills/oat-dispatch-subagents/tests/approval-contract.test.mjs .agents/skills/recon/tests/*.test.mjs
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm test:skills
+pnpm oat:validate-skills
+pnpm lint
+pnpm format
+```
+
+Expected: the complete prior suite passes, each formerly omitted approval axis
+is present and bound, and independent deletion or mutation prevents packet
+validation and publication.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/recon
+git commit -m "fix(prev2-t01): bind complete approved dispatch projection"
+```
+
 ## Reviews
 
 | Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
@@ -986,7 +1042,7 @@ git commit -m "refactor(prev1-t02): centralize recon packet validation"
 | p03       | code     | passed          | 2026-08-31 | `reviews/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -           |
 | p04       | code     | passed          | 2026-08-31 | `reviews/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -           |
 | p-rev1    | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -           |
-| final     | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| final     | code     | fixes_added     | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`         | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -           |
 | spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -           |
@@ -1020,8 +1076,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Phase 4: 2 tasks — documentation, lockstep release packaging, and full gates.
 - Revision 1: 2 tasks — simplify the validation design and centralize packet
   validation/publication behind one normalized run graph.
+- Revision 2: 1 task — bind packet validation and receipts to the complete
+  canonical user-approved dispatch projection.
 
-**Total: 13 tasks**
+**Total: 14 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
