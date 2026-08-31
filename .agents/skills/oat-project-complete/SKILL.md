@@ -51,6 +51,7 @@ COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
 SYNCED_ARCHIVE_ENTRY_SCRIPT="$SKILL_DIR/scripts/resolve-synced-archive-entry.mjs"
 SYNCED_ARCHIVE_EXECUTE_SCRIPT="$SKILL_DIR/scripts/execute-synced-archive-entry.mjs"
+SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-synced-archive-resume-fields.mjs"
 SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
@@ -76,34 +77,47 @@ test -f "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" || {
   echo "Missing synced archive entry executor: $SYNCED_ARCHIVE_EXECUTE_SCRIPT" >&2
   exit 1
 }
+test -f "$SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" || {
+  echo "Missing synced archive resume field parser: $SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" >&2
+  exit 1
+}
 test -f "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" || {
   echo "Missing synced archive finalizer: $SYNCED_ARCHIVE_FINALIZE_SCRIPT" >&2
   exit 1
 }
 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+SYNCED_ARCHIVE_RESUME="false"
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   SYNCED_RECORD_PATH="${PROJECT_PATH}.json"
-  if [[ -f "$SYNCED_RECORD_PATH" ]]; then
-    REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
-    SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \
-      --repo-root "$REPO_ROOT" \
-      --record-path "$SYNCED_RECORD_PATH" \
-      --project-name "$PROJECT_NAME" \
-      --project-path "$PROJECT_PATH") || exit 1
-    SYNCED_ARCHIVE_ENTRY_ROUTE=$(node -e '
+  REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+  SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \
+    --repo-root "$REPO_ROOT" \
+    --record-path "$SYNCED_RECORD_PATH" \
+    --project-name "$PROJECT_NAME" \
+    --project-path "$PROJECT_PATH") || exit 1
+  SYNCED_ARCHIVE_ENTRY_ROUTE=$(node -e '
 const value = JSON.parse(process.argv[1]);
 if (value.status !== "ok" || !["continue-active", "archive-resumed"].includes(value.route)) process.exit(1);
 process.stdout.write(value.route);
 ' "$SYNCED_ARCHIVE_ENTRY") || exit 1
-    if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resumed" ]]; then
-      printf '%s\n' "$SYNCED_ARCHIVE_ENTRY"
-      echo "Verified persisted synced archive terminal receipt; active pointer cleared."
-      echo "Archive resume is terminal; Steps 2-7 were not replayed."
-      exit 0
+  if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resumed" ]]; then
+    printf '%s\n' "$SYNCED_ARCHIVE_ENTRY"
+    SYNCED_ARCHIVE_RESUME_ASSIGNMENTS=$(node \
+      "$SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" \
+      "$SYNCED_ARCHIVE_ENTRY") || exit 1
+    eval "$SYNCED_ARCHIVE_RESUME_ASSIGNMENTS" || exit 1
+    ARCHIVED_PROJECT_STATUS_ASSIGNMENTS=$(oat project status \
+      --project-path "$ARCHIVE_PATH" --shell \
+      oat_pr_status=project.prStatus \
+      oat_pr_url=project.prUrl) || exit 1
+    eval "$ARCHIVED_PROJECT_STATUS_ASSIGNMENTS" || exit 1
+    WAS_PR_OPEN_AT_START="false"
+    if [[ "${oat_pr_status:-}" == "open" ]]; then
+      WAS_PR_OPEN_AT_START="true"
     fi
-  else
-    echo "Synced discovery record is absent; archive must resume from verified terminal archive metadata and the completed ref."
+    echo "Verified synced archive terminal receipt; active pointer retained until closeout succeeds."
+    echo "Steps 2-8 will not replay; continuing at Step 8.5."
   fi
 fi
 PROJECT_RETAINED_REF=""
@@ -115,6 +129,14 @@ if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
   IS_DURABLE_PROJECT="true"
 fi
 ```
+
+When `SYNCED_ARCHIVE_RESUME="true"`, continue directly at **Step 8.5**. Do not
+execute Steps 2 through 8, ask the upfront questions again, read or mutate the
+retired active checkout, regenerate active artifacts, or invoke archive a
+second time. The executor result and the archived project status have already
+initialized every resume-safe downstream receipt and choice. A resume never
+opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
+an already-tracked open PR is updated by Step 11.5.
 
 ### Step 2: Upfront User Questions (Batched)
 
@@ -980,23 +1002,27 @@ The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
 Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.
 
 Only after every applicable synced terminal and recap-export field above has
-passed validation, use the finalizer to clear the deferred pointer. The
-finalizer validates the terminal receipt again before changing configuration,
-so a failed archive command or malformed result cannot clear the pointer:
-
-```bash
-if [[ "$PROJECT_SCOPE" == "synced" ]]; then
-  SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
-    node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
-      --project-name "$PROJECT_NAME") || exit 1
-  printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
-  echo "Synced archive terminal receipt verified; active project pointer cleared."
-fi
-```
+passed validation may the workflow continue. Keep the pointer through the
+required link, dashboard, bookkeeping, push, and PR-closeout work below so a
+failure after record retirement can retry through the recordless archive path.
 
 #### Step 8.5: Finalize Archive-Aware Recap Links
 
-Run this only when archive returned a `projectRecapExport`.
+The recap-link rewrite in this subsection runs only when archive returned a
+`projectRecapExport`. A synced archive resume with no recap export performs no
+recap-link rewrite, then still continues at Step 8.6.
+
+This is the explicit rejoin point when `SYNCED_ARCHIVE_RESUME="true"`. Use
+`ARCHIVE_OUTPUT` and `PROJECT_RECAP_EXPORT_JSON` from the validated executor
+result; use its `ARCHIVE_PATH`, `SUMMARY_EXPORT_FILE`, `LIFECYCLE_COMMIT`,
+`ARCHIVE_S3_PATH`, and `SELECTED_PROJECT_RECAP_RUN` assignments for all later
+steps. Do not infer any receipt from the deleted checkout and do not rerun the
+Step 8 archive command—the executor already validated the terminal report.
+Keep the active pointer until post-archive closeout succeeds, then run the
+finalizer once before confirmation. Continue through Steps 8.5–12, including
+final synced links,
+dashboard refresh, the required bookkeeping push, tracked-PR closeout when
+applicable, and final confirmation.
 
 Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport.exportRoot`; do not derive them from the local archive.
 Use a repository-relative path under
@@ -1310,6 +1336,26 @@ its immediate parent equal to `PROJECT_REF_COMMIT`, and preserve the recovered
 to its one canonical path, and all unrelated staged-state snapshots must remain
 byte-for-byte unchanged.
 
+For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
+push the parent branch exactly once after the lifecycle receipt and any recap
+evidence commit are final. Verify the pushed upstream contains the exact final
+bookkeeping commit before continuing to PR closeout or claiming completion:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  BOOKKEEPING_PUSH_COMMIT="${EVIDENCE_COMMIT:-$LIFECYCLE_COMMIT}"
+  test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
+  git merge-base --is-ancestor "$LIFECYCLE_COMMIT" \
+    "$BOOKKEEPING_PUSH_COMMIT" || exit 1
+  git push || exit 1
+  BOOKKEEPING_UPSTREAM=$(git rev-parse --abbrev-ref \
+    --symbolic-full-name '@{u}') || exit 1
+  git merge-base --is-ancestor "$BOOKKEEPING_PUSH_COMMIT" \
+    "$BOOKKEEPING_UPSTREAM" || exit 1
+  echo "Completion bookkeeping pushed: $BOOKKEEPING_PUSH_COMMIT"
+fi
+```
+
 ### Step 11: Open PR in GitHub (Conditional)
 
 **Skip if `SHOULD_OPEN_PR` is false.**
@@ -1387,6 +1433,21 @@ Failure handling:
   and any recap evidence update in Step 10.6 already shipped.
 
 ### Step 12: Confirm to User
+
+Immediately before confirmation, clear the deferred synced archive pointer.
+The finalizer validates the terminal receipt again before changing
+configuration. This ordering keeps every failure before final confirmation
+directly retryable, including a retry after record retirement:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+    node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
+      --project-name "$PROJECT_NAME") || exit 1
+  printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
+  echo "Synced archive terminal receipt verified; active project pointer cleared."
+fi
+```
 
 Show user:
 

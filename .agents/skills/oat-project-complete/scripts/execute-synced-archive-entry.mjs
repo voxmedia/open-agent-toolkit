@@ -1,9 +1,10 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { isAbsolute, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
-import { finalizeSyncedArchive } from './finalize-synced-archive.mjs';
+import { validateSyncedArchiveTerminalReport } from './finalize-synced-archive.mjs';
 import { resolveSyncedArchiveEntry } from './resolve-synced-archive-entry.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -12,6 +13,77 @@ function executionError(message) {
   const error = new Error(message);
   error.code = 'E_SYNCED_ARCHIVE_EXECUTION';
   return error;
+}
+
+function buildPostArchiveContinuation(archiveReport, projectPath) {
+  let selectedProjectRecapRun = '';
+  if (archiveReport.projectRecapExport !== undefined) {
+    const sourceRunRoot = archiveReport.projectRecapExport?.sourceRunRoot;
+    const exportRoot = archiveReport.projectRecapExport?.exportRoot;
+    const manifestPath =
+      archiveReport.projectRecapExport?.manifest?.relativePath;
+    if (
+      typeof sourceRunRoot !== 'string' ||
+      typeof exportRoot !== 'string' ||
+      manifestPath !== 'manifest.json'
+    ) {
+      throw executionError(
+        'Archive resume report has an invalid project recap export receipt.',
+      );
+    }
+    selectedProjectRecapRun = relative(projectPath, sourceRunRoot);
+    if (
+      selectedProjectRecapRun.length === 0 ||
+      /^\.\.(?:[/\\]|$)/.test(selectedProjectRecapRun) ||
+      isAbsolute(selectedProjectRecapRun)
+    ) {
+      throw executionError(
+        'Archive resume recap source is outside the original project path.',
+      );
+    }
+  }
+  return {
+    required: true,
+    rejoinStep: '8.5',
+    archivePath: archiveReport.archivePath,
+    summaryExportFile: archiveReport.summaryExportFile ?? '',
+    lifecycleCommit: archiveReport.lifecycleCommit,
+    s3Path: archiveReport.s3Path ?? '',
+    selectedProjectRecapRun,
+    projectRecapExport: archiveReport.projectRecapExport ?? null,
+  };
+}
+
+export async function continueSyncedArchiveCompletion({
+  executionResult,
+  finalizeLinks,
+  refreshDashboard,
+  pushBookkeeping,
+  closeoutPr,
+  clearPointer,
+  confirmCompletion,
+}) {
+  if (
+    executionResult?.route !== 'archive-resumed' ||
+    executionResult?.terminal !== true ||
+    executionResult?.terminalReceiptValidated !== true ||
+    executionResult?.continuation?.required !== true
+  ) {
+    throw executionError(
+      'Post-archive continuation requires a finalized archive-resume result.',
+    );
+  }
+  await finalizeLinks(executionResult.continuation);
+  await refreshDashboard(executionResult.continuation);
+  await pushBookkeeping(executionResult.continuation);
+  await closeoutPr(executionResult.continuation);
+  await clearPointer(executionResult.archiveReport);
+  await confirmCompletion(executionResult.continuation);
+  return {
+    status: 'ok',
+    route: 'completion-confirmed',
+    lifecycleCommit: executionResult.continuation.lifecycleCommit,
+  };
 }
 
 export async function executeSyncedArchiveEntry({
@@ -23,14 +95,22 @@ export async function executeSyncedArchiveEntry({
   pullProject,
   runActiveWorkflowSteps,
   archiveProject,
-  finalizeArchive,
+  validateArchive,
 }) {
-  const entry = await resolveSyncedArchiveEntry({
-    record,
-    projectName,
-    repoRoot,
-    ...(probeRefs ? { probeRefs } : {}),
-  });
+  const entry = record
+    ? await resolveSyncedArchiveEntry({
+        record,
+        projectName,
+        repoRoot,
+        ...(probeRefs ? { probeRefs } : {}),
+      })
+    : {
+        status: 'ok',
+        route: 'archive-resume',
+        terminal: true,
+        archiveSnapshot: null,
+        verifiedSourceSha: null,
+      };
 
   if (entry.route === 'pull') {
     await pullProject(projectPath);
@@ -44,18 +124,31 @@ export async function executeSyncedArchiveEntry({
   }
 
   const archiveReport = await archiveProject(projectPath, {
-    archiveSnapshot: entry.archiveSnapshot,
-    verifiedSourceSha: entry.verifiedSourceSha,
+    ...(entry.archiveSnapshot
+      ? {
+          archiveSnapshot: entry.archiveSnapshot,
+          verifiedSourceSha: entry.verifiedSourceSha,
+        }
+      : { recordless: true }),
   });
-  if (
-    archiveReport?.snapshotId !== entry.archiveSnapshot ||
-    archiveReport?.verifiedSourceSha !== entry.verifiedSourceSha
+  if (entry.archiveSnapshot) {
+    if (
+      archiveReport?.snapshotId !== entry.archiveSnapshot ||
+      archiveReport?.verifiedSourceSha !== entry.verifiedSourceSha
+    ) {
+      throw executionError(
+        'Archive resume report does not match the persisted snapshot identity.',
+      );
+    }
+  } else if (
+    typeof archiveReport?.snapshotId !== 'string' ||
+    archiveReport.snapshotId.length === 0
   ) {
     throw executionError(
-      'Archive resume report does not match the persisted snapshot identity.',
+      'Recordless archive resume report has no persisted snapshot identity.',
     );
   }
-  const finalization = await finalizeArchive({
+  await validateArchive({
     archiveReport,
     projectName,
   });
@@ -64,9 +157,10 @@ export async function executeSyncedArchiveEntry({
     route: 'archive-resumed',
     terminal: true,
     skippedActiveSteps: true,
-    archiveSnapshot: entry.archiveSnapshot,
+    archiveSnapshot: archiveReport.snapshotId,
     archiveReport,
-    finalization,
+    terminalReceiptValidated: true,
+    continuation: buildPostArchiveContinuation(archiveReport, projectPath),
   };
 }
 
@@ -99,6 +193,7 @@ async function readRecord(recordPath) {
   try {
     return JSON.parse(await readFile(recordPath, 'utf8'));
   } catch (error) {
+    if (error?.code === 'ENOENT') return null;
     throw executionError(
       `Unable to read synced discovery record: ${error.message}`,
     );
@@ -136,17 +231,8 @@ async function main(argv) {
         );
       }
     },
-    finalizeArchive: async ({ archiveReport, projectName }) =>
-      finalizeSyncedArchive({
-        projectName,
-        getArchiveReport: async () => archiveReport,
-        clearActiveProject: async () => {
-          await runOat(
-            ['config', 'set', 'activeProject', ''],
-            options.repoRoot,
-          );
-        },
-      }),
+    validateArchive: async ({ archiveReport, projectName }) =>
+      validateSyncedArchiveTerminalReport(archiveReport, projectName),
   });
 }
 
