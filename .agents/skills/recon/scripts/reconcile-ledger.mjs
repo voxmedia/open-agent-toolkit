@@ -30,9 +30,11 @@ export function reconcileLedger({
     if (!review || review.runId !== runId || review.status !== 'complete') {
       throw new Error(`Reconciliation requires a complete ${kind} result`);
     }
-    if (
-      !review.dispositions.every((item) => item.disposition === disposition)
-    ) {
+    const allowed =
+      kind === 'coverage'
+        ? new Set(['covered', 'gap'])
+        : new Set([disposition]);
+    if (!review.dispositions.every((item) => allowed.has(item.disposition))) {
       throw new Error(`Reconciliation received an invalid ${kind} disposition`);
     }
   }
@@ -50,10 +52,36 @@ export function reconcileLedger({
     const supporting = reviewResults.filter((review) =>
       review.dispositions.some((item) => item.claimId === claim.id),
     );
-    if (supporting.length !== 3) continue;
+    const materialCoverageGap = reviewResults.some(
+      (review) =>
+        review.reviewKind === 'coverage' &&
+        review.coverageFindings.some(
+          (finding) =>
+            finding.material === true && finding.claimIds.includes(claim.id),
+        ),
+    );
+    const coreComplete = [...requiredDispositions].every(
+      ([kind, disposition]) =>
+        supporting.some(
+          (review) =>
+            review.reviewKind === kind &&
+            review.dispositions.some(
+              (item) =>
+                item.claimId === claim.id &&
+                (item.disposition === disposition ||
+                  (kind === 'coverage' && item.disposition === 'gap')),
+            ),
+        ),
+    );
+    claim.reviewIds = [
+      ...new Set([
+        ...claim.reviewIds,
+        ...supporting.map((review) => review.id),
+      ]),
+    ];
+    if (!coreComplete) continue;
     const from = claim.status;
-    claim.status = 'verified';
-    claim.reviewIds = supporting.map((review) => review.id);
+    claim.status = materialCoverageGap ? 'contested' : 'verified';
     if (from !== claim.status)
       transitions.push({ claimId: claim.id, from, to: claim.status });
   }
@@ -79,6 +107,7 @@ export function reconcileLedger({
     transitions: exactClone(transitions),
     additions: [],
     removals: [],
+    removalDispositions: [],
     coverageDispositions,
     permittedInputs: [
       priorReference,

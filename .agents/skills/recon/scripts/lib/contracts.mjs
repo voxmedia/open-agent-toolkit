@@ -180,6 +180,65 @@ function duplicateIds(values, path, errors) {
   }
 }
 
+function validateApprovalEnvelope(value, errors, path) {
+  if (!isObject(value)) return;
+  requiredArray(value, 'waves', errors, path);
+  const waveIds = new Set();
+  const laneIds = new Set();
+  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
+    const wavePath = `${path}.waves[${waveIndex}]`;
+    requiredString(wave, 'id', errors, wavePath);
+    requiredString(wave, 'mode', errors, wavePath);
+    requiredArray(wave, 'lanes', errors, wavePath);
+    if (typeof wave.required !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'required must be a boolean',
+          `${wavePath}.required`,
+        ),
+      );
+    }
+    if (!stageModes.includes(wave.mode)) {
+      errors.push(
+        issue('INVALID_STAGE_MODE', 'Unknown wave mode', `${wavePath}.mode`),
+      );
+    }
+    if (waveIds.has(wave.id)) {
+      errors.push(
+        issue('DUPLICATE_ID', `Duplicate wave ${wave.id}`, `${wavePath}.id`),
+      );
+    }
+    waveIds.add(wave.id);
+    closedObject(
+      wave,
+      new Set(['id', 'mode', 'required', 'lanes']),
+      errors,
+      wavePath,
+    );
+    for (const [laneIndex, lane] of (wave.lanes ?? []).entries()) {
+      const lanePath = `${wavePath}.lanes[${laneIndex}]`;
+      requiredString(lane, 'id', errors, lanePath);
+      if (typeof lane.required !== 'boolean') {
+        errors.push(
+          issue(
+            'MISSING_REQUIRED_FIELD',
+            'required must be a boolean',
+            `${lanePath}.required`,
+          ),
+        );
+      }
+      if (laneIds.has(lane.id)) {
+        errors.push(
+          issue('DUPLICATE_ID', `Duplicate lane ${lane.id}`, `${lanePath}.id`),
+        );
+      }
+      laneIds.add(lane.id);
+      closedObject(lane, new Set(['id', 'required']), errors, lanePath);
+    }
+  }
+}
+
 function validateManifest(value, errors) {
   closedObject(
     value,
@@ -297,6 +356,11 @@ function validateManifest(value, errors) {
       'approvalFingerprint',
       errors,
       '$.execution',
+    );
+    validateApprovalEnvelope(
+      value.execution.approvalEnvelope,
+      errors,
+      '$.execution.approvalEnvelope',
     );
   }
   if (Array.isArray(value.sources))
@@ -944,9 +1008,14 @@ function validateReviewResult(value, errors) {
     requiredArray(value, key, errors);
   }
   if (
-    !['semantic', 'adversarial', 'coverage', 'reconciliation'].includes(
-      value.reviewKind,
-    )
+    ![
+      'semantic',
+      'adversarial',
+      'coverage',
+      'redundant-verification',
+      'contradiction-resolution',
+      'reconciliation',
+    ].includes(value.reviewKind)
   ) {
     errors.push(
       issue(
@@ -990,6 +1059,7 @@ function validateReviewResult(value, errors) {
     requiredArray(value, 'transitions', errors);
     requiredArray(value, 'additions', errors);
     requiredArray(value, 'removals', errors);
+    requiredArray(value, 'removalDispositions', errors);
     requiredArray(value, 'coverageDispositions', errors);
     for (const key of ['additions', 'removals']) {
       const seen = new Set();
@@ -1005,6 +1075,33 @@ function validateReviewResult(value, errors) {
         }
         seen.add(id);
       }
+    }
+    for (const [index, disposition] of (
+      value.removalDispositions ?? []
+    ).entries()) {
+      for (const key of ['claimId', 'reviewId', 'disposition']) {
+        requiredString(
+          disposition,
+          key,
+          errors,
+          `$.removalDispositions[${index}]`,
+        );
+      }
+      if (disposition.disposition !== 'rejected') {
+        errors.push(
+          issue(
+            'INVALID_REMOVAL_DISPOSITION',
+            'Claim removal must be authorized by a rejected review disposition',
+            `$.removalDispositions[${index}].disposition`,
+          ),
+        );
+      }
+      closedObject(
+        disposition,
+        new Set(['claimId', 'reviewId', 'disposition']),
+        errors,
+        `$.removalDispositions[${index}]`,
+      );
     }
     for (const [index, transition] of (value.transitions ?? []).entries()) {
       closedObject(
@@ -1035,18 +1132,31 @@ function validateReviewResult(value, errors) {
           `$.coverageDispositions[${index}]`,
         );
       }
-      if (disposition.disposition !== 'accepted-gap') {
+      if (!['accepted-gap', 'resolved'].includes(disposition.disposition)) {
         errors.push(
           issue(
             'INVALID_COVERAGE_DISPOSITION',
-            'Coverage dispositions must be accepted-gap',
+            'Coverage dispositions must be accepted-gap or resolved',
             `$.coverageDispositions[${index}].disposition`,
+          ),
+        );
+      }
+      if (
+        disposition.disposition === 'resolved' &&
+        (!Array.isArray(disposition.evidenceIds) ||
+          disposition.evidenceIds.length === 0)
+      ) {
+        errors.push(
+          issue(
+            'INVALID_COVERAGE_DISPOSITION',
+            'Resolved coverage dispositions require typed evidence IDs',
+            `$.coverageDispositions[${index}].evidenceIds`,
           ),
         );
       }
       closedObject(
         disposition,
-        new Set(['findingId', 'gapId', 'disposition']),
+        new Set(['findingId', 'gapId', 'disposition', 'evidenceIds']),
         errors,
         `$.coverageDispositions[${index}]`,
       );
@@ -1075,6 +1185,8 @@ function validateReviewResult(value, errors) {
       semantic: ['affirmed', 'rejected', 'uncertain'],
       adversarial: ['unchallenged', 'challenged'],
       coverage: ['covered', 'gap'],
+      'redundant-verification': ['affirmed', 'rejected', 'uncertain'],
+      'contradiction-resolution': ['resolved', 'unresolved', 'rejected'],
       reconciliation: [],
     }[value.reviewKind];
     if (allowed && !allowed.includes(disposition.disposition)) {
@@ -1086,6 +1198,63 @@ function validateReviewResult(value, errors) {
         ),
       );
     }
+  }
+  if (value.reviewKind === 'contradiction-resolution') {
+    requiredArray(value, 'contradictionDispositions', errors);
+    for (const [index, disposition] of (
+      value.contradictionDispositions ?? []
+    ).entries()) {
+      requiredString(
+        disposition,
+        'contradictionId',
+        errors,
+        `$.contradictionDispositions[${index}]`,
+      );
+      requiredArray(
+        disposition,
+        'claimIds',
+        errors,
+        `$.contradictionDispositions[${index}]`,
+      );
+      requiredString(
+        disposition,
+        'disposition',
+        errors,
+        `$.contradictionDispositions[${index}]`,
+      );
+      if (!['resolved', 'unresolved'].includes(disposition.disposition)) {
+        errors.push(
+          issue(
+            'INVALID_CONTRADICTION_DISPOSITION',
+            'Contradiction disposition must be resolved or unresolved',
+            `$.contradictionDispositions[${index}].disposition`,
+          ),
+        );
+      }
+      closedObject(
+        disposition,
+        new Set(['contradictionId', 'claimIds', 'disposition']),
+        errors,
+        `$.contradictionDispositions[${index}]`,
+      );
+    }
+  }
+  if (
+    ['redundant-verification', 'contradiction-resolution'].includes(
+      value.reviewKind,
+    ) &&
+    ((value.dispositions ?? []).length === 0 ||
+      (value.permittedInputs ?? []).length === 0 ||
+      (value.reviewKind === 'contradiction-resolution' &&
+        (value.contradictionDispositions ?? []).length === 0))
+  ) {
+    errors.push(
+      issue(
+        'EMPTY_ASSURANCE_RESULT',
+        'Thorough assurance results must bind immutable inputs, claims, and affected contradictions',
+        '$',
+      ),
+    );
   }
   for (const [index, finding] of (value.coverageFindings ?? []).entries()) {
     for (const key of ['id', 'gapId', 'code', 'message']) {
@@ -1181,9 +1350,12 @@ function validateReviewResult(value, errors) {
             'transitions',
             'additions',
             'removals',
+            'removalDispositions',
             'coverageDispositions',
           ]
-        : [...common, 'brief'],
+        : value.reviewKind === 'contradiction-resolution'
+          ? [...common, 'brief', 'contradictionDispositions']
+          : [...common, 'brief'],
     ),
     errors,
   );
@@ -1235,6 +1407,18 @@ function validateDispatchReceipt(value, errors) {
     closedObject(
       value.acceptedEnvelope,
       envelopeKeys,
+      errors,
+      '$.acceptedEnvelope',
+    );
+  }
+  validateApprovalEnvelope(
+    value.approvalEnvelope,
+    errors,
+    '$.approvalEnvelope',
+  );
+  if (isObject(value.acceptedEnvelope)) {
+    validateApprovalEnvelope(
+      value.acceptedEnvelope,
       errors,
       '$.acceptedEnvelope',
     );

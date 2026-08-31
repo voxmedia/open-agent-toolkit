@@ -50,7 +50,8 @@ execution axis in the approval envelope.
   references, confirmed output path;
 - discriminated `sources`;
 - `execution`: exact approval envelope, fingerprint, and immutable dispatch
-  receipt references;
+  receipt references. The envelope closes every wave to one stage mode and an
+  explicit list of required or conditional lane IDs;
 - `stages`: `recon.stage-result` records whose single artifact ID, lane, and
   accepted/completed receipt IDs bind every completed pass to one hashed
   same-run artifact of the required kind;
@@ -61,6 +62,10 @@ execution axis in the approval envelope.
 
 Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`,
 or `failed`. The validator—not a worker—derives achieved profile.
+It derives rigor from the exact required wave/lane/stage multiset, never from a
+set of mode names. Every approved required lane has one terminal stage; only
+lanes whose typed artifact is named by matching accepted and completed receipts
+can contribute to achieved rigor.
 
 ## Source Descriptors and Locators
 
@@ -69,7 +74,11 @@ All source descriptors carry `kind`, stable `id`, `available`, `authority`,
 
 Validation state is closed to `pinned`, `unpinned`, `stale`, `invalid`, or
 `unavailable`. Only an available `pinned` source is assurance-eligible;
-everything else requires an explicit affected-source/claim gap.
+everything else requires an explicit affected-source/claim gap. A stale,
+invalid, or unavailable source may remain as auditable non-exact evidence when
+one material gap names that source and every affected claim and all affected
+claims are below `supported`; missing coverage or a stronger claim state
+remains invalid.
 
 - `repository`: canonical `root`, revision, dirty state, and per-path content
   hashes. Locator: relative path, matching revision, line start/end.
@@ -111,14 +120,18 @@ Claim states are categorical:
 Quick packets never contain `verified` claims. Standard and thorough claims need
 recorded independent semantic, adversarial, and coverage reviews. Every review
 ID resolves to a unique, complete, typed, hashed result bound to the exact
-immutable brief digest and the claim's required disposition. A material
-unresolved challenge prevents verification. Review workers propose; only a
-reconciler writes a new ledger candidate. Reconciliation binds the prior ledger
-reference and revision, the next revision, the incorporated review IDs, and the
-exact canonical claim transitions. It also binds additions, removals, and every
-prior/current state change; preserves statement, evidence-link, and
-qualification continuity; and accepts new evidence only when an incorporated
-review supplied the exact record.
+immutable brief digest, the claim's required disposition, and the matching
+accepted/completed stage receipts. An unreceipted result cannot contribute
+assurance or reconciliation. A material unresolved challenge or coverage
+finding prevents verification. Review workers propose; only a reconciler writes
+a new ledger candidate. Reconciliation binds the prior ledger reference and
+revision, the next revision, the exact receipted review-result set, and the exact
+canonical claim transitions. Standard and thorough output is exactly the next
+revision of the bound prior ledger; revision one cannot bypass reconciliation.
+It also binds additions, removals, and every prior/current state change;
+preserves statement, evidence-link, and qualification continuity; accepts new
+evidence only when an incorporated review supplied the exact record; and
+requires a receipted typed rejection disposition before removing a prior claim.
 
 ## Evidence and Secret Redaction
 
@@ -141,7 +154,12 @@ nor a digest of the sensitive span. Diagnostics must never echo the span.
   unresolved issues, and completion status. Reconciliation results replace the
   brief reference with prior-ledger/revision, additions/removals, exact
   transitions, and coverage-disposition bindings. Coverage findings are closed
-  records bound to affected claims and exact manifest gaps.
+  records bound to affected claims and exact manifest gaps. Accepted material
+  gaps require a legal downgrade for every affected claim; a resolved finding
+  instead names exact typed evidence. Thorough redundant verification and
+  contradiction resolution are claim-bearing typed review results, not raw
+  dossiers: they bind immutable briefs, claim dispositions, and explicit
+  affected-contradiction dispositions.
 - `recon.stage-result`: stable stage ID, mode, lane, status, exactly one output
   artifact ID, accepted/completed receipt IDs, and safe diagnostics.
 - `recon.dispatch-receipt`: immutable prepared, approved, accepted, or terminal

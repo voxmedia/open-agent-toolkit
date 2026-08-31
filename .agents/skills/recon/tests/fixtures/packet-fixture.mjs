@@ -108,7 +108,14 @@ export async function createPacketFixture({
         reviewIds:
           achievedProfile === 'quick'
             ? []
-            : ['review-semantic', 'review-adversarial', 'review-coverage'],
+            : [
+                'review-semantic',
+                'review-adversarial',
+                'review-coverage',
+                ...(achievedProfile === 'thorough'
+                  ? ['review-redundant-verification']
+                  : []),
+              ],
         derivedFrom: [dossierRef],
         challenges: [],
       },
@@ -118,7 +125,12 @@ export async function createPacketFixture({
         status: 'contested',
         evidence: [{ evidenceId: 'evidence-1', relation: 'qualifies' }],
         qualifications: ['Needs another source.'],
-        reviewIds: ['review-adversarial'],
+        reviewIds: [
+          'review-adversarial',
+          ...(achievedProfile === 'thorough'
+            ? ['review-contradiction-resolution']
+            : []),
+        ],
         derivedFrom: [dossierRef],
         challenges: [
           { id: 'challenge-1', material: true, status: 'unresolved' },
@@ -143,6 +155,9 @@ export async function createPacketFixture({
     priorLedger.revision = 1;
     priorLedger.claims[0].status = 'supported';
     priorLedger.claims[0].reviewIds = [];
+    if (achievedProfile === 'thorough') {
+      priorLedger.claims[1].reviewIds = ['review-adversarial'];
+    }
     priorLedger.transitions[0] = {
       claimId: 'claim-1',
       from: 'provisional',
@@ -182,6 +197,24 @@ export async function createPacketFixture({
         }),
       ]),
     );
+    if (achievedProfile === 'thorough') {
+      briefs['redundant-verify'] = createReviewBrief({
+        id: 'brief-redundant-verify',
+        mode: 'verify',
+        createdAt: '2026-08-31T00:03:00.000Z',
+        manifest: briefManifest,
+        ledger: priorLedger,
+        claimIds: ['claim-1'],
+      });
+      briefs['contradiction-resolution'] = createReviewBrief({
+        id: 'brief-contradiction-resolution',
+        mode: 'adversary',
+        createdAt: '2026-08-31T00:03:00.000Z',
+        manifest: briefManifest,
+        ledger: priorLedger,
+        claimIds: ['claim-2'],
+      });
+    }
     const briefRefs = {};
     for (const [mode, brief] of Object.entries(briefs)) {
       const path = join(packetRoot, 'reviews', 'briefs', `${mode}.json`);
@@ -192,11 +225,30 @@ export async function createPacketFixture({
       };
       reviewArtifacts.push(briefRefs[mode]);
     }
-    for (const [id, reviewKind, briefMode, disposition] of [
+    const resultSpecs = [
       ['review-semantic', 'semantic', 'verify', 'affirmed'],
       ['review-adversarial', 'adversarial', 'adversary', 'unchallenged'],
       ['review-coverage', 'coverage', 'coverage', 'covered'],
-    ]) {
+      ...(achievedProfile === 'thorough'
+        ? [
+            [
+              'review-redundant-verification',
+              'redundant-verification',
+              'redundant-verify',
+              'affirmed',
+            ],
+            [
+              'review-contradiction-resolution',
+              'contradiction-resolution',
+              'contradiction-resolution',
+              'unresolved',
+            ],
+          ]
+        : []),
+    ];
+    for (const [id, reviewKind, briefMode, disposition] of resultSpecs) {
+      const claimId =
+        reviewKind === 'contradiction-resolution' ? 'claim-2' : 'claim-1';
       const result = {
         kind: 'recon.review-result',
         schemaVersion: 1,
@@ -208,10 +260,21 @@ export async function createPacketFixture({
         brief: { ...briefRefs[briefMode] },
         permittedInputs: [{ ...briefRefs[briefMode] }],
         excludedInputs: ['prior_reasoning'],
-        dispositions: [{ claimId: 'claim-1', disposition }],
+        dispositions: [{ claimId, disposition }],
         newEvidence: [],
         coverageFindings: [],
         unresolvedIssues: [],
+        ...(reviewKind === 'contradiction-resolution'
+          ? {
+              contradictionDispositions: [
+                {
+                  contradictionId: 'challenge-1',
+                  claimIds: ['claim-2'],
+                  disposition: 'unresolved',
+                },
+              ],
+            }
+          : {}),
       };
       const path = join(packetRoot, 'reviews', `${reviewKind}.json`);
       await writeJson(path, result);
@@ -234,10 +297,14 @@ export async function createPacketFixture({
         'review-semantic',
         'review-adversarial',
         'review-coverage',
+        ...(achievedProfile === 'thorough'
+          ? ['review-redundant-verification', 'review-contradiction-resolution']
+          : []),
       ],
       transitions: structuredClone(ledger.transitions),
       additions: [],
       removals: [],
+      removalDispositions: [],
       coverageDispositions: [],
       permittedInputs: [...reviewArtifacts],
       excludedInputs: [],
@@ -277,6 +344,8 @@ export async function createPacketFixture({
       : achievedProfile === 'thorough'
         ? thoroughStages
         : standardStages;
+  const stageLaneId = (mode) =>
+    mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
   const approvalEnvelope = {
     provider: 'fixture',
     model: 'fixture-model',
@@ -284,29 +353,35 @@ export async function createPacketFixture({
     route: 'fake',
     role: 'recon-worker',
     serviceTier: 'fixture',
-    waves: [{ id: 'wave-gather', laneCap: 1, concurrency: 1 }],
+    waves: stageModes.map((mode) => ({
+      id: `wave-${mode}`,
+      mode,
+      required: true,
+      lanes: [{ id: stageLaneId(mode), required: true }],
+    })),
   };
   const stageArtifacts = [];
   const stageRows = [];
   for (const [index, mode] of stageModes.entries()) {
     const stageId = `stage-${index + 1}`;
-    const laneId =
-      mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
+    const laneId = stageLaneId(mode);
     let artifactId;
     if (mode === 'semantic-verification') artifactId = 'review-semantic';
     else if (mode === 'adversarial') artifactId = 'review-adversarial';
     else if (mode === 'coverage') artifactId = 'review-coverage';
     else if (mode === 'reconciliation') artifactId = 'review-reconciliation';
+    else if (mode === 'redundant-verification')
+      artifactId = 'review-redundant-verification';
+    else if (mode === 'contradiction-resolution')
+      artifactId = 'review-contradiction-resolution';
     else {
       artifactId = `dossier-${mode}`;
       const dossierMode =
-        mode === 'locator-validation' || mode === 'redundant-verification'
+        mode === 'locator-validation'
           ? 'verify'
-          : mode === 'contradiction-resolution'
-            ? 'reconcile'
-            : mode === 'redundant-gather'
-              ? 'gather'
-              : mode;
+          : mode === 'redundant-gather'
+            ? 'gather'
+            : mode;
       const artifactPath = join(
         packetRoot,
         'raw',

@@ -236,10 +236,23 @@ async function makePacket({
         qualifications: [],
         reviewIds:
           claimStatus === 'verified'
-            ? ['review-semantic', 'review-adversarial', 'review-coverage']
+            ? [
+                'review-semantic',
+                'review-adversarial',
+                'review-coverage',
+                ...(profile === 'thorough'
+                  ? [
+                      'review-redundant-verification',
+                      'review-contradiction-resolution',
+                    ]
+                  : []),
+              ]
             : [],
         derivedFrom: [dossierRef],
-        challenges: [],
+        challenges:
+          profile === 'thorough'
+            ? [{ id: 'challenge-1', material: false, status: 'resolved' }]
+            : [],
       },
     ],
     unresolvedQuestions: [],
@@ -328,11 +341,27 @@ async function makePacket({
       questions: ['What evidence exists?'],
       claims: [{ id: 'claim-1', statement: ledger.claims[0].statement }],
     };
-    for (const [name, brief] of [
+    const briefSpecs = [
       ['verify', verifyBrief],
       ['adversary', adversaryBrief],
       ['coverage', coverageBrief],
-    ]) {
+      ...(profile === 'thorough'
+        ? [
+            [
+              'redundant-verify',
+              { ...structuredClone(verifyBrief), id: 'brief-redundant-verify' },
+            ],
+            [
+              'contradiction-resolution',
+              {
+                ...structuredClone(adversaryBrief),
+                id: 'brief-contradiction-resolution',
+              },
+            ],
+          ]
+        : []),
+    ];
+    for (const [name, brief] of briefSpecs) {
       const path = join(packetRoot, 'reviews', 'briefs', `${name}.json`);
       await mkdir(join(packetRoot, 'reviews', 'briefs'), { recursive: true });
       await writeJson(path, brief);
@@ -347,6 +376,22 @@ async function makePacket({
       ['review-semantic', 'semantic', 'brief-verify', 'affirmed'],
       ['review-adversarial', 'adversarial', 'brief-adversary', 'unchallenged'],
       ['review-coverage', 'coverage', 'brief-coverage', 'covered'],
+      ...(profile === 'thorough'
+        ? [
+            [
+              'review-redundant-verification',
+              'redundant-verification',
+              'brief-redundant-verify',
+              'affirmed',
+            ],
+            [
+              'review-contradiction-resolution',
+              'contradiction-resolution',
+              'brief-contradiction-resolution',
+              'resolved',
+            ],
+          ]
+        : []),
     ];
     for (const [id, reviewKind, briefId, disposition] of resultSpecs) {
       const brief = reviewPaths.get(briefId);
@@ -365,6 +410,17 @@ async function makePacket({
         newEvidence: [],
         coverageFindings: [],
         unresolvedIssues: [],
+        ...(reviewKind === 'contradiction-resolution'
+          ? {
+              contradictionDispositions: [
+                {
+                  contradictionId: 'challenge-1',
+                  claimIds: ['claim-1'],
+                  disposition: 'resolved',
+                },
+              ],
+            }
+          : {}),
       };
       const path = join(packetRoot, 'reviews', `${reviewKind}.json`);
       await writeJson(path, value);
@@ -389,10 +445,14 @@ async function makePacket({
         'review-semantic',
         'review-adversarial',
         'review-coverage',
+        ...(profile === 'thorough'
+          ? ['review-redundant-verification', 'review-contradiction-resolution']
+          : []),
       ],
       transitions: structuredClone(ledger.transitions),
       additions: [],
       removals: [],
+      removalDispositions: [],
       coverageDispositions: [],
       permittedInputs: [
         priorRef,
@@ -427,6 +487,11 @@ async function makePacket({
     path: 'claims.json',
     digest: await hashFile(claimsPath),
   };
+  const stageDefinitions = stagesFor(profile);
+  const stageLaneId = (stage) =>
+    stage.mode === 'semantic-verification'
+      ? 'lane-semantic'
+      : `lane-${stage.mode}`;
   const approvalEnvelope = {
     provider: 'fixture-provider',
     model: 'fixture-model',
@@ -434,32 +499,35 @@ async function makePacket({
     route: 'fake',
     role: 'recon-worker',
     serviceTier: 'fixture',
-    waves: [{ id: 'wave-1', laneCap: 1, concurrency: 1 }],
+    waves: stageDefinitions.map((stage) => ({
+      id: `wave-${stage.mode}`,
+      mode: stage.mode,
+      required: true,
+      lanes: [{ id: stageLaneId(stage), required: true }],
+    })),
   };
   const stageArtifacts = [];
   const stageRows = [];
-  for (const stage of stagesFor(profile)) {
-    const laneId =
-      stage.mode === 'semantic-verification'
-        ? 'lane-semantic'
-        : `lane-${stage.mode}`;
+  for (const stage of stageDefinitions) {
+    const laneId = stageLaneId(stage);
     let artifactId;
     if (stage.mode === 'semantic-verification') artifactId = 'review-semantic';
     else if (stage.mode === 'adversarial') artifactId = 'review-adversarial';
     else if (stage.mode === 'coverage') artifactId = 'review-coverage';
     else if (stage.mode === 'reconciliation')
       artifactId = 'review-reconciliation';
+    else if (stage.mode === 'redundant-verification')
+      artifactId = 'review-redundant-verification';
+    else if (stage.mode === 'contradiction-resolution')
+      artifactId = 'review-contradiction-resolution';
     else {
       artifactId = `stage-artifact-${stage.mode}`;
       const mode =
-        stage.mode === 'locator-validation' ||
-        stage.mode === 'redundant-verification'
+        stage.mode === 'locator-validation'
           ? 'verify'
-          : stage.mode === 'contradiction-resolution'
-            ? 'reconcile'
-            : stage.mode === 'redundant-gather'
-              ? 'gather'
-              : stage.mode;
+          : stage.mode === 'redundant-gather'
+            ? 'gather'
+            : stage.mode;
       const path = join(
         packetRoot,
         'raw',
@@ -614,7 +682,14 @@ for (const sourceKind of [
 
 test('valid lower-assurance packet publishes as an honest partial', async () => {
   const packet = await makePacket({ profile: 'standard', status: 'partial' });
-  packet.manifest.stages = packet.manifest.stages.slice(0, 4);
+  for (const stage of packet.manifest.stages.slice(4)) {
+    stage.status = 'omitted';
+    stage.artifactIds = [];
+    stage.dispatchReceiptIds = [];
+  }
+  packet.manifest.artifacts = packet.manifest.artifacts.filter(
+    (artifact) => !artifact.path.startsWith('reviews/'),
+  );
   packet.manifest.run.achievedProfile = 'quick';
   packet.ledger.claims[0].status = 'supported';
   packet.ledger.claims[0].reviewIds = [];
@@ -624,11 +699,6 @@ test('valid lower-assurance packet publishes as an honest partial', async () => 
     from: 'provisional',
     to: 'supported',
   };
-  packet.reviewPaths.get('review-reconciliation').value.transitions =
-    structuredClone(packet.ledger.transitions);
-  packet.reviewPaths.get('review-reconciliation').value.incorporatedReviewIds =
-    [];
-  await persistReview(packet, 'review-reconciliation');
   packet.manifest.gaps.push({
     id: 'gap-1',
     code: 'PASS_OMITTED',
@@ -808,7 +878,8 @@ test('verified claims require unique complete typed review results bound to immu
   await expectInvalid(duplicate, 'DUPLICATE_REVIEW_ID');
 
   const wrongKind = await makePacket({ profile: 'standard' });
-  wrongKind.reviewPaths.get('review-semantic').value.reviewKind = 'coverage';
+  wrongKind.reviewPaths.get('review-semantic').value.reviewKind =
+    'reconciliation';
   await persistReview(wrongKind, 'review-semantic');
   await expectInvalid(wrongKind, 'REVIEW_KIND_MISMATCH');
 

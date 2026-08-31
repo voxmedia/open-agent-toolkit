@@ -238,8 +238,15 @@ function sourceHasMinimumProvenance(source) {
   return false;
 }
 
-async function reopenEvidence(packetRoot, source, evidence, errors) {
+async function reopenEvidence(
+  packetRoot,
+  source,
+  evidence,
+  errors,
+  allowIneligibleAudit = false,
+) {
   if (source?.available !== true || source?.validationState !== 'pinned') {
+    if (allowIneligibleAudit) return false;
     errors.push(
       issue(
         'INELIGIBLE_SOURCE_STATE',
@@ -579,8 +586,14 @@ const stageArtifactContract = {
     reviewKind: 'reconciliation',
   },
   'redundant-gather': { kind: 'recon.raw-dossier', mode: 'gather' },
-  'redundant-verification': { kind: 'recon.raw-dossier', mode: 'verify' },
-  'contradiction-resolution': { kind: 'recon.raw-dossier', mode: 'reconcile' },
+  'redundant-verification': {
+    kind: 'recon.review-result',
+    reviewKind: 'redundant-verification',
+  },
+  'contradiction-resolution': {
+    kind: 'recon.review-result',
+    reviewKind: 'contradiction-resolution',
+  },
 };
 
 function stageArtifactIsComplete(
@@ -641,28 +654,98 @@ function stageArtifactIsComplete(
   return true;
 }
 
-function deriveAchievedProfile(
-  stages,
+function approvedRequiredLanes(approvalEnvelope) {
+  return (approvalEnvelope?.waves ?? []).flatMap((wave) =>
+    (wave.lanes ?? [])
+      .filter((lane) => wave.required === true && lane.required === true)
+      .map((lane) => ({ waveId: wave.id, mode: wave.mode, laneId: lane.id })),
+  );
+}
+
+function validateStageTopology(
+  manifest,
   artifactsById,
   runId,
   approvalFingerprint,
+  errors,
 ) {
-  const complete = new Set(
-    stages
-      .filter((stage) =>
-        stageArtifactIsComplete(
-          stage,
-          artifactsById,
-          runId,
-          approvalFingerprint,
-        ),
-      )
-      .map((stage) => stage.mode),
+  const requiredLanes = approvedRequiredLanes(
+    manifest.execution?.approvalEnvelope,
   );
+  const plannedByLane = new Map(
+    (manifest.execution?.approvalEnvelope?.waves ?? []).flatMap((wave) =>
+      (wave.lanes ?? []).map((lane) => [
+        lane.id,
+        { mode: wave.mode, required: wave.required && lane.required },
+      ]),
+    ),
+  );
+  const stageByLane = new Map();
+  const completeArtifactIdsByMode = new Map();
+  for (const stage of manifest.stages ?? []) {
+    const planned = plannedByLane.get(stage.laneId);
+    if (!planned || planned.mode !== stage.mode) {
+      errors.push(
+        issue(
+          'UNAPPROVED_STAGE_TOPOLOGY',
+          `Stage ${stage.id} is not the exact approved lane and mode`,
+          stage.id,
+        ),
+      );
+      continue;
+    }
+    if (stageByLane.has(stage.laneId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_LANE_STAGE',
+          `Lane ${stage.laneId} has multiple terminal stages`,
+          stage.id,
+        ),
+      );
+      continue;
+    }
+    stageByLane.set(stage.laneId, stage);
+    if (
+      stageArtifactIsComplete(stage, artifactsById, runId, approvalFingerprint)
+    ) {
+      const ids = completeArtifactIdsByMode.get(stage.mode) ?? [];
+      ids.push(stage.artifactIds[0]);
+      completeArtifactIdsByMode.set(stage.mode, ids);
+    }
+  }
+  for (const lane of requiredLanes) {
+    if (!stageByLane.has(lane.laneId)) {
+      errors.push(
+        issue(
+          'MISSING_APPROVED_LANE_STAGE',
+          `Approved required lane ${lane.laneId} has no terminal stage`,
+          `lane:${lane.laneId}`,
+        ),
+      );
+    }
+  }
+  return { requiredLanes, stageByLane, completeArtifactIdsByMode };
+}
+
+function deriveAchievedProfile(topology) {
   let achieved = null;
   for (const profile of profiles) {
-    if (requiredStages[profile].every((mode) => complete.has(mode)))
-      achieved = profile;
+    const complete = requiredStages[profile].every((mode) => {
+      const lanes = topology.requiredLanes.filter((lane) => lane.mode === mode);
+      return (
+        lanes.length > 0 &&
+        lanes.every((lane) => {
+          const stage = topology.stageByLane.get(lane.laneId);
+          return (
+            stage &&
+            topology.completeArtifactIdsByMode
+              .get(mode)
+              ?.includes(stage.artifactIds[0])
+          );
+        })
+      );
+    });
+    if (complete) achieved = profile;
   }
   return achieved;
 }
@@ -673,13 +756,14 @@ function sameReference(left, right) {
 
 function reviewBriefBindsClaim(brief, reviewKind, claim, ledger, manifest) {
   const projected =
-    reviewKind === 'semantic'
+    reviewKind === 'semantic' || reviewKind === 'redundant-verification'
       ? brief?.claims?.find((item) => item.id === claim.id)
-      : reviewKind === 'adversarial'
+      : reviewKind === 'adversarial' ||
+          reviewKind === 'contradiction-resolution'
         ? brief?.provisionalStatements?.find((item) => item.id === claim.id)
         : brief?.claims?.find((item) => item.id === claim.id);
   if (!projected || projected.statement !== claim.statement) return false;
-  if (reviewKind !== 'semantic') {
+  if (reviewKind !== 'semantic' && reviewKind !== 'redundant-verification') {
     return Object.keys(projected).sort().join(',') === 'id,statement';
   }
   const evidenceById = new Map(ledger.evidence.map((item) => [item.id, item]));
@@ -718,6 +802,17 @@ function validateReviewBindings(
   errors,
 ) {
   const claims = new Map(ledger.claims.map((claim) => [claim.id, claim]));
+  const reconciliation = [...artifactsById.values()].find(
+    ({ value }) => value.reviewKind === 'reconciliation',
+  )?.value;
+  const priorLedger = [...artifactsByPath.values()].find(
+    ({ reference, value }) =>
+      sameReference(reference, reconciliation?.inputLedger) &&
+      value.kind === 'recon.claim-ledger',
+  )?.value;
+  const priorClaims = new Map(
+    (priorLedger?.claims ?? []).map((claim) => [claim.id, claim]),
+  );
   for (const { value: result } of artifactsById.values()) {
     if (
       result.kind !== 'recon.review-result' ||
@@ -731,9 +826,11 @@ function validateReviewBindings(
         value.kind === 'recon.review-brief',
     )?.value;
     const expectedMode =
-      result.reviewKind === 'semantic'
+      result.reviewKind === 'semantic' ||
+      result.reviewKind === 'redundant-verification'
         ? 'verify'
-        : result.reviewKind === 'adversarial'
+        : result.reviewKind === 'adversarial' ||
+            result.reviewKind === 'contradiction-resolution'
           ? 'adversary'
           : 'coverage';
     if (!brief || brief.mode !== expectedMode || brief.runId !== ledger.runId) {
@@ -748,7 +845,10 @@ function validateReviewBindings(
     }
     const seen = new Set();
     for (const disposition of result.dispositions) {
-      const claim = claims.get(disposition.claimId);
+      const currentClaim = claims.get(disposition.claimId);
+      const priorClaim = priorClaims.get(disposition.claimId);
+      const claim = currentClaim ?? priorClaim;
+      const bindingLedger = currentClaim ? ledger : priorLedger;
       if (
         !claim ||
         seen.has(disposition.claimId) ||
@@ -756,7 +856,7 @@ function validateReviewBindings(
           brief,
           result.reviewKind,
           claim,
-          ledger,
+          bindingLedger,
           manifest,
         )
       ) {
@@ -770,7 +870,65 @@ function validateReviewBindings(
       }
       seen.add(disposition.claimId);
     }
+    if (result.reviewKind === 'contradiction-resolution') {
+      const challengeOwners = new Map();
+      for (const claim of ledger.claims) {
+        for (const challenge of claim.challenges ?? []) {
+          challengeOwners.set(challenge.id, claim.id);
+        }
+      }
+      for (const disposition of result.contradictionDispositions ?? []) {
+        const owner = challengeOwners.get(disposition.contradictionId);
+        if (
+          !owner ||
+          !disposition.claimIds.includes(owner) ||
+          !disposition.claimIds.every((claimId) => claims.has(claimId))
+        ) {
+          errors.push(
+            issue(
+              'CONTRADICTION_BINDING_MISMATCH',
+              `Contradiction ${disposition.contradictionId} is not bound to its affected claims`,
+              result.id,
+            ),
+          );
+        }
+      }
+    }
   }
+}
+
+const assuranceStageModeByReviewKind = new Map([
+  ['semantic', 'semantic-verification'],
+  ['adversarial', 'adversarial'],
+  ['coverage', 'coverage'],
+  ['redundant-verification', 'redundant-verification'],
+  ['contradiction-resolution', 'contradiction-resolution'],
+]);
+
+function validateReceiptedAssuranceReviews(artifactsById, topology, errors) {
+  const receipted = new Set();
+  for (const [reviewKind, mode] of assuranceStageModeByReviewKind) {
+    for (const id of topology.completeArtifactIdsByMode.get(mode) ?? []) {
+      const artifact = artifactsById.get(id)?.value;
+      if (artifact?.reviewKind === reviewKind) receipted.add(id);
+    }
+  }
+  for (const { value } of artifactsById.values()) {
+    if (
+      value.kind === 'recon.review-result' &&
+      assuranceStageModeByReviewKind.has(value.reviewKind) &&
+      !receipted.has(value.id)
+    ) {
+      errors.push(
+        issue(
+          'UNRECEIPTED_ASSURANCE_REVIEW',
+          `Assurance result ${value.id} is not the exact artifact of a completed approved stage`,
+          value.id,
+        ),
+      );
+    }
+  }
+  return receipted;
 }
 
 function validateReconciliation(
@@ -778,14 +936,27 @@ function validateReconciliation(
   ledger,
   artifactsById,
   artifactsByPath,
+  topology,
+  receiptedReviewIds,
+  exactEvidence,
+  reconciliationRequired,
   errors,
 ) {
-  const reconciliation = [...artifactsById.values()].find(
-    ({ value }) =>
-      value.kind === 'recon.review-result' &&
-      value.reviewKind === 'reconciliation',
-  )?.value;
-  if (ledger.revision <= 1) return;
+  const reconciliationId =
+    topology.completeArtifactIdsByMode.get('reconciliation')?.[0];
+  const reconciliation = artifactsById.get(reconciliationId)?.value;
+  if (ledger.revision <= 1) {
+    if (reconciliationRequired) {
+      errors.push(
+        issue(
+          'RECONCILIATION_REVISION_MISMATCH',
+          'Standard and thorough canonical ledgers must be the next revision of the bound prior ledger',
+          '$.revision',
+        ),
+      );
+    }
+    return;
+  }
   if (!reconciliation || reconciliation.status !== 'complete') {
     errors.push(
       issue(
@@ -848,6 +1019,43 @@ function validateReconciliation(
       ),
     );
   }
+  const removalDispositions = new Map(
+    (reconciliation.removalDispositions ?? []).map((item) => [
+      item.claimId,
+      item,
+    ]),
+  );
+  for (const claimId of expectedRemovals) {
+    const authorization = removalDispositions.get(claimId);
+    const review = artifactsById.get(authorization?.reviewId)?.value;
+    const disposition = review?.dispositions?.find(
+      (item) => item.claimId === claimId,
+    );
+    if (
+      !authorization ||
+      authorization.disposition !== 'rejected' ||
+      !receiptedReviewIds.has(authorization.reviewId) ||
+      !reconciliation.incorporatedReviewIds.includes(authorization.reviewId) ||
+      disposition?.disposition !== 'rejected'
+    ) {
+      errors.push(
+        issue(
+          'UNAUTHORIZED_CLAIM_REMOVAL',
+          `Claim ${claimId} lacks a receipted typed review disposition authorizing removal`,
+          claimId,
+        ),
+      );
+    }
+  }
+  if (removalDispositions.size !== expectedRemovals.length) {
+    errors.push(
+      issue(
+        'UNAUTHORIZED_CLAIM_REMOVAL',
+        'Removal dispositions must exactly match removed prior claims',
+        reconciliation.id,
+      ),
+    );
+  }
   const transitions = reconciliation.transitions ?? [];
   const transitionCounts = new Map();
   for (const transition of transitions) {
@@ -900,8 +1108,8 @@ function validateReconciliation(
       ]),
     ];
     if (
-      hashCanonicalJson(expectedReviewIds) !==
-      hashCanonicalJson(currentClaim.reviewIds)
+      expectedReviewIds.length !== new Set(currentClaim.reviewIds).size ||
+      expectedReviewIds.some((id) => !currentClaim.reviewIds.includes(id))
     ) {
       errors.push(
         issue(
@@ -977,17 +1185,10 @@ function validateReconciliation(
       ),
     );
   }
-  const expectedReviews = new Set(
-    ledger.claims
-      .filter((claim) => claim.status === 'verified')
-      .flatMap((claim) => claim.reviewIds),
-  );
   const incorporated = new Set(reconciliation.incorporatedReviewIds ?? []);
   if (
-    expectedReviews.size !== incorporated.size ||
-    [...expectedReviews].some(
-      (id) => !incorporated.has(id) || !artifactsById.has(id),
-    )
+    receiptedReviewIds.size !== incorporated.size ||
+    [...receiptedReviewIds].some((id) => !incorporated.has(id))
   ) {
     errors.push(
       issue(
@@ -998,48 +1199,85 @@ function validateReconciliation(
     );
   }
 
-  const coverage = [...artifactsById.values()].find(
-    ({ value }) => value.reviewKind === 'coverage',
-  )?.value;
+  const coverageResults = (
+    topology.completeArtifactIdsByMode.get('coverage') ?? []
+  )
+    .map((id) => artifactsById.get(id)?.value)
+    .filter(Boolean);
   const coverageDispositions = new Map(
     (reconciliation.coverageDispositions ?? []).map((item) => [
       item.findingId,
       item,
     ]),
   );
-  for (const finding of coverage?.coverageFindings ?? []) {
-    const gap = manifest.gaps.find((item) => item.id === finding.gapId);
-    const claimsExist = finding.claimIds.every((id) => currentClaims.has(id));
-    if (
-      !gap ||
-      gap.material !== finding.material ||
-      gap.code !== finding.code ||
-      gap.message !== finding.message ||
-      !gap.coverageFindingIds.includes(finding.id) ||
-      !finding.claimIds.every((id) => gap.claimIds.includes(id)) ||
-      !claimsExist
-    ) {
-      errors.push(
-        issue(
-          'COVERAGE_GAP_MISMATCH',
-          `Coverage finding ${finding.id} is not bound to an exact manifest gap and affected claims`,
-          finding.id,
-        ),
-      );
-    }
-    const disposition = coverageDispositions.get(finding.id);
-    if (
-      !disposition ||
-      disposition.gapId !== finding.gapId ||
-      disposition.disposition !== 'accepted-gap'
-    ) {
-      errors.push(
-        issue(
-          'COVERAGE_RECONCILIATION_MISMATCH',
-          `Coverage finding ${finding.id} lacks an exact reconciliation disposition`,
-          finding.id,
-        ),
-      );
+  for (const coverage of coverageResults) {
+    for (const finding of coverage.coverageFindings ?? []) {
+      const gap = manifest.gaps.find((item) => item.id === finding.gapId);
+      const claimsExist = finding.claimIds.every((id) => currentClaims.has(id));
+      if (
+        !gap ||
+        gap.material !== finding.material ||
+        gap.code !== finding.code ||
+        gap.message !== finding.message ||
+        !gap.coverageFindingIds?.includes(finding.id) ||
+        !finding.claimIds.every((id) => gap.claimIds?.includes(id)) ||
+        !claimsExist
+      ) {
+        errors.push(
+          issue(
+            'COVERAGE_GAP_MISMATCH',
+            `Coverage finding ${finding.id} is not bound to an exact manifest gap and affected claims`,
+            finding.id,
+          ),
+        );
+      }
+      const disposition = coverageDispositions.get(finding.id);
+      if (!disposition || disposition.gapId !== finding.gapId) {
+        errors.push(
+          issue(
+            'COVERAGE_RECONCILIATION_MISMATCH',
+            `Coverage finding ${finding.id} lacks an exact reconciliation disposition`,
+            finding.id,
+          ),
+        );
+      }
+      if (disposition?.disposition === 'accepted-gap') {
+        for (const claimId of finding.claimIds) {
+          const claim = currentClaims.get(claimId);
+          const coverageDisposition = coverage.dispositions.find(
+            (item) => item.claimId === claimId,
+          );
+          if (
+            finding.material === true &&
+            (claim?.status === 'verified' ||
+              coverageDisposition?.disposition !== 'gap')
+          ) {
+            errors.push(
+              issue(
+                'MATERIAL_COVERAGE_ASSURANCE_EXCEEDED',
+                `Material unresolved coverage finding ${finding.id} requires claim ${claimId} to be downgraded`,
+                claimId,
+              ),
+            );
+          }
+        }
+      } else if (disposition?.disposition === 'resolved') {
+        if (
+          !disposition.evidenceIds?.every(
+            (id) =>
+              exactEvidence.has(id) &&
+              ledger.evidence.some((evidence) => evidence.id === id),
+          )
+        ) {
+          errors.push(
+            issue(
+              'COVERAGE_RESOLUTION_EVIDENCE_INVALID',
+              `Coverage finding ${finding.id} is not resolved by exact typed evidence`,
+              finding.id,
+            ),
+          );
+        }
+      }
     }
   }
 }
@@ -1050,6 +1288,7 @@ function validateAssurance(
   exactEvidence,
   achievedProfile,
   artifactsById,
+  receiptedReviewIds,
   errors,
 ) {
   const evidenceById = new Map(
@@ -1127,6 +1366,10 @@ function validateAssurance(
         ['adversarial', 'unchallenged'],
         ['coverage', 'covered'],
       ]);
+      if (achievedProfile === 'thorough') {
+        required.set('redundant-verification', 'affirmed');
+      }
+      const satisfied = new Set();
       const reviewerLanes = new Set();
       for (const reviewId of new Set(claim.reviewIds ?? [])) {
         const artifact = artifactsById.get(reviewId)?.value;
@@ -1140,7 +1383,19 @@ function validateAssurance(
           );
           continue;
         }
-        if (!required.has(artifact.reviewKind)) {
+        if (!receiptedReviewIds.has(reviewId)) {
+          errors.push(
+            issue(
+              'UNRECEIPTED_ASSURANCE_REVIEW',
+              `Review ${reviewId} is not the exact receipted stage result`,
+              claim.id,
+            ),
+          );
+        }
+        if (
+          !required.has(artifact.reviewKind) &&
+          artifact.reviewKind !== 'contradiction-resolution'
+        ) {
           errors.push(
             issue(
               'REVIEW_KIND_MISMATCH',
@@ -1184,9 +1439,11 @@ function validateAssurance(
             value.kind === 'recon.review-brief',
         )?.value;
         const expectedMode =
-          artifact.reviewKind === 'semantic'
+          artifact.reviewKind === 'semantic' ||
+          artifact.reviewKind === 'redundant-verification'
             ? 'verify'
-            : artifact.reviewKind === 'adversarial'
+            : artifact.reviewKind === 'adversarial' ||
+                artifact.reviewKind === 'contradiction-resolution'
               ? 'adversary'
               : 'coverage';
         if (
@@ -1215,9 +1472,13 @@ function validateAssurance(
         const dispositions = (artifact.dispositions ?? []).filter(
           (item) => item.claimId === claim.id,
         );
+        const expectedDisposition =
+          artifact.reviewKind === 'contradiction-resolution'
+            ? 'resolved'
+            : required.get(artifact.reviewKind);
         if (
           dispositions.length !== 1 ||
-          dispositions[0].disposition !== required.get(artifact.reviewKind)
+          dispositions[0].disposition !== expectedDisposition
         ) {
           errors.push(
             issue(
@@ -1236,13 +1497,18 @@ function validateAssurance(
             ),
           );
         }
-        required.delete(artifact.reviewKind);
+        if (required.has(artifact.reviewKind)) {
+          satisfied.add(artifact.reviewKind);
+        }
       }
-      if (required.size > 0) {
+      const missingReviewKinds = [...required.keys()].filter(
+        (kind) => !satisfied.has(kind),
+      );
+      if (missingReviewKinds.length > 0) {
         errors.push(
           issue(
             'MISSING_INDEPENDENT_REVIEW',
-            `Verified claims require ${[...required.keys()].join(', ')} reviews`,
+            `Verified claims require ${missingReviewKinds.join(', ')} reviews`,
             claim.id,
           ),
         );
@@ -1395,15 +1661,41 @@ export async function validatePacket(packetDirectory, options = {}) {
         );
         continue;
       }
-      if (await reopenEvidence(packetRoot, source, evidence, errors)) {
+      const affectedClaims = (ledger.claims ?? []).filter((claim) =>
+        (claim.evidence ?? []).some((link) => link.evidenceId === evidence.id),
+      );
+      const ineligibleGap = (manifest.gaps ?? []).find(
+        (gap) =>
+          gap.sourceIds?.includes(source.id) &&
+          affectedClaims.every((claim) => gap.claimIds?.includes(claim.id)) &&
+          affectedClaims.every(
+            (claim) => !['supported', 'verified'].includes(claim.status),
+          ),
+      );
+      if (
+        await reopenEvidence(
+          packetRoot,
+          source,
+          evidence,
+          errors,
+          Boolean(ineligibleGap),
+        )
+      ) {
         exactEvidence.add(evidence.id);
       }
     }
-    const achievedProfile = deriveAchievedProfile(
-      manifest.stages ?? [],
+    const topology = validateStageTopology(
+      manifest,
       artifactsById,
       manifest.run.id,
       manifest.execution.approvalFingerprint,
+      errors,
+    );
+    const achievedProfile = deriveAchievedProfile(topology);
+    const receiptedReviewIds = validateReceiptedAssuranceReviews(
+      artifactsById,
+      topology,
+      errors,
     );
     validateReviewBindings(
       manifest,
@@ -1418,6 +1710,7 @@ export async function validatePacket(packetDirectory, options = {}) {
       exactEvidence,
       achievedProfile,
       artifactsById,
+      receiptedReviewIds,
       errors,
     );
     validateReconciliation(
@@ -1425,6 +1718,10 @@ export async function validatePacket(packetDirectory, options = {}) {
       ledger,
       artifactsById,
       artifactsByPath,
+      topology,
+      receiptedReviewIds,
+      exactEvidence,
+      achievedProfile === 'standard' || achievedProfile === 'thorough',
       errors,
     );
 

@@ -120,6 +120,7 @@ export async function runFakeRecon(options = {}) {
         : requestedProfile === 'thorough'
           ? 20
           : 10,
+    waves: structuredClone(fixture.manifest.execution.approvalEnvelope.waves),
   };
   const dispatchRoot = join(roots.packetRoot, 'raw', 'dispatch');
   await mkdir(dispatchRoot, { recursive: true });
@@ -216,18 +217,32 @@ export async function runFakeRecon(options = {}) {
       ['semantic', 'verify', 'affirmed'],
       ['adversarial', 'adversary', 'unchallenged'],
       ['coverage', 'coverage', 'covered'],
+      ...(requestedProfile === 'thorough'
+        ? [
+            ['redundant-verification', 'verify', 'affirmed'],
+            ['contradiction-resolution', 'adversary', 'unresolved'],
+          ]
+        : []),
     ];
     const results = [];
     for (const [reviewKind, mode, disposition] of resultSpecs) {
+      const briefName =
+        reviewKind === 'redundant-verification'
+          ? 'redundant-verify'
+          : reviewKind === 'contradiction-resolution'
+            ? 'contradiction-resolution'
+            : mode;
+      const claimId =
+        reviewKind === 'contradiction-resolution' ? 'claim-2' : 'claim-1';
       const brief = createReviewBrief({
-        id: `brief-${mode}`,
+        id: `brief-${briefName}`,
         mode,
         createdAt: '2026-08-31T00:03:00.000Z',
         manifest: fixture.manifest,
         ledger: priorLedger,
-        claimIds: ['claim-1'],
+        claimIds: [claimId],
       });
-      const briefRelative = `reviews/briefs/${mode}.json`;
+      const briefRelative = `reviews/briefs/${briefName}.json`;
       const briefPath = join(roots.packetRoot, briefRelative);
       await writeJson(briefPath, brief);
       const briefReference = {
@@ -250,10 +265,21 @@ export async function runFakeRecon(options = {}) {
         brief: briefReference,
         permittedInputs: [briefReference],
         excludedInputs: ['prior_reasoning'],
-        dispositions: [{ claimId: 'claim-1', disposition }],
+        dispositions: [{ claimId, disposition }],
         newEvidence: [],
         coverageFindings: [],
         unresolvedIssues: [],
+        ...(reviewKind === 'contradiction-resolution'
+          ? {
+              contradictionDispositions: [
+                {
+                  contradictionId: 'challenge-1',
+                  claimIds: ['claim-2'],
+                  disposition: 'unresolved',
+                },
+              ],
+            }
+          : {}),
       };
       const resultRelative = `reviews/${reviewKind}.json`;
       const resultPath = join(roots.packetRoot, resultRelative);
@@ -306,6 +332,14 @@ export async function runFakeRecon(options = {}) {
       'reviews/adversarial.json',
       'reviews/coverage.json',
       'reviews/reconciliation.json',
+      ...(requestedProfile === 'thorough'
+        ? [
+            'reviews/briefs/redundant-verify.json',
+            'reviews/briefs/contradiction-resolution.json',
+            'reviews/redundant-verification.json',
+            'reviews/contradiction-resolution.json',
+          ]
+        : []),
     ]) {
       const validation = await validateArtifactFile(
         join(roots.packetRoot, relativePath),

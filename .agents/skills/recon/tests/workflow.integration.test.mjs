@@ -286,3 +286,41 @@ test('standard workflow emits all typed review results and reconciles revision o
     ],
   );
 });
+
+test('thorough workflow receipts claim-bearing redundant and contradiction results', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'thorough', roots: injectedRoots });
+  const redundant = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'reviews', 'redundant-verification.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(redundant.reviewKind, 'redundant-verification');
+  assert.deepEqual(redundant.dispositions, [
+    { claimId: 'claim-1', disposition: 'affirmed' },
+  ]);
+  assert.equal(redundant.permittedInputs.length, 1);
+
+  const contradiction = JSON.parse(
+    await readFile(
+      join(
+        injectedRoots.packetRoot,
+        'reviews',
+        'contradiction-resolution.json',
+      ),
+      'utf8',
+    ),
+  );
+  assert.equal(contradiction.reviewKind, 'contradiction-resolution');
+  assert.deepEqual(contradiction.dispositions, [
+    { claimId: 'claim-2', disposition: 'unresolved' },
+  ]);
+  assert.deepEqual(contradiction.contradictionDispositions, [
+    {
+      contradictionId: 'challenge-1',
+      claimIds: ['claim-2'],
+      disposition: 'unresolved',
+    },
+  ]);
+});
