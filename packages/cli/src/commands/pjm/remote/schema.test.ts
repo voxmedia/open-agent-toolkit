@@ -148,14 +148,20 @@ describe('remote record schemas', () => {
       revision,
       issue: {
         title: 'Remote title',
-        description: '[REDACTED]',
+        description: '[SUPPRESSED:SENSITIVE-CONTENT]',
         priority: 'high',
         status: 'open',
       },
       lifecycle: 'active',
       contentRedacted: true,
       redactionCount: 1,
-      redactions: [{ field: 'description', reason: 'credential' }],
+      redactions: [
+        {
+          field: { kind: 'core', name: 'description' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+      ],
       extensions: { github: { milestone: 'M1' } },
     });
     const baseline = RemoteBaselineRecordSchema.parse({
@@ -597,6 +603,64 @@ describe('remote record schemas', () => {
         },
       }),
     ).toThrow(/byte limit/i);
+  });
+
+  it('requires bounded field-specific whole-field suppression evidence', () => {
+    const base = {
+      recordType: 'snapshot' as const,
+      schemaVersion: 1 as const,
+      snapshotId: 'snap_snapshot_123',
+      bindingId: 'bnd_binding_123',
+      provider: 'github' as const,
+      observedAt: '2026-08-31T00:00:00.000Z',
+      observedBy: capabilityReference,
+      identity,
+      revision,
+      issue: {
+        title: 'Remote title',
+        description: '[SUPPRESSED:SENSITIVE-CONTENT]',
+        priority: null,
+        status: 'open',
+      },
+      lifecycle: 'active' as const,
+      contentRedacted: true,
+      redactionCount: 1,
+      redactions: [
+        {
+          field: { kind: 'core' as const, name: 'description' as const },
+          reason: 'sensitive-content' as const,
+          representation: 'whole-field-marker' as const,
+        },
+      ],
+    };
+
+    expect(RemoteSnapshotRecordSchema.parse(base).redactions).toEqual(
+      base.redactions,
+    );
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        redactions: [
+          {
+            field: { kind: 'extension', key: 'provider.raw.path' },
+            reason: 'sensitive-content',
+            representation: 'whole-field-marker',
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        contentRedacted: false,
+      }),
+    ).toThrow(/contentRedacted/i);
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        issue: { ...base.issue, description: 'retained substring' },
+      }),
+    ).toThrow(/suppression marker/i);
   });
 
   it('requires record IDs to match stable filenames', () => {

@@ -5,8 +5,9 @@ import type {
   OatPjmRemoteProvider,
 } from '@config/oat-config';
 
-import { containsCredentialAssignment } from './credential-safety';
+import { containsSensitiveContentSignal } from './credential-safety';
 import type { SharedRemoteField } from './purpose-policy';
+import { WHOLE_FIELD_SUPPRESSION_MARKER } from './schema';
 
 export interface BuildBindingPreviewInput {
   binding: {
@@ -87,8 +88,6 @@ const FIELD_ORDER: readonly SharedRemoteField[] = [
   'description',
   'priority',
 ];
-const NON_ASSIGNMENT_CREDENTIAL_EVIDENCE =
-  /(?:bearer\s+|github_pat_|gh[pousr]_|sk-)/i;
 
 export function buildBindingPreview(
   input: BuildBindingPreviewInput,
@@ -191,8 +190,8 @@ function normalizeFieldMask(
 
 function renderConcise(value: string | null): RenderedField {
   if (value === null) return { kind: 'value', value: null };
-  if (containsCredentialEvidence(value)) {
-    return { kind: 'value', value: '[REDACTED:CREDENTIAL]' };
+  if (containsSensitiveContentSignal(value)) {
+    return { kind: 'value', value: WHOLE_FIELD_SUPPRESSION_MARKER };
   }
   return {
     kind: 'value',
@@ -215,14 +214,7 @@ function isSafeEvidence(value: string): boolean {
     value.length <= 255 &&
     !/[\r\n]/.test(value) &&
     !value.includes('\0') &&
-    !containsCredentialEvidence(value)
-  );
-}
-
-function containsCredentialEvidence(value: string): boolean {
-  return (
-    containsCredentialAssignment(value) ||
-    NON_ASSIGNMENT_CREDENTIAL_EVIDENCE.test(value)
+    !containsSensitiveContentSignal(value)
   );
 }
 

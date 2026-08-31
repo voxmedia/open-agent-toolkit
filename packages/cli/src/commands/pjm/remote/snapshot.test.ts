@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
   MAX_REMOTE_DESCRIPTION_BYTES,
+  WHOLE_FIELD_SUPPRESSION_MARKER,
 } from './schema';
 import { sanitizeRemoteSnapshot } from './snapshot';
 
@@ -79,126 +80,78 @@ describe('sanitizeRemoteSnapshot', () => {
     );
   });
 
-  it('redacts credential-shaped values and visibly marks incomplete content', () => {
+  it('suppresses a signaled field in full and visibly marks incomplete content', () => {
     const input = rawSnapshot();
     input.issue.description = [
       'Authorization: Bearer abc.def.ghi',
-      'password=hunter2',
-      'GitHub token: github_pat_1234567890abcdefghijklmnop',
       'Keep surrounding prose.',
     ].join('\n');
 
     const result = sanitizeRemoteSnapshot(input);
 
-    expect(result.issue.description).not.toMatch(
-      /abc\.def\.ghi|hunter2|github_pat_1234567890/,
+    expect(result.issue.description).toBe(WHOLE_FIELD_SUPPRESSION_MARKER);
+    expect(JSON.stringify(result)).not.toMatch(
+      /abc\.def\.ghi|Keep surrounding prose/,
     );
-    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.description).toContain('Keep surrounding prose.');
     expect(result.contentRedacted).toBe(true);
     expect(result.redactionCount).toBe(1);
     expect(result.redactions).toEqual([
-      { field: 'description', reason: 'credential' },
+      {
+        field: { kind: 'core', name: 'description' },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      },
     ]);
   });
 
-  it('redacts quoted credential assignments across every retained core field', () => {
+  it('suppresses all four core fields for bracketed and multi-segment signals', () => {
     const input = rawSnapshot();
-    input.issue.title = '{"api_key" : "json-api-secret"}';
-    input.issue.description = "access_token: 'yaml-access-secret'";
-    input.issue.priority = '\'password\' = "config-password-secret"';
-    input.issue.status =
-      '{"authorization":"Bearer authorization-header-secret"}';
+    input.issue.title = '[api-key] title-private-tail';
+    input.issue.description = 'access token description-private-tail';
+    input.issue.priority = '<password> priority-private-tail';
+    input.issue.status = '.authorization status-private-tail';
 
     const result = sanitizeRemoteSnapshot(input);
     const serialized = JSON.stringify(result);
 
-    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue).toEqual({
+      title: WHOLE_FIELD_SUPPRESSION_MARKER,
+      description: WHOLE_FIELD_SUPPRESSION_MARKER,
+      priority: WHOLE_FIELD_SUPPRESSION_MARKER,
+      status: WHOLE_FIELD_SUPPRESSION_MARKER,
+    });
     expect(serialized).not.toMatch(
-      /json-api-secret|yaml-access-secret|config-password-secret|authorization-header-secret/,
+      /title-private-tail|description-private-tail|priority-private-tail|status-private-tail/,
     );
     expect(result).toMatchObject({
       contentRedacted: true,
       redactionCount: 4,
       redactions: [
-        { field: 'title', reason: 'credential' },
-        { field: 'description', reason: 'credential' },
-        { field: 'priority', reason: 'credential' },
-        { field: 'status', reason: 'credential' },
+        {
+          field: { kind: 'core', name: 'title' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+        {
+          field: { kind: 'core', name: 'description' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+        {
+          field: { kind: 'core', name: 'priority' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+        {
+          field: { kind: 'core', name: 'status' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
       ],
     });
   });
 
-  it('fully redacts multiline quoted assignments with escaped quotes across core fields', () => {
-    const input = rawSnapshot();
-    input.issue.title = `{"api_key": "title-prefix
-escaped \\"title quote\\"
-TITLE_SECRET_SUFFIX"}`;
-    input.issue.description = `access_token: 'description-prefix
-escaped ''description quote''
-DESCRIPTION_SECRET_SUFFIX'`;
-    input.issue.priority = `"password" = "priority-prefix
-escaped ""priority quote""
-PRIORITY_SECRET_SUFFIX"`;
-    input.issue.status = `{"authorization": "Bearer status-prefix
-escaped \\"status quote\\"
-STATUS_SECRET_SUFFIX"}`;
-
-    const result = sanitizeRemoteSnapshot(input);
-    const serialized = JSON.stringify(result);
-
-    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
-    expect(serialized).not.toMatch(
-      /title-prefix|TITLE_SECRET_SUFFIX|description-prefix|DESCRIPTION_SECRET_SUFFIX|priority-prefix|PRIORITY_SECRET_SUFFIX|status-prefix|STATUS_SECRET_SUFFIX|escaped.*quote/i,
-    );
-    expect(result).toMatchObject({
-      contentRedacted: true,
-      redactionCount: 4,
-      redactions: [
-        { field: 'title', reason: 'credential' },
-        { field: 'description', reason: 'credential' },
-        { field: 'priority', reason: 'credential' },
-        { field: 'status', reason: 'credential' },
-      ],
-    });
-  });
-
-  it('redacts punctuation-delimited assignments across retained core fields', () => {
-    const input = rawSnapshot();
-    input.issue.title = '(password=SECRET_TITLE_PAREN)';
-    input.issue.description = '!api_key=SECRET_DESCRIPTION_BANG!';
-    input.issue.priority = '<access_token=SECRET_PRIORITY_ANGLE>';
-    input.issue.status = '.authorization=SECRET_STATUS_PERIOD';
-
-    const result = sanitizeRemoteSnapshot(input);
-    const serialized = JSON.stringify(result);
-
-    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
-    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
-    expect(serialized).not.toMatch(
-      /SECRET_TITLE_PAREN|SECRET_DESCRIPTION_BANG|SECRET_PRIORITY_ANGLE|SECRET_STATUS_PERIOD/,
-    );
-    expect(result).toMatchObject({
-      contentRedacted: true,
-      redactionCount: 4,
-      redactions: [
-        { field: 'title', reason: 'credential' },
-        { field: 'description', reason: 'credential' },
-        { field: 'priority', reason: 'credential' },
-        { field: 'status', reason: 'credential' },
-      ],
-    });
-  });
-
-  it('does not treat credential-key substrings embedded in identifiers as assignments', () => {
+  it('does not treat credential-key substrings embedded in identifiers as signals', () => {
     const input = rawSnapshot();
     input.issue.title = 'compassword=value';
     input.issue.description = 'api_keychain=value';
@@ -217,34 +170,37 @@ STATUS_SECRET_SUFFIX"}`;
     expect(result.redactionCount).toBe(0);
   });
 
-  it('drops allowlisted extensions containing credentials and marks the snapshot incomplete', () => {
+  it('suppresses an adapter-allowlisted extension with bounded field evidence', () => {
     const input = rawSnapshot();
     input.extensions.workflow = {
-      token: 'ghp_abcdefghijklmnopqrstuvwxyz123456',
+      note: '[access_token] extension-private-tail',
     };
 
     const result = sanitizeRemoteSnapshot(input, {
       allowedExtensionKeys: ['estimate', 'workflow'],
     });
 
-    expect(result.extensions).toEqual({ github: { estimate: 3 } });
+    expect(result.extensions).toEqual({
+      github: {
+        estimate: 3,
+        workflow: WHOLE_FIELD_SUPPRESSION_MARKER,
+      },
+    });
     expect(result.contentRedacted).toBe(true);
-    expect(JSON.stringify(result)).not.toContain('ghp_');
+    expect(result.redactions).toContainEqual({
+      field: { kind: 'extension', key: 'workflow' },
+      reason: 'sensitive-content',
+      representation: 'whole-field-marker',
+    });
+    expect(JSON.stringify(result)).not.toContain('extension-private-tail');
   });
 
-  it('drops allowlisted extensions with punctuation-delimited assignments', () => {
-    const input = rawSnapshot();
-    input.extensions.workflow = {
-      note: '(password=SECRET_EXTENSION_PAREN)',
-    };
-
-    const result = sanitizeRemoteSnapshot(input, {
-      allowedExtensionKeys: ['estimate', 'workflow'],
-    });
-
-    expect(result.extensions).toEqual({ github: { estimate: 3 } });
-    expect(result.contentRedacted).toBe(true);
-    expect(JSON.stringify(result)).not.toContain('SECRET_EXTENSION_PAREN');
+  it('rejects arbitrary provider paths as extension allowlist keys', () => {
+    expect(() =>
+      sanitizeRemoteSnapshot(rawSnapshot(), {
+        allowedExtensionKeys: ['provider.raw.path'],
+      }),
+    ).toThrow(/extension key/i);
   });
 
   it('fails closed on oversized descriptions and provider extensions', () => {

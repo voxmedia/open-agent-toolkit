@@ -1,8 +1,8 @@
-import { redactCredentialAssignments } from './credential-safety';
+import { containsSensitiveContentSignal } from './credential-safety';
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
-  MAX_REMOTE_DESCRIPTION_BYTES,
   RemoteSnapshotRecordSchema,
+  WHOLE_FIELD_SUPPRESSION_MARKER,
   type RemoteSnapshotRecord,
 } from './schema';
 
@@ -30,25 +30,19 @@ export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
 }
 
-const AUTHORIZATION_HEADER =
-  /(\bAuthorization\s*:\s*(?:Bearer|Basic)\s+)([^\s]+)/gi;
-const STANDALONE_CREDENTIAL =
-  /\b(?:github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16})\b/g;
-const CREDENTIAL_KEY =
-  /^(?:authorization|password|passwd|api[_-]?key|access[_-]?token|secret|token)$/i;
-const REDACTION_MARKER = '[REDACTED:CREDENTIAL]';
+const MAX_ALLOWED_EXTENSION_KEYS = 64;
+const SCHEMA_SAFE_EXTENSION_KEY = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+
+type SnapshotRedaction = RemoteSnapshotRecord['redactions'][number];
+type CoreSnapshotField = Extract<
+  SnapshotRedaction['field'],
+  { kind: 'core' }
+>['name'];
 
 export function sanitizeRemoteSnapshot(
   input: SanitizableRemoteSnapshot,
   options: SnapshotSanitizationOptions = {},
 ): RemoteSnapshotRecord {
-  const descriptionBytes = Buffer.byteLength(input.issue.description, 'utf8');
-  if (descriptionBytes > MAX_REMOTE_DESCRIPTION_BYTES) {
-    throw new Error(
-      `Remote description exceeds ${MAX_REMOTE_DESCRIPTION_BYTES} byte limit.`,
-    );
-  }
-
   const redactions: RemoteSnapshotRecord['redactions'] = [];
   const issue = {
     title: sanitizeCoreField('title', input.issue.title, redactions),
@@ -64,12 +58,12 @@ export function sanitizeRemoteSnapshot(
     status: sanitizeCoreField('status', input.issue.status, redactions),
   };
 
-  const extensionResult = sanitizeExtensions(
+  const extensions = sanitizeExtensions(
     input.provider,
     input.extensions,
     options.allowedExtensionKeys ?? [],
+    redactions,
   );
-  const contentRedacted = redactions.length > 0 || extensionResult.redacted;
 
   return RemoteSnapshotRecordSchema.parse({
     recordType: 'snapshot',
@@ -83,86 +77,91 @@ export function sanitizeRemoteSnapshot(
     revision: input.revision,
     issue,
     lifecycle: input.lifecycle,
-    contentRedacted,
+    contentRedacted: redactions.length > 0,
     redactionCount: redactions.length,
     redactions,
-    extensions: extensionResult.value,
+    extensions,
   });
 }
 
 function sanitizeCoreField(
-  field: RemoteSnapshotRecord['redactions'][number]['field'],
+  field: CoreSnapshotField,
   value: string,
   redactions: RemoteSnapshotRecord['redactions'],
 ): string {
-  const sanitized = redactCredentials(value);
-  if (sanitized !== value) {
-    redactions.push({ field, reason: 'credential' });
-  }
-  return sanitized;
+  if (!containsSensitiveContentSignal(value)) return value;
+
+  redactions.push({
+    field: { kind: 'core', name: field },
+    reason: 'sensitive-content',
+    representation: 'whole-field-marker',
+  });
+  return WHOLE_FIELD_SUPPRESSION_MARKER;
 }
 
 function sanitizeExtensions(
   provider: RemoteSnapshotRecord['provider'],
   extensions: Record<string, unknown> | undefined,
   allowedKeys: readonly string[],
-): {
-  value: RemoteSnapshotRecord['extensions'];
-  redacted: boolean;
-} {
-  if (!extensions || allowedKeys.length === 0) {
-    return { value: undefined, redacted: false };
+  redactions: RemoteSnapshotRecord['redactions'],
+): RemoteSnapshotRecord['extensions'] {
+  validateExtensionAllowlist(allowedKeys);
+  if (!extensions || allowedKeys.length === 0) return undefined;
+
+  const retained: Record<string, unknown> = {};
+  for (const key of allowedKeys) {
+    if (!Object.hasOwn(extensions, key)) continue;
+
+    const value = extensions[key];
+    if (containsSensitiveExtensionContent(value)) {
+      retained[key] = WHOLE_FIELD_SUPPRESSION_MARKER;
+      redactions.push({
+        field: { kind: 'extension', key },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      });
+      continue;
+    }
+    retained[key] = value;
   }
 
-  const selected = Object.fromEntries(
-    allowedKeys
-      .filter((key) => Object.hasOwn(extensions, key))
-      .map((key) => [key, extensions[key]]),
-  );
+  if (Object.keys(retained).length === 0) return undefined;
+  const result = { [provider]: retained };
   if (
-    Buffer.byteLength(JSON.stringify(selected), 'utf8') >
+    Buffer.byteLength(JSON.stringify(result), 'utf8') >
     MAX_PROVIDER_EXTENSION_BYTES
   ) {
     throw new Error(
       `Provider extension exceeds ${MAX_PROVIDER_EXTENSION_BYTES} byte limit.`,
     );
   }
-
-  let redacted = false;
-  const retained: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(selected)) {
-    if (containsCredential(value, key)) {
-      redacted = true;
-      continue;
-    }
-    retained[key] = value;
-  }
-
-  if (Object.keys(retained).length === 0) {
-    return { value: undefined, redacted };
-  }
-  return { value: { [provider]: retained }, redacted };
+  return result;
 }
 
-function redactCredentials(value: string): string {
-  return redactCredentialAssignments(
-    value.replace(
-      AUTHORIZATION_HEADER,
-      (_match, prefix: string) => `${prefix}${REDACTION_MARKER}`,
-    ),
-    REDACTION_MARKER,
-  ).replace(STANDALONE_CREDENTIAL, REDACTION_MARKER);
+function validateExtensionAllowlist(allowedKeys: readonly string[]): void {
+  if (
+    allowedKeys.length > MAX_ALLOWED_EXTENSION_KEYS ||
+    new Set(allowedKeys).size !== allowedKeys.length ||
+    allowedKeys.some((key) => !SCHEMA_SAFE_EXTENSION_KEY.test(key))
+  ) {
+    throw new Error(
+      'Adapter extension keys must be unique, bounded, and schema-safe.',
+    );
+  }
 }
 
-function containsCredential(value: unknown, key?: string): boolean {
-  if (key && CREDENTIAL_KEY.test(key)) return true;
-  if (typeof value === 'string') return redactCredentials(value) !== value;
+function containsSensitiveExtensionContent(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return containsSensitiveContentSignal(value);
+  }
   if (Array.isArray(value)) {
-    return value.some((entry) => containsCredential(entry));
+    return value.some((entry) => containsSensitiveExtensionContent(entry));
   }
   if (value && typeof value === 'object') {
-    return Object.entries(value).some(([entryKey, entry]) =>
-      containsCredential(entry, entryKey),
+    return Object.entries(value).some(
+      ([key, entry]) =>
+        containsSensitiveContentSignal(key) ||
+        containsSensitiveExtensionContent(entry),
     );
   }
   return false;

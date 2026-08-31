@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 export const MAX_REMOTE_DESCRIPTION_BYTES = 1_048_576;
 export const MAX_PROVIDER_EXTENSION_BYTES = 16_384;
+export const WHOLE_FIELD_SUPPRESSION_MARKER = '[SUPPRESSED:SENSITIVE-CONTENT]';
 
 const StableIdSchema = z
   .string()
@@ -210,6 +211,27 @@ const ProviderExtensionsSchema = z
   })
   .strict();
 
+const SnapshotExtensionKeySchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z][A-Za-z0-9_-]*$/);
+
+const SnapshotSuppressedFieldSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('core'),
+      name: z.enum(['title', 'description', 'priority', 'status']),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('extension'),
+      key: SnapshotExtensionKeySchema,
+    })
+    .strict(),
+]);
+
 const CoreIssueSchema = z
   .object({
     title: z.string().max(8_192),
@@ -281,8 +303,9 @@ export const RemoteSnapshotRecordSchema = z
       .array(
         z
           .object({
-            field: z.enum(['title', 'description', 'priority', 'status']),
-            reason: z.enum(['credential', 'policy']),
+            field: SnapshotSuppressedFieldSchema,
+            reason: z.enum(['sensitive-content', 'policy']),
+            representation: z.literal('whole-field-marker'),
           })
           .strict(),
       )
@@ -315,6 +338,43 @@ export const RemoteSnapshotRecordSchema = z
         path: ['redactionCount'],
         message: 'Snapshot redactionCount must match retained redactions.',
       });
+    }
+    if (record.contentRedacted !== record.redactions.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contentRedacted'],
+        message:
+          'Snapshot contentRedacted must match field suppression evidence.',
+      });
+    }
+
+    const seenFields = new Set<string>();
+    for (const [index, redaction] of record.redactions.entries()) {
+      const fieldId =
+        redaction.field.kind === 'core'
+          ? `core:${redaction.field.name}`
+          : `extension:${redaction.field.key}`;
+      if (seenFields.has(fieldId)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['redactions', index, 'field'],
+          message: 'Snapshot suppression evidence fields must be unique.',
+        });
+      }
+      seenFields.add(fieldId);
+
+      const retainedValue =
+        redaction.field.kind === 'core'
+          ? record.issue[redaction.field.name]
+          : record.extensions?.[record.provider]?.[redaction.field.key];
+      if (retainedValue !== WHOLE_FIELD_SUPPRESSION_MARKER) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['redactions', index, 'field'],
+          message:
+            'Snapshot suppression evidence requires the whole-field suppression marker.',
+        });
+      }
     }
   });
 

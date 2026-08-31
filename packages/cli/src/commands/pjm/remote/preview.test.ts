@@ -5,6 +5,7 @@ import {
   validatePreviewApproval,
   type BuildBindingPreviewInput,
 } from './preview';
+import { WHOLE_FIELD_SUPPRESSION_MARKER } from './schema';
 
 const timestamp = '2026-08-31T12:00:00.000Z';
 const baseInput: BuildBindingPreviewInput = {
@@ -151,38 +152,36 @@ describe('binding previews and approvals', () => {
     ).toEqual({ valid: false, reason: 'digest-mismatch' });
   });
 
-  it('renders bodies and credential-shaped values safely', () => {
+  it('suppresses concise signaled fields without acting as the outbound gate', () => {
     const preview = buildBindingPreview({
       ...baseInput,
       projection: {
         ...baseInput.projection,
-        title: 'token=super-secret',
-        description: 'password=hunter2',
+        title: '[api key] preview-private-tail',
+        description: 'password body-private-tail',
       },
     });
 
     expect(preview.renderedFields.title).toEqual({
       kind: 'value',
-      value: '[REDACTED:CREDENTIAL]',
+      value: WHOLE_FIELD_SUPPRESSION_MARKER,
     });
     expect(preview.renderedFields.description).toMatchObject({
       kind: 'hash',
       digest: expect.stringMatching(/^sha256:/),
-      bytes: 16,
+      bytes: 26,
     });
-    expect(JSON.stringify(preview)).not.toMatch(/super-secret|hunter2/);
+    expect(JSON.stringify(preview)).not.toContain('preview-private-tail');
+    expect(preview.componentDigests.projection).toMatch(/^sha256:/);
   });
 
   it.each([
-    ['quoted JSON key', '{"api_key":"quoted-preview-secret"}'],
-    ['quoted authorization key', '{"authorization":"Bearer auth-secret"}'],
-    ['unquoted YAML key', 'access_token: yaml-preview-secret'],
-    ['unquoted config key', 'password = config-preview-secret'],
-    ['parenthesized key', '(password=paren-preview-secret)'],
-    ['bang-delimited key', '!api_key=bang-preview-secret!'],
-    ['angle-delimited key', '<access_token=angle-preview-secret>'],
-    ['period-delimited key', '.secret=period-preview-secret'],
-  ])('redacts %s from concise preview fields', (_fixture, title) => {
+    ['bracketed key', '[password] preview-private-tail'],
+    ['multi-segment underscore key', 'api_key preview-private-tail'],
+    ['multi-segment hyphen key', 'access-token preview-private-tail'],
+    ['multi-segment spaced key', 'access token preview-private-tail'],
+    ['punctuation-bounded key', '.authorization preview-private-tail'],
+  ])('suppresses %s from concise preview fields', (_fixture, title) => {
     const preview = buildBindingPreview({
       ...baseInput,
       projection: { ...baseInput.projection, title },
@@ -190,9 +189,9 @@ describe('binding previews and approvals', () => {
 
     expect(preview.renderedFields.title).toEqual({
       kind: 'value',
-      value: '[REDACTED:CREDENTIAL]',
+      value: WHOLE_FIELD_SUPPRESSION_MARKER,
     });
-    expect(JSON.stringify(preview)).not.toContain(title);
+    expect(JSON.stringify(preview)).not.toContain('preview-private-tail');
   });
 
   it.each([
@@ -270,22 +269,10 @@ describe('binding previews and approvals', () => {
   });
 
   it.each([
-    ['quoted JSON source', 'source', '{"api_key":"approval-secret"}'],
-    [
-      'quoted JSON actor',
-      'actor',
-      '{"authorization":"Bearer approval-auth-secret"}',
-    ],
-    ['unquoted YAML source', 'source', 'access_token: approval-yaml-secret'],
-    ['unquoted config actor', 'actor', 'password = approval-config-secret'],
-    ['parenthesized source', 'source', '(api_key=approval-paren-secret)'],
-    ['bang-delimited actor', 'actor', '!password=approval-bang-secret!'],
-    [
-      'angle-delimited source',
-      'source',
-      '<access_token=approval-angle-secret>',
-    ],
-    ['period-delimited actor', 'actor', '.secret=approval-period-secret'],
+    ['bracketed source', 'source', '[api-key] approval-private-tail'],
+    ['bracketed actor', 'actor', '[authorization] approval-private-tail'],
+    ['spaced source', 'source', 'access token approval-private-tail'],
+    ['underscored actor', 'actor', 'api_key approval-private-tail'],
   ] as const)(
     'rejects %s as unsafe approval evidence',
     (_fixture, field, value) => {
