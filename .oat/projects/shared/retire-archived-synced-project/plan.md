@@ -515,7 +515,9 @@ git commit -m "feat(p03-t03): align completed links and pruning"
 
 - Modify: `packages/cli/src/e2e/workflow.test.ts`
 - Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/sync-runner.test.ts`
 - Modify: `packages/cli/src/commands/project/list.integration.test.ts`
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
 
 **Step 1: Add integration fixtures**
 
@@ -523,12 +525,15 @@ Run a synced project from active record/ref through completed state, local and
 configured S3 archive, completed-ref transition, checkout removal, record
 deletion, listing omission, pull/open rejection, link reachability, and explicit
 prune. Add a legacy complete-record fixture and at least one interruption/retry
-fixture crossing the p02/p03 seam.
+fixture crossing the p02/p03 seam. Prove that archive sync can restore the
+recordless terminal snapshot without recreating active state, and that dashboard
+generation omits fully retired projects while rendering a precise diagnosis for
+legacy terminal cleanup when applicable.
 
 Run:
 
 ```bash
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/e2e/workflow.test.ts src/commands/project/archive/archive-utils.test.ts src/commands/project/list.integration.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/e2e/workflow.test.ts src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/sync-runner.test.ts src/commands/project/list.integration.test.ts src/commands/state/generate.test.ts
 ```
 
 Expected: the new end-to-end expectations fail before the combined behavior is
@@ -536,14 +541,16 @@ fully integrated.
 
 **Step 2: Reconcile integration seams**
 
-Apply only bounded fixes required to make the p02 transaction receipts and p03
-terminal classifications agree. Preserve each parallel phase's ownership and
-do not redesign the completed-ref contract in integration.
+Reconcile fixtures and assertions only. Preserve each parallel phase's source
+ownership and do not redesign the completed-ref contract in integration. If an
+integration failure exposes a source defect, return it to the owning p02 or p03
+phase as a separately reviewed fix task and commit rather than modifying source
+outside this task's declared write set.
 
 **Step 3: Format**
 
 ```bash
-pnpm exec oxfmt --write packages/cli/src/e2e/workflow.test.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/list.integration.test.ts
+pnpm exec oxfmt --write packages/cli/src/e2e/workflow.test.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/archive/sync-runner.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.test.ts
 ```
 
 **Step 4: Verify**
@@ -555,7 +562,7 @@ Expected: the full active-to-archived transition and legacy migration pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/e2e/workflow.test.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/list.integration.test.ts
+git add packages/cli/src/e2e/workflow.test.ts packages/cli/src/commands/project/archive/archive-utils.test.ts packages/cli/src/commands/project/archive/sync-runner.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.test.ts
 git commit -m "test(p04-t01): prove synced archive retirement end to end"
 ```
 
