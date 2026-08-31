@@ -386,7 +386,7 @@ async function hasRecognizedLegacySources(repoRoot: string): Promise<boolean> {
     }
   }
 
-  return (await collectJudgmentProposals(repoRoot)).length > 0;
+  return false;
 }
 
 async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
