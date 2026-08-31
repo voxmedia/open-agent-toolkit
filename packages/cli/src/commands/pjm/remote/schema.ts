@@ -2,8 +2,14 @@ import { basename } from 'node:path';
 
 import { z } from 'zod';
 
+import {
+  containsSensitiveContentSignal,
+  containsSensitiveContentSignalInValue,
+} from './credential-safety';
+
 export const MAX_REMOTE_DESCRIPTION_BYTES = 1_048_576;
 export const MAX_PROVIDER_EXTENSION_BYTES = 16_384;
+export const MAX_SNAPSHOT_SUPPRESSION_EVIDENCE = 16;
 export const WHOLE_FIELD_SUPPRESSION_MARKER = '[SUPPRESSED:SENSITIVE-CONTENT]';
 
 const StableIdSchema = z
@@ -284,21 +290,78 @@ const RemoteRevisionSchema = z
   })
   .strict();
 
-export const RemoteSnapshotRecordSchema = z
+const RemoteSnapshotCommonShape = {
+  recordType: z.literal('snapshot'),
+  snapshotId: StableIdSchema,
+  bindingId: StableIdSchema,
+  provider: ProviderSchema,
+  observedAt: TimestampSchema,
+  observedBy: CapabilityReferenceSchema,
+  identity: RemoteIdentitySchema,
+  revision: RemoteRevisionSchema,
+  issue: CoreIssueSchema,
+  lifecycle: LifecycleConditionSchema,
+  contentRedacted: z.boolean(),
+  redactionCount: z.number().int().min(0),
+  extensions: ProviderExtensionsSchema.optional(),
+};
+
+const LegacyRemoteSnapshotRecordBaseSchema = z
   .object({
-    recordType: z.literal('snapshot'),
+    ...RemoteSnapshotCommonShape,
     schemaVersion: z.literal(1),
-    snapshotId: StableIdSchema,
-    bindingId: StableIdSchema,
-    provider: ProviderSchema,
-    observedAt: TimestampSchema,
-    observedBy: CapabilityReferenceSchema,
-    identity: RemoteIdentitySchema,
-    revision: RemoteRevisionSchema,
-    issue: CoreIssueSchema,
-    lifecycle: LifecycleConditionSchema,
-    contentRedacted: z.boolean(),
-    redactionCount: z.number().int().min(0),
+    redactions: z
+      .array(
+        z
+          .object({
+            field: z.enum(['title', 'description', 'priority', 'status']),
+            reason: z.enum(['credential', 'policy']),
+          })
+          .strict(),
+      )
+      .max(MAX_SNAPSHOT_SUPPRESSION_EVIDENCE),
+  })
+  .strict();
+
+type LegacyRemoteSnapshotRecord = z.infer<
+  typeof LegacyRemoteSnapshotRecordBaseSchema
+>;
+
+const LegacyRemoteSnapshotRecordSchema =
+  LegacyRemoteSnapshotRecordBaseSchema.superRefine((record, context) => {
+    if (record.redactionCount !== record.redactions.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['redactionCount'],
+        message: 'Legacy snapshot redactionCount must match redactions.',
+      });
+    }
+    if (!record.contentRedacted && record.redactions.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contentRedacted'],
+        message:
+          'Legacy snapshot redaction evidence must mark content redacted.',
+      });
+    }
+    if (
+      record.contentRedacted &&
+      record.redactions.length === 0 &&
+      !snapshotContainsSensitiveSignal(record)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contentRedacted'],
+        message:
+          'Legacy snapshot has incomplete redaction evidence and requires refresh.',
+      });
+    }
+  });
+
+const CurrentRemoteSnapshotRecordBaseSchema = z
+  .object({
+    ...RemoteSnapshotCommonShape,
+    schemaVersion: z.literal(2),
     redactions: z
       .array(
         z
@@ -309,74 +372,247 @@ export const RemoteSnapshotRecordSchema = z
           })
           .strict(),
       )
-      .max(16),
-    extensions: ProviderExtensionsSchema.optional(),
+      .max(MAX_SNAPSHOT_SUPPRESSION_EVIDENCE),
   })
-  .strict()
-  .superRefine((record, context) => {
-    if (record.observedBy.provider !== record.provider) {
+  .strict();
+
+type CurrentRemoteSnapshotRecord = z.infer<
+  typeof CurrentRemoteSnapshotRecordBaseSchema
+>;
+
+const CurrentRemoteSnapshotRecordSchema =
+  CurrentRemoteSnapshotRecordBaseSchema.superRefine(
+    validateCurrentRemoteSnapshot,
+  );
+
+const RemoteSnapshotRecordCompatibilitySchema = z.union([
+  CurrentRemoteSnapshotRecordSchema,
+  LegacyRemoteSnapshotRecordSchema.transform(migrateLegacyRemoteSnapshot).pipe(
+    CurrentRemoteSnapshotRecordSchema,
+  ),
+]);
+
+// Runtime reads accept legacy v1 records, but callers and writes use only the
+// canonical v2 output shape produced by the compatibility parser.
+export const RemoteSnapshotRecordSchema: z.ZodType<CurrentRemoteSnapshotRecord> =
+  RemoteSnapshotRecordCompatibilitySchema as z.ZodType<CurrentRemoteSnapshotRecord>;
+
+const CORE_SNAPSHOT_FIELDS = [
+  'title',
+  'description',
+  'priority',
+  'status',
+] as const;
+
+function validateCurrentRemoteSnapshot(
+  record: CurrentRemoteSnapshotRecord,
+  context: z.RefinementCtx,
+): void {
+  if (record.observedBy.provider !== record.provider) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['observedBy', 'provider'],
+      message: 'Snapshot capability provider must match snapshot provider.',
+    });
+  }
+  if (
+    JSON.stringify(record.observedBy.context) !==
+    JSON.stringify(record.identity.context)
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['observedBy', 'context'],
+      message:
+        'Snapshot capability context must match remote identity context.',
+    });
+  }
+  if (record.redactionCount !== record.redactions.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['redactionCount'],
+      message: 'Snapshot redactionCount must match retained redactions.',
+    });
+  }
+  if (record.contentRedacted !== record.redactions.length > 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['contentRedacted'],
+      message:
+        'Snapshot contentRedacted must match field suppression evidence.',
+    });
+  }
+
+  const evidenceByField = new Map<string, number>();
+  for (const [index, redaction] of record.redactions.entries()) {
+    const fieldId = suppressionFieldId(redaction.field);
+    if (evidenceByField.has(fieldId)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['observedBy', 'provider'],
-        message: 'Snapshot capability provider must match snapshot provider.',
+        path: ['redactions', index, 'field'],
+        message: 'Snapshot suppression evidence fields must be unique.',
       });
     }
+    evidenceByField.set(fieldId, index);
+
+    const retainedValue =
+      redaction.field.kind === 'core'
+        ? record.issue[redaction.field.name]
+        : record.extensions?.[record.provider]?.[redaction.field.key];
+    if (retainedValue !== WHOLE_FIELD_SUPPRESSION_MARKER) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['redactions', index, 'field'],
+        message:
+          'Snapshot suppression evidence requires the whole-field suppression marker.',
+      });
+    }
+  }
+
+  for (const field of CORE_SNAPSHOT_FIELDS) {
+    validateRetainedSnapshotField(
+      record.issue[field],
+      `core:${field}`,
+      ['issue', field],
+      evidenceByField,
+      context,
+    );
+  }
+
+  for (const [provider, payload] of Object.entries(record.extensions ?? {})) {
+    if (provider !== record.provider) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['extensions', provider],
+        message: 'Snapshot extensions must match the snapshot provider.',
+      });
+      continue;
+    }
+    for (const [key, value] of Object.entries(payload ?? {})) {
+      validateRetainedSnapshotField(
+        value,
+        `extension:${key}`,
+        ['extensions', provider, key],
+        evidenceByField,
+        context,
+      );
+    }
+  }
+}
+
+function validateRetainedSnapshotField(
+  value: unknown,
+  fieldId: string,
+  path: Array<string | number>,
+  evidenceByField: ReadonlyMap<string, number>,
+  context: z.RefinementCtx,
+): void {
+  const hasEvidence = evidenceByField.has(fieldId);
+  if (value === WHOLE_FIELD_SUPPRESSION_MARKER) {
+    if (!hasEvidence) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path,
+        message:
+          'Snapshot contains an unpaired whole-field suppression marker.',
+      });
+    }
+    return;
+  }
+  if (containsSensitiveContentSignalInValue(value)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path,
+      message:
+        'Snapshot retained field contains a sensitive-content signal without whole-field suppression.',
+    });
+  }
+}
+
+function migrateLegacyRemoteSnapshot(
+  record: LegacyRemoteSnapshotRecord,
+): CurrentRemoteSnapshotRecord {
+  const coreReasons = new Map<
+    (typeof CORE_SNAPSHOT_FIELDS)[number],
+    'sensitive-content' | 'policy'
+  >();
+  for (const redaction of record.redactions) {
+    coreReasons.set(
+      redaction.field,
+      redaction.reason === 'policy' ? 'policy' : 'sensitive-content',
+    );
+  }
+  for (const field of CORE_SNAPSHOT_FIELDS) {
+    const value = record.issue[field];
     if (
-      JSON.stringify(record.observedBy.context) !==
-      JSON.stringify(record.identity.context)
+      typeof value === 'string' &&
+      containsSensitiveContentSignal(value) &&
+      !coreReasons.has(field)
     ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['observedBy', 'context'],
-        message:
-          'Snapshot capability context must match remote identity context.',
-      });
+      coreReasons.set(field, 'sensitive-content');
     }
-    if (record.redactionCount !== record.redactions.length) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['redactionCount'],
-        message: 'Snapshot redactionCount must match retained redactions.',
-      });
-    }
-    if (record.contentRedacted !== record.redactions.length > 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['contentRedacted'],
-        message:
-          'Snapshot contentRedacted must match field suppression evidence.',
-      });
-    }
+  }
 
-    const seenFields = new Set<string>();
-    for (const [index, redaction] of record.redactions.entries()) {
-      const fieldId =
-        redaction.field.kind === 'core'
-          ? `core:${redaction.field.name}`
-          : `extension:${redaction.field.key}`;
-      if (seenFields.has(fieldId)) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['redactions', index, 'field'],
-          message: 'Snapshot suppression evidence fields must be unique.',
-        });
-      }
-      seenFields.add(fieldId);
+  const issue = { ...record.issue };
+  const redactions: CurrentRemoteSnapshotRecord['redactions'] = [];
+  for (const field of CORE_SNAPSHOT_FIELDS) {
+    const reason = coreReasons.get(field);
+    if (!reason) continue;
+    issue[field] = WHOLE_FIELD_SUPPRESSION_MARKER;
+    redactions.push({
+      field: { kind: 'core', name: field },
+      reason,
+      representation: 'whole-field-marker',
+    });
+  }
 
-      const retainedValue =
-        redaction.field.kind === 'core'
-          ? record.issue[redaction.field.name]
-          : record.extensions?.[record.provider]?.[redaction.field.key];
-      if (retainedValue !== WHOLE_FIELD_SUPPRESSION_MARKER) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['redactions', index, 'field'],
-          message:
-            'Snapshot suppression evidence requires the whole-field suppression marker.',
-        });
-      }
+  const extensions = record.extensions ? { ...record.extensions } : undefined;
+  const providerExtensions = record.extensions?.[record.provider];
+  if (extensions && providerExtensions) {
+    const migratedExtensions = { ...providerExtensions };
+    extensions[record.provider] = migratedExtensions;
+    for (const [key, value] of Object.entries(providerExtensions)) {
+      if (!containsSensitiveContentSignalInValue(value)) continue;
+      migratedExtensions[key] = WHOLE_FIELD_SUPPRESSION_MARKER;
+      redactions.push({
+        field: { kind: 'extension', key },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      });
     }
-  });
+  }
+
+  return {
+    ...record,
+    schemaVersion: 2,
+    issue,
+    extensions,
+    contentRedacted: redactions.length > 0,
+    redactionCount: redactions.length,
+    redactions,
+  };
+}
+
+function snapshotContainsSensitiveSignal(
+  record: LegacyRemoteSnapshotRecord,
+): boolean {
+  return (
+    CORE_SNAPSHOT_FIELDS.some((field) => {
+      const value = record.issue[field];
+      return typeof value === 'string' && containsSensitiveContentSignal(value);
+    }) ||
+    Object.values(record.extensions?.[record.provider] ?? {}).some((value) =>
+      containsSensitiveContentSignalInValue(value),
+    )
+  );
+}
+
+function suppressionFieldId(
+  field: z.infer<typeof SnapshotSuppressedFieldSchema>,
+): string {
+  return field.kind === 'core'
+    ? `core:${field.name}`
+    : `extension:${field.key}`;
+}
 
 const BaselineFieldSchema = z
   .object({

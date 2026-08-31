@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
+  MAX_SNAPSHOT_SUPPRESSION_EVIDENCE,
   PlannedBindingCreateSchema,
   RemoteBaselineRecordSchema,
   RemoteBatchRecordSchema,
@@ -138,7 +139,7 @@ describe('remote record schemas', () => {
   it('parses binding state, snapshots, and baselines with bounded core content', () => {
     const snapshot = RemoteSnapshotRecordSchema.parse({
       recordType: 'snapshot',
-      schemaVersion: 1,
+      schemaVersion: 2,
       snapshotId: 'snap_snapshot_123',
       bindingId: 'bnd_binding_123',
       provider: 'github',
@@ -554,7 +555,7 @@ describe('remote record schemas', () => {
     expect(() =>
       RemoteSnapshotRecordSchema.parse({
         recordType: 'snapshot',
-        schemaVersion: 2,
+        schemaVersion: 3,
         snapshotId: 'snap_snapshot_123',
       }),
     ).toThrow();
@@ -570,7 +571,7 @@ describe('remote record schemas', () => {
   it('enforces adapter extension allowlists and byte limits', () => {
     const base = {
       recordType: 'snapshot' as const,
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       snapshotId: 'snap_snapshot_123',
       bindingId: 'bnd_binding_123',
       provider: 'github' as const,
@@ -608,7 +609,7 @@ describe('remote record schemas', () => {
   it('requires bounded field-specific whole-field suppression evidence', () => {
     const base = {
       recordType: 'snapshot' as const,
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       snapshotId: 'snap_snapshot_123',
       bindingId: 'bnd_binding_123',
       provider: 'github' as const,
@@ -661,6 +662,110 @@ describe('remote record schemas', () => {
         issue: { ...base.issue, description: 'retained substring' },
       }),
     ).toThrow(/suppression marker/i);
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        issue: { ...base.issue, description: 'password private-tail' },
+        contentRedacted: false,
+        redactionCount: 0,
+        redactions: [],
+      }),
+    ).toThrow(/sensitive-content/i);
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        issue: { ...base.issue, description: 'ordinary description' },
+        extensions: {
+          github: { workflow: { note: '[api key] private-tail' } },
+        },
+        contentRedacted: false,
+        redactionCount: 0,
+        redactions: [],
+      }),
+    ).toThrow(/sensitive-content/i);
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        contentRedacted: false,
+        redactionCount: 0,
+        redactions: [],
+      }),
+    ).toThrow(/unpaired.*marker/i);
+    expect(base.redactions).toHaveLength(1);
+    expect(MAX_SNAPSHOT_SUPPRESSION_EVIDENCE).toBeGreaterThan(
+      base.redactions.length,
+    );
+  });
+
+  it('migrates legacy schema-v1 redactions without trusting retained substrings', () => {
+    const legacyBase = {
+      recordType: 'snapshot',
+      schemaVersion: 1 as const,
+      snapshotId: 'snap_snapshot_legacy',
+      bindingId: 'bnd_binding_123',
+      provider: 'github' as const,
+      observedAt: timestamp,
+      observedBy: capabilityReference,
+      identity,
+      revision,
+      issue: {
+        title: 'Remote title',
+        description:
+          'password=[REDACTED:CREDENTIAL] parser-retained-private-tail',
+        priority: null,
+        status: 'open',
+      },
+      lifecycle: 'active' as const,
+      contentRedacted: true,
+      redactionCount: 1,
+      redactions: [
+        { field: 'description' as const, reason: 'credential' as const },
+      ],
+    };
+    const migrated = RemoteSnapshotRecordSchema.parse(legacyBase);
+
+    expect(migrated).toMatchObject({
+      schemaVersion: 2,
+      issue: { description: '[SUPPRESSED:SENSITIVE-CONTENT]' },
+      contentRedacted: true,
+      redactionCount: 1,
+      redactions: [
+        {
+          field: { kind: 'core', name: 'description' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+      ],
+    });
+    expect(JSON.stringify(migrated)).not.toContain(
+      'parser-retained-private-tail',
+    );
+
+    expect(
+      RemoteSnapshotRecordSchema.parse({
+        ...legacyBase,
+        issue: {
+          ...legacyBase.issue,
+          title: '[api-key] formerly-missed-private-tail',
+          description: 'ordinary description',
+        },
+        contentRedacted: false,
+        redactionCount: 0,
+        redactions: [],
+      }),
+    ).toMatchObject({
+      schemaVersion: 2,
+      issue: { title: '[SUPPRESSED:SENSITIVE-CONTENT]' },
+      contentRedacted: true,
+    });
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...legacyBase,
+        issue: { ...legacyBase.issue, description: 'ordinary description' },
+        redactionCount: 0,
+        redactions: [],
+      }),
+    ).toThrow(/requires refresh/i);
   });
 
   it('requires record IDs to match stable filenames', () => {

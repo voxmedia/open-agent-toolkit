@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -305,6 +312,124 @@ describe('RemoteSyncStore', () => {
         verification,
       ),
     ).rejects.toThrow();
+  });
+
+  it('rejects direct persistence of signaled canonical snapshot fields', async () => {
+    const { store } = await createStore();
+    const unsafeState = {
+      ...bindingState(),
+      snapshot: {
+        recordType: 'snapshot',
+        schemaVersion: 2,
+        snapshotId: 'snap_snapshot_123',
+        bindingId: 'bnd_binding_123',
+        provider: 'github',
+        observedAt: timestamp,
+        observedBy: {
+          provider: 'github',
+          transport: 'gh',
+          context: { host: 'github.com', repositoryId: 'repo-123' },
+          capabilityDigest: 'sha256:capability',
+        },
+        identity: {
+          stableId: 'issue-node-123',
+          context: { host: 'github.com', repositoryId: 'repo-123' },
+          aliases: [],
+        },
+        revision: {
+          strength: 'hash-only',
+          token: null,
+          updatedAt: timestamp,
+          contentHash: 'sha256:remote',
+        },
+        issue: {
+          title: 'Remote title',
+          description: 'password direct-store-private-tail',
+          priority: null,
+          status: 'open',
+        },
+        lifecycle: 'active',
+        contentRedacted: false,
+        redactionCount: 0,
+        redactions: [],
+      },
+    } as unknown as RemoteBindingState;
+
+    await expect(store.writeBindingState(unsafeState)).rejects.toThrow(
+      /sensitive-content/i,
+    );
+  });
+
+  it('migrates a prior schema-v1 snapshot before restart persistence', async () => {
+    const { root, store } = await createStore();
+    const bindingsDir = join(root, 'operational', 'bindings');
+    await mkdir(bindingsDir, { recursive: true });
+    await writeFile(
+      join(bindingsDir, 'bnd_binding_123.json'),
+      JSON.stringify({
+        ...bindingState(),
+        snapshot: {
+          recordType: 'snapshot',
+          schemaVersion: 1,
+          snapshotId: 'snap_snapshot_legacy',
+          bindingId: 'bnd_binding_123',
+          provider: 'github',
+          observedAt: timestamp,
+          observedBy: {
+            provider: 'github',
+            transport: 'gh',
+            context: { host: 'github.com', repositoryId: 'repo-123' },
+            capabilityDigest: 'sha256:capability',
+          },
+          identity: {
+            stableId: 'issue-node-123',
+            context: { host: 'github.com', repositoryId: 'repo-123' },
+            aliases: [],
+          },
+          revision: {
+            strength: 'hash-only',
+            token: null,
+            updatedAt: timestamp,
+            contentHash: 'sha256:remote',
+          },
+          issue: {
+            title: 'Remote title',
+            description: 'password=[REDACTED:CREDENTIAL] restart-private-tail',
+            priority: null,
+            status: 'open',
+          },
+          lifecycle: 'active',
+          contentRedacted: true,
+          redactionCount: 1,
+          redactions: [{ field: 'description', reason: 'credential' }],
+        },
+        contentRedacted: true,
+      }),
+    );
+
+    const migrated = await store.readBindingState('bnd_binding_123');
+    expect(migrated?.snapshot).toMatchObject({
+      schemaVersion: 2,
+      issue: { description: '[SUPPRESSED:SENSITIVE-CONTENT]' },
+      redactions: [
+        {
+          field: { kind: 'core', name: 'description' },
+          reason: 'sensitive-content',
+          representation: 'whole-field-marker',
+        },
+      ],
+    });
+    expect(JSON.stringify(migrated)).not.toContain('restart-private-tail');
+
+    await store.writeBindingState(migrated!);
+    const persisted = JSON.parse(
+      await readFile(join(bindingsDir, 'bnd_binding_123.json'), 'utf8'),
+    );
+    expect(persisted.snapshot.schemaVersion).toBe(2);
+    expect(persisted.snapshot.issue.description).toBe(
+      '[SUPPRESSED:SENSITIVE-CONTENT]',
+    );
+    expect(JSON.stringify(persisted)).not.toContain('restart-private-tail');
   });
 
   it('creates operation journals exclusively', async () => {

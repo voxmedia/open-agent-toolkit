@@ -8,3 +8,20 @@ const SENSITIVE_CONTENT_SIGNAL =
 export function containsSensitiveContentSignal(value: string): boolean {
   return SENSITIVE_CONTENT_SIGNAL.test(value);
 }
+
+export function containsSensitiveContentSignalInValue(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return containsSensitiveContentSignal(value);
+  }
+  if (Array.isArray(value)) {
+    return value.some((entry) => containsSensitiveContentSignalInValue(entry));
+  }
+  if (value && typeof value === 'object') {
+    return Object.entries(value).some(
+      ([key, entry]) =>
+        containsSensitiveContentSignal(key) ||
+        containsSensitiveContentSignalInValue(entry),
+    );
+  }
+  return false;
+}

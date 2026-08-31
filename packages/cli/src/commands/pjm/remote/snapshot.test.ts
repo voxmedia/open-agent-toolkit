@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
   MAX_REMOTE_DESCRIPTION_BYTES,
+  MAX_SNAPSHOT_SUPPRESSION_EVIDENCE,
   WHOLE_FIELD_SUPPRESSION_MARKER,
 } from './schema';
 import { sanitizeRemoteSnapshot } from './snapshot';
@@ -199,6 +200,39 @@ describe('sanitizeRemoteSnapshot', () => {
     expect(() =>
       sanitizeRemoteSnapshot(rawSnapshot(), {
         allowedExtensionKeys: ['provider.raw.path'],
+      }),
+    ).toThrow(/extension key/i);
+  });
+
+  it('supports the shared maximum when every core and extension field is signaled', () => {
+    const input = rawSnapshot();
+    input.issue.title = 'password title-private-tail';
+    input.issue.description = 'api key description-private-tail';
+    input.issue.priority = 'access token priority-private-tail';
+    input.issue.status = 'authorization status-private-tail';
+    const extensionCount = MAX_SNAPSHOT_SUPPRESSION_EVIDENCE - 4;
+    const allowedExtensionKeys = Array.from(
+      { length: extensionCount },
+      (_, index) => `field_${index}`,
+    );
+    input.extensions = Object.fromEntries(
+      allowedExtensionKeys.map((key) => [
+        key,
+        `password extension-private-tail-${key}`,
+      ]),
+    );
+
+    const result = sanitizeRemoteSnapshot(input, { allowedExtensionKeys });
+
+    expect(result.redactionCount).toBe(MAX_SNAPSHOT_SUPPRESSION_EVIDENCE);
+    expect(result.redactions).toHaveLength(MAX_SNAPSHOT_SUPPRESSION_EVIDENCE);
+    expect(Object.values(result.extensions?.github ?? {})).toEqual(
+      Array(extensionCount).fill(WHOLE_FIELD_SUPPRESSION_MARKER),
+    );
+    expect(JSON.stringify(result)).not.toContain('private-tail');
+    expect(() =>
+      sanitizeRemoteSnapshot(input, {
+        allowedExtensionKeys: [...allowedExtensionKeys, 'one_too_many'],
       }),
     ).toThrow(/extension key/i);
   });

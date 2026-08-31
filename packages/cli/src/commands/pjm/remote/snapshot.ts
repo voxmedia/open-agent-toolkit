@@ -1,6 +1,10 @@
-import { containsSensitiveContentSignal } from './credential-safety';
+import {
+  containsSensitiveContentSignal,
+  containsSensitiveContentSignalInValue,
+} from './credential-safety';
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
+  MAX_SNAPSHOT_SUPPRESSION_EVIDENCE,
   RemoteSnapshotRecordSchema,
   WHOLE_FIELD_SUPPRESSION_MARKER,
   type RemoteSnapshotRecord,
@@ -30,7 +34,9 @@ export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
 }
 
-const MAX_ALLOWED_EXTENSION_KEYS = 64;
+const CORE_SNAPSHOT_FIELD_COUNT = 4;
+const MAX_ALLOWED_EXTENSION_KEYS =
+  MAX_SNAPSHOT_SUPPRESSION_EVIDENCE - CORE_SNAPSHOT_FIELD_COUNT;
 const SCHEMA_SAFE_EXTENSION_KEY = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 
 type SnapshotRedaction = RemoteSnapshotRecord['redactions'][number];
@@ -67,7 +73,7 @@ export function sanitizeRemoteSnapshot(
 
   return RemoteSnapshotRecordSchema.parse({
     recordType: 'snapshot',
-    schemaVersion: 1,
+    schemaVersion: 2,
     snapshotId: input.snapshotId,
     bindingId: input.bindingId,
     provider: input.provider,
@@ -113,7 +119,7 @@ function sanitizeExtensions(
     if (!Object.hasOwn(extensions, key)) continue;
 
     const value = extensions[key];
-    if (containsSensitiveExtensionContent(value)) {
+    if (containsSensitiveContentSignalInValue(value)) {
       retained[key] = WHOLE_FIELD_SUPPRESSION_MARKER;
       redactions.push({
         field: { kind: 'extension', key },
@@ -148,21 +154,4 @@ function validateExtensionAllowlist(allowedKeys: readonly string[]): void {
       'Adapter extension keys must be unique, bounded, and schema-safe.',
     );
   }
-}
-
-function containsSensitiveExtensionContent(value: unknown): boolean {
-  if (typeof value === 'string') {
-    return containsSensitiveContentSignal(value);
-  }
-  if (Array.isArray(value)) {
-    return value.some((entry) => containsSensitiveExtensionContent(entry));
-  }
-  if (value && typeof value === 'object') {
-    return Object.entries(value).some(
-      ([key, entry]) =>
-        containsSensitiveContentSignal(key) ||
-        containsSensitiveExtensionContent(entry),
-    );
-  }
-  return false;
 }
