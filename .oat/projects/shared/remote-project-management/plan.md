@@ -88,6 +88,9 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
 
 ### Task p01-t01: Define remote configuration types
 
+**Implementation:** completed in
+`6f5de98828e8b71c62014677cb7f4391cf0e8941`
+
 **Files:** Modify packages/cli/src/config/oat-config.ts and
 packages/cli/src/config/oat-config.test.ts.
 
@@ -101,6 +104,8 @@ packages/cli/src/config/oat-config.test.ts.
 5. Commit: feat(p01-t01): define remote configuration types
 
 ### Task p01-t02: Resolve transport preferences by owning scope
+
+**Implementation:** in progress
 
 **Files:** Modify packages/cli/src/config/resolve.ts and
 packages/cli/src/config/resolve.test.ts.

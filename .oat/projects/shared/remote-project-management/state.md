@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: 586a0d0002d40cd1c49590db904847848736f8af
+oat_current_task: p01-t02
+oat_last_commit: 6f5de98828e8b71c62014677cb7f4391cf0e8941
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -24,7 +24,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T04:12:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T04:18:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -36,7 +36,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 is ready to begin at p01-t01. The workflow uses a
+Implementation — Phase 1 completed p01-t01 and continues at p01-t02. The workflow uses a
 final-phase HiLL checkpoint, automatic checkpoint review, and sequential phase
 execution for the currently validated plan metadata.
 
@@ -67,7 +67,8 @@ execution for the currently validated plan metadata.
 - ✓ External Cursor fallback re-gate passed with zero findings
 - ✓ User-selected Cursor Fable gate passed and its artifact was received
 - ✓ Plan complete
-- ⧗ Phase 1 ready at p01-t01
+- ✓ p01-t01 defined ownership-safe remote configuration types and parsing
+- ⧗ Phase 1 continues at p01-t02
 
 ## Blockers
 

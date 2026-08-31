@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -65,29 +65,36 @@ oat_generated: false
 
 ### Task p01-t01: Define remote configuration types
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6f5de98828e8b71c62014677cb7f4391cf0e8941
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Shared PJM config now accepts closed remote policy and storage shapes, while
+  local and user config accept ordered per-provider transport preferences.
+- Cross-surface remote keys fail with actionable ownership errors.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/oat-config.ts` - Added remote config types,
+  normalization, and surface ownership enforcement.
+- `packages/cli/src/config/oat-config.test.ts` - Added shared/local/user parse,
+  round-trip, and cross-surface rejection coverage.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts`
+- Result: pass (121 tests); CLI type-check and lint also passed.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Transport lists preserve explicit empty arrays and remove duplicates during
+  config normalization.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- CLI lint found a shadowed callback name before commit; renamed it and reran
+  formatting, focused tests, type-check, and lint successfully.
 
 ---
 
@@ -227,6 +234,7 @@ fallback:
   allow_below_task_class_floor: false
 payload:
   phase_base_head: 24eed8db6176c06f609501c57616b9440efaceaf
+  effective_phase_base_head: 44547bd26d621891e25b3e05f2c1662ee1423058
   phase_recovery_limit: 10
   phase_recovery_attempts_used: 0
   pending_attempt: null
@@ -255,18 +263,20 @@ Chronological log of implementation progress.
 
 ### 2026-03-15
 
-**Session Start:** {time}
+**Session Start:** 2026-08-31T04:10:00Z
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Define remote configuration types - 6f5de98828e8b71c62014677cb7f4391cf0e8941
+- [ ] p01-t02: Resolve transport preferences by owning scope - in progress
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Added ownership-safe shared remote policy/storage and local/user transport
+  configuration surfaces.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Preserve explicit empty transport lists because they intentionally disable a
+  provider instead of inheriting lower-precedence defaults.
 
 **Follow-ups / TODO:**
 
