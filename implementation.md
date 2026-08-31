@@ -429,6 +429,19 @@ The configured closeout sequence is snapshotted immutably as
 final implementation phase. Approval remains pending until all pre-approval
 steps and the implementation-tail recap gate finish.
 
+**Summary completed:** `summary.md` was generated in fresh mode (137 lines)
+and pushed at project-ref receipt
+`1cfef6998295a206b3e56b73ac9c8f5fa2f17208`. PJM adoption was declared, so
+three grounded Key Decisions were promoted in source commit
+`1b2aabfbb4d69d82a90c3177ce9c9e633eae557a`; its exact four paths were the
+three new decision records and managed index. Project-log rollup succeeded
+with a deduplicated ledger outcome.
+
+The summary step is recorded complete. The qualified rolling freshness
+checkpoint advanced to the decision-promotion commit and the recomputed full
+effective-delta fingerprint; the immutable reviewed implementation basis is
+unchanged.
+
 ---
 
 ## Implementation Log
