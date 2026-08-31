@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03-t06
 oat_last_commit: 659547363032fd9f41eefadc947bb0496fe7457f
 oat_blockers: []
 associated_issues:
@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:55:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T01:17:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -111,16 +111,16 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — PR open; conflict reconciliation is committed and the prior
-exit-gate generation is stale pending fresh verification and review.
+Implementation — reconciliation review received; three bounded fixes are
+queued before a fresh final review and replacement exit-gate generation.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete — review received and gate passed)
-- **Implementation:** `implementation.md` (9/9 tasks complete; final review passed)
+- **Plan:** `plan.md` (complete — reconciliation fixes added)
+- **Implementation:** `implementation.md` (9/12 tasks complete; fixes in progress)
 
 ## Progress
 
@@ -148,7 +148,7 @@ exit-gate generation is stale pending fresh verification and review.
 - ✓ PR created
 - ✓ Summary, documentation, and final PR pre-approval steps completed
 - ✓ Project recap explicitly skipped; terminal-outcome guard passed
-- ⧗ Awaiting final HiLL approval
+- ⧗ Reconciliation review fixes p03-t06 through p03-t08 in progress
 
 ## Blockers
 
@@ -156,7 +156,6 @@ None
 
 ## Next Milestone
 
-Approve or defer the final p03 HiLL checkpoint. Approval completes the
-implementation lifecycle while leaving PR #246 open and unmerged. GitHub
-currently reports the PR as conflicting with `main`; conflict reconciliation
-is required before merge.
+Complete p03-t06 through p03-t08, obtain a clean independent final review, and
+run a fresh configured implementation exit gate before returning to the final
+p03 HiLL approval.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 2     | 2/2       |
-| Phase 2 | complete | 2     | 2/2       |
-| Phase 3 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 2     | 2/2       |
+| Phase 2 | complete    | 2     | 2/2       |
+| Phase 3 | in_progress | 8     | 5/8       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/12 tasks completed
 
 ---
 
 ## Phase 1: Configuration Contract Core
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-08-30
 
 ### Phase Summary
@@ -202,6 +202,38 @@ a new run only after synchronous artifact production is fixed.
 
 **Verification:** The focused 190-test contract suite, skill-version-bump gate,
 and repository check passed before and after the source commit.
+
+---
+
+### Review Received: final reconciliation
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T010800Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 2
+
+**New tasks added:** p03-t06, p03-t07, p03-t08
+
+**Status:** `fixes_added`
+
+**Finding dispositions:**
+
+- I1 (`artifact_alignment_required`): reconcile the active
+  review-gate-integrity discovery and roadmap with the sole completed combined
+  owner in p03-t06.
+- m1 (`code_fix_required`): preserve backslashes literally inside
+  single-quoted tokens and add direct-prefix regressions in p03-t07.
+- m2 (`artifact_alignment_required`): restore main's migrated `M` scope
+  estimate on the archived backlog record in p03-t08.
+
+**Next:** Complete all three bounded fixes, run proportionate verification,
+and obtain a new independent final review before replacing the stale exit-gate
+generation.
 
 ---
 

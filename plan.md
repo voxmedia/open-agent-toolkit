@@ -553,19 +553,98 @@ pnpm check
 git commit -m "test(p03-t05): assert artifact-missing recovery contract"
 ```
 
+### Task p03-t06: Align active planning surfaces on the combined owner
+
+**Review finding:** I1
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-gate-integrity/discovery.md`
+- Modify: `.oat/repo/pjm/roadmap.md`
+
+**Step 1: Remove the stale split-project guidance**
+
+Reconcile the earlier review-gate-integrity discovery paragraph and Key
+Decision 8 with the completed `gate-execution-contract-hardening` owner. Link
+the two delivered backlog items at their archived paths and keep general
+review/gate integrity outside the combined project's scope.
+
+**Step 2: Align the roadmap node**
+
+Replace the plural headless/structured-output quick-project wording with the
+single completed combined project without changing unrelated roadmap state.
+
+**Step 3: Verify and commit**
+
+```bash
+rg -n "gate-headless-no-yield|gate-structured-output-contract|headless no-yield.*structured output|backlog/items/BL-260726" .oat/projects/shared/review-gate-integrity/discovery.md .oat/repo/pjm/roadmap.md
+pnpm exec oxfmt .oat/projects/shared/review-gate-integrity/discovery.md .oat/repo/pjm/roadmap.md
+git commit -m "docs(p03-t06): align combined gate project ownership"
+```
+
+### Task p03-t07: Preserve single-quoted backslashes in validation
+
+**Review finding:** m1
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/configured-command.ts`
+- Modify: `packages/cli/src/commands/gate/configured-command.test.ts`
+
+**Step 1: Add direct-prefix and prompt regressions**
+
+Require `oat --json 'g\\ate' review` and `oat '--j\\son' gate review` to be
+conservatively not applicable, while a backslash inside a single-quoted prompt
+remains literal.
+
+**Step 2: Correct single-quote tokenization**
+
+Handle characters inside a single-quoted token before generic backslash escape
+processing so the tokenizer matches shell argv behavior for the recognized
+direct-command boundary.
+
+**Step 3: Verify and commit**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/configured-command.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+git commit -m "fix(p03-t07): preserve single-quoted backslashes"
+```
+
+### Task p03-t08: Restore the migrated backlog estimate
+
+**Review finding:** m2
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/archived/BL-260726-validate-structured-output.md`
+
+**Step 1: Preserve main-side planning metadata**
+
+Restore `scope_estimate: M` without changing the completed status, acceptance
+criteria, archive path, or combined-project ownership.
+
+**Step 2: Verify and commit**
+
+```bash
+oat backlog regenerate-index
+oat pjm doctor --json
+git commit -m "docs(p03-t08): preserve archived scope estimate"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed   | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
-| p02    | code     | passed   | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
-| p03    | code     | passed   | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
-| final  | code     | passed   | 2026-08-31 | reviews/archived/code-final-review-2026-08-31T000201Z.md    | 659547363032fd9f41eefadc947bb0496fe7457f | auto       | -                             |
-| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                             |
-| plan   | artifact | passed   | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
-| final  | code     | passed   | 2026-08-31 | reviews/archived/final-review-2026-08-31T000938Z.md         | 659547363032fd9f41eefadc947bb0496fe7457f | gate       | claude-fable-skip-permissions |
-| final  | code     | received | 2026-08-31 | reviews/final-review-2026-08-31T010800Z.md                  | 3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e | auto       | -                             |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed      | 2026-08-30 | reviews/archived/code-p01-review-2026-08-30T225810Z.md      | 4b247ec29df914dc66f96ee134b538a6a81985d7 | auto       | -                             |
+| p02    | code     | passed      | 2026-08-30 | reviews/archived/code-p02-review-2026-08-30T224353Z.md      | 76966f7fb2db9726b263d661be8f6805db5fab57 | auto       | -                             |
+| p03    | code     | passed      | 2026-08-30 | reviews/archived/code-p03-review-2026-08-30T233249Z.md      | 7bba63b3db9401015405398995cc9bcc0fac6df1 | auto       | -                             |
+| final  | code     | passed      | 2026-08-31 | reviews/archived/code-final-review-2026-08-31T000201Z.md    | 659547363032fd9f41eefadc947bb0496fe7457f | auto       | -                             |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                             |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                             |
+| plan   | artifact | passed      | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| final  | code     | passed      | 2026-08-31 | reviews/archived/final-review-2026-08-31T000938Z.md         | 659547363032fd9f41eefadc947bb0496fe7457f | gate       | claude-fable-skip-permissions |
+| final  | code     | fixes_added | 2026-08-31 | reviews/archived/final-review-2026-08-31T010800Z.md         | 3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -577,10 +656,10 @@ git commit -m "test(p03-t05): assert artifact-missing recovery contract"
 - Phase 1: 2 tasks — pure configured-command contract and canonical skill
   alignment
 - Phase 2: 2 tasks — cause-specific runtime diagnosis and no-yield prompt
-- Phase 3: 5 tasks — configuration enforcement, end-to-end proof, release
-  closeout, and bounded final-review repairs
+- Phase 3: 8 tasks — configuration enforcement, end-to-end proof, release
+  closeout, and bounded final-review and reconciliation repairs
 
-**Total: 9 tasks**
+**Total: 12 tasks**
 
 Ready for code review and merge after every task, review, and gate is complete.
 
