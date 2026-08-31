@@ -120,6 +120,22 @@ export function adviseProviderRefresh(input: {
   }
 
   if (input.policy.state === 'restart-required') {
+    if (input.policy.provenance.kind === 'repository-decision') {
+      return {
+        state: 'restart-required',
+        source: 'provider-refresh-policy',
+        reason: `OAT conservatively advises starting a new provider session after a successful materialization change so the provider has an opportunity to load the changed asset; this does not prove runtime visibility (${input.policy.provenance.reference})`,
+        policy: input.policy,
+        recovery: [
+          {
+            code: 'start-new-provider-session',
+            message:
+              'Start a new provider session so it has an opportunity to load the changed asset, then inspect its catalog.',
+          },
+        ],
+      };
+    }
+
     return {
       state: 'restart-required',
       source: 'provider-refresh-policy',

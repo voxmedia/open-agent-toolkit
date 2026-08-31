@@ -637,7 +637,10 @@ describe('createStatusCommand', () => {
     ).toMatchObject({
       visibility: {
         state: 'not-reported',
-        policy: { state: 'unknown' },
+        policy: {
+          state: 'restart-required',
+          provenance: { kind: 'repository-decision' },
+        },
       },
     });
   });

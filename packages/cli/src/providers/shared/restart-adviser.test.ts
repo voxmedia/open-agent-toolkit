@@ -14,6 +14,16 @@ const policy = (
   },
 });
 
+const repositoryDecisionPolicy: ProviderCatalogRefreshPolicy = {
+  state: 'restart-required',
+  provenance: {
+    kind: 'repository-decision',
+    reference:
+      '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+    verifiedAt: '2026-08-31',
+  },
+};
+
 describe('adviseProviderRefresh', () => {
   it.each([
     {
@@ -62,6 +72,34 @@ describe('adviseProviderRefresh', () => {
     });
   });
 
+  it('advises a new session for the repository decision without claiming restart or visibility', () => {
+    const advice = adviseProviderRefresh({
+      policy: repositoryDecisionPolicy,
+      materialization: 'changed',
+    });
+
+    expect(advice).toMatchObject({
+      state: 'restart-required',
+      source: 'provider-refresh-policy',
+      policy: repositoryDecisionPolicy,
+      recovery: [
+        {
+          code: 'start-new-provider-session',
+          message:
+            'Start a new provider session so it has an opportunity to load the changed asset, then inspect its catalog.',
+        },
+      ],
+    });
+    expect(advice.reason).toContain('conservatively advises starting a new');
+    expect(advice.reason).toContain('does not prove runtime visibility');
+    expect(advice.reason).not.toMatch(
+      /restart (?:the )?(?:provider|application|process)/i,
+    );
+    expect(advice.recovery[0]?.message).not.toMatch(
+      /restart (?:the )?(?:provider|application|process)/i,
+    );
+  });
+
   it('preserves an explicit not-reported observation without turning it into unknown', () => {
     expect(
       adviseProviderRefresh({
@@ -81,15 +119,18 @@ describe('adviseProviderRefresh', () => {
   });
 
   it.each([
+    { materialization: 'not-required' as const, expected: 'unknown' },
     { materialization: 'current' as const, expected: 'unknown' },
+    { materialization: 'planned' as const, expected: 'unknown' },
     { materialization: 'failed' as const, expected: 'unknown' },
     { materialization: 'missing' as const, expected: 'unknown' },
     { materialization: 'unsupported' as const, expected: 'unsupported' },
+    { materialization: 'unknown' as const, expected: 'unknown' },
   ])(
-    'keeps $materialization materialization separate from provider visibility',
+    'does not emit repository-decision advice for $materialization materialization',
     ({ materialization, expected }) => {
       const advice = adviseProviderRefresh({
-        policy: policy('restart-required'),
+        policy: repositoryDecisionPolicy,
         materialization,
       });
 

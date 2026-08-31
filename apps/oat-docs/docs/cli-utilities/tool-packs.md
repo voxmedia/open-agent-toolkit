@@ -210,6 +210,13 @@ the registered refresh policy separately and say `not-reported` when they did
 not inspect a running provider catalog. A provider file being current therefore
 does not mean the active session is proven to see it.
 
+After a successful provider-visible file change, OAT conservatively advises
+starting a new provider session so it has an opportunity to load the changed
+asset. This repository policy is not a provider hot-reload guarantee, an
+application-process restart requirement, or proof of visibility. No advice is
+emitted for current/no-op, planned-only, failed, missing, inactive, or
+unsupported materialization.
+
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
 is reported as current, while an edited copy is retained and reported as a
@@ -771,7 +778,7 @@ All mutation commands (`install`, `update`, `remove`, `migrate`) automatically r
 
 Use `--no-sync` on any mutation command to skip this step.
 
-For `oat tools install`, the follow-up sync still reconciles provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. Refresh or restart advice is shown only when a sourced provider/content policy applies to a successful current-run change. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
+For `oat tools install`, the follow-up sync still reconciles provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. New-session advice is shown only when a registered provider/content policy applies to a successful current-run change. It gives the provider an opportunity to load the changed asset; it does not tell you to restart the application process or prove runtime visibility. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
 
 Removal and migration use the symmetric contract: the follow-up sync prunes exactly the provider views for the canonical paths that were removed, in that scope only, and only after the canonical source is confirmed absent.
 

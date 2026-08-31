@@ -90,10 +90,14 @@ const UNKNOWN_REFRESH: ProviderCatalogRefreshPolicy = {
   state: 'unknown',
   reason: 'No sourced provider-version refresh contract is registered',
 };
-const CLAUDE_AGENT_REFRESH: ProviderCatalogRefreshPolicy = {
-  state: 'unknown',
-  reason:
-    'Claude agent refresh depends on active-session directory and launch-mode facts that OAT does not observe',
+const CONSERVATIVE_NEW_SESSION_REFRESH: ProviderCatalogRefreshPolicy = {
+  state: 'restart-required',
+  provenance: {
+    kind: 'repository-decision',
+    reference:
+      '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+    verifiedAt: '2026-08-31',
+  },
 };
 
 export type UserAgentMaterializationCoverage = 'none' | 'bundled' | 'all';
@@ -152,7 +156,11 @@ function capabilitiesFor(
           contentKind === 'skill' && mapping !== undefined
             ? 'supported'
             : 'unsupported',
-        catalogRefresh: refreshPolicies[contentKind] ?? UNKNOWN_REFRESH,
+        catalogRefresh: supported
+          ? // A sourced provider/content policy takes precedence over the
+            // repository-wide conservative new-session decision.
+            (refreshPolicies[contentKind] ?? CONSERVATIVE_NEW_SESSION_REFRESH)
+          : UNKNOWN_REFRESH,
         ...(supported
           ? {}
           : {
@@ -167,9 +175,7 @@ const REGISTRATIONS: readonly ProviderRegistration[] = [
   {
     adapter: claudeAdapter,
     extensions: [],
-    capabilities: capabilitiesFor(claudeAdapter, [], {
-      agent: CLAUDE_AGENT_REFRESH,
-    }),
+    capabilities: capabilitiesFor(claudeAdapter),
   },
   {
     adapter: cursorAdapter,

@@ -13,7 +13,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
     - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
-    - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. A restart is conditionally required for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts, so it conservatively records Claude agent refresh as `unknown`. These semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
+    - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. It describes a conditional restart for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts. After a successful provider-visible file change, the generic OAT repository policy therefore conservatively advises starting a new provider session; it does not claim that Claude hot-reloaded the file or that the application process must restart. The provider semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
 
@@ -63,7 +63,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - All project-generated Codex variants and config registrations are repository-owned, version-controlled output and are never auto-ignored by OAT. User-config output remains under `~/.codex`.
     - A single role can be materialized directly with `oat providers codex materialize <agent-name> --model <model-id> --effort <reasoning-effort>`; `--agent-path` selects a specific canonical markdown agent, `--role-name` overrides the generated role name, and `--scope user` writes a user-config-owned role.
     - Aggregate Codex config drift metadata (`aggregateConfigHash`) is emitted in sync/status codex extension output and intentionally not stored as a separate manifest row
-    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions. Codex catalog refresh behavior remains `unknown` until a versioned provider contract or reproducible local validation is registered; file creation alone does not prove that an already-running session sees the role.
+    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions. After a successful provider-visible file change, OAT conservatively advises starting a new Codex session so it has an opportunity to load the role. This repository policy is not a Codex hot-reload contract, an application-process restart requirement, or proof that the new session exposed the role.
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
@@ -118,11 +118,24 @@ OAT reports three separate facts rather than collapsing them into “available�
    do not query a running provider session, so they report visibility as
    `not-reported` or `unknown`, never `visible`.
 
-After a successful relevant change, `oat sync` emits refresh advice from the
-registered policy. Claude's documented behavior depends on session-start and
-launch-mode facts that OAT does not observe, so Claude agent refresh remains
-`unknown`; unsupported or unsourced provider/content combinations stay explicit
-rather than inheriting unsupported advice. A current file with no
+After a successful provider-visible file change, `oat sync` conservatively
+advises starting a new provider session so the provider has an opportunity to
+load the changed asset. This repository decision was approved on 2026-08-31 and
+is recorded in the active project's implementation record. It is safety
+guidance, not a provider hot-reload guarantee, an instruction to restart the
+application process, or proof that the new session loaded or exposed the asset.
+The compatibility schema reports this session boundary as `restart-required`;
+with `repository-decision` provenance, that state means “start a new provider
+session,” not “restart the application.”
+No advice is emitted for current/no-op, planned-only, failed, missing, inactive,
+or unsupported materialization.
+
+A truthful provider/content-specific policy takes precedence over this generic
+repository decision. Claude's documented behavior remains conditional on
+session-start and launch-mode facts that OAT cannot observe, so OAT does not
+claim those conditions were met; the conservative new-session advice still
+applies after a successful file change. Unsupported capabilities retain an
+`unknown` policy rather than inheriting advice. A current file with no
 current-session catalog probe is still not proof of provider visibility.
 
 ## Scope rules

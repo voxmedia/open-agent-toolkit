@@ -88,7 +88,15 @@ describe('provider registry', () => {
       support: 'supported',
       projectionModes: ['native-read', 'materialization-extension'],
       nativeRoleSurface: true,
-      catalogRefresh: { state: 'unknown' },
+      catalogRefresh: {
+        state: 'restart-required',
+        provenance: {
+          kind: 'repository-decision',
+          reference:
+            '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+          verifiedAt: '2026-08-31',
+        },
+      },
     });
     expect(
       registrations[0]!.capabilities.find(
@@ -96,9 +104,13 @@ describe('provider registry', () => {
       ),
     ).toMatchObject({
       catalogRefresh: {
-        state: 'unknown',
-        reason:
-          'Claude agent refresh depends on active-session directory and launch-mode facts that OAT does not observe',
+        state: 'restart-required',
+        provenance: {
+          kind: 'repository-decision',
+          reference:
+            '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+          verifiedAt: '2026-08-31',
+        },
       },
     });
     expect(
@@ -108,7 +120,16 @@ describe('provider registry', () => {
     ).toMatchObject({
       support: 'unsupported',
       projectionModes: ['unsupported'],
+      catalogRefresh: { state: 'unknown' },
     });
+
+    for (const capability of registrations.flatMap(
+      ({ capabilities }) => capabilities,
+    )) {
+      expect(capability.catalogRefresh.state).toBe(
+        capability.support === 'supported' ? 'restart-required' : 'unknown',
+      );
+    }
   });
 
   it('derives user-agent coverage from active provider capability evidence', () => {

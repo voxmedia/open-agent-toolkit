@@ -591,16 +591,81 @@ describe('createSyncCommand', () => {
           contentKind: 'agent',
           materialization: 'changed',
           visibility: {
-            state: 'unknown',
+            state: 'restart-required',
             source: 'provider-refresh-policy',
             policy: {
-              state: 'unknown',
+              state: 'restart-required',
+              provenance: {
+                kind: 'repository-decision',
+                reference:
+                  '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+                verifiedAt: '2026-08-31',
+              },
             },
-            recovery: [],
+            recovery: [
+              {
+                code: 'start-new-provider-session',
+                message:
+                  'Start a new provider session so it has an opportunity to load the changed asset, then inspect its catalog.',
+              },
+            ],
           },
         },
       ],
     });
+  });
+
+  it('renders conservative new-session advice after a successful relevant change', async () => {
+    const canonical = createAgentCanonicalEntry('reviewer.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [canonical],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/reviewer.md',
+              operation: 'create_copy',
+              strategy: 'copy',
+              reason: 'missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'reviewer.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain(
+      'Start a new provider session so it has an opportunity to load the changed asset',
+    );
+    expect(output).not.toMatch(
+      /restart (?:the )?(?:provider|application|process)/i,
+    );
   });
 
   it('keeps aggregate-only mixed counts unattributed to named assets', async () => {

@@ -68,14 +68,27 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 ## Provider refresh evidence
 
 Refresh advice is emitted only for a successful, relevant current-run change.
-The registry carries provider/content policies with provenance; absent evidence
-stays `unknown`. The official Claude Code subagent contract, verified on
+For every supported provider-visible capability without a stronger sourced
+policy, the registry records the OAT repository decision approved on
+2026-08-31: start a new provider session so it has an opportunity to load the
+changed asset. This is conservative safety guidance, not a provider hot-reload
+guarantee, an application-process restart requirement, or proof that the new
+session loaded or exposed the asset. Current/no-op, planned-only, failed,
+missing, inactive, and unsupported materialization receive no such advice;
+unsupported capabilities keep an `unknown` policy.
+
+The compatibility schema names this session boundary `restart-required`. When
+its provenance is `repository-decision`, the recovery text means “start a new
+provider session,” not “restart the application.”
+
+A truthful provider/content-specific policy takes precedence over the generic
+repository decision. The official Claude Code subagent contract, verified on
 2026-08-31, says existing agent directories are watched and changes load within
-seconds. A restart is conditionally required for the first agent added to a
+seconds. It describes a conditional restart for the first agent added to a
 directory absent at session start, for agents added through `--add-dir`, and
 when Claude starts with `--disable-slash-commands`. OAT cannot observe those
-runtime conditions, so the registered Claude agent policy remains `unknown`.
-No equivalent behavior is inferred for other providers.
+runtime conditions and does not claim they occurred; it applies only the
+generic new-session guidance after a successful file change.
 
 `oat status`, `oat doctor`, and `oat init` expose that their running-provider
 catalog observation is `not-reported`. They inspect filesystem/configuration
