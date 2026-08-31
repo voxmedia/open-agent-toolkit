@@ -80,13 +80,19 @@ Notable commands introduced in the current CLI surface:
   `--no-commit` leaves the new record uncommitted for the caller to persist.
   With `--json`, the receipt includes `status`, `sha`, and `ref`, plus
   `conflicts` when applicable and per-child results when coordination children
-  were requested.
+  were requested. A project whose authoritative ref is
+  `refs/oat/completed/<project>` is terminal and cannot be pulled or opened.
+  A same-SHA `refs/oat/projects/<project>` ref is only an inert alias; differing
+  active and completed SHAs are reported as a terminal mismatch that must be
+  repaired before lifecycle work continues.
 - `oat project links [project] --format markdown|json` - render SHA-pinned
   links for the linkable artifacts on the project ref. On GitHub origins the
   artifacts become full-SHA blob links; other hosts degrade to the retained ref
   and short SHA without guessing a web URL. `--durable-summary <path>` accepts
   only a path contained in the repository, normalizes it repository-relative,
-  and renders it as a code span rather than a guessed remote link.
+  and renders it as a code span rather than a guessed remote link. Completed
+  projects resolve through `refs/oat/completed/<project>` while the rendered
+  artifact URLs remain pinned to the verified full source SHA.
 - `oat project pause [project]` - persist the pause state and clear the active
   project pointer. If synced publication is declined or fails after the pause
   commit is created, that clean commit is retained; address the publication
@@ -99,7 +105,10 @@ Notable commands introduced in the current CLI surface:
   commit. If remote deletion succeeds but local checkout removal fails, the
   local ref, record, and checkouts are retained. Resolve the reported local
   obstruction and retry `prune --force`; do not run `project push`, which would
-  republish the deleted remote ref.
+  republish the deleted remote ref. For a completed project, explicit prune
+  deletes the completed ref and any same-SHA active alias but preserves durable
+  local and S3 archive snapshots. A differing-SHA terminal mismatch blocks
+  prune and retains both refs.
 - `oat project migrate <path> --to synced [--no-commit]` - migrate an existing
   shared project to synced storage while preserving its artifacts and
   retargeting the active project pointer. `--no-commit` leaves the parent
@@ -110,7 +119,9 @@ Notable commands introduced in the current CLI surface:
   parents. A malformed discovery record with no materialized checkout appears
   as a `recorded-invalid` row. When the checkout is materialized, its existing
   row instead carries the restore hint and `recordError` parse diagnostic in
-  `--json` output.
+  `--json` output. Fully retired completed refs and same-SHA active aliases are
+  omitted from active discovery. A differing-SHA active/completed pair appears
+  as a `terminal-invalid` row with a recovery diagnosis.
 - `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
 - `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
 - `oat config dump --json` - merged config with source attribution
@@ -121,7 +132,7 @@ Notable commands introduced in the current CLI surface:
 - `oat review latest --json` - find the newest review artifact by `oat_generated_at`, scanning the active or specified project's `reviews/` and `reviews/archived/` directories plus ad-hoc review locations. Same-time candidates use target priority, then lifecycle recency (`final` > higher phase/task > lower phase/task). The JSON contract returns `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`, with `null` values when no review exists. Archived project reviews remain discoverable as history but return `actionable: false`.
 - `oat project list --json` - summary state for tracked projects under the configured projects root
 - `oat project complete-state <project-path>` - apply the canonical completed-state mutation to a project's `state.md`; used by `oat-project-complete` during lifecycle closeout
-- `oat project archive [project-path] [--project-recap-run <project-relative-path>] [--no-commit]` - archive a tracked project through the same local move, summary export, and optional S3 upload path used by completion. When omitted, the project path falls back to the active project. The optional recap path must identify a `project-recap` run inside the project's `explainers/` directory. Archive stages the selected complete package into `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies every manifest-declared immutable file byte, then atomically installs the export before deleting the active project. Existing destinations, incomplete legacy hash coverage, stale bytes, path escapes, and recipe mismatches fail without removing the active project. `--no-commit` is a manual/library-only option: for a synced project it still removes the checkout but deliberately omits the lifecycle commit receipt. Never pass it through `oat-project-complete`, which requires that receipt.
+- `oat project archive [project-path] [--project-recap-run <project-relative-path>] [--no-commit]` - archive a tracked project through the same local move, summary export, and configured S3 upload path used by completion. When omitted, the project path falls back to the active project. The optional recap path must identify a `project-recap` run inside the project's `explainers/` directory. Archive stages the selected complete package into `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies every manifest-declared immutable file byte, then atomically installs the export before deleting the active project. Existing destinations, incomplete legacy hash coverage, stale bytes, path escapes, and recipe mismatches fail without removing the active project. For synced projects, a configured S3 upload must succeed before terminal cleanup. Successful closeout makes `refs/oat/completed/<project>` authoritative, deletes the tracked JSON record and nested checkout, and leaves archive metadata sufficient for an idempotent recordless retry. Legacy complete records receive a cleanup diagnosis rather than pull/open guidance. `--no-commit` is a manual/library-only option: for a synced project it still removes the checkout but deliberately omits the lifecycle commit receipt. Never pass it through `oat-project-complete`, which requires that receipt.
 - `oat repo archive sync [project-name]` - hydrate archived project snapshots from the configured repo-scoped S3 archive into `.oat/projects/archived/`. The old `oat project archive sync` path remains as a deprecated shim.
 - `oat project validate-plan --project-path <path>` - validates `oat_plan_parallel_groups` metadata in `plan.md`; exits non-zero on invalid. See [Implementation Execution](../workflows/projects/implementation-execution.md#parallel-phase-groups).
 - `oat project log append|check|synthesize|rollup` - manage the optional append-only project observation log: append validated judgment or structural entries, inspect grammar and synthesis status, complete end-of-run synthesis, and roll observations into `summary.md` plus the configured repository ledger. See [Project Log](../cli-utilities/project-log.md).

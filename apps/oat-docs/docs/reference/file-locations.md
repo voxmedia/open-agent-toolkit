@@ -92,8 +92,10 @@ Config ownership note:
 - Synced checkout: `.oat/projects/synced/<project>/` (gitignored nested
   worktree)
 - Synced record: `.oat/projects/synced/<project>.json` (tracked on the parent
-  branch)
-- Synced ref: `refs/oat/projects/<project>` on `origin`
+  branch while the project is active; removed after durable archived closeout)
+- Active synced ref: `refs/oat/projects/<project>` on `origin`
+- Completed synced ref: `refs/oat/completed/<project>` on `origin` (the
+  authoritative terminal reachability root after archive)
 - Local: `.oat/projects/local/<project>/`
 - Archived: `.oat/projects/archived/<project>/`
 
@@ -108,6 +110,10 @@ Archive sync surfaces:
 - Remote archive base: `archive.s3Uri` in `.oat/config.json`
 - Archive sync command: `oat repo archive sync` or `oat repo archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
+- Terminal archive metadata:
+  `.oat/projects/archived/<project>/.oat-archive-snapshot.json` binds the
+  snapshot to its synced source-ref SHA so a recordless interrupted closeout
+  can retry without recreating the active record or checkout.
 - Summary export target:
   `<repo>/<archive.summaryExportPath>/YYYYMMDD-<project-name>.md` when
   configured. The archive report returns this absolute filesystem path, while

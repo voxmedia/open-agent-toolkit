@@ -25,6 +25,12 @@ the nested checkout. When the selected project is a coordination parent, pull
 also discovers and pulls its child projects by default. Pass `--no-children`
 only when you intentionally want the selected project alone.
 
+Completed projects are not adoption candidates. Their authoritative ref is
+`refs/oat/completed/<project>`; both `pull` and `open` return a terminal
+diagnosis instead of recreating an archived checkout or record. A same-SHA
+active ref may remain as an inert alias and is ignored. Differing active and
+completed SHAs require repair before lifecycle work continues.
+
 After adoption, set or open the project through the normal lifecycle command
 you are using. Arrival-aware project skills pull before reading its artifacts.
 
@@ -47,17 +53,19 @@ you are using. Arrival-aware project skills pull before reading its artifacts.
   project ref during sync operations such as `pull`; do not expect a generic
   clone or `git fetch` to materialize the checkout.
 
-## Why retained refs remain durable
+## Why completed refs remain durable
 
-`refs/oat/projects/<project>` is a real Git ref locally and on `origin`. The
+`refs/oat/completed/<project>` is a real Git ref locally and on `origin`. The
 objects reachable from it remain garbage-collection roots even when no nested
 checkout exists. Branch pruning, remote-tracking-ref pruning, and
-`git worktree prune` do not delete the project ref. Completion deliberately
-retains it so pinned PR links remain valid.
+`git worktree prune` do not delete the completed ref. Completion deliberately
+retains this terminal reachability root so pinned PR links remain valid.
 
-Only the explicit destructive operation `oat project prune` removes the local
-and remote project refs. Treat it as permanent project-history deletion and
-review its warnings before using `--force`.
+Only the explicit destructive operation `oat project prune` removes the
+completed ref and any matching active alias. Treat that as permanent Git
+project-history reachability deletion and review its warnings before using
+`--force`. Prune does not remove durable local or S3 archive snapshots, and it
+refuses to delete either ref when their SHAs differ.
 
 ## Archive contents
 
@@ -65,8 +73,11 @@ When archive is selected, completion copies a synced project into
 `.oat/projects/archived/<project>/` without the nested checkout's `.git`
 pointer or `reviews/`. S3 snapshots also omit `pr/`, following the existing
 archive policy. When archive is disabled or declined, the active synced
-checkout remains in place. Both paths retain the project ref and commit the
-tracked record as `complete`; only the archive path records an archive snapshot.
+checkout remains in place. Successful archived closeout instead uploads the S3
+snapshot first when configured, makes the completed ref authoritative, removes
+the checkout, and deletes the tracked JSON record. The local archive metadata
+retains the source-ref identity needed for recordless retries and later S3
+restore without recreating active state.
 
 ## Related
 
