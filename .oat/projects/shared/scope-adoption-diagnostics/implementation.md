@@ -359,6 +359,20 @@ review after the artifact-only alignment; continue to configured closeout.
 | p04 integration   | plan.md         | Rebase after the narrow PJM cleanup lands                                 | PR #244 merged into append-only phase history at `ac380219d`   | Preserve immutable task commits while integrating the cleanup-first baseline                | Git history         | No doctor-source overlap; umbrella still rebases after diagnostics |
 | p04 verification  | plan.md         | All eight gates exit 0                                                    | All pass after a bounded four-worker CLI Vitest cap            | Exact gate had to pass without weakening assertions or timeout contracts                    | Gate logs           | Review p04 and final implementation                                |
 
+### Implementation Exit Gate: blocked before review
+
+- Launch attempt: `82ce4580-8037-4d98-8521-4ee3daaa05a6`
+- Gate run: `09b87ee3-2fde-4ed4-b863-67d2365a2e79`
+- Configured target: `claude-fable-skip-permissions` (`claude`, `fable`)
+- Outcome: `review_failed`; not receive-eligible; no artifact or handoff
+- Failure: the accepted target could not authenticate because its OAuth session
+  expired and could not be refreshed; the branch-local route therefore returned
+  no JSON
+- Remediation attempts consumed: 0/2 (credential/transport failures do not
+  consume review-remediation attempts)
+- Resume: restore Claude authentication, then run `oat-project-implement` to
+  reconcile and retry this persisted gate generation
+
 ## Test Results
 
 | Phase | Tests Run                           | Passed | Failed | Coverage                                             |

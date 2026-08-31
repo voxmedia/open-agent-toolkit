@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:cb8f1ea5cbd6ba4a1bb7234b2f28948c18d3cb9e38bdc52ece069e9d2c049bef'
@@ -42,13 +42,13 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:fdedf505f65ef830c4596a0e1a8dda99a542877a55dba400839089ef100ba9ac'
   freshness_head: c32d4233d0295e34fd63734ef171b56ea701ce61
   freshness_fingerprint: 'sha256:effective-delta-v1:fdedf505f65ef830c4596a0e1a8dda99a542877a55dba400839089ef100ba9ac'
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: 82ce4580-8037-4d98-8521-4ee3daaa05a6
   launch_started_at: '2026-08-31T00:51:28Z'
   launch_result_receipt: /tmp/oat-implement-exit-gate-scope-adoption-diagnostics-82ce4580-8037-4d98-8521-4ee3daaa05a6.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
+  gate_run_marker: /var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/09b87ee3-2fde-4ed4-b863-67d2365a2e79.json
+  gate_run_id: 09b87ee3-2fde-4ed4-b863-67d2365a2e79
+  envelope_status: review_failed
   artifact: null
   handoff: null
   receive_state: not_started
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: null
-  updated_at: '2026-08-31T00:51:28Z'
+  failure: 'Configured target claude-fable-skip-permissions was accepted, then failed before review because the Claude OAuth session expired and could not be refreshed; the branch-local gate route returned no JSON.'
+  updated_at: '2026-08-31T00:52:36Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -136,9 +136,15 @@ and the release unit stays staged at `0.2.49`.
 
 ## Blockers
 
-None. Recovery accounting is settled at p02 1/10 and p04 1/10, both with no
-pending attempt. The cleanup-first merge dependency is resolved.
+- Configured implementation exit gate run
+  `09b87ee3-2fde-4ed4-b863-67d2365a2e79` is blocked before review. The required
+  `claude-fable-skip-permissions` target was accepted, but its OAuth session
+  expired and could not refresh. The structured result is `review_failed`, is
+  not receive-eligible, and consumes 0/2 remediation attempts.
+- Recovery accounting remains settled at p02 1/10 and p04 1/10, both with no
+  pending attempt. The cleanup-first merge dependency is resolved.
 
 ## Next Milestone
 
-Run the configured implementation closeout gates, then request final approval.
+Restore Claude authentication for the configured cross-family target, then
+resume with `oat-project-implement` to reconcile and retry the persisted gate.
