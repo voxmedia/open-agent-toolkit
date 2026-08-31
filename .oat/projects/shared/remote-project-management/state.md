@@ -22,6 +22,9 @@ oat_phase_recovery_policy:
     p01:
       used_attempts: 0
       pending_attempt: null
+    p02:
+      used_attempts: 0
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
