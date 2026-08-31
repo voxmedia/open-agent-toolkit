@@ -220,7 +220,8 @@ test; modify packages/cli/src/commands/backlog/new.ts and new.test.ts.
 
 ### Task p01-t09: Add foundational remote doctor checks
 
-**Implementation:** in progress
+**Implementation:** completed in
+`373839ef12a713d18fd5e1422cbcf02dfbebff17`
 
 **Files:** Create packages/cli/src/commands/pjm/remote/doctor.ts and its test;
 modify packages/cli/src/commands/pjm/doctor.ts and doctor.test.ts.
@@ -235,6 +236,8 @@ modify packages/cli/src/commands/pjm/doctor.ts and doctor.test.ts.
 5. Commit: feat(p01-t09): add remote doctor foundations
 
 ### Task p01-t10: Persist pre-create binding intent
+
+**Implementation:** in progress
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/schema.ts,
 packages/cli/src/commands/pjm/remote/schema.test.ts,

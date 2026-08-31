@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t09
+oat_current_task_id: p01-t10
 oat_generated: false
 ---
 
@@ -205,8 +205,17 @@ CLI type-check and lint passed.
 
 ### Task p01-t09: Add foundational remote doctor checks
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 373839ef12a713d18fd5e1422cbcf02dfbebff17
+
+**Outcome:** PJM doctor now adds dormant-until-adopted `pjm:remote_*`
+diagnostics for schema/filename mismatch, dangling and duplicate identities,
+metadata/state disagreement, forbidden portable content, invalid policy, and
+concurrent active intents. Findings expose only identifiers and filenames, not
+record values or credentials.
+
+**Verification:** Remote and existing PJM doctor suites passed (27 tests); CLI
+type-check and lint passed.
 
 ---
 
@@ -325,7 +334,8 @@ Chronological log of implementation progress.
 - [x] p01-t06: Persist remote records atomically - c4cc34e687d3df0cc1eff2b19368c790f5603346
 - [x] p01-t07: Preserve simultaneous operation intents - 8319af27338dc2abbf2ce5e88dba6f77ffa0b41d
 - [x] p01-t08: Add backward-compatible association codec - 68e882fac52f808ae2f78320dec8fb8c8b66d408
-- [ ] p01-t09: Add foundational remote doctor checks - in progress
+- [x] p01-t09: Add foundational remote doctor checks - 373839ef12a713d18fd5e1422cbcf02dfbebff17
+- [ ] p01-t10: Persist pre-create binding intent - in progress
 
 **What changed (high level):**
 
@@ -342,6 +352,8 @@ Chronological log of implementation progress.
 - Added journal-derived concurrent-intent detection that cannot lose a second
   writer behind a stale binding hint.
 - Added lossless associated-issue compatibility and canonical binding links.
+- Added credential-safe remote doctor foundations without changing local-only
+  doctor output.
 
 **Decisions:**
 
