@@ -42,15 +42,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
   freshness_head: c68032b004a29cfedccb63e02728c6446eb6a33c
   freshness_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: a1fce449-4b3c-4166-8bed-13952143778c
   launch_started_at: '2026-08-31T01:17:08Z'
   launch_result_receipt: /tmp/oat-implement-exit-gate-scope-adoption-diagnostics-a1fce449-4b3c-4166-8bed-13952143778c.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
+  gate_run_marker: /var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/f8fd1422-ed90-466c-b3c7-9e25a562d96a.json
+  gate_run_id: f8fd1422-ed90-466c-b3c7-9e25a562d96a
+  envelope_status: ok
+  artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md before treating this gate review as consumed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -58,10 +58,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T01:17:08Z'
+  updated_at: '2026-08-31T01:35:36Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
