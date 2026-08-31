@@ -197,6 +197,10 @@ async function runCli(
 }
 
 describe('oat pjm', () => {
+  it('registers the nested remote lifecycle family', () => {
+    const command = createPjmCommand();
+    expect(command.commands.map((entry) => entry.name())).toContain('remote');
+  });
   const tempDirs: string[] = [];
 
   afterEach(async () => {
