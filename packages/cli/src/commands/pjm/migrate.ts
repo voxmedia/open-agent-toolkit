@@ -20,7 +20,11 @@ import {
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import YAML from 'yaml';
 
-import { initializeRepoReference } from './init';
+import type { PjmAdoption } from './adoption';
+import {
+  CANONICAL_REPO_REFERENCE_PATHS,
+  initializeRepoReference,
+} from './init';
 
 export type PjmMigrationActionType =
   | 'move'
@@ -62,7 +66,7 @@ export interface PjmMigrationOptions {
   assetsRoot: string;
   templatesRoot?: string;
   home?: string;
-  projectManagementEnabled: boolean;
+  adoption: PjmAdoption;
   apply?: boolean;
 }
 
@@ -82,6 +86,11 @@ const ACTIVE_MOVES = [
 const JUDGMENT_TARGETS = [
   'reference/backlog.md',
   'reference/backlog-completed.md',
+] as const;
+
+const LEGACY_MIGRATION_PATHS = [
+  ...ACTIVE_MOVES.map((move) => move.source),
+  'reference/decision-record.md',
 ] as const;
 
 async function pathExists(path: string): Promise<boolean> {
@@ -370,22 +379,19 @@ async function collectJudgmentProposals(
   return actions;
 }
 
-async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
-  const hasPjm = await pathExists(join(repoRoot, 'pjm'));
-  const hasDecisions = await pathExists(
-    join(repoRoot, 'reference', 'decisions'),
-  );
-  if (!hasPjm || !hasDecisions) {
-    return false;
+async function hasRecognizedLegacySources(repoRoot: string): Promise<boolean> {
+  for (const legacyPath of LEGACY_MIGRATION_PATHS) {
+    if (await pathExists(join(repoRoot, legacyPath))) {
+      return true;
+    }
   }
 
-  for (const legacyPath of [
-    'reference/current-state.md',
-    'reference/roadmap.md',
-    'reference/backlog',
-    'reference/decision-record.md',
-  ]) {
-    if (await pathExists(join(repoRoot, legacyPath))) {
+  return false;
+}
+
+async function isAlreadyMigrated(repoRoot: string): Promise<boolean> {
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    if (!(await pathExists(join(repoRoot, relativePath)))) {
       return false;
     }
   }
@@ -471,16 +477,17 @@ function buildEmptyResult(
 export async function migratePjmRepo(
   options: PjmMigrationOptions,
 ): Promise<PjmMigrationResult> {
-  if (!options.projectManagementEnabled) {
-    return buildEmptyResult(
-      options,
-      'skipped',
-      'project-management pack is disabled',
-    );
+  const hasLegacySources = await hasRecognizedLegacySources(options.repoRoot);
+  if (!hasLegacySources && (await isAlreadyMigrated(options.repoRoot))) {
+    return buildEmptyResult(options, 'already-migrated');
   }
 
-  if (await isAlreadyMigrated(options.repoRoot)) {
-    return buildEmptyResult(options, 'already-migrated');
+  if (!hasLegacySources) {
+    const reason =
+      options.adoption.state === 'partial-initialization'
+        ? 'PJM initialization is partial and no recognized legacy migration input was found; run oat pjm init to complete initialization'
+        : 'No recognized PJM migration input was found; run oat pjm init to initialize this repository';
+    return buildEmptyResult(options, 'skipped', reason);
   }
 
   const apply = options.apply ?? false;

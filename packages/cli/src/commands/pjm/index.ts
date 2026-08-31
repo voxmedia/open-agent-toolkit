@@ -2,7 +2,6 @@ import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
-import { readOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { formatDoctorResults, type DoctorCheck } from '@ui/output';
@@ -32,7 +31,6 @@ interface PjmCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
-  readOatConfig: typeof readOatConfig;
   resolvePjmAdoption: typeof resolvePjmAdoption;
   initializeRepoReference: typeof initializeRepoReference;
   runPjmDoctorChecks: typeof runPjmDoctorChecks;
@@ -44,7 +42,6 @@ const DEFAULT_DEPENDENCIES: PjmCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveAssetsRoot,
-  readOatConfig,
   resolvePjmAdoption,
   initializeRepoReference,
   runPjmDoctorChecks,
@@ -267,14 +264,16 @@ export function createPjmCommand(
           return;
         }
 
-        const config = await dependencies.readOatConfig(projectRoot);
+        const adoption = await dependencies.resolvePjmAdoption({
+          projectRoot,
+          repoRoot,
+        });
         const result = await dependencies.migratePjmRepo({
           repoRoot,
           assetsRoot,
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
           home: context.home,
-          projectManagementEnabled:
-            config.tools?.['project-management'] === true,
+          adoption,
           apply: options.dryRun ? false : (options.apply ?? false),
         });
 

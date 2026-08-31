@@ -26,6 +26,9 @@ export default defineConfig({
     },
   },
   test: {
+    // Git-heavy integration fixtures create multiple repositories and child
+    // processes per file. Cap workers to avoid host-load-dependent timeouts.
+    maxWorkers: 4,
     passWithNoTests: true,
     include: ['src/**/*.test.ts'],
     // `resolveAssetsRoot` honours a non-empty OAT_ASSETS_DIR, so an ambient

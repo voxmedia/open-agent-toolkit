@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-08-30 — BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics — Corrected PJM migration adoption semantics and made scoped pack diagnostics provider-aware, attributable, and fault-tolerant.
 - 2026-08-30 — BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands — Gate configuration now rejects recognized lifecycle review commands that lack canonical global structured output.
 - 2026-08-30 — BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode — Headless gate children must complete synchronously and clean no-artifact exits now have a distinct terminal diagnosis.
 - 2026-08-30 — BL-260830-migrate-the-legacy-pjm — Migrate the legacy PJM reference layout — Migrated 23 legacy decisions; promoted 13 actionable and five needs-discussion records into the canonical backlog; folded six shipped, absorbed, or obsolete records into completion history; removed the parallel legacy tree; relocated durable explainer evidence; corrected provider-pointer diagnostics and recap destinations; and cleared every PJM doctor warning.
