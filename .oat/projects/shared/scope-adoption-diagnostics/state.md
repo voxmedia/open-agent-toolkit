@@ -28,9 +28,9 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:fecd028242fe42d4a81a916c10827ca38294640e2c2851ced9c1eb90dcfc2071'
   resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --target cursor-fable-5-xhigh --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
   resolved_description: 'Operator-selected Cursor Fable one-time final implementation review after the configured Claude target failed authentication.'
@@ -40,8 +40,8 @@ oat_implement_exit_gate:
   reviewed_head: c68032b004a29cfedccb63e02728c6446eb6a33c
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
-  freshness_head: c68032b004a29cfedccb63e02728c6446eb6a33c
-  freshness_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
+  freshness_head: c3d6e1b6c3bf63392a61163add489b306381293f
+  freshness_fingerprint: 'sha256:effective-delta-v1:8d5c8e725ef530b515ae8ae9bde4c9e85b27d9e12156a647bc2bd42b68eb5bbb'
   launch_state: result_persisted
   launch_attempt_id: a1fce449-4b3c-4166-8bed-13952143778c
   launch_started_at: '2026-08-31T01:17:08Z'
@@ -51,17 +51,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=f8fd1422-ed90-466c-b3c7-9e25a562d96a; handoff=Run oat-project-review-receive for .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md before treating this gate review as consumed.; source=.oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md; scope=final; type=code; filename=final-review-2026-08-31T013235Z.md'
   receive_source_artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
   receive_archived_artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/archived/final-review-2026-08-31T013235Z.md
   receive_event_identity: 'final|code|final-review-2026-08-31T013235Z.md'
   receive_pre_head: 1fa0eac2ca10010dac9701cb2eed39590dc451b4
-  receive_commit: null
+  receive_commit: c3d6e1b6c3bf63392a61163add489b306381293f
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-31T01:36:18Z'
+  updated_at: '2026-08-31T01:37:51Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -69,7 +69,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T00:49:40Z'
+oat_project_state_updated: '2026-08-31T01:39:29Z'
 oat_generated: false
 ---
 
@@ -84,9 +84,10 @@ oat_generated: false
 All 10 implementation tasks are complete. The p04 review passed, and the
 initial final review passed product and release behavior with only minor finding
 `m1`, resolved by `p04-t03`. Thomas explicitly waived a redundant second review
-on 2026-08-30 after the artifact-only alignment. Configured closeout gates and
-approval remain. PR #244 stays integrated without PJM doctor source conflicts,
-and the release unit stays staged at `0.2.49`.
+on 2026-08-30 after the artifact-only alignment. The operator-selected Cursor
+Fable exit gate passed with zero findings and was durably received;
+approval-aware closeout remains. PR #244 stays integrated without PJM doctor
+source conflicts, and the release unit stays staged at `0.2.49`.
 
 ## Artifacts
 
@@ -94,7 +95,7 @@ and the release unit stays staged at `0.2.49`.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 10 tasks)
-- **Implementation:** `implementation.md` (10/10 tasks; closeout gates pending)
+- **Implementation:** `implementation.md` (10/10 tasks; approval-aware closeout pending)
 
 ## Progress
 
@@ -132,19 +133,17 @@ and the release unit stays staged at `0.2.49`.
   finding
 - ✓ p04-t03 aligned current terminal summaries with the authoritative ledger
 - ✓ Thomas waived a redundant second review after the artifact-only alignment
-- ⧗ Configured closeout gates and approval remain
+- ✓ Cursor Fable implementation exit gate passed with zero findings and was
+  durably received
+- ⧗ Approval-aware closeout remains
 
 ## Blockers
 
-- Configured implementation exit gate run
-  `09b87ee3-2fde-4ed4-b863-67d2365a2e79` is blocked before review. The required
-  `claude-fable-skip-permissions` target was accepted, but its OAuth session
-  expired and could not refresh. The structured result is `review_failed`, is
-  not receive-eligible, and consumes 0/2 remediation attempts.
-- Recovery accounting remains settled at p02 1/10 and p04 1/10, both with no
-  pending attempt. The cleanup-first merge dependency is resolved.
+None. The failed Claude gate remains preserved in implementation history; the
+operator-selected Cursor Fable replacement passed and was received. Recovery
+accounting remains settled at p02 1/10 and p04 1/10, both with no pending
+attempt. The cleanup-first merge dependency is resolved.
 
 ## Next Milestone
 
-Restore Claude authentication for the configured cross-family target, then
-resume with `oat-project-implement` to reconcile and retry the persisted gate.
+Run the configured approval-aware closeout sequence and request final approval.
