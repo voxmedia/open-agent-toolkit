@@ -1125,21 +1125,22 @@ git commit -m "fix(prev2-t03): validate canonical projection arrays"
 
 ## Reviews
 
-| Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
-| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01       | code     | passed          | 2026-08-31 | `reviews/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -           |
-| p02       | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -           |
-| p03       | code     | passed          | 2026-08-31 | `reviews/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -           |
-| p04       | code     | passed          | 2026-08-31 | `reviews/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -           |
-| p-rev1    | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -           |
-| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`         | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -           |
-| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`         | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -           |
-| final     | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`         | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -           |
-| spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
-| design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
-| plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -           |
-| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -                                        | -          | -           |
-| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md` | -                                        | -          | -           |
+| Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target         |
+| --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01       | code     | passed          | 2026-08-31 | `reviews/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -                   |
+| p02       | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
+| p03       | code     | passed          | 2026-08-31 | `reviews/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                   |
+| p04       | code     | passed          | 2026-08-31 | `reviews/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                   |
+| p-rev1    | code     | passed          | 2026-08-31 | `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
+| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`         | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                   |
+| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`         | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                   |
+| final     | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`         | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                   |
+| final     | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`    | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high |
+| spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -                   |
+| design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -                   |
+| plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`     | -                                        | -          | -                   |
+| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -                                        | -          | -                   |
+| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md` | -                                        | -          | -                   |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
