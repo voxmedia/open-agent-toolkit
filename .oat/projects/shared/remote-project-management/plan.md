@@ -393,6 +393,9 @@ packages/cli/src/commands/pjm/remote/operation-state.test.ts.
 
 ### Task p02-t09: Verify postconditions and block blind retries
 
+**Implementation:** completed in
+`933ba8f1479d3c0d90a0caec98bf7a821d2dd011`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/verification.ts and
 packages/cli/src/commands/pjm/remote/verification.test.ts.
 

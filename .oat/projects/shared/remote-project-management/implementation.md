@@ -393,8 +393,17 @@ passed.
 
 ### Task p02-t09: Verify postconditions and block blind retries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 933ba8f1479d3c0d90a0caec98bf7a821d2dd011
+
+**Outcome:** Added requested-field postcondition verification over authoritative
+read-back. Exact and durable prior evidence verify without repetition;
+provider rejection remains distinct; partial, ambiguous, missing-readback,
+unavailable-field, and revision-drift results require reconciliation before
+retry or transport change.
+
+**Verification:** Postcondition-verification suite passed (8 tests); CLI
+format/build, type-check, and lint passed.
 
 ---
 
@@ -616,6 +625,7 @@ Chronological log of implementation progress.
 - [x] p02-t06: Resolve effective remote authority exactly - 6032d969ef102012e658bd788565ca1596553bb0
 - [x] p02-t07: Bind previews and approvals to load-bearing inputs - 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
 - [x] p02-t08: Implement operation and substep state reduction - 2e7496aab1941d017696bdaa513cf16ab5bd7666
+- [x] p02-t09: Verify postconditions and block blind retries - 933ba8f1479d3c0d90a0caec98bf7a821d2dd011
 
 **What changed (high level):**
 
