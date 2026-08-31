@@ -32,6 +32,8 @@ import {
   commitRecordChange,
   preflightSyncedCheckout,
   removeSyncedCheckout,
+  retireSyncedRef,
+  type SyncedRefRetirementReceipt,
 } from '@commands/project/sync/ref-sync';
 import {
   canonicalizePath,
@@ -172,7 +174,10 @@ interface ArchiveProjectOnCompletionDependencies
   writeSyncedRecord?: typeof writeSyncedRecord;
   preflightSyncedCheckout?: typeof preflightSyncedCheckout;
   removeSyncedCheckout?: typeof removeSyncedCheckout;
+  retireSyncedRef?: typeof retireSyncedRef;
   commitRecordChange?: typeof commitRecordChange;
+  removeSyncedRecord?: (recordPath: string) => Promise<void>;
+  afterLifecycleCommit?: () => Promise<void>;
 }
 
 export interface ArchiveProjectRecapExportV1 {
@@ -199,6 +204,8 @@ export interface ArchiveProjectOnCompletionResult {
   lifecycleCommit: string | null;
   recapExportPaths: string[];
   snapshotId: string;
+  terminalReceipt: SyncedRefRetirementReceipt | null;
+  recordRetired: boolean;
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
@@ -214,6 +221,11 @@ export interface ArchiveSnapshotMetadata {
   snapshotName: string;
   scope: ProjectScope;
   sourceRefSha?: string;
+}
+
+interface RecordlessSyncedArchiveIdentity {
+  archivePath: string;
+  metadata: ArchiveSnapshotMetadata & { sourceRefSha: string };
 }
 
 export interface ExactArchiveProjectRoot {
@@ -771,6 +783,70 @@ async function verifyArchiveSnapshotMetadata(
       `Existing archive \`${archivePath}\` does not match persisted snapshot \`${expected.snapshotName}\`; refusing to overwrite it.`,
     );
   }
+}
+
+async function resolveRecordlessSyncedArchiveIdentity(
+  options: Pick<
+    ArchiveProjectOnCompletionOptions,
+    'repoRoot' | 'projectsRoot' | 'projectName'
+  >,
+  dependencies: ResolveArchiveProjectTargetDependencies,
+): Promise<RecordlessSyncedArchiveIdentity> {
+  const tentativeTarget = await resolveArchiveProjectTarget(
+    options,
+    dependencies,
+  );
+  assertDurableArchiveProjectTarget(tentativeTarget);
+  const archiveRoot = dirname(tentativeTarget.archivePath);
+  const candidates: RecordlessSyncedArchiveIdentity[] = [];
+  let entries: import('node:fs').Dirent[];
+  try {
+    entries = await readdir(archiveRoot, { withFileTypes: true });
+  } catch {
+    entries = [];
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const archivePath = join(archiveRoot, entry.name);
+    let metadata: unknown;
+    try {
+      metadata = JSON.parse(
+        await readFile(
+          join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      );
+    } catch {
+      continue;
+    }
+    if (
+      isRecord(metadata) &&
+      metadata.projectName === options.projectName &&
+      metadata.scope === 'synced' &&
+      typeof metadata.snapshotName === 'string' &&
+      typeof metadata.sourceRefSha === 'string' &&
+      /^[0-9a-f]{40}$/.test(metadata.sourceRefSha)
+    ) {
+      candidates.push({
+        archivePath,
+        metadata: {
+          projectName: options.projectName,
+          snapshotName: metadata.snapshotName,
+          scope: 'synced',
+          sourceRefSha: metadata.sourceRefSha,
+        },
+      });
+    }
+  }
+  if (candidates.length !== 1) {
+    throw new CliError(
+      candidates.length === 0
+        ? `Synced project ${options.projectName} has no active record and no unique persisted synced archive identity; refusing to create a replacement active record or a new snapshot.`
+        : `Synced project ${options.projectName} has no active record and multiple persisted synced archive identities; refusing an ambiguous terminal retry.`,
+      2,
+    );
+  }
+  return candidates[0]!;
 }
 
 async function exportProjectSummary(
@@ -1601,35 +1677,51 @@ export async function archiveProjectOnCompletion(
     : null;
   const git = dependencies.gitRunner ?? defaultGitRunner;
   let activeRecord: SyncedProjectRecord | null = record;
+  const recordlessIdentity =
+    syncTarget && !activeRecord
+      ? await resolveRecordlessSyncedArchiveIdentity(options, dependencies)
+      : null;
   let sourceRefSha: string | undefined;
 
   if (syncTarget) {
-    if (!activeRecord) {
-      throw new CliError(
-        `Synced project ${options.projectName} is missing its discovery record; restore the record or run oat project pull ${options.projectName} from a clean checkout to adopt the project before archiving.`,
-        2,
+    if (recordlessIdentity) {
+      sourceRefSha = recordlessIdentity.metadata.sourceRefSha;
+    } else {
+      const preflight = await (
+        dependencies.preflightSyncedCheckout ?? preflightSyncedCheckout
+      )(syncTarget, git);
+      const isBoundTerminalRetry = Boolean(
+        preflight.sha &&
+        activeRecord?.archiveSourceRefSha === preflight.sha &&
+        preflight.status === 'unpushed',
       );
+      if (
+        preflight.status !== 'clean' &&
+        !(
+          preflight.status === 'absent' &&
+          (activeRecord?.status === 'complete' ||
+            Boolean(activeRecord?.archiveSourceRefSha))
+        ) &&
+        !isBoundTerminalRetry
+      ) {
+        const recoveryCommand =
+          preflight.status === 'absent'
+            ? `oat project pull ${options.projectName}`
+            : `oat project push ${options.projectName}`;
+        throw new CliError(
+          `Synced project ${options.projectName} is ${preflight.status}; run ${recoveryCommand} before archiving.`,
+          1,
+        );
+      }
+      sourceRefSha =
+        preflight.sha ??
+        activeRecord?.archiveSourceRefSha ??
+        (
+          await git.run(['rev-parse', syncTarget.ref], {
+            cwd: options.repoRoot,
+          })
+        ).stdout;
     }
-    const preflight = await (
-      dependencies.preflightSyncedCheckout ?? preflightSyncedCheckout
-    )(syncTarget, git);
-    if (
-      preflight.status !== 'clean' &&
-      !(preflight.status === 'absent' && activeRecord.status === 'complete')
-    ) {
-      const recoveryCommand =
-        preflight.status === 'absent'
-          ? `oat project pull ${options.projectName}`
-          : `oat project push ${options.projectName}`;
-      throw new CliError(
-        `Synced project ${options.projectName} is ${preflight.status}; run ${recoveryCommand} before archiving.`,
-        1,
-      );
-    }
-    sourceRefSha =
-      preflight.sha ??
-      (await git.run(['rev-parse', syncTarget.ref], { cwd: options.repoRoot }))
-        .stdout;
     if (!/^[0-9a-f]{40}$/.test(sourceRefSha)) {
       throw new CliError(
         `Unable to bind archive retry identity for ${options.projectName} to ${syncTarget.ref}.`,
@@ -1637,7 +1729,7 @@ export async function archiveProjectOnCompletion(
       );
     }
     if (
-      activeRecord.archiveSourceRefSha &&
+      activeRecord?.archiveSourceRefSha &&
       activeRecord.archiveSourceRefSha !== sourceRefSha
     ) {
       throw new CliError(
@@ -1652,9 +1744,12 @@ export async function archiveProjectOnCompletion(
       repoRoot: options.repoRoot,
       projectsRoot: options.projectsRoot,
       projectName: options.projectName,
-      ...(activeRecord?.archiveSnapshot
+      ...((activeRecord?.archiveSnapshot ??
+      recordlessIdentity?.metadata.snapshotName)
         ? {
-            archiveSnapshot: activeRecord.archiveSnapshot,
+            archiveSnapshot:
+              activeRecord?.archiveSnapshot ??
+              recordlessIdentity?.metadata.snapshotName,
             archiveScope: projectScope,
           }
         : {}),
@@ -1685,7 +1780,9 @@ export async function archiveProjectOnCompletion(
   }
   const archivePath = archiveTarget.archivePath;
   const exportIdentity = syncTarget
-    ? (activeRecord?.archiveSnapshot ?? snapshotName)
+    ? (activeRecord?.archiveSnapshot ??
+      recordlessIdentity?.metadata.snapshotName ??
+      snapshotName)
     : snapshotName;
   const snapshotId = syncTarget ? exportIdentity : basename(archivePath);
 
@@ -1861,11 +1958,36 @@ export async function archiveProjectOnCompletion(
 
   let lifecycleCommit: string | null = null;
   let recapExportPaths: string[] = [];
+  let terminalReceipt: SyncedRefRetirementReceipt | null = null;
+  let recordRetired = false;
   if (syncTarget) {
-    if (!activeRecord) {
+    if (!sourceRefSha) {
       throw new CliError(
-        `Synced project ${options.projectName} is missing its discovery record.`,
+        `Synced project ${options.projectName} has no verified source SHA for terminal sealing.`,
         2,
+      );
+    }
+    terminalReceipt = await (dependencies.retireSyncedRef ?? retireSyncedRef)(
+      syncTarget,
+      sourceRefSha,
+      git,
+    );
+    if (
+      terminalReceipt.state !== 'completed-only' &&
+      terminalReceipt.state !== 'matching-aliases'
+    ) {
+      throw new CliError(
+        `Synced project ${options.projectName} did not reach a verified terminal ref state.`,
+        2,
+      );
+    }
+    const removed = await (
+      dependencies.removeSyncedCheckout ?? removeSyncedCheckout
+    )(syncTarget, git, { force: true });
+    if (removed.status !== 'removed' && removed.status !== 'absent') {
+      throw new CliError(
+        `Synced checkout became ${removed.status} during archive; run oat project push ${options.projectName} and retry.`,
+        1,
       );
     }
     if (projectRecapExport) {
@@ -1877,49 +1999,55 @@ export async function archiveProjectOnCompletion(
           basename(filePath) !== 'build-record.json',
       );
     }
-    activeRecord = {
-      ...activeRecord,
-      status: 'complete',
-      completedAt: activeRecord.completedAt ?? timestamp,
-    };
-    await writeRecord(recordPath, activeRecord);
+    await (dependencies.removeSyncedRecord
+      ? dependencies.removeSyncedRecord(recordPath)
+      : removePath(recordPath, { recursive: true, force: true }));
+    recordRetired = true;
     if (options.commit !== false) {
       const pathspecs = [
         recordPath,
         ...(summaryExportFile ? [summaryExportFile] : []),
         ...recapExportPaths,
       ];
-      const committed = await (
-        dependencies.commitRecordChange ?? commitRecordChange
-      )(
-        options.repoRoot,
-        pathspecs,
-        `chore(oat): complete synced project ${options.projectName}`,
-        git,
-        {
-          summaryExportPath: options.summaryExportPath,
-          projectRoots: syncTarget,
-          recapExportRoot: projectRecapExport?.exportRoot,
-        },
+      const lifecycleStatus = await git.run(
+        [
+          'status',
+          '--porcelain=v1',
+          '--untracked-files=all',
+          '--',
+          ...pathspecs.map((pathspec) =>
+            relative(
+              canonicalizePath(resolve(options.repoRoot)),
+              canonicalizePath(resolve(pathspec)),
+            ),
+          ),
+        ],
+        { cwd: options.repoRoot },
       );
+      const committed =
+        lifecycleStatus.stdout === ''
+          ? null
+          : await (dependencies.commitRecordChange ?? commitRecordChange)(
+              options.repoRoot,
+              pathspecs,
+              `chore(oat): complete synced project ${options.projectName}`,
+              git,
+              {
+                summaryExportPath: options.summaryExportPath,
+                projectRoots: syncTarget,
+                recapExportRoot: projectRecapExport?.exportRoot,
+              },
+            );
       lifecycleCommit =
         committed?.sha ??
         (await recoverSyncedLifecycleCommit(
           options.repoRoot,
           pathspecs,
-          activeRecord,
+          options.projectName,
           `chore(oat): complete synced project ${options.projectName}`,
           git,
         ));
-    }
-    const removed = await (
-      dependencies.removeSyncedCheckout ?? removeSyncedCheckout
-    )(syncTarget, git);
-    if (removed.status !== 'removed' && removed.status !== 'absent') {
-      throw new CliError(
-        `Synced checkout became ${removed.status} during archive; run oat project push ${options.projectName} and retry.`,
-        1,
-      );
+      await dependencies.afterLifecycleCommit?.();
     }
   }
 
@@ -1932,20 +2060,22 @@ export async function archiveProjectOnCompletion(
     lifecycleCommit,
     recapExportPaths,
     snapshotId,
+    terminalReceipt,
+    recordRetired,
   };
 }
 
 async function recoverSyncedLifecycleCommit(
   repoRoot: string,
   pathspecs: string[],
-  record: SyncedProjectRecord,
+  projectName: string,
   expectedSubject: string,
   git: GitRunner,
 ): Promise<string> {
   const [recordPathspec] = pathspecs;
   if (!recordPathspec) {
     throw new CliError(
-      `Unable to recover the prior lifecycle commit for ${record.slug}: no lifecycle paths were supplied.`,
+      `Unable to recover the prior lifecycle commit for ${projectName}: no lifecycle paths were supplied.`,
       2,
     );
   }
@@ -1963,7 +2093,7 @@ async function recoverSyncedLifecycleCommit(
   ).stdout;
   if (!/^[0-9a-f]{40}$/.test(candidate)) {
     throw new CliError(
-      `Unable to recover the prior lifecycle commit for ${record.slug}.`,
+      `Unable to recover the prior lifecycle commit for ${projectName}.`,
       2,
     );
   }
@@ -1990,24 +2120,21 @@ async function recoverSyncedLifecycleCommit(
   );
   const committedRecord = await git.run(
     ['show', `${candidate}:${recordPath}`],
-    { cwd: repoRoot },
+    {
+      cwd: repoRoot,
+      allowFailure: true,
+    },
   );
-  let parsedRecord: unknown;
-  try {
-    parsedRecord = JSON.parse(committedRecord.stdout);
-  } catch {
-    parsedRecord = null;
-  }
 
   if (
     subject !== expectedSubject ||
     ancestor.code !== 0 ||
     contentsMatch.code !== 0 ||
     JSON.stringify(changedPaths) !== JSON.stringify(normalizedPathspecs) ||
-    JSON.stringify(parsedRecord) !== JSON.stringify(record)
+    committedRecord.code === 0
   ) {
     throw new CliError(
-      `Unable to recover lifecycle commit ${candidate} for ${record.slug}: subject, path set, contents, or branch relationship did not match the completed archive transaction.`,
+      `Unable to recover lifecycle commit ${candidate} for ${projectName}: subject, path set, record deletion, contents, or branch relationship did not match the completed archive transaction.`,
       2,
     );
   }

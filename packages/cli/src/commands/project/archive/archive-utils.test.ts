@@ -65,6 +65,17 @@ describe('archive utils', () => {
     return root;
   }
 
+  async function commitSyncedRecord(
+    repoRoot: string,
+    recordPath: string,
+  ): Promise<void> {
+    await defaultGitRunner.run(['add', recordPath], { cwd: repoRoot });
+    await defaultGitRunner.run(
+      ['commit', '-m', 'test: seed synced discovery record'],
+      { cwd: repoRoot },
+    );
+  }
+
   async function createRecapPackage(
     projectPath: string,
     {
@@ -738,6 +749,7 @@ describe('archive utils', () => {
         recordPath,
         buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
       );
+      await commitSyncedRecord(fixture.cloneA, recordPath);
 
       const options = {
         repoRoot: fixture.cloneA,
@@ -802,10 +814,11 @@ describe('archive utils', () => {
       expect(result.s3Path).toBe(
         `s3://archive-bucket/projects/clone-a/projects/${snapshotId}`,
       );
-      expect(await readSyncedRecord(recordPath)).toMatchObject({
-        status: 'complete',
-        completedAt: '2026-08-27T12:00:00Z',
-        archiveSnapshot: snapshotId,
+      await expect(readSyncedRecord(recordPath)).resolves.toBeNull();
+      expect(result.recordRetired).toBe(true);
+      expect(result.terminalReceipt).toMatchObject({
+        completedRef: 'refs/oat/completed/demo',
+        verifiedSha: expect.stringMatching(/^[a-f0-9]{40}$/),
       });
 
       const retried = await archiveProjectOnCompletion(options, {
@@ -867,6 +880,7 @@ describe('archive utils', () => {
           recordPath,
           buildSyncedRecord('demo', new Date('2026-08-27T00:00:00Z')),
         );
+        await commitSyncedRecord(fixture.cloneA, recordPath);
         const beforeHead = (
           await defaultGitRunner.run(['rev-parse', 'HEAD'], {
             cwd: fixture.cloneA,
@@ -908,9 +922,7 @@ describe('archive utils', () => {
           ).stdout,
         ).not.toContain(target.projectPath);
         await expect(access(target.projectPath)).rejects.toThrow();
-        await expect(readSyncedRecord(recordPath)).resolves.toMatchObject({
-          status: 'complete',
-        });
+        await expect(readSyncedRecord(recordPath)).resolves.toBeNull();
       } finally {
         await fixture.cleanup();
       }
@@ -963,6 +975,7 @@ describe('archive utils', () => {
         recordPath,
         buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
       );
+      await commitSyncedRecord(fixture.cloneA, recordPath);
       const options = {
         repoRoot: fixture.cloneA,
         projectPath: target.projectPath,
@@ -1058,6 +1071,7 @@ describe('archive utils', () => {
         recordPath,
         buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
       );
+      await commitSyncedRecord(fixture.cloneA, recordPath);
       const options = {
         repoRoot: fixture.cloneA,
         projectPath: target.projectPath,
@@ -1088,10 +1102,7 @@ describe('archive utils', () => {
       await expect(
         readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
       ).resolves.toBe('# summary\n');
-      expect(await readSyncedRecord(recordPath)).toMatchObject({
-        archiveSnapshot: retried.snapshotId,
-        status: 'complete',
-      });
+      await expect(readSyncedRecord(recordPath)).resolves.toBeNull();
     } finally {
       await fixture.cleanup();
     }
@@ -1203,7 +1214,9 @@ describe('archive utils', () => {
             projectsRoot: '.oat/projects/shared',
             s3SyncOnComplete: false,
           }),
-        ).rejects.toThrow(/missing its discovery record.*project pull/s);
+        ).rejects.toThrow(
+          /no active record and no unique persisted synced archive identity/i,
+        );
 
         await expect(access(target.projectPath)).resolves.toBeUndefined();
         await expect(
@@ -1258,6 +1271,7 @@ describe('archive utils', () => {
             recordPath,
             buildSyncedRecord(slug, new Date('2026-08-27T00:00:00Z')),
           );
+          await commitSyncedRecord(fixture.cloneA, recordPath);
           await mkdir(
             join(fixture.cloneA, '.oat', 'projects', 'archived', slug),
             { recursive: true },
@@ -1319,23 +1333,25 @@ describe('archive utils', () => {
               : {}),
             ...(failureBoundary === 'after-lifecycle'
               ? {
-                  removeSyncedCheckout: vi.fn(async () => {
+                  afterLifecycleCommit: vi.fn(async () => {
                     throw new Error('injected after-lifecycle failure');
+                  }),
+                }
+              : {}),
+            ...(failureBoundary === 'after-checkout-removal'
+              ? {
+                  removeSyncedRecord: vi.fn(async () => {
+                    throw new Error('injected after-checkout-removal failure');
                   }),
                 }
               : {}),
           };
 
-          if (failureBoundary === 'after-checkout-removal') {
-            await archiveProjectOnCompletion(options, firstDependencies);
-          } else {
-            await expect(
-              archiveProjectOnCompletion(options, firstDependencies),
-            ).rejects.toThrow(/injected/);
-          }
+          await expect(
+            archiveProjectOnCompletion(options, firstDependencies),
+          ).rejects.toThrow(/injected/);
           const committedLifecycleBeforeRetry =
-            failureBoundary === 'after-lifecycle' ||
-            failureBoundary === 'after-checkout-removal'
+            failureBoundary === 'after-lifecycle'
               ? (
                   await defaultGitRunner.run(['rev-parse', 'HEAD'], {
                     cwd: fixture.cloneA,
@@ -1389,14 +1405,11 @@ describe('archive utils', () => {
             expect(retried.lifecycleCommit).toBe(committedLifecycleBeforeRetry);
           }
           await expect(access(target.projectPath)).rejects.toThrow();
-          expect(await readSyncedRecord(recordPath)).toMatchObject({
-            archiveSnapshot: snapshotId,
-            completedAt:
-              failureBoundary === 'after-copy'
-                ? '2026-08-28T12:00:00Z'
-                : '2026-08-27T12:00:00Z',
-            status: 'complete',
-          });
+          await expect(readSyncedRecord(recordPath)).resolves.toBeNull();
+          expect(retried.recordRetired).toBe(true);
+          expect(retried.terminalReceipt?.verifiedSha).toMatch(
+            /^[a-f0-9]{40}$/,
+          );
           const commitsAfter = Number(
             (
               await defaultGitRunner.run(['rev-list', '--count', 'HEAD'], {
@@ -2660,6 +2673,14 @@ describe('archive utils', () => {
     const removeSyncedCheckout = vi.fn(async () => ({
       status: 'removed' as const,
     }));
+    const retireSyncedRef = vi.fn(async () => ({
+      status: 'retired' as const,
+      state: 'completed-only' as const,
+      activeAliasRetained: false,
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      verifiedSha: 'a'.repeat(40),
+    }));
     const failSummaryCopy = async (source: string, destination: string) => {
       if (basename(source) === 'summary.md') {
         throw new Error('injected summary copy failure');
@@ -2681,6 +2702,7 @@ describe('archive utils', () => {
         copySingleFile: failSummaryCopy,
         preflightSyncedCheckout,
         removeSyncedCheckout,
+        retireSyncedRef,
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');
@@ -2689,6 +2711,7 @@ describe('archive utils', () => {
     const retried = await archiveProjectOnCompletion(options, {
       preflightSyncedCheckout,
       removeSyncedCheckout,
+      retireSyncedRef,
       timestamp,
     });
     expect(retried.snapshotId).toBe('20260401-demo');
@@ -2702,6 +2725,7 @@ describe('archive utils', () => {
         copySingleFile: failSummaryCopy,
         preflightSyncedCheckout,
         removeSyncedCheckout,
+        retireSyncedRef,
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');
@@ -3711,7 +3735,7 @@ describe('archive utils', () => {
       await expect(
         archiveProjectOnCompletion(options, {
           timestamp: () => '2026-08-29T12:00:00Z',
-          removeSyncedCheckout: vi.fn(async () => {
+          retireSyncedRef: vi.fn(async () => {
             throw new Error('injected post-copy failure');
           }),
         }),
