@@ -642,6 +642,31 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   correction should remain per-asset
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p03 fix round 3
+
+- Original request ID: `recon-skill-p03-implementation-20260831T1710Z`
+- Continuation event: `recon-skill-p03-fix-r3-20260831T2012Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: third and final bounded correction of the one Important round-3
+  per-asset retention finding
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed with unrelated test concern
+- Fix commit: `cb3d94ac2afa9d29f59257c708f71161fec35dcb`
+- Finding disposition: direct intent alone retains a full dependency pack;
+  other consumers retain only final selected asset IDs, and apply verification
+  checks expected state per selected asset
+- Verification: focused 24/24, reviewer suite 247/247, six prior probes 6/6,
+  real sync 3/3, complete p03 744/744, CLI type-check, lint, format, and diff
+  checks pass
+- Concern: full `commands.integration.test.ts` twice timed out only on the
+  pre-existing out-of-scope doctor invalid-defaultScope case; no doctor edits
+- Optional nested dispatches: none
+- Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z continuation_event=recon-skill-p03-fix-r3-20260831T2012Z scope=p03-fix-r3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -955,6 +980,19 @@ context before p02 can advance.
   release-wide retain-all override, enforcing final-consumer retention per
   asset, and verifying mixed current/missing selected states in both orders.
 
+### 2026-08-31 - p03 review fixes round 3 completed
+
+- Final append-only fix commit `cb3d94ac2` narrows full-pack retention to
+  direct intent and applies final dependency retention per selected asset.
+- Reconcile plans now emit per-asset expected states, and apply verification
+  rejects either an unexpected retained file or unexpected deletion.
+- The partial-overlap regression converges in both orders to lease
+  `[brainstorm]`, dispatch current, orchestration missing, and partial utility
+  inventory with one global preflight before all writes.
+- All Phase 3-owned reviewer, prior-finding, real-sync, complete-surface, type,
+  lint, format, and diff checks pass. The configured three fix rounds are
+  exhausted; terminal fresh re-review is next.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -1021,6 +1059,9 @@ context before p02 can advance.
 - Phase 3 review round 3 passes all six prior finding probes, 742/742 skill
   tests, canonical validation, type/lint/format/diff checks, and project sync;
   one direct partial-overlap lifecycle probe remains blocking.
+- After p03 fix round 3, focused reconcile passes 24/24, reviewer suite
+  247/247, all six prior probes 6/6, real sync 3/3, and complete Phase 3
+  744/744; CLI type-check, lint, format, and diff checks pass.
 
 ## Final Summary (for PR/docs)
 
