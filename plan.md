@@ -645,6 +645,7 @@ git commit -m "docs(p03-t08): preserve archived scope estimate"
 | plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T222802Z.md | -                                        | gate       | claude-fable-skip-permissions |
 | final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T000938Z.md         | 659547363032fd9f41eefadc947bb0496fe7457f | gate       | claude-fable-skip-permissions |
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T010800Z.md         | 3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e | auto       | -                             |
+| final  | code     | received        | 2026-08-31 | reviews/final-review-2026-08-31T012845Z.md                  | 74da4bca17c5d3575e0908f72e070c42a8ac4018 | auto       | -                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
