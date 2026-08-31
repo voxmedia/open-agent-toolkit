@@ -1,0 +1,156 @@
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a",
+  "target": "claude-fable-skip-permissions",
+  "project": ".oat/projects/synced/gate-execution-contract-hardening",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md",
+  "generatedAt": "2026-08-31T01:41:07Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 0
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Run oat-project-review-receive for .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md before treating this gate review as consumed.",
+  "diversity": {
+    "avoid": "same-family",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": [
+        "openai"
+      ],
+      "contributingScopes": [
+        "p01",
+        "p02",
+        "p03"
+      ],
+      "contributingStampCount": 3
+    },
+    "reviewer": {
+      "target": "claude-fable-skip-permissions",
+      "runtime": "claude",
+      "family": "claude",
+      "model": "fable"
+    }
+  },
+  "gateInvocation": {
+    "runId": "d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a",
+    "targetId": "claude-fable-skip-permissions",
+    "runtime": "claude",
+    "model": "fable",
+    "reasoningEffort": "provider-default",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "claude-fable-skip-permissions"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "preferredValue": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "classification": {
+      "taskClass": null,
+      "preferredEffort": null,
+      "source": "not-reported"
+    },
+    "notices": [],
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a",
+      "targetId": "claude-fable-skip-permissions",
+      "runtime": "claude",
+      "model": "fable",
+      "reasoningEffort": "provider-default",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/synced/gate-execution-contract-hardening",
+      "invocation": {
+        "runId": "d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a",
+        "targetId": "claude-fable-skip-permissions",
+        "runtime": "claude",
+        "model": "fable",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/synced/gate-execution-contract-hardening",
+      "artifactProject": ".oat/projects/synced/gate-execution-contract-hardening",
+      "normalizedArtifactProject": ".oat/projects/synced/gate-execution-contract-hardening",
+      "matchingArtifactPaths": [
+        ".oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md"
+      ],
+      "invocation": {
+        "runId": "d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a",
+        "targetId": "claude-fable-skip-permissions",
+        "runtime": "claude",
+        "model": "fable",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}
