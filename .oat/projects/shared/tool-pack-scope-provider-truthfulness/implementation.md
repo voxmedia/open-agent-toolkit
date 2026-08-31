@@ -1,7 +1,8 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02 terminal round-4 review found multi-pack, multi-scope post-removal failures emit recovery commands that cover only one invalidated scope
 oat_last_updated: 2026-08-31
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -24,15 +25,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | in progress | 7     | 7/7       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 5     | 0/5       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 4     | 0/4       |
-| Phase 7 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | blocked  | 7     | 7/7       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 5     | 0/5       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 4     | 0/4       |
+| Phase 7 | pending  | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -134,7 +135,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** in progress after 7/7 tasks; one operator-authorized correction and review cycle active
+**Status:** blocked after 7/7 tasks and terminal operator-authorized review round 4
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -147,11 +148,14 @@ oat_generated: false
   recovery-settlement commits, and two review-fix commits.
 - Combined p02 verification passes 29 files / 701 tests plus CLI lint,
   type-check, formatting, and `git diff --check`.
-- The third governed review still found two Important blockers. On 2026-08-31,
-  Thomas explicitly authorized exactly one additional bounded correction and
-  one additional High review cycle. This raises the review-fix retry limit from
-  two to three for this run without changing the plan or phase scope. Phase 3
-  starts only if review round 4 passes; another blocking round is terminal.
+- The third governed review found two Important blockers. Thomas authorized one
+  additional bounded correction and one additional High review cycle. Commit
+  `e85ba38ae` fixed both round-3 findings and raised the combined p02 suite to
+  29 files / 710 tests.
+- Terminal round 4 reproduced one new Important defect: multi-pack,
+  multi-scope post-removal failures invalidate final evidence for both scopes
+  but can emit a recovery command for only one scope. The authorization is
+  exhausted, so Phase 3 has not started.
 
 | Task    | Status   | Commit      | Outcome                                                 |
 | ------- | -------- | ----------- | ------------------------------------------------------- |
@@ -206,8 +210,10 @@ oat_generated: false
   settlement.
 - `d959cb12c` - round-1 fix for four blocking review findings.
 - `9d557564f` - round-2 fix for provider-context and removal findings.
+- `e85ba38ae` - operator-authorized round-3 fix for immutable provider snapshot
+  reuse and structured post-removal failure reporting.
 
-**Terminal review blockers:**
+**Round-3 review blockers (fixed by `e85ba38ae`):**
 
 1. Interactive init and sync still re-detect providers in cancel/save branches
    after the first `ProviderScopeContext`, so one command scope can observe two
@@ -224,6 +230,18 @@ oat_generated: false
 - One append-only fix commit and one fresh independent High reviewer round are
   permitted. A blocking fourth review stops implementation without automatic
   extension.
+
+**Terminal round-4 blocker:**
+
+- `failedPostRemovalLifecycleOutcomes()` discards final evidence for every
+  selected scope but chooses one recovery scope per outcome. For `--all` over
+  project and user scopes, direct reproduction showed an unrelated pack report
+  a user-scope failure while recommending `--scope project`; even the failed
+  pack's one-scope retry cannot re-establish both invalidated scopes.
+- Artifact: `reviews/p02-review-2026-08-31T155718Z.md`; reviewed head
+  `e85ba38ae575e193a7084f1046798ca0827f6bef`; 0 critical, 1 important.
+- Verification: 29 files / 710 tests; focused blocker suite; CLI lint,
+  type-check, formatting, and `git diff --check` all passed.
 
 ---
 
@@ -333,6 +351,38 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   terminal blocked verdict after the third governed cycle.
 - All review rounds used `oat-reviewer-gpt-5-6-sol-high`, invocation `manual`,
   with reconnaissance not attempted.
+
+### Run 4 — 2026-08-31T15:35:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — original accepted implementer continuation plus fresh reviewer
+- Dispatch policy: managed High from project state
+- Scope: exactly the two round-3 Important findings, authorized by Thomas
+- Outcome: `BLOCKED`; correction completed, terminal review round 4 found one
+  Important multi-pack/multi-scope recovery defect
+- Verification: 29 files / 710 tests plus CLI lint, type-check, formatting,
+  and whitespace checks pass at `e85ba38ae575e193a7084f1046798ca0827f6bef`
+- Review-fix rounds: 3/3 used; no automatic fifth cycle is authorized
+- Outstanding: explicit human disposition of
+  `reviews/p02-review-2026-08-31T155718Z.md`; do not start p03
+
+#### Fix continuation — `review-fix-p02-r03-20260831T153500Z`
+
+- Original request: `dispatch-p02-20260831T120200Z-492af17f6`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Commit: `e85ba38ae575e193a7084f1046798ca0827f6bef`
+- Outcome: both round-3 findings fixed; focused 6 files / 168 tests and combined
+  29 files / 710 tests passed
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Review record — round 4
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `e85ba38ae575e193a7084f1046798ca0827f6bef`
+- Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
+- Artifact: `reviews/p02-review-2026-08-31T155718Z.md`
+- Reconnaissance: attempted; orchestration evidence is recorded in the artifact
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

@@ -68,6 +68,10 @@ p02 completed 7 planned tasks plus two validated recoveries and two review-fix c
 
 Thomas authorized exactly one additional bounded p02 correction and one additional independent High review cycle for the two Important findings in reviews/p02-review-2026-08-31T144935Z.md; another blocking review is terminal.
 
+### 2026-08-31 · structural · oat-project-implement · p02-blocked-round4
+
+Operator-authorized fix e85ba38ae575e193a7084f1046798ca0827f6bef resolved both round-3 findings, but terminal High review round 4 remained blocked with critical:0, important:1 after direct multi-pack/multi-scope recovery reproduction. Reconnaissance was attempted and reconciled in reviews/p02-review-2026-08-31T155718Z.md; no automatic fifth cycle or p03 launch is authorized.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
