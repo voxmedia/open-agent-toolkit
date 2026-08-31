@@ -22,6 +22,13 @@ export interface GitRunner {
   run(args: string[], options: GitRunOptions): Promise<GitResult>;
 }
 
+export interface AtomicRefTransition {
+  remote: string;
+  sourceSha: string;
+  activeRef: string;
+  completedRef: string;
+}
+
 export type ExecFileImplementation = (
   file: string,
   args: readonly string[],
@@ -32,6 +39,34 @@ export type ExecFileImplementation = (
     stderr: string,
   ) => void,
 ) => unknown;
+
+export function pushAtomicRefTransition(
+  git: GitRunner,
+  cwd: string,
+  transition: AtomicRefTransition,
+): Promise<GitResult> {
+  return git.run(
+    [
+      'push',
+      '--atomic',
+      transition.remote,
+      `${transition.sourceSha}:${transition.completedRef}`,
+      `:${transition.activeRef}`,
+    ],
+    { cwd, allowFailure: true },
+  );
+}
+
+export function isAtomicPushUnsupported(result: GitResult): boolean {
+  if (result.code === 0) return false;
+  const detail = `${result.stderr}\n${result.stdout}`;
+  return (
+    /(?:does not support|not supported).*(?:--atomic|atomic push)/i.test(
+      detail,
+    ) ||
+    /(?:--atomic|atomic push).*(?:does not support|not supported)/i.test(detail)
+  );
+}
 
 function numericExitCode(error: ExecFileException | null): number {
   return typeof error?.code === 'number' ? error.code : 0;

@@ -10,6 +10,7 @@ import {
 } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { completedSyncedRefName } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
 import {
   addLinkedWorktree,
@@ -28,6 +29,7 @@ import {
   commitRecordChange,
   continueSynced,
   createSyncedProject,
+  deleteCompletedSyncedRefForPrune,
   migrateSharedToSynced,
   pendingRebaseConflicts,
   preflightSyncedCheckout,
@@ -35,6 +37,7 @@ import {
   pullSynced,
   pruneSynced,
   pushSynced,
+  retireSyncedRef,
   removeSyncedCheckout,
   rollbackCreatedSyncedProject,
   type SyncTarget,
@@ -1901,6 +1904,303 @@ describe('commitRecordChange', () => {
       expect(
         existsSync(join(fixture.cloneA, '.oat/projects/synced/beta.json')),
       ).toBe(true);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('synced ref retirement', () => {
+  async function createPushedTarget(slug: string) {
+    const fixture = await createSyncedFixture();
+    const target = buildSyncTarget(
+      fixture.cloneA,
+      '.oat/projects/shared',
+      slug,
+    );
+    await createSyncedProject(target, defaultGitRunner);
+    await pushSynced(target, defaultGitRunner, {});
+    const sourceSha = git(fixture.cloneA, ['rev-parse', target.ref]);
+    return { fixture, target, sourceSha };
+  }
+
+  it('atomically creates the completed ref, deletes the active ref, and cleans local refs', async () => {
+    const { fixture, target, sourceSha } =
+      await createPushedTarget('fresh-retirement');
+    try {
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push(args);
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        retireSyncedRef(target, sourceSha, recordingRunner),
+      ).resolves.toEqual({
+        status: 'retired',
+        state: 'completed-only',
+        activeRef: target.ref,
+        completedRef: completedSyncedRefName(target.slug),
+        verifiedSha: sourceSha,
+      });
+
+      expect(calls).toContainEqual([
+        'push',
+        '--atomic',
+        target.remote,
+        `${sourceSha}:${completedSyncedRefName(target.slug)}`,
+        `:${target.ref}`,
+      ]);
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).toBe('');
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedSyncedRefName(target.slug),
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+      expect(
+        git(fixture.cloneA, [
+          'show-ref',
+          '--verify',
+          completedSyncedRefName(target.slug),
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+      expect(git(fixture.cloneA, ['show-ref'])).not.toContain(target.ref);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('converges after completed-ref creation left both refs at the bound SHA', async () => {
+    const { fixture, target, sourceSha } =
+      await createPushedTarget('both-ref-retry');
+    try {
+      const completedRef = completedSyncedRefName(target.slug);
+      git(fixture.cloneA, [
+        'push',
+        '-q',
+        target.remote,
+        `${sourceSha}:${completedRef}`,
+      ]);
+
+      await expect(
+        retireSyncedRef(target, sourceSha, defaultGitRunner),
+      ).resolves.toMatchObject({
+        status: 'retired',
+        state: 'completed-only',
+        verifiedSha: sourceSha,
+      });
+      expect(
+        git(fixture.cloneA, ['ls-remote', '--refs', target.remote, target.ref]),
+      ).toBe('');
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('falls back to create-verify-delete when the remote lacks atomic push support', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'non-atomic-retirement',
+    );
+    try {
+      const calls: string[][] = [];
+      const nonAtomicRunner: GitRunner = {
+        async run(args, options) {
+          calls.push(args);
+          if (args.includes('--atomic')) {
+            return {
+              code: 128,
+              stdout: '',
+              stderr: 'the receiving end does not support --atomic push',
+            };
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        retireSyncedRef(target, sourceSha, nonAtomicRunner),
+      ).resolves.toMatchObject({
+        status: 'retired',
+        state: 'completed-only',
+        verifiedSha: sourceSha,
+      });
+      expect(calls).toContainEqual([
+        'push',
+        target.remote,
+        `${sourceSha}:${completedSyncedRefName(target.slug)}`,
+      ]);
+      expect(calls).toContainEqual(['push', target.remote, `:${target.ref}`]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('returns the same terminal receipt when the active ref was already deleted', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'completed-only-retry',
+    );
+    try {
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+
+      await expect(
+        retireSyncedRef(target, sourceSha, defaultGitRunner),
+      ).resolves.toEqual({
+        status: 'already-retired',
+        state: 'completed-only',
+        activeRef: target.ref,
+        completedRef: completedSyncedRefName(target.slug),
+        verifiedSha: sourceSha,
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('fails closed when the completed ref is bound to a different SHA', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'mismatched-completed',
+    );
+    try {
+      await writeFile(join(target.projectPath, 'other.md'), 'other\n', 'utf8');
+      git(target.projectPath, ['add', 'other.md']);
+      git(target.projectPath, ['commit', '-m', 'other commit']);
+      const otherSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+      git(fixture.cloneA, [
+        'push',
+        '-q',
+        target.remote,
+        `${otherSha}:${completedSyncedRefName(target.slug)}`,
+      ]);
+
+      await expect(
+        retireSyncedRef(target, sourceSha, defaultGitRunner),
+      ).rejects.toThrow(/completed ref.*different SHA/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses retirement when neither source nor completed ref exists', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'missing-source',
+      );
+
+      await expect(
+        retireSyncedRef(
+          target,
+          '1234567890123456789012345678901234567890',
+          defaultGitRunner,
+        ),
+      ).rejects.toThrow(/source ref.*missing/i);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves the active ref when the remote rejects the transition', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'rejected-retirement',
+    );
+    try {
+      await installRejectingHook(fixture.cloneA, 'pre-push');
+
+      await expect(
+        retireSyncedRef(target, sourceSha, defaultGitRunner),
+      ).rejects.toThrow(/remote ref retirement.*rejected/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedSyncedRefName(target.slug),
+        ]),
+      ).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('keeps completed-ref deletion separate for the explicit destructive prune path', async () => {
+    const { fixture, target, sourceSha } =
+      await createPushedTarget('completed-prune');
+    try {
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+
+      await expect(
+        deleteCompletedSyncedRefForPrune(target, defaultGitRunner),
+      ).resolves.toEqual({
+        completedRef: completedSyncedRefName(target.slug),
+        deleted: true,
+      });
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedSyncedRefName(target.slug),
+        ]),
+      ).toBe('');
+      expect(git(fixture.cloneA, ['show-ref'])).not.toContain(
+        completedSyncedRefName(target.slug),
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('retains the completed ref and destructive retry guidance when prune deletion is rejected', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'rejected-completed-prune',
+    );
+    try {
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+      await installRejectingHook(fixture.cloneA, 'pre-push');
+
+      await expect(
+        deleteCompletedSyncedRefForPrune(target, defaultGitRunner),
+      ).rejects.toThrow(/explicit prune.*retained terminal history/i);
+      expect(
+        git(fixture.cloneA, [
+          'show-ref',
+          '--verify',
+          completedSyncedRefName(target.slug),
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
     } finally {
       await fixture.cleanup();
     }

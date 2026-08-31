@@ -14,6 +14,7 @@ import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   canonicalizePath,
+  completedSyncedRefName,
   isSyncedCheckout,
   resolveScopeRoot,
   SYNCED_REMOTE,
@@ -25,7 +26,11 @@ import { CliError } from '@errors/cli-error';
 import { copyDirectory } from '@fs/io';
 import YAML from 'yaml';
 
-import type { GitRunner } from './git';
+import {
+  isAtomicPushUnsupported,
+  pushAtomicRefTransition,
+  type GitRunner,
+} from './git';
 import {
   buildSyncedRecord,
   readSyncedRecord,
@@ -101,6 +106,19 @@ export type MigrateResult = {
   status: 'migrated';
   lifecycleCommit: string | null;
   sha: string;
+};
+
+export type SyncedRefRetirementReceipt = {
+  status: 'retired' | 'already-retired';
+  state: 'completed-only';
+  activeRef: string;
+  completedRef: string;
+  verifiedSha: string;
+};
+
+export type CompletedSyncedRefDeletionReceipt = {
+  completedRef: string;
+  deleted: boolean;
 };
 
 export function classifyRemoteRefLookup(
@@ -1018,6 +1036,259 @@ async function removePreflightedSyncedCheckout(
   );
   await git.run(['worktree', 'prune'], { cwd: target.repoRoot });
   return { status: 'removed' };
+}
+
+async function probeTerminalRefs(
+  target: SyncTarget,
+  expectedSha: string,
+  git: GitRunner,
+): Promise<import('./resolve-target').SyncedTerminalRefProbe> {
+  const { probeSyncedTerminalRefs } = await import('./resolve-target');
+  return probeSyncedTerminalRefs(target, expectedSha, git);
+}
+
+function assertRetirementProbe(
+  target: SyncTarget,
+  expectedSha: string,
+  probe: import('./resolve-target').SyncedTerminalRefProbe,
+): void {
+  if (probe.state === 'wrong-sha') {
+    if (probe.completedSha !== null && probe.completedSha !== expectedSha) {
+      throw new CliError(
+        `Refusing to retire ${target.slug}: completed ref ${probe.completedRef} points to a different SHA (${probe.completedSha}) than the bound source SHA ${expectedSha}.`,
+        2,
+      );
+    }
+    throw new CliError(
+      `Refusing to retire ${target.slug}: active source ref ${probe.activeRef} points to ${probe.activeSha ?? 'an unknown SHA'}, not the bound source SHA ${expectedSha}.`,
+      2,
+    );
+  }
+  if (probe.state === 'absent') {
+    throw new CliError(
+      `Refusing to retire ${target.slug}: source ref ${probe.activeRef} is missing and completed ref ${probe.completedRef} does not preserve ${expectedSha}.`,
+      2,
+    );
+  }
+}
+
+async function fallbackRemoteRefTransition(
+  target: SyncTarget,
+  sourceSha: string,
+  completedRef: string,
+  git: GitRunner,
+): Promise<void> {
+  const create = await git.run(
+    ['push', target.remote, `${sourceSha}:${completedRef}`],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (create.code !== 0) {
+    throw new CliError(
+      `Remote ref retirement for ${target.slug} was rejected while creating ${completedRef}: ${create.stderr || create.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
+
+  const afterCreate = await probeTerminalRefs(target, sourceSha, git);
+  assertRetirementProbe(target, sourceSha, afterCreate);
+  if (afterCreate.state === 'completed-only') return;
+  if (afterCreate.state !== 'both') {
+    throw new CliError(
+      `Remote ref retirement for ${target.slug} did not preserve both refs before active-ref deletion.`,
+      2,
+    );
+  }
+
+  const removeActive = await git.run(
+    ['push', target.remote, `:${target.ref}`],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (removeActive.code === 0) return;
+
+  const afterFailure = await probeTerminalRefs(target, sourceSha, git);
+  assertRetirementProbe(target, sourceSha, afterFailure);
+  if (afterFailure.state !== 'completed-only') {
+    throw new CliError(
+      `Remote ref retirement for ${target.slug} was rejected while deleting ${target.ref}; ${completedRef} remains verified for retry: ${removeActive.stderr || removeActive.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
+}
+
+async function transitionRemoteRefs(
+  target: SyncTarget,
+  sourceSha: string,
+  completedRef: string,
+  git: GitRunner,
+): Promise<void> {
+  const result = await pushAtomicRefTransition(git, target.repoRoot, {
+    remote: target.remote,
+    sourceSha,
+    activeRef: target.ref,
+    completedRef,
+  });
+  if (result.code === 0) return;
+  if (isAtomicPushUnsupported(result)) {
+    await fallbackRemoteRefTransition(target, sourceSha, completedRef, git);
+    return;
+  }
+
+  const afterFailure = await probeTerminalRefs(target, sourceSha, git);
+  assertRetirementProbe(target, sourceSha, afterFailure);
+  if (afterFailure.state !== 'completed-only') {
+    throw new CliError(
+      `Remote ref retirement for ${target.slug} was rejected; active ref ${target.ref} was retained: ${result.stderr || result.stdout || 'unknown Git error'}`,
+      2,
+    );
+  }
+}
+
+async function localRefSha(
+  target: SyncTarget,
+  ref: string,
+  git: GitRunner,
+): Promise<string | null> {
+  const result = await git.run(['show-ref', '--hash', ref], {
+    cwd: target.repoRoot,
+    allowFailure: true,
+  });
+  assertExpectedGitResult(`git show-ref --hash ${ref}`, result, [0, 1]);
+  return result.code === 0 ? result.stdout : null;
+}
+
+async function reconcileLocalTerminalRefs(
+  target: SyncTarget,
+  sourceSha: string,
+  completedRef: string,
+  git: GitRunner,
+): Promise<void> {
+  const [activeSha, completedSha] = await Promise.all([
+    localRefSha(target, target.ref, git),
+    localRefSha(target, completedRef, git),
+  ]);
+  if (activeSha !== null && activeSha !== sourceSha) {
+    throw new CliError(
+      `Refusing local ref cleanup for ${target.slug}: ${target.ref} points to ${activeSha}, not ${sourceSha}.`,
+      2,
+    );
+  }
+  if (completedSha !== null && completedSha !== sourceSha) {
+    throw new CliError(
+      `Refusing local ref cleanup for ${target.slug}: ${completedRef} points to ${completedSha}, not ${sourceSha}.`,
+      2,
+    );
+  }
+
+  if (completedSha === null) {
+    await git.run(['update-ref', completedRef, sourceSha], {
+      cwd: target.repoRoot,
+    });
+  }
+  if (activeSha !== null) {
+    await git.run(['update-ref', '-d', target.ref, sourceSha], {
+      cwd: target.repoRoot,
+    });
+  }
+
+  const [finalActiveSha, finalCompletedSha] = await Promise.all([
+    localRefSha(target, target.ref, git),
+    localRefSha(target, completedRef, git),
+  ]);
+  if (finalActiveSha !== null || finalCompletedSha !== sourceSha) {
+    throw new CliError(
+      `Unable to verify local terminal refs for ${target.slug} after remote retirement.`,
+      2,
+    );
+  }
+}
+
+export async function retireSyncedRef(
+  target: SyncTarget,
+  sourceSha: string,
+  git: GitRunner,
+): Promise<SyncedRefRetirementReceipt> {
+  await assertCanonicalSyncTargetIdentity(target);
+  const initial = await probeTerminalRefs(target, sourceSha, git);
+  assertRetirementProbe(target, sourceSha, initial);
+  const completedRef = initial.completedRef;
+
+  if (initial.state !== 'completed-only') {
+    await transitionRemoteRefs(target, sourceSha, completedRef, git);
+  }
+
+  const terminal = await probeTerminalRefs(target, sourceSha, git);
+  assertRetirementProbe(target, sourceSha, terminal);
+  if (terminal.state !== 'completed-only') {
+    throw new CliError(
+      `Unable to verify completed-only terminal state for ${target.slug}; active ref ${target.ref} was not safely retired.`,
+      2,
+    );
+  }
+  await reconcileLocalTerminalRefs(target, sourceSha, completedRef, git);
+
+  return {
+    status: initial.state === 'completed-only' ? 'already-retired' : 'retired',
+    state: 'completed-only',
+    activeRef: target.ref,
+    completedRef,
+    verifiedSha: sourceSha,
+  };
+}
+
+export async function deleteCompletedSyncedRefForPrune(
+  target: SyncTarget,
+  git: GitRunner,
+): Promise<CompletedSyncedRefDeletionReceipt> {
+  await assertCanonicalSyncTargetIdentity(target);
+  const completedRef = completedSyncedRefName(target.slug);
+  const [remote, localSha] = await Promise.all([
+    git.run(['ls-remote', '--exit-code', target.remote, completedRef], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    }),
+    localRefSha(target, completedRef, git),
+  ]);
+  const remoteState = classifyRemoteRefLookup(
+    remote,
+    target.remote,
+    completedRef,
+  );
+
+  if (remoteState === 'present') {
+    const deletion = await git.run(
+      ['push', target.remote, `:${completedRef}`],
+      { cwd: target.repoRoot, allowFailure: true },
+    );
+    if (deletion.code !== 0) {
+      throw new CliError(
+        `Explicit prune could not delete retained terminal history at ${completedRef}; the local completed ref was retained. Restore access to ${target.remote} and retry the destructive prune: ${deletion.stderr || deletion.stdout || 'unknown Git error'}`,
+        2,
+      );
+    }
+    const verified = await git.run(
+      ['ls-remote', '--exit-code', target.remote, completedRef],
+      { cwd: target.repoRoot, allowFailure: true },
+    );
+    if (
+      classifyRemoteRefLookup(verified, target.remote, completedRef) !==
+      'absent'
+    ) {
+      throw new CliError(
+        `Explicit prune could not verify deletion of retained terminal history at ${completedRef}; the local completed ref was retained.`,
+        2,
+      );
+    }
+  }
+
+  if (localSha !== null) {
+    await git.run(['update-ref', '-d', completedRef], {
+      cwd: target.repoRoot,
+    });
+  }
+  return {
+    completedRef,
+    deleted: remoteState === 'present' || localSha !== null,
+  };
 }
 
 export async function pruneSynced(
