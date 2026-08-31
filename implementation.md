@@ -487,6 +487,15 @@ All configured pre-approval steps and the recap gate are complete. The sequence
 is durably `awaiting_approval` with final p03 HiLL approval still pending; PR
 #246 remains open and unmerged.
 
+**PR mergeability boundary:** After fetching `origin/main` at
+`845462e78468265c7e2e2b2f6c64731472731ecb`, GitHub reports PR #246 as
+`CONFLICTING` / `DIRTY`. The unique merge base remains
+`5d684ba9746cd91006524eb5a82f18078a3196ef`, and the recomputed qualified
+freshness fingerprint still matches
+`sha256:effective-delta-v1:e23c689764b3e06b0ac5e7f6c0970303363795f68e33fd040c8eec30431ed5f6`.
+The exit gate therefore remains fresh, but the PR must be reconciled before it
+can merge.
+
 ---
 
 ## Implementation Log

@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:41:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:42:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -157,4 +157,6 @@ None
 ## Next Milestone
 
 Approve or defer the final p03 HiLL checkpoint. Approval completes the
-implementation lifecycle while leaving PR #246 open and unmerged.
+implementation lifecycle while leaving PR #246 open and unmerged. GitHub
+currently reports the PR as conflicting with `main`; conflict reconciliation
+is required before merge.
