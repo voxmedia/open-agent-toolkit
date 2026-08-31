@@ -53,7 +53,9 @@ oat_phase_recovery_policy:
         discovered_by: pnpm test
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: 90a4c7a3e7d022813e97b972c4ec5c00044f54f7
-        status: active
+        status: completed
+        recovery_commit: 646b9809271b73243e9b001006aa57cb5494a7a8
+        verification: focused 23/23; phase 493/493; CLI lint, type-check, and format; pnpm check; git diff --check; and pnpm test passed
 oat_dispatch_policy:
   mode: managed
   policy: high
