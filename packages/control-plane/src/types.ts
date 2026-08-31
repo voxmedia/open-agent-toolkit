@@ -156,6 +156,46 @@ export type ProjectListRow =
       };
     }
   | {
+      kind: 'recorded-terminal';
+      name: string;
+      path: string;
+      scope: 'synced';
+      checkout: 'absent';
+      terminalState: 'legacy-completion';
+      archiveSnapshot: string | null;
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: 'complete';
+      progress: null;
+      recommendation: {
+        skill: 'none';
+        reason: string;
+      };
+    }
+  | {
+      kind: 'terminal-invalid';
+      name: string;
+      path?: string;
+      scope: 'synced';
+      checkout: 'invalid';
+      terminalState: 'ref-sha-mismatch';
+      activeRef: string;
+      completedRef: string;
+      activeSha: string | null;
+      completedSha: string | null;
+      expectedSha?: string;
+      phase: null;
+      phaseStatus: null;
+      workflowMode: null;
+      lifecycle: 'complete';
+      progress: null;
+      recommendation: {
+        skill: 'none';
+        reason: string;
+      };
+    }
+  | {
       kind: 'recorded-invalid';
       name: string;
       path: string;

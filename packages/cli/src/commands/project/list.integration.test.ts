@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -12,6 +13,10 @@ interface CliResult {
   stdout: string;
   stderr: string;
   exitCode: number;
+}
+
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
 async function createWorkspace(): Promise<string> {
@@ -319,6 +324,61 @@ describe('oat project list coordination integration', () => {
         checkout: 'absent',
         ref: 'refs/oat/projects/remote-only',
         phase: null,
+      }),
+    );
+  });
+
+  it('keeps matching terminal aliases out of remote active discovery and exposes mismatches', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    for (const slug of ['matching-terminal', 'invalid-terminal']) {
+      const created = await runCli(fixture.cloneA, [
+        'project',
+        'new',
+        slug,
+        '--no-dashboard',
+        '--json',
+      ]);
+      expect(created.exitCode).toBe(0);
+      const activeSha = git(fixture.cloneA, [
+        'ls-remote',
+        'origin',
+        `refs/oat/projects/${slug}`,
+      ]).split(/\s+/)[0]!;
+      git(fixture.cloneA, [
+        'push',
+        '-q',
+        'origin',
+        `${activeSha}:refs/oat/completed/${slug}`,
+      ]);
+    }
+    const mainSha = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+    git(fixture.cloneA, [
+      'push',
+      '-q',
+      '--force',
+      'origin',
+      `${mainSha}:refs/oat/completed/invalid-terminal`,
+    ]);
+
+    const remote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--remote',
+      '--json',
+    ]);
+    expect(remote.exitCode).toBe(0);
+    const payload = JSON.parse(remote.stdout) as {
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(payload.projects).not.toContainEqual(
+      expect.objectContaining({ name: 'matching-terminal' }),
+    );
+    expect(payload.projects).toContainEqual(
+      expect.objectContaining({
+        kind: 'terminal-invalid',
+        name: 'invalid-terminal',
+        terminalState: 'ref-sha-mismatch',
       }),
     );
   });

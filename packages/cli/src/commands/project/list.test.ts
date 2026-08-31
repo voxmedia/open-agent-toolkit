@@ -5,6 +5,8 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { SyncedProjectRecord } from '@commands/project/sync/record';
+import type { SyncedTerminalRefProbe } from '@commands/project/sync/resolve-target';
 import { CliError } from '@errors/cli-error';
 import type { ProjectSummary } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
@@ -22,6 +24,8 @@ interface HarnessOptions {
     { kind: string; phase: string; phaseStatus: string }
   >;
   remoteOutput?: string;
+  syncedRecords?: SyncedProjectRecord[];
+  terminalProbes?: Record<string, SyncedTerminalRefProbe>;
   resolveError?: Error;
 }
 
@@ -62,7 +66,12 @@ function createHarness(options: HarnessOptions): {
       async () => options.projectsRoot ?? '.oat/projects/shared',
     ),
     listProjects,
-    listSyncedRecords: vi.fn(async () => []),
+    listSyncedRecords: vi.fn(async () => options.syncedRecords ?? []),
+    probeSyncedTerminalRefs: vi.fn(async (target) => {
+      const probe = options.terminalProbes?.[target.slug];
+      if (!probe) throw new Error(`missing terminal probe for ${target.slug}`);
+      return probe;
+    }),
     directoryExists: vi.fn(async (path: string) => path.endsWith('/shared')),
     readProjectMetadata: vi.fn(async (projectPath: string) => {
       const projectName = projectPath.split('/').at(-1) ?? projectPath;
@@ -331,6 +340,7 @@ describe('oat project list', () => {
       resolveProjectsRoot: async () => '.oat/projects/shared',
       listProjects: async () => [projectSummary('local-row')],
       listSyncedRecords: async () => [],
+      probeSyncedTerminalRefs: vi.fn(),
       directoryExists: async (path) => path.endsWith('/shared'),
       readProjectMetadata: async () => ({
         kind: 'implementation',
@@ -348,6 +358,120 @@ describe('oat project list', () => {
       projects: [expect.objectContaining({ name: 'local-row' })],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('classifies legacy completion without recommending pull', async () => {
+    const record = completedRecord('legacy-complete');
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      syncedRecords: [record],
+      terminalProbes: {
+        'legacy-complete': terminalProbe('legacy-complete', 'both'),
+      },
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [
+        {
+          kind: 'recorded-terminal',
+          name: 'legacy-complete',
+          terminalState: 'legacy-completion',
+          recommendation: {
+            skill: 'none',
+            reason: expect.stringContaining('legacy terminal cleanup'),
+          },
+        },
+      ],
+    });
+  });
+
+  it('distinguishes incomplete archive metadata from retirement cleanup', async () => {
+    const record = {
+      ...completedRecord('missing-archive'),
+      archiveSnapshot: undefined,
+      archiveSourceRefSha: undefined,
+    };
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      syncedRecords: [record],
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [
+        {
+          kind: 'recorded-terminal',
+          archiveSnapshot: null,
+          recommendation: {
+            skill: 'none',
+            reason: expect.stringContaining('archive snapshot is incomplete'),
+          },
+        },
+      ],
+    });
+  });
+
+  it('surfaces differing terminal ref SHAs as invalid recovery', async () => {
+    const record = completedRecord('mismatch');
+    const probe = terminalProbe('mismatch', 'wrong-sha');
+    probe.completedSha = 'b'.repeat(40);
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      syncedRecords: [record],
+      terminalProbes: { mismatch: probe },
+    });
+
+    await runCommand(command, [], ['--json']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      projects: [
+        {
+          kind: 'terminal-invalid',
+          terminalState: 'ref-sha-mismatch',
+          activeSha: 'a'.repeat(40),
+          completedSha: 'b'.repeat(40),
+          recommendation: {
+            skill: 'none',
+            reason: expect.stringContaining('repair the ref mismatch'),
+          },
+        },
+      ],
+    });
+  });
+
+  it('omits completed-only and matching aliases from remote discovery', async () => {
+    const sameSha = 'a'.repeat(40);
+    const otherSha = 'b'.repeat(40);
+    const { command, capture } = createHarness({
+      cwd: '/repo',
+      remoteOutput: [
+        `${sameSha}\trefs/oat/projects/matching`,
+        `${sameSha}\trefs/oat/completed/matching`,
+        `${sameSha}\trefs/oat/completed/completed-only`,
+        `${sameSha}\trefs/oat/projects/active-only`,
+        `${sameSha}\trefs/oat/projects/mismatch`,
+        `${otherSha}\trefs/oat/completed/mismatch`,
+      ].join('\n'),
+    });
+
+    await runCommand(command, ['--remote'], ['--json']);
+
+    const projects = (
+      capture.jsonPayloads[0] as {
+        projects: Array<{ name: string; kind: string }>;
+      }
+    ).projects;
+    expect(projects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'active-only', kind: 'remote' }),
+        expect.objectContaining({ name: 'mismatch', kind: 'terminal-invalid' }),
+      ]),
+    );
+    expect(projects.map((row) => row.name)).not.toContain('matching');
+    expect(projects.map((row) => row.name)).not.toContain('completed-only');
   });
 
   it.each([
@@ -390,5 +514,35 @@ function projectSummary(name: string): ProjectSummary {
       skill: 'oat-project-progress',
       reason: 'Check current progress.',
     },
+  };
+}
+
+function completedRecord(slug: string): SyncedProjectRecord {
+  return {
+    schemaVersion: 1,
+    slug,
+    scope: 'synced',
+    ref: `refs/oat/projects/${slug}`,
+    remote: 'origin',
+    status: 'complete',
+    createdAt: '2026-08-30T00:00:00.000Z',
+    completedAt: '2026-08-31T00:00:00.000Z',
+    archiveSnapshot: slug,
+    archiveSourceRefSha: 'a'.repeat(40),
+  };
+}
+
+function terminalProbe(
+  slug: string,
+  state: SyncedTerminalRefProbe['state'],
+): SyncedTerminalRefProbe {
+  const sha = 'a'.repeat(40);
+  return {
+    state,
+    activeRef: `refs/oat/projects/${slug}`,
+    completedRef: `refs/oat/completed/${slug}`,
+    expectedSha: sha,
+    activeSha: state === 'completed-only' ? null : sha,
+    completedSha: state === 'active-only' || state === 'absent' ? null : sha,
   };
 }

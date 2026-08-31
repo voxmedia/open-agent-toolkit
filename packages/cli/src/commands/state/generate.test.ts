@@ -323,6 +323,66 @@ describe('generateStateDashboard', () => {
     expect(dashboard).toContain('**proj-b** - implement');
   });
 
+  it('renders legacy terminal cleanup without a continuation recommendation', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const syncedRoot = join(root, '.oat', 'projects', 'synced');
+    await mkdir(syncedRoot, { recursive: true });
+    await writeFile(
+      join(syncedRoot, 'legacy-terminal.json'),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        slug: 'legacy-terminal',
+        scope: 'synced',
+        ref: 'refs/oat/projects/legacy-terminal',
+        remote: 'origin',
+        status: 'complete',
+        createdAt: '2026-08-30T00:00:00.000Z',
+        completedAt: '2026-08-31T00:00:00.000Z',
+        archiveSnapshot: 'legacy-terminal',
+        archiveSourceRefSha: 'a'.repeat(40),
+      })}\n`,
+      'utf8',
+    );
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+      gitRunner: {
+        run: async () => ({
+          code: 0,
+          stdout: [
+            `${'a'.repeat(40)}\trefs/oat/projects/legacy-terminal`,
+            `${'a'.repeat(40)}\trefs/oat/completed/legacy-terminal`,
+          ].join('\n'),
+          stderr: '',
+        }),
+      },
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).toContain(
+      '**legacy-terminal** - archive is durable but legacy terminal cleanup remains',
+    );
+    expect(dashboard).not.toContain('oat project pull legacy-terminal');
+  });
+
+  it('omits fully retired recordless terminal projects from the dashboard', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+
+    const result = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-08-31',
+      git: mockGit,
+    });
+
+    const dashboard = await readFile(result.dashboardPath, 'utf8');
+    expect(dashboard).not.toContain('retired-recordless');
+    expect(dashboard).toContain('*(No projects found)*');
+  });
+
   it('groups completed coordination parents into a Decompositions section', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
