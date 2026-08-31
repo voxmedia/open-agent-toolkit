@@ -64,10 +64,10 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:e7105d60d6c8f52e63b2f1b1895b7e8a4739dc00c945241499edec5b6b4dbc02
   freshness_head: d74afcc12aa8f29b29cd901a61d826b3607d5da4
   freshness_fingerprint: sha256:effective-delta-v1:f0f3f10057d802cd0618d857aec54cb66efcd0af913f075f2c7ef6056523e51f
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: c30a37ea-e6c5-43a7-88d4-d00d186dd2c1
+  launch_started_at: '2026-08-31T23:20:29Z'
+  launch_result_receipt: /Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/c30a37ea-e6c5-43a7-88d4-d00d186dd2c1.json
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -83,13 +83,13 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T23:19:40Z'
+  updated_at: '2026-08-31T23:20:29Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:19:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:20:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -146,7 +146,8 @@ Implement - configured Claude Fable exit gate
 - ✓ Full final verification and focused re-review passed with zero findings
 - ✓ Cursor Fable gate remained unlaunched and its blocked generation was preserved as stale
 - ✓ Fresh Claude Fable gate generation resolved against the unchanged reviewed implementation basis
-- → Persist launch intent, run the gate, receive its structured result, then evaluate the post-p04 HiLL checkpoint
+- ✓ Claude Fable gate launch intent and durable result receipt persisted
+- → Launch the exact configured command, receive its structured result, then evaluate the post-p04 HiLL checkpoint
 
 ## Blockers
 

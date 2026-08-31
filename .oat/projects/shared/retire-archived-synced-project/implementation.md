@@ -363,6 +363,9 @@ _Orchestration runs from `oat-project-implement` are appended here._
   `available=true`, retained reviewed head `98b005960`, and reproduced the
   unchanged implementation fingerprint. Launch provenance remains empty until
   the preselected receipt and attempt ID are committed.
+- Launch attempt `c30a37ea-e6c5-43a7-88d4-d00d186dd2c1` preselected its durable
+  stdout receipt under `~/.oat/runtime/closeout-receipts/` before process start.
+  The gate marker and run ID remain unset until the CLI proves acceptance.
 
 <!-- orchestration-runs-end -->
 
