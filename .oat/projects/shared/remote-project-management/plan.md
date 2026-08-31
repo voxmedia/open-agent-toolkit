@@ -1,11 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - Configured oat-project-plan gate cannot authenticate claude-fable-skip-permissions; refresh Claude OAuth or update the gate target configuration.
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_source: spec-driven
 oat_import_reference: null
 oat_import_source_path: null
@@ -49,8 +48,8 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
 - [x] Complete the structured plan self-review.
 - [x] Pass a corroborated external fallback gate on
       cursor-gpt-5-6-sol-xhigh with zero findings.
-- [ ] Pass the configured provider-neutral external plan gate (blocked by the
-      selected Claude target's expired OAuth session).
+- [x] Pass the user-selected cursor-fable-5-xhigh external plan gate and
+      receive its corroborated artifact.
 
 ## Dependency Topology
 
@@ -1112,15 +1111,18 @@ packages/cli/src/commands/help-snapshots.test.ts.
 ### Task p08-t01: Document remote PJM configuration and safety
 
 **Files:** Create apps/oat-docs/docs/cli-utilities/remote-project-management.md;
-modify cli-utilities/index.md and cli-utilities/configuration.md.
+modify cli-utilities/index.md, cli-utilities/configuration.md, and the generated
+apps/oat-docs/index.md.
 
 1. Document lifecycle operations, repository policy, user/local transport
    order, fail-closed defaults, binding tightening, storage, previews, approval
    floors, uncertainty, and offline behavior with non-secret examples.
 2. Link the guide from the CLI utilities index and configuration reference.
-3. Format: pnpm format:fix
-4. Run: pnpm check && pnpm build:docs
-5. Commit: docs(p08-t01): document remote project management
+3. Regenerate apps/oat-docs/index.md through pnpm build:docs (or oat docs
+   generate-index); do not hand-edit the generated index.
+4. Format: pnpm format:fix
+5. Run: pnpm check && pnpm build:docs
+6. Commit: docs(p08-t01): document remote project management
 
 ### Task p08-t02: Update CLI and file-location references
 
@@ -1216,7 +1218,7 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | -                                                           | -             | structured-auto-3 | codex:sol-high           |
 | plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T025155Z.md          | -             | -                 | -                        |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md | -             | -                 | -                        |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
