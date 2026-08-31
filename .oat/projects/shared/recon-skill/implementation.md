@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 oat_template: false
 ---
@@ -20,20 +20,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 | Phase   | Status  | Tasks | Completed |
 | ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 1     | 0/1       |
+| Phase 1 | passed  | 1     | 1/1       |
 | Phase 2 | pending | 4     | 0/4       |
 | Phase 3 | pending | 4     | 0/4       |
 | Phase 4 | pending | 2     | 0/2       |
 
-**Total:** 0/11 tasks completed
+**Total:** 1/11 tasks completed
 
 ## Task Status
 
 ### Phase 1: Approval-Bound Dispatch Contract
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p01-t01 | pending | -      |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p01-t01 | completed | `7db372825` |
 
 ### Phase 2: Recon Skill, Worker, and Packet Pipeline
 
@@ -121,6 +121,32 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Finding disposition: 2 Important fixed; expanded contract suite passes 9/9
 - Dispatch: scope=p01-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p01 review round 2
+
+- Request ID: `recon-skill-p01-rereview-20260831T045845Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: read the complete p01 implementation range and write only the
+  timestamped re-review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with passing verdict
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p01-code-rereview-2026-08-31T045845Z.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase p01 outcome
+
+- Verdict: passed
+- Planned task commits: 1
+- Fix iterations: 1
+- Recovery attempts: 0
+- Optional nested dispatches: none
+- Worktree: root checkout, clean
+- Outstanding items: none
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -162,6 +188,14 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Root validation confirmed the expanded 9/9 contract suite and bounded
   three-file fix range. A fresh independent re-review is next.
 
+### 2026-08-31 - p01 passed
+
+- Fresh independent re-review passed with zero findings and confirmed both
+  prior Important findings resolved.
+- Phase p01 completed after one bounded review-fix iteration and no
+  implementation recovery attempts.
+- Next task: `p02-t01`.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -169,7 +203,10 @@ source artifact and follow-up disposition.
 
 ## Test Results
 
-No implementation tests have run.
+- p01 approval contract: 9/9 passed.
+- p01 focused CLI skill validation: 163/163 passed.
+- p01 canonical skill validation, format, lint, CLI type-check, `pnpm check`,
+  and skill-bump validation passed.
 
 ## Final Summary (for PR/docs)
 
