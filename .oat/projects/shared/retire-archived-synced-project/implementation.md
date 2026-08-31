@@ -370,6 +370,11 @@ _Orchestration runs from `oat-project-implement` are appended here._
   `2026-08-31T23:22:06.654Z`. Its unique marker matches the Claude Fable target,
   final code scope, and active project; the synchronously awaited child remains
   in flight.
+- Gate run `42a1a4fe-e3a4-4830-8fbc-474ba966613d` returned one complete `ok`
+  envelope with matching gate lineage, project, target, and artifact. It passed
+  the Important threshold with 0 Critical, 0 Important, 0 Medium, and 1 Minor;
+  the non-null handoff is receive-eligible and must be dispositioned before the
+  exit gate can become allowed.
 
 <!-- orchestration-runs-end -->
 
