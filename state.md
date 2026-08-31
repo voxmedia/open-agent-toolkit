@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-30T23:55:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:04:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -96,9 +96,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - all nine tasks are complete. The two bounded final-review fixes are
-recorded as `fixes_completed`; the final review is awaiting independent
-re-review and has not advanced to `passed`.
+Implement - all nine tasks are complete and the clean full-project re-review
+passed at source head `659547363032fd9f41eefadc947bb0496fe7457f`.
+The configured implementation exit gate is next.
 
 ## Artifacts
 
@@ -106,7 +106,7 @@ re-review and has not advanced to `passed`.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete — review received and gate passed)
-- **Implementation:** `implementation.md` (9/9 tasks complete; final re-review next)
+- **Implementation:** `implementation.md` (9/9 tasks complete; final review passed)
 
 ## Progress
 
@@ -129,7 +129,8 @@ re-review and has not advanced to `passed`.
 - ✓ Final verification passed test, lint, type-check, and build
 - ✓ Full-project review received: 0 Critical, 0 Important, 2 Medium, 1 Minor
 - ✓ Bounded final-review fixes completed at p03-t04 and p03-t05
-- ⧗ Final review event is `fixes_completed`, awaiting independent re-review
+- ✓ Independent final re-review passed with zero findings
+- ⧗ Configured implementation exit gate next
 
 ## Blockers
 
@@ -137,5 +138,5 @@ None
 
 ## Next Milestone
 
-Rerun the full-project review. Only after it passes should the configured
-implementation exit gate and final-phase HiLL checkpoint proceed.
+Execute the configured implementation exit gate, then continue the configured
+post-implementation sequence toward the final-phase HiLL checkpoint.
