@@ -355,6 +355,10 @@ _Orchestration runs from `oat-project-implement` are appended here._
   reported `cursor-fable-5-high` unavailable, and `cursor-agent --version`
   reported a locked macOS login keychain. Resume after a local keychain unlock;
   no implementation, verification, or review work needs to be repeated.
+- The operator explicitly selected the available non-Cursor Claude Fable target
+  after the Cursor keychain remained locked. The unlaunched Cursor generation
+  was preserved as stale before changing the local gate declaration; no
+  remediation attempt was consumed.
 
 <!-- orchestration-runs-end -->
 

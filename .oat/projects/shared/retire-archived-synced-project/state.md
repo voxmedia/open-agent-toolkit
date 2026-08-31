@@ -1,7 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: 98b005960b2c5f282fadb8781d990d2ed4a159c9
-oat_blockers: [cursor_fable_keychain_locked]
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -43,7 +43,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:0e5a923055d2929f4e095487738186557932cc15414d013cf017125ea4045949
@@ -83,27 +83,28 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: >-
-    target_unavailable: cursor-fable-5-high; cursor-agent reports the macOS
-    login keychain is locked
-  updated_at: '2026-08-31T18:07:44Z'
+    superseded_before_launch: cursor-fable-5-high remained unavailable because
+    the macOS login keychain was locked; the operator explicitly selected the
+    available non-Cursor Claude Fable target for a new gate generation
+  updated_at: '2026-08-31T23:17:45Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T18:07:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:17:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** final review passed; configured exit gate blocked before launch
+**Status:** final review passed; replacing the unlaunched Cursor gate generation
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - configured Cursor Fable exit gate pre-launch recovery
+Implement - configured exit gate target override
 
 ## Artifacts
 
@@ -146,8 +147,8 @@ Implement - configured Cursor Fable exit gate pre-launch recovery
 - ✗ Final whole-project review found 1 Critical, 1 Important, and 1 Medium terminal-path gap
 - ✓ Completed p04-t03 through p04-t05; combined regression passes 156/156
 - ✓ Full final verification and focused re-review passed with zero findings
-- ⚠ Cursor Fable target unavailable because the macOS login keychain is locked; gate not launched
-- → Unlock the login keychain locally, re-probe the target, then run the gate and post-p04 HiLL checkpoint
+- ✓ Cursor Fable gate remained unlaunched and its blocked generation was preserved as stale
+- → Resolve a fresh gate generation with the operator-selected non-Cursor Claude Fable target
 
 ## Blockers
 

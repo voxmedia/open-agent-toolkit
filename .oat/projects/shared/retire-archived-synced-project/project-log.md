@@ -120,6 +120,10 @@ Focused final re-review of e3ca4e5ce3e02ce85b5105fc90b55fbfbe7bb8ce..98b005960b2
 
 Configured Cursor Fable exit gate was not launched: source CLI target probe reports cursor-fable-5-high available=false, and cursor-agent --version reports the macOS login keychain is locked. Implementation, final verification, and final re-review remain passed; resume by unlocking the login keychain locally, re-probing the target, and rerunning oat-project-implement.
 
+### 2026-08-31 · structural · oat-project-implement · exit-gate-target-override
+
+Operator selected the available non-Cursor Claude Fable target after cursor-fable-5-high remained unavailable. The Cursor generation never launched, is preserved as stale in state.md, and consumed no remediation attempt.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
