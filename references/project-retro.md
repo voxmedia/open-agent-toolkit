@@ -21,7 +21,7 @@ oat_retro_evidence_sources:
   - source: child-run-transcripts
     status: unavailable
 oat_retro_promotions: proposed
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -84,9 +84,9 @@ IDs, project-log headings, and commit IDs provide stable anchors.
 
 - **Promotions:** Proposed — RP-01 is eligible for an interactive repository
   guidance update.
-- **Filing:** Proposed — UP-01 and UP-02 have no destination yet.
-- **Unsettled items:** RP-01 awaits apply consent; UP-01 and UP-02 await an
-  explicit filing decision and destination.
+- **Filing:** Complete — UP-01 and UP-02 are filed as OAT GitHub issues.
+- **Unsettled items:** RP-01 remains proposed and deferred; no filing items are
+  unsettled.
 
 ## What Went Well
 
@@ -252,12 +252,12 @@ may contain credentials. The original session's safe disclosure at
 
 ### UP-01: Make consolidated-project retirement checks semantic
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** https://github.com/voxmedia/open-agent-toolkit/issues/250
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new OAT GitHub issue after duplicate review.
 
 Quick-start consolidation and completion guidance should verify more than
 deleted directories and moved backlog files. A bounded sweep by absorbed
@@ -269,12 +269,13 @@ to eliminate duplicate-ownership guidance.
 
 ### UP-02: Define a retro receipt path after project-log sealing
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** https://github.com/voxmedia/open-agent-toolkit/issues/251
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as a new OAT GitHub issue; #209 is related but
+  covers a distinct retrospective-preservation mechanism.
 
 `oat-project-complete` requires the completion seal to be the final project-log
 entry, while a later explicit `oat-project-retro` run requires appending a
