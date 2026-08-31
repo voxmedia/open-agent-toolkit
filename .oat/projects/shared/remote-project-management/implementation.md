@@ -1,11 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01
-    reason: 'Phase-wide live CLI tests failed twice with varying unrelated five-second Git-fixture timeouts; direction is required before review or Phase 2.'
-    since: 2026-08-30
-oat_last_updated: 2026-08-30
+oat_blockers: []
+oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t01
 oat_generated: false
 ---
@@ -13,7 +10,7 @@ oat_generated: false
 # Implementation: remote-project-management
 
 **Started:** 2026-03-15
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -27,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 10    | 10/10     |
-| Phase 2 | pending | 9     | 0/9       |
-| Phase 3 | pending | 12    | 0/12      |
-| Phase 4 | pending | 11    | 0/11      |
-| Phase 5 | pending | 9     | 0/9       |
-| Phase 6 | pending | 10    | 0/10      |
-| Phase 7 | pending | 10    | 0/10      |
-| Phase 8 | pending | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 10    | 10/10     |
+| Phase 2 | pending   | 9     | 0/9       |
+| Phase 3 | pending   | 12    | 0/12      |
+| Phase 4 | pending   | 11    | 0/11      |
+| Phase 5 | pending   | 9     | 0/9       |
+| Phase 6 | pending   | 10    | 0/10      |
+| Phase 7 | pending   | 10    | 0/10      |
+| Phase 8 | pending   | 6     | 0/6       |
 
 **Total:** 10/77 tasks completed
 
@@ -44,7 +41,7 @@ oat_generated: false
 
 ## Phase 1: Domain, Configuration, and Persistence
 
-**Status:** blocked
+**Status:** completed
 **Started:** 2026-03-15
 
 ### Phase Summary
@@ -75,11 +72,13 @@ oat_generated: false
 **Verification:**
 
 - Run: each task's focused Vitest command; the combined 10-file Phase 1 suite;
-  format; CLI type-check, lint, build; and the live full CLI suite twice.
+  format; CLI type-check, lint, build; two pre-merge live full CLI runs; and one
+  uncached post-merge live full CLI run.
 - Result: all task checks passed; the combined suite passed 417/417; format,
-  type-check, lint, and build passed. The live full CLI suite failed twice with
-  varying unrelated five-second Git-fixture timeouts, so Phase 1 is blocked
-  before independent review.
+  type-check, lint, and build passed. After merging origin/main at `4fa5390d1`,
+  PR #249's four-worker Vitest cap eliminated the host-load timeout class: the
+  uncached CLI suite passed 317 files and 4,688 tests in 85.86 seconds with
+  zero cached tasks.
 
 **Notes / Decisions:**
 
@@ -386,6 +385,18 @@ continuation_events:
 - Reason: The single permitted no-edit rerun remained ambiguously red outside
   p01; no recovery attempt was reserved and no edit was made.
 
+#### Operator-scope blocker resolution
+
+- Authorization: user directed merging origin/main and authorized a bounded
+  repair only if PR #249 did not address the timeout class.
+- Integration: merged `origin/main` (`2c6005d64`, PR #249) in merge commit
+  `4fa5390d1` without conflicts.
+- Verification: `pnpm exec turbo run test --filter=@open-agent-toolkit/cli
+--force` passed 317 files and 4,688 tests in 85.86 seconds; Turbo reported
+  3/3 tasks successful and 0 cached.
+- Disposition: resolved by upstream integration; no project repair was needed,
+  and recovery usage remains 0/10 with `pending_attempt: null`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -436,13 +447,12 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Resolve the repeated live full-CLI Git-fixture timeout boundary, rerun Phase 1
-  verification, and only then launch the independent Phase 1 review.
+- Run the independent Phase 1 review, then begin Phase 2 if it passes.
 
 **Blockers:**
 
-- Full CLI suite produced varying unrelated five-second Git-fixture timeouts on
-  the permitted run and no-edit rerun - pending direction.
+- None. PR #249's worker cap resolved the live full-CLI timeout class after
+  origin/main was merged.
 
 **Session End:** 2026-08-31T04:59:16Z
 
@@ -468,10 +478,10 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                        | Passed                       | Failed                         | Coverage |
-| ----- | ------------------------------------------------ | ---------------------------- | ------------------------------ | -------- |
-| 1     | Focused, format, types, lint, build, full CLI x2 | 417 focused + non-test gates | 13 then 17 full-suite timeouts | blocked  |
-| 2     | -                                                | -                            | -                              | -        |
+| Phase | Tests Run                                                   | Passed                                 | Failed | Coverage |
+| ----- | ----------------------------------------------------------- | -------------------------------------- | ------ | -------- |
+| 1     | Focused, format, types, lint, build, post-merge full CLI x1 | 417 focused; full CLI 4,688; all gates | 0      | passed   |
+| 2     | -                                                           | -                                      | -      | -        |
 
 ## Final Summary (for PR/docs)
 

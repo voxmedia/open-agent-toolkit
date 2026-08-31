@@ -1,10 +1,7 @@
 ---
 oat_current_task: p02-t01
 oat_last_commit: cd6608947699b6431216fa8364b67729b7583866
-oat_blockers:
-  - task_id: p01
-    reason: 'Phase-wide live CLI tests failed twice with varying unrelated five-second Git-fixture timeouts; direction is required before review or Phase 2.'
-    since: 2026-08-30
+oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -27,7 +24,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T04:59:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T05:25:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -35,13 +32,13 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-03-15
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation — Phase 1 completed p01-t01 through p01-t10, but phase-wide
-verification is blocked by repeated unrelated five-second Git-fixture timeouts
-in the live full CLI suite. Independent review and Phase 2 have not started.
+Implementation — Phase 1 completed p01-t01 through p01-t10 and passed
+phase-wide verification after origin/main incorporated PR #249's four-worker
+Vitest cap. Independent review is next; Phase 2 has not started.
 
 ## Artifacts
 
@@ -81,16 +78,13 @@ in the live full CLI suite. Independent review and Phase 2 have not started.
 - ✓ p01-t09 added foundational credential-safe remote doctor checks
 - ✓ p01-t10 persisted pre-create intent and gated portable metadata on durable
   remote identity verification
-- ⚠ Phase 1 tasks complete; phase-wide verification requires direction
+- ✓ Phase 1 tasks complete and phase-wide verification passed
 
 ## Blockers
 
-- Phase p01: the live full CLI suite failed twice with varying unrelated
-  five-second Git-fixture timeouts. Focused Phase 1 verification passed 417/417,
-  and format, type-check, lint, and build passed. No recovery attempt was
-  reserved and no speculative edit was made.
+None.
 
 ## Next Milestone
 
-Resolve the Phase 1 full-suite timeout boundary, rerun phase verification, and
-only then run the independent Phase 1 implementation review.
+Run the independent Phase 1 implementation review, then begin Phase 2 if it
+passes.
