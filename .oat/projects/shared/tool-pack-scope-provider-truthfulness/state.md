@@ -35,6 +35,22 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p02-t02-20260831T121154Z
+        original_request_id: dispatch-p02-20260831T120200Z-492af17f6
+        original_task_id: p02-t02
+        original_commit: 1f81e62de770e95db763a76d3931426876453b2d
+        discovered_by: git commit hook oxlint --fix
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 1f81e62de770e95db763a76d3931426876453b2d
+        status: completed
 oat_dispatch_policy:
   mode: managed
   policy: high

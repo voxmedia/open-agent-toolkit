@@ -9,7 +9,7 @@ import {
   type ProviderRegistration,
 } from './registry';
 
-function adapter(name: string, detected: boolean): ProviderAdapter {
+function createAdapter(name: string, detected: boolean): ProviderAdapter {
   return {
     name,
     displayName: name,
@@ -22,7 +22,7 @@ function adapter(name: string, detected: boolean): ProviderAdapter {
 
 function registration(name: string, detected = false): ProviderRegistration {
   return {
-    adapter: adapter(name, detected),
+    adapter: createAdapter(name, detected),
     extensions: [],
     capabilities: (['project', 'user'] as const).flatMap((scope) =>
       (['skill', 'agent', 'rule', 'directory'] as const).map((contentKind) => ({
