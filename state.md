@@ -80,7 +80,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-08-31T00:13:34Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:37:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:41:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -111,7 +111,8 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR open; all pre-approval work is complete and final HiLL
+approval is pending.
 
 ## Artifacts
 
@@ -145,7 +146,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Independent final re-review passed with zero findings
 - ✓ Configured implementation exit gate passed and receive completed durably
 - ✓ PR created
-- ⧗ Awaiting human review
+- ✓ Summary, documentation, and final PR pre-approval steps completed
+- ✓ Project recap explicitly skipped; terminal-outcome guard passed
+- ⧗ Awaiting final HiLL approval
 
 ## Blockers
 
@@ -153,8 +156,5 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Approve or defer the final p03 HiLL checkpoint. Approval completes the
+implementation lifecycle while leaving PR #246 open and unmerged.

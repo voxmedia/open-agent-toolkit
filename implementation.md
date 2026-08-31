@@ -478,6 +478,15 @@ The `pr` sequence step is recorded complete. No source-tree change occurred,
 so the qualified rolling freshness checkpoint remains at the documentation
 commit and its already corroborated fingerprint.
 
+**Implementation-tail recap:** Thomas selected `skip`. The adapter persisted
+`oat_project_recap: skip/interactive` at `2026-08-31T00:41:00.618Z`, and the
+shared terminal-outcome guard returned `ok` for the skip intent. No recap run or
+manifest was created, so `summary.md` correctly remains unchanged.
+
+All configured pre-approval steps and the recap gate are complete. The sequence
+is durably `awaiting_approval` with final p03 HiLL approval still pending; PR
+#246 remains open and unmerged.
+
 ---
 
 ## Implementation Log
