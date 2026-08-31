@@ -1215,7 +1215,7 @@ describe('archive utils', () => {
             s3SyncOnComplete: false,
           }),
         ).rejects.toThrow(
-          /no active record and no unique persisted synced archive identity/i,
+          /no active record and no persisted synced archive identity/i,
         );
 
         await expect(access(target.projectPath)).resolves.toBeUndefined();
@@ -1233,6 +1233,136 @@ describe('archive utils', () => {
       }
     },
   );
+
+  it('rejects stale recordless metadata before summary export or S3 access', async () => {
+    const repoRoot = await createRepoRoot();
+    const slug = 'stale-recordless';
+    const archivePath = join(repoRoot, '.oat', 'projects', 'archived', slug);
+    const staleSha = 'a'.repeat(40);
+    await mkdir(archivePath, { recursive: true });
+    await writeFile(join(archivePath, 'summary.md'), '# stale\n');
+    await writeFile(
+      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: slug,
+        snapshotName: `20260830-${slug}`,
+        scope: 'synced',
+        sourceRefSha: staleSha,
+      })}\n`,
+    );
+    const ensureS3Access = vi.fn(async () => ({
+      ok: true,
+      warnings: [],
+    }));
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath: join(repoRoot, '.oat', 'projects', 'synced', slug),
+          projectName: slug,
+          projectsRoot: '.oat/projects/shared',
+          summaryExportPath: '.oat/repo/reference/project-summaries',
+          s3Uri: 's3://archive-bucket/projects',
+          s3SyncOnComplete: true,
+        },
+        {
+          ensureS3ArchiveAccess: ensureS3Access,
+          probeSyncedTerminalRefs: vi.fn(async () => ({
+            state: 'wrong-sha' as const,
+            activeRef: `refs/oat/projects/${slug}`,
+            completedRef: `refs/oat/completed/${slug}`,
+            expectedSha: staleSha,
+            activeSha: null,
+            completedSha: 'b'.repeat(40),
+          })),
+        },
+      ),
+    ).rejects.toThrow(/no persisted archive identity matches.*completed ref/i);
+    expect(ensureS3Access).not.toHaveBeenCalled();
+    await expect(
+      access(
+        join(
+          repoRoot,
+          '.oat',
+          'repo',
+          'reference',
+          'project-summaries',
+          `20260830-${slug}.md`,
+        ),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('selects the only recordless archive matching the completed ref', async () => {
+    const repoRoot = await createRepoRoot();
+    const slug = 'recordless-incarnations';
+    const matchingSha = 'b'.repeat(40);
+    for (const [suffix, sourceRefSha] of [
+      ['old', 'a'.repeat(40)],
+      ['current', matchingSha],
+    ] as const) {
+      const archivePath = join(
+        repoRoot,
+        '.oat',
+        'projects',
+        'archived',
+        `${slug}-${suffix}`,
+      );
+      await mkdir(archivePath, { recursive: true });
+      await writeFile(join(archivePath, 'summary.md'), `# ${suffix}\n`);
+      await writeFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        `${JSON.stringify({
+          projectName: slug,
+          snapshotName: `20260830-${slug}-${suffix}`,
+          scope: 'synced',
+          sourceRefSha,
+        })}\n`,
+      );
+    }
+    const terminalReceipt = {
+      status: 'already-retired' as const,
+      state: 'completed-only' as const,
+      activeAliasRetained: false,
+      activeRef: `refs/oat/projects/${slug}`,
+      completedRef: `refs/oat/completed/${slug}`,
+      verifiedSha: matchingSha,
+    };
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath: join(repoRoot, '.oat', 'projects', 'synced', slug),
+        projectName: slug,
+        projectsRoot: '.oat/projects/shared',
+        s3SyncOnComplete: false,
+        commit: false,
+      },
+      {
+        probeSyncedTerminalRefs: vi.fn(async (_target, expectedSha) => ({
+          state:
+            expectedSha === matchingSha
+              ? ('completed-only' as const)
+              : ('wrong-sha' as const),
+          activeRef: terminalReceipt.activeRef,
+          completedRef: terminalReceipt.completedRef,
+          expectedSha,
+          activeSha: null,
+          completedSha: matchingSha,
+        })),
+        retireSyncedRef: vi.fn(async () => terminalReceipt),
+        removeSyncedCheckout: vi.fn(async () => ({
+          status: 'absent' as const,
+        })),
+      },
+    );
+
+    expect(result.snapshotId).toBe(`20260830-${slug}-current`);
+    await expect(
+      readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+    ).resolves.toBe('# current\n');
+  });
 
   it.each([
     'after-copy',
@@ -2681,6 +2811,14 @@ describe('archive utils', () => {
       completedRef: 'refs/oat/completed/demo',
       verifiedSha: 'a'.repeat(40),
     }));
+    const probeSyncedTerminalRefs = vi.fn(async () => ({
+      state: 'completed-only' as const,
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      expectedSha: 'a'.repeat(40),
+      activeSha: null,
+      completedSha: 'a'.repeat(40),
+    }));
     const failSummaryCopy = async (source: string, destination: string) => {
       if (basename(source) === 'summary.md') {
         throw new Error('injected summary copy failure');
@@ -2703,6 +2841,7 @@ describe('archive utils', () => {
         preflightSyncedCheckout,
         removeSyncedCheckout,
         retireSyncedRef,
+        probeSyncedTerminalRefs,
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');
@@ -2712,6 +2851,7 @@ describe('archive utils', () => {
       preflightSyncedCheckout,
       removeSyncedCheckout,
       retireSyncedRef,
+      probeSyncedTerminalRefs,
       timestamp,
     });
     expect(retried.snapshotId).toBe('20260401-demo');
@@ -2726,6 +2866,7 @@ describe('archive utils', () => {
         preflightSyncedCheckout,
         removeSyncedCheckout,
         retireSyncedRef,
+        probeSyncedTerminalRefs,
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');

@@ -312,13 +312,15 @@ export async function runArchivePushCommand(
       },
     );
     assertDurableArchiveProjectTarget(archiveTarget);
-    if (options.projectRecapRun?.trim()) {
+    const dryRun = options.dryRun === true || context.dryRun;
+    const recordlessSyncedApply =
+      projectScope === 'synced' && syncedRecord === null && !dryRun;
+    if (options.projectRecapRun?.trim() && !recordlessSyncedApply) {
       await dependencies.verifySelectedProjectRecapForArchive(
         target.projectPath,
         options.projectRecapRun.trim(),
       );
     }
-    const dryRun = options.dryRun === true || context.dryRun;
 
     if (dryRun) {
       const report = await buildDryRunReport(

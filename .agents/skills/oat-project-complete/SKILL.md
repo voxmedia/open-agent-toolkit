@@ -49,6 +49,8 @@ COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
+SYNCED_ARCHIVE_ENTRY_SCRIPT="$SKILL_DIR/scripts/resolve-synced-archive-entry.mjs"
+SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
   exit 1
@@ -65,12 +67,34 @@ test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
   echo "Missing non-archive lifecycle receipt validator: $NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" >&2
   exit 1
 }
+test -f "$SYNCED_ARCHIVE_ENTRY_SCRIPT" || {
+  echo "Missing synced archive entry router: $SYNCED_ARCHIVE_ENTRY_SCRIPT" >&2
+  exit 1
+}
+test -f "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" || {
+  echo "Missing synced archive finalizer: $SYNCED_ARCHIVE_FINALIZE_SCRIPT" >&2
+  exit 1
+}
 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   SYNCED_RECORD_PATH="${PROJECT_PATH}.json"
   if [[ -f "$SYNCED_RECORD_PATH" ]]; then
-    oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+    REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+    SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_ENTRY_SCRIPT" \
+      --repo-root "$REPO_ROOT" \
+      --record-path "$SYNCED_RECORD_PATH" \
+      --project-name "$PROJECT_NAME") || exit 1
+    SYNCED_ARCHIVE_ENTRY_ROUTE=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (value.status !== "ok" || !["pull", "archive-resume"].includes(value.route)) process.exit(1);
+process.stdout.write(value.route);
+' "$SYNCED_ARCHIVE_ENTRY") || exit 1
+    if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resume" ]]; then
+      echo "Verified a persisted synced archive identity against the completed ref; skipping pull and resuming archive."
+    else
+      oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+    fi
   else
     echo "Synced discovery record is absent; archive must resume from verified terminal archive metadata and the completed ref."
   fi
@@ -646,13 +670,20 @@ project push.
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
 
-### Step 6: Clear Active Project Pointer
+### Step 6: Clear or Defer the Active Project Pointer
 
-Clear the active project pointer immediately. If the user is completing a project, clearing the pointer is implicit — no confirmation needed.
+Clearing the active project pointer is implicit and requires no confirmation.
+For a synced archive, defer the clear until Step 8 has validated the full
+terminal report. Every archive or configured-S3 failure therefore exits with
+the original pointer intact and the completion remains directly resumable.
 
 ```bash
-oat config set activeProject ""
-echo "Active project pointer cleared."
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  echo "Active project pointer retained until synced archive terminal receipt validation."
+else
+  oat config set activeProject ""
+  echo "Active project pointer cleared."
+fi
 ```
 
 ### Step 7: Generate PR Description
@@ -940,6 +971,21 @@ SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-
 The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
 `--json` added only to select the machine-readable report.
 Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.
+
+Only after every applicable synced terminal and recap-export field above has
+passed validation, use the finalizer to clear the deferred pointer. The
+finalizer validates the terminal receipt again before changing configuration,
+so a failed archive command or malformed result cannot clear the pointer:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+    node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
+      --project-name "$PROJECT_NAME") || exit 1
+  printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
+  echo "Synced archive terminal receipt verified; active project pointer cleared."
+fi
+```
 
 #### Step 8.5: Finalize Archive-Aware Recap Links
 

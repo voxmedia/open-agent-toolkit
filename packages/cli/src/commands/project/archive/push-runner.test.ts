@@ -686,7 +686,7 @@ describe('oat project archive push', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('reports a recordless synced terminal retry with its authoritative receipt', async () => {
+  it('reports a recordless selected-recap retry with its authoritative receipt', async () => {
     const verifiedSha = 'a'.repeat(40);
     const { archiveProjectOnCompletion, capture, context, dependencies } =
       createHarness({
@@ -718,9 +718,21 @@ describe('oat project archive push', () => {
         },
       });
 
-    await runArchivePushCommand(dependencies, undefined, {}, context);
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { projectRecapRun: 'explainers/project-recap/original-run' },
+      context,
+    );
 
-    expect(archiveProjectOnCompletion).toHaveBeenCalledOnce();
+    expect(
+      dependencies.verifySelectedProjectRecapForArchive,
+    ).not.toHaveBeenCalled();
+    expect(archiveProjectOnCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectRecapRun: 'explainers/project-recap/original-run',
+      }),
+    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'ok',
       mode: 'apply',

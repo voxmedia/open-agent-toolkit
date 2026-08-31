@@ -35,6 +35,7 @@ import {
   retireSyncedRef,
   type SyncedRefRetirementReceipt,
 } from '@commands/project/sync/ref-sync';
+import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
 import {
   canonicalizePath,
   type ProjectScope,
@@ -178,6 +179,7 @@ interface ArchiveProjectOnCompletionDependencies
   commitRecordChange?: typeof commitRecordChange;
   removeSyncedRecord?: (recordPath: string) => Promise<void>;
   afterLifecycleCommit?: () => Promise<void>;
+  probeSyncedTerminalRefs?: typeof probeSyncedTerminalRefs;
 }
 
 export interface ArchiveProjectRecapExportV1 {
@@ -790,7 +792,9 @@ async function resolveRecordlessSyncedArchiveIdentity(
     ArchiveProjectOnCompletionOptions,
     'repoRoot' | 'projectsRoot' | 'projectName'
   >,
-  dependencies: ResolveArchiveProjectTargetDependencies,
+  target: ReturnType<typeof buildSyncTarget>,
+  git: GitRunner,
+  dependencies: ArchiveProjectOnCompletionDependencies,
 ): Promise<RecordlessSyncedArchiveIdentity> {
   const tentativeTarget = await resolveArchiveProjectTarget(
     options,
@@ -838,15 +842,33 @@ async function resolveRecordlessSyncedArchiveIdentity(
       });
     }
   }
-  if (candidates.length !== 1) {
+  if (candidates.length === 0) {
     throw new CliError(
-      candidates.length === 0
-        ? `Synced project ${options.projectName} has no active record and no unique persisted synced archive identity; refusing to create a replacement active record or a new snapshot.`
-        : `Synced project ${options.projectName} has no active record and multiple persisted synced archive identities; refusing an ambiguous terminal retry.`,
+      `Synced project ${options.projectName} has no active record and no persisted synced archive identity; refusing to create a replacement active record or a new snapshot.`,
       2,
     );
   }
-  return candidates[0]!;
+  const probe = dependencies.probeSyncedTerminalRefs ?? probeSyncedTerminalRefs;
+  const matches: RecordlessSyncedArchiveIdentity[] = [];
+  for (const candidate of candidates) {
+    const terminal = await probe(target, candidate.metadata.sourceRefSha, git);
+    if (
+      terminal.completedSha === candidate.metadata.sourceRefSha &&
+      (terminal.activeSha === null ||
+        terminal.activeSha === candidate.metadata.sourceRefSha)
+    ) {
+      matches.push(candidate);
+    }
+  }
+  if (matches.length !== 1) {
+    throw new CliError(
+      matches.length === 0
+        ? `Synced project ${options.projectName} has no active record, but no persisted archive identity matches its authoritative completed ref; refusing terminal retry before export or S3 mutation.`
+        : `Synced project ${options.projectName} has no active record and multiple persisted archives match its authoritative completed ref; refusing an ambiguous terminal retry.`,
+      2,
+    );
+  }
+  return matches[0]!;
 }
 
 async function exportProjectSummary(
@@ -1675,11 +1697,16 @@ export async function archiveProjectOnCompletion(
         options.projectName,
       )
     : null;
-  const git = dependencies.gitRunner ?? defaultGitRunner;
   let activeRecord: SyncedProjectRecord | null = record;
+  const git = dependencies.gitRunner ?? defaultGitRunner;
   const recordlessIdentity =
     syncTarget && !activeRecord
-      ? await resolveRecordlessSyncedArchiveIdentity(options, dependencies)
+      ? await resolveRecordlessSyncedArchiveIdentity(
+          options,
+          syncTarget,
+          git,
+          dependencies,
+        )
       : null;
   let sourceRefSha: string | undefined;
 
