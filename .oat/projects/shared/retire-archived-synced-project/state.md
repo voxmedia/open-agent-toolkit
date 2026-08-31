@@ -1,8 +1,7 @@
 ---
 oat_current_task: p01-t02
 oat_last_commit: 26264a2c8ed2fc0289473a81d0f296ceb764cb76
-oat_blockers:
-  - 'p01-t02: Git omits an already-equal completed-ref update and its lease from the atomic receive-pack transaction, so active deletion is not a true two-ref compare-and-swap; two fix iterations and three reviews are exhausted.'
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -83,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:59:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T11:50:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation blocked in p01
+**Status:** Implementation in progress in p01
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p01 blocked after review governance exhaustion
+Implement - p01 contract revision authorized; fix and review in progress
 
 ## Artifacts
 
@@ -119,15 +118,16 @@ Implement - p01 blocked after review governance exhaustion
 - ✓ p01 review round 1 fixed one Important and partially fixed one Critical
 - ✓ p01 review round 2 fixed the unsafe non-atomic fallback deletion
 - ✗ p01 review round 3 found one remaining atomic no-op Critical
-- ✗ Two fix iterations and three review rounds exhausted
+- ✓ Operator accepted completed-ref authority and same-SHA active aliases
+- → Fresh bounded p01 fix/review generation authorized
 
 ## Blockers
 
-- `p01-t02`: Git does not transmit the completed-ref update or lease when that
-  ref already equals the source SHA, so the active deletion cannot safely
-  depend on completed-ref stability with the current push shape.
+None. The prior atomic no-op blocker was resolved by the approved contract:
+completed-only and matching active/completed refs are both terminal; differing
+SHAs still fail closed.
 
 ## Next Milestone
 
-Choose a revised two-ref transition contract, then explicitly authorize a new
-fix/review generation
+Complete and review the revised p01 transition, then merge `origin/main` before
+starting parallel p02/p03 implementation

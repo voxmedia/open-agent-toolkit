@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'p01-t02: Git omits an already-equal completed-ref update and its lease from the atomic receive-pack transaction, so active deletion is not a true two-ref compare-and-swap; two fix iterations and three reviews are exhausted.'
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t02
 oat_generated: false
@@ -20,20 +19,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p01   | blocked | 2     | 2/2       |
-| p02   | pending | 3     | 0/3       |
-| p03   | pending | 3     | 0/3       |
-| p04   | pending | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in progress | 2     | 1/2       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 3     | 0/3       |
+| p04   | pending     | 2     | 0/2       |
 
-**Total:** 2/10 tasks completed
+**Total:** 1/10 tasks completed
 
 ---
 
 ## Phase 1: Terminal Ref and Transition Foundation
 
-**Status:** blocked — review governance exhausted
+**Status:** in progress — revised contract
 **Started:** 2026-08-31
 
 ### Task p01-t01: Define completed synced-ref identity
@@ -41,14 +40,13 @@ oat_generated: false
 **Status:** completed
 **Commit:** c2fdaf291c43128ad0b3fbc7f8374bc681b78b8b
 
-### Task p01-t02: Implement idempotent active-to-completed ref transition
+### Task p01-t02: Implement idempotent completed-ref terminalization
 
-**Status:** blocked
+**Status:** in progress — operator-approved contract revision
 **Commit:** ce631f78b9ebdce4746ec2f1614ffb30362c3ddf
-**Blocker:** The completed-ref lease is omitted from an atomic push when the
-completed ref is already at `sourceSha`, leaving active deletion without a
-true two-ref compare-and-swap. The configured two fix iterations and three
-review rounds are exhausted.
+**Revision:** The completed ref is authoritative. Completed-only and matching
+active/completed refs are valid terminal outcomes; a matching active ref is an
+inert alias. Differing SHAs still fail closed.
 
 ---
 
@@ -160,20 +158,31 @@ _Orchestration runs from `oat-project-implement` are appended here._
   genuine remote two-ref CAS primitive or preserve the active ref whenever the
   completed ref already exists.
 
+### Run 2 — p01 operator-approved contract revision
+
+- Decision: `refs/oat/completed/<slug>` is authoritative terminal identity.
+- Valid terminal shapes: completed-only and matching active/completed refs.
+- A matching active ref is a stale alias ignored by active project surfaces.
+- Differing active/completed SHAs remain a hard recovery mismatch.
+- The three prior reviews remain historical evidence for the superseded
+  physical-active-deletion requirement.
+- Fresh fix iterations: 0 of 2 used; review rounds: 0 of 3 used.
+- Authorization: user explicitly approved updating the plan and proceeding.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
 
-Phase p01 implementation and two bounded fix commits are complete, but the
-third independent review reproduced one remaining Critical atomic no-op race.
-The configured fix and review governance budgets are exhausted, so p01 is
-blocked pending an explicit transition-contract decision and new authorization.
+The original p01 generation exhausted its review budget on Git's omission of a
+no-op completed-ref update. The operator resolved that blocker by making the
+completed ref authoritative and accepting a matching active ref as an inert
+terminal alias. A fresh bounded fix/review generation is now in progress.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented              | Actual / Accepted                                              | Reason                                                                          | Source of Truth                 | Follow-up                                                         |
+| ------------- | --------------- | --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| p01-t02       | User decision   | Completion deletes the active ref | Completed is authoritative; a same-SHA active alias may remain | Git cannot include a no-op completed update and lease in the atomic transaction | Operator-approved plan revision | Revalidate p01 and consume the terminal classification in p02/p03 |
 
 ## Test Results
 

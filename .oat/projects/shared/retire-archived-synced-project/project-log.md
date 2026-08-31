@@ -48,6 +48,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 Phase outcome blocked after 2 fix iterations and 3 review rounds; remaining Critical atomic no-op lease race is recorded in reviews/p01-review-2026-08-31T055541Z.md; implementation stopped before p02/p03 and before origin/main merge.
 
+### 2026-08-31 · structural · oat-project-implement · p01-contract-revision
+
+Operator approved completed-ref authority: completed-only and matching active/completed refs are terminal; same-SHA active is an inert alias; differing SHAs remain a hard mismatch. Plan revised and a fresh bounded p01 fix/review generation authorized.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

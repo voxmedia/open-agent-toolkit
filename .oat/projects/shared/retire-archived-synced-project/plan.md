@@ -1,8 +1,7 @@
 ---
 oat_status: complete
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - 'p01-t02: Git omits an already-equal completed-ref update and its lease from the atomic receive-pack transaction, so active deletion is not a true two-ref compare-and-swap; two fix iterations and three reviews are exhausted.'
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_phase: plan
 oat_phase_status: complete
@@ -27,12 +26,13 @@ ref namespaces without losing durable archive identity, source-commit
 reachability, migration safety, or idempotent recovery.
 
 **Architecture:** Treat the tracked synced JSON record as active/transactional
-state. After local and configured remote archive durability is proven, move the
-source commit from `refs/oat/projects/<slug>` to
-`refs/oat/completed/<slug>`, remove the checkout, and delete the JSON record in
-the exact lifecycle commit. Legacy complete records remain a recoverable
-transition input, while active project surfaces ignore completed refs and emit
-precise terminal diagnoses for direct actions.
+state. After local and configured remote archive durability is proven, create
+and verify `refs/oat/completed/<slug>` at the source SHA, remove the checkout,
+and delete the JSON record in the exact lifecycle commit. The completed ref is
+authoritative terminal identity: an absent active ref or an active ref at the
+same SHA are both valid terminal states. A matching active ref is a stale alias
+that active project surfaces must ignore; differing SHAs remain a hard recovery
+mismatch. Legacy complete records remain a recoverable transition input.
 
 **Tech Stack:** TypeScript ESM, Commander, Zod, Git custom refs, Vitest, pnpm,
 Turborepo, Fumadocs documentation.
@@ -113,7 +113,7 @@ git commit -m "feat(p01-t01): define completed synced ref identity"
 
 ---
 
-### Task p01-t02: Implement idempotent active-to-completed ref transition
+### Task p01-t02: Implement idempotent completed-ref terminalization
 
 **Files:**
 
@@ -125,12 +125,14 @@ git commit -m "feat(p01-t01): define completed synced ref identity"
 **Step 1: Write failure-boundary tests**
 
 Specify a transition helper that creates/verifies the completed ref at the
-bound source SHA and removes the active remote ref without a history gap. Cover
-fresh transition, retry after completed-ref creation, retry after active-ref
-deletion, both refs at the same SHA, mismatched completed SHA, missing source,
-remote rejection, and local-ref cleanup. If the remote supports atomic push,
-assert that the helper requests it; still verify postconditions explicitly so
-retries remain safe when a prior attempt partially completed.
+bound source SHA and returns a terminal receipt for either completed-only or
+matching active/completed refs. Cover fresh atomic transition, atomic rejection
+with a safe completed-ref fallback, completed-only retry, matching-both retry,
+mismatched SHAs, missing source, remote rejection, and local-ref reconciliation.
+If the remote supports atomic push, it may create completed and delete active
+together. If atomic transition is unavailable, create and verify completed but
+retain active at the same SHA; never require unsafe deletion after completed is
+already present.
 
 Run:
 
@@ -142,10 +144,12 @@ Expected: transition and recovery cases fail before implementation.
 
 **Step 2: Implement the transition state machine**
 
-Return explicit terminal states and receipts containing active ref, completed
-ref, and verified SHA. Never delete the active ref until the completed ref is
-verified at the bound SHA. Fail closed on mismatches and make repeated calls
-converge on the same terminal result.
+Return explicit terminal receipts containing active ref, completed ref,
+verified SHA, and whether the active alias was retained. Treat completed-only
+and matching-both as successful terminal outcomes. Never classify a matching
+active alias as active work. Fail closed on SHA mismatches and make repeated
+calls converge on the same terminal result without requiring cross-ref CAS for
+a no-op completed update.
 
 Also add a completed-ref deletion primitive for the existing explicit prune
 path; it must remain separate from normal completion and retain destructive
@@ -189,7 +193,7 @@ git commit -m "feat(p01-t02): add idempotent synced ref retirement"
 Cover local archive creation, summary/recap export, configured S3 success,
 configured S3 access/sync failure, unconfigured S3, and retry from an existing
 verified snapshot. Assert that a configured S3 failure leaves the record,
-checkout, and active ref recoverable and does not begin terminal cleanup.
+checkout, and source refs recoverable and does not begin terminal cleanup.
 
 Run:
 
@@ -240,8 +244,9 @@ Exercise interruptions before completed-ref creation, after completed-ref
 creation, after active-ref removal, after checkout removal, before lifecycle
 commit, after filesystem deletion of the JSON record but before that deletion
 is committed, and after lifecycle commit recovery. Assert one snapshot
-identity, one exact lifecycle commit, no active JSON record on success, no
-active remote ref, and a completed ref at `archiveSourceRefSha`.
+identity, one exact lifecycle commit, no active JSON record on success, and a
+completed ref at `archiveSourceRefSha`. The active ref may be absent or remain
+as a stale alias at that exact SHA; a differing active SHA must block sealing.
 
 Include legacy `status: complete` records with retained active refs and absent
 checkouts so rerunning archive performs the same safe terminal transition.
@@ -260,11 +265,12 @@ Invoke the p01 transition helper with the bound source SHA, remove the synced
 checkout before the terminal lifecycle commit, then delete the record and
 commit the deletion together with summary/recap exports. Extend lifecycle
 receipt recovery to validate deletion rather than a complete-record payload.
-Use archive metadata plus completed-ref state when retrying after checkout or
-active-ref removal. A retry after the JSON file has already been deleted must
-locate and validate the original snapshot from the completed ref plus persisted
-archive metadata; it must not create a replacement active record or choose a
-new dated snapshot.
+Require a terminal receipt classified as either `completed-only` or
+`matching-aliases` before deleting the record. Use archive metadata plus
+completed-ref state when retrying after checkout or active-ref removal. A retry
+after the JSON file has already been deleted must locate and validate the
+original snapshot from the completed ref plus persisted archive metadata; it
+must not create a replacement active record or choose a new dated snapshot.
 
 **Step 3: Format**
 
@@ -298,7 +304,8 @@ git commit -m "feat(p02-t02): seal synced archive without active record"
 **Step 1: Add command/report tests**
 
 Require structured output to report the completed ref, verified source SHA,
-record-retirement status, lifecycle commit, archive path, and S3 disposition.
+active-alias disposition, record-retirement status, lifecycle commit, archive
+path, and S3 disposition.
 Prove that a durability failure returns a non-success result and leaves
 completion resumable. Add a direct command-entry recovery case where the JSON
 record is already absent, the completed ref matches the persisted archive
@@ -367,10 +374,13 @@ Cover active absent records, complete archived legacy records, complete records
 without an archive snapshot, recordless completed refs, both active/completed
 refs during recovery, and fully retired projects. Legacy complete rows must
 never recommend pull; use a precise archive-retry/migration diagnosis where
-cleanup remains pending. Fully retired projects must not appear as active. Add
-dashboard-generation cases proving that fully retired projects remain omitted
-and that a visible legacy terminal state renders the same cleanup diagnosis
-rather than a continuation recommendation.
+cleanup remains pending. Matching active/completed refs are a fully terminal
+state: the completed ref is authoritative and the matching active alias must be
+ignored. Differing ref SHAs are invalid recovery states with a precise
+diagnosis. Fully retired projects must not appear as active. Add dashboard-
+generation cases proving that fully retired projects remain omitted and that a
+visible legacy terminal state renders the same cleanup diagnosis rather than a
+continuation recommendation.
 
 Run:
 
@@ -386,8 +396,9 @@ implementation.
 Add only the row/type data needed to distinguish active absence, legacy
 completion awaiting retirement, invalid recovery, and active remote discovery.
 Do not enumerate `refs/oat/completed/*` as active projects. Route terminal
-classification into dashboard generation so legacy cleanup uses the same
-diagnosis while fully retired recordless projects stay absent.
+classification into dashboard generation so completed-only and matching-alias
+projects stay absent, legacy cleanup uses the same diagnosis, and differing
+active/completed SHAs remain visible only as invalid recovery.
 
 **Step 3: Format**
 
@@ -422,9 +433,11 @@ git commit -m "fix(p03-t01): classify completed synced records"
 **Step 1: Add direct-action tests**
 
 Test pull/open by slug and path for a legacy complete record, a completed-only
-ref, a both-ref recovery state, and an ordinary active absent checkout. Terminal
-cases must return an actionable archive/migration diagnosis and never create a
-nested checkout; active cases keep current materialization behavior.
+ref, matching active/completed refs, differing active/completed refs, and an
+ordinary active absent checkout. Terminal cases must return an actionable
+archive/migration diagnosis and never create a nested checkout; mismatches must
+return a precise recovery error; active cases keep current materialization
+behavior.
 
 Run:
 
@@ -439,7 +452,8 @@ missing-project errors.
 
 Use the p01 terminal probe before adoption/materialization. Keep recovery
 instructions distinct for legacy record cleanup, already-retired projects, and
-ref-SHA mismatches.
+ref-SHA mismatches. A matching active alias never makes a completed project
+pullable or openable.
 
 **Step 3: Format**
 
@@ -478,8 +492,8 @@ git commit -m "fix(p03-t02): block archived project resurrection"
 Prove that existing rendered links remain full-SHA pinned after ref
 reclassification, explicit link refresh can diagnose or read a completed ref
 without reopening the project, and prune can intentionally delete a completed
-ref while preserving local/S3 archives. Keep the permanent-link-loss warning
-and force behavior.
+ref plus any matching active alias while preserving local/S3 archives. Keep the
+permanent-link-loss warning and force behavior; refuse a mismatched active ref.
 
 Run:
 
@@ -493,7 +507,8 @@ Expected: completed-only refs are not handled precisely.
 
 Resolve the completed ref only for explicit terminal-safe operations. Never
 make it eligible for pull/open. Prune must delete the correct completed ref and
-must not remove or rewrite the durable archive snapshot.
+any matching active alias, and must not remove or rewrite the durable archive
+snapshot. Differing active/completed SHAs remain a hard mismatch.
 
 **Step 3: Format**
 
@@ -534,11 +549,13 @@ git commit -m "feat(p03-t03): align completed links and pruning"
 Run a synced project from active record/ref through completed state, local and
 configured S3 archive, completed-ref transition, checkout removal, record
 deletion, listing omission, pull/open rejection, link reachability, and explicit
-prune. Add a legacy complete-record fixture and at least one interruption/retry
-fixture crossing the p02/p03 seam. Prove that archive sync can restore the
-recordless terminal snapshot without recreating active state, and that dashboard
-generation omits fully retired projects while rendering a precise diagnosis for
-legacy terminal cleanup when applicable.
+prune. Cover both valid terminal shapes: completed-only and matching active/
+completed aliases. Add a differing-SHA mismatch, a legacy complete-record
+fixture, and at least one interruption/retry fixture crossing the p02/p03 seam.
+Prove that archive sync can restore the recordless terminal snapshot without
+recreating active state, and that dashboard generation omits fully retired
+projects while rendering a precise diagnosis for legacy terminal cleanup when
+applicable.
 
 Run:
 
@@ -601,7 +618,9 @@ git commit -m "test(p04-t01): prove synced archive retirement end to end"
 Document active versus completed ref namespaces, successful record deletion,
 legacy migration/retry diagnostics, configured S3 durability, terminal link
 behavior, and the distinction between completion retention and destructive
-prune. Remove claims that archive permanently keeps the active record/ref.
+prune. State that the completed ref is authoritative, that a same-SHA active ref
+may remain as an inert alias, and that differing SHAs require recovery. Remove
+claims that archive permanently keeps the active record.
 
 **Step 2: Apply lockstep release versioning**
 
