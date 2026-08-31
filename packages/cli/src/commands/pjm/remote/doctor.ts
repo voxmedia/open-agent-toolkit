@@ -67,8 +67,7 @@ export async function runRemoteDoctorChecks(
   const forbiddenContent = metadataFiles
     .filter((file) => containsForbiddenPortableKey(file.raw))
     .map((file) => file.filename);
-  const policyValid =
-    input.policy === undefined || isValidRemotePolicy(input.policy);
+  const policyFindings = collectRemotePolicyFindings(input.policy);
   const concurrentBindings = collectConcurrentBindings(operations);
 
   return [
@@ -95,13 +94,15 @@ export async function runRemoteDoctorChecks(
     {
       name: 'pjm:remote_policy',
       description: 'Remote repository policy is valid and fail-closed',
-      status: policyValid ? 'pass' : 'fail',
-      message: policyValid
-        ? 'Remote policy is valid or not configured.'
-        : 'Remote policy contains an invalid schema, description, storage, or authority value.',
-      fix: policyValid
-        ? undefined
-        : 'Repair pjm.remote policy in shared .oat/config.json before any remote mutation.',
+      status: policyFindings.length === 0 ? 'pass' : 'fail',
+      message:
+        policyFindings.length === 0
+          ? 'Remote policy is valid or not configured.'
+          : `Remote policy contains invalid or unknown fields: ${policyFindings.join(', ')}.`,
+      fix:
+        policyFindings.length === 0
+          ? undefined
+          : 'Repair pjm.remote policy in shared .oat/config.json before any remote mutation.',
     },
     findingCheck(
       'pjm:remote_concurrent_intents',
@@ -249,36 +250,152 @@ function containsForbiddenPortableKey(
   );
 }
 
-function isValidRemotePolicy(value: unknown): boolean {
-  if (
-    !isRecord(value) ||
-    value.schemaVersion !== 1 ||
-    !isRecord(value.policy)
-  ) {
-    return false;
+function collectRemotePolicyFindings(value: unknown): string[] {
+  if (value === undefined) return [];
+  const findings: string[] = [];
+  if (!isRecord(value)) return ['pjm.remote'];
+  collectUnknownKeys(
+    value,
+    ['schemaVersion', 'storage', 'policy'],
+    'pjm.remote',
+    findings,
+  );
+  if (value.schemaVersion !== 1) findings.push('pjm.remote.schemaVersion');
+  if ('storage' in value) {
+    if (!isRecord(value.storage)) {
+      findings.push('pjm.remote.storage');
+    } else {
+      collectUnknownKeys(
+        value.storage,
+        ['state'],
+        'pjm.remote.storage',
+        findings,
+      );
+      if (!['local', 'shared'].includes(String(value.storage.state))) {
+        findings.push('pjm.remote.storage.state');
+      }
+    }
   }
-  if (
-    isRecord(value.storage) &&
-    value.storage.state !== 'local' &&
-    value.storage.state !== 'shared'
-  ) {
-    return false;
+  if (!isRecord(value.policy)) {
+    findings.push('pjm.remote.policy');
+    return [...new Set(findings)];
   }
-  if (
-    !['none', 'managed-section', 'replace'].includes(
-      String(value.policy.description),
-    )
-  ) {
-    return false;
+  collectUnknownKeys(
+    value.policy,
+    ['description', 'authority', 'providers'],
+    'pjm.remote.policy',
+    findings,
+  );
+  if (!isDescriptionMode(value.policy.description)) {
+    findings.push('pjm.remote.policy.description');
   }
-  if (!isRecord(value.policy.authority)) return false;
-  const authorities = new Set([
+  collectAuthorityFindings(
+    value.policy.authority,
+    'pjm.remote.policy.authority',
+    findings,
+    true,
+  );
+  if ('providers' in value.policy) {
+    if (!isRecord(value.policy.providers)) {
+      findings.push('pjm.remote.policy.providers');
+    } else {
+      const providers = new Set(['github', 'linear', 'jira']);
+      for (const [provider, providerPolicy] of Object.entries(
+        value.policy.providers,
+      )) {
+        const path = `pjm.remote.policy.providers.${provider}`;
+        if (!providers.has(provider) || !isRecord(providerPolicy)) {
+          findings.push(path);
+          continue;
+        }
+        collectUnknownKeys(
+          providerPolicy,
+          ['description', 'authority'],
+          path,
+          findings,
+        );
+        if (
+          'description' in providerPolicy &&
+          !isDescriptionMode(providerPolicy.description)
+        ) {
+          findings.push(`${path}.description`);
+        }
+        if ('authority' in providerPolicy) {
+          collectAuthorityFindings(
+            providerPolicy.authority,
+            `${path}.authority`,
+            findings,
+            false,
+          );
+        }
+      }
+    }
+  }
+  return [...new Set(findings)].sort();
+}
+
+function collectAuthorityFindings(
+  value: unknown,
+  path: string,
+  findings: string[],
+  requireDefault: boolean,
+): void {
+  if (!isRecord(value)) {
+    findings.push(path);
+    return;
+  }
+  collectUnknownKeys(value, ['default', 'operations'], path, findings);
+  if (requireDefault && !('default' in value)) findings.push(`${path}.default`);
+  if ('default' in value && !isAuthority(value.default)) {
+    findings.push(`${path}.default`);
+  }
+  if ('operations' in value) {
+    if (!isRecord(value.operations)) {
+      findings.push(`${path}.operations`);
+      return;
+    }
+    const operations = new Set([
+      'create',
+      'update-fields',
+      'transition',
+      'annotate',
+      'delete',
+      'relink',
+      'detach',
+      'recreate',
+    ]);
+    for (const [operation, authority] of Object.entries(value.operations)) {
+      const operationPath = `${path}.operations.${operation}`;
+      if (!operations.has(operation) || !isAuthority(authority)) {
+        findings.push(operationPath);
+      }
+    }
+  }
+}
+
+function collectUnknownKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  path: string,
+  findings: string[],
+): void {
+  const keys = new Set(allowed);
+  for (const key of Object.keys(value)) {
+    if (!keys.has(key)) findings.push(`${path}.${key}`);
+  }
+}
+
+function isDescriptionMode(value: unknown): boolean {
+  return ['none', 'managed-section', 'replace'].includes(String(value));
+}
+
+function isAuthority(value: unknown): boolean {
+  return [
     'read-only',
     'user-approved',
     'user-authorized',
     'autonomous',
-  ]);
-  return authorities.has(String(value.policy.authority.default));
+  ].includes(String(value));
 }
 
 function collectConcurrentBindings(
@@ -287,8 +404,10 @@ function collectConcurrentBindings(
   const counts = new Map<string, number>();
   const active = new Set([
     'planned',
+    'pending',
     'authorized',
     'attempt-started',
+    'verification-pending',
     'partial',
     'uncertain',
   ]);

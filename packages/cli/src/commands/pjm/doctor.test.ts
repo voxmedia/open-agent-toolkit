@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { runPjmDoctorChecks } from './doctor';
 import { initializeRepoReference } from './init';
+import { resolveRemoteStorageLocations } from './remote/storage-locator';
 
 const TEMPLATE_NAMES = [
   'current-state.md',
@@ -16,6 +18,48 @@ const TEMPLATE_NAMES = [
   'repo-readme.md',
   'pjm-handoffs-readme.md',
 ] as const;
+
+function remoteOperationRecord(
+  operationId: string,
+  state: 'pending' | 'verification-pending',
+) {
+  const providerContext = { host: 'github.com', repositoryId: 'repo-123' };
+  return {
+    recordType: 'operation',
+    schemaVersion: 1,
+    operationId,
+    correlationId: operationId,
+    bindingId: 'bnd_binding_123',
+    provider: 'github',
+    providerContext,
+    lifecycleOperation: 'reconcile',
+    operationClass: 'update-fields',
+    state,
+    reason: null,
+    lastSafeStep: 'planned',
+    preview: {
+      digest: `sha256:${operationId}`,
+      bindingId: 'bnd_binding_123',
+      provider: 'github',
+      providerContext,
+      capabilityDigest: 'sha256:capability',
+      revisionDigest: 'sha256:revision',
+      policyDigest: 'sha256:policy',
+    },
+    authority: null,
+    approval: null,
+    createdAt: '2026-08-31T00:00:00.000Z',
+    updatedAt: '2026-08-31T00:00:00.000Z',
+    transport: null,
+    selectedTransport: null,
+    attempts: [],
+    observations: [],
+    verification: [],
+    retryDisposition: 'safe-before-attempt',
+    steps: [],
+    outcome: { classification: 'pending', message: null, verifiedAt: null },
+  };
+}
 
 async function seedTemplate(root: string, name: string): Promise<void> {
   await mkdir(root, { recursive: true });
@@ -65,6 +109,56 @@ describe('runPjmDoctorChecks', () => {
     expect(checks.some((check) => check.name.startsWith('pjm:remote_'))).toBe(
       false,
     );
+  });
+
+  it('discovers malformed state and concurrent intents in default local storage', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
+    tempDirs.push(root);
+    execFileSync('git', ['init', '-q', '--initial-branch=main'], { cwd: root });
+    execFileSync(
+      'git',
+      [
+        'remote',
+        'add',
+        'origin',
+        'https://github.com/example/doctor-fixture.git',
+      ],
+      { cwd: root },
+    );
+    const repoRoot = await createCanonicalRepo(root);
+    const locations = resolveRemoteStorageLocations({
+      repoRoot: root,
+      gitCommonDir: join(root, '.git'),
+      repositoryIdentity: 'https://github.com/example/doctor-fixture.git',
+      stateStorage: 'local',
+      target: { kind: 'backlog', scope: 'shared', path: null },
+    });
+    await mkdir(locations.operational.bindingsDir, { recursive: true });
+    await mkdir(locations.operational.operationsDir, { recursive: true });
+    await writeFile(
+      join(locations.operational.bindingsDir, 'bnd_binding_123.json'),
+      JSON.stringify({ recordType: 'binding-state', schemaVersion: 99 }),
+    );
+    for (const [operationId, state] of [
+      ['op_operation_123', 'pending'],
+      ['op_operation_456', 'verification-pending'],
+    ] as const) {
+      await writeFile(
+        join(locations.operational.operationsDir, `${operationId}.json`),
+        JSON.stringify(remoteOperationRecord(operationId, state)),
+      );
+    }
+
+    const checks = await runPjmDoctorChecks(repoRoot);
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_schema'),
+    ).toMatchObject({ status: 'fail' });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_concurrent_intents'),
+    ).toMatchObject({
+      status: 'fail',
+      message: expect.stringContaining('bnd_binding_123'),
+    });
   });
 
   it('reports repository adoption independently of pack availability', async () => {

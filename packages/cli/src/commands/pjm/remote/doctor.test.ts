@@ -8,6 +8,48 @@ import { runRemoteDoctorChecks } from './doctor';
 
 const timestamp = '2026-08-31T00:00:00.000Z';
 
+function operationRecord(
+  operationId: string,
+  state: 'pending' | 'verification-pending',
+) {
+  const providerContext = { host: 'github.com', repositoryId: 'repo-123' };
+  return {
+    recordType: 'operation',
+    schemaVersion: 1,
+    operationId,
+    correlationId: operationId,
+    bindingId: 'bnd_binding_123',
+    provider: 'github',
+    providerContext,
+    lifecycleOperation: 'reconcile',
+    operationClass: 'update-fields',
+    state,
+    reason: null,
+    lastSafeStep: 'planned',
+    preview: {
+      digest: `sha256:${operationId}`,
+      bindingId: 'bnd_binding_123',
+      provider: 'github',
+      providerContext,
+      capabilityDigest: 'sha256:capability',
+      revisionDigest: 'sha256:revision',
+      policyDigest: 'sha256:policy',
+    },
+    authority: null,
+    approval: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    transport: null,
+    selectedTransport: null,
+    attempts: [],
+    observations: [],
+    verification: [],
+    retryDisposition: 'safe-before-attempt',
+    steps: [],
+    outcome: { classification: 'pending', message: null, verifiedAt: null },
+  };
+}
+
 describe('runRemoteDoctorChecks', () => {
   const tempDirs: string[] = [];
 
@@ -55,8 +97,15 @@ describe('runRemoteDoctorChecks', () => {
         context: { host: 'github.com' },
         aliases: [],
       },
+      identityHistory: [],
       purposes: ['source'],
       policyRestrictions: {},
+      publicationProjection: {
+        title: 'frontmatter',
+        description: 'description-section',
+        priority: 'frontmatter',
+      },
+      provenanceToken: 'oat-binding:bnd_binding_123',
       lifecycle: 'active',
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -75,11 +124,24 @@ describe('runRemoteDoctorChecks', () => {
         recordType: 'binding-state',
         schemaVersion: 1,
         bindingId: 'bnd_binding_456',
+        provider: 'github',
         metadataUpdatedAt: '2026-08-31T00:01:00.000Z',
+        localProjection: {
+          title: 'Local title',
+          description: null,
+          priority: null,
+          source: 'backlog-description',
+          sourceRevision: 'sha256:local',
+          observedAt: timestamp,
+        },
         snapshot: null,
         baseline: null,
+        capability: null,
+        contentRedacted: false,
         lifecycle: 'active',
+        lifecycleCondition: 'active',
         activeOperationIds: [],
+        createdAt: timestamp,
         updatedAt: timestamp,
       }),
     );
@@ -128,34 +190,28 @@ describe('runRemoteDoctorChecks', () => {
           context: { host: 'github.com' },
           aliases: [],
         },
+        identityHistory: [],
         purposes: ['source'],
         policyRestrictions: {},
+        publicationProjection: {
+          title: 'frontmatter',
+          description: 'description-section',
+          priority: 'frontmatter',
+        },
+        provenanceToken: 'oat-binding:bnd_binding_123',
         lifecycle: 'active',
         createdAt: timestamp,
         updatedAt: timestamp,
         description: 'must not persist here',
       }),
     );
-    for (const operationId of ['op_operation_123', 'op_operation_456']) {
+    for (const [operationId, state] of [
+      ['op_operation_123', 'pending'],
+      ['op_operation_456', 'verification-pending'],
+    ] as const) {
       await writeFile(
         join(paths.operationsDir, `${operationId}.json`),
-        JSON.stringify({
-          recordType: 'operation',
-          schemaVersion: 1,
-          operationId,
-          bindingId: 'bnd_binding_123',
-          operationClass: 'update-fields',
-          state: 'planned',
-          createdAt: timestamp,
-          updatedAt: timestamp,
-          transport: null,
-          steps: [],
-          outcome: {
-            classification: 'pending',
-            message: null,
-            verifiedAt: null,
-          },
-        }),
+        JSON.stringify(operationRecord(operationId, state)),
       );
     }
 
@@ -183,6 +239,43 @@ describe('runRemoteDoctorChecks', () => {
       status: 'fail',
       message: expect.stringContaining('bnd_binding_123'),
     });
+  });
+
+  it('diagnoses every malformed or unknown policy path without exposing values', async () => {
+    const paths = await createPaths();
+    const secret = 'ghp_policy_value_must_not_leak';
+    const checks = await runRemoteDoctorChecks({
+      ...paths,
+      policy: {
+        schemaVersion: 1,
+        unknownRemoteKey: secret,
+        policy: {
+          description: 'replace',
+          authority: {
+            default: 'autonomous',
+            operations: {
+              'update-fields': 'misspelled-read-only',
+              unknownOperation: 'autonomous',
+            },
+          },
+          providers: {
+            github: {
+              description: 'unsafe-description',
+              authority: { operations: { delete: 'misspelled-read-only' } },
+              unknownProviderPolicy: true,
+            },
+            unknownProvider: { authority: { default: 'autonomous' } },
+          },
+          unknownPolicy: true,
+        },
+      },
+    });
+    const policy = checks.find((check) => check.name === 'pjm:remote_policy');
+    expect(policy).toMatchObject({ status: 'fail' });
+    expect(policy?.message).toMatch(
+      /operations\.update-fields|unknownOperation/,
+    );
+    expect(JSON.stringify(policy)).not.toContain(secret);
   });
 
   it('never echoes credential-shaped values in findings', async () => {

@@ -1043,48 +1043,56 @@ function normalizePjmRemoteAuthorityPolicy(
 ): OatPjmRemoteAuthorityPolicy | undefined {
   if (!isRecord(value)) return undefined;
   const policy: OatPjmRemoteAuthorityPolicy = {};
-  if (
-    typeof value.default === 'string' &&
-    (PJM_REMOTE_AUTHORITIES as readonly string[]).includes(value.default)
-  ) {
-    policy.default = value.default as OatPjmRemoteMutationAuthority;
+  if ('default' in value) {
+    policy.default = isPjmRemoteAuthority(value.default)
+      ? value.default
+      : 'read-only';
   }
   if (isRecord(value.operations)) {
     const operations: Partial<
       Record<OatPjmRemoteOperationClass, OatPjmRemoteMutationAuthority>
     > = {};
     for (const operation of PJM_REMOTE_OPERATION_CLASSES) {
+      if (!(operation in value.operations)) continue;
       const authority = value.operations[operation];
-      if (
-        typeof authority === 'string' &&
-        (PJM_REMOTE_AUTHORITIES as readonly string[]).includes(authority)
-      ) {
-        operations[operation] = authority as OatPjmRemoteMutationAuthority;
-      }
+      operations[operation] = isPjmRemoteAuthority(authority)
+        ? authority
+        : 'read-only';
     }
     if (Object.keys(operations).length > 0) policy.operations = operations;
   }
   return Object.keys(policy).length > 0 ? policy : undefined;
 }
 
+function isPjmRemoteAuthority(
+  value: unknown,
+): value is OatPjmRemoteMutationAuthority {
+  return (
+    typeof value === 'string' &&
+    (PJM_REMOTE_AUTHORITIES as readonly string[]).includes(value)
+  );
+}
+
 function normalizePjmRemoteSharedConfig(
   value: Record<string, unknown>,
 ): OatPjmRemoteSharedConfig | undefined {
   if (value.schemaVersion !== 1 || !isRecord(value.policy)) return undefined;
-  const description = value.policy.description;
-  const authority = normalizePjmRemoteAuthorityPolicy(value.policy.authority);
-  if (
-    typeof description !== 'string' ||
-    !(PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
-      description,
-    ) ||
-    !authority?.default
-  ) {
-    return undefined;
-  }
+  const description =
+    typeof value.policy.description === 'string' &&
+    (PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
+      value.policy.description,
+    )
+      ? (value.policy.description as OatPjmRemoteDescriptionMode)
+      : 'none';
+  const authority = normalizePjmRemoteAuthorityPolicy(
+    value.policy.authority,
+  ) ?? { default: 'read-only' as const };
   const policy: OatPjmRemoteSharedConfig['policy'] = {
-    description: description as OatPjmRemoteDescriptionMode,
-    authority: { ...authority, default: authority.default },
+    description,
+    authority: {
+      ...authority,
+      default: authority.default ?? 'read-only',
+    },
   };
   if (isRecord(value.policy.providers)) {
     const providers: NonNullable<
@@ -1094,19 +1102,20 @@ function normalizePjmRemoteSharedConfig(
       const candidate = value.policy.providers[provider];
       if (!isRecord(candidate)) continue;
       const providerPolicy: OatPjmRemoteProviderPolicy = {};
-      if (
-        typeof candidate.description === 'string' &&
-        (PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
-          candidate.description,
-        )
-      ) {
+      if ('description' in candidate) {
         providerPolicy.description =
-          candidate.description as OatPjmRemoteDescriptionMode;
+          typeof candidate.description === 'string' &&
+          (PJM_REMOTE_DESCRIPTION_MODES as readonly string[]).includes(
+            candidate.description,
+          )
+            ? (candidate.description as OatPjmRemoteDescriptionMode)
+            : 'none';
       }
-      const providerAuthority = normalizePjmRemoteAuthorityPolicy(
-        candidate.authority,
-      );
-      if (providerAuthority) providerPolicy.authority = providerAuthority;
+      if ('authority' in candidate) {
+        providerPolicy.authority = normalizePjmRemoteAuthorityPolicy(
+          candidate.authority,
+        ) ?? { default: 'read-only' };
+      }
       if (Object.keys(providerPolicy).length > 0) {
         providers[provider] = providerPolicy;
       }

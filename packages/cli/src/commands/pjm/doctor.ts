@@ -1,5 +1,7 @@
+import { execFile as execFileCallback } from 'node:child_process';
 import { access, readdir, readFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
+import { promisify } from 'node:util';
 
 import {
   BACKLOG_ITEM_STATUSES,
@@ -8,11 +10,15 @@ import {
   isValidBacklogStatus,
 } from '@commands/backlog/shared/item-status';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { parseJsonConfig } from '@config/json';
 import type { DoctorCheck } from '@ui/output';
 
 import { resolvePjmAdoption, type PjmAdoption } from './adoption';
 import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 import { runRemoteDoctorChecks, type RemoteDoctorInput } from './remote/doctor';
+import { resolveRemoteStorageLocations } from './remote/storage-locator';
+
+const execFileAsync = promisify(execFileCallback);
 
 const ALLOWED_TOP_LEVEL_DIRECTORIES = new Set([
   'pjm',
@@ -554,16 +560,85 @@ export async function runPjmDoctorChecks(
         : 'Run `oat backlog archive <id>` to archive each completed item still under items/.',
   });
 
-  const defaultRemoteRoot = join(repoRoot, 'pjm', 'remote');
+  const defaultRemote = await resolveDefaultRemoteDoctorInput(
+    projectRoot,
+    repoRoot,
+  );
   checks.push(
-    ...(await runRemoteDoctorChecks(
-      options.remote ?? {
-        portableBindingsDir: join(defaultRemoteRoot, 'bindings'),
-        operationalBindingsDir: join(defaultRemoteRoot, 'state', 'bindings'),
-        operationsDir: join(defaultRemoteRoot, 'state', 'operations'),
-      },
-    )),
+    ...(await runRemoteDoctorChecks(options.remote ?? defaultRemote)),
   );
 
   return checks;
+}
+
+async function resolveDefaultRemoteDoctorInput(
+  projectRoot: string,
+  pjmRepoRoot: string,
+): Promise<RemoteDoctorInput> {
+  const rawConfig = await readRawRemoteConfig(projectRoot);
+  const stateStorage =
+    isRecord(rawConfig) &&
+    isRecord(rawConfig.storage) &&
+    rawConfig.storage.state === 'shared'
+      ? 'shared'
+      : 'local';
+  try {
+    const [{ stdout: commonDirOutput }, { stdout: originOutput }] =
+      await Promise.all([
+        execFileAsync('git', ['rev-parse', '--git-common-dir'], {
+          cwd: projectRoot,
+        }),
+        execFileAsync('git', ['config', '--get', 'remote.origin.url'], {
+          cwd: projectRoot,
+        }).catch(() => ({ stdout: '' })),
+      ]);
+    const commonDir = commonDirOutput.trim();
+    const gitCommonDir = isAbsolute(commonDir)
+      ? commonDir
+      : resolve(projectRoot, commonDir);
+    const repositoryIdentity =
+      originOutput.trim() || `local-repository:${resolve(projectRoot)}`;
+    const locations = resolveRemoteStorageLocations({
+      repoRoot: projectRoot,
+      gitCommonDir,
+      repositoryIdentity,
+      stateStorage,
+      target: { kind: 'backlog', scope: 'shared', path: null },
+    });
+    return {
+      portableBindingsDir: locations.portable.bindingsDir,
+      operationalBindingsDir: locations.operational.bindingsDir,
+      operationsDir: locations.operational.operationsDir,
+      policy: rawConfig,
+    };
+  } catch {
+    const fallbackRoot = join(pjmRepoRoot, 'pjm', 'remote');
+    return {
+      portableBindingsDir: join(fallbackRoot, 'bindings'),
+      operationalBindingsDir: join(fallbackRoot, 'state', 'bindings'),
+      operationsDir: join(fallbackRoot, 'state', 'operations'),
+      policy: rawConfig,
+    };
+  }
+}
+
+async function readRawRemoteConfig(
+  projectRoot: string,
+): Promise<unknown | undefined> {
+  const content = await readIfExists(join(projectRoot, '.oat', 'config.json'));
+  if (!content) return undefined;
+  try {
+    const config = parseJsonConfig(
+      content,
+      join(projectRoot, '.oat', 'config.json'),
+    );
+    if (!isRecord(config) || !isRecord(config.pjm)) return undefined;
+    return config.pjm.remote;
+  } catch {
+    return undefined;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

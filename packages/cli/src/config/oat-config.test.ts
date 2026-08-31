@@ -361,6 +361,62 @@ describe('oat-config', () => {
     });
   });
 
+  it('fails closed when malformed narrowing policy is combined with permissive defaults', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'replace',
+              authority: {
+                default: 'autonomous',
+                operations: {
+                  'update-fields': 'misspelled-read-only',
+                  unknownOperation: 'autonomous',
+                },
+              },
+              providers: {
+                github: {
+                  description: 'unsafe-description',
+                  authority: {
+                    operations: { delete: 'misspelled-read-only' },
+                  },
+                  unknownProviderPolicy: true,
+                },
+                unknownProvider: { authority: { default: 'autonomous' } },
+              },
+              unknownPolicy: true,
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          policy: {
+            authority: {
+              default: 'autonomous',
+              operations: { 'update-fields': 'read-only' },
+            },
+            providers: {
+              github: {
+                description: 'none',
+                authority: { operations: { delete: 'read-only' } },
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
   it('reads transport preferences from local and user PJM config', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));

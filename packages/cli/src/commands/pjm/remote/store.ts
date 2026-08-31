@@ -9,6 +9,7 @@ import {
   type FileHandle,
 } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import type { z } from 'zod';
 
@@ -26,6 +27,7 @@ import {
   type RemoteOperationOutcome,
   type RemoteOperationRecord,
   type RemoteOperationStep,
+  type FieldVerification,
   type PlannedBindingCreate,
   type VerifiedDurableRemoteIdentity,
 } from './schema';
@@ -99,6 +101,7 @@ export interface RemoteOperationTransition {
   transport?: RemoteOperationRecord['transport'];
   outcome?: RemoteOperationOutcome;
   appendStep?: RemoteOperationStep;
+  verification?: FieldVerification[];
 }
 
 export interface ConcurrentOperationIntentInspection {
@@ -109,8 +112,10 @@ export interface ConcurrentOperationIntentInspection {
 
 const ACTIVE_OPERATION_STATES: ReadonlySet<RemoteOperationState> = new Set([
   'planned',
+  'pending',
   'authorized',
   'attempt-started',
+  'verification-pending',
   'partial',
   'uncertain',
 ]);
@@ -135,25 +140,26 @@ export class RemoteSyncStore {
     );
   }
 
-  async writeBindingMetadata(
+  async materializeVerifiedBinding(
+    operationId: string,
     record: RemoteBindingMetadata,
-    verification?: VerifiedDurableRemoteIdentity,
+    verification: VerifiedDurableRemoteIdentity,
   ): Promise<void> {
     const parsed = RemoteBindingMetadataSchema.parse(record);
     assertVerifiedDurableRemoteIdentity(parsed, verification);
+    const operation = await this.readOperation(operationId);
+    assertMaterializationMatchesCreateIntent(
+      operationId,
+      operation,
+      parsed,
+      verification,
+    );
     const path = join(
       this.locations.portable.bindingsDir,
       `${parsed.bindingId}.json`,
     );
     assertRecordIdMatchesFilename(path, parsed.bindingId);
     await this.#atomicWrite(path, parsed);
-  }
-
-  async materializeVerifiedBinding(
-    record: RemoteBindingMetadata,
-    verification: VerifiedDurableRemoteIdentity,
-  ): Promise<void> {
-    await this.writeBindingMetadata(record, verification);
   }
 
   async listBindingMetadata(): Promise<RemoteBindingMetadata[]> {
@@ -210,12 +216,34 @@ export class RemoteSyncStore {
       recordType: 'operation',
       schemaVersion: 1,
       operationId: parsed.operationId,
+      correlationId: parsed.operationId,
       bindingId: parsed.bindingId,
+      provider: parsed.provider,
+      providerContext: parsed.providerContext,
+      lifecycleOperation: 'publish',
       operationClass: 'create',
       state: 'planned',
+      reason: null,
+      lastSafeStep: 'planned',
+      preview: {
+        digest: parsed.provenanceToken,
+        bindingId: parsed.bindingId,
+        provider: parsed.provider,
+        providerContext: parsed.providerContext,
+        capabilityDigest: 'unprobed',
+        revisionDigest: 'unbound',
+        policyDigest: parsed.provenanceToken,
+      },
+      authority: null,
+      approval: null,
       createdAt: parsed.createdAt,
       updatedAt: parsed.createdAt,
       transport: null,
+      selectedTransport: null,
+      attempts: [],
+      observations: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt',
       steps: [],
       outcome: {
         classification: 'pending',
@@ -275,6 +303,9 @@ export class RemoteSyncStore {
         ? { transport: update.transport }
         : {}),
       ...(update.outcome !== undefined ? { outcome: update.outcome } : {}),
+      ...(update.verification !== undefined
+        ? { verification: update.verification }
+        : {}),
       steps: update.appendStep
         ? [...current.steps, update.appendStep]
         : current.steps,
@@ -420,6 +451,68 @@ function assertVerifiedDurableRemoteIdentity(
   ) {
     throw new Error(
       'Portable binding metadata requires a verified durable remote identity.',
+    );
+  }
+}
+
+function assertMaterializationMatchesCreateIntent(
+  operationId: string,
+  operation: RemoteOperationRecord | null,
+  record: RemoteBindingMetadata,
+  verification: VerifiedDurableRemoteIdentity,
+): void {
+  if (!operation?.createIntent || operation.operationClass !== 'create') {
+    throw new Error(
+      `Create operation journal '${operationId}' does not contain binding intent.`,
+    );
+  }
+  if (
+    operation.state !== 'verified' ||
+    operation.outcome.classification !== 'verified' ||
+    !operation.verification.some(
+      (item) =>
+        item.field === 'remoteIdentity' &&
+        item.status === 'verified' &&
+        item.observedHash === verification.evidenceDigest,
+    )
+  ) {
+    throw new Error(
+      `Create operation journal '${operationId}' is not in a verified materialization state.`,
+    );
+  }
+  const intent = operation.createIntent;
+  const mismatches: string[] = [];
+  if (operation.bindingId !== record.bindingId) mismatches.push('bindingId');
+  if (operation.provider !== record.provider) mismatches.push('provider');
+  if (!isDeepStrictEqual(intent.target, record.target))
+    mismatches.push('target');
+  if (
+    !isDeepStrictEqual(intent.providerContext, record.remoteIdentity.context)
+  ) {
+    mismatches.push('providerContext');
+  }
+  if (!isDeepStrictEqual(intent.purposes, record.purposes)) {
+    mismatches.push('purposes');
+  }
+  if (
+    !isDeepStrictEqual(intent.policyRestrictions, record.policyRestrictions)
+  ) {
+    mismatches.push('policyRestrictions');
+  }
+  if (
+    !isDeepStrictEqual(
+      intent.publicationProjection,
+      record.publicationProjection,
+    )
+  ) {
+    mismatches.push('publicationProjection');
+  }
+  if (intent.provenanceToken !== record.provenanceToken) {
+    mismatches.push('provenance');
+  }
+  if (mismatches.length > 0) {
+    throw new Error(
+      `Binding metadata does not match create intent fields: ${mismatches.join(', ')}.`,
     );
   }
 }

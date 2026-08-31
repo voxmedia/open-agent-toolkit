@@ -40,8 +40,15 @@ function metadata(bindingId = 'bnd_binding_123'): RemoteBindingMetadata {
       context: { host: 'github.com', repositoryId: 'repo-123' },
       aliases: [],
     },
+    identityHistory: [],
     purposes: ['source'],
     policyRestrictions: {},
+    publicationProjection: {
+      title: 'frontmatter',
+      description: 'description-section',
+      priority: 'frontmatter',
+    },
+    provenanceToken: `oat-binding:${bindingId}`,
     lifecycle: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -53,11 +60,24 @@ function bindingState(bindingId = 'bnd_binding_123'): RemoteBindingState {
     recordType: 'binding-state',
     schemaVersion: 1,
     bindingId,
+    provider: 'github',
     metadataUpdatedAt: timestamp,
+    localProjection: {
+      title: 'Local title',
+      description: 'Local description',
+      priority: null,
+      source: 'backlog-description',
+      sourceRevision: 'sha256:local-revision',
+      observedAt: timestamp,
+    },
     snapshot: null,
     baseline: null,
+    capability: null,
+    contentRedacted: false,
     lifecycle: 'active',
+    lifecycleCondition: 'active',
     activeOperationIds: [],
+    createdAt: timestamp,
     updatedAt: timestamp,
   };
 }
@@ -70,15 +90,75 @@ function operation(
     recordType: 'operation',
     schemaVersion: 1,
     operationId,
+    correlationId: `corr_${operationId}`,
     bindingId,
+    provider: 'github',
+    providerContext: { host: 'github.com', repositoryId: 'repo-123' },
+    lifecycleOperation: 'reconcile',
     operationClass: 'update-fields',
     state: 'planned',
+    reason: null,
+    lastSafeStep: 'planned',
+    preview: {
+      digest: `sha256:${operationId}`,
+      bindingId,
+      provider: 'github',
+      providerContext: { host: 'github.com', repositoryId: 'repo-123' },
+      capabilityDigest: 'sha256:capability',
+      revisionDigest: 'sha256:revision',
+      policyDigest: 'sha256:policy',
+    },
+    authority: null,
+    approval: null,
     createdAt: timestamp,
     updatedAt: timestamp,
     transport: null,
+    selectedTransport: null,
+    attempts: [],
+    observations: [],
+    verification: [],
+    retryDisposition: 'safe-before-attempt',
     steps: [],
     outcome: { classification: 'pending', message: null, verifiedAt: null },
   };
+}
+
+async function createVerifiedBinding(
+  store: RemoteSyncStore,
+  record: RemoteBindingMetadata,
+): Promise<void> {
+  const operationId = `op_${record.bindingId}`;
+  await store.createBindingIntent({
+    schemaVersion: 1,
+    bindingId: record.bindingId,
+    operationId,
+    provider: record.provider,
+    target: record.target,
+    publicationProjection: record.publicationProjection,
+    providerContext: record.remoteIdentity.context,
+    purposes: record.purposes,
+    policyRestrictions: record.policyRestrictions,
+    provenanceToken: record.provenanceToken,
+    createdAt: record.createdAt,
+  });
+  await store.transitionOperation(operationId, 'planned', {
+    state: 'verified',
+    updatedAt: verification.verifiedAt,
+    verification: [
+      {
+        field: 'remoteIdentity',
+        expectedHash: verification.evidenceDigest,
+        observedHash: verification.evidenceDigest,
+        status: 'verified',
+      },
+    ],
+    outcome: {
+      classification: 'verified',
+      message: 'durable identity verified',
+      verifiedAt: verification.verifiedAt,
+    },
+  });
+  await store.materializeVerifiedBinding(operationId, record, verification);
 }
 
 describe('RemoteSyncStore', () => {
@@ -123,7 +203,7 @@ describe('RemoteSyncStore', () => {
 
   it('keeps portable metadata and operational binding state in separate classes', async () => {
     const { root, store } = await createStore();
-    await store.writeBindingMetadata(metadata(), verification);
+    await createVerifiedBinding(store, metadata());
     await store.writeBindingState(bindingState());
 
     expect(await store.readBindingMetadata('bnd_binding_123')).toEqual(
@@ -213,7 +293,8 @@ describe('RemoteSyncStore', () => {
   it('validates schemas and filename identity before persistence', async () => {
     const { store } = await createStore();
     await expect(
-      store.writeBindingMetadata(
+      store.materializeVerifiedBinding(
+        'op_operation_123',
         {
           ...metadata(),
           bindingId: '../escape',
@@ -246,6 +327,16 @@ describe('RemoteSyncStore', () => {
       semanticOperation: 'update-fields' as const,
       state: 'authorized' as const,
       actionDigest: 'sha256:step',
+      previewDigest: 'sha256:preview',
+      authority: {
+        effective: 'user-approved' as const,
+        sourceDigest: 'sha256:policy',
+      },
+      approvalRequirement: 'fresh-approval' as const,
+      approval: null,
+      attempts: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt' as const,
     };
     await store.transitionOperation('op_operation_123', 'planned', {
       state: 'authorized',
@@ -269,8 +360,14 @@ describe('RemoteSyncStore', () => {
     });
 
     await Promise.all([
-      store.createOperation(operation('op_operation_123')),
-      store.createOperation(operation('op_operation_456')),
+      store.createOperation({
+        ...operation('op_operation_123'),
+        state: 'pending',
+      }),
+      store.createOperation({
+        ...operation('op_operation_456'),
+        state: 'verification-pending',
+      }),
     ]);
 
     expect(
@@ -343,12 +440,110 @@ describe('RemoteSyncStore', () => {
       createIntent: intent,
     });
 
-    await expect(store.writeBindingMetadata(metadata())).rejects.toThrow(
-      /verified durable remote identity/i,
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        metadata(),
+        undefined as never,
+      ),
+    ).rejects.toThrow(/verified durable remote identity/i);
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        metadata(),
+        verification,
+      ),
+    ).rejects.toThrow(/verified/i);
+  });
+
+  it('requires materialization to match a retained verified create journal', async () => {
+    const { store } = await createStore();
+    const intent = {
+      schemaVersion: 1 as const,
+      bindingId: 'bnd_binding_789',
+      operationId: 'op_operation_789',
+      provider: 'github' as const,
+      target: {
+        kind: 'backlog' as const,
+        scope: 'shared' as const,
+        id: 'item-789',
+        path: '.oat/repo/pjm/backlog/item-789.md',
+      },
+      publicationProjection: {
+        title: 'frontmatter' as const,
+        description: 'description-section' as const,
+        priority: 'frontmatter' as const,
+      },
+      providerContext: {
+        host: 'github.com',
+        owner: 'voxmedia',
+        repositoryId: 'repo-123',
+      },
+      purposes: ['planning' as const],
+      policyRestrictions: { authority: { default: 'user-approved' as const } },
+      provenanceToken: 'oat-create:item-789:bnd_binding_789',
+      createdAt: timestamp,
+    };
+    const record = {
+      ...metadata(intent.bindingId),
+      target: intent.target,
+      remoteIdentity: {
+        stableId: verification.stableId,
+        context: intent.providerContext,
+        aliases: [],
+      },
+      purposes: intent.purposes,
+      policyRestrictions: intent.policyRestrictions,
+      publicationProjection: intent.publicationProjection,
+      provenanceToken: intent.provenanceToken,
+      identityHistory: [],
+    };
+
+    await expect(
+      store.materializeVerifiedBinding('op_missing_123', record, verification),
+    ).rejects.toThrow(/create operation|journal/i);
+    await store.createBindingIntent(intent);
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        record,
+        verification,
+      ),
+    ).rejects.toThrow(/verified/i);
+    await store.transitionOperation(intent.operationId, 'planned', {
+      state: 'verified',
+      updatedAt: verification.verifiedAt,
+      outcome: {
+        classification: 'verified',
+        message: 'durable identity verified',
+        verifiedAt: verification.verifiedAt,
+      },
+      verification: [
+        {
+          field: 'remoteIdentity',
+          expectedHash: verification.evidenceDigest,
+          observedHash: verification.evidenceDigest,
+          status: 'verified',
+        },
+      ],
+    });
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        { ...record, provenanceToken: 'wrong-provenance' },
+        verification,
+      ),
+    ).rejects.toThrow(/intent|provenance/i);
+
+    await store.materializeVerifiedBinding(
+      intent.operationId,
+      record,
+      verification,
     );
-    await store.materializeVerifiedBinding(metadata(), verification);
-    expect(await store.readBindingMetadata('bnd_binding_123')).toEqual(
-      metadata(),
-    );
+    expect(await store.readBindingMetadata(intent.bindingId)).toEqual(record);
+    expect(await store.readOperation(intent.operationId)).toMatchObject({
+      state: 'verified',
+      createIntent: intent,
+    });
   });
 });
