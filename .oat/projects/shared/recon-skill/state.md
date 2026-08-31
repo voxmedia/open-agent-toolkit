@@ -1,6 +1,6 @@
 ---
 oat_current_task: prev1-t01
-oat_last_commit: cf4e5fbf17743825484460ed32f1f522075eb552
+oat_last_commit: 8fe8c43df249a9bae94af38fcc54d7bdd57ced9d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T13:37:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T14:55:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev1 - simplifying the packet validation design
+Revision p-rev1 - bounded review fixes for publication roots and receipt drift
 
 ## Artifacts
 
@@ -110,14 +110,19 @@ Revision p-rev1 - simplifying the packet validation design
 - ✓ Planning PR opened as #248
 - ✓ Implementation started with a final-phase HiLL checkpoint at p04
 - ✓ p01 passed independent review after one bounded fix iteration
-- ⧗ Revision p-rev1 created to replace incremental validator patches with one
+- ✓ Revision p-rev1 created to replace incremental validator patches with one
   normalized validation boundary
+- ✓ p-rev1 implementation completed as two bounded commits; all five round-4
+  bypasses reject in direct probes and the overengineering assessment passed
+- ⧗ p-rev1 review round 1 found two Important adjacent invariant gaps for one
+  bounded fix and fresh re-review
 
 ## Blockers
 
-None. The p02 review findings are now assigned to revision phase p-rev1.
+Two Important p-rev1 review findings remain assigned to the bounded revision
+fix loop; no design expansion or external blocker is present.
 
 ## Next Milestone
 
-Complete revision p-rev1 and obtain an independent review against the complete
-p02 safety history
+Complete the bounded p-rev1 review fix and obtain a fresh independent re-review
+against the complete p02 safety history

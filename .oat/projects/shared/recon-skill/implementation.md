@@ -18,15 +18,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | passed      | 1     | 1/1       |
-| Phase 2      | blocked     | 4     | 3/4       |
-| Phase 3      | pending     | 4     | 0/4       |
-| Phase 4      | pending     | 2     | 0/2       |
-| Phase p-rev1 | in_progress | 2     | 0/2       |
+| Phase        | Status  | Tasks | Completed |
+| ------------ | ------- | ----- | --------- |
+| Phase 1      | passed  | 1     | 1/1       |
+| Phase 2      | blocked | 4     | 3/4       |
+| Phase 3      | pending | 4     | 0/4       |
+| Phase 4      | pending | 2     | 0/2       |
+| Phase p-rev1 | blocked | 2     | 2/2       |
 
-**Total:** 4/13 tasks completed
+**Total:** 6/13 tasks completed
 
 ## Task Status
 
@@ -63,10 +63,10 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev1: Revision 1 — Simplify Packet Validation
 
-| Task      | Status      | Commit |
-| --------- | ----------- | ------ |
-| prev1-t01 | in_progress | -      |
-| prev1-t02 | pending     | -      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev1-t01 | completed | `9e8a92e48` |
+| prev1-t02 | completed | `8fe8c43df` |
 
 ## Orchestration Runs
 
@@ -318,6 +318,43 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Outstanding items: three Critical and two Important findings in
   `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
 
+#### Dispatch p-rev1 implementation
+
+- Request ID: `recon-skill-prev1-implementation-20260831`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Authority: execute exactly the two p-rev1 tasks and their declared file
+  boundaries; two planned task commits
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with non-blocking gate concerns
+- Task commits: `9e8a92e48761ce4db5fc95239270498a8bc101ca` and
+  `8fe8c43df249a9bae94af38fcc54d7bdd57ced9d`
+- Recovery attempts: 0/10; no recovery event
+- Optional nested dispatches: none
+- Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Dispatch p-rev1 review round 1
+
+- Request ID: `recon-skill-prev1-review-20260831T1450Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: review the complete p02 implementation history through p-rev1 and
+  write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p-rev1-code-review-2026-08-31T145006Z.md`
+- Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
+- Overengineering assessment: passed; the revision is a focused simplification
+  with no new schema, profile, persisted intermediate, review pass, provider
+  behavior, integration, or generalized artifact framework
+- Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -474,6 +511,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 root-owned revision review must use the complete p02 review history as acceptance
 context before p02 can advance.
 
+### 2026-08-31 - p-rev1 review round 1 received
+
+- The two planned revision commits centralize assurance and rendering behind
+  one branded, deeply immutable, non-persisted `ValidatedRun`; direct RED/GREEN
+  coverage closes all five p02 review-round-4 bypasses in their stated forms.
+- Independent review passed the explicit overengineering/non-goal assessment
+  and found no Critical issues, but reproduced two Important adjacent gaps:
+  source/output identities are not all retained and rechecked at publication,
+  and receipt selection drift can silently publish a dishonest lower-profile
+  partial from a stage still declared complete.
+- Both corrections remain inside the existing canonical-root and exact
+  receipt/topology invariants. They return to the original p-rev1 implementer
+  for one bounded append-only fix and a fresh independent re-review.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -495,6 +546,14 @@ source artifact and follow-up disposition.
   validation, format, lint, CLI type-check, and `pnpm check` passed.
 - Passing tests do not override the final independent review's reproduced
   false-assurance paths.
+- p-rev1 direct RED coverage reproduced one failure for each review-round-4
+  bypass group; the post-fix recon suite passes 86/86.
+- p-rev1 focused CLI validation passes 164/164, the complete skill suite passes
+  681/681, and canonical validation, lint, format, CLI type-check, `pnpm check`,
+  root type-check, build, skill-bump validation, and docs build pass.
+- `pnpm test` still reports the pending p03 recon-worker bundle materialization
+  and an unrelated approval-prompt inventory gap; release-version gates remain
+  pending p04's lockstep package bump after the current-main rebase.
 
 ## Final Summary (for PR/docs)
 
