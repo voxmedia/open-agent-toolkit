@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t03
-oat_last_commit: 7d9e9e77275a9ffb09ec0989662ec2954b257960
+oat_current_task: null
+oat_last_commit: af850a463b220ac47342c675c3f68986dcae576c
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -82,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T17:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T17:43:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** p04 final-review fixes in progress
+**Status:** p04 final-review fixes complete; final re-review pending
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p04 final-review fixes
+Implement - full final verification and focused re-review
 
 ## Artifacts
 
@@ -102,7 +102,7 @@ Implement - p04 final-review fixes
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (10/13 tasks complete; three final-review fixes pending)
+- **Implementation:** `implementation.md` (13/13 tasks complete; final re-review pending)
 
 ## Progress
 
@@ -135,14 +135,14 @@ Implement - p04 final-review fixes
 - ✓ p04 integration and documentation committed at `7d9e9e772`
 - ✓ p04 review passed with zero findings; all repository and release gates pass
 - ✗ Final whole-project review found 1 Critical, 1 Important, and 1 Medium terminal-path gap
-- → Execute p04-t03 through p04-t05, re-review, run Cursor Fable, then evaluate the post-p04 HiLL checkpoint
+- ✓ Completed p04-t03 through p04-t05; combined regression passes 156/156
+- → Run full final verification and focused re-review, then Cursor Fable and the post-p04 HiLL checkpoint
 
 ## Blockers
 
-None. The final review findings are bounded implementation defects with
-approved contract behavior and do not require a product decision.
+None.
 
 ## Next Milestone
 
-Complete p04-t03 through p04-t05 and the focused final re-review, then run the
+Complete full final verification and the focused final re-review, then run the
 configured Cursor Fable exit gate and evaluate the post-p04 HiLL checkpoint.

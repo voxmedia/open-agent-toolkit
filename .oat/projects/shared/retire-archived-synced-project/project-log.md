@@ -108,6 +108,10 @@ Phase p04 passed at 7d9e9e77275a9ffb09ec0989662ec2954b257960 after one bounded p
 
 Automatic final review at fd9fe6615efc32a89ea977deeb6d4cc27b51c175 blocked with 1 Critical, 1 Important, and 1 Medium terminal-path finding; all three were converted to p04-t03 through p04-t05. The consumed artifact is reviews/archived/final-review-2026-08-31T171506Z.md; no finding was deferred.
 
+### 2026-08-31 · structural · oat-project-implement · final-review-fixes-completed
+
+Final-review fix tasks p04-t03 through p04-t05 completed in e7f52ba14, 49c649995, and af850a463. Test-first verification passed 78/78, 16/16, and 52/52 respectively; combined regression passed 156/156 with CLI check and type-check green. Proceeding to full final verification and focused re-review.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
