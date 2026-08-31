@@ -552,7 +552,9 @@ Reconcile fixtures and assertions only. Preserve each parallel phase's source
 ownership and do not redesign the completed-ref contract in integration. If an
 integration failure exposes a source defect, return it to the owning p02 or p03
 phase as a separately reviewed fix task and commit rather than modifying source
-outside this task's declared write set.
+outside this task's declared write set. `sync-runner.ts` is expected to require
+test-only proof in p04; if that expectation is false, add an explicitly owned
+p02 fix task for the source change before continuing integration.
 
 **Step 3: Format**
 
@@ -607,7 +609,7 @@ version bump relative to `origin/main`.
 **Step 3: Format**
 
 ```bash
-pnpm exec oxfmt --write apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/picking-up-projects.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+pnpm exec oxfmt --write apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/docs/reference/file-locations.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/picking-up-projects.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
 ```
 
 **Step 4: Run scoped evidence-grade tests**
@@ -659,17 +661,17 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -                                        | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -                                        | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -                                        | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -                                        | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -                                        | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -                                        | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -                                        | -          | -           |
-| plan   | artifact | passed   | 2026-08-31 | plan.md                                            | 4acc4bed89f5f5cddc2350ae7b7b10682cdf16da | auto       | -           |
-| plan   | artifact | received | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T044004Z.md | -                                        | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target                   |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------------------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| p03    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| p04    | code     | pending | -          | -                                                           | -             | -          | -                             |
+| final  | code     | pending | -          | -                                                           | -             | -          | -                             |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -                             |
+| design | artifact | pending | -          | -                                                           | -             | -          | -                             |
+| plan   | artifact | passed  | 2026-08-31 | structured plan-review (no artifact)                        | -             | auto       | -                             |
+| plan   | artifact | passed  | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T044004Z.md | -             | gate       | claude-fable-skip-permissions |
 
 Status progression:
 `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
