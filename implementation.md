@@ -382,6 +382,12 @@ durable evidence proves this attempt was not accepted.
 its unique run marker at `2026-08-31T00:05:30.486Z`. The accepted run is now
 the only launch eligible to satisfy this generation.
 
+**Structured result:** The accepted run exited 0 with one complete `ok`
+envelope. Run, project, invocation, and artifact correlation all matched;
+`receiveEligible` is true and the handoff is non-null. The gate passed its
+Important threshold with 0 Critical, 0 Important, 0 Medium, and 1 Minor
+finding. The result is persisted before receive disposition.
+
 ---
 
 ## Implementation Log

@@ -52,6 +52,10 @@ Parallel fan-in merged p01 then p02 in plan order; both root reviews passed and 
 
 Phase p03 passed root review with three task commits; full DoD, uncached verification, release validation, docs build, and owned backlog closeout passed.
 
+### 2026-08-31 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
