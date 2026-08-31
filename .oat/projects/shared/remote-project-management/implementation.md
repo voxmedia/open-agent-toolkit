@@ -715,10 +715,10 @@ phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
 phase_head: 831e110beff1aa8065926409f4819fec834cfc3c
 recovery_usage: 1/10
 pending_attempt: null
-review_cycles: 3/4
+review_cycles: 4/4
 review_fix_loops: 3/3
-phase_outcome: operator-review-pending
-terminal_review_artifact: reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md
+phase_outcome: blocked
+terminal_review_artifact: reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
     reason: bounded fixes for Phase 2 round-1 Critical and Important review findings
@@ -741,11 +741,12 @@ continuation_events:
 
 #### Independent review and bounded fixes
 
-| Round | Request                        | Artifact                                                       | Findings                          | Outcome                      |
-| ----- | ------------------------------ | -------------------------------------------------------------- | --------------------------------- | ---------------------------- |
-| 1     | `review-p02-20260831T135618Z`  | `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`       | 1 Critical, 2 Important, 2 Medium | blocked; fix `bbbb3857c`     |
-| 2     | `review-p02-r2-20260831T1450Z` | `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`     | 2 Critical, 0 Important, 2 Medium | blocked; fix `eed80d5ab`     |
-| 3     | `review-p02-r3-20260831T1505Z` | `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md` | 1 Critical, 0 Important, 2 Medium | terminal normal-review BLOCK |
+| Round | Request                                 | Artifact                                                          | Findings                          | Outcome                        |
+| ----- | --------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | ------------------------------ |
+| 1     | `review-p02-20260831T135618Z`           | `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`          | 1 Critical, 2 Important, 2 Medium | blocked; fix `bbbb3857c`       |
+| 2     | `review-p02-r2-20260831T1450Z`          | `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`        | 2 Critical, 0 Important, 2 Medium | blocked; fix `eed80d5ab`       |
+| 3     | `review-p02-r3-20260831T1505Z`          | `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`    | 1 Critical, 0 Important, 2 Medium | terminal normal-review BLOCK   |
+| 4     | `review-p02-r4-operator-20260831T1540Z` | `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md` | 2 Critical, 0 Important, 2 Medium | terminal operator-review BLOCK |
 
 - All five blockers from rounds 1 and 2 are resolved. The remaining Critical
   finding is a punctuation-delimited credential-assignment bypass shared by
@@ -771,6 +772,20 @@ continuation_events:
   `oat-reviewer-gpt-5-6-sol-high`.
 - No further fix/review cycle, target change, or Phase 3 dispatch is authorized
   if the fourth review remains blocked.
+- Fix commit: `831e110beff1aa8065926409f4819fec834cfc3c`
+  (`fix(p02): centralize credential assignment safety`), limited to the six
+  authorized scanner/snapshot/preview files.
+- Fix verification: focused 58/58; combined Phase 2 110/110; CLI format,
+  type-check, lint, check, and build passed; uncached CLI 4,838/4,838 with 0
+  cached tasks.
+- Review artifact:
+  `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md`.
+- Review result: BLOCK with 2 Critical, 0 Important, 2 Medium, and 0 Minor.
+- Remaining Critical findings: multi-segment/escaped values can retain a secret
+  suffix after partial redaction, and bracket-notation assignments bypass all
+  three credential-safety boundaries.
+- Status: terminal Phase 2 block; the normal cycle and operator exception are
+  exhausted, and no fifth cycle is authorized.
 
 #### Approved future-phase boundary correction
 

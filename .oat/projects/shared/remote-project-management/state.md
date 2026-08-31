@@ -1,7 +1,8 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 831e110beff1aa8065926409f4819fec834cfc3c
-oat_blockers: []
+oat_blockers:
+  - 'p02 operator review: multi-segment credential values are only partially redacted and bracket-notation assignments bypass snapshot, preview, and approval-evidence boundaries'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -28,7 +29,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -41,8 +42,8 @@ oat_generated: false
 ## Current Phase
 
 Implementation — Phase 2 tasks and the operator-authorized third review-fix
-round are complete. Phase-wide verification passed; the single authorized
-fourth independent review is next. Phase 3 has not started.
+round are complete, but the single authorized fourth review is blocked by two
+Critical credential-safety findings. Phase 3 has not started.
 
 ## Artifacts
 
@@ -100,13 +101,19 @@ fourth independent review is next. Phase 3 has not started.
 - ⚠ Phase 2 final normal review blocked with 1 Critical and 2 Medium findings
 - ⧗ One additional bounded Phase 2 fix/review cycle authorized
 - ✓ Operator-extension credential-boundary fix committed as `831e110be`
+- ⚠ Phase 2 operator review blocked with 2 Critical and 2 Medium findings
 
 ## Blockers
 
-None. The fourth Phase 2 review remains the terminal governance boundary.
+- Phase 2 exhausted normal governance and the one-cycle operator exception.
+  Multi-segment or escaped values may be only partly redacted, while
+  bracket-notation assignments can bypass snapshot, preview, and
+  approval-evidence boundaries. See
+  `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md`.
 
 ## Next Milestone
 
-Run the operator-authorized fourth independent Phase 2 review. Before any Phase
-3 dispatch, amend the future-phase artifacts to preserve the
-runtime-discovered MCP/CLI boundary confirmed on 2026-08-31.
+Phase 2 is terminally blocked; no fifth fix/review cycle is authorized. If an
+operator later changes that boundary, the future-phase artifacts must still be
+amended before any Phase 3 dispatch to preserve the runtime-discovered MCP/CLI
+constraint confirmed on 2026-08-31.
