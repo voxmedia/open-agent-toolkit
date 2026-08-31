@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - 'p03-review: Phase 3 exhausted the three-cycle review cap with 6 Critical and 1 Important findings remaining (since 2026-08-31).'
 oat_last_updated: 2026-08-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,14 +29,14 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 10    | 10/10     |
 | Phase 2 | completed | 10    | 10/10     |
-| Phase 3 | pending   | 12    | 0/12      |
+| Phase 3 | blocked   | 12    | 12/12     |
 | Phase 4 | pending   | 11    | 0/11      |
 | Phase 5 | pending   | 9     | 0/9       |
 | Phase 6 | pending   | 10    | 0/10      |
 | Phase 7 | pending   | 10    | 0/10      |
 | Phase 8 | pending   | 6     | 0/6       |
 
-**Total:** 20/78 tasks completed
+**Total:** 32/78 tasks completed
 
 ---
 
@@ -541,6 +542,112 @@ lint, build, and diff checks passed.
 
 ---
 
+## Phase 3: Execution Substrate and Lifecycle UX
+
+**Status:** blocked — all 12 planned tasks are implemented, but the third and
+final normal code review found 6 Critical and 1 Important issue.
+**Started:** 2026-08-31
+**Reviewed head:** 9872f13ddd2940b338ababfea297434dad6a4ae5
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Added the provider-neutral adapter, semantic host-capability selection,
+  outbound projection safety, external-action protocol, lifecycle services,
+  command envelope, command family, host skill, integration harness, shared
+  storage approval, and create/bind path.
+- Added two bounded review-fix commits for projection binding, suppression
+  evidence, identity/capability pinning, authority checks, append-only
+  operation evidence, replay handling, and derived storage paths.
+- The final review confirmed the focused suite, skill contract, type-check,
+  managed views, and range diff all pass, but direct reproductions still prove
+  unsafe annotation divergence and unsafe stable-identity acceptance.
+
+**Verification:**
+
+- Initial phase suite: 249 tests passed; uncached CLI suite: 4,919 tests passed.
+- Review-fix round 1: 385 remote/config tests passed; uncached CLI suite: 4,929 tests passed.
+- Final independent review: focused 147/147, skill contract 3/3, CLI type-check,
+  managed views 89/89, and range diff check passed.
+
+### Task p03-t01: Define provider adapter and conformance contract
+
+**Status:** completed
+**Commit:** 06a3eef51b63dada8e7418122f48c588a9d6342c
+
+### Task p03-t02: Select host execution by semantic capability evidence
+
+**Status:** completed
+**Commit:** 509caa927dd004768185eb357b34a6569af7a9e6
+
+### Task p03-t03: Gate explicit outbound projections before host execution
+
+**Status:** completed
+**Commit:** a3c9dc8bdf284fb3e91c6aff9a89e7497b2e47ad
+
+### Task p03-t04: Define the host-executor action protocol
+
+**Status:** completed
+**Commit:** ce353815249da49cbc32a16e232d8b1508862e01
+
+### Task p03-t05: Implement refresh and intake services
+
+**Status:** completed
+**Commit:** 6eae8ba55094f694ebfdacdafcb610fe8acba032
+
+### Task p03-t06: Implement publish and reconcile services
+
+**Status:** completed
+**Commit:** f5431de42bea2890ebfa7e42acd8830678efb77f
+
+### Task p03-t07: Emit one command envelope and exit mapping
+
+**Status:** completed
+**Commit:** f57f57512c16feb7793ee48624a95de6111058b3
+
+### Task p03-t08: Wire the oat pjm remote command family
+
+**Status:** completed
+**Commit:** f13d4070dd8f186c61d9d8d9ea2942d835018750
+
+### Task p03-t09: Add the provider-neutral host skill
+
+**Status:** completed
+**Commit:** fa11ccaaeb8621b4f525d8d542d7bc1808b8e789
+
+### Task p03-t10: Add shared lifecycle integration fixtures
+
+**Status:** completed
+**Commit:** fc5541ace3f8270e48519eea41da8fdc86fd7ae8
+
+### Task p03-t11: Gate shared operational storage behind previewed approval
+
+**Status:** completed
+**Commit:** 0851ca4585680853cde2fbeb95db678f6cac7572
+
+### Task p03-t12: Materialize a binding through initial publish
+
+**Status:** completed
+**Commit:** 5e6915158f969acacca9f0ef3171340995258fe2
+**Review fixes:** b8b7892d05d4cabdc179adbeff768078eecf0a15,
+9872f13ddd2940b338ababfea297434dad6a4ae5
+
+### Phase 3 terminal review disposition
+
+- Review 1: `reviews/p03-review-2026-08-31T202119Z.md` — 5 Critical,
+  2 Important; fixed by `b8b7892d0`.
+- Review 2: `reviews/p03-review-2026-08-31T213820Z.md` — 5 Critical,
+  1 Important; fixed by `9872f13dd`.
+- Review 3: `reviews/p03-review-2026-08-31T232956Z.md` — 6 Critical,
+  1 Important; terminal normal-governance block.
+- Every reviewer reported `**Reconnaissance:** not-attempted`; none of the
+  three artifacts contains a `## Review Orchestration` section.
+- Phase 4 is not authorized while this blocker remains. Any additional Phase 3
+  repair/review cycle requires explicit operator authorization.
+
+---
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
@@ -911,6 +1018,61 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   artifact contains a `## Review Orchestration` section.
 - Phase 2 completed at 10/10 tasks. p03-t01 is next.
 
+### Run 4 — Phase p03
+
+```yaml
+request_id: implement-p03-20260831T1910Z
+caller: oat-project-implement
+scope: p03
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+provider: codex
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+phase_base_head: add63562faa0611ce65e4fd16df02876cf8832ed
+phase_head: 9872f13ddd2940b338ababfea297434dad6a4ae5
+review_cycles: 3/3
+review_fix_loops: 2/3
+phase_outcome: blocked
+continuation_events:
+  - id: review-fix-p03-r1
+    outcome: done
+    commit: b8b7892d05d4cabdc179adbeff768078eecf0a15
+  - id: review-fix-p03-r2-20260831T2200Z
+    outcome: done
+    commit: 9872f13ddd2940b338ababfea297434dad6a4ae5
+```
+
+**Implementation dispatch:** Dispatch: scope=p03 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+**Final review dispatch:** Dispatch: scope=p03 action=review role=reviewer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+target=oat-reviewer-gpt-5-6-sol-high
+
+**Task commits:** `06a3eef51`, `509caa927`, `a3c9dc8bd`, `ce3538152`,
+`6eae8ba55`, `f5431de42`, `f57f57512`, `f13d4070d`, `fa11ccaae`,
+`fc5541ace`, `0851ca458`, `5e6915158`.
+
+**Review outcomes:**
+
+| Round | Artifact                                   | Findings                | Outcome         |
+| ----- | ------------------------------------------ | ----------------------- | --------------- |
+| 1     | `reviews/p03-review-2026-08-31T202119Z.md` | 5 Critical, 2 Important | fix `b8b7892d0` |
+| 2     | `reviews/p03-review-2026-08-31T213820Z.md` | 5 Critical, 1 Important | fix `9872f13dd` |
+| 3     | `reviews/p03-review-2026-08-31T232956Z.md` | 6 Critical, 1 Important | terminal block  |
+
+- Review governance is exhausted at 3/3. No Phase 4 dispatch occurred.
+- The final artifact's focused verification passed, but direct reproductions
+  confirmed the projection and identity safety failures.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1002,10 +1164,11 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | -------- |
-| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed   |
-| 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed   |
+| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage                   |
+| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | -------------------------- |
+| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed                     |
+| 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
+| 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 
 ## Final Summary (for PR/docs)
 
