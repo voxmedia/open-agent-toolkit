@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import { assessOutboundProjectionSafety } from './outbound-projection-safety';
 import {
   buildBindingPreview,
   validatePreviewApproval,
   type BuildBindingPreviewInput,
 } from './preview';
-import { WHOLE_FIELD_SUPPRESSION_MARKER } from './schema';
 
 const timestamp = '2026-08-31T12:00:00.000Z';
+const projection = {
+  title: 'Local title',
+  description: 'A long local description that should be hashed in output.',
+  priority: 'high',
+  sourceRevision: 'sha256:local',
+};
 const baseInput: BuildBindingPreviewInput = {
   binding: {
     bindingId: 'bnd_binding_123',
@@ -35,12 +41,10 @@ const baseInput: BuildBindingPreviewInput = {
     description: 'managed-section',
     authority: { 'update-fields': 'user-approved' },
   },
-  projection: {
-    title: 'Local title',
-    description: 'A long local description that should be hashed in output.',
-    priority: 'high',
-    sourceRevision: 'sha256:local',
-  },
+  projection,
+  outboundSafety: assessOutboundProjectionSafety(projection, {
+    assessedAt: timestamp,
+  }),
   operationClass: 'update-fields',
   fieldMask: ['description', 'title'],
   createdAt: timestamp,
@@ -68,7 +72,14 @@ describe('binding previews and approvals', () => {
       capability: expect.stringMatching(/^sha256:/),
       policy: expect.stringMatching(/^sha256:/),
       projection: expect.stringMatching(/^sha256:/),
+      outboundSafety: expect.stringMatching(/^sha256:/),
     });
+    expect(first.componentDigests.projection).toBe(
+      baseInput.outboundSafety.projectionDigest,
+    );
+    expect(first.componentDigests.outboundSafety).toBe(
+      baseInput.outboundSafety.resultDigest,
+    );
   });
 
   it('binds approval digests to a specific generated preview instance', () => {
@@ -132,10 +143,15 @@ describe('binding previews and approvals', () => {
     ['field mask', { fieldMask: ['title'] }],
   ] as const)('invalidates approval when %s changes', (_name, change) => {
     const original = buildBindingPreview(baseInput);
-    const changed = buildBindingPreview({
+    const changedInput = {
       ...baseInput,
       ...change,
-    } as BuildBindingPreviewInput);
+    } as BuildBindingPreviewInput;
+    changedInput.outboundSafety = assessOutboundProjectionSafety(
+      changedInput.projection,
+      { assessedAt: timestamp },
+    );
+    const changed = buildBindingPreview(changedInput);
     const approval = {
       previewDigest: original.digest,
       operationClass: 'update-fields' as const,
@@ -153,27 +169,21 @@ describe('binding previews and approvals', () => {
     ).toEqual({ valid: false, reason: 'digest-mismatch' });
   });
 
-  it('suppresses concise signaled fields without acting as the outbound gate', () => {
-    const preview = buildBindingPreview({
-      ...baseInput,
-      projection: {
-        ...baseInput.projection,
-        title: '[api key] preview-private-tail',
-        description: 'password body-private-tail',
-      },
-    });
-
-    expect(preview.renderedFields.title).toEqual({
-      kind: 'value',
-      value: WHOLE_FIELD_SUPPRESSION_MARKER,
-    });
-    expect(preview.renderedFields.description).toMatchObject({
-      kind: 'hash',
-      digest: expect.stringMatching(/^sha256:/),
-      bytes: 26,
-    });
-    expect(JSON.stringify(preview)).not.toContain('preview-private-tail');
-    expect(preview.componentDigests.projection).toMatch(/^sha256:/);
+  it('blocks signaled projection fields before preview construction', () => {
+    const unsafeProjection = {
+      ...baseInput.projection,
+      title: '[api key] preview-private-tail',
+      description: 'password body-private-tail',
+    };
+    expect(() =>
+      buildBindingPreview({
+        ...baseInput,
+        projection: unsafeProjection,
+        outboundSafety: assessOutboundProjectionSafety(unsafeProjection, {
+          assessedAt: timestamp,
+        }),
+      }),
+    ).toThrow(/blocks execution/);
   });
 
   it.each([
@@ -182,17 +192,17 @@ describe('binding previews and approvals', () => {
     ['multi-segment hyphen key', 'access-token preview-private-tail'],
     ['multi-segment spaced key', 'access token preview-private-tail'],
     ['punctuation-bounded key', '.authorization preview-private-tail'],
-  ])('suppresses %s from concise preview fields', (_fixture, title) => {
-    const preview = buildBindingPreview({
-      ...baseInput,
-      projection: { ...baseInput.projection, title },
-    });
-
-    expect(preview.renderedFields.title).toEqual({
-      kind: 'value',
-      value: WHOLE_FIELD_SUPPRESSION_MARKER,
-    });
-    expect(JSON.stringify(preview)).not.toContain('preview-private-tail');
+  ])('blocks %s from outbound preview fields', (_fixture, title) => {
+    const unsafeProjection = { ...baseInput.projection, title };
+    expect(() =>
+      buildBindingPreview({
+        ...baseInput,
+        projection: unsafeProjection,
+        outboundSafety: assessOutboundProjectionSafety(unsafeProjection, {
+          assessedAt: timestamp,
+        }),
+      }),
+    ).toThrow(/blocks execution/);
   });
 
   it.each([
@@ -203,9 +213,13 @@ describe('binding previews and approvals', () => {
   ])(
     'renders ordinary identifier substring %s unchanged',
     (_fixture, title) => {
+      const safeProjection = { ...baseInput.projection, title };
       const preview = buildBindingPreview({
         ...baseInput,
-        projection: { ...baseInput.projection, title },
+        projection: safeProjection,
+        outboundSafety: assessOutboundProjectionSafety(safeProjection, {
+          assessedAt: timestamp,
+        }),
       });
 
       expect(preview.renderedFields.title).toEqual({

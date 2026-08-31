@@ -337,6 +337,10 @@ describe('remote record schemas', () => {
       op_operation_456: 'blocked',
     });
     expect(operation.schemaVersion).toBe(2);
+    expect(operation.preview).toMatchObject({
+      projectionDigest: null,
+      safetyResultDigest: null,
+    });
     expect(operation).not.toHaveProperty('transport');
     expect(operation).not.toHaveProperty('selectedTransport');
     expect(operation.selectedExecution).toMatchObject({

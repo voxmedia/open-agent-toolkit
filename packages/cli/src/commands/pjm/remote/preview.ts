@@ -6,6 +6,10 @@ import type {
 } from '@config/oat-config';
 
 import { containsSensitiveContentSignal } from './credential-safety';
+import {
+  requireCurrentOutboundSafety,
+  type OutboundProjectionSafetyResult,
+} from './outbound-projection-safety';
 import type { SharedRemoteField } from './purpose-policy';
 import { WHOLE_FIELD_SUPPRESSION_MARKER } from './schema';
 
@@ -39,6 +43,7 @@ export interface BuildBindingPreviewInput {
     priority: string | null;
     sourceRevision: string;
   };
+  outboundSafety: OutboundProjectionSafetyResult;
   operationClass: OatPjmRemoteOperationClass;
   fieldMask: SharedRemoteField[];
   createdAt: string;
@@ -63,6 +68,7 @@ export interface BindingPreview {
     capability: string;
     policy: string;
     projection: string;
+    outboundSafety: string;
   };
   renderedFields: Record<SharedRemoteField, RenderedField>;
 }
@@ -102,13 +108,15 @@ export function buildBindingPreview(
   }
 
   const fieldMask = normalizeFieldMask(input.fieldMask);
+  requireCurrentOutboundSafety(input.projection, input.outboundSafety);
   const componentDigests = {
     target: hashCanonical(input.target),
     baseline: hashCanonical(input.baseline),
     revision: hashCanonical(input.revision),
     capability: hashCanonical(input.capability),
     policy: hashCanonical(input.policy),
-    projection: hashCanonical(input.projection),
+    projection: input.outboundSafety.projectionDigest,
+    outboundSafety: input.outboundSafety.resultDigest,
   };
   const digest = hashCanonical({
     schemaVersion: 1,

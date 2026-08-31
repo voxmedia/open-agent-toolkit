@@ -822,6 +822,8 @@ const OperationPreviewSchema = z
     capabilityEvidenceDigest: z.string().min(1).max(512),
     revisionDigest: z.string().min(1).max(512),
     policyDigest: z.string().min(1).max(512),
+    projectionDigest: z.string().min(1).max(512).nullable().optional(),
+    safetyResultDigest: z.string().min(1).max(512).nullable().optional(),
   })
   .strict();
 
@@ -1027,6 +1029,17 @@ const CurrentRemoteOperationRecordSchema = z
         code: z.ZodIssueCode.custom,
         path: ['approval', 'previewDigest'],
         message: 'Operation approval preview digest must match the preview.',
+      });
+    }
+    if (
+      (record.preview.projectionDigest == null) !==
+      (record.preview.safetyResultDigest == null)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['preview'],
+        message:
+          'Operation preview projection and safety-result digests must be persisted together.',
       });
     }
     for (const [index, step] of record.steps.entries()) {
@@ -1258,6 +1271,8 @@ function migrateLegacyOperationRecord(value: unknown): unknown {
         capabilityEvidenceDigest:
           value.preview.capabilityEvidenceDigest ??
           value.preview.capabilityDigest,
+        projectionDigest: value.preview.projectionDigest ?? null,
+        safetyResultDigest: value.preview.safetyResultDigest ?? null,
       }
     : value.preview;
   if (isPlainRecord(preview)) delete preview.capabilityDigest;
