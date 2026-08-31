@@ -49,7 +49,8 @@ Design — in progress. The complete specification and draft technical design ar
 - ✓ Discovery HiLL checkpoint approved
 - ✓ Specification complete
 - ✓ Full technical design drafted
-- ⧗ Running two independent design-review loops
+- ✓ Design review loop 1 received and all findings resolved in artifacts
+- ⧗ Running design review loop 2
 
 ## Blockers
 

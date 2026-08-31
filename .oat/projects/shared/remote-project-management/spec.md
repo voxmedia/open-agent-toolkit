@@ -43,7 +43,7 @@ uncertain.
   verifiable, and recoverable after an uncertain outcome.
 - Support explicit intake, publish, refresh, reconcile, and closeout lifecycle
   operations.
-- Retain a bounded complete core-issue snapshot locally for offline use.
+- Retain a bounded complete non-secret core-issue snapshot locally for offline use.
 - Support verified, policy-authorized completion annotations and lifecycle
   transitions per binding.
 
@@ -252,13 +252,19 @@ uncertain.
 
 #### FR12: Bounded offline core snapshot
 
-- **Description:** Sync-down must retain a bounded complete core-issue snapshot
-  for useful offline work.
+- **Description:** Sync-down must retain a bounded complete non-secret core-issue
+  snapshot for useful offline work.
 - **Acceptance Criteria:**
   - The snapshot includes durable identity and aliases, title, complete
-    description, status and other core provider fields, and revision and
-    freshness evidence.
+    non-secret description, status and other core provider fields, and revision
+    and freshness evidence.
+  - High-confidence credential values are a hard exception: they are redacted
+    before persistence and the snapshot is visibly marked incomplete by
+    redaction rather than falsely reported as byte-complete.
   - Full description retention is independent of remote description-write authority.
+  - Snapshot and journal content is local and gitignored by default while
+    remaining available across worktrees on the same machine. Shared tracked
+    retention requires explicit opt-in and previewed approval.
   - Comments, activity history, and assignees are excluded by default.
   - Excluded discussion data may be fetched on demand as read-only evidence
     while remote access exists.
@@ -358,7 +364,7 @@ uncertain.
 
 - **Description:** Core and synchronization evidence must never persist credential values.
 - **Acceptance Criteria:**
-  - No credential value appears in tracked configuration, snapshots, logs,
+  - No credential value appears in local or tracked configuration, snapshots, logs,
     previews, receipts, or error output.
   - Provider authentication remains transport-managed.
   - Automated secret scans over representative operations report no leaked credentials.
@@ -390,7 +396,8 @@ uncertain.
 - **Description:** Local PJM must remain useful with all remote capabilities unavailable.
 - **Acceptance Criteria:**
   - The local-only workflow suite passes with network and provider transports disabled.
-  - Previously refreshed items expose freshness and the complete bounded core snapshot.
+  - Previously refreshed items expose freshness and the complete non-secret
+    bounded core snapshot plus any redaction status.
   - Pending remote actions are visibly distinguished from completed work.
 - **Priority:** P0
 
@@ -445,6 +452,9 @@ uncertain.
 - Repository-derived implementation assumptions from the 2026-08-19 knowledge
   snapshot require current-code revalidation before implementation.
 - Agent sessions are ephemeral.
+- Full remote snapshots and operation journals are machine-local by default;
+  cross-machine portability is an explicit sensitive-data opt-in, not an
+  implicit consequence of PJM adoption.
 - Remote access, credentials, MCP tools, and provider CLIs may be absent.
 - Jira scope is Jira Cloud only.
 - One item may bind to several records, including several from one provider.
@@ -464,7 +474,7 @@ uncertain.
 
 The selected approach is a local-first PJM core surrounded by explicit remote
 bindings. Each binding identifies one remote record and carries purposes,
-effective policy, a complete offline snapshot, a narrower writable baseline,
+effective policy, a complete non-secret offline snapshot, a narrower writable baseline,
 revision evidence, pending operations, receipts, capabilities, and lifecycle
 condition. The binding—not the item, project, repository, or provider—is the
 reconciliation and outcome boundary.
@@ -542,7 +552,7 @@ simulating a distributed transaction.
 | FR9  | Perform preview-first three-way reconciliation                      | P0       | unit + integration: reconciliation classification suite | Plan pending  |
 | FR10 | Treat each binding as the atomic outcome unit                       | P0       | integration: reviewed batch and partial failure         | Plan pending  |
 | FR11 | Refresh, write once, verify, and stop after uncertainty             | P0       | integration: guarded mutation and race fixtures         | Plan pending  |
-| FR12 | Retain the bounded complete core issue                              | P0       | integration: sync-down snapshot contract                | Plan pending  |
+| FR12 | Retain the bounded complete non-secret core issue                   | P0       | integration: sync-down snapshot contract                | Plan pending  |
 | FR13 | Preserve evidence across remote lifecycle anomalies                 | P0       | integration: lifecycle anomaly suite                    | Plan pending  |
 | FR14 | Persist create intent and reconcile uncertain creates               | P0       | integration: duplicate-create recovery                  | Plan pending  |
 | FR15 | Close out and annotate eligible bindings independently              | P0       | e2e: multi-binding project completion                   | Plan pending  |

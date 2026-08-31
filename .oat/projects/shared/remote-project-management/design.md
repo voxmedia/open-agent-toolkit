@@ -114,27 +114,56 @@ Local projection ---> Reconciler <--- Provider adapter <--- Remote snapshot
                        Verified outcome
 ```
 
-### Persistence Layout
+### Persistence Layout and Storage Classes
+
+Portable binding metadata and operational state have different privacy and
+portability requirements.
 
 ```text
-.oat/repo/pjm/remote/
-├── bindings/
-│   └── <binding-id>.json
-└── operations/
-    └── <operation-id>.json
+Portable metadata for shared backlog targets:
+.oat/repo/pjm/remote/bindings/<binding-id>.json
+
+Portable metadata for shared or synced project targets:
+<project-path>/remote/bindings/<binding-id>.json
+
+Default operational state shared by worktrees on one machine:
+<git-common-dir>/oat/pjm-remote/<repository-fingerprint>/
+├── bindings/<binding-id>.json
+├── operations/<operation-id>.json
+└── batches/<batch-id>.json
 ```
 
-Records are repository-relative, deterministic JSON with independent schema
-versions. They are searchable across worktrees and survive backlog archival or
-project completion because they are keyed by stable identifiers, not mutable
-paths. Directories are created lazily; they are not part of PJM adoption
-completeness. No credentials, raw authentication headers, full comment threads,
-or assignee details may be stored.
+Portable metadata contains stable provider identity, aliases, purposes, target,
+and non-secret policy restrictions. It never contains descriptions, baselines,
+process output, capability probe evidence, approvals, attempts, receipts, or
+provider payloads. Metadata for a local project target stays in the common
+local store rather than entering tracked repository state. Synced project
+metadata travels with that project's existing synced artifact ref rather than
+the shared branch.
 
-The binding record contains the bounded core snapshot, including the full
-remote description. “Bounded” refers to the allowed field set, not truncation
-of the description. Provider extensions use an adapter allowlist and byte
-limits so an adapter cannot persist an unbounded raw provider response.
+Operational state is local and gitignored by default, but lives under the Git
+common directory so all worktrees on the same machine see the same binding
+snapshot, journal, and batch history. A new clone must run refresh to populate
+its own local state. Repositories may explicitly select shared operational
+storage in `.oat/config.json`; that opt-in requires a previewed user approval
+because sanitized ticket content and audit history will enter Git history. In
+shared mode, operational records live beside the owning portable metadata and
+follow the owning shared or synced scope. Local project targets cannot select
+shared operational storage.
+
+All records use deterministic JSON with independent schema versions and stable
+IDs rather than mutable paths. Directories are created lazily and do not affect
+PJM adoption completeness. No credential, raw authentication header, comment
+thread, activity history, or assignee detail may be stored.
+
+The operational binding state contains the bounded core snapshot, including
+the complete non-secret remote description. “Bounded” refers to the allowed
+field set, not arbitrary truncation. High-confidence credential values are a
+hard safety exception: they are replaced with explicit redaction markers before
+persistence, the snapshot is marked `contentRedacted`, and the user is told
+that the locally retained description is not byte-complete. Provider extensions
+use an adapter allowlist and byte limits so an adapter cannot persist an
+unbounded raw response.
 
 ### Data Flow
 
@@ -146,7 +175,8 @@ limits so an adapter cannot persist an unbounded raw provider response.
 3. Select the first available transport that advertises the required read
    capability.
 4. Read and normalize the remote issue.
-5. Persist the complete core snapshot and capability evidence atomically.
+5. Redact credential values, mark any redaction, and persist the complete
+   non-secret core snapshot and capability evidence atomically.
 6. For intake, create or enrich the local target and establish the initial
    inbound reconciliation baseline.
 7. Emit freshness, revision strength, and lifecycle condition without claiming
@@ -176,8 +206,10 @@ limits so an adapter cannot persist an unbounded raw provider response.
 3. Re-probe identity/capability and re-read the target. Reject a stale preview.
 4. Pin the selected transport and persist `attempt-started`.
 5. Perform one mutation attempt.
-6. Read the target back through the pinned transport or an equivalently
-   authoritative read capability.
+6. Read the target back through the pinned transport and the same provider
+   context. If that read is unavailable or ambiguous, persist `uncertain` and
+   enter reconciliation; a different transport may contribute evidence only in
+   that separate flow after identity and context equivalence are re-established.
 7. Verify the requested field mask. Advance the binding snapshot and baseline
    only for verified postconditions.
 8. Persist `verified`, `partial`, `uncertain`, or `rejected`. Partial or
@@ -231,6 +263,56 @@ function serializeAssociatedIssues(
 - Doctor reports dangling or mismatched binding IDs; it does not silently
   rewrite historical records.
 
+### Purpose Policy Composer
+
+**Purpose:** Make the uncommon multi-purpose binding safe and deterministic.
+
+Each purpose contributes a provider-neutral default policy before repository,
+provider, and binding restrictions are applied:
+
+| Purpose     | Shared-field directions                    | Closeout defaults                                        |
+| ----------- | ------------------------------------------ | -------------------------------------------------------- |
+| `source`    | title/description/priority inbound only    | annotation or provider-valid transition may be proposed  |
+| `planning`  | allowed shared fields inbound and outbound | annotation and provider-valid transition may be proposed |
+| `delivery`  | no shared-field reconciliation             | defer to provider-native delivery automation             |
+| `reference` | no shared-field reconciliation             | no remote action                                         |
+
+Field directions compose by intersection, never union. A `source + planning`
+binding is inbound-only for shared fields because the planning purpose cannot
+grant outbound authority to the source purpose. Any combination containing
+`delivery` or `reference` has no shared-field direction unless every declared
+purpose independently permits that direction. An empty intersection is a safe
+no-op, not an implicit grant.
+
+Lifecycle operations compose through the same set intersection. If purpose
+defaults request incompatible transition targets or content, the composed
+result is `choice-required` and no mutation is planned. Repository/provider
+policy and binding restrictions can tighten the composed result but cannot add
+a direction or operation removed by purpose composition.
+
+Closeout creates one binding-level composite preview for the remote record. It
+deduplicates identical annotation and transition requests, orders any allowed
+annotation before an allowed transition, and journals each provider substep.
+If one substep succeeds and another cannot be verified, the one combined action
+becomes `partial`; it is never repeated as if nothing happened.
+
+```typescript
+interface PurposePolicy {
+  fields: Partial<
+    Record<'title' | 'description' | 'priority', Array<'inbound' | 'outbound'>>
+  >;
+  lifecycle: MutationClass[];
+  closeout: {
+    annotation: 'propose' | 'none';
+    transition: 'propose' | 'provider-automation' | 'none';
+  };
+}
+
+function composePurposePolicies(
+  purposes: RemoteBindingRecord['purposes'],
+): ComposedPurposePolicy;
+```
+
 ### Remote Configuration Resolver
 
 **Purpose:** Resolve security-sensitive repository policy separately from
@@ -245,6 +327,7 @@ machine/user transport preference.
     "schemaVersion": 1,
     "remote": {
       "schemaVersion": 1,
+      "storage": { "state": "local" },
       "policy": {
         "description": "none",
         "authority": {
@@ -252,9 +335,12 @@ machine/user transport preference.
           "operations": {}
         },
         "providers": {
-          "github": {},
-          "linear": {},
-          "jira": {}
+          "github": {
+            "description": "managed-section",
+            "authority": {
+              "operations": { "annotate": "user-approved" }
+            }
+          }
         }
       }
     }
@@ -262,7 +348,7 @@ machine/user transport preference.
 }
 ```
 
-**User or local configuration:**
+**User configuration (`~/.oat/config.json`):**
 
 ```json
 {
@@ -277,6 +363,12 @@ machine/user transport preference.
   }
 }
 ```
+
+**Repository-local override (`.oat/config.local.json`):**
+
+The same `pjm.remote.transports` shape may override the user default for one
+checkout or machine. Shared `.oat/config.json` does not accept transport order;
+it owns policy and storage only.
 
 Built-in transport defaults are `github: [gh]`, `linear: [mcp]`, and
 `jira: [mcp]`. Optional fallbacks are used only when configured and available.
@@ -296,27 +388,79 @@ type MutationClass =
   | 'update-fields'
   | 'transition'
   | 'annotate'
-  | 'delete';
+  | 'delete'
+  | 'relink'
+  | 'detach'
+  | 'recreate';
+
+type ProviderName = 'github' | 'linear' | 'jira';
+
+interface AuthorityPolicy {
+  default?: MutationAuthority;
+  operations?: Partial<Record<MutationClass, MutationAuthority>>;
+}
+
+interface ProviderRemotePolicy {
+  description?: DescriptionMode;
+  authority?: AuthorityPolicy;
+}
+
+interface RepositoryRemotePolicy {
+  description: DescriptionMode;
+  authority: AuthorityPolicy & { default: MutationAuthority };
+  providers?: Partial<Record<ProviderName, ProviderRemotePolicy>>;
+}
+
+interface OatPjmRemoteSharedConfig {
+  schemaVersion: 1;
+  storage?: { state: 'local' | 'shared' };
+  policy: RepositoryRemotePolicy;
+}
+
+interface BindingPolicyRestriction {
+  description?: DescriptionMode;
+  authority?: AuthorityPolicy;
+}
+
+interface OatPjmRemoteTransportConfig {
+  transports?: Partial<Record<ProviderName, string[]>>;
+}
 
 interface EffectiveRemotePolicy {
   description: DescriptionMode;
   authority: Record<MutationClass, MutationAuthority>;
   sources: Record<string, 'default' | 'shared' | 'provider' | 'binding'>;
-  hardFloors: Array<'replace-description' | 'destructive'>;
+  hardFloors: Array<
+    'replace-description' | 'destructive' | 'identity-resolution'
+  >;
 }
 ```
 
 **Precedence and validation:**
 
-- Shared repository policy is the only layer that may broaden the built-in
-  `read-only` and `none` defaults.
-- Provider policy may broaden or narrow the repository default for that
-  provider.
+- `OatConfig.pjm.remote` in `.oat/config.json` accepts only
+  `OatPjmRemoteSharedConfig`; it is the only config surface that may broaden the
+  built-in `read-only` and `none` defaults or opt into shared operational state.
+- `OatLocalConfig.pjm.remote` in `.oat/config.local.json` and
+  `UserConfig.pjm.remote` in `~/.oat/config.json` accept only
+  `OatPjmRemoteTransportConfig`.
+- Provider policy is nested inside the shared repository policy and may broaden
+  or narrow the repository default for that provider.
 - A binding override may only tighten:
   `autonomous > user-authorized > user-approved > read-only` and
   `replace > managed-section > none`.
+- Transport precedence is repository-local > user > built-in. Each provider
+  list replaces the lower-precedence list as an ordered, duplicate-free value;
+  lists are not concatenated. An empty list explicitly disables remote
+  transport for that provider.
+- Built-in defaults remain `github: [gh]`, `linear: [mcp]`, and `jira: [mcp]`.
+- `oat config get/list/dump/describe` exposes resolved values and sources.
+  For example, `oat config set pjm.remote.policy.description managed-section
+--shared` and `oat config set pjm.remote.transports.linear
+'["mcp","linear-cli"]' --user` enforce the owning surface; cross-surface
+  writes are rejected.
 - User/local transport preference cannot modify authority, description policy,
-  adoption, or hard floors.
+  storage, adoption, or hard floors.
 - Unknown or invalid policy values fail closed and produce an actionable doctor
   finding instead of being normalized away.
 
@@ -338,14 +482,25 @@ interface RemoteSyncStore {
     expectedState: OperationState,
     update: OperationTransition,
   ): Promise<RemoteOperationRecord>;
+  readBatch(batchId: string): Promise<RemoteBatchRecord | null>;
+  createBatch(record: PlannedBatch): Promise<void>;
+  updateBatch(record: RemoteBatchRecord): Promise<void>;
 }
 ```
 
 Writes use unique temporary files in the destination directory, `fsync` where
-supported, atomic rename, and restrictive creation mode. A state transition
-requires the expected prior state and rejects duplicate step IDs. This is
-process-local compare-before-write, not a cross-process lock or remote CAS
-guarantee.
+supported, atomic rename, and restrictive creation mode. Each operation journal
+is first created with exclusive `wx` semantics before any effect. A state
+transition requires the expected prior state and rejects duplicate step IDs.
+
+This is process-local compare-before-write, not a cross-process lock or remote
+CAS guarantee. The operation directory is authoritative for active intents;
+the binding does not claim an enforceable single-pending-operation field. If
+two processes start concurrently, both unique journals are preserved. After
+every binding-state rename the writer re-reads state and scans journals for the
+binding. Multiple active intents become a reconciliation block, and doctor can
+reconstruct them even if one process overwrote a derived binding hint. No
+concurrent intent may be deleted or blindly retried.
 
 ### Local Projection Resolver
 
@@ -434,6 +589,7 @@ interface ProviderAdapter {
   resolveIdentity(input: RemoteReference): Promise<RemoteIdentityResolution>;
   normalize(input: ProviderIssue): NormalizedRemoteIssue;
   planRead(input: ReadInput): TransportAction;
+  planDiscussionRead(input: DiscussionReadInput): TransportAction;
   planDuplicateSearch(input: DuplicateSearchInput): TransportAction;
   planCreate(input: CreateInput): TransportAction;
   planUpdate(input: UpdateInput): TransportAction;
@@ -487,8 +643,12 @@ blocks that operation without disabling safe reads.
   produces explicit degraded capability evidence. V1 does not silently add a
   direct REST credential path.
 - Jira Data Center references are rejected as an unsupported provider variant.
-- ADF managed content uses one uniquely anchored OAT container. The codec must
-  round-trip the surrounding document byte-semantically; otherwise
+- ADF managed content uses one uniquely anchored OAT container. The codec
+  requires structural equality for every node, text value, attribute, and mark
+  outside that container. It hashes canonical JSON that ignores object key
+  ordering while preserving semantically ordered arrays. The original observed
+  representation remains evidence, but byte equality is not required. If the
+  selected transport cannot demonstrate structural preservation,
   managed-section update is unsupported.
 
 ### Managed Content Codecs
@@ -602,8 +762,44 @@ The provider-neutral `oat-pjm-remote` skill invokes:
 - `reconcile`: classify changes and optionally execute approved proposals;
 - `closeout`: build a reviewed batch of per-binding transitions and completion
   annotations;
+- `discussion`: fetch a bounded page of comments or activity as read-only,
+  sanitized, non-persisted evidence; an explicit local-only distillation may
+  update authored backlog content separately;
+- `resolve relink`: verify and attach a replacement remote identity while
+  preserving identity history and the last snapshot;
+- `resolve detach`: stop operational synchronization, preserve a tombstoned
+  binding and snapshot, and remove only the compact operational link;
+- `resolve recreate`: search for duplicates, create a replacement only after
+  fresh approval, and preserve old and new identity history;
 - `operation continue`: advance a prepared MCP action using one external
   observation.
+
+Discussion reads are paginated and bounded by provider cursor plus a configured
+maximum page size. Results are sanitized and returned to the caller but are not
+written into the binding snapshot, journal, or tracked project artifacts. When
+the user asks to distill discussion into a backlog item, the skill proposes a
+separate local edit with source/freshness evidence; that is not comment sync.
+
+Lifecycle resolution has explicit safety rules:
+
+- **Relink** requires fresh user approval, verifies the replacement's stable
+  identity and context, rejects duplicates, moves the former identity into
+  history, retains the former snapshot, establishes a fresh snapshot/baseline,
+  and updates the compact association only after the binding transition is
+  durable.
+- **Detach** requires fresh user approval because it removes operational
+  protection. It removes the compact binding ID, keeps a reference link when
+  requested, tombstones rather than deletes binding state, and retains all
+  snapshots and receipts for recovery.
+- **Recreate** requires the configured `create` authority plus a non-configurable
+  fresh-approval floor. It first searches provenance and aliases for a possible
+  existing record. After create/read-back verification, the old identity enters
+  history and the new identity becomes current. An uncertain create leaves the
+  old binding frozen and cannot be retried blindly.
+
+All three are restart-safe journaled operations. A crash between binding and
+association writes is diagnosed and repairable from the operation receipt;
+neither side is silently discarded.
 
 Commands live under `oat pjm remote` to avoid collision with the existing
 Git-ref project `push`, `pull`, `remote`, and `synced` vocabulary.
@@ -616,13 +812,16 @@ Doctor checks:
 - malformed or unsupported record versions;
 - filename and stable identity mismatch;
 - dangling or duplicate binding IDs;
+- portable metadata versus local/shared operational-state divergence;
 - compact link and binding target disagreement;
 - invalid provider context or display aliases;
 - stale, pending, partial, or uncertain operations;
+- concurrent active intents reconstructed from operation journals;
 - missing verification evidence;
 - policy values that were ignored or would broaden illegally;
 - connector or executable availability without exposing credentials;
 - snapshot fields outside the allowed retention boundary.
+- credential-shaped content or operational state in a disallowed storage class.
 
 Migration is explicit and idempotent. Legacy associations remain usable without
 migration. The migration command can report candidates, add canonical object
@@ -631,10 +830,10 @@ context or mutation authority and never performs a remote write.
 
 ## Data Models
 
-### Remote Binding Record
+### Remote Binding Metadata and Operational State
 
 ```typescript
-interface RemoteBindingRecord {
+interface RemoteBindingMetadataRecord {
   schemaVersion: 1;
   bindingId: string;
   localTarget: {
@@ -648,17 +847,30 @@ interface RemoteBindingRecord {
     context: RemoteAccountContext;
     aliases: RemoteAlias[];
   };
+  identityHistory: HistoricalRemoteIdentity[];
   purposes: Array<'source' | 'planning' | 'delivery' | 'reference'>;
   policyRestriction?: BindingPolicyRestriction;
+  lifecycle: RemoteLifecycleState;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface RemoteBindingStateRecord {
+  schemaVersion: 1;
+  bindingId: string;
   localProjection: LocalIssueProjection;
   snapshot: RemoteIssueSnapshot | null;
   baseline: ReconciliationBaseline | null;
   capability: CapabilitySnapshot | null;
-  lifecycle: RemoteLifecycleState;
-  pendingOperationId: string | null;
+  contentRedacted: boolean;
+  activeOperationIds: string[]; // derived hint; journals are authoritative
   createdAt: string;
   updatedAt: string;
 }
+
+type RemoteBindingRecord = RemoteBindingMetadataRecord & {
+  state: RemoteBindingStateRecord;
+};
 ```
 
 Validation rules:
@@ -666,13 +878,15 @@ Validation rules:
 - IDs are generated locally and path-safe; filenames must match `bindingId`.
 - Purposes are unique and non-empty.
 - Stable provider identity and context are immutable except through explicit
-  relink.
+  relink or recreate; prior identities move to append-only `identityHistory`.
 - One active operational binding owns a provider/context/stable-ID tuple in a
   PJM repository. Additional local links to the same remote record remain
   reference-only unless the existing binding is explicitly relinked.
 - Aliases are append-only with one current alias per kind.
 - A binding policy must be no broader than the resolved provider policy.
-- At most one mutation-capable pending operation may exist per binding.
+- The normal path permits one active mutation intent per binding, but this is a
+  best-effort sequencing rule, not a lock-backed invariant. Multiple journals
+  discovered for one binding block new writes and require reconciliation.
 
 ### Local Issue Projection
 
@@ -712,6 +926,8 @@ interface RemoteIssueSnapshot {
     | 'deleted-confirmed'
     | 'temporarily-unavailable';
   extensions: Record<string, JsonValue>;
+  contentRedacted: boolean;
+  redactionCount: number;
 }
 ```
 
@@ -746,11 +962,15 @@ write. Refreshing the snapshot alone never changes it.
 ```typescript
 type OperationState =
   | 'planned'
+  | 'pending'
   | 'authorized'
   | 'attempt-started'
+  | 'verification-pending'
+  | 'blocked'
   | 'verified'
   | 'partial'
   | 'uncertain'
+  | 'failed'
   | 'rejected';
 
 interface RemoteOperationRecord {
@@ -763,9 +983,15 @@ interface RemoteOperationRecord {
     | 'publish'
     | 'refresh'
     | 'reconcile'
-    | 'closeout';
+    | 'closeout'
+    | 'discussion'
+    | 'relink'
+    | 'detach'
+    | 'recreate';
   mutationClass: MutationClass | null;
   state: OperationState;
+  reason: OperationReason | null;
+  lastSafeStep: OperationSafeStep;
   preview: OperationPreview;
   authority: AuthorityDecision;
   approval: ApprovalEvidence | null;
@@ -782,8 +1008,64 @@ interface RemoteOperationRecord {
 }
 ```
 
-Terminal records are retained. No failed or uncertain record is deleted to make
-a retry appear new.
+Allowed transitions are:
+
+```text
+planned -> pending | authorized | blocked | failed
+pending -> authorized | blocked | failed
+authorized -> attempt-started | blocked | failed
+attempt-started -> verification-pending | partial | uncertain | rejected
+verification-pending -> verified | partial | uncertain
+```
+
+`pending` covers an offline intent, authorization requirement, or prepared
+external action. `blocked` is a safely persisted user/capability/policy
+condition before effect. `failed` is a pre-effect runtime or persistence failure
+with no possible remote effect. `rejected` is a provider-declared non-commit
+after an attempt. `partial` and `uncertain` always require reconciliation.
+Terminal records are retained, and terminal state never transitions back to an
+attempt state. Every command envelope is derived from the atomically persisted
+record; the CLI never returns a durable status that the record cannot represent.
+
+### Remote Batch Record
+
+```typescript
+interface RemoteBatchRecord {
+  schemaVersion: 1;
+  batchId: string;
+  lifecycleOperation: 'closeout' | 'refresh' | 'reconcile';
+  state:
+    | 'planned'
+    | 'pending'
+    | 'authorized'
+    | 'in-progress'
+    | 'complete'
+    | 'partial'
+    | 'uncertain'
+    | 'blocked';
+  membershipDigest: string;
+  previewDigest: string;
+  members: Array<{
+    bindingId: string;
+    operationId: string;
+    bindingPreviewDigest: string;
+  }>;
+  authority: AuthorityDecision;
+  approval: ApprovalEvidence | null;
+  outcomes: Record<string, OperationState>;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+Batch membership and order become immutable when previewed. Approval binds to
+the membership digest and every member preview. Bindings added or changed after
+preview require a new batch. On restart, the orchestrator reconstructs state
+from the batch and member journals: verified members remain complete, blocked
+members remain blocked, uncertain or partial members are never retried, and
+only never-attempted authorized members may continue after policy and freshness
+are revalidated. The batch reports all outcomes and never rolls back a verified
+member.
 
 ### Provider Outcome
 
@@ -791,9 +1073,14 @@ a retry appear new.
 type ProviderOutcome =
   | { kind: 'verified'; fields: FieldVerification[] }
   | { kind: 'partial-write'; fields: FieldVerification[]; recovery: string }
-  | { kind: 'pending'; reason: 'offline' | 'authorization-required' }
+  | {
+      kind: 'pending';
+      reason: 'offline' | 'authorization-required' | 'external-action-required';
+    }
   | { kind: 'needs-review'; conflicts: ReconciliationConflict[] }
+  | { kind: 'blocked'; code: RemoteErrorCode; recovery: string }
   | { kind: 'unknown-remote-outcome'; evidence: SanitizedEvidence }
+  | { kind: 'rejected'; providerCode?: string; evidence: SanitizedEvidence }
   | { kind: 'failed'; code: RemoteErrorCode; providerCode?: string };
 ```
 
@@ -811,6 +1098,10 @@ oat pjm remote publish --binding <binding-id> --json
 oat pjm remote refresh --binding <binding-id> --json
 oat pjm remote reconcile --binding <binding-id> --json
 oat pjm remote closeout --project <project-path> --json
+oat pjm remote discussion --binding <binding-id> --limit <n> --json
+oat pjm remote resolve relink --binding <binding-id> <provider-ref> --json
+oat pjm remote resolve detach --binding <binding-id> --json
+oat pjm remote resolve recreate --binding <binding-id> --json
 oat pjm remote operation continue --operation <id> --observation-stdin --json
 oat pjm remote doctor --json
 oat pjm remote migrate --check --json
@@ -830,9 +1121,11 @@ interface RemoteCommandEnvelope {
     | 'needs-review'
     | 'partial'
     | 'uncertain'
-    | 'blocked';
+    | 'blocked'
+    | 'failed';
   operation: string;
   projectRoot: string;
+  persisted: boolean;
   results: BindingOperationResult[];
   externalAction: ExternalActionEnvelope | null;
   recovery: RecoveryInstruction[];
@@ -841,6 +1134,24 @@ interface RemoteCommandEnvelope {
 
 Human output derives from the same envelope and must identify provider, target,
 freshness, effective authority, and independent binding outcomes.
+
+### Exit Semantics
+
+| Envelope status | Durable operation state                              | Exit | Meaning                                                                                        |
+| --------------- | ---------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------- |
+| `ok`            | `verified`                                           | 0    | Requested operation reached a verified successful terminal state.                              |
+| `pending`       | `pending`                                            | 1    | Intent or external-action handoff was safely persisted; more user or agent action is required. |
+| `needs-review`  | `blocked` with conflict reason                       | 1    | Conflicts require an explicit choice before mutation.                                          |
+| `partial`       | `partial`                                            | 1    | Some postconditions verified; reconciliation is required.                                      |
+| `uncertain`     | `uncertain`                                          | 1    | A remote effect may have occurred; reconciliation is required.                                 |
+| `blocked`       | `blocked`                                            | 1    | Policy, capability, lifecycle, or approval safely prevented progress.                          |
+| `failed`        | `failed`, or no record if initial persistence failed | 2    | Runtime or persistence failed before a safe durable handoff was established.                   |
+
+JSON and human modes use the same mapping. A host-executor skill treats
+`pending` plus a valid `externalAction` as a successful structured handoff even
+though the shell exit is 1. If the CLI cannot persist the corresponding state,
+it returns the system error envelope with exit 2 instead. Command-wiring tests
+assert stdout/stderr separation and human/JSON parity for every row.
 
 ### Preview and Apply Boundary
 
@@ -884,7 +1195,12 @@ shell logic from becoming a second implementation.
 
 - Snapshots retain only the bounded core field allowlist and adapter-approved
   extensions.
-- Full descriptions may contain sensitive business content. Human previews
+- Full descriptions may contain sensitive business content. Operational state
+  therefore uses the common machine-local store by default; shared Git storage
+  requires explicit repository configuration and a previewed approval.
+- Credential-shaped values are redacted before either storage class is written;
+  the snapshot records the redaction instead of claiming complete retention.
+- Human previews
   display concise diffs or hashes by default and require an explicit verbose
   view for full bodies.
 - Public GitHub publication passes a privacy/sanitization check so private OAT
@@ -992,7 +1308,7 @@ full comments, or unfiltered provider payloads.
 | ---- | --------------------------- | ----------------------------------------------------------------------------------- |
 | FR1  | integration + e2e           | Shared adapter conformance for GitHub, Linear, Jira; several same-provider bindings |
 | FR2  | e2e                         | Local PJM with every transport disabled; pending intent never shown as success      |
-| FR3  | unit + integration          | Purpose defaults, multiple purposes, combined closeout action                       |
+| FR3  | unit + integration          | Purpose-policy intersection, incompatible purposes, combined closeout action        |
 | FR4  | integration                 | Intake, publish, refresh, reconcile, closeout; no transitive propagation            |
 | FR5  | unit + integration          | Strict binding persistence, identity aliases, restart recovery                      |
 | FR6  | unit                        | Title/description contract, optional safe priority, provider extensions             |
@@ -1001,16 +1317,16 @@ full comments, or unfiltered provider payloads.
 | FR9  | unit + integration          | B/L/R classification and explicit same-field conflict                               |
 | FR10 | integration                 | Reviewed batch partial failure with independent outcomes                            |
 | FR11 | integration                 | Refresh, one attempt, read-back, timeout, no blind retry                            |
-| FR12 | integration                 | Full core snapshot with comments/activity/assignees excluded                        |
-| FR13 | integration                 | Missing/invisible, moved, archived, confirmed deleted, unavailable                  |
+| FR12 | integration                 | Non-secret snapshot, local/shared storage, redaction, bounded discussion read       |
+| FR13 | integration                 | Anomalies plus approved relink, detach, and duplicate-safe recreate                 |
 | FR14 | integration                 | Persisted create intent, provenance search, uncertain create                        |
 | FR15 | e2e                         | Multi-binding closeout, annotation verification, delivery/reference defaults        |
 | FR16 | integration                 | Ordered probes, capability matching, pre-start fallback, pinned uncertainty         |
 | FR17 | e2e                         | GitHub to Linear, GitHub to Jira, and GitHub-only workflows                         |
 | FR18 | integration + manual        | Project artifacts not published; discussion remains informational                   |
-| NFR1 | integration + security scan | Secret-shaped fixtures absent from output, records, and snapshots                   |
+| NFR1 | integration + security scan | Secret fixtures redacted; no local or shared record leakage                         |
 | NFR2 | integration                 | Ambiguity, permission, schema drift, and uncertainty all fail closed                |
-| NFR3 | integration                 | Crash injection around every operation transition and restart                       |
+| NFR3 | integration                 | Crash injection, batch restart, and concurrent-intent preservation                  |
 | NFR4 | e2e                         | Disconnected search and snapshot use with visible freshness                         |
 | NFR5 | integration                 | ADF, aliases, transition metadata, and extension retention                          |
 | NFR6 | manual + e2e                | Preview sources, freshness, conflicts, and per-binding outcomes                     |
@@ -1037,6 +1353,7 @@ full comments, or unfiltered provider payloads.
   authorization-required, context ambiguity, partial errors, and stale step
   digests.
 - Repository config versus user transport preference resolution.
+- Local/common-dir versus explicitly shared storage location and privacy rules.
 - Existing backlog creation/archive/index, PJM adoption, project parsing, and
   Git project sync regression suites.
 - Doctor and migration against mixed historical association shapes.
@@ -1049,6 +1366,7 @@ full comments, or unfiltered provider payloads.
 - GitHub source plus Jira planning with ADF and discovered transition.
 - Reviewed multi-binding batch with one verified, one blocked, and one uncertain
   result.
+- Interrupted closeout reconstructing immutable membership and member outcomes.
 - Agent-host action loop using fake MCP tools; no live credentials in CI.
 
 ### Provider-Specific Cases
@@ -1065,8 +1383,9 @@ full comments, or unfiltered provider payloads.
 
 Concurrency tests assert the actual guarantee: no false success and no blind
 retry after uncertainty. They do not assert prevention of simultaneous-writer
-races. Store tests may detect conflicting local expected-state transitions, but
-that is not presented as a distributed lock.
+races. A two-process start fixture must preserve both unique operation journals,
+detect concurrent intents after binding re-read, and prove that neither is lost
+or blindly retried. That detection is not presented as a distributed lock.
 
 ## Deployment Strategy
 
@@ -1090,6 +1409,9 @@ skill receives one frontmatter version bump in the final PR.
   and mutations; local behavior is unchanged.
 - Remote directories are lazy and do not change `pjm init` adoption
   completeness.
+- Existing repositories default to common machine-local operational storage.
+  Enabling shared Git storage is a separate previewed config migration; local
+  project targets remain local regardless.
 - Legacy scalar associations and object associations without `binding` parse
   as reference-only.
 - New bindings add canonical `{type, ref, binding}` entries without rewriting
@@ -1105,7 +1427,8 @@ skill receives one frontmatter version bump in the final PR.
 ## Implementation Phases
 
 1. **Domain, configuration, and persistence:** Compatibility association codec,
-   strict records, split config resolver, atomic store, and doctor foundations.
+   strict metadata/state/batch records, storage locator, split config resolver,
+   atomic store, and doctor foundations.
 2. **Reconciliation and safety engine:** Local projections, field policies,
    B/L/R reconciliation, authority, previews, operation state machine, and
    verification.
@@ -1118,8 +1441,9 @@ skill receives one frontmatter version bump in the final PR.
 6. **Jira Cloud adapter and transports:** MCP action mappings, optional ACLI,
    ADF managed content, metadata/transition discovery, and conformance.
 7. **Cross-provider workflows and closeout:** Reviewed batches, completion
-   annotations, representative E2E flows, migration, doctor completion, docs,
-   and release validation.
+   annotations, discussion evidence, relink/detach/recreate recovery,
+   representative E2E flows, migration, doctor completion, docs, and release
+   validation.
 
 Phases 4, 5, and 6 are peer provider lanes after phases 1–3 establish the shared
 contract. They have separate provider files and tests but converge on shared
@@ -1133,11 +1457,12 @@ groups without the separate confirmation required by the planning workflow.
   - **Mitigation:** Keep all state, policy, schemas, and verdicts in CLI code;
     the skill only discovers tools, invokes one envelope, and returns an
     observation. Test the bridge with captured catalogs.
-- **Tracked snapshot sensitivity:** Full ticket descriptions become repository
-  content.
-  - **Mitigation:** Document the boundary, retain only core fields, avoid
-    comments/assignees/raw payloads, redact outputs, and require teams to apply
-    repository access policy before enabling sync-down.
+- **Snapshot sensitivity:** Full ticket descriptions may contain business data
+  or credential-shaped values.
+  - **Mitigation:** Keep operational state machine-local by default, require
+    previewed opt-in for shared Git storage, retain only core fields, redact
+    credentials before persistence, mark redacted snapshots, and avoid
+    comments, assignees, and raw payloads.
 - **Managed ADF lossiness:** Connector or CLI representations may not preserve
   surrounding Jira content.
   - **Mitigation:** Capability-test round trips; fail closed to no description
