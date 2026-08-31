@@ -812,6 +812,7 @@ git commit -m "fix(p04-t05): fail closed on terminal lookup errors"
 | p03    | code     | passed          | 2026-08-31 | reviews/p03-review-2026-08-31T134913Z.md                    | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
 | p04    | code     | passed          | 2026-08-31 | reviews/p04-review-2026-08-31T170239Z.md                    | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
+| final  | code     | passed          | 2026-08-31 | reviews/final-review-2026-08-31T180107Z.md                  | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan   | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |

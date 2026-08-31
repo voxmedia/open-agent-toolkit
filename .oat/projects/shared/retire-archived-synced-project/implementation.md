@@ -157,6 +157,12 @@ a focused final re-review before the configured Cursor Fable exit gate.
 CLI check and type-check passed. The final review event is now
 `fixes_completed` pending focused re-review.
 
+**Focused re-review:** Passed at
+`98b005960b2c5f282fadb8781d990d2ed4a159c9` with 0 Critical, 0 Important, 0
+Medium, and 0 Minor findings. Artifact:
+`reviews/final-review-2026-08-31T180107Z.md`; independent verification passed
+186/186 focused tests.
+
 ---
 
 ## Orchestration Runs
@@ -336,6 +342,15 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Optional nested dispatches: none.
 - Outstanding item: full final verification, focused final re-review, Cursor
   Fable exit gate, and post-p04 HiLL checkpoint.
+- Full final verification passed after the fixture correction at `98b005960`:
+  uncached CLI 4721/4721, control-plane 78/78, and every repository, release,
+  docs, lint, format, and skill-validation gate exited 0.
+- Focused final re-review artifact:
+  `reviews/final-review-2026-08-31T180107Z.md`.
+- Focused final re-review result: passed — 0 Critical, 0 Important, 0 Medium,
+  0 Minor; 186/186 affected-path tests passed.
+- Remaining boundary: configured Cursor Fable exit gate, then the post-p04
+  HiLL checkpoint.
 
 <!-- orchestration-runs-end -->
 
