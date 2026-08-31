@@ -693,6 +693,7 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T130719Z.md                    | 04b2ce008344b92ca9be447434dc9398b0037abf | manual     | -                             |
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T134233Z.md                    | 87c7d690e551d58429f9dffffb83c5f44c5bb206 | manual     | -                             |
 | p02    | code     | blocked         | 2026-08-31 | reviews/p02-review-2026-08-31T140841Z.md                    | 2a8d84388376ef0f8f367dd321010182fe1afc93 | manual     | -                             |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T131555Z.md                    | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
 | p03    | code     | passed          | 2026-08-31 | reviews/p03-review-2026-08-31T134913Z.md                    | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |

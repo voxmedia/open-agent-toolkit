@@ -76,6 +76,10 @@ Phase p03 passed re-review at 28162dae60ac623c3f680a608e374afa1d0c24c5 with zero
 
 Phase p02 remains blocked after 2 fix iterations and 3 review rounds. Final review at 2a8d84388376ef0f8f367dd321010182fe1afc93 found one Critical: the archive-resume branch skips active Steps 2-7 but exits before required post-archive durability and closeout; evidence is in reviews/p02-review-2026-08-31T140841Z.md. The p02 branch is preserved and unmerged pending explicit authorization for a fresh bounded generation.
 
+### 2026-08-31 · structural · oat-project-implement · p02-fresh-generation-authorized
+
+Operator explicitly authorized one fresh bounded p02 fix/review generation after the prior automatic budget stop. Scope is limited to replacing the whole-skill terminal retry exit with a continuation that skips active Steps 2-7 but completes required post-archive durability and closeout.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

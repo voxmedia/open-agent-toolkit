@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02 final review found that archive-resume exits before required post-archive durability and closeout; automatic budget exhausted at 2 fixes and 3 reviews
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t03
 oat_generated: false
@@ -20,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | blocked   | 3     | 3/3       |
-| p03   | completed | 3     | 3/3       |
-| p04   | pending   | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 2     | 2/2       |
+| p02   | in progress | 3     | 3/3       |
+| p03   | completed   | 3     | 3/3       |
+| p04   | pending     | 2     | 0/2       |
 
-**Total:** 8/10 tasks implemented; p02 remains review-blocked
+**Total:** 8/10 tasks implemented; fresh p02 fix/review generation in progress
 
 ---
 
@@ -53,7 +52,7 @@ inert alias. Differing SHAs still fail closed.
 
 ## Phase 2: Archive Transaction and Completion Integration
 
-**Status:** blocked
+**Status:** in progress
 **Started:** 2026-08-31
 
 ### Task p02-t01: Gate terminal cleanup on archive durability
@@ -71,7 +70,8 @@ inert alias. Differing SHAs still fail closed.
 **Status:** completed
 **Commit:** 04b2ce008
 **Review fixes:** `87c7d690e`, `2a8d84388`
-**Blocker:** The final retry branch exits before required post-archive closeout.
+**Fresh generation:** Authorized to replace the whole-skill exit with a
+post-archive continuation and re-review the narrow fix.
 
 ---
 
@@ -218,6 +218,17 @@ _Orchestration runs from `oat-project-implement` are appended here._
   preserved but unmerged pending explicit authorization for a fresh bounded
   generation.
 
+### Run 4 — operator-authorized p02 closeout continuation
+
+- Authorization: user explicitly authorized one fresh bounded p02 fix/review
+  generation after the prior 2-fix/3-review budget stop.
+- Fresh generation scope: terminal retained-record retries must continue to
+  bypass pull and active Steps 2-7, then rejoin required post-archive links,
+  dashboard, bookkeeping commit/push, PR closeout, and final confirmation.
+- Fresh fix iterations: 0 of 2 used; review rounds: 0 of 3 used.
+- Starting branch head: `ff648a46b` (p02 implementation plus all prior review
+  evidence); source fix head before this generation: `2a8d84388`.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -229,7 +240,8 @@ terminal alias. The fresh generation passed after one bounded fix round; p01 is
 complete at `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`. p03 passed after one
 bounded fix and is merged. p02 implemented all planned tasks but remains blocked
 after exhausting its automatic review budget on the post-archive continuation
-gap recorded in `reviews/p02-review-2026-08-31T140841Z.md`.
+gap recorded in `reviews/p02-review-2026-08-31T140841Z.md`. The operator then
+authorized one fresh bounded generation to close that single continuation gap.
 
 ## Deviations from Plan / Design
 

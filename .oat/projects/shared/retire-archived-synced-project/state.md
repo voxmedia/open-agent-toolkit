@@ -1,8 +1,7 @@
 ---
 oat_current_task: p02-t03
 oat_last_commit: 2a8d84388376ef0f8f367dd321010182fe1afc93
-oat_blockers:
-  - p02 final review found that archive-resume exits before required post-archive durability and closeout; automatic budget exhausted at 2 fixes and 3 reviews
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -83,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T14:11:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T14:31:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation blocked in p02; p01 and p03 passed
+**Status:** Fresh bounded p02 fix/review generation authorized; p01 and p03 passed
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p02 archive completion closeout requires an authorized fresh fix generation
+Implement - p02 post-archive continuation fix and bounded re-review
 
 ## Artifacts
 
@@ -103,7 +102,7 @@ Implement - p02 archive completion closeout requires an authorized fresh fix gen
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (blocked at p02 closeout review)
+- **Implementation:** `implementation.md` (fresh p02 fix/review generation in progress)
 
 ## Progress
 
@@ -128,18 +127,16 @@ Implement - p02 archive completion closeout requires an authorized fresh fix gen
 - ✓ p03 implementation and bounded re-review passed; merged at `aa7f0b8f8`
 - ✓ p03 post-merge verification passed 214/214 focused tests and package checks
 - ✗ p02 final review found one Critical after 2 fix iterations and 3 review rounds
-- → Automatic implementation is blocked pending authorization for a fresh p02 fix/review generation
+- ✓ Operator authorized one fresh bounded p02 fix/review generation
+- → Implement p02 post-archive continuation and re-review the narrow fix
 
 ## Blockers
 
-The p02 terminal retry branch correctly skips pull and active Steps 2-7, but it
-currently exits the whole completion skill. That bypasses required post-archive
-links, dashboard regeneration, bookkeeping commit/push, PR closeout, and final
-confirmation. The configured automatic budget is exhausted at 2 fix iterations
-and 3 review rounds; continuing requires explicit authorization for a fresh
-bounded p02 generation.
+None. The prior p02 review-budget stop was explicitly reopened for one fresh
+bounded generation. The required fix remains narrow: skip active Steps 2-7 for
+terminal retries, then rejoin the existing post-archive closeout path.
 
 ## Next Milestone
 
-Authorize and complete a fresh p02 fix/review generation, merge p02 only after
-it passes, then enter the p04 HiLL checkpoint
+Complete and review the fresh p02 fix, merge p02 only after it passes, then
+enter the p04 HiLL checkpoint
