@@ -1,7 +1,14 @@
 ---
 oat_status: complete
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t02
+    reason: >-
+      Git omits an already-equal completed-ref update and its lease from the
+      atomic receive-pack transaction, so active deletion is not a true
+      two-ref compare-and-swap. Two fix iterations and three reviews are
+      exhausted.
+    since: 2026-08-31
 oat_last_updated: 2026-08-31
 oat_phase: plan
 oat_phase_status: complete
@@ -666,7 +673,8 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
 | p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T052034Z.md                    | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
-| p01    | code     | fixes_added     | 2026-08-31 | reviews/p01-review-2026-08-31T053841Z.md                    | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T053841Z.md                    | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
+| p01    | code     | fixes_added     | 2026-08-31 | reviews/p01-review-2026-08-31T055541Z.md                    | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
 | p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                             |

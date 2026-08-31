@@ -1,7 +1,14 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t02
+    reason: >-
+      Git omits an already-equal completed-ref update and its lease from the
+      atomic receive-pack transaction, so active deletion is not a true
+      two-ref compare-and-swap. Two fix iterations and three reviews are
+      exhausted.
+    since: 2026-08-31
 oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t02
 oat_generated: false
@@ -19,12 +26,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 2     | 2/2       |
-| p02   | pending     | 3     | 0/3       |
-| p03   | pending     | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status  | Tasks | Completed |
+| ----- | ------- | ----- | --------- |
+| p01   | blocked | 2     | 2/2       |
+| p02   | pending | 3     | 0/3       |
+| p03   | pending | 3     | 0/3       |
+| p04   | pending | 2     | 0/2       |
 
 **Total:** 2/10 tasks completed
 
@@ -32,7 +39,7 @@ oat_generated: false
 
 ## Phase 1: Terminal Ref and Transition Foundation
 
-**Status:** in_progress — review fixes
+**Status:** blocked — review governance exhausted
 **Started:** 2026-08-31
 
 ### Task p01-t01: Define completed synced-ref identity
@@ -42,8 +49,12 @@ oat_generated: false
 
 ### Task p01-t02: Implement idempotent active-to-completed ref transition
 
-**Status:** completed — review fixes pending
+**Status:** blocked
 **Commit:** ce631f78b9ebdce4746ec2f1614ffb30362c3ddf
+**Blocker:** The completed-ref lease is omitted from an atomic push when the
+completed ref is already at `sourceSha`, leaving active deletion without a
+true two-ref compare-and-swap. The configured two fix iterations and three
+review rounds are exhausted.
 
 ---
 
@@ -141,19 +152,28 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Re-review artifact: `reviews/p01-review-2026-08-31T053841Z.md`
 - Re-review result: blocked — 1 remaining Critical, 0 Important, 0 Medium,
   0 Minor.
-- Fix iterations: 1 of 2 used; final bounded fix continuation is next.
+- Fix round 2: `26264a2c8ed2fc0289473a81d0f296ceb764cb76`
+  removed every non-atomic active-deletion fallback and preserved both refs on
+  unsupported remotes.
+- Final review request: `ac612268-cf40-41c6-882b-d8cd5a3915ae`
+- Final p01 review artifact: `reviews/p01-review-2026-08-31T055541Z.md`
+- Final p01 review result: blocked — 1 Critical, 0 Important, 0 Medium,
+  0 Minor.
+- Fix iterations: 2 of 2 used; review rounds: 3 of 3 used.
 - Optional nested dispatches: none.
-- Outstanding item: a non-atomic remote cannot jointly condition active-ref
-  deletion on the completed ref remaining unchanged. Preserve both refs and
-  return an explicit recoverable state instead of attempting deletion.
+- Outstanding item: standard Git omits a no-op completed-ref update and lease
+  from the receive-pack transaction. A revised transition must either use a
+  genuine remote two-ref CAS primitive or preserve the active ref whenever the
+  completed ref already exists.
 
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
 
-Phase p01 implementation completed in two commits. Fix round 1 closed one
-blocking finding and narrowed the remaining Critical defect to unsafe
-non-atomic fallback deletion. Final bounded fix continuation is pending.
+Phase p01 implementation and two bounded fix commits are complete, but the
+third independent review reproduced one remaining Critical atomic no-op race.
+The configured fix and review governance budgets are exhausted, so p01 is
+blocked pending an explicit transition-contract decision and new authorization.
 
 ## Deviations from Plan / Design
 
@@ -163,12 +183,12 @@ non-atomic fallback deletion. Final bounded fix continuation is pending.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
-| p02   | -         | -      | -      | -        |
-| p03   | -         | -      | -      | -        |
-| p04   | -         | -      | -      | -        |
+| Phase | Tests Run         | Passed | Failed | Coverage                                  |
+| ----- | ----------------- | ------ | ------ | ----------------------------------------- |
+| p01   | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery |
+| p02   | -                 | -      | -      | -                                         |
+| p03   | -                 | -      | -      | -                                         |
+| p04   | -                 | -      | -      | -                                         |
 
 ## Final Summary (for PR/docs)
 

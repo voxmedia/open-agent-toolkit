@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/artifact-plan-review-2026-08-31T044004Z.md
 
+### 2026-08-31 · structural · oat-project-implement · p01
+
+Phase outcome blocked after 2 fix iterations and 3 review rounds; remaining Critical atomic no-op lease race is recorded in reviews/p01-review-2026-08-31T055541Z.md; implementation stopped before p02/p03 and before origin/main merge.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

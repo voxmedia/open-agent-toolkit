@@ -1,7 +1,14 @@
 ---
 oat_current_task: p01-t02
-oat_last_commit: 2ccde026814c4c3f09d21d2267fe0d394c58490d
-oat_blockers: []
+oat_last_commit: 26264a2c8ed2fc0289473a81d0f296ceb764cb76
+oat_blockers:
+  - task_id: p01-t02
+    reason: >-
+      Git omits an already-equal completed-ref update and its lease from the
+      atomic receive-pack transaction, so active deletion is not a true
+      two-ref compare-and-swap. Two fix iterations and three reviews are
+      exhausted.
+    since: 2026-08-31
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -82,19 +89,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:40:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T05:59:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation in progress
+**Status:** Implementation blocked in p01
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p01 review fixes in progress
+Implement - p01 blocked after review governance exhaustion
 
 ## Artifacts
 
@@ -115,13 +122,18 @@ Implement - p01 review fixes in progress
 - ✓ Four-phase, ten-task implementation tracker initialized
 - ✓ Remaining implementation gate pinned locally to Cursor Fable High
 - ✓ p01 implementation completed in two bounded task commits
-- ✓ p01 review round 1 fixed one Critical and one Important
-- ⧗ p01 review round 2 requires one final Critical fallback fix
+- ✓ p01 review round 1 fixed one Important and partially fixed one Critical
+- ✓ p01 review round 2 fixed the unsafe non-atomic fallback deletion
+- ✗ p01 review round 3 found one remaining atomic no-op Critical
+- ✗ Two fix iterations and three review rounds exhausted
 
 ## Blockers
 
-None
+- `p01-t02`: Git does not transmit the completed-ref update or lease when that
+  ref already equals the source SHA, so the active deletion cannot safely
+  depend on completed-ref stability with the current push shape.
 
 ## Next Milestone
 
-Fail closed on non-atomic fallback and re-review p01
+Choose a revised two-ref transition contract, then explicitly authorize a new
+fix/review generation
