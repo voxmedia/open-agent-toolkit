@@ -1,8 +1,7 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02 terminal round-5 review found recovery prose claims canonical removal was applied for packs whose structured canonical status is unchanged
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -25,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | blocked  | 7     | 7/7       |
-| Phase 3 | pending  | 5     | 0/5       |
-| Phase 4 | pending  | 5     | 0/5       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 4     | 0/4       |
-| Phase 7 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | in progress | 7     | 7/7       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 5     | 0/5       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 4     | 0/4       |
+| Phase 7 | pending     | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -135,7 +134,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** blocked after 7/7 tasks and terminal operator-authorized review round 5
+**Status:** in progress after 7/7 tasks; final bounded correction and review authorized
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -269,6 +268,15 @@ unchanged`, making the source-qualified recovery record contradictory.
   `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`; 0 critical, 1 important.
 - Verification: focused 35 tests and combined 29 files / 714 tests; CLI lint,
   type-check, formatting, and `git diff --check` all passed.
+
+**Final operator-authorized correction:**
+
+- Scope is restricted to deriving recovery prose from each pack's actual
+  canonical status and asserting complete exact human/JSON recovery records.
+- The review-fix retry limit is raised to its maximum of five. One append-only
+  fix commit and one fresh independent High review are permitted.
+- A blocking review stops implementation without another extension; a passing
+  review advances directly to Phase 3.
 
 ---
 

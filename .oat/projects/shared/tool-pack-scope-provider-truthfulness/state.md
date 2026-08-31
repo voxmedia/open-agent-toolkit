@@ -1,8 +1,7 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f
-oat_blockers:
-  - p02 terminal round-5 review found recovery prose claims canonical removal was applied for packs whose structured canonical status is unchanged
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -28,7 +27,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 4 # Thomas authorized a second additional bounded p02 fix/re-review cycle on 2026-08-31
+oat_orchestration_retry_limit: 5 # Thomas authorized the final available bounded p02 fix/re-review cycle on 2026-08-31
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -90,7 +89,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T16:44:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T16:56:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -100,16 +99,15 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation blocked
+**Status:** Implementation in progress
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation - The authorized correction now emits every pack/scope recovery
-command, but terminal review round 5 found one Important contradiction: packs
-with `canonical.status: unchanged` are told canonical removal was already
-applied. Phase 3 has not started.
+Implementation - Thomas authorized the final bounded correction for the
+round-5 recovery-prose contradiction and one fresh High review. Phase 2 is
+reopened only for that finding; Phase 3 starts only if the review passes.
 
 ## Artifacts
 
@@ -117,7 +115,7 @@ applied. Phase 3 has not started.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p01 passed; p02 terminal round-5 review blocked)
+- **Implementation:** `implementation.md` (in progress — p01 passed; p02 final correction authorized)
 
 ## Progress
 

@@ -80,6 +80,10 @@ Thomas authorized exactly one bounded correction for the Important multi-pack/mu
 
 Operator-authorized fix 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f covered every selected pack and invalidated scope, but terminal High review round 5 remained blocked with critical:0, important:1 because recovery prose contradicted canonical.status unchanged. Reconnaissance was attempted and reconciled in reviews/p02-review-2026-08-31T164057Z.md; p03 was not launched.
 
+### 2026-08-31 · structural · oat-project-implement · p02-final-correction-authorized
+
+Thomas authorized the fifth and final review-fix retry for the recovery-prose contradiction in reviews/p02-review-2026-08-31T164057Z.md plus one fresh independent High review; a blocking review is terminal and a passing review advances directly to p03.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
