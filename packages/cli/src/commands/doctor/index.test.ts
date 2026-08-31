@@ -192,12 +192,17 @@ function emptyInventory(pack: PackName): PackInventory {
 }
 
 function detectedAdapter(name: string, detected: boolean): ProviderAdapter {
+  const registered = getProviderRegistrations().find(
+    ({ adapter }) => adapter.name === name,
+  )?.adapter;
   return {
-    name,
-    displayName: name,
-    defaultStrategy: 'auto',
-    projectMappings: [],
-    userMappings: [],
+    ...(registered ?? {
+      name,
+      displayName: name,
+      defaultStrategy: 'auto' as const,
+      projectMappings: [],
+      userMappings: [],
+    }),
     detect: async () => detected,
   };
 }
@@ -549,7 +554,7 @@ describe('createDoctorCommand', () => {
     ).toMatchObject({
       visibility: {
         state: 'not-reported',
-        policy: { state: 'manual-refresh' },
+        policy: { state: 'unknown' },
       },
     });
   });
@@ -1894,6 +1899,16 @@ config_file = "agents/${roleName}.toml"
   it('names user-scope agents lacking native materialization without demanding a repair', async () => {
     const { command, capture } = createHarness({
       scope: 'user',
+      adapters: [],
+      providerContext: {
+        scope: 'user',
+        configSource: '~/.oat/sync/config.json',
+        activeProviders: [],
+        detectedProviders: [],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
       packInventories: [
         packInventory('research', [
           scopedInventory(
@@ -2057,7 +2072,7 @@ config_file = "agents/${roleName}.toml"
       label: 'Claude only',
       adapters: [detectedAdapter('claude', true)],
       providers: {},
-      expected: false,
+      expected: true,
     },
     {
       label: 'Codex configured enabled but undetected',
@@ -2076,6 +2091,12 @@ config_file = "agents/${roleName}.toml"
       adapters: [detectedAdapter('cursor', true)],
       providers: {},
       expected: true,
+    },
+    {
+      label: 'unsupported provider',
+      adapters: [detectedAdapter('unsupported', true)],
+      providers: {},
+      expected: false,
     },
     {
       label: 'no provider',
@@ -2115,7 +2136,7 @@ config_file = "agents/${roleName}.toml"
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     }
   });
@@ -2135,7 +2156,7 @@ config_file = "agents/${roleName}.toml"
       pack: 'core',
       assetsRoot: '/tmp/assets',
       userRoot: '/tmp/home',
-      userManagedRoleMaterialization: false,
+      userManagedRoleMaterialization: true,
     });
     expect(process.exitCode).toBe(1);
   });

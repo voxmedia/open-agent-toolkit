@@ -112,9 +112,6 @@ export function adviseProviderRefresh(input: {
       recovery: [
         {
           code: 'refresh-provider-catalog',
-          ...(input.policy.provenance.reference.includes('code.claude.com')
-            ? { command: '/agents' }
-            : {}),
           message:
             'Refresh the provider catalog in the active session, then inspect it for the materialized asset.',
         },

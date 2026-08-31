@@ -112,4 +112,22 @@ describe('adviseProviderRefresh', () => {
       recovery: [],
     });
   });
+
+  it('does not invent a provider command for generic manual-refresh evidence', () => {
+    const advice = adviseProviderRefresh({
+      policy: {
+        state: 'manual-refresh',
+        provenance: {
+          kind: 'official-contract',
+          reference: 'https://code.claude.com/docs/en/sub-agents',
+          verifiedAt: '2026-08-31',
+        },
+      },
+      materialization: 'changed',
+    });
+
+    expect(advice.recovery).toEqual([
+      expect.not.objectContaining({ command: expect.any(String) }),
+    ]);
+  });
 });

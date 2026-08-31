@@ -207,12 +207,17 @@ function createDetectedAdapter(
   name: string,
   detected: boolean,
 ): ProviderAdapter {
+  const registered = getProviderRegistrations().find(
+    ({ adapter }) => adapter.name === name,
+  )?.adapter;
   return {
-    name,
-    displayName: name,
-    defaultStrategy: 'auto',
-    projectMappings: [],
-    userMappings: [],
+    ...(registered ?? {
+      name,
+      displayName: name,
+      defaultStrategy: 'auto' as const,
+      projectMappings: [],
+      userMappings: [],
+    }),
     detect: async () => detected,
   };
 }
@@ -632,7 +637,7 @@ describe('createStatusCommand', () => {
     ).toMatchObject({
       visibility: {
         state: 'not-reported',
-        policy: { state: 'manual-refresh' },
+        policy: { state: 'unknown' },
       },
     });
   });
@@ -1358,7 +1363,13 @@ describe('createStatusCommand', () => {
 
     await runStatusCommand(command, ['--scope', 'user']);
 
-    expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user');
+    expect(scanCanonical).toHaveBeenCalledWith(
+      '/tmp/home',
+      'user',
+      expect.arrayContaining([
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]),
+    );
     expect(scanBundledManagedCodexAgents).toHaveBeenCalledTimes(1);
     expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
       '/tmp/home',
@@ -1371,6 +1382,25 @@ describe('createStatusCommand', () => {
       ]),
       undefined,
       { userConfigDir: '/tmp/home/.oat' },
+    );
+  });
+
+  it('scans user agents selected by active Claude capability', async () => {
+    const { command, scanCanonical } = createHarness({
+      adapters: [createDetectedAdapter('claude', true)],
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [],
+    });
+
+    await runStatusCommand(command, ['--scope', 'user']);
+
+    expect(scanCanonical).toHaveBeenCalledWith(
+      '/tmp/home',
+      'user',
+      expect.arrayContaining([
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]),
     );
   });
 
@@ -1829,7 +1859,7 @@ describe('createStatusCommand', () => {
         label: 'Claude-only detection',
         adapters: [createDetectedAdapter('claude', true)],
         providers: {},
-        expected: false,
+        expected: true,
       },
       {
         label: 'Codex configured enabled without detection',
@@ -1889,6 +1919,12 @@ describe('createStatusCommand', () => {
         expected: true,
       },
       {
+        label: 'unsupported provider detection',
+        adapters: [createDetectedAdapter('unsupported', true)],
+        providers: {},
+        expected: false,
+      },
+      {
         label: 'no providers',
         adapters: [],
         providers: {},
@@ -1940,10 +1976,12 @@ describe('createStatusCommand', () => {
         ]),
       ];
       const human = createHarness({
+        adapters: [],
         driftReports: [],
         packInventories: inventories,
       });
       const json = createHarness({
+        adapters: [],
         driftReports: [],
         packInventories: inventories,
       });
@@ -2238,7 +2276,7 @@ describe('createStatusCommand', () => {
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     });
 
@@ -2259,7 +2297,7 @@ describe('createStatusCommand', () => {
         pack: 'core',
         assetsRoot: '/tmp/assets',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     });
 

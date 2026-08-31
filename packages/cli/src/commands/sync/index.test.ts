@@ -575,16 +575,12 @@ describe('createSyncCommand', () => {
           contentKind: 'agent',
           materialization: 'changed',
           visibility: {
-            state: 'refresh-required',
+            state: 'unknown',
             source: 'provider-refresh-policy',
             policy: {
-              state: 'manual-refresh',
-              provenance: {
-                kind: 'official-contract',
-                verifiedAt: '2026-08-31',
-              },
+              state: 'unknown',
             },
-            recovery: [{ command: '/agents' }],
+            recovery: [],
           },
         },
       ],
@@ -1427,6 +1423,16 @@ describe('createSyncCommand', () => {
       applied: 1,
       failed: 0,
       skipped: 0,
+      operations: [
+        {
+          provider: 'cursor',
+          action: 'create' as const,
+          target: 'role',
+          path: '.cursor/agents/oat-reviewer-gpt.md',
+          entryName: 'oat-reviewer-gpt',
+          status: 'changed' as const,
+        },
+      ],
     }));
     const cursorExtension: SyncMaterializationExtension = {
       provider: 'cursor',
@@ -1478,7 +1484,23 @@ describe('createSyncCommand', () => {
           aggregateConfigHash: 'codex-hash',
         },
       ],
-      codexExtensionApplyResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer.toml',
+              entryName: 'oat-reviewer',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
       extraMaterializationExtensions: [cursorExtension],
     });
 
@@ -1513,8 +1535,25 @@ describe('createSyncCommand', () => {
         skipped: 0,
       },
       materializationExtensions: [
-        { provider: 'codex', applied: 1, failed: 0 },
-        { provider: 'cursor', applied: 1, failed: 0 },
+        {
+          provider: 'codex',
+          applied: 1,
+          failed: 0,
+          operations: [{ reason: 'managed Codex role file missing' }],
+          operationResults: [{ status: 'changed' }],
+        },
+        {
+          provider: 'cursor',
+          applied: 1,
+          failed: 0,
+          operations: [{ reason: 'managed Cursor role file missing' }],
+          operationResults: [{ status: 'changed' }],
+        },
+      ],
+      codexExtensions: [
+        {
+          operations: [{ reason: 'managed Codex role file missing' }],
+        },
       ],
     });
     expect(process.exitCode).toBe(0);

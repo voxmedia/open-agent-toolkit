@@ -53,7 +53,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 ## Provider enablement model
 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
-- User provider enablement is stored in `~/.oat/sync/config.json`. `oat providers set <name> --scope user --enable|--disable` updates this canonical user config while preserving unrelated fields.
+- User provider enablement is stored in `~/.oat/sync/config.json`. `oat providers set --scope user --enabled claude` and `oat providers set --scope user --disabled claude` update this canonical user config while preserving unrelated fields.
 - `oat providers list` and `oat providers inspect` show configuration-owned activation separately from filesystem detection, plus registered scope/content capability, projection modes, native reads, materialization, and visibility evidence.
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
@@ -69,9 +69,12 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 
 Refresh advice is emitted only for a successful, relevant current-run change.
 The registry carries provider/content policies with provenance; absent evidence
-stays `unknown`. Claude agent files use a sourced `manual-refresh` policy from
-the official Claude Code subagent contract verified on 2026-08-31: use
-`/agents` to load a manually added agent immediately, or restart the session.
+stays `unknown`. The official Claude Code subagent contract, verified on
+2026-08-31, says existing agent directories are watched and changes load within
+seconds. A restart is conditionally required for the first agent added to a
+directory absent at session start, for agents added through `--add-dir`, and
+when Claude starts with `--disable-slash-commands`. OAT cannot observe those
+runtime conditions, so the registered Claude agent policy remains `unknown`.
 No equivalent behavior is inferred for other providers.
 
 `oat status`, `oat doctor`, and `oat init` expose that their running-provider

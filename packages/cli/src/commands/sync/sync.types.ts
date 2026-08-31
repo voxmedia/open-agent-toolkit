@@ -15,6 +15,7 @@ import type {
   MaterializationPlan,
   ProviderAdapter,
 } from '@providers/shared';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import type { ConcreteScope, Scope } from '@shared/types';
 
 export interface SyncProviderMismatches {
@@ -95,6 +96,7 @@ export interface CodexExtensionSummary {
 export interface MaterializationExtensionSummary {
   provider: string;
   operations: MaterializationOperation[];
+  operationResults?: MaterializationOperationResult[];
   managedEntries: string[];
   aggregateHash: string;
   applied?: number;

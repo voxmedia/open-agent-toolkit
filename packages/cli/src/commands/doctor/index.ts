@@ -96,6 +96,10 @@ import {
   type ProviderScopeContext,
 } from '@providers/shared';
 import {
+  userAgentMaterializationCoverage,
+  type UserAgentMaterializationCoverage,
+} from '@providers/shared/registry';
+import {
   adviseProviderRefresh,
   type ProviderVisibilityEvidence,
 } from '@providers/shared/restart-adviser';
@@ -1097,36 +1101,48 @@ async function createPackStateChecks(
   try {
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const userRoot = scopeRoots.get('user');
-    const userManagedRoleMaterialization = userRoot
+    const userAgentCoverage: UserAgentMaterializationCoverage = userRoot
       ? await (async () => {
           const config = await dependencies.resolveUserSyncConfig(
             join(userRoot, '.oat'),
           );
           const providerContext = providerContexts.get('user') ?? null;
-          const activeProviders = providerContext
-            ? providerContext.activeProviders
+          const activeAdapters = providerContext
+            ? providerContext.registrations
+                .filter(({ adapter }) =>
+                  providerContext.activeProviders.includes(adapter.name),
+                )
+                .map(({ adapter }) => adapter)
             : await dependencies
                 .getConfigAwareAdapters(
                   dependencies.getAdapters(),
                   userRoot,
                   config,
                 )
-                .then(({ activeAdapters }) =>
-                  activeAdapters.map(({ name }) => name),
+                .then(
+                  ({ activeAdapters: resolvedAdapters }) => resolvedAdapters,
                 );
-          return providerContext
-            ? providerContext.registrations
-                .filter(({ adapter }) => activeProviders.includes(adapter.name))
-                .some(({ extensions }) =>
-                  extensions.some(({ provider }) =>
-                    ['codex', 'cursor'].includes(provider),
-                  ),
-                )
-            : activeProviders.some(
-                (name) => name === 'codex' || name === 'cursor',
-              );
+          const activeProviders = activeAdapters.map(({ name }) => name);
+          const knownRegistrations = getProviderRegistrations().filter(
+            ({ adapter }) => activeProviders.includes(adapter.name),
+          );
+          let coverage = userAgentMaterializationCoverage({
+            registrations: providerContext?.registrations ?? knownRegistrations,
+            activeProviders,
+          });
+          if (coverage !== 'all') {
+            const mappings = activeAdapters.flatMap(({ userMappings }) =>
+              userMappings.filter(({ contentType }) => contentType === 'agent'),
+            );
+            if (mappings.some(({ nativeRead }) => !nativeRead)) {
+              coverage = 'all';
+            } else if (mappings.length > 0 && coverage === 'none') {
+              coverage = 'bundled';
+            }
+          }
+          return coverage;
         })()
-      : false;
+      : 'none';
     inventories = attributeSharedOwnerDiagnostics(
       await Promise.all(
         PACK_NAMES.map((pack) =>
@@ -1134,11 +1150,33 @@ async function createPackStateChecks(
             pack,
             assetsRoot,
             ...roots,
-            ...(userRoot ? { userManagedRoleMaterialization } : {}),
+            ...(userRoot
+              ? {
+                  userManagedRoleMaterialization: userAgentCoverage !== 'none',
+                }
+              : {}),
           }),
         ),
       ),
     );
+    if (userAgentCoverage === 'all') {
+      inventories = inventories.map((inventory) => ({
+        ...inventory,
+        scopes: inventory.scopes.map((scoped) =>
+          scoped.scope === 'user'
+            ? {
+                ...scoped,
+                diagnostics: scoped.diagnostics.filter(
+                  ({ code }) => code !== 'user-agent-unmaterialized',
+                ),
+              }
+            : scoped,
+        ),
+        diagnostics: inventory.diagnostics.filter(
+          ({ code }) => code !== 'user-agent-unmaterialized',
+        ),
+      }));
+    }
     findings = collectPackStateFindings(inventories);
   } catch (error) {
     const detail =

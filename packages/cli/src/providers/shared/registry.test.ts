@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   getProviderRegistrations,
   resolveProviderScopeContext,
+  userAgentMaterializationCoverage,
   validateProviderRegistrations,
   type ProviderRegistration,
 } from './registry';
@@ -95,12 +96,9 @@ describe('provider registry', () => {
       ),
     ).toMatchObject({
       catalogRefresh: {
-        state: 'manual-refresh',
-        provenance: {
-          kind: 'official-contract',
-          reference: 'https://code.claude.com/docs/en/sub-agents',
-          verifiedAt: '2026-08-31',
-        },
+        state: 'unknown',
+        reason:
+          'Claude agent refresh depends on active-session directory and launch-mode facts that OAT does not observe',
       },
     });
     expect(
@@ -111,6 +109,34 @@ describe('provider registry', () => {
       support: 'unsupported',
       projectionModes: ['unsupported'],
     });
+  });
+
+  it('derives user-agent coverage from active provider capability evidence', () => {
+    const registrations = getProviderRegistrations();
+    expect(
+      userAgentMaterializationCoverage({
+        registrations,
+        activeProviders: ['claude'],
+      }),
+    ).toBe('all');
+    expect(
+      userAgentMaterializationCoverage({
+        registrations,
+        activeProviders: ['codex'],
+      }),
+    ).toBe('bundled');
+    expect(
+      userAgentMaterializationCoverage({
+        registrations,
+        activeProviders: ['gemini'],
+      }),
+    ).toBe('all');
+    expect(
+      userAgentMaterializationCoverage({
+        registrations,
+        activeProviders: [],
+      }),
+    ).toBe('none');
   });
 
   it('uses focused adapter mappings as Copilot and Gemini managed-role proof', () => {

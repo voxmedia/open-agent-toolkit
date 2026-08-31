@@ -91,13 +91,34 @@ const UNKNOWN_REFRESH: ProviderCatalogRefreshPolicy = {
   reason: 'No sourced provider-version refresh contract is registered',
 };
 const CLAUDE_AGENT_REFRESH: ProviderCatalogRefreshPolicy = {
-  state: 'manual-refresh',
-  provenance: {
-    kind: 'official-contract',
-    reference: 'https://code.claude.com/docs/en/sub-agents',
-    verifiedAt: '2026-08-31',
-  },
+  state: 'unknown',
+  reason:
+    'Claude agent refresh depends on active-session directory and launch-mode facts that OAT does not observe',
 };
+
+export type UserAgentMaterializationCoverage = 'none' | 'bundled' | 'all';
+
+export function userAgentMaterializationCoverage(input: {
+  registrations: readonly ProviderRegistration[];
+  activeProviders: readonly string[];
+}): UserAgentMaterializationCoverage {
+  const active = new Set(input.activeProviders);
+  let coverage: UserAgentMaterializationCoverage = 'none';
+  for (const registration of input.registrations) {
+    if (!active.has(registration.adapter.name)) continue;
+    const capability = registration.capabilities.find(
+      ({ scope, contentKind }) => scope === 'user' && contentKind === 'agent',
+    );
+    if (capability?.support !== 'supported') continue;
+    if (capability.projectionModes.includes('entry-sync')) return 'all';
+    if (capability.projectionModes.includes('materialization-extension')) {
+      coverage = 'bundled';
+    } else if (capability.projectionModes.includes('native-read')) {
+      return 'all';
+    }
+  }
+  return coverage;
+}
 
 function capabilitiesFor(
   adapter: ProviderAdapter,

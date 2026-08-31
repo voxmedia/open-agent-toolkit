@@ -13,7 +13,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
     - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
-    - Claude's official subagent contract says manually added agent files require either `/agents` to load immediately or a session restart. OAT records this as a manual-refresh policy, verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
+    - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. A restart is conditionally required for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts, so it conservatively records Claude agent refresh as `unknown`. These semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
 
@@ -119,10 +119,11 @@ OAT reports three separate facts rather than collapsing them into â€œavailableâ€
    `not-reported` or `unknown`, never `visible`.
 
 After a successful relevant change, `oat sync` emits refresh advice from the
-registered policy. Today Claude agents have a sourced `manual-refresh` policy;
-unsupported or unsourced provider/content combinations remain explicit rather
-than inheriting Claude's advice. A current file with no current-session catalog
-probe is still not proof of provider visibility.
+registered policy. Claude's documented behavior depends on session-start and
+launch-mode facts that OAT does not observe, so Claude agent refresh remains
+`unknown`; unsupported or unsourced provider/content combinations stay explicit
+rather than inheriting unsupported advice. A current file with no
+current-session catalog probe is still not proof of provider visibility.
 
 ## Scope rules
 

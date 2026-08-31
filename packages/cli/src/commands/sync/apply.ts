@@ -306,7 +306,10 @@ export async function runSyncApply(
         (candidate) => candidate.provider === plan.provider,
       );
       if (summary) {
-        Object.assign(summary, result);
+        summary.applied = result.applied;
+        summary.failed = result.failed;
+        summary.skipped = result.skipped;
+        summary.operationResults = result.operations;
       }
     }
   }
