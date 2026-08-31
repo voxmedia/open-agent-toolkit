@@ -128,6 +128,10 @@ Operator selected the available non-Cursor Claude Fable target after cursor-fabl
 
 Resolved a fresh configured exit-gate generation for available target claude-fable-skip-permissions. Reviewed head and implementation fingerprint are unchanged; launch provenance remains empty pending the committed launch-intent transition.
 
+### 2026-08-31 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
