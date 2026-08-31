@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
+oat_current_task: p01-t05
+oat_last_commit: b67d6e45097049687de95cca2c5fdce9497e5049
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -24,7 +24,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T04:26:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T04:30:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -36,8 +36,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 completed p01-t01 through p01-t03 and continues at
-p01-t04. The workflow uses a
+Implementation — Phase 1 completed p01-t01 through p01-t04 and continues at
+p01-t05. The workflow uses a
 final-phase HiLL checkpoint, automatic checkpoint review, and sequential phase
 execution for the currently validated plan metadata.
 
@@ -71,7 +71,8 @@ execution for the currently validated plan metadata.
 - ✓ p01-t01 defined ownership-safe remote configuration types and parsing
 - ✓ p01-t02 resolved local, user, and built-in transport preferences
 - ✓ p01-t03 exposed ownership-safe remote config commands
-- ⧗ Phase 1 continues at p01-t04
+- ✓ p01-t04 defined strict versioned remote record schemas
+- ⧗ Phase 1 continues at p01-t05
 
 ## Blockers
 

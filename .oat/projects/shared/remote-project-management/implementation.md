@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -129,8 +129,17 @@ passed.
 
 ### Task p01-t04: Define strict remote record schemas
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b67d6e45097049687de95cca2c5fdce9497e5049
+
+**Outcome:** Added closed, independently versioned Zod records for portable
+binding metadata, operational binding state, snapshots, baselines, operations,
+steps, batches, aliases, redaction evidence, and per-binding outcomes. Stable
+IDs, filename agreement, duplicate steps, extension namespaces, and byte limits
+are enforced.
+
+**Verification:** Focused schema suite passed (6 tests); CLI type-check and lint
+passed.
 
 ---
 
@@ -279,7 +288,8 @@ Chronological log of implementation progress.
 - [x] p01-t01: Define remote configuration types - 6f5de98828e8b71c62014677cb7f4391cf0e8941
 - [x] p01-t02: Resolve transport preferences by owning scope - b3479ac367467fcdc381c277e6da6399d78fcdaf
 - [x] p01-t03: Expose remote configuration through config commands - 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
-- [ ] p01-t04: Define strict remote record schemas - in progress
+- [x] p01-t04: Define strict remote record schemas - b67d6e45097049687de95cca2c5fdce9497e5049
+- [ ] p01-t05: Resolve portable and operational storage locations - in progress
 
 **What changed (high level):**
 
@@ -288,6 +298,8 @@ Chronological log of implementation progress.
 - Added provider-specific transport resolution with per-value source evidence.
 - Exposed remote configuration through the command catalog and mutations while
   enforcing shared versus local/user ownership.
+- Added strict remote persistence schemas with stable identity and bounded
+  provider extensions.
 
 **Decisions:**
 

@@ -137,7 +137,8 @@ packages/cli/src/commands/config/index.test.ts.
 
 ### Task p01-t04: Define strict remote record schemas
 
-**Implementation:** in progress
+**Implementation:** completed in
+`b67d6e45097049687de95cca2c5fdce9497e5049`
 
 **Files:** Create packages/cli/src/commands/pjm/remote/schema.ts and
 packages/cli/src/commands/pjm/remote/schema.test.ts.
@@ -152,6 +153,8 @@ packages/cli/src/commands/pjm/remote/schema.test.ts.
 5. Commit: feat(p01-t04): define remote record schemas
 
 ### Task p01-t05: Resolve portable and operational storage locations
+
+**Implementation:** in progress
 
 **Files:** Create packages/cli/src/commands/pjm/remote/storage-locator.ts and
 packages/cli/src/commands/pjm/remote/storage-locator.test.ts.
