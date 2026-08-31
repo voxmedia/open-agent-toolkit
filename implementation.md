@@ -454,6 +454,17 @@ The rolling freshness checkpoint advances over the reference-sync commit while
 the immutable sequence remains at `pre_approval` with only `summary`
 completed.
 
+**Documentation completed:** Thomas approved the single contributor-guide
+correction. Source commit `1b9a236ee8ce1badc8dd37c50c9485adc8add2f8`
+changed only `apps/oat-docs/docs/contributing/skills.md`; workspace Markdown
+lint and the uncached 72-page docs build passed. Project receipt
+`4091da4ceb51be71d6c84c0722241d3af7a970f8` set
+`oat_docs_updated: complete`.
+
+The `document` sequence step is recorded complete and the rolling freshness
+checkpoint advances over its exact closeout-only source commit. The immutable
+reviewed implementation basis remains unchanged.
+
 ---
 
 ## Implementation Log
