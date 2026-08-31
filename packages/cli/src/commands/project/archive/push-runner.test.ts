@@ -9,6 +9,7 @@ import {
 } from '@commands/__tests__/helpers';
 import type { SyncedProjectRecord } from '@commands/project/sync/record';
 import type { OatConfig, OatLocalConfig } from '@config/oat-config';
+import { CliError } from '@errors/cli-error';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,6 +41,15 @@ interface HarnessOptions {
     lifecycleCommit?: string | null;
     recapExportPaths?: string[];
     snapshotId?: string;
+    terminalReceipt?: {
+      status: 'retired' | 'already-retired';
+      state: 'completed-only' | 'matching-aliases';
+      activeAliasRetained: boolean;
+      activeRef: string;
+      completedRef: string;
+      verifiedSha: string;
+    } | null;
+    recordRetired?: boolean;
   };
   archiveTarget?: ArchiveProjectTarget;
   config?: OatConfig;
@@ -95,6 +105,8 @@ function createHarness(options: HarnessOptions = {}): {
     lifecycleCommit: null,
     recapExportPaths: [],
     snapshotId: 'demo-project',
+    terminalReceipt: null,
+    recordRetired: false,
     ...options.archiveResult,
   };
   const archiveTarget: ArchiveProjectTarget = options.archiveTarget ?? {
@@ -665,9 +677,82 @@ describe('oat project archive push', () => {
       lifecycleCommit: null,
       recapExportPaths: [],
       snapshotId: 'demo-project',
+      completedRef: null,
+      verifiedSourceSha: null,
+      activeAliasDisposition: null,
+      recordRetired: false,
       warnings: ['Archive completed locally; S3 sync skipped.'],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a recordless synced terminal retry with its authoritative receipt', async () => {
+    const verifiedSha = 'a'.repeat(40);
+    const { archiveProjectOnCompletion, capture, context, dependencies } =
+      createHarness({
+        json: true,
+        localConfig: {
+          version: 1,
+          activeProject: '.oat/projects/synced/demo-project',
+        },
+        syncedRecord: null,
+        archiveResult: {
+          archivePath:
+            '/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project',
+          s3Path:
+            's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
+          summaryExportFile:
+            '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-summaries/20260401-demo-project.md',
+          warnings: [],
+          lifecycleCommit: 'b'.repeat(40),
+          snapshotId: '20260401-demo-project',
+          recordRetired: true,
+          terminalReceipt: {
+            status: 'already-retired',
+            state: 'matching-aliases',
+            activeAliasRetained: true,
+            activeRef: 'refs/oat/projects/demo-project',
+            completedRef: 'refs/oat/completed/demo-project',
+            verifiedSha,
+          },
+        },
+      });
+
+    await runArchivePushCommand(dependencies, undefined, {}, context);
+
+    expect(archiveProjectOnCompletion).toHaveBeenCalledOnce();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      mode: 'apply',
+      snapshotId: '20260401-demo-project',
+      completedRef: 'refs/oat/completed/demo-project',
+      verifiedSourceSha: verifiedSha,
+      activeAliasDisposition: 'retained',
+      recordRetired: true,
+      lifecycleCommit: 'b'.repeat(40),
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('returns a precise non-success result when configured archive durability fails', async () => {
+    const { capture, context, dependencies } = createHarness({ json: true });
+    dependencies.archiveProjectOnCompletion = vi.fn(async () => {
+      throw new CliError(
+        'Synced archive durability for demo-project requires the configured S3 upload to succeed before terminal cleanup.',
+        1,
+      );
+    });
+
+    await runArchivePushCommand(dependencies, undefined, {}, context);
+
+    expect(capture.jsonPayloads).toEqual([
+      {
+        status: 'error',
+        message:
+          'Synced archive durability for demo-project requires the configured S3 upload to succeed before terminal cleanup.',
+      },
+    ]);
+    expect(process.exitCode).toBe(1);
   });
 
   it('reports an actionable error when no project path or activeProject exists', async () => {

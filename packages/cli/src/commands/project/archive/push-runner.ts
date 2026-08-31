@@ -79,6 +79,10 @@ interface ArchivePushReport {
   lifecycleCommit: string | null;
   recapExportPaths: string[];
   snapshotId: string;
+  completedRef: string | null;
+  verifiedSourceSha: string | null;
+  activeAliasDisposition: 'retained' | 'removed' | null;
+  recordRetired: boolean;
 }
 
 export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePushCommandDependencies {
@@ -194,6 +198,10 @@ async function buildDryRunReport(
       projectScope === 'synced'
         ? snapshotName
         : basename(archiveTarget.archivePath),
+    completedRef: null,
+    verifiedSourceSha: null,
+    activeAliasDisposition: null,
+    recordRetired: false,
   };
 }
 
@@ -345,6 +353,14 @@ export async function runArchivePushCommand(
       lifecycleCommit: result.lifecycleCommit,
       recapExportPaths: result.recapExportPaths,
       snapshotId: result.snapshotId,
+      completedRef: result.terminalReceipt?.completedRef ?? null,
+      verifiedSourceSha: result.terminalReceipt?.verifiedSha ?? null,
+      activeAliasDisposition: result.terminalReceipt
+        ? result.terminalReceipt.activeAliasRetained
+          ? 'retained'
+          : 'removed'
+        : null,
+      recordRetired: result.recordRetired,
     };
 
     emitArchivePushReport(report, config.archive?.summaryExportPath, context);

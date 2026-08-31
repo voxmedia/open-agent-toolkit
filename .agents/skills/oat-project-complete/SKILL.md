@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.5
+version: 1.7.6
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -68,7 +68,12 @@ test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
-  oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+  SYNCED_RECORD_PATH="${PROJECT_PATH}.json"
+  if [[ -f "$SYNCED_RECORD_PATH" ]]; then
+    oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+  else
+    echo "Synced discovery record is absent; archive must resume from verified terminal archive metadata and the completed ref."
+  fi
 fi
 PROJECT_RETAINED_REF=""
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
@@ -869,7 +874,10 @@ source.
 This conditional skips archive movement only; it does not skip the Step 3.7
 seal append for an existing project log.
 
-Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
+Archive happens after PR description generation. For a synced project, the
+archive command owns the exact lifecycle commit that deletes the discovery
+record together with tracked archive exports; later bookkeeping must reuse its
+receipt rather than creating a second lifecycle commit.
 
 The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.
 
@@ -894,14 +902,22 @@ printf '%s\n' "$ARCHIVE_OUTPUT"
 
 Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
 `status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
-`s3Path`, `summaryExportFile`, `lifecycleCommit`, and `warnings` fields for later reporting. Set
+`s3Path`, `summaryExportFile`, `lifecycleCommit`, `completedRef`,
+`verifiedSourceSha`, `activeAliasDisposition`, `recordRetired`, and `warnings`
+fields for later reporting. Set
 `ARCHIVE_PATH` from `archivePath`, set `SUMMARY_EXPORT_FILE` from
 `summaryExportFile` (empty when null), then set `PROJECT_PATH="$ARCHIVE_PATH"`.
 
 For a synced project, require a full `lifecycleCommit` SHA in the archive
-report and set `LIFECYCLE_COMMIT` to it. This is the parent-branch record and
-summary-export commit owned by archive; do not replace it with
-`git rev-parse HEAD` and do not create another lifecycle commit.
+report, require `completedRef` to equal
+`refs/oat/completed/${PROJECT_NAME}`, require a full `verifiedSourceSha`,
+require `activeAliasDisposition` to be `removed` or `retained`, and require
+`recordRetired` to be exactly `true`. Set `LIFECYCLE_COMMIT` to the reported
+commit. This is the parent-branch record-deletion and archive-export commit
+owned by archive; do not replace it with `git rev-parse HEAD` and do not create
+another lifecycle commit. `removed` is the completed-only terminal shape;
+`retained` is the equally terminal same-SHA active alias shape. A differing-SHA
+state is never a successful report.
 
 When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
 `projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
@@ -1068,7 +1084,8 @@ Expected changes may include:
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
-- Shared-project deletions or synced-project record updates (if archived)
+- Shared-project deletions; synced archive record deletion is already sealed by
+  the archive-owned lifecycle commit
 - The complete tracked recap export and tracked summary export reported by
   archive (if present)
 
