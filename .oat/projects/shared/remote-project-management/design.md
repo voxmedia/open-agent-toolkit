@@ -167,7 +167,8 @@ PJM adoption completeness. Authentication headers, transport credentials, raw
 provider payloads, comment threads, activity history, and assignee detail are
 outside every persisted schema.
 
-The operational binding state contains only an explicit core field allowlist.
+The operational binding state contains only an explicit normalized field
+allowlist: the four core fields plus adapter-approved extension keys.
 Inbound remote-authored text is not subjected to repository scanning, arbitrary
 credential-value parsing, or a general DLP promise. Instead, a small
 conservative sensitive-content indicator runs on each allowed text field. When
@@ -175,7 +176,9 @@ it fires, the entire affected field is replaced by an explicit suppression
 marker, the field is marked unavailable, and the user is told that the local
 snapshot is incomplete. The implementation never tries to retain a supposedly
 safe substring of a flagged field. Provider extensions use an adapter allowlist
-and byte limits so an adapter cannot persist an unbounded raw response.
+and byte limits so an adapter cannot persist an unbounded raw response. Allowed
+extension text receives the same whole-field suppression treatment as core
+text.
 
 ### Data Flow
 
@@ -235,7 +238,8 @@ and byte limits so an adapter cannot persist an unbounded raw response.
 7. Verify the requested field mask. Advance the binding snapshot and baseline
    only for verified postconditions.
 8. Persist `verified`, `partial`, `uncertain`, or `rejected`. Partial or
-   uncertain outcomes block retry and transport switching until reconciliation.
+   uncertain outcomes block retry and execution-capability switching until
+   reconciliation.
 
 #### Host-executed action
 
@@ -492,7 +496,7 @@ interface EffectiveRemotePolicy {
 - `oat config get/list/dump/describe` exposes resolved values and sources.
   For example, `oat config set pjm.remote.policy.description managed-section
 --shared` enforces the owning surface; attempts to configure native tools or
-  transport order through shared remote policy are rejected.
+  tool selection or execution order through shared remote policy are rejected.
 - Host execution discovery cannot modify authority, description policy,
   storage, adoption, or hard floors.
 - Unknown or invalid policy values fail closed and produce an actionable doctor
@@ -599,10 +603,11 @@ approval-required actions.
 Every preview includes:
 
 - binding and stable remote identity;
-- provider context and selected transport candidate;
+- provider context and bounded host-execution capability evidence;
 - purposes and effective policy with sources;
 - observed revision strength and freshness;
 - exact affected fields and before/after values or safe hashes;
+- the explicit outbound projection digest and universal safety-result digest;
 - conflict and lifecycle conditions;
 - required authorization step;
 - a digest binding the preview to all load-bearing inputs.
@@ -619,16 +624,18 @@ contract.
 ```typescript
 interface ProviderAdapter {
   readonly provider: 'github' | 'linear' | 'jira';
-  probe(input: ProbeInput): Promise<CapabilitySnapshot>;
-  resolveIdentity(input: RemoteReference): Promise<RemoteIdentityResolution>;
-  normalize(input: ProviderIssue): NormalizedRemoteIssue;
-  planRead(input: ReadInput): TransportAction;
-  planDiscussionRead(input: DiscussionReadInput): TransportAction;
-  planDuplicateSearch(input: DuplicateSearchInput): TransportAction;
-  planCreate(input: CreateInput): TransportAction;
-  planUpdate(input: UpdateInput): TransportAction;
-  planTransition(input: TransitionInput): TransportAction;
-  planAnnotation(input: AnnotationInput): TransportAction;
+  normalize(input: SanitizedProviderObservation): NormalizedRemoteIssue;
+  planRead(input: ReadInput): SemanticAction;
+  planDiscussionRead(input: DiscussionReadInput): SemanticAction;
+  planDuplicateSearch(input: DuplicateSearchInput): SemanticAction;
+  planCreate(input: CreateInput): SemanticAction;
+  planUpdate(input: UpdateInput): SemanticAction;
+  planTransition(input: TransitionInput): SemanticAction;
+  planAnnotation(input: AnnotationInput): SemanticAction;
+  validateObservation(
+    action: SemanticAction,
+    observation: SanitizedProviderObservation,
+  ): ObservationValidation;
   verify(input: VerificationInput): FieldVerification[];
   managedContent: ManagedContentCodec;
 }
@@ -643,8 +650,10 @@ blocks that operation without disabling safe reads.
 
 - Stable identity includes host, owner, repository ID, issue node/database ID,
   and current issue number/URL aliases.
-- Default transport is `gh`; `gh issue` and `gh api` are dialects within
-  one transport.
+- The adapter emits semantic intents and accepts only sanitized observations
+  whose identity, repository context, and capability evidence match them. It
+  does not encode GitHub MCP tool names, GitHub CLI commands, flags, or native
+  request schemas.
 - The adapter verifies every requested field because GitHub surfaces may
   silently omit unsupported fields.
 - Pull-request and branch evidence remains delivery evidence, not automatic
@@ -656,23 +665,18 @@ blocks that operation without disabling safe reads.
 
 - Stable identity includes workspace, team, issue UUID, and current identifier
   and URL aliases.
-- Default transport is host MCP or connector; an installed `linear-cli` is an
-  optional configured fallback.
-- Exact MCP tools, workspace/team scope, write availability, and connector
-  partial-error behavior are runtime capabilities.
-- The community CLI is never bundled and its schema/version is probed before
-  use.
-- First-party GraphQL is deferred; transport failure does not silently activate
-  it.
+- Workspace/team scope, write availability, and partial-error behavior are live
+  host capabilities represented only as bounded semantic evidence.
+- The adapter does not encode a connector catalog, community-CLI dialect, or
+  first-party GraphQL client. Missing capability remains explicit.
 
 #### Jira Cloud
 
 - Stable identity includes cloud/site ID, project context, immutable issue ID,
   and current key/URL aliases.
-- Default transport is Rovo MCP or connector; installed official `acli` is an
-  optional configured fallback.
-- The adapter discovers create/edit metadata, fields, issue types, and valid
-  transitions rather than assuming tenant configuration.
+- The host discovers create/edit metadata, fields, issue types, and valid
+  transitions live; the adapter validates normalized metadata observations
+  rather than assuming tenant configuration or encoding a native invocation.
 - Missing changelog, archive, arbitrary custom-field, or transition fidelity
   produces explicit degraded capability evidence. V1 does not silently add a
   direct REST credential path.
@@ -682,7 +686,7 @@ blocks that operation without disabling safe reads.
   outside that container. It hashes canonical JSON that ignores object key
   ordering while preserving semantically ordered arrays. The original observed
   representation remains evidence, but byte equality is not required. If the
-  selected transport cannot demonstrate structural preservation,
+  selected host execution surface cannot demonstrate structural preservation,
   managed-section update is unsupported.
 
 ### Managed Content Codecs
@@ -705,9 +709,10 @@ conversion. First insertion is a distinct previewed action. The full body
 before and after remains available for preview and verification, but only the
 managed region enters the outbound reconciliation baseline.
 
-### Transport Registry and Safe Command Runner
+### Host Execution Selection and Outbound Safety
 
-**Purpose:** Probe configured transports and execute discrete, bounded actions.
+**Purpose:** Select a live host capability using bounded semantic evidence and
+gate every explicit outbound projection before an external effect.
 
 ```typescript
 type CapabilityAvailability =
@@ -718,33 +723,36 @@ type CapabilityAvailability =
 interface CapabilitySnapshot {
   schemaVersion: 1;
   provider: string;
-  transport: string;
-  transportVersion: string | null;
-  catalogFingerprint: string;
+  surfaceKind: 'connector' | 'configured-cli';
+  evidenceDigest: string;
   context: RemoteAccountContext;
   availability: CapabilityAvailability;
   operations: Partial<Record<SemanticOperation, CapabilityLevel>>;
   permissions: 'known' | 'unknown';
   observedAt: string;
-  evidence: SanitizedProbeEvidence;
+  evidence: SanitizedCapabilityEvidence;
 }
 
-interface SafeCommandRunner {
-  run(request: {
-    executable: string;
-    argv: string[];
-    cwd: string;
-    timeoutMs: number;
-    maxOutputBytes: number;
-    environment: Record<string, string>;
-  }): Promise<SanitizedProcessResult>;
+interface OutboundProjectionSafetyResult {
+  schemaVersion: 1;
+  projectionDigest: string;
+  verdict: 'safe' | 'blocked';
+  resultDigest: string;
+  reasons: SanitizedSafetyReason[];
 }
 ```
 
-Transport config contains registered transport IDs, never shell fragments.
-Execution uses discrete argv with no shell interpolation, controlled environment,
-bounded time and buffers, injectable process behavior, JSON decoding, and
-redaction before logging or persistence.
+The host inspects currently granted connector descriptions and may inspect an
+already configured CLI's live help only when no capable connector is available.
+OAT does not persist the discovered catalog, help text, executable name, flags,
+or argument schema. Selection consumes only sanitized provider/context/
+capability evidence and may change only before an attempt starts.
+
+The outbound gate receives only the normalized fields proposed for the current
+create or update plus bounded OAT-owned evidence. It never scans the repository,
+worktree, Git history, or arbitrary files. A missing, stale, failed, or blocked
+result prevents execution, and the projection/result digests participate in the
+preview and approval digest.
 
 ### Agent-host Executor Bridge
 
@@ -758,11 +766,11 @@ interface ExternalActionEnvelope {
   stepId: string;
   actionDigest: string;
   provider: 'github' | 'linear' | 'jira';
-  transport: 'mcp';
   semanticOperation: SemanticOperation;
   context: RemoteAccountContext;
-  request: SanitizedProviderRequest;
-  expectedObservation: JsonSchemaDescriptor;
+  intent: NormalizedSemanticIntent;
+  expectedObservation: SemanticObservationContract;
+  outboundSafety: OutboundProjectionSafetyResult | null;
 }
 
 interface ExternalObservationEnvelope {
@@ -771,8 +779,8 @@ interface ExternalObservationEnvelope {
   stepId: string;
   actionDigest: string;
   observedAt: string;
-  toolIdentity: string;
-  catalogFingerprint: string;
+  surfaceKind: 'connector' | 'configured-cli';
+  capabilityEvidenceDigest: string;
   context: RemoteAccountContext;
   outcome: SanitizedProviderObservation;
 }
@@ -805,7 +813,7 @@ The provider-neutral `oat-pjm-remote` skill invokes:
   binding and snapshot, and remove only the compact operational link;
 - `resolve recreate`: search for duplicates, create a replacement only after
   fresh approval, and preserve old and new identity history;
-- `operation continue`: advance a prepared MCP action using one external
+- `operation continue`: advance a prepared host-executed action using one
   observation.
 
 Discussion reads are paginated and bounded by provider cursor plus a configured
@@ -853,7 +861,7 @@ Doctor checks:
 - concurrent active intents reconstructed from operation journals;
 - missing verification evidence;
 - policy values that were ignored or would broaden illegally;
-- connector or executable availability without exposing credentials;
+- provider/context host-capability availability without exposing credentials;
 - snapshot fields outside the allowed retention boundary.
 - credential-shaped content or operational state in a disallowed storage class.
 
@@ -962,11 +970,25 @@ interface RemoteIssueSnapshot {
   extensions: Record<string, JsonValue>;
   contentRedacted: boolean;
   redactionCount: number;
+  redactions: Array<{
+    field:
+      | {
+          kind: 'core';
+          name: 'title' | 'description' | 'priority' | 'status';
+        }
+      | { kind: 'extension'; key: string };
+    reason: 'sensitive-content' | 'policy';
+    representation: 'whole-field-marker';
+  }>;
 }
 ```
 
 The snapshot never includes comments, activity history, assignees, credentials,
-or an unfiltered raw response.
+or an unfiltered raw response. `contentRedacted` means the retained snapshot is
+incomplete. Each listed field contains only the whole-field suppression marker;
+no safe-looking substring from a signaled field is retained. Extension keys in
+suppression evidence must be bounded, schema-safe, and members of the adapter's
+explicit allowlist; the evidence never accepts an arbitrary provider path.
 
 ### Reconciliation Baseline
 
@@ -1015,7 +1037,7 @@ interface OperationSubstepRecord {
   approvalRequirement: 'none' | 'explicit-instruction' | 'fresh-approval';
   approval: ApprovalEvidence | null;
   state: OperationState;
-  selectedTransport: CapabilityReference | null;
+  selectedExecution: CapabilityReference | null;
   attempts: OperationAttempt[];
   verification: FieldVerification[];
   retryDisposition:
@@ -1047,7 +1069,7 @@ interface RemoteOperationRecord {
   authority: AuthorityDecision | null;
   approval: ApprovalEvidence | null;
   substeps: OperationSubstepRecord[];
-  selectedTransport: CapabilityReference | null;
+  selectedExecution: CapabilityReference | null;
   attempts: OperationAttempt[];
   observations: ExternalObservationSummary[];
   verification: FieldVerification[];
@@ -1089,10 +1111,10 @@ substep cannot start until every dependency is verified.
 For a non-composite operation, parent `authority` and `approval` are populated
 and `substeps` is empty. For a composite, parent `mutationClass` is `composite`,
 parent authority/approval are null summaries, and the substeps are the
-authoritative effect records. The parent pins one transport before the first
-effect; every substep references that same capability. If it becomes unavailable
-between substeps, the parent becomes partial or uncertain and enters
-reconciliation instead of switching transports.
+authoritative effect records. The parent pins one host execution capability
+before the first effect; every substep references that same evidence. If it
+becomes unavailable between substeps, the parent becomes partial or uncertain
+and enters reconciliation instead of selecting another capability.
 
 Parent state reduces from durable substep states:
 
@@ -1253,7 +1275,8 @@ preview digest.
 ### Internal Programmatic API
 
 Command factories inject filesystem, clock, ID generation, config, provider
-registry, transport registry, process runner, and host-observation parsing.
+registry, host-capability selection, outbound-projection assessment, and
+host-observation parsing.
 This keeps all remote behavior deterministic in tests and prevents skill-inline
 shell logic from becoming a second implementation.
 
@@ -1261,12 +1284,13 @@ shell logic from becoming a second implementation.
 
 ### Authentication
 
-- Authentication remains owned by `gh`, `linear-cli`, `acli`, host
-  connectors, keychains, or their supported environment-backed secret stores.
-- OAT probes auth presence and account context but never reads or persists
-  credential values.
-- A transport authenticated to the wrong account, workspace, site, or repository
-  is unavailable for the requested binding.
+- Authentication remains owned by the live connector or already configured CLI
+  chosen by the host, including its supported keychain or environment-backed
+  secret store.
+- The host reports bounded auth-presence and account-context evidence; OAT never
+  requests, reads, or persists credential values.
+- A capability authenticated to the wrong account, workspace, site, or
+  repository is unavailable for the requested binding.
 
 ### Authorization
 
@@ -1285,24 +1309,29 @@ shell logic from becoming a second implementation.
 - Full descriptions may contain sensitive business content. Operational state
   therefore uses the common machine-local store by default; shared Git storage
   requires explicit repository configuration and a previewed approval.
-- Credential-shaped values are redacted before either storage class is written;
-  the snapshot records the redaction instead of claiming complete retention.
-- Human previews
-  display concise diffs or hashes by default and require an explicit verbose
-  view for full bodies.
-- Public GitHub publication passes a privacy/sanitization check so private OAT
-  artifacts are not copied into a public issue.
-- Process output and external observations pass redaction before logging and
-  again before persistence.
+- Each inbound text field that triggers the conservative sensitive-content
+  signal is suppressed in full before either storage class is written; the
+  snapshot marks the field incomplete instead of claiming parsed or complete
+  retention.
+- Human previews display concise diffs or hashes by default and require an
+  explicit verbose view for full bodies.
+- Every create/update projection, including public GitHub publication, passes
+  the same provider-neutral privacy/secret gate before approval or execution.
+  The gate sees only the explicit normalized projection and never scans the
+  repository, worktree, Git history, or arbitrary files.
+- Sanitized host observations pass schema and size validation before logging or
+  persistence; native output and raw payloads are outside the contract.
 - Paths are derived from validated generated IDs, never provider-supplied
   strings.
 
 ### Threat Mitigation
 
-- **Command injection:** Registered transport IDs map to fixed executables and
-  discrete argv; no shell templates are accepted.
-- **Credential leakage:** Controlled environment, redaction, bounded evidence,
-  and schema allowlists exclude auth values.
+- **Native invocation drift:** OAT contains no provider tool name, executable,
+  flag, or argument mapping. The host discovers a live capability and returns
+  only bounded semantic evidence.
+- **Credential leakage:** Authentication stays with the host capability;
+  allowlists, whole-field inbound suppression, explicit outbound projections,
+  and the universal outbound gate protect OAT-owned evidence.
 - **Approval replay:** Digest-bound, freshness-checked approval becomes invalid
   after any load-bearing input changes.
 - **Connector result spoofing:** Action and step digests plus provider context
@@ -1338,8 +1367,9 @@ identity, auth state, and required capability.
 
 ### Resource Limits
 
-- Process runners impose timeout and stdout/stderr byte limits.
 - External observation envelopes impose JSON depth and byte limits.
+- Host execution remains subject to the host's runtime timeout and output
+  limits; OAT accepts no unbounded native output.
 - Provider extensions use per-adapter allowlists and byte limits.
 - Full descriptions are retained, but commands avoid duplicating them in logs,
   receipts, and previews.
@@ -1352,7 +1382,7 @@ identity, auth state, and required capability.
   stale preview, unresolved conflict, or missing approval. Return `blocked`
   with corrective guidance and no remote attempt.
 - **Capability errors:** Tool unavailable, auth required, permission unknown,
-  operation unsupported, or schema/catalog drift. Return `pending` or
+  operation unsupported, or semantic-evidence drift. Return `pending` or
   `blocked` before mutation.
 - **Remote lifecycle errors:** Not found or invisible, moved, archived, deleted,
   or temporarily unavailable. Preserve binding and snapshot; stop writes.
@@ -1368,8 +1398,8 @@ identity, auth state, and required capability.
 - Read-only probes may retry bounded transient failures with provider-aware
   backoff.
 - No mutation is automatically retried after `attempt-started`.
-- A pre-start unavailable transport may fall through to the next configured
-  candidate.
+- A pre-start unavailable capability may fall through to another live-discovered
+  capability whose provider context and semantic evidence match.
 - Partial or uncertain results require refresh and reconciliation on the pinned
   binding before a new operation can be authorized.
 - Provider rate-limit evidence is retained, but a retry-after time is advisory
@@ -1377,11 +1407,11 @@ identity, auth state, and required capability.
 
 ### Logging
 
-- **Info:** Operation and binding IDs, semantic action, provider, transport ID,
-  capability state, and terminal classification.
+- **Info:** Operation and binding IDs, semantic action, provider, host-surface
+  kind, capability state, and terminal classification.
 - **Warn:** Stale capability, degraded revision strength, partial verification,
   lifecycle anomaly, or pending reconciliation.
-- **Error:** Sanitized persistence, schema, or transport failure with recovery
+- **Error:** Sanitized persistence, schema, or host-execution failure with recovery
   instructions.
 
 No log includes credential values, raw environment, authentication headers,
@@ -1391,34 +1421,34 @@ full comments, or unfiltered provider payloads.
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification                | Key Scenarios                                                                       |
-| ---- | --------------------------- | ----------------------------------------------------------------------------------- |
-| FR1  | integration + e2e           | Shared adapter conformance for GitHub, Linear, Jira; several same-provider bindings |
-| FR2  | e2e                         | Local PJM with every transport disabled; pending intent never shown as success      |
-| FR3  | unit + integration          | Purpose intersection plus mixed-authority composite closeout substeps               |
-| FR4  | integration                 | Intake, publish, refresh, reconcile, closeout; no transitive propagation            |
-| FR5  | unit + integration          | Strict binding persistence, identity aliases, restart recovery                      |
-| FR6  | unit                        | Title/description contract, optional safe priority, provider extensions             |
-| FR7  | unit + integration          | None/managed/replace matrix, malformed boundaries, binding tightening               |
-| FR8  | unit + integration          | Cross-layer default/operation truth table, binding clamps, approval floors          |
-| FR9  | unit + integration          | B/L/R classification and explicit same-field conflict                               |
-| FR10 | integration                 | Reviewed batch partial failure with independent outcomes                            |
-| FR11 | integration                 | Refresh, one attempt, read-back, timeout, no blind retry                            |
-| FR12 | integration                 | Non-secret snapshot, local/shared storage, redaction, bounded discussion read       |
-| FR13 | integration                 | Anomalies plus approved relink, detach, and duplicate-safe recreate                 |
-| FR14 | integration                 | Persisted create intent, provenance search, uncertain create                        |
-| FR15 | e2e                         | Closeout substep crash recovery, annotation/transition outcomes, purpose defaults   |
-| FR16 | integration                 | Ordered probes, capability matching, pre-start fallback, pinned uncertainty         |
-| FR17 | e2e                         | GitHub to Linear, GitHub to Jira, and GitHub-only workflows                         |
-| FR18 | integration + manual        | Project artifacts not published; discussion remains informational                   |
-| NFR1 | integration + security scan | Secret fixtures redacted; no local or shared record leakage                         |
-| NFR2 | integration                 | Ambiguity, permission, schema drift, and uncertainty all fail closed                |
-| NFR3 | integration                 | Crash injection, substep/batch restart, rejected mapping, concurrent intents        |
-| NFR4 | e2e                         | Disconnected search and snapshot use with visible freshness                         |
-| NFR5 | integration                 | ADF, aliases, transition metadata, and extension retention                          |
-| NFR6 | manual + e2e                | Preview sources, freshness, conflicts, and per-binding outcomes                     |
-| NFR7 | integration                 | Existing backlog/project suites unchanged without remote config                     |
-| NFR8 | integration                 | Same semantic fixtures through eligible CLI and MCP transports                      |
+| ID   | Verification         | Key Scenarios                                                                       |
+| ---- | -------------------- | ----------------------------------------------------------------------------------- |
+| FR1  | integration + e2e    | Shared adapter conformance for GitHub, Linear, Jira; several same-provider bindings |
+| FR2  | e2e                  | Local PJM with no host execution available; pending intent never shown as success   |
+| FR3  | unit + integration   | Purpose intersection plus mixed-authority composite closeout substeps               |
+| FR4  | integration          | Intake, publish, refresh, reconcile, closeout; no transitive propagation            |
+| FR5  | unit + integration   | Strict binding persistence, identity aliases, restart recovery                      |
+| FR6  | unit                 | Title/description contract, optional safe priority, provider extensions             |
+| FR7  | unit + integration   | None/managed/replace matrix, malformed boundaries, binding tightening               |
+| FR8  | unit + integration   | Cross-layer default/operation truth table, binding clamps, approval floors          |
+| FR9  | unit + integration   | B/L/R classification and explicit same-field conflict                               |
+| FR10 | integration          | Reviewed batch partial failure with independent outcomes                            |
+| FR11 | integration          | Refresh, one attempt, read-back, timeout, no blind retry                            |
+| FR12 | integration          | Allowlisted snapshot, whole-field suppression, bounded discussion read              |
+| FR13 | integration          | Anomalies plus approved relink, detach, and duplicate-safe recreate                 |
+| FR14 | integration          | Persisted create intent, provenance search, uncertain create                        |
+| FR15 | e2e                  | Closeout substep crash recovery, annotation/transition outcomes, purpose defaults   |
+| FR16 | integration          | Ordered probes, capability matching, pre-start fallback, pinned uncertainty         |
+| FR17 | e2e                  | GitHub to Linear, GitHub to Jira, and GitHub-only workflows                         |
+| FR18 | integration + manual | Project artifacts not published; discussion remains informational                   |
+| NFR1 | integration + safety | Inbound suppression and explicit outbound-gate fixtures; no auth leakage            |
+| NFR2 | integration          | Ambiguity, permission, schema drift, and uncertainty all fail closed                |
+| NFR3 | integration          | Crash injection, substep/batch restart, rejected mapping, concurrent intents        |
+| NFR4 | e2e                  | Disconnected search and snapshot use with visible freshness                         |
+| NFR5 | integration          | ADF, aliases, transition metadata, and extension retention                          |
+| NFR6 | manual + e2e         | Preview sources, freshness, conflicts, and per-binding outcomes                     |
+| NFR7 | integration          | Existing backlog/project suites unchanged without remote config                     |
+| NFR8 | integration          | Same semantic fixtures through generic host capability evidence                     |
 
 ### Unit Tests
 
@@ -1436,12 +1466,12 @@ full comments, or unfiltered provider payloads.
 ### Integration Tests
 
 - Injected filesystem with crash points before and after every local transition.
-- Fake `gh`, `linear-cli`, and `acli` executables for argv, timeouts,
-  invalid JSON, nonzero exits, partial output, version drift, and redaction.
-- Fake connector catalogs and observations for unavailable operations,
-  authorization-required, context ambiguity, partial errors, and stale step
-  digests.
-- Repository config versus user transport preference resolution.
+- Generic fake-host capability evidence and sanitized observations for
+  unavailable operations, authorization-required state, context ambiguity,
+  partial errors, stale step digests, and pre-attempt fallback.
+- Contract tests proving OAT core, skills, and tests contain no native tool
+  catalog, connector schema, executable dialect, or provider invocation map.
+- Repository policy versus runtime host-capability separation.
 - Local/common-dir versus explicitly shared storage location and privacy rules.
 - Existing backlog creation/archive/index, PJM adoption, project parsing, and
   Git project sync regression suites.
@@ -1456,14 +1486,15 @@ full comments, or unfiltered provider payloads.
 - Reviewed multi-binding batch with one verified, one blocked, and one uncertain
   result.
 - Interrupted closeout reconstructing immutable membership and member outcomes.
-- Agent-host action loop using fake MCP tools; no live credentials in CI.
+- Agent-host action loop using generic semantic intents and sanitized
+  observations; no live credentials or provider-native fixtures in CI.
 
 ### Provider-Specific Cases
 
 - **GitHub:** Silently dropped fields, transfer aliases, 404 versus confirmed
   deletion, rate limit, and PR linkage as evidence only.
-- **Linear:** Missing MCP operation, workspace/team ambiguity, moved-team alias,
-  archived visibility, connector partial response, and CLI schema drift.
+- **Linear:** Missing semantic capability, workspace/team ambiguity, moved-team
+  alias, archived visibility, and partial host observation.
 - **Jira:** Create/edit metadata drift, ADF invalid nodes, stable ID with changed
   key, revision unknown, JQL lag, unavailable transition, and unknown create
   outcome.
@@ -1484,7 +1515,8 @@ This ships as an opt-in PJM capability:
    while remote policy remains fail-closed.
 2. Add reconciliation and preview before any provider mutation path.
 3. Add the host-executor skill and fake connector conformance.
-4. Enable provider transports incrementally behind capability probes.
+4. Enable provider semantic adapters incrementally behind live host-capability
+   evidence and the universal outbound gate.
 5. Publish docs and examples with no credentials and with destructive/full-body
    approval floors prominent.
 
@@ -1510,6 +1542,12 @@ skill receives one frontmatter version bump in the final PR.
   approval.
 - Migration never contacts a provider or infers account context, stable remote
   identity, purpose, or mutation authority.
+- The execution-substrate migration replaces p01/p02 capability, preview, and
+  operation transport identifiers, versions, and catalog fingerprints with
+  provider-neutral surface kind, semantic capability/context evidence, and
+  evidence digests. Previously written records are handled by an explicit
+  record-version migration or compatibility parser and cannot retain native
+  transport fields as authority or availability evidence.
 - Binding and operation schemas version independently from
   `pjm.schemaVersion`, which continues to describe adoption scaffolding.
 
@@ -1521,14 +1559,15 @@ skill receives one frontmatter version bump in the final PR.
 2. **Reconciliation and safety engine:** Local projections, field policies,
    B/L/R reconciliation, authority, previews, operation state machine, and
    verification.
-3. **Execution substrate and lifecycle UX:** Safe CLI runner, transport registry,
-   external-action protocol, command envelopes, and `oat-pjm-remote` skill.
-4. **GitHub adapter and `gh` transport:** Identity, normalization, managed
-   Markdown, create/update/transition/annotation, and conformance.
-5. **Linear adapter and transports:** MCP action mappings, optional
-   `linear-cli`, workspace/team identity, and conformance.
-6. **Jira Cloud adapter and transports:** MCP action mappings, optional ACLI,
-   ADF managed content, metadata/transition discovery, and conformance.
+3. **Execution substrate and lifecycle UX:** Host-capability evidence,
+   universal outbound-projection safety, external-action protocol, command
+   envelopes, and `oat-pjm-remote` skill.
+4. **GitHub semantic adapter:** Identity, normalization, managed Markdown,
+   semantic intents/observations, publication safety, and conformance.
+5. **Linear semantic adapter:** Workspace/team identity, semantic intents,
+   sanitized observations, duplicate search, and conformance.
+6. **Jira Cloud semantic adapter:** ADF managed content, metadata/transition
+   semantics, sanitized observations, duplicate search, and conformance.
 7. **Cross-provider workflows and closeout:** Reviewed batches, completion
    annotations, discussion evidence, relink/detach/recreate recovery,
    representative E2E flows, migration, doctor completion, docs, and release
@@ -1545,21 +1584,22 @@ groups without the separate confirmation required by the planning workflow.
 - **Agent-host bridge drift:** Skill prose and TypeScript may diverge.
   - **Mitigation:** Keep all state, policy, schemas, and verdicts in CLI code;
     the skill only discovers tools, invokes one envelope, and returns an
-    observation. Test the bridge with captured catalogs.
+    observation. Contract-test semantic envelopes and explicitly reject native
+    catalogs or invocation mappings.
 - **Snapshot sensitivity:** Full ticket descriptions may contain business data
   or credential-shaped values.
   - **Mitigation:** Keep operational state machine-local by default, require
-    previewed opt-in for shared Git storage, retain only core fields, redact
-    credentials before persistence, mark redacted snapshots, and avoid
-    comments, assignees, and raw payloads.
+    previewed opt-in for shared Git storage, retain only core fields, suppress
+    any signaled inbound field in full, mark snapshots incomplete, and avoid
+    comments, assignees, and raw payloads. Do not claim general DLP.
 - **Managed ADF lossiness:** Connector or CLI representations may not preserve
   surrounding Jira content.
   - **Mitigation:** Capability-test round trips; fail closed to no description
     update when exact structural preservation cannot be demonstrated.
-- **Provider capability drift:** Tool catalogs, CLI schemas, fields, and
-  workflows change.
-  - **Mitigation:** Probe at runtime, fingerprint capability evidence, re-probe
-    before writes, and preserve explicit degraded outcomes.
+- **Provider capability drift:** Live tools, CLI help, fields, and workflows
+  change.
+  - **Mitigation:** Discover at runtime, retain only bounded semantic capability
+    evidence, re-check before writes, and preserve explicit degraded outcomes.
 - **Operation journal persistence gap:** A process may fail after remote effect
   but before local receipt update.
   - **Mitigation:** Mark attempt before effect and treat any post-attempt gap as

@@ -418,20 +418,32 @@ packages/cli/src/commands/pjm/remote/credential-safety.test.ts,
 packages/cli/src/commands/pjm/remote/snapshot.ts,
 packages/cli/src/commands/pjm/remote/snapshot.test.ts,
 packages/cli/src/commands/pjm/remote/preview.ts, and
-packages/cli/src/commands/pjm/remote/preview.test.ts.
+packages/cli/src/commands/pjm/remote/preview.test.ts; modify
+packages/cli/src/commands/pjm/remote/schema.ts and
+packages/cli/src/commands/pjm/remote/schema.test.ts.
 
 1. Add failing cases proving that a conservative sensitive-content signal in
-   an allowlisted inbound ticket field suppresses the whole field across
-   snapshots and previews, marks the result incomplete, and blocks approval.
-   Include bracketed and multi-segment credential-key signals plus ordinary
+   an allowlisted inbound ticket field suppresses the whole field in retained
+   snapshots and marks the result incomplete. Cover all four core fields and an
+   adapter-approved extension key; extension evidence uses only a bounded,
+   schema-safe allowlisted key rather than an arbitrary provider path. Add
+   separate concise-preview and approval-evidence cases that reject the same
+   signal without treating the preview as the universal outbound gate. Include
+   bracketed and multi-segment credential-key signals plus ordinary
    identifier-like negative cases.
 2. Remove credential assignment/value parsing in favor of simple field-level
-   suppression. This boundary applies only to explicitly allowlisted inbound
-   remote ticket content: it does not scan the repository or codebase and does
-   not claim general DLP or exhaustive secret detection.
-3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/credential-safety.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/preview.test.ts
-5. Commit: fix(p02-t10): simplify credential content safety
+   suppression. Retained snapshots record which allowlisted field was
+   suppressed with a bounded core-or-extension field reference, store only the
+   whole-field marker for that field, and mark the snapshot incomplete. This
+   boundary applies only to explicitly allowlisted inbound remote ticket
+   content: it does not scan the repository or codebase and does not claim
+   general DLP or exhaustive secret detection.
+3. Preserve p02 review history as evidence for the retired parser approach.
+   This task does not declare outbound content safe; p03-t03 remains the single
+   universal gate for every normalized create/update projection.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/credential-safety.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/preview.test.ts src/commands/pjm/remote/schema.test.ts
+6. Commit: fix(p02-t10): simplify credential content safety
 
 ## Phase 3: Execution Substrate and Lifecycle UX
 
@@ -460,7 +472,11 @@ provider-conformance.ts, and provider-conformance.test.ts.
 ### Task p03-t02: Select host execution by semantic capability evidence
 
 **Files:** Create packages/cli/src/commands/pjm/remote/host-execution.ts and
-host-execution.test.ts.
+host-execution.test.ts; modify packages/cli/src/config/oat-config.ts,
+oat-config.test.ts, resolve.ts, and resolve.test.ts; modify
+packages/cli/src/commands/config/index.ts and index.test.ts; modify
+packages/cli/src/commands/pjm/remote/schema.ts, schema.test.ts, preview.ts,
+preview.test.ts, store.ts, and store.test.ts.
 
 1. Add provider-neutral cases for unavailable, auth-required,
    context-mismatched, capability-missing, equivalent pre-attempt fallback,
@@ -468,15 +484,29 @@ host-execution.test.ts.
 2. Implement selectHostExecution() over semantic provider/context/capability
    evidence. Do not retain a tool catalog or provider-native schema, and permit
    fallback only before an attempt starts.
-3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/host-execution.test.ts
-5. Commit: feat(p03-t02): select host execution capabilities
+3. Retire the completed p01 provider transport defaults and local/user
+   transport-preference surfaces from effective configuration. Host discovery
+   is runtime-owned; existing configured native tool identifiers must not
+   become authority or availability evidence.
+4. Replace persisted capability, preview, and operation transport identifiers,
+   versions, and catalog fingerprints with provider-neutral surface kind,
+   semantic capability/context evidence, and evidence digests. Add an explicit
+   record-version migration or compatible parser for records already written by
+   p01/p02, and update store fixtures so legacy transport-shaped records cannot
+   remain authoritative after conversion.
+5. Format: pnpm format:fix
+6. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/host-execution.test.ts src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/preview.test.ts src/commands/pjm/remote/store.test.ts src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts
+7. Commit: feat(p03-t02): select host execution capabilities
 
 ### Task p03-t03: Gate explicit outbound projections before host execution
 
 **Files:** Create
 packages/cli/src/commands/pjm/remote/outbound-projection-safety.ts and
-outbound-projection-safety.test.ts.
+outbound-projection-safety.test.ts; modify
+packages/cli/src/commands/pjm/remote/preview.ts,
+packages/cli/src/commands/pjm/remote/preview.test.ts,
+packages/cli/src/commands/pjm/remote/schema.ts, and
+packages/cli/src/commands/pjm/remote/schema.test.ts.
 
 1. Add failing cases for explicit normalized field projections, prohibited
    private-artifact markers, representative synthetic secret signals, safe
@@ -484,11 +514,13 @@ outbound-projection-safety.test.ts.
    Prove the gate receives only the intended outbound projection and never
    scans the repository or codebase.
 2. Implement assessOutboundProjectionSafety() as a universal pre-write gate.
-   Bind its safe verdict and projection digest into preview/approval/action
-   evidence; any failure blocks host execution without persisting the detected
-   value.
+   Persist its exact projection digest and safety-result digest in the preview
+   component digests and operation record so approval inherits both through the
+   preview digest. Missing, stale, mismatched, failed, or blocked evidence makes
+   action construction impossible and blocks host execution without persisting
+   the detected value.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/outbound-projection-safety.test.ts
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/outbound-projection-safety.test.ts src/commands/pjm/remote/preview.test.ts src/commands/pjm/remote/schema.test.ts
 5. Commit: feat(p03-t03): gate outbound remote projections
 
 ### Task p03-t04: Define the host-executor action protocol
@@ -501,7 +533,9 @@ external-action.test.ts.
    size limits, and sanitization. Assert native tool schemas and captured
    catalogs are rejected from durable evidence.
 2. Implement buildExternalAction() and acceptExternalObservation(); the host
-   selects and invokes a live capability, while observations remain evidence
+   selects and invokes a live capability. Mutation actions carry the exact
+   projection and safety-result digests from the persisted preview/operation,
+   and action construction rejects any mismatch; observations remain evidence
    and cannot directly set success.
 3. Format: pnpm format:fix
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/external-action.test.ts
@@ -530,7 +564,9 @@ lifecycle.test.ts.
    conflict, read-only, stale-preview, and no-transitive-propagation cases.
    Prove autonomous mode is blocked without matching active-workflow authority
    evidence and allowed only while that evidence remains current. Require the
-   universal outbound-projection safety verdict and digest for every write.
+   universal outbound-projection safety verdict and exact projection/result
+   digests for every write, and prove a stale or mismatched action is rejected
+   before any host execution.
 2. Implement publishBinding() and reconcileRemoteBinding() using persisted
    intent, immediate pre-read, one attempt, pinned readback, and verification.
    Persist the instruction/workflow evidence in the preview and operation
@@ -632,7 +668,10 @@ packages/cli/src/commands/pjm/remote/index.test.ts.
    projection, reserved IDs, persist-before-create intent, verified create
    readback, snapshot/baseline initialization, portable metadata, and compact
    association materialization. Inject crashes after each boundary and cover
-   rejected and uncertain creates without blind retry.
+   rejected and uncertain creates without blind retry. Prove the persisted
+   preview, approval, operation, and emitted action retain the same projection
+   and safety-result digests and that no create action exists when the gate is
+   absent, stale, mismatched, failed, or blocked.
 2. Implement createAndBindRemoteIssue() as an ordered local transaction:
    reserve IDs and intent; emit one semantic host create action after the
    outbound gate passes; verify the sanitized observation's durable identity
@@ -944,10 +983,11 @@ packages/cli/src/commands/pjm/remote/providers/linear.test.ts, and
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
 5. Commit: feat(p05-t09): validate linear duplicate results
 
-## Phase 6: Jira Cloud Adapter and Transports
+## Phase 6: Jira Cloud Semantic Adapter
 
-> Peer lane after p03. Own only providers/jira*, transports/acli*, Jira
-> action/ADF codecs, and its additive conformance fixture entries.
+> Peer lane after p03. Own only providers/jira\*, Jira ADF handling, and its
+> additive conformance fixture entries. Host execution remains generic and
+> live-discovered.
 
 ### Task p06-t01: Normalize Jira Cloud identity and snapshots
 
@@ -974,65 +1014,74 @@ jira.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/jira-adf.test.ts
 5. Commit: feat(p06-t02): preserve managed jira adf content
 
-### Task p06-t03: Map Jira MCP read and metadata actions
+### Task p06-t03: Plan Jira semantic read and metadata intents
 
-**Files:** Create
-packages/cli/src/commands/pjm/remote/providers/jira-actions.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts and
+jira.test.ts.
 
-1. Add captured catalog cases for site/project ambiguity, lookup, create/edit
-   metadata, transition discovery, comments, auth-required, and partial errors.
-2. Implement external-action schemas for probe/read/metadata/discussion with
-   catalog fingerprints and no bundled REST client.
+1. Add semantic intent cases for site/project ambiguity, lookup, create/edit
+   metadata discovery, transition discovery, bounded discussion reads,
+   auth-required outcomes, and partial errors without a captured tool catalog.
+2. Implement provider-neutral read and metadata intents plus expected
+   normalized observation evidence. Do not encode native connector or CLI
+   request shapes.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira-actions.test.ts
-5. Commit: feat(p06-t03): map jira connector reads
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts
+5. Commit: feat(p06-t03): plan jira read intents
 
-### Task p06-t04: Map Jira MCP mutation actions
+### Task p06-t04: Plan Jira semantic mutation intents
 
-**Files:** Modify
-packages/cli/src/commands/pjm/remote/providers/jira-actions.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts and
+jira.test.ts.
 
-1. Add create/update/transition/comment actions, schema drift, unavailable
-   transition, unknown create result, and exact postcondition masks.
-2. Implement connector mutation plans using discovered metadata while keeping
-   the core authoritative for approval, state, and verification.
+1. Add create/update/transition/comment intent cases, metadata drift,
+   unavailable transitions, unknown create results, explicit outbound
+   projections, and exact postcondition masks.
+2. Implement semantic mutation plans using normalized Jira metadata while
+   keeping the universal outbound gate, approval, journaling, state, and
+   verification in OAT. Do not construct a native invocation.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira-actions.test.ts
-5. Commit: feat(p06-t04): map jira connector mutations
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts
+5. Commit: feat(p06-t04): plan jira mutation intents
 
-### Task p06-t05: Probe optional Atlassian ACLI
+### Task p06-t05: Validate Jira read and metadata observations
 
-**Files:** Create packages/cli/src/commands/pjm/remote/transports/acli.ts and
-acli.test.ts.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts and
+jira.test.ts.
 
-1. Add official CLI availability/version/auth/site/project/schema/capability
-   fixtures through a fake executable.
-2. Implement opt-in probe and read methods with exact context evidence; do not
-   bundle or install ACLI.
+1. Add sanitized host-observation cases for unavailable/auth-required access,
+   site/project mismatch, metadata and transition discovery, bounded discussion
+   pages, partial response, and sufficient semantic capability evidence.
+2. Validate context and normalize read/metadata observations without retaining
+   native response schemas, live tool descriptions, CLI help output, or a tool
+   identity as durable authority.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/acli.test.ts
-5. Commit: feat(p06-t05): probe optional atlassian cli
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts
+5. Commit: feat(p06-t05): validate jira read observations
 
-### Task p06-t06: Execute optional ACLI mutations
+### Task p06-t06: Validate Jira mutation observations
 
-**Files:** Modify packages/cli/src/commands/pjm/remote/transports/acli.ts and
-acli.test.ts.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts and
+jira.test.ts.
 
-1. Add create/update/transition/comment, ADF, invalid JSON, rejection,
-   timeout-after-write, and pinned readback fixtures.
-2. Implement only capability-demonstrated operations, preserving discovered
-   metadata and uncertainty boundaries.
+1. Add sanitized create/update/transition/comment observation cases for ADF,
+   rejection, unknown-after-attempt, silently dropped fields, unavailable
+   transitions, metadata drift, and pinned readback.
+2. Validate observations against the semantic plan, normalized metadata, and
+   postconditions; leave missing capabilities unavailable and never map native
+   commands, tool names, or arguments.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/acli.test.ts
-5. Commit: feat(p06-t06): execute optional atlassian cli operations
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts
+5. Commit: feat(p06-t06): validate jira mutation observations
 
 ### Task p06-t07: Run Jira adapter conformance
 
 **Files:** Create
 packages/cli/src/commands/pjm/remote/providers/jira.conformance.test.ts.
 
-1. Cover ADF, safe priority, changed keys, transition discovery, MCP default,
-   ACLI equivalence, revision weakness, and provider extensions.
+1. Cover ADF, safe priority, changed keys, transition discovery, semantic
+   intents, sanitized host observations, revision weakness, and provider
+   extensions.
 2. Import the immutable p03 conformance harness and supply Jira fixtures
    locally; keep all shared interfaces and shared files unchanged.
 3. Format: pnpm format:fix
@@ -1045,44 +1094,45 @@ packages/cli/src/commands/pjm/remote/providers/jira.conformance.test.ts.
 `packages/cli/src/commands/pjm/remote/__integration__/jira.test.ts`.
 
 1. Exercise intake, refresh, publish, reconcile, closeout, and external-action
-   continuation through fake MCP observations and optional ACLI fallback.
-2. Assert ADF preservation, key history, metadata drift, unavailable transition,
-   unknown create, pinned readback, and independent outcomes.
+   continuation through generic fake-host capability evidence and observations.
+2. Assert live-discovery boundaries, ADF preservation, key history, metadata
+   drift, unavailable transitions, unknown create, pinned readback, and
+   independent outcomes without provider-native request fixtures.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/jira.test.ts`
 5. Commit: test(p06-t08): integrate jira remote lifecycle
 
-### Task p06-t09: Search Jira duplicates through MCP actions
+### Task p06-t09: Plan Jira duplicate-search intents
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts,
 packages/cli/src/commands/pjm/remote/providers/jira.test.ts,
-packages/cli/src/commands/pjm/remote/providers/jira-actions.ts,
-packages/cli/src/commands/pjm/remote/providers/jira-actions.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/jira.test.ts`.
 
-1. Add planDuplicateSearch() and connector action/observation cases for
-   provenance, historical keys, site/project context, unavailable JQL/search,
-   lag, bounded ambiguity, one stable issue-ID match, and no match.
-2. Implement MCP duplicate-search planning with catalog fingerprinting and
-   stable issue-ID/context verification before adoption.
+1. Add planDuplicateSearch() semantic intent cases for provenance, historical
+   keys, site/project context, unavailable search semantics, lag, bounded
+   ambiguity, one stable issue-ID match, and no match.
+2. Implement a bounded provider-neutral search plan and required stable
+   issue-ID/context verification without a native query schema or catalog
+   fingerprint.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts src/commands/pjm/remote/providers/jira-actions.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
-5. Commit: feat(p06-t09): search jira duplicates through mcp
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
+5. Commit: feat(p06-t09): plan jira duplicate searches
 
-### Task p06-t10: Search Jira duplicates through optional ACLI
+### Task p06-t10: Validate Jira duplicate-search observations
 
-**Files:** Modify packages/cli/src/commands/pjm/remote/transports/acli.ts,
-packages/cli/src/commands/pjm/remote/transports/acli.test.ts, and
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts,
+packages/cli/src/commands/pjm/remote/providers/jira.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/jira.test.ts`.
 
-1. Add fake ACLI cases for provenance/JQL search, unavailable semantic fields,
-   changed keys, result lag, bounded ambiguity, one stable issue-ID/context
-   match, and no match.
-2. Implement searchDuplicates() only when capability probing demonstrates
-   semantic equivalence with the adapter plan.
+1. Add generic host-observation cases for provenance and historical-key search,
+   unavailable search semantics, context mismatch, result lag, bounded
+   ambiguity, one stable issue-ID/context match, and no match.
+2. Accept a duplicate result only when sanitized capability, identity, and
+   context evidence satisfy the semantic plan; retain no native invocation
+   mapping.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/acli.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
-5. Commit: feat(p06-t10): search jira duplicates through acli
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
+5. Commit: feat(p06-t10): validate jira duplicate results
 
 ## Phase 7: Cross-Provider Convergence and Recovery
 
@@ -1181,7 +1231,7 @@ packages/cli/src/commands/pjm/remote/migrate.ts and migrate.test.ts.
 
 1. Add remaining diagnostics for stale/pending/partial/uncertain records,
    missing verification, identity/context drift, retention breaches, and
-   transport availability; add idempotent check/apply migration fixtures and
+   host capability availability; add idempotent check/apply migration fixtures and
    command-factory cases for remote doctor and migrate --check/--apply.
 2. Implement doctor and local-only migrate --check/--apply; never infer provider
    context, identity, purpose, authority, or contact a provider.
@@ -1208,11 +1258,14 @@ packages/cli/src/commands/pjm/remote/migrate.ts and migrate.test.ts.
 `packages/cli/src/commands/pjm/remote/__integration__/safety.test.ts` and
 tools/smoke/pjm-remote/no-secret-output.test.mjs.
 
-1. Exercise all transports disabled, worktree restart, interrupted operation,
+1. Exercise all host execution capabilities unavailable, worktree restart,
+   interrupted operation,
    concurrent intents, secret fixtures, shared-storage refusal, and visible
    freshness/redaction/uncertainty UX.
-2. Assert existing local operations pass and no credential value appears in
-   files, stdout, stderr, or diagnostics.
+2. Assert existing local operations pass and no synthetic sensitive fixture
+   value appears in fixture-owned normalized projections, snapshots, journals,
+   receipts, previews, logs, stdout, stderr, or diagnostics. The test must not
+   inspect the repository, worktree, Git history, or unrelated files.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/safety.test.ts && pnpm test:smoke`
 5. Commit: test(p07-t09): verify remote safety guarantees
@@ -1237,9 +1290,10 @@ packages/cli/src/commands/help-snapshots.test.ts.
 modify cli-utilities/index.md, cli-utilities/configuration.md, and the generated
 apps/oat-docs/index.md.
 
-1. Document lifecycle operations, repository policy, user/local transport
-   order, fail-closed defaults, binding tightening, storage, previews, approval
-   floors, uncertainty, and offline behavior with non-secret examples.
+1. Document lifecycle operations, repository policy, live host-capability
+   discovery, configured-CLI help fallback, fail-closed defaults, binding
+   tightening, storage, previews, approval floors, uncertainty, and offline
+   behavior with non-secret examples.
 2. Link the guide from the CLI utilities index and configuration reference.
 3. Regenerate apps/oat-docs/index.md through pnpm build:docs (or oat docs
    generate-index); do not hand-edit the generated index.
@@ -1324,45 +1378,48 @@ in-scope implementation files when a gate exposes a project defect.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                        | Reviewed Head                            | Invocation         | Gate Target              |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------- | ---------------------------------------- | ------------------ | ------------------------ |
-| p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md          | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1           | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md        | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2           | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md    | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3           | codex:sol-high           |
-| p02    | code     | received        | 2026-08-31 | reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension | codex:sol-high           |
-| p03    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| p04    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| p05    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| p06    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| p07    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| p08    | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| final  | code     | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| spec   | artifact | pending         | -          | -                                                               | -                                        | -                  | -                        |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1           | cursor                   |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md            | -                                        | manual-2           | cursor                   |
-| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | structured-auto-3  | codex:sol-high           |
-| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md     | -                                        | gate               | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md     | -                                        | gate               | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md     | -                                        | -                  | -                        |
+| Scope  | Type     | Status          | Date       | Artifact                                                        | Reviewed Head                            | Invocation          | Gate Target              |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------- | ---------------------------------------- | ------------------- | ------------------------ |
+| p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension  | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md          | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md        | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md    | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3            | codex:sol-high           |
+| p02    | code     | received        | 2026-08-31 | reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension  | codex:sol-high           |
+| p03    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p04    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p05    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p06    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p07    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p08    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| final  | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| spec   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1            | cursor                   |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md            | -                                        | manual-2            | cursor                   |
+| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | structured-auto-3   | codex:sol-high           |
+| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md     | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md     | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md     | -                                        | -                   | -                        |
+| design | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
 
 ## Implementation Complete
 
-This is the planned execution rollup; all implementation phases remain pending.
+This is the planned execution rollup; live completion state remains
+authoritative in `implementation.md`.
 
 - Phase 1: 10 tasks - domain, configuration, persistence, compatibility, doctor
-- Phase 2: 9 tasks - policy, projection, reconciliation, authority, verification
-- Phase 3: 12 tasks - provider/transport contracts, lifecycle, commands, skill
-- Phase 4: 11 tasks - GitHub adapter, gh, publication safety, search, discussion
-- Phase 5: 9 tasks - Linear MCP actions, duplicate search, optional linear-cli
-- Phase 6: 10 tasks - Jira MCP actions, ADF, duplicate search, optional ACLI
+- Phase 2: 10 tasks - policy, projection, reconciliation, authority, verification, field-level inbound safety
+- Phase 3: 12 tasks - provider/host-execution contracts, outbound gate, lifecycle, commands, skill
+- Phase 4: 11 tasks - GitHub semantic adapter, publication safety, search, discussion
+- Phase 5: 9 tasks - Linear semantic intents, observations, and duplicate search
+- Phase 6: 10 tasks - Jira semantic intents, observations, ADF, and duplicate search
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
 
-**Total: 77 tasks**
+**Total: 78 tasks**
 
 ## References
 

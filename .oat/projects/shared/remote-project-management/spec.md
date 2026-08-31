@@ -34,7 +34,7 @@ uncertain.
 ### Primary Goals
 
 - Preserve fully useful local PJM workflows when remote providers, credentials,
-  transports, or network access are unavailable.
+  host execution capabilities, or network access are unavailable.
 - Support GitHub Issues, Linear, and Jira Cloud through one provider-neutral
   binding and reconciliation model without erasing provider-specific semantics.
 - Permit multiple independently governed remote bindings on one local backlog
@@ -110,8 +110,8 @@ uncertain.
 - **Description:** Ordinary local backlog and project work must remain available
   without remote access.
 - **Acceptance Criteria:**
-  - Agents can search, create, enrich, promote, and execute local work with all
-    remote transports unavailable.
+  - Agents can search, create, enrich, promote, and execute local work with no
+    remote host execution capability available.
   - Network or credential absence does not block local project lifecycle
     operations.
   - A requested remote mutation that cannot run becomes an explicit pending
@@ -431,7 +431,8 @@ uncertain.
 
 - **Description:** Local PJM must remain useful with all remote capabilities unavailable.
 - **Acceptance Criteria:**
-  - The local-only workflow suite passes with network and provider transports disabled.
+  - The local-only workflow suite passes with network and all host execution
+    capabilities unavailable.
   - Previously refreshed items expose freshness and the bounded allowlisted
     core snapshot plus any field-suppression status.
   - Pending remote actions are visibly distinguished from completed work.
@@ -604,10 +605,10 @@ simulating a distributed transaction.
 | FR13 | Preserve evidence across remote lifecycle anomalies                 | P0       | integration: lifecycle anomaly suite                    | p01-t04, p07-t05, p07-t06, p07-t07                                                                |
 | FR14 | Persist create intent and reconcile uncertain creates               | P0       | integration: duplicate-create recovery                  | p01-t10, p02-t08, p03-t06, p03-t12, p04-t09, p04-t10, p05-t08, p05-t09, p06-t09, p06-t10, p07-t06 |
 | FR15 | Close out and annotate eligible bindings independently              | P0       | e2e: multi-binding project completion                   | p02-t01, p02-t08, p07-t01, p07-t02, p07-t03                                                       |
-| FR16 | Discover capable host execution with guarded fallback               | P0       | integration: semantic host capability and fallback      | p01-t02, p03-t02, p03-t04, p03-t09, p04-t02, p05-t02, p05-t04, p06-t03, p06-t05                   |
+| FR16 | Discover capable host execution with guarded fallback               | P0       | integration: semantic host capability and fallback      | p03-t02, p03-t04, p03-t09, p04-t02, p05-t02, p05-t04, p06-t03, p06-t05                            |
 | FR17 | Support GitHub-to-Linear, GitHub-to-Jira, and GitHub-only workflows | P0       | e2e: representative provider workflows                  | p04-t06, p05-t06, p06-t07, p07-t08                                                                |
 | FR18 | Keep detailed OAT artifacts local and discussion informational      | P1       | integration + manual: information-boundary review       | p02-t02, p04-t11, p07-t04, p07-t08                                                                |
-| NFR1 | Protect auth, inbound fields, and outbound projections              | P0       | integration: bounded content-safety contracts           | p01-t05, p02-t03, p02-t10, p03-t03, p04-t08, p07-t09                                              |
+| NFR1 | Protect auth, inbound fields, and outbound projections              | P0       | integration: bounded content-safety contracts           | p01-t05, p02-t03, p02-t10, p03-t03, p03-t04, p03-t06, p03-t12, p04-t08, p07-t09                   |
 | NFR2 | Fail closed on ambiguous or unsafe mutation conditions              | P0       | integration: safety-failure matrix                      | p02-t06, p02-t07, p02-t09, p03-t11, p04-t08, p07-t07                                              |
 | NFR3 | Recover safely across ephemeral sessions and interruptions          | P0       | integration: restart and uncertain-operation recovery   | p01-t06, p01-t07, p01-t10, p02-t08, p03-t12, p07-t03, p07-t09                                     |
 | NFR4 | Keep local PJM useful while offline                                 | P0       | e2e: disconnected operation                             | p01-t05, p03-t05, p07-t09                                                                         |
@@ -657,7 +658,8 @@ simulating a distributed transaction.
   - **Likelihood:** Medium
   - **Impact:** High
   - **Mitigation:** Persist intent before the call, write once, verify by
-    read-back, and require reconciliation before retry or transport change.
+    read-back, and require reconciliation before retry or execution-capability
+    change.
 - **Authority confusion:** Multiple purposes, bindings, and provider automation
   can make ownership unclear.
   - **Likelihood:** Medium
