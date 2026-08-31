@@ -843,7 +843,7 @@ git commit -m "chore(p04-t02): prepare recon release"
 
 | Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
 | --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01       | code     | received        | 2026-08-31 | `reviews/p01-code-review-2026-08-31T044331Z.md`               | 7db3728253d018daf1303b55261a4a90ac9d5a04 | auto       | -           |
+| p01       | code     | fixes_completed | 2026-08-31 | `reviews/p01-code-review-2026-08-31T044331Z.md`               | 7db3728253d018daf1303b55261a4a90ac9d5a04 | auto       | -           |
 | p02       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p03       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p04       | code     | pending         | -          | -                                                             | -                                        | -          | -           |

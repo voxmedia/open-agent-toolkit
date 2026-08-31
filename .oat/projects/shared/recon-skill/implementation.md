@@ -104,6 +104,23 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p01 fix round 1
+
+- Original request ID: `recon-skill-p01-implementation-20260831T043249Z`
+- Continuation event: `recon-skill-p01-fix-r1-20260831T044854Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: bounded correction of the two Important findings in the original
+  p01 file boundary
+- Task class/floor: `hard-reasoning` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `d10b5271e072687ae244c03b5fd268c3eacbc828`
+- Finding disposition: 2 Important fixed; expanded contract suite passes 9/9
+- Dispatch: scope=p01-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -135,6 +152,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   exception after launch acceptance.
 - The findings are bounded to the four p01 task files and return to the original
   phase implementer handle for correction and re-review.
+
+### 2026-08-31 - p01 review fixes completed
+
+- The original phase handle added append-only fix commit `d10b5271e` without
+  rewriting the task commit.
+- The canonical v1 projection now binds the complete ordered nested wave/lane
+  topology, and approval-bound accepted runs exclude fresh-launch recovery.
+- Root validation confirmed the expanded 9/9 contract suite and bounded
+  three-file fix range. A fresh independent re-review is next.
 
 ## Deviations from Plan / Design
 
