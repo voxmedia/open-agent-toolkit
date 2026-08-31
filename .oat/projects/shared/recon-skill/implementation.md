@@ -262,6 +262,26 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Outstanding items: four Critical and one Important finding in
   `reviews/p02-code-final-rereview-2026-08-31T065541Z.md`
 
+#### Dispatch p02 fix round 3
+
+- Original request ID: `recon-skill-p02-implementation-20260831T0510Z`
+- Continuation event: `recon-skill-p02-fix-r3-20260831T0710Z`
+- Role/class: fresh same-target `oat-phase-implementer` / worker because the
+  original completed handle was unavailable across the resumed run
+- Provider/context: Codex / root-native fresh bounded continuation
+- Authority: operator-authorized correction of the five final-review findings
+  inside the existing p02 file boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Route: index 0 of 1; escalation request remained on the only exact route
+- Launch/outcome: accepted fresh same-target continuation / completed
+- Fix commit: `cf4e5fbf17743825484460ed32f1f522075eb552`
+- Finding disposition: 4 Critical and 1 Important fixed; expanded recon suite
+  passes 79/79
+- Dispatch: scope=p02-fix-r3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -376,6 +396,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   the lifecycle permits one fresh same-target implementer for this bounded fix,
   linked to request `recon-skill-p02-implementation-20260831T0510Z`.
 
+### 2026-08-31 - p02 correction round 3 completed
+
+- Fresh same-target continuation commit `cf4e5fbf1` closes the five reproduced
+  assurance bypasses without rewriting prior history or leaving the p02 file
+  boundary.
+- Root verification confirmed exactly one nine-file fix commit and the expanded
+  79/79 recon suite.
+- A fresh independent review of the complete p02 range is next.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -388,6 +417,8 @@ source artifact and follow-up disposition.
 - p01 canonical skill validation, format, lint, CLI type-check, `pnpm check`,
   and skill-bump validation passed.
 - p02 focused recon suite: 68/68 passed at reviewed head `c58c14813`.
+- p02 focused recon suite after authorized fix round 3: 79/79 passed at
+  `cf4e5fbf1`.
 - p02 focused CLI skill validation, complete skill suite, canonical skill
   validation, format, lint, CLI type-check, and `pnpm check` passed.
 - Passing tests do not override the final independent review's reproduced
