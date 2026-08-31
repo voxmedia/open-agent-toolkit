@@ -16,6 +16,12 @@ import {
 } from './store';
 
 const timestamp = '2026-08-31T00:00:00.000Z';
+const verification = {
+  provider: 'github' as const,
+  stableId: 'issue-node-123',
+  verifiedAt: '2026-08-31T00:01:00.000Z',
+  evidenceDigest: 'sha256:verified-readback',
+};
 
 function metadata(bindingId = 'bnd_binding_123'): RemoteBindingMetadata {
   return {
@@ -117,7 +123,7 @@ describe('RemoteSyncStore', () => {
 
   it('keeps portable metadata and operational binding state in separate classes', async () => {
     const { root, store } = await createStore();
-    await store.writeBindingMetadata(metadata());
+    await store.writeBindingMetadata(metadata(), verification);
     await store.writeBindingState(bindingState());
 
     expect(await store.readBindingMetadata('bnd_binding_123')).toEqual(
@@ -207,10 +213,13 @@ describe('RemoteSyncStore', () => {
   it('validates schemas and filename identity before persistence', async () => {
     const { store } = await createStore();
     await expect(
-      store.writeBindingMetadata({
-        ...metadata(),
-        bindingId: '../escape',
-      } as RemoteBindingMetadata),
+      store.writeBindingMetadata(
+        {
+          ...metadata(),
+          bindingId: '../escape',
+        } as RemoteBindingMetadata,
+        verification,
+      ),
     ).rejects.toThrow();
   });
 
@@ -279,5 +288,67 @@ describe('RemoteSyncStore', () => {
         { operationId: 'op_operation_456' },
       ],
     });
+  });
+
+  it('persists pre-create intent before identity and materializes only after verification', async () => {
+    const { store } = await createStore();
+    const intent = {
+      schemaVersion: 1 as const,
+      bindingId: 'bnd_binding_789',
+      operationId: 'op_operation_789',
+      provider: 'github' as const,
+      target: {
+        kind: 'backlog' as const,
+        scope: 'shared' as const,
+        id: 'item-789',
+        path: '.oat/repo/pjm/backlog/item-789.md',
+      },
+      publicationProjection: {
+        title: 'frontmatter' as const,
+        description: 'description-section' as const,
+        priority: 'frontmatter' as const,
+      },
+      providerContext: {
+        host: 'github.com',
+        owner: 'voxmedia',
+        repositoryId: 'repo-123',
+      },
+      purposes: ['planning' as const],
+      policyRestrictions: { authority: { default: 'user-approved' as const } },
+      provenanceToken: 'oat-create:item-789:bnd_binding_789',
+      createdAt: timestamp,
+    };
+
+    await store.createBindingIntent(intent);
+    expect(await store.readBindingMetadata(intent.bindingId)).toBeNull();
+    expect(await store.readOperation(intent.operationId)).toMatchObject({
+      bindingId: intent.bindingId,
+      operationClass: 'create',
+      state: 'planned',
+      createIntent: intent,
+    });
+
+    await store.transitionOperation(intent.operationId, 'planned', {
+      state: 'uncertain',
+      updatedAt: '2026-08-31T00:02:00.000Z',
+      outcome: {
+        classification: 'uncertain',
+        message: 'provider outcome unknown',
+        verifiedAt: null,
+      },
+    });
+    expect(await store.readBindingMetadata(intent.bindingId)).toBeNull();
+    expect(await store.readOperation(intent.operationId)).toMatchObject({
+      state: 'uncertain',
+      createIntent: intent,
+    });
+
+    await expect(store.writeBindingMetadata(metadata())).rejects.toThrow(
+      /verified durable remote identity/i,
+    );
+    await store.materializeVerifiedBinding(metadata(), verification);
+    expect(await store.readBindingMetadata('bnd_binding_123')).toEqual(
+      metadata(),
+    );
   });
 });

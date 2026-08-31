@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   MAX_PROVIDER_EXTENSION_BYTES,
+  PlannedBindingCreateSchema,
   RemoteBaselineRecordSchema,
   RemoteBatchRecordSchema,
   RemoteBindingMetadataSchema,
   RemoteBindingStateSchema,
   RemoteOperationRecordSchema,
   RemoteSnapshotRecordSchema,
+  VerifiedDurableRemoteIdentitySchema,
   assertRecordIdMatchesFilename,
 } from './schema';
 
@@ -224,5 +226,61 @@ describe('remote record schemas', () => {
         'op_operation_123',
       ),
     ).toThrow(/filename/i);
+  });
+
+  it('defines pre-create intent without a remote identity and explicit publication projection', () => {
+    const intent = PlannedBindingCreateSchema.parse({
+      schemaVersion: 1,
+      bindingId: 'bnd_binding_789',
+      operationId: 'op_operation_789',
+      provider: 'linear',
+      target: {
+        kind: 'project',
+        scope: 'synced',
+        id: 'project-demo',
+        path: '.oat/projects/synced/demo',
+      },
+      publicationProjection: {
+        title: 'plan',
+        description: 'summary',
+        priority: 'none',
+      },
+      providerContext: { workspaceId: 'workspace-1', teamId: 'team-1' },
+      purposes: ['planning'],
+      policyRestrictions: { authority: { default: 'user-approved' } },
+      provenanceToken: 'oat-create:project-demo:bnd_binding_789',
+      createdAt: '2026-08-31T00:00:00.000Z',
+    });
+
+    expect(intent).not.toHaveProperty('remoteIdentity');
+    expect(() =>
+      PlannedBindingCreateSchema.parse({
+        ...intent,
+        remoteIdentity: identity,
+      }),
+    ).toThrow();
+    expect(() =>
+      PlannedBindingCreateSchema.parse({
+        ...intent,
+        publicationProjection: undefined,
+      }),
+    ).toThrow();
+  });
+
+  it('requires explicit durable-identity verification evidence for materialization', () => {
+    expect(() =>
+      VerifiedDurableRemoteIdentitySchema.parse({
+        provider: 'github',
+        stableId: 'issue-node-123',
+      }),
+    ).toThrow();
+    expect(
+      VerifiedDurableRemoteIdentitySchema.parse({
+        provider: 'github',
+        stableId: 'issue-node-123',
+        verifiedAt: '2026-08-31T00:01:00.000Z',
+        evidenceDigest: 'sha256:verified-readback',
+      }),
+    ).toMatchObject({ provider: 'github', stableId: 'issue-node-123' });
   });
 });

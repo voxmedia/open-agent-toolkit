@@ -59,6 +59,15 @@ export const RemoteIdentitySchema = z
   })
   .strict();
 
+export const VerifiedDurableRemoteIdentitySchema = z
+  .object({
+    provider: ProviderSchema,
+    stableId: z.string().min(1).max(512),
+    verifiedAt: TimestampSchema,
+    evidenceDigest: z.string().min(1).max(512),
+  })
+  .strict();
+
 export const RemoteLocalTargetSchema = z
   .object({
     kind: z.enum(['backlog', 'project']),
@@ -80,6 +89,28 @@ export const BindingPolicyRestrictionSchema = z
       })
       .strict()
       .optional(),
+  })
+  .strict();
+
+export const PlannedBindingCreateSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    bindingId: StableIdSchema,
+    operationId: StableIdSchema,
+    provider: ProviderSchema,
+    target: RemoteLocalTargetSchema,
+    publicationProjection: z
+      .object({
+        title: z.enum(['frontmatter', 'plan', 'none']),
+        description: z.enum(['description-section', 'summary', 'none']),
+        priority: z.enum(['frontmatter', 'plan', 'none']),
+      })
+      .strict(),
+    providerContext: RemoteAccountContextSchema,
+    purposes: z.array(PurposeSchema).min(1).max(4),
+    policyRestrictions: BindingPolicyRestrictionSchema,
+    provenanceToken: z.string().min(1).max(512),
+    createdAt: TimestampSchema,
   })
   .strict();
 
@@ -260,6 +291,7 @@ export const RemoteOperationRecordSchema = z
       .nullable(),
     steps: z.array(RemoteOperationStepSchema).max(64),
     outcome: RemoteOperationOutcomeSchema,
+    createIntent: PlannedBindingCreateSchema.optional(),
   })
   .strict()
   .superRefine((record, context) => {
@@ -273,6 +305,29 @@ export const RemoteOperationRecordSchema = z
         });
       }
       seen.add(step.stepId);
+    }
+    if (record.createIntent) {
+      if (record.operationClass !== 'create') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['createIntent'],
+          message: 'A pre-create intent requires a create operation.',
+        });
+      }
+      if (record.createIntent.operationId !== record.operationId) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['createIntent', 'operationId'],
+          message: 'Pre-create intent operationId must match its journal.',
+        });
+      }
+      if (record.createIntent.bindingId !== record.bindingId) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['createIntent', 'bindingId'],
+          message: 'Pre-create intent bindingId must match its journal.',
+        });
+      }
     }
   });
 
@@ -309,6 +364,10 @@ export function assertRecordIdMatchesFilename(
 }
 
 export type RemoteAlias = z.infer<typeof RemoteAliasSchema>;
+export type VerifiedDurableRemoteIdentity = z.infer<
+  typeof VerifiedDurableRemoteIdentitySchema
+>;
+export type PlannedBindingCreate = z.infer<typeof PlannedBindingCreateSchema>;
 export type RemoteBindingMetadata = z.infer<typeof RemoteBindingMetadataSchema>;
 export type RemoteSnapshotRecord = z.infer<typeof RemoteSnapshotRecordSchema>;
 export type RemoteBaselineRecord = z.infer<typeof RemoteBaselineRecordSchema>;

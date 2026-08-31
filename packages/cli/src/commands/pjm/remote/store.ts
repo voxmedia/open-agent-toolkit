@@ -13,10 +13,12 @@ import { dirname, join } from 'node:path';
 import type { z } from 'zod';
 
 import {
+  PlannedBindingCreateSchema,
   RemoteBatchRecordSchema,
   RemoteBindingMetadataSchema,
   RemoteBindingStateSchema,
   RemoteOperationRecordSchema,
+  VerifiedDurableRemoteIdentitySchema,
   assertRecordIdMatchesFilename,
   type RemoteBatchRecord,
   type RemoteBindingMetadata,
@@ -24,6 +26,8 @@ import {
   type RemoteOperationOutcome,
   type RemoteOperationRecord,
   type RemoteOperationStep,
+  type PlannedBindingCreate,
+  type VerifiedDurableRemoteIdentity,
 } from './schema';
 import type { RemoteStorageLocations } from './storage-locator';
 
@@ -131,14 +135,25 @@ export class RemoteSyncStore {
     );
   }
 
-  async writeBindingMetadata(record: RemoteBindingMetadata): Promise<void> {
+  async writeBindingMetadata(
+    record: RemoteBindingMetadata,
+    verification?: VerifiedDurableRemoteIdentity,
+  ): Promise<void> {
     const parsed = RemoteBindingMetadataSchema.parse(record);
+    assertVerifiedDurableRemoteIdentity(parsed, verification);
     const path = join(
       this.locations.portable.bindingsDir,
       `${parsed.bindingId}.json`,
     );
     assertRecordIdMatchesFilename(path, parsed.bindingId);
     await this.#atomicWrite(path, parsed);
+  }
+
+  async materializeVerifiedBinding(
+    record: RemoteBindingMetadata,
+    verification: VerifiedDurableRemoteIdentity,
+  ): Promise<void> {
+    await this.writeBindingMetadata(record, verification);
   }
 
   async listBindingMetadata(): Promise<RemoteBindingMetadata[]> {
@@ -187,6 +202,28 @@ export class RemoteSyncStore {
     );
     assertRecordIdMatchesFilename(path, parsed.operationId);
     await this.#exclusiveWrite(path, parsed);
+  }
+
+  async createBindingIntent(intent: PlannedBindingCreate): Promise<void> {
+    const parsed = PlannedBindingCreateSchema.parse(intent);
+    await this.createOperation({
+      recordType: 'operation',
+      schemaVersion: 1,
+      operationId: parsed.operationId,
+      bindingId: parsed.bindingId,
+      operationClass: 'create',
+      state: 'planned',
+      createdAt: parsed.createdAt,
+      updatedAt: parsed.createdAt,
+      transport: null,
+      steps: [],
+      outcome: {
+        classification: 'pending',
+        message: null,
+        verifiedAt: null,
+      },
+      createIntent: parsed,
+    });
   }
 
   async listActiveOperations(
@@ -368,6 +405,22 @@ export class RemoteSyncStore {
       await ignoreMissing(() => filesystem.unlink(path));
       throw error;
     }
+  }
+}
+
+function assertVerifiedDurableRemoteIdentity(
+  record: RemoteBindingMetadata,
+  verification: VerifiedDurableRemoteIdentity | undefined,
+): void {
+  const result = VerifiedDurableRemoteIdentitySchema.safeParse(verification);
+  if (
+    !result.success ||
+    result.data.provider !== record.provider ||
+    result.data.stableId !== record.remoteIdentity.stableId
+  ) {
+    throw new Error(
+      'Portable binding metadata requires a verified durable remote identity.',
+    );
   }
 }
 
