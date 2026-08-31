@@ -12,9 +12,10 @@ labels:
   - wave-4-follow-up
 assignee: null
 created: 2026-08-27T06:56:35.323Z
-updated: 2026-08-27T06:56:35.323Z
+updated: 2026-08-31T00:11:26Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-harden-codex-skill-anaphora-guard.md
 ---
 
 ## Description

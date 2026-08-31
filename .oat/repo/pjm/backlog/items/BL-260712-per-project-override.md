@@ -8,8 +8,10 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [workflow-gates, configuration, ux]
 assignee: null
 created: '2026-07-12T20:57:00Z'
-updated: '2026-07-13T04:45:00Z'
+updated: '2026-08-30T23:55:32Z'
 associated_issues: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-disable-configured-gates-per-project.md
 ---
 
 ## Description
