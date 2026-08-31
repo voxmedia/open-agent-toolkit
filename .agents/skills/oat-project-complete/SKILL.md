@@ -50,6 +50,7 @@ COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
 SYNCED_ARCHIVE_ENTRY_SCRIPT="$SKILL_DIR/scripts/resolve-synced-archive-entry.mjs"
+SYNCED_ARCHIVE_EXECUTE_SCRIPT="$SKILL_DIR/scripts/execute-synced-archive-entry.mjs"
 SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
@@ -71,6 +72,10 @@ test -f "$SYNCED_ARCHIVE_ENTRY_SCRIPT" || {
   echo "Missing synced archive entry router: $SYNCED_ARCHIVE_ENTRY_SCRIPT" >&2
   exit 1
 }
+test -f "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" || {
+  echo "Missing synced archive entry executor: $SYNCED_ARCHIVE_EXECUTE_SCRIPT" >&2
+  exit 1
+}
 test -f "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" || {
   echo "Missing synced archive finalizer: $SYNCED_ARCHIVE_FINALIZE_SCRIPT" >&2
   exit 1
@@ -81,19 +86,21 @@ if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   SYNCED_RECORD_PATH="${PROJECT_PATH}.json"
   if [[ -f "$SYNCED_RECORD_PATH" ]]; then
     REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
-    SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_ENTRY_SCRIPT" \
+    SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \
       --repo-root "$REPO_ROOT" \
       --record-path "$SYNCED_RECORD_PATH" \
-      --project-name "$PROJECT_NAME") || exit 1
+      --project-name "$PROJECT_NAME" \
+      --project-path "$PROJECT_PATH") || exit 1
     SYNCED_ARCHIVE_ENTRY_ROUTE=$(node -e '
 const value = JSON.parse(process.argv[1]);
-if (value.status !== "ok" || !["pull", "archive-resume"].includes(value.route)) process.exit(1);
+if (value.status !== "ok" || !["continue-active", "archive-resumed"].includes(value.route)) process.exit(1);
 process.stdout.write(value.route);
 ' "$SYNCED_ARCHIVE_ENTRY") || exit 1
-    if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resume" ]]; then
-      echo "Verified a persisted synced archive identity against the completed ref; skipping pull and resuming archive."
-    else
-      oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+    if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resumed" ]]; then
+      printf '%s\n' "$SYNCED_ARCHIVE_ENTRY"
+      echo "Verified persisted synced archive terminal receipt; active pointer cleared."
+      echo "Archive resume is terminal; Steps 2-7 were not replayed."
+      exit 0
     fi
   else
     echo "Synced discovery record is absent; archive must resume from verified terminal archive metadata and the completed ref."

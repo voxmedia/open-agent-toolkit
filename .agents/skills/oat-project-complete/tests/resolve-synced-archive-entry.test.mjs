@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
+import { executeSyncedArchiveEntry } from '../scripts/execute-synced-archive-entry.mjs';
 import { finalizeSyncedArchive } from '../scripts/finalize-synced-archive.mjs';
 import { resolveSyncedArchiveEntry } from '../scripts/resolve-synced-archive-entry.mjs';
 
@@ -66,6 +69,80 @@ test('rejects a persisted identity whose completed ref differs', async () => {
   );
 });
 
+for (const [checkoutState, activeSha] of [
+  ['present after ref retirement', sourceSha],
+  ['absent after checkout removal', null],
+]) {
+  test(`executes terminal archive resume with checkout ${checkoutState} without replaying active steps`, async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-archive-resume-'));
+    const projectPath = join(repoRoot, 'demo');
+    if (checkoutState.startsWith('present')) {
+      await mkdir(projectPath);
+    }
+    let pullCount = 0;
+    let activeStepCount = 0;
+    let archiveCount = 0;
+    let clearCount = 0;
+    try {
+      const result = await executeSyncedArchiveEntry({
+        record: baseRecord,
+        projectName: 'demo',
+        projectPath,
+        repoRoot,
+        probeRefs: async () => ({ activeSha, completedSha: sourceSha }),
+        pullProject: async () => {
+          pullCount += 1;
+        },
+        runActiveWorkflowSteps: async () => {
+          activeStepCount += 1;
+        },
+        archiveProject: async (receivedPath, persistedIdentity) => {
+          archiveCount += 1;
+          assert.equal(receivedPath, projectPath);
+          assert.deepEqual(persistedIdentity, {
+            archiveSnapshot: baseRecord.archiveSnapshot,
+            verifiedSourceSha: sourceSha,
+          });
+          if (checkoutState.startsWith('present')) {
+            await access(projectPath);
+          } else {
+            await assert.rejects(access(projectPath));
+          }
+          return {
+            status: 'ok',
+            mode: 'apply',
+            archivePath: '/archive/demo',
+            snapshotId: baseRecord.archiveSnapshot,
+            lifecycleCommit: 'b'.repeat(40),
+            completedRef: 'refs/oat/completed/demo',
+            verifiedSourceSha: sourceSha,
+            activeAliasDisposition: activeSha === null ? 'removed' : 'retained',
+            recordRetired: true,
+          };
+        },
+        finalizeArchive: async ({ archiveReport, projectName }) =>
+          finalizeSyncedArchive({
+            projectName,
+            getArchiveReport: async () => archiveReport,
+            clearActiveProject: async () => {
+              clearCount += 1;
+            },
+          }),
+      });
+
+      assert.equal(result.route, 'archive-resumed');
+      assert.equal(result.terminal, true);
+      assert.equal(result.skippedActiveSteps, true);
+      assert.equal(pullCount, 0);
+      assert.equal(activeStepCount, 0);
+      assert.equal(archiveCount, 1);
+      assert.equal(clearCount, 1);
+    } finally {
+      await rm(repoRoot, { recursive: true, force: true });
+    }
+  });
+}
+
 test('retains the active pointer when the synced archive attempt fails', async () => {
   let clearCount = 0;
   await assert.rejects(
@@ -129,13 +206,20 @@ test('skill defers synced archive pointer clearing until terminal report validat
   assert.ok(deferredClear > recapValidation);
 });
 
-test('skill entry resolves terminal retry before deciding whether to pull', async () => {
+test('skill entry exits terminal archive resume before Step 2', async () => {
   const guidance = await readFile(
     new URL('../SKILL.md', import.meta.url),
     'utf8',
   );
-  const router = guidance.indexOf('resolve-synced-archive-entry.mjs');
-  const pull = guidance.indexOf('oat project pull "$PROJECT_PATH"', router);
-  assert.ok(router > 0);
-  assert.ok(pull > router);
+  const executor = guidance.indexOf('execute-synced-archive-entry.mjs');
+  const terminalRoute = guidance.indexOf(
+    'SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resumed"',
+    executor,
+  );
+  const earlyExit = guidance.indexOf('exit 0', terminalRoute);
+  const stepTwo = guidance.indexOf('### Step 2:', earlyExit);
+  assert.ok(executor > 0);
+  assert.ok(terminalRoute > executor);
+  assert.ok(earlyExit > terminalRoute);
+  assert.ok(stepTwo > earlyExit);
 });
