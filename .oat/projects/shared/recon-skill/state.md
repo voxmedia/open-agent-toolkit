@@ -1,6 +1,6 @@
 ---
 oat_current_task: prev1-t01
-oat_last_commit: 8fe8c43df249a9bae94af38fcc54d7bdd57ced9d
+oat_last_commit: 784cfaba271e080598d6c829c317651461558cc5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T14:55:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev1 - bounded review fixes for publication roots and receipt drift
+Revision p-rev1 - awaiting fresh independent re-review
 
 ## Artifacts
 
@@ -114,15 +114,16 @@ Revision p-rev1 - bounded review fixes for publication roots and receipt drift
   normalized validation boundary
 - ✓ p-rev1 implementation completed as two bounded commits; all five round-4
   bypasses reject in direct probes and the overengineering assessment passed
-- ⧗ p-rev1 review round 1 found two Important adjacent invariant gaps for one
-  bounded fix and fresh re-review
+- ✓ p-rev1 review round 1 found two Important adjacent invariant gaps
+- ✓ One bounded append-only fix closed publication-root and receipt-drift gaps
+- ⧗ Fresh independent re-review of the complete p02 safety history is next
 
 ## Blockers
 
-Two Important p-rev1 review findings remain assigned to the bounded revision
-fix loop; no design expansion or external blocker is present.
+None. The two p-rev1 review findings have bounded fixes and await independent
+re-review.
 
 ## Next Milestone
 
-Complete the bounded p-rev1 review fix and obtain a fresh independent re-review
-against the complete p02 safety history
+Obtain a fresh independent p-rev1 re-review against the complete p02 safety
+history

@@ -355,6 +355,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   behavior, integration, or generalized artifact framework
 - Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p-rev1 fix round 1
+
+- Original request ID: `recon-skill-prev1-implementation-20260831`
+- Continuation event: `recon-skill-prev1-fix-r1-20260831T1456Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: bounded correction of the two Important p-rev1 review findings
+  inside prev1-t02's existing script/test boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `784cfaba271e080598d6c829c317651461558cc5`
+- Finding disposition: 0 Critical and 2 Important fixed; publication retains
+  and rechecks source/output identities, and declared-complete receipt drift
+  now fails structurally
+- Verification: focused 40/40, recon 99/99, CLI 164/164, skill suite 694/694,
+  canonical validation, lint, format, CLI type-check, and `pnpm check` pass
+- Optional nested dispatches: none
+- Dispatch: scope=p-rev1-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -525,6 +547,19 @@ context before p02 can advance.
   receipt/topology invariants. They return to the original p-rev1 implementer
   for one bounded append-only fix and a fresh independent re-review.
 
+### 2026-08-31 - p-rev1 review fixes completed
+
+- The original revision handle added append-only fix commit `784cfaba2` without
+  rewriting the two planned revision commits.
+- `ValidatedRun` now retains and publication rechecks every filesystem source
+  and packet/output identity, while `request.outputPath` must bind the canonical
+  packet root.
+- Declared-complete stages now fail structurally on receipt selection drift;
+  normalized failed/omitted stage outcomes drive honest partial rendering.
+- Root validation confirmed the bounded eight-file fix range and 99/99 recon
+  suite. A fresh independent re-review of the complete p02-through-revision
+  range is next.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -554,6 +589,9 @@ source artifact and follow-up disposition.
 - `pnpm test` still reports the pending p03 recon-worker bundle materialization
   and an unrelated approval-prompt inventory gap; release-version gates remain
   pending p04's lockstep package bump after the current-main rebase.
+- After p-rev1 fix round 1, focused identity/receipt/render coverage passes
+  40/40 and the complete recon suite passes 99/99; CLI validation passes
+  164/164 and the complete skill suite passes 694/694.
 
 ## Final Summary (for PR/docs)
 
