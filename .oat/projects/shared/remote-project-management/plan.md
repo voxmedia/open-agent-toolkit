@@ -310,6 +310,9 @@ packages/cli/src/commands/pjm/remote/snapshot.test.ts.
 
 ### Task p02-t04: Implement managed Markdown boundaries
 
+**Implementation:** completed in
+`1fe6b21049235bfb0a74ab1d28d11e2194794645`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/managed-markdown.ts and
 packages/cli/src/commands/pjm/remote/managed-markdown.test.ts.
 

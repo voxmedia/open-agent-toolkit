@@ -312,6 +312,22 @@ and lint passed.
 
 ### Task p02-t04: Implement managed Markdown boundaries
 
+**Status:** completed
+**Commit:** 1fe6b21049235bfb0a74ab1d28d11e2194794645
+
+**Outcome:** Added binding-specific managed Markdown inspection, insertion,
+and replacement with visible ownership headings. Unique regions round-trip and
+preserve every surrounding byte; missing, duplicate, nested, crossed,
+malformed, or user-edited boundaries return choice-required without a
+full-body fallback.
+
+**Verification:** Managed-Markdown suite passed (8 tests); CLI format/build,
+type-check, and lint passed.
+
+---
+
+### Task p02-t05: Classify three-way field reconciliation
+
 **Status:** pending
 **Commit:** -
 
@@ -530,6 +546,7 @@ Chronological log of implementation progress.
 - [x] p02-t01: Compose binding-purpose policy by intersection - f7a8dc493557e619d8004aaa52a0ce47bdaf7263
 - [x] p02-t02: Project local backlog and project content safely - 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
 - [x] p02-t03: Redact and bound retained remote snapshots - 9e3df8f1cb4efd3a42b0903f4a563691ac1297fb
+- [x] p02-t04: Implement managed Markdown boundaries - 1fe6b21049235bfb0a74ab1d28d11e2194794645
 
 **What changed (high level):**
 
