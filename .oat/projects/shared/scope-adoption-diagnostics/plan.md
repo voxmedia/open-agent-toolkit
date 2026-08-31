@@ -673,22 +673,100 @@ git add .oat/projects/shared/scope-adoption-diagnostics/plan.md \
 git commit -m "fix(p04-t03): align terminal review summaries"
 ```
 
+### Task p04-t04: (review) Keep judgment leftovers out of migration eligibility
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/pjm/migrate.ts`
+- Modify: `packages/cli/src/commands/pjm/migrate.test.ts`
+
+**Step 1: Analyze failure context**
+
+Remote PR #249 finding `I1` reports that judgment-only leftovers
+(`reference/backlog.md`, `reference/backlog-completed.md`, and a second roadmap)
+currently satisfy `hasRecognizedLegacySources`. Verify that these proposal-only
+files cannot be mechanically migrated and must not authorize writes.
+
+**Step 2: Implement fix**
+
+Limit recognized migration input to the mechanical legacy-source inventory.
+Continue surfacing judgment proposals during a migration already authorized by
+a genuine mechanical source. Add complete-layout and incomplete-layout
+zero-write regressions for every judgment-only shape.
+
+**Step 3: Verify targeted behavior**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/adoption.test.ts src/commands/pjm/migrate.test.ts src/commands/pjm/index.test.ts`
+
+Expected: all PJM eligibility tests pass, including byte-for-byte zero-write
+assertions for judgment-only leftovers.
+
+**Step 4: Verify project commands**
+
+Run `pnpm check && pnpm type-check` with each exit code captured explicitly.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p04-t04): exclude judgment leftovers from migration input"`
+
+### Task p04-t05: (review) Store shared-owner observations once
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.ts`
+- Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
+- Modify: `packages/cli/src/commands/status/index.test.ts`
+- Modify: `packages/cli/src/commands/doctor/index.test.ts`
+
+**Step 1: Analyze failure context**
+
+Remote PR #249 finding `M1` correctly identifies duplicate scope/pack storage,
+although current status rendering already removes the pack-level copy by
+message. Preserve the existing single human rendering while removing the
+consumer-specific deduplication dependency from the attributed data.
+
+**Step 2: Implement fix**
+
+Attach each shared-owner observation only to the selected applicable scope.
+Keep precise owner context, canonical pack ordering, suppression when no owner
+applies, and the rule that shared assets do not establish placement. Strengthen
+inventory, status, and doctor tests to assert exact cardinality.
+
+**Step 3: Verify targeted behavior**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-inventory.test.ts src/commands/status/index.test.ts src/commands/doctor/index.test.ts src/commands/tools/remove/remove-tools.test.ts`
+
+Expected: all tests pass and each report contains exactly one applicable
+shared-owner observation.
+
+**Step 4: Verify project commands**
+
+Run the complete ordered eight-gate sequence from `p04-t02` with explicit exit
+codes after both remote-review fixes are committed.
+
+**Step 5: Commit**
+
+`git commit -m "fix(p04-t05): emit shared-owner observations once"`
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220053Z.md`           | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
-| p01    | code     | passed          | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
-| p02    | code     | passed          | 2026-08-30 | `reviews/archived/p02-review-2026-08-30T224248Z.md`           | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
-| p03    | code     | passed          | 2026-08-30 | `reviews/archived/p03-review-2026-08-30T225845Z.md`           | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
-| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`           | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
-| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md`         | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
-| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T215450Z.md` | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-30 | -                                                             | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md`         | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
+| Scope          | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| -------------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01            | code     | fixes_completed | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220053Z.md`           | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
+| p01            | code     | passed          | 2026-08-30 | `reviews/archived/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
+| p02            | code     | passed          | 2026-08-30 | `reviews/archived/p02-review-2026-08-30T224248Z.md`           | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
+| p03            | code     | passed          | 2026-08-30 | `reviews/archived/p03-review-2026-08-30T225845Z.md`           | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
+| p04            | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`           | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
+| final          | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md`         | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
+| spec           | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| design         | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| plan           | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T215450Z.md` | -                                        | -          | -                             |
+| plan           | artifact | passed          | 2026-08-27 | `reviews/archived/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
+| plan           | artifact | fixes_completed | 2026-08-30 | -                                                             | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final          | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T013235Z.md`         | 990d8f2416c5a30adf0b8185291f6fbc71cc5868 | gate       | cursor-fable-5-xhigh          |
+| github-pr #249 | code     | fixes_added     | 2026-08-31 | `reviews/archived/remote-pr-249-review-2026-08-31T040842Z.md` | 5b5e6837eac12695ae38d7d99cee96f095b97ae1 | -          | -                             |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -714,18 +792,15 @@ review result.
 - Phase 1: 2 tasks - PJM migration adoption semantics
 - Phase 2: 3 tasks - provider-aware, attributable, fault-tolerant diagnostics
 - Phase 3: 2 tasks - production-realistic test-quality ratchets
-- Phase 4: 3 tasks - release verification and final review alignment
+- Phase 4: 5 tasks - release verification, final alignment, and remote-review fixes
 
-**Total: 10 tasks**
+**Total: 12 tasks**
 
-All 10 implementation tasks are complete. Current-main revalidation retained all
-nine original tasks, adapting five without expanding into umbrella ownership;
-PR #244's cleanup-first dependency is integrated. A bounded p04 recovery capped
-CLI Vitest at four workers and made the exact `pnpm test` gate pass without
-changing timeouts or assertions. The initial final review passed product and
-release behavior and produced only `m1`; `p04-t03` resolved it, and Thomas
-explicitly waived a redundant second review on 2026-08-30. Configured closeout
-gates and approval remain.
+Ten of 12 implementation tasks are complete. Remote PR #249 findings added
+`p04-t04` and `p04-t05` for one PJM eligibility correction and one
+shared-observation representation correction. The earlier closeout evidence is
+preserved, but its final review and configured gate are stale until the
+substantive revision is implemented and revalidated.
 
 ## References
 

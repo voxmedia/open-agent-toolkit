@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t04
 oat_last_commit: bc7fa79f1ee63a66cd5d8b8181fefe5257777adc
 oat_blockers: []
 associated_issues:
@@ -18,7 +18,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:fecd028242fe42d4a81a916c10827ca38294640e2c2851ced9c1eb90dcfc2071'
@@ -61,7 +61,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-08-31T03:55:02Z'
+  updated_at: '2026-08-31T04:08:42Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/249'
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T03:55:02Z'
+oat_project_state_updated: '2026-08-31T04:08:42Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,23 +98,23 @@ oat_project_recap:
 
 # Project State: Scope and Adoption Diagnostics
 
-**Status:** Implementation complete; PR open
+**Status:** PR revision in progress
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-Implementation — complete after passing final review, the Cursor Fable exit
-gate, explicit approval, and the configured post-approval retrospective. PR
-#249 remains open for human review.
+Implementation — remote PR #249 revision in progress. Bugbot findings are
+tracked as `p04-t04` and `p04-t05`; the earlier final review and Cursor Fable
+exit gate are preserved but stale for the changed implementation basis.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
-- **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 10 tasks)
-- **Implementation:** `implementation.md` (10/10 tasks; closeout complete)
+- **Plan:** `plan.md` (4 phases, 12 tasks including two remote-review fixes)
+- **Implementation:** `implementation.md` (10/12 tasks; revision in progress)
 - **Retrospective:** `references/project-retro.md` (complete; no promotion or filing proposals)
 
 ## Progress
@@ -163,19 +163,22 @@ gate, explicit approval, and the configured post-approval retrospective. PR
 - ✓ Current `origin/main` through PR #246 integrated; release reconciled to
   `0.2.50`
 - ✓ Post-integration PJM doctor and all eight ordered repository gates passed
+- ⧗ Remote PR #249 findings converted to `p04-t04` and `p04-t05`
 - ⧗ Awaiting human review
 - ✓ Approval-aware closeout sequence completed
 
 ## Blockers
 
 None. The failed Claude gate remains preserved in implementation history; the
-operator-selected Cursor Fable replacement passed and was received. Recovery
-accounting remains settled at p02 1/10 and p04 1/10, both with no pending
-attempt. The cleanup-first merge dependency is resolved.
+operator-selected Cursor Fable replacement passed and was received for the
+prior basis. Recovery accounting remains settled at p02 1/10 and p04 1/10,
+both with no pending attempt. The current remote-review revision requires fresh
+review and gate evidence after implementation.
 
 ## Next Milestone
 
-PR is open for review.
+Complete `p04-t04` and `p04-t05`, then refresh final review and configured gate
+evidence before returning the PR to closeout.
 
 - To incorporate feedback: run `oat-project-revise`
 - Complete before merge: run `oat-project-complete` now, then merge the PR.

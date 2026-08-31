@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: implementation
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -12,19 +12,19 @@ oat_generated: false
 **Started:** 2026-08-30 21:48 UTC
 **Last Updated:** 2026-08-30
 
-> Implementation completed sequentially with the managed High dispatch ceiling;
-> `oat_current_task_id` is cleared.
+> Remote PR revision is in progress with the managed High dispatch ceiling;
+> `p04-t04` is the current task.
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | in_progress | 5     | 3/5       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/12 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -374,6 +374,30 @@ review after the artifact-only alignment; continue to configured closeout.
 (10/10 tasks), release lockstep, and project ownership boundaries.
 
 **Next:** Continue the configured approval-aware closeout sequence.
+
+### Remote Review Received: PR #249
+
+**Date:** 2026-08-31
+**Source:** Cursor Bugbot GitHub review at head
+`5b5e6837eac12695ae38d7d99cee96f095b97ae1`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p04-t04`, `p04-t05`
+
+**Disposition:** `I1` is a valid PJM zero-write eligibility defect. `M1` does
+not reproduce as duplicate status output because status already deduplicates
+scope/pack messages, but the duplicate stored representation violates the
+emit-once contract and is accepted as a bounded correction. No findings were
+deferred or dismissed.
+
+**Next:** Execute the two revision tasks and revalidate the substantive branch
+basis before closeout.
 
 <!-- orchestration-runs-end -->
 
