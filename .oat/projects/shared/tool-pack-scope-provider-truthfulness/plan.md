@@ -43,9 +43,9 @@ oxfmt/oxlint, Markdown skills, and Fumadocs.
 - [x] Mapped every FR/NFR to stable task IDs in `spec.md`
 - [x] Defer HiLL checkpoint confirmation to `oat-project-implement`
 - [x] Evaluated phase boundaries for parallelism; keep execution sequential
-- [ ] User confirmed the plan breakdown
+- [x] User confirmed the plan breakdown
 - [x] Project dispatch policy selected and persisted
-- [ ] Phase gate review choice resolved after plan confirmation
+- [x] Phase gate review choice resolved after plan confirmation (disabled)
 - [ ] Automatic plan artifact review and configured plan gate passed
 
 ## Coordination and Sequencing
@@ -128,7 +128,11 @@ predates the accepted SHA.
 **Step 4: Commit**
 
 ```bash
-git add .oat/projects/shared/tool-pack-scope-provider-truthfulness
+git add -- \
+  .oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md \
+  .oat/projects/shared/tool-pack-scope-provider-truthfulness/design.md \
+  .oat/projects/shared/tool-pack-scope-provider-truthfulness/plan.md \
+  .oat/projects/shared/tool-pack-scope-provider-truthfulness/spec.md
 git commit -m "chore(p01-t01): record accepted diagnostics baseline"
 ```
 
@@ -221,7 +225,11 @@ Expected: registry and activation contracts pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/providers/shared
+git add -- \
+  packages/cli/src/providers/shared/registry.ts \
+  packages/cli/src/providers/shared/registry.test.ts \
+  packages/cli/src/providers/shared/index.ts \
+  packages/cli/src/providers/shared/adapter-contract.test.ts
 git commit -m "feat(p02-t02): centralize provider capability registration"
 ```
 
@@ -270,7 +278,21 @@ Expected: all consumers use the registry with unchanged activation precedence.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands packages/cli/src/providers/shared
+git add -- \
+  packages/cli/src/commands/init/index.ts \
+  packages/cli/src/commands/init/index.test.ts \
+  packages/cli/src/commands/sync/index.ts \
+  packages/cli/src/commands/sync/index.test.ts \
+  packages/cli/src/commands/status/index.ts \
+  packages/cli/src/commands/status/index.test.ts \
+  packages/cli/src/commands/doctor/index.ts \
+  packages/cli/src/commands/doctor/index.test.ts \
+  packages/cli/src/commands/providers/list/list.ts \
+  packages/cli/src/commands/providers/list/list.test.ts \
+  packages/cli/src/commands/providers/inspect/inspect.ts \
+  packages/cli/src/commands/providers/inspect/inspect.test.ts \
+  packages/cli/src/commands/providers/set/index.ts \
+  packages/cli/src/commands/providers/set/index.test.ts
 git commit -m "refactor(p02-t03): route provider consumers through registry"
 ```
 
@@ -360,7 +382,14 @@ the explicit FR10 project-config preservation matrix passes without rewriting
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/init/tools packages/cli/src/commands/tools/install packages/cli/src/commands/tools/shared/auto-sync.ts packages/cli/src/commands/tools/shared/auto-sync.test.ts packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts
+git add -- \
+  packages/cli/src/commands/init/tools/index.ts \
+  packages/cli/src/commands/init/tools/index.test.ts \
+  packages/cli/src/commands/tools/install/index.ts \
+  packages/cli/src/commands/tools/install/index.test.ts \
+  packages/cli/src/commands/tools/shared/auto-sync.ts \
+  packages/cli/src/commands/tools/shared/auto-sync.test.ts \
+  packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts
 git commit -m "fix(p02-t05): honor verified tool pack scope selections"
 ```
 
@@ -403,7 +432,16 @@ Expected: renderer parity and landed fault tolerance pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/tools/list packages/cli/src/commands/tools/info packages/cli/src/commands/tools/shared/format-pack-inventory.ts packages/cli/src/commands/status packages/cli/src/commands/doctor
+git add -- \
+  packages/cli/src/commands/tools/list/list-tools.ts \
+  packages/cli/src/commands/tools/list/list-tools.test.ts \
+  packages/cli/src/commands/tools/info/info-tool.ts \
+  packages/cli/src/commands/tools/info/info-tool.test.ts \
+  packages/cli/src/commands/tools/shared/format-pack-inventory.ts \
+  packages/cli/src/commands/status/index.ts \
+  packages/cli/src/commands/status/index.test.ts \
+  packages/cli/src/commands/doctor/index.ts \
+  packages/cli/src/commands/doctor/index.test.ts
 git commit -m "feat(p02-t06): render normalized pack evidence"
 ```
 
@@ -446,7 +484,16 @@ Expected: compatibility and failure-evidence cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/tools/update packages/cli/src/commands/tools/remove packages/cli/src/commands/commands.integration.test.ts packages/cli/src/e2e/workflow.test.ts
+git add -- \
+  packages/cli/src/commands/tools/update/index.ts \
+  packages/cli/src/commands/tools/update/index.test.ts \
+  packages/cli/src/commands/tools/update/update-tools.ts \
+  packages/cli/src/commands/tools/update/update-tools.test.ts \
+  packages/cli/src/commands/tools/remove/index.ts \
+  packages/cli/src/commands/tools/remove/remove-tools.ts \
+  packages/cli/src/commands/tools/remove/remove-tools.test.ts \
+  packages/cli/src/commands/commands.integration.test.ts \
+  packages/cli/src/e2e/workflow.test.ts
 git commit -m "feat(p02-t07): expose pack lifecycle evidence consistently"
 ```
 
@@ -497,7 +544,14 @@ Expected: user agent planning follows capability without collisions.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/shared/types.ts packages/cli/src/engine/scanner.ts packages/cli/src/engine/scanner.test.ts packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/compute-plan.test.ts packages/cli/src/commands/sync
+git add -- \
+  packages/cli/src/shared/types.ts \
+  packages/cli/src/engine/scanner.ts \
+  packages/cli/src/engine/scanner.test.ts \
+  packages/cli/src/engine/compute-plan.ts \
+  packages/cli/src/engine/compute-plan.test.ts \
+  packages/cli/src/commands/sync/index.ts \
+  packages/cli/src/commands/sync/index.test.ts
 git commit -m "feat(p03-t01): scan user agents by provider capability"
 ```
 
@@ -538,7 +592,14 @@ Expected: detailed outcomes and compatibility counts pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/engine/engine.types.ts packages/cli/src/engine/engine.types.test.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/execute-plan.test.ts packages/cli/src/commands/sync
+git add -- \
+  packages/cli/src/engine/engine.types.ts \
+  packages/cli/src/engine/engine.types.test.ts \
+  packages/cli/src/engine/execute-plan.ts \
+  packages/cli/src/engine/execute-plan.test.ts \
+  packages/cli/src/commands/sync/sync.types.ts \
+  packages/cli/src/commands/sync/apply.ts \
+  packages/cli/src/commands/sync/dry-run.ts
 git commit -m "feat(p03-t02): report per-asset core sync outcomes"
 ```
 
@@ -581,7 +642,15 @@ Expected: managed-role and per-operation outcomes pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/providers packages/cli/src/engine/engine.integration.test.ts
+git add -- \
+  packages/cli/src/providers/shared/materialization-extension.ts \
+  packages/cli/src/providers/shared/materialization-extension.test.ts \
+  packages/cli/src/providers/codex/codec/sync-extension.ts \
+  packages/cli/src/providers/codex/codec/sync-extension.test.ts \
+  packages/cli/src/providers/cursor/codec/sync-extension.ts \
+  packages/cli/src/providers/cursor/codec/sync-extension.test.ts \
+  packages/cli/src/providers/claude/adapter.test.ts \
+  packages/cli/src/engine/engine.integration.test.ts
 git commit -m "feat(p03-t03): expose provider role materialization evidence"
 ```
 
@@ -625,7 +694,16 @@ Expected: user config and complete inspection matrix pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/providers packages/cli/src/config/user-sync-config.ts packages/cli/src/config/user-sync-config.test.ts
+git add -- \
+  packages/cli/src/commands/providers/providers.types.ts \
+  packages/cli/src/commands/providers/set/index.ts \
+  packages/cli/src/commands/providers/set/index.test.ts \
+  packages/cli/src/commands/providers/list/list.ts \
+  packages/cli/src/commands/providers/list/list.test.ts \
+  packages/cli/src/commands/providers/inspect/inspect.ts \
+  packages/cli/src/commands/providers/inspect/inspect.test.ts \
+  packages/cli/src/config/user-sync-config.ts \
+  packages/cli/src/config/user-sync-config.test.ts
 git commit -m "feat(p03-t04): configure and inspect user providers"
 ```
 
@@ -683,7 +761,22 @@ pass repository checks.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/providers/shared packages/cli/src/commands/sync packages/cli/src/commands/init/tools packages/cli/src/commands/status packages/cli/src/commands/doctor apps/oat-docs/docs/provider-sync apps/oat-docs/docs/cli-utilities/tool-packs.md
+git add -- \
+  packages/cli/src/providers/shared/restart-adviser.ts \
+  packages/cli/src/providers/shared/restart-adviser.test.ts \
+  packages/cli/src/providers/shared/registry.ts \
+  packages/cli/src/providers/shared/registry.test.ts \
+  packages/cli/src/commands/sync/apply.ts \
+  packages/cli/src/commands/sync/index.test.ts \
+  packages/cli/src/commands/init/tools/index.ts \
+  packages/cli/src/commands/init/tools/index.test.ts \
+  packages/cli/src/commands/status/index.ts \
+  packages/cli/src/commands/status/index.test.ts \
+  packages/cli/src/commands/doctor/index.ts \
+  packages/cli/src/commands/doctor/index.test.ts \
+  apps/oat-docs/docs/provider-sync/providers.md \
+  apps/oat-docs/docs/provider-sync/scope-and-surface.md \
+  apps/oat-docs/docs/cli-utilities/tool-packs.md
 git commit -m "feat(p03-t05): report sourced provider refresh advice"
 ```
 
@@ -733,7 +826,12 @@ Expected: V1 compatibility and V2 invariants pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/manifest
+git add -- \
+  packages/cli/src/manifest/manifest.types.ts \
+  packages/cli/src/manifest/manifest.types.test.ts \
+  packages/cli/src/manifest/manager.ts \
+  packages/cli/src/manifest/manager.test.ts \
+  packages/cli/src/manifest/index.ts
 git commit -m "feat(p04-t01): add collection ownership manifest v2"
 ```
 
@@ -777,7 +875,15 @@ Expected: proof and strategy-provenance cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/engine
+git add -- \
+  packages/cli/src/engine/collection-sync.ts \
+  packages/cli/src/engine/collection-sync.test.ts \
+  packages/cli/src/engine/engine.types.ts \
+  packages/cli/src/engine/engine.types.test.ts \
+  packages/cli/src/engine/compute-plan.ts \
+  packages/cli/src/engine/compute-plan.test.ts \
+  packages/cli/src/engine/provider-path-safety.ts \
+  packages/cli/src/engine/provider-path-safety.test.ts
 git commit -m "feat(p04-t02): plan exact collection aliases safely"
 ```
 
@@ -863,7 +969,15 @@ Expected: deterministic ownership and zero canonical/unmanaged loss.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/drift packages/cli/src/engine packages/cli/src/commands/remove/skill
+git add -- \
+  packages/cli/src/drift/detector.ts \
+  packages/cli/src/drift/detector.test.ts \
+  packages/cli/src/drift/strays.ts \
+  packages/cli/src/engine/compute-plan.ts \
+  packages/cli/src/engine/compute-plan.test.ts \
+  packages/cli/src/commands/remove/skill/remove-skill.ts \
+  packages/cli/src/commands/remove/skill/remove-skill.test.ts \
+  packages/cli/src/engine/engine.integration.test.ts
 git commit -m "feat(p04-t04): reconcile collection ownership safely"
 ```
 
@@ -913,7 +1027,20 @@ Expected: apply/dry-run/docs agree and the docs pass repository checks.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/sync packages/cli/src/commands/providers apps/oat-docs/docs/provider-sync apps/oat-docs/docs/reference/oat-directory-structure.md
+git add -- \
+  packages/cli/src/commands/sync/sync.types.ts \
+  packages/cli/src/commands/sync/sync.utils.ts \
+  packages/cli/src/commands/sync/apply.ts \
+  packages/cli/src/commands/sync/dry-run.ts \
+  packages/cli/src/commands/sync/index.test.ts \
+  packages/cli/src/commands/providers/list/list.ts \
+  packages/cli/src/commands/providers/list/list.test.ts \
+  packages/cli/src/commands/providers/inspect/inspect.ts \
+  packages/cli/src/commands/providers/inspect/inspect.test.ts \
+  apps/oat-docs/docs/provider-sync/manifest-and-drift.md \
+  apps/oat-docs/docs/provider-sync/commands.md \
+  apps/oat-docs/docs/provider-sync/config.md \
+  apps/oat-docs/docs/reference/oat-directory-structure.md
 git commit -m "feat(p04-t05): expose collection alias lifecycle"
 ```
 
@@ -1007,7 +1134,16 @@ Expected: one choice contract drives every entry point; defaults are zero-write.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/init packages/cli/src/commands/tools/install packages/cli/src/commands/help-snapshots.test.ts
+git add -- \
+  packages/cli/src/commands/init/tools/project-guidance.ts \
+  packages/cli/src/commands/init/tools/project-guidance.test.ts \
+  packages/cli/src/commands/init/tools/index.ts \
+  packages/cli/src/commands/init/tools/index.test.ts \
+  packages/cli/src/commands/init/index.ts \
+  packages/cli/src/commands/init/index.test.ts \
+  packages/cli/src/commands/tools/install/index.ts \
+  packages/cli/src/commands/tools/install/index.test.ts \
+  packages/cli/src/commands/help-snapshots.test.ts
 git commit -m "feat(p05-t02): plan explicit project guidance"
 ```
 
@@ -1090,7 +1226,11 @@ Expected: standalone parity passes and the docs pass repository checks.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/init/tools/workflows apps/oat-docs/docs/cli-utilities/bootstrap.md apps/oat-docs/docs/cli-utilities/tool-packs.md
+git add -- \
+  packages/cli/src/commands/init/tools/workflows/index.ts \
+  packages/cli/src/commands/init/tools/workflows/index.test.ts \
+  apps/oat-docs/docs/cli-utilities/bootstrap.md \
+  apps/oat-docs/docs/cli-utilities/tool-packs.md
 git commit -m "feat(p05-t04): ship independent project guidance"
 ```
 
@@ -1137,7 +1277,11 @@ Expected: exact identity/root-order cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/agents/canonical packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
+git add -- \
+  packages/cli/src/agents/canonical/resolve.ts \
+  packages/cli/src/agents/canonical/resolve.test.ts \
+  packages/cli/src/agents/canonical/index.ts \
+  packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts
 git commit -m "feat(p06-t01): expose exact canonical role resolution"
 ```
 
@@ -1177,7 +1321,12 @@ Expected: legal transitions pass; all post-acceptance replacement fails.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/providers/identity
+git add -- \
+  packages/cli/src/providers/identity/generic-dispatch-record.ts \
+  packages/cli/src/providers/identity/generic-dispatch-record.test.ts \
+  packages/cli/src/providers/identity/oat-dispatch-record.ts \
+  packages/cli/src/providers/identity/oat-dispatch-record.test.ts \
+  packages/cli/src/providers/identity/dispatch-report.test.ts
 git commit -m "feat(p06-t02): validate namespaced dispatch provenance"
 ```
 
@@ -1218,7 +1367,14 @@ Expected: CLI, atomicity, and validation cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/dispatch packages/cli/src/commands/project/index.ts packages/cli/src/commands/help-snapshots.test.ts packages/cli/src/fs/io.ts packages/cli/src/fs/io.test.ts
+git add -- \
+  packages/cli/src/commands/project/dispatch/index.ts \
+  packages/cli/src/commands/project/dispatch/record.ts \
+  packages/cli/src/commands/project/dispatch/record.test.ts \
+  packages/cli/src/commands/project/index.ts \
+  packages/cli/src/commands/help-snapshots.test.ts \
+  packages/cli/src/fs/io.ts \
+  packages/cli/src/fs/io.test.ts
 git commit -m "feat(p06-t03): persist project dispatch records"
 ```
 
@@ -1273,7 +1429,19 @@ Expected: native-first exact-pin/record contracts and skill gates pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts apps/oat-docs/docs/workflows/projects apps/oat-docs/docs/provider-sync/scope-and-surface.md
+git add -- \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-project-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md \
+  .agents/skills/oat-project-review-provide/SKILL.md \
+  .agents/skills/oat-project-review-provide-remote/SKILL.md \
+  .agents/skills/oat-project-plan-writing/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  apps/oat-docs/docs/workflows/projects/evidence-layers.md \
+  apps/oat-docs/docs/workflows/projects/implementation-execution.md \
+  apps/oat-docs/docs/workflows/projects/orchestration-model.md \
+  apps/oat-docs/docs/provider-sync/scope-and-surface.md
 git commit -m "feat(p06-t04): attest native dispatch lineage"
 ```
 
@@ -1363,7 +1531,13 @@ Expected: Claude/Cursor provenance and no-replacement cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/providers/identity
+git add -- \
+  packages/cli/src/providers/identity/claude-runtime-observation.ts \
+  packages/cli/src/providers/identity/claude-runtime-observation.test.ts \
+  packages/cli/src/providers/identity/runtime-observation.ts \
+  packages/cli/src/providers/identity/runtime-observation.test.ts \
+  packages/cli/src/providers/identity/oat-dispatch-record.ts \
+  packages/cli/src/providers/identity/oat-dispatch-record.test.ts
 git commit -m "feat(p07-t02): normalize provider runtime observations"
 ```
 
@@ -1419,7 +1593,18 @@ Expected: observation is corroborative only; smoke/schema contracts pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/dispatch packages/cli/src/providers/identity packages/cli/src/commands/commands.integration.test.ts packages/cli/src/e2e/workflow.test.ts tools/smoke apps/oat-docs/docs/workflows/projects/evidence-layers.md apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/reference/cli-reference.md
+git add -- \
+  packages/cli/src/commands/project/dispatch/record.ts \
+  packages/cli/src/commands/project/dispatch/record.test.ts \
+  packages/cli/src/providers/identity/dispatch-report.test.ts \
+  packages/cli/src/commands/commands.integration.test.ts \
+  packages/cli/src/e2e/workflow.test.ts \
+  tools/smoke/evidence/collect.mjs \
+  tools/smoke/evidence/collect.test.mjs \
+  tools/smoke/CONTRACT.md \
+  apps/oat-docs/docs/workflows/projects/evidence-layers.md \
+  apps/oat-docs/docs/provider-sync/providers.md \
+  apps/oat-docs/docs/reference/cli-reference.md
 git commit -m "feat(p07-t03): report runtime identity observations"
 ```
 
@@ -1482,7 +1667,24 @@ exit code in `implementation.md`.
 **Step 5: Commit**
 
 ```bash
-git add packages .oat/repo/pjm/backlog .oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md
+git add -- \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/repo/pjm/backlog/items/BL-260829-make-tool-pack-scope-selection.md \
+  .oat/repo/pjm/backlog/archived/BL-260829-make-tool-pack-scope-selection.md \
+  .oat/repo/pjm/backlog/items/BL-260724-support-provider-directory.md \
+  .oat/repo/pjm/backlog/archived/BL-260724-support-provider-directory.md \
+  .oat/repo/pjm/backlog/items/BL-260828-add-project-level-oat-guidance.md \
+  .oat/repo/pjm/backlog/archived/BL-260828-add-project-level-oat-guidance.md \
+  .oat/repo/pjm/backlog/items/BL-260826-populate-native-subagent.md \
+  .oat/repo/pjm/backlog/archived/BL-260826-populate-native-subagent.md \
+  .oat/repo/pjm/backlog/completed.md \
+  .oat/repo/pjm/backlog/index.md \
+  .oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md
 git commit -m "chore(p07-t04): release truthful tool pack state"
 ```
 
@@ -1504,14 +1706,15 @@ gates exit 0 at the final reviewed head.
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -             | -          | -           |
+| plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -             | -          | -           |
 
 The design review findings were resolved directly in `design.md`. Thomas
 approved planning without another design re-review, so that event remains
 `fixes_completed`, not relabeled `passed`.
 
-The first plan review's five findings were resolved directly in `plan.md`.
-That event remains `fixes_completed` until a clean plan artifact re-review.
+The first plan review's five findings were resolved directly in `plan.md`. A
+managed High structured re-review then found and corrected exact staging
+boundaries; its clean retry advanced the event to `passed`.
 
 Status progression: `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`.
