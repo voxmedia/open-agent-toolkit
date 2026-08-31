@@ -237,7 +237,8 @@ modify packages/cli/src/commands/pjm/doctor.ts and doctor.test.ts.
 
 ### Task p01-t10: Persist pre-create binding intent
 
-**Implementation:** in progress
+**Implementation:** completed in
+`cd6608947699b6431216fa8364b67729b7583866`
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/schema.ts,
 packages/cli/src/commands/pjm/remote/schema.test.ts,

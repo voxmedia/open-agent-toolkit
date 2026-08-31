@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t10
-oat_last_commit: 373839ef12a713d18fd5e1422cbcf02dfbebff17
+oat_current_task: p02-t01
+oat_last_commit: cd6608947699b6431216fa8364b67729b7583866
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -24,7 +24,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T04:46:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T04:52:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -36,8 +36,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 completed p01-t01 through p01-t09 and continues at
-p01-t10. The workflow uses a
+Implementation — Phase 1 completed p01-t01 through p01-t10 and awaits its
+independent phase review before Phase 2 begins. The workflow uses a
 final-phase HiLL checkpoint, automatic checkpoint review, and sequential phase
 execution for the currently validated plan metadata.
 
@@ -77,7 +77,9 @@ execution for the currently validated plan metadata.
 - ✓ p01-t07 preserved simultaneous operation journals and conflict evidence
 - ✓ p01-t08 added a backward-compatible association codec
 - ✓ p01-t09 added foundational credential-safe remote doctor checks
-- ⧗ Phase 1 continues at p01-t10
+- ✓ p01-t10 persisted pre-create intent and gated portable metadata on durable
+  remote identity verification
+- ⧗ Phase 1 implementation awaits independent review
 
 ## Blockers
 
@@ -85,5 +87,4 @@ None.
 
 ## Next Milestone
 
-Complete Phase 1 domain, configuration, and persistence tasks, then run its
-independent phase review.
+Run the independent Phase 1 implementation review, then begin p02-t01.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t10
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,44 +24,63 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 10    | 0/10      |
-| Phase 2 | pending     | 9     | 0/9       |
-| Phase 3 | pending     | 12    | 0/12      |
-| Phase 4 | pending     | 11    | 0/11      |
-| Phase 5 | pending     | 9     | 0/9       |
-| Phase 6 | pending     | 10    | 0/10      |
-| Phase 7 | pending     | 10    | 0/10      |
-| Phase 8 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 10    | 10/10     |
+| Phase 2 | pending   | 9     | 0/9       |
+| Phase 3 | pending   | 12    | 0/12      |
+| Phase 4 | pending   | 11    | 0/11      |
+| Phase 5 | pending   | 9     | 0/9       |
+| Phase 6 | pending   | 10    | 0/10      |
+| Phase 7 | pending   | 10    | 0/10      |
+| Phase 8 | pending   | 6     | 0/6       |
 
-**Total:** 0/77 tasks completed
+**Total:** 10/77 tasks completed
 
 ---
 
 ## Phase 1: Domain, Configuration, and Persistence
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-15
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added ownership-safe remote configuration and deterministic provider
+  transport resolution across shared, local, and user surfaces.
+- Added strict portable and operational record schemas, privacy-aware storage
+  location resolution, and restart-safe atomic persistence.
+- Preserved concurrent operation intents and backward-compatible issue
+  associations while adding credential-safe doctor diagnostics.
+- Added pre-create intent journaling that materializes portable binding metadata
+  only after durable remote identity verification.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/config/` - Remote configuration ownership, parsing, and
+  resolution.
+- `packages/cli/src/commands/config/index.ts` - Remote configuration command
+  descriptors and mutation rules.
+- `packages/cli/src/commands/pjm/remote/` - Remote schemas, storage, association,
+  doctor, and pre-create intent foundations.
+- `packages/cli/src/commands/backlog/new.ts` - Backward-compatible association
+  serialization.
+- `packages/cli/src/commands/pjm/doctor.ts` - Dormant additive remote diagnostics.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: each task's focused Vitest command, CLI type-check, and CLI lint.
+- Result: pass for all ten tasks; phase-wide verification follows the final
+  bookkeeping commit.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Portable metadata deliberately excludes verification evidence; verification
+  gates materialization but stays out of the compact portable record.
+- Active intent conflicts are derived from exclusive journals rather than
+  claiming a distributed lock.
 
 ### Task p01-t01: Define remote configuration types
 
@@ -221,8 +240,17 @@ type-check and lint passed.
 
 ### Task p01-t10: Persist pre-create binding intent
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cd6608947699b6431216fa8364b67729b7583866
+
+**Outcome:** Reserved binding and operation identifiers, provider context,
+projection, policy, purposes, and provenance are persisted in an exclusive
+pre-create journal before any provider identity exists. Portable binding
+metadata is materialized only when explicit durable identity verification
+matches its provider and stable ID.
+
+**Verification:** Focused schema/store suites passed (15 tests); CLI type-check
+and lint passed.
 
 ---
 
@@ -335,7 +363,7 @@ Chronological log of implementation progress.
 - [x] p01-t07: Preserve simultaneous operation intents - 8319af27338dc2abbf2ce5e88dba6f77ffa0b41d
 - [x] p01-t08: Add backward-compatible association codec - 68e882fac52f808ae2f78320dec8fb8c8b66d408
 - [x] p01-t09: Add foundational remote doctor checks - 373839ef12a713d18fd5e1422cbcf02dfbebff17
-- [ ] p01-t10: Persist pre-create binding intent - in progress
+- [x] p01-t10: Persist pre-create binding intent - cd6608947699b6431216fa8364b67729b7583866
 
 **What changed (high level):**
 
@@ -354,6 +382,8 @@ Chronological log of implementation progress.
 - Added lossless associated-issue compatibility and canonical binding links.
 - Added credential-safe remote doctor foundations without changing local-only
   doctor output.
+- Added pre-create intent journals and verified-only portable metadata
+  materialization without persisting verification evidence.
 
 **Decisions:**
 
