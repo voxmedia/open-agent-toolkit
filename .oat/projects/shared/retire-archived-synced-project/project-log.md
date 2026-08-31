@@ -64,6 +64,10 @@ Phase p01 passed re-review at c59bcc4c0f54c8541a43090eea6ebfe33e34244d with zero
 
 Merged origin/main at 2c6005d64f45a19e8b9eedbc977959b066d3eda0 after p01 passed, as directed. Merge completed without conflicts. Post-merge p01 verification passed 134/134 focused tests and CLI type-check.
 
+### 2026-08-31 · structural · oat-project-implement · p02-p03-parallel-start
+
+Started parallel p02/p03 implementation from logical base e7c60215e639d7b7de077101bb863509c3d807f6. Strict autonomous bootstrap passed in both worktrees; each has isolated setup commit 79dfa969d updating only the sync manifest. p02 owns archive/completion files and p03 owns terminal list/action semantics.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

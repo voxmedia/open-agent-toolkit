@@ -19,12 +19,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | pending   | 3     | 0/3       |
-| p03   | pending   | 3     | 0/3       |
-| p04   | pending   | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 2     | 2/2       |
+| p02   | in progress | 3     | 0/3       |
+| p03   | in progress | 3     | 0/3       |
+| p04   | pending     | 2     | 0/2       |
 
 **Total:** 2/10 tasks completed
 
@@ -52,8 +52,8 @@ inert alias. Differing SHAs still fail closed.
 
 ## Phase 2: Archive Transaction and Completion Integration
 
-**Status:** pending
-**Started:** -
+**Status:** in progress
+**Started:** 2026-08-31
 
 ### Task p02-t01: Gate terminal cleanup on archive durability
 
@@ -74,8 +74,8 @@ inert alias. Differing SHAs still fail closed.
 
 ## Phase 3: Terminal Discovery and Action Semantics
 
-**Status:** pending
-**Started:** -
+**Status:** in progress
+**Started:** 2026-08-31
 
 ### Task p03-t01: Classify legacy completed synced records precisely
 
@@ -179,6 +179,20 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Re-review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - Final verification: 134/134 focused tests and CLI type-check passed.
 - Fresh fix iterations: 1 of 2 used; review rounds: 2 of 3 used.
+
+### Run 3 — parallel p02/p03 implementation
+
+- Logical phase base: `e7c60215e639d7b7de077101bb863509c3d807f6`.
+- p02 worktree: `.worktrees/retire-archived-synced-p02` on branch
+  `retire-archived-synced-p02`.
+- p03 worktree: `.worktrees/retire-archived-synced-p03` on branch
+  `retire-archived-synced-p03`.
+- Both worktrees passed repository bootstrap, build, provider/project status,
+  and `pnpm check` under strict policy.
+- Both provider syncs produced the identical isolated setup commit
+  `79dfa969d` updating only `.oat/sync/manifest.json` to OAT 0.2.50.
+- p02 and p03 have disjoint plan ownership; p03 consumes but does not modify
+  p01 transition primitives.
 
 <!-- orchestration-runs-end -->
 

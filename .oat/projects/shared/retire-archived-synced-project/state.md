@@ -12,7 +12,7 @@ oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
-oat_parallel_execution: false
+oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -94,7 +94,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - merge current main, then run parallel p02/p03
+Implement - parallel p02 archive transaction and p03 terminal semantics
 
 ## Artifacts
 
@@ -122,7 +122,9 @@ Implement - merge current main, then run parallel p02/p03
 - ✓ Revised terminal receipt implementation passed 128 focused tests
 - ✓ Fix round 1 closed the torn probe and unleased prune deletion
 - ✓ p01 re-review passed with 0 findings; 134 focused tests pass
-- → Merge `origin/main`, then begin parallel p02/p03 implementation
+- ✓ Merged `origin/main` at `2c6005d64`; post-merge p01 checks pass
+- ✓ Strict p02/p03 worktree bootstrap passed from `e7c60215e`
+- → Parallel p02/p03 implementation in progress
 
 ## Blockers
 
@@ -132,5 +134,4 @@ SHAs still fail closed.
 
 ## Next Milestone
 
-Merge `origin/main`, resolve and verify any seams, then start parallel p02/p03
-implementation
+Complete and review p02/p03, merge both branches, then enter p04 integration
