@@ -44,7 +44,7 @@ function bulletLines(values, empty = 'None.') {
 }
 
 export function renderPacketDocument(validatedRun) {
-  const { manifest, ledger } = assertValidatedRun(validatedRun);
+  const { manifest, ledger, topology } = assertValidatedRun(validatedRun);
   const evidenceById = new Map(
     ledger.evidence.map((evidence) => [evidence.id, evidence]),
   );
@@ -56,9 +56,9 @@ export function renderPacketDocument(validatedRun) {
     (claim) =>
       claim.status === 'contested' || (claim.challenges ?? []).length > 0,
   );
-  const failedStages = manifest.stages.filter(
-    (stage) => stage.status !== 'complete',
-  );
+  const failedStages = topology.stages
+    .map(({ stage }) => stage)
+    .filter((stage) => stage.status !== 'complete');
   const omittedGaps = manifest.gaps.filter((gap) =>
     /PASS_(?:FAILED|OMITTED)/.test(gap.code),
   );
@@ -185,11 +185,16 @@ export async function renderValidatedPacket(validatedRun) {
   const target = join(packetRoot, 'packet.md');
   const temporary = join(packetRoot, `.packet.md.${process.pid}.tmp`);
   try {
-    await assertUnchangedRoot(run.packetRootIdentity);
     const document = renderPacketDocument(run);
     await assertSafeOutputPath(packetRoot, temporary);
     await assertSafeOutputPath(packetRoot, target);
+    await Promise.all(
+      run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
+    );
     await writeFile(temporary, document, { encoding: 'utf8', flag: 'wx' });
+    await Promise.all(
+      run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
+    );
     await rename(temporary, target);
     return {
       directory: packetRoot,
@@ -199,7 +204,8 @@ export async function renderValidatedPacket(validatedRun) {
       claimCounts: claimCounts(ledger),
       gapCount: manifest.gaps.length,
       failedOrOmittedPasses: [
-        ...manifest.stages
+        ...run.topology.stages
+          .map(({ stage }) => stage)
           .filter((stage) => stage.status !== 'complete')
           .map((stage) => stage.mode),
         ...manifest.gaps

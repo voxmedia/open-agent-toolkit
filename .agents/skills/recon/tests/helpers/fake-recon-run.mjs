@@ -105,6 +105,7 @@ export async function runFakeRecon(options = {}) {
     requestedProfile,
     achievedProfile,
     status,
+    failedStageMode: options.workerFailure,
     roots,
   });
   fixture.manifest.sources[0].authority = authorityLevel;

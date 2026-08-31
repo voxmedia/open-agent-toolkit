@@ -30,7 +30,7 @@ function normalizeTopology(topology) {
 
 export function createValidatedRun({
   packetRoot,
-  packetRootIdentity,
+  filesystemIdentities,
   manifest,
   ledger,
   artifactsById,
@@ -42,7 +42,9 @@ export function createValidatedRun({
 }) {
   const run = {
     packetRoot,
-    packetRootIdentity: clone(packetRootIdentity),
+    filesystemIdentities: [...filesystemIdentities.values()]
+      .map((identity) => clone(identity))
+      .sort((left, right) => left.path.localeCompare(right.path)),
     manifest: clone(manifest),
     ledger: clone(ledger),
     artifacts: [...artifactsById.entries()]

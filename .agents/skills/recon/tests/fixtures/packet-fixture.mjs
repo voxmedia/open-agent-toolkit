@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -17,6 +17,8 @@ export async function createPacketFixture({
   status = 'complete',
   requestedProfile = profile,
   achievedProfile = profile,
+  sourceKind = 'file',
+  failedStageMode,
   roots,
 } = {}) {
   const tempRoot = roots
@@ -27,7 +29,7 @@ export async function createPacketFixture({
     : join(tempRoot, 'packet');
   const sourceRoot = roots
     ? await realpath(resolve(roots.sourceRoot))
-    : tempRoot;
+    : join(tempRoot, 'sources');
   let sourcePath = join(sourceRoot, 'source.txt');
   await mkdir(join(packetRoot, 'raw', 'dossiers'), { recursive: true });
   await mkdir(join(packetRoot, 'reviews', 'briefs'), { recursive: true });
@@ -57,16 +59,105 @@ export async function createPacketFixture({
     digest: await hashFile(dossierPath),
   };
 
-  const source = {
-    kind: 'file',
+  const sourceBase = {
     id: 'source-1',
     available: true,
     authority: 'contract-enforced',
     observedAt: '2026-08-31T00:00:00.000Z',
     validationState: 'pinned',
-    path: sourcePath,
-    contentHash: await hashFile(sourcePath),
   };
+  let source;
+  let locator;
+  if (sourceKind === 'repository') {
+    source = {
+      ...sourceBase,
+      kind: 'repository',
+      root: await realpath(sourceRoot),
+      revision: 'abc123',
+      dirty: false,
+      contentHashes: { 'source.txt': await hashFile(sourcePath) },
+    };
+    locator = {
+      kind: 'repository',
+      path: 'source.txt',
+      revision: source.revision,
+      lineStart: 1,
+      lineEnd: 1,
+    };
+  } else if (sourceKind === 'url') {
+    sourcePath = join(packetRoot, 'raw', 'captures', 'url.txt');
+    await mkdir(dirname(sourcePath), { recursive: true });
+    await cp(new URL('url-capture.txt', import.meta.url), sourcePath);
+    source = {
+      ...sourceBase,
+      kind: 'url',
+      authority: 'provider-enforced',
+      url: 'https://example.test/evidence',
+      capturePath: 'raw/captures/url.txt',
+      captureDigest: await hashFile(sourcePath),
+    };
+    locator = {
+      kind: 'url',
+      url: source.url,
+      retrievedAt: source.observedAt,
+    };
+  } else if (sourceKind === 'command-output') {
+    sourcePath = join(packetRoot, 'raw', 'captures', 'command.txt');
+    await mkdir(dirname(sourcePath), { recursive: true });
+    await cp(new URL('command-output.txt', import.meta.url), sourcePath);
+    source = {
+      ...sourceBase,
+      kind: 'command-output',
+      argv: ['example', '--read-only'],
+      cwd: sourceRoot,
+      exitStatus: 0,
+      outputPath: 'raw/captures/command.txt',
+      outputDigest: await hashFile(sourcePath),
+      environmentNames: ['PATH'],
+    };
+    locator = {
+      kind: 'command-output',
+      artifactPath: source.outputPath,
+      lineStart: 1,
+      lineEnd: 1,
+      commandDigest: hashCanonicalJson(source.argv),
+    };
+  } else if (sourceKind === 'connected-resource') {
+    sourcePath = join(packetRoot, 'raw', 'captures', 'connected.json');
+    await mkdir(dirname(sourcePath), { recursive: true });
+    await cp(new URL('connected-resource.json', import.meta.url), sourcePath);
+    source = {
+      ...sourceBase,
+      kind: 'connected-resource',
+      authority: 'provider-enforced',
+      system: 'fixture',
+      resourceId: 'resource-1',
+      resourceVersion: 'v1',
+      capturePath: 'raw/captures/connected.json',
+      captureDigest: await hashFile(sourcePath),
+    };
+    locator = {
+      kind: 'connected-resource',
+      system: source.system,
+      resourceId: source.resourceId,
+      resourceVersion: source.resourceVersion,
+      fieldOrSection: 'finding',
+      retrievedAt: source.observedAt,
+    };
+  } else {
+    source = {
+      ...sourceBase,
+      kind: 'file',
+      path: sourcePath,
+      contentHash: await hashFile(sourcePath),
+    };
+    locator = {
+      kind: 'file',
+      path: sourcePath,
+      lineStart: 1,
+      lineEnd: 1,
+    };
+  }
   const claimStatus = achievedProfile === 'quick' ? 'supported' : 'verified';
   const ledger = {
     kind: 'recon.claim-ledger',
@@ -84,12 +175,7 @@ export async function createPacketFixture({
       {
         id: 'evidence-1',
         sourceId: 'source-1',
-        locator: {
-          kind: 'file',
-          path: sourcePath,
-          lineStart: 1,
-          lineEnd: 1,
-        },
+        locator,
         displayExcerpt: 'alpha evidence',
         observedAt: '2026-08-31T00:00:00.000Z',
         contentHash: hashCanonicalJson('alpha evidence'),
@@ -340,12 +426,13 @@ export async function createPacketFixture({
     'redundant-verification',
     'contradiction-resolution',
   ];
-  const stageModes =
-    achievedProfile === 'quick'
-      ? quickStages
-      : achievedProfile === 'thorough'
-        ? thoroughStages
-        : standardStages;
+  const stagesByProfile = {
+    quick: quickStages,
+    standard: standardStages,
+    thorough: thoroughStages,
+  };
+  const stageModes = stagesByProfile[requestedProfile];
+  const completedModes = new Set(stagesByProfile[achievedProfile] ?? []);
   const stageLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
   const approvalEnvelope = {
@@ -359,8 +446,8 @@ export async function createPacketFixture({
     authority: 'contract-enforced',
     deadlineSeconds: 60,
     retryLimit: 0,
-    concurrency: achievedProfile === 'thorough' ? 4 : 2,
-    laneCap: achievedProfile === 'thorough' ? 20 : 10,
+    concurrency: requestedProfile === 'thorough' ? 4 : 2,
+    laneCap: requestedProfile === 'thorough' ? 20 : 10,
     waves: stageModes.map((mode) => ({
       id: `wave-${mode}`,
       mode,
@@ -373,6 +460,21 @@ export async function createPacketFixture({
   for (const [index, mode] of stageModes.entries()) {
     const stageId = `stage-${index + 1}`;
     const laneId = stageLaneId(mode);
+    if (!completedModes.has(mode)) {
+      const stageStatus = mode === failedStageMode ? 'failed' : 'omitted';
+      stageRows.push({
+        kind: 'recon.stage-result',
+        schemaVersion: 1,
+        id: stageId,
+        mode,
+        laneId,
+        status: stageStatus,
+        artifactIds: [],
+        dispatchReceiptIds: [],
+        message: `${mode} was ${stageStatus} before a complete artifact was accepted.`,
+      });
+      continue;
+    }
     let artifactId;
     if (mode === 'semantic-verification') artifactId = 'review-semantic';
     else if (mode === 'adversarial') artifactId = 'review-adversarial';
@@ -461,6 +563,17 @@ export async function createPacketFixture({
       dispatchReceiptIds,
     });
   }
+  const incompleteStageGaps = stageRows
+    .filter((stage) => stage.status !== 'complete')
+    .map((stage, index) => ({
+      id: `gap-stage-${index + 1}`,
+      code: stage.status === 'failed' ? 'PASS_FAILED' : 'PASS_OMITTED',
+      message: `${stage.mode} was ${stage.status}; no complete result was published.`,
+      material: true,
+      sourceIds: [],
+      claimIds: [],
+      coverageFindingIds: [],
+    }));
   const manifest = {
     kind: 'recon.packet-manifest',
     schemaVersion: 1,
@@ -498,6 +611,7 @@ export async function createPacketFixture({
         claimIds: [],
         coverageFindingIds: [],
       },
+      ...incompleteStageGaps,
     ],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
@@ -506,6 +620,7 @@ export async function createPacketFixture({
   return {
     tempRoot,
     packetRoot,
+    sourceRoot,
     sourcePath,
     manifestPath,
     claimsPath,

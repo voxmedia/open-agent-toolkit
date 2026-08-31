@@ -696,10 +696,12 @@ for (const sourceKind of [
 
 test('valid lower-assurance packet publishes as an honest partial', async () => {
   const packet = await makePacket({ profile: 'standard', status: 'partial' });
-  for (const stage of packet.manifest.stages.slice(4)) {
+  const omittedStages = packet.manifest.stages.slice(4);
+  for (const stage of omittedStages) {
     stage.status = 'omitted';
     stage.artifactIds = [];
     stage.dispatchReceiptIds = [];
+    stage.message = `${stage.mode} was omitted after the quick profile completed.`;
   }
   packet.manifest.artifacts = packet.manifest.artifacts.filter(
     (artifact) => !artifact.path.startsWith('reviews/'),
@@ -713,12 +715,14 @@ test('valid lower-assurance packet publishes as an honest partial', async () => 
     from: 'provisional',
     to: 'supported',
   };
-  packet.manifest.gaps.push({
-    id: 'gap-1',
-    code: 'PASS_OMITTED',
-    message: 'Independent review did not complete.',
-    material: true,
-  });
+  packet.manifest.gaps.push(
+    ...omittedStages.map((stage, index) => ({
+      id: `gap-${index + 1}`,
+      code: 'PASS_OMITTED',
+      message: `${stage.mode} was omitted after the quick profile completed.`,
+      material: true,
+    })),
+  );
   await persist(packet);
   const result = await validatePacket(packet.packetRoot);
   assert.equal(result.valid, true, JSON.stringify(result, null, 2));

@@ -140,6 +140,63 @@ test('approval and receipt selection require every canonical execution axis', as
   }
 });
 
+test('declared-complete stages reject every receipt selection drift under complete and partial outcomes', async () => {
+  const selectionAxes = [
+    'provider',
+    'model',
+    'effort',
+    'reasoningMode',
+    'route',
+    'role',
+    'serviceTier',
+  ];
+  for (const status of ['complete', 'partial']) {
+    for (const receiptState of ['accepted', 'completed']) {
+      for (const axis of selectionAxes) {
+        const packet = await createPacketFixture({ profile: 'quick', status });
+        roots.push(packet.tempRoot);
+        if (status === 'partial') {
+          packet.manifest.run.achievedProfile = null;
+          packet.manifest.gaps.push({
+            id: `gap-${receiptState}-${axis}`,
+            code: 'PASS_FAILED',
+            message:
+              'A declared-complete stage retained invalid receipt evidence.',
+            material: true,
+            sourceIds: [],
+            claimIds: [],
+            coverageFindingIds: [],
+          });
+        }
+        const reference = packet.manifest.artifacts.find(
+          (item) =>
+            item.path.startsWith('raw/dispatch/') &&
+            item.path.endsWith(`-${receiptState}.json`),
+        );
+        const receipt = await readJson(join(packet.packetRoot, reference.path));
+        receipt.selection[axis] = `${receipt.selection[axis]}-drift`;
+        await replaceArtifact(packet, reference.path, receipt);
+
+        const validation = await validatePacket(packet.packetRoot);
+        assert.ok(
+          validation.errors.some(
+            (error) => error.code === 'INCOMPLETE_DECLARED_STAGE',
+          ),
+          `${status}/${receiptState}/${axis} lacked structural rejection: ${JSON.stringify(validation, null, 2)}`,
+        );
+        if (status === 'partial') {
+          assert.ok(
+            validation.errors.some(
+              (error) => error.code === 'PROFILE_ASSURANCE_EXCEEDED',
+            ),
+            `${status}/${receiptState}/${axis} retained supported assurance without quick`,
+          );
+        }
+      }
+    }
+  }
+});
+
 test('review dispositions bind exact claim-bearing typed immutable briefs', async () => {
   const packet = await fixture();
   const briefPath = join(packet.packetRoot, 'reviews/briefs/verify.json');

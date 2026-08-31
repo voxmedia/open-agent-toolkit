@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { lstat, readFile, realpath, rm } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -52,6 +52,12 @@ function packetPath(packetRoot, path) {
   if (typeof path !== 'string' || path.length === 0) return null;
   const candidate = resolve(packetRoot, path);
   return isContainedPath(packetRoot, candidate) ? candidate : null;
+}
+
+async function retainFilesystemIdentity(identities, path) {
+  const identity = await assertCanonicalRoot(path);
+  identities.set(identity.path, identity);
+  return identity;
 }
 
 async function readJson(path, code, errors) {
@@ -271,6 +277,7 @@ async function reopenEvidence(
   source,
   evidence,
   errors,
+  filesystemIdentities,
   allowIneligibleAudit = false,
 ) {
   if (source?.available !== true || source?.validationState !== 'pinned') {
@@ -326,6 +333,7 @@ async function reopenEvidence(
   let path;
   try {
     if (source.kind === 'repository') {
+      await retainFilesystemIdentity(filesystemIdentities, source.root);
       path = resolve(source.root, locator.path);
       if (!isContainedPath(resolve(source.root), path)) {
         errors.push(
@@ -338,6 +346,7 @@ async function reopenEvidence(
         return false;
       }
       await assertSafeExistingPath(resolve(source.root), path);
+      await retainFilesystemIdentity(filesystemIdentities, path);
       if (locator.revision !== source.revision) {
         errors.push(
           issue(
@@ -362,17 +371,7 @@ async function reopenEvidence(
         return false;
       }
       path = resolve(source.path);
-      if ((await realpath(path)) !== path) {
-        const error = new Error('File source path is not canonical');
-        error.code = 'SYMLINK_ESCAPE';
-        throw error;
-      }
-      const stat = await lstat(path);
-      if (stat.isSymbolicLink()) {
-        const error = new Error('File source is a symlink');
-        error.code = 'SYMLINK_ESCAPE';
-        throw error;
-      }
+      await retainFilesystemIdentity(filesystemIdentities, path);
       expectedDigest = source.contentHash;
       content = await readFile(path, 'utf8');
     } else if (source.kind === 'url') {
@@ -412,6 +411,7 @@ async function reopenEvidence(
       const capturePath = source.capturePath ?? validator?.capturePath;
       path = packetPath(packetRoot, capturePath);
       if (path) await assertSafeExistingPath(packetRoot, path);
+      if (path) await retainFilesystemIdentity(filesystemIdentities, path);
       expectedDigest = source.captureDigest ?? validator?.captureDigest;
       content = await readFile(path, 'utf8');
     } else if (source.kind === 'command-output') {
@@ -437,6 +437,7 @@ async function reopenEvidence(
       }
       path = packetPath(packetRoot, source.outputPath);
       if (path) await assertSafeExistingPath(packetRoot, path);
+      if (path) await retainFilesystemIdentity(filesystemIdentities, path);
       expectedDigest = source.outputDigest;
       content = await readFile(path, 'utf8');
     } else if (source.kind === 'connected-resource') {
@@ -491,6 +492,7 @@ async function reopenEvidence(
       }
       path = packetPath(packetRoot, source.capturePath);
       if (path) await assertSafeExistingPath(packetRoot, path);
+      if (path) await retainFilesystemIdentity(filesystemIdentities, path);
       expectedDigest = source.captureDigest;
       content = await readFile(path, 'utf8');
     }
@@ -749,15 +751,45 @@ function validateStageTopology(
       continue;
     }
     stageByLane.set(stage.laneId, stage);
-    if (
-      stageArtifactIsComplete(
-        stage,
-        artifactsById,
-        runId,
-        approvalFingerprint,
-        manifest.execution?.approvalEnvelope,
-      )
-    ) {
+    const artifactIsComplete = stageArtifactIsComplete(
+      stage,
+      artifactsById,
+      runId,
+      approvalFingerprint,
+      manifest.execution?.approvalEnvelope,
+    );
+    if (stage.status === 'complete' && !artifactIsComplete) {
+      errors.push(
+        issue(
+          'INCOMPLETE_DECLARED_STAGE',
+          `Stage ${stage.id} is declared complete without its exact artifact and receipt contract`,
+          stage.id,
+        ),
+      );
+    }
+    if (stage.status !== 'complete') {
+      const expectedGapCode =
+        stage.status === 'failed' ? 'PASS_FAILED' : 'PASS_OMITTED';
+      const hasOutcomeEvidence =
+        typeof stage.message === 'string' &&
+        stage.message.length > 0 &&
+        (manifest.gaps ?? []).some(
+          (gap) =>
+            gap.code === expectedGapCode &&
+            gap.material === true &&
+            gap.message?.includes(stage.mode),
+        );
+      if (!hasOutcomeEvidence) {
+        errors.push(
+          issue(
+            'MISSING_STAGE_OUTCOME_EVIDENCE',
+            `Stage ${stage.id} lacks material ${expectedGapCode} diagnostics`,
+            stage.id,
+          ),
+        );
+      }
+    }
+    if (artifactIsComplete) {
       const ids = completeArtifactIdsByMode.get(stage.mode) ?? [];
       ids.push(stage.artifactIds[0]);
       completeArtifactIdsByMode.set(stage.mode, ids);
@@ -770,6 +802,17 @@ function validateStageTopology(
           'MISSING_APPROVED_LANE_STAGE',
           `Approved required lane ${lane.laneId} has no terminal stage`,
           `lane:${lane.laneId}`,
+        ),
+      );
+    }
+  }
+  for (const mode of requiredStages[manifest.run.requestedProfile] ?? []) {
+    if (![...stageByLane.values()].some((stage) => stage.mode === mode)) {
+      errors.push(
+        issue(
+          'MISSING_REQUESTED_STAGE_OUTCOME',
+          `Requested ${manifest.run.requestedProfile} profile lacks an explicit ${mode} outcome`,
+          `stage:${mode}`,
         ),
       );
     }
@@ -1429,6 +1472,18 @@ function validateAssurance(validatedRun, errors) {
     (ledger.evidence ?? []).map((item) => [item.id, item]),
   );
   for (const claim of ledger.claims ?? []) {
+    if (
+      (claim.status === 'supported' || claim.status === 'verified') &&
+      achievedProfile === null
+    ) {
+      errors.push(
+        issue(
+          'PROFILE_ASSURANCE_EXCEEDED',
+          'Supported assurance requires the quick profile to be achieved',
+          claim.id,
+        ),
+      );
+    }
     if (claim.status === 'verified' && achievedProfile === 'quick') {
       errors.push(
         issue(
@@ -1692,9 +1747,11 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
   const packetRoot = resolve(packetDirectory);
   const errors = [];
   const warnings = [];
+  const filesystemIdentities = new Map();
   let packetRootIdentity = null;
   try {
     packetRootIdentity = await assertCanonicalRoot(packetRoot);
+    filesystemIdentities.set(packetRootIdentity.path, packetRootIdentity);
   } catch (error) {
     errors.push(
       issue(
@@ -1721,6 +1778,16 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
 
   if (manifest) errors.push(...validateArtifactShape(manifest).errors);
   if (ledger) errors.push(...validateArtifactShape(ledger).errors);
+
+  if (manifest && manifest.request?.outputPath !== packetRoot) {
+    errors.push(
+      issue(
+        'OUTPUT_ROOT_MISMATCH',
+        'Declared output path must equal the canonical packet root',
+        '$.request.outputPath',
+      ),
+    );
+  }
 
   if (manifest && ledger && manifest.run?.id !== ledger.runId) {
     errors.push(issue('RUN_ID_MISMATCH', 'Manifest and ledger run IDs differ'));
@@ -1807,6 +1874,7 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
           source,
           evidence,
           errors,
+          filesystemIdentities,
           Boolean(ineligibleGap),
         )
       ) {
@@ -1854,15 +1922,15 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
       reconciliationRequired,
       errors,
     );
-    if (packetRootIdentity) {
+    for (const identity of filesystemIdentities.values()) {
       try {
-        await assertUnchangedRoot(packetRootIdentity);
+        await assertUnchangedRoot(identity);
       } catch {
         errors.push(
           issue(
             'ROOT_IDENTITY_CHANGED',
-            'Packet root identity changed during validation',
-            packetRoot,
+            'Filesystem identity changed during validation',
+            identity.path,
           ),
         );
       }
@@ -1876,7 +1944,7 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
     ) {
       validatedRun = createValidatedRun({
         packetRoot,
-        packetRootIdentity,
+        filesystemIdentities,
         manifest,
         ledger,
         artifactsById,
