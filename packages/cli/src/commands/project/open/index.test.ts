@@ -15,12 +15,13 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import { defaultGitRunner } from '@commands/project/sync/git';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   buildSyncTarget,
   createSyncedProject,
   pushSynced as pushSyncedReal,
 } from '@commands/project/sync/ref-sync';
+import { generateStateDashboard } from '@commands/state/generate';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
@@ -72,6 +73,18 @@ function createHarness(options: HarnessOptions): {
   const guardSyncedTerminalTarget = vi.fn(async () => {
     if (options.terminalError) throw options.terminalError;
   });
+  const gitRunner = {
+    run: vi.fn(async (args: string[]) =>
+      args[0] === 'ls-remote' &&
+      args.some((arg) => arg.startsWith('refs/oat/completed/'))
+        ? { code: 2, stdout: '', stderr: '' }
+        : {
+            code: 1,
+            stdout: '',
+            stderr: `Unsupported test Git command: ${args.join(' ')}`,
+          },
+    ),
+  } satisfies GitRunner;
 
   const command = createProjectOpenCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -89,6 +102,9 @@ function createHarness(options: HarnessOptions): {
     pushSynced,
     pullSynced,
     commitRecordChange,
+    gitRunner,
+    generateStateDashboard: async ({ repoRoot }) =>
+      generateStateDashboard({ repoRoot, gitRunner }),
     ...(options.resolveError
       ? {
           resolveSyncedTarget: vi.fn(async () => {
