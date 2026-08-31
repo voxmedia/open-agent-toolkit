@@ -98,6 +98,26 @@ describe('validateConfiguredGateCommand', () => {
     });
   });
 
+  it.each(["oat --json 'g\\ate' review", "oat '--j\\son' gate review"])(
+    'preserves single-quoted backslashes in command tokens: %s',
+    (command) => {
+      expect(validateConfiguredGateCommand(command)).toEqual({
+        kind: 'not-applicable',
+      });
+    },
+  );
+
+  it('preserves a literal backslash in a single-quoted prompt', () => {
+    expect(
+      validateConfiguredGateCommand(
+        "oat --json gate review --prompt 'keep\\this-literal'",
+      ),
+    ).toEqual({
+      kind: 'valid',
+      command: 'gate-review',
+    });
+  });
+
   it.each([
     "oat '' gate review",
     'oat "" gate review',

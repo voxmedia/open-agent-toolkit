@@ -16,6 +16,15 @@ function tokenizeCommand(command: string): string[] | null {
   for (let index = 0; index < command.length; index += 1) {
     const character = command[index]!;
 
+    if (quote === "'") {
+      if (character === "'") {
+        quote = null;
+      } else {
+        token += character;
+      }
+      continue;
+    }
+
     if (escaped) {
       if (character === '\n') {
         return null;
@@ -36,9 +45,8 @@ function tokenizeCommand(command: string): string[] | null {
         quote = null;
       } else {
         if (
-          quote !== "'" &&
-          (character === '`' ||
-            (character === '$' && command[index + 1] === '('))
+          character === '`' ||
+          (character === '$' && command[index + 1] === '(')
         ) {
           return null;
         }
