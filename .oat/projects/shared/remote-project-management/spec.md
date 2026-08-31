@@ -531,32 +531,32 @@ simulating a distributed transaction.
 
 | ID   | Description                                                         | Priority | Verification                                            | Planned Tasks |
 | ---- | ------------------------------------------------------------------- | -------- | ------------------------------------------------------- | ------------- |
-| FR1  | Support coexisting GitHub, Linear, and Jira bindings                | P0       | integration + e2e: three-provider conformance           | TBD           |
-| FR2  | Preserve complete local-first operation without remote access       | P0       | e2e: offline local PJM workflow                         | TBD           |
-| FR3  | Govern bindings through explicit purposes                           | P0       | unit + integration: binding-purpose policy matrix       | TBD           |
-| FR4  | Expose deliberate remote lifecycle operations                       | P0       | integration: lifecycle operation contract               | TBD           |
-| FR5  | Retain durable binding identity and synchronization evidence        | P0       | unit + integration: binding persistence and recovery    | TBD           |
-| FR6  | Limit the shared planning-field contract                            | P0       | unit: normalized-field contract                         | TBD           |
-| FR7  | Enforce description modes and fail-closed precedence                | P0       | unit + integration: description-policy matrix           | TBD           |
-| FR8  | Enforce four mutation-authority modes                               | P0       | unit + integration: mutation-authority matrix           | TBD           |
-| FR9  | Perform preview-first three-way reconciliation                      | P0       | unit + integration: reconciliation classification suite | TBD           |
-| FR10 | Treat each binding as the atomic outcome unit                       | P0       | integration: reviewed batch and partial failure         | TBD           |
-| FR11 | Refresh, write once, verify, and stop after uncertainty             | P0       | integration: guarded mutation and race fixtures         | TBD           |
-| FR12 | Retain the bounded complete core issue                              | P0       | integration: sync-down snapshot contract                | TBD           |
-| FR13 | Preserve evidence across remote lifecycle anomalies                 | P0       | integration: lifecycle anomaly suite                    | TBD           |
-| FR14 | Persist create intent and reconcile uncertain creates               | P0       | integration: duplicate-create recovery                  | TBD           |
-| FR15 | Close out and annotate eligible bindings independently              | P0       | e2e: multi-binding project completion                   | TBD           |
-| FR16 | Select capable configured transports with guarded fallback          | P0       | integration: transport capability and fallback matrix   | TBD           |
-| FR17 | Support GitHub-to-Linear, GitHub-to-Jira, and GitHub-only workflows | P0       | e2e: representative provider workflows                  | TBD           |
-| FR18 | Keep detailed OAT artifacts local and discussion informational      | P1       | integration + manual: information-boundary review       | TBD           |
-| NFR1 | Prevent credentials from entering durable or displayed evidence     | P0       | integration + security scan: credential leakage         | TBD           |
-| NFR2 | Fail closed on ambiguous or unsafe mutation conditions              | P0       | integration: safety-failure matrix                      | TBD           |
-| NFR3 | Recover safely across ephemeral sessions and interruptions          | P0       | integration: restart and uncertain-operation recovery   | TBD           |
-| NFR4 | Keep local PJM useful while offline                                 | P0       | e2e: disconnected operation                             | TBD           |
-| NFR5 | Preserve provider-specific semantics and capabilities               | P0       | integration: provider extension conformance             | TBD           |
-| NFR6 | Clearly expose previews, freshness, conflicts, and outcomes         | P1       | manual + e2e: preview and result UX                     | TBD           |
-| NFR7 | Preserve compatibility with existing local PJM                      | P0       | integration: local regression suite                     | TBD           |
-| NFR8 | Keep transports replaceable behind semantic capabilities            | P1       | integration: multi-transport semantic conformance       | TBD           |
+| FR1  | Support coexisting GitHub, Linear, and Jira bindings                | P0       | integration + e2e: three-provider conformance           | Plan pending  |
+| FR2  | Preserve complete local-first operation without remote access       | P0       | e2e: offline local PJM workflow                         | Plan pending  |
+| FR3  | Govern bindings through explicit purposes                           | P0       | unit + integration: binding-purpose policy matrix       | Plan pending  |
+| FR4  | Expose deliberate remote lifecycle operations                       | P0       | integration: lifecycle operation contract               | Plan pending  |
+| FR5  | Retain durable binding identity and synchronization evidence        | P0       | unit + integration: binding persistence and recovery    | Plan pending  |
+| FR6  | Limit the shared planning-field contract                            | P0       | unit: normalized-field contract                         | Plan pending  |
+| FR7  | Enforce description modes and fail-closed precedence                | P0       | unit + integration: description-policy matrix           | Plan pending  |
+| FR8  | Enforce four mutation-authority modes                               | P0       | unit + integration: mutation-authority matrix           | Plan pending  |
+| FR9  | Perform preview-first three-way reconciliation                      | P0       | unit + integration: reconciliation classification suite | Plan pending  |
+| FR10 | Treat each binding as the atomic outcome unit                       | P0       | integration: reviewed batch and partial failure         | Plan pending  |
+| FR11 | Refresh, write once, verify, and stop after uncertainty             | P0       | integration: guarded mutation and race fixtures         | Plan pending  |
+| FR12 | Retain the bounded complete core issue                              | P0       | integration: sync-down snapshot contract                | Plan pending  |
+| FR13 | Preserve evidence across remote lifecycle anomalies                 | P0       | integration: lifecycle anomaly suite                    | Plan pending  |
+| FR14 | Persist create intent and reconcile uncertain creates               | P0       | integration: duplicate-create recovery                  | Plan pending  |
+| FR15 | Close out and annotate eligible bindings independently              | P0       | e2e: multi-binding project completion                   | Plan pending  |
+| FR16 | Select capable configured transports with guarded fallback          | P0       | integration: transport capability and fallback matrix   | Plan pending  |
+| FR17 | Support GitHub-to-Linear, GitHub-to-Jira, and GitHub-only workflows | P0       | e2e: representative provider workflows                  | Plan pending  |
+| FR18 | Keep detailed OAT artifacts local and discussion informational      | P1       | integration + manual: information-boundary review       | Plan pending  |
+| NFR1 | Prevent credentials from entering durable or displayed evidence     | P0       | integration + security scan: credential leakage         | Plan pending  |
+| NFR2 | Fail closed on ambiguous or unsafe mutation conditions              | P0       | integration: safety-failure matrix                      | Plan pending  |
+| NFR3 | Recover safely across ephemeral sessions and interruptions          | P0       | integration: restart and uncertain-operation recovery   | Plan pending  |
+| NFR4 | Keep local PJM useful while offline                                 | P0       | e2e: disconnected operation                             | Plan pending  |
+| NFR5 | Preserve provider-specific semantics and capabilities               | P0       | integration: provider extension conformance             | Plan pending  |
+| NFR6 | Clearly expose previews, freshness, conflicts, and outcomes         | P1       | manual + e2e: preview and result UX                     | Plan pending  |
+| NFR7 | Preserve compatibility with existing local PJM                      | P0       | integration: local regression suite                     | Plan pending  |
+| NFR8 | Keep transports replaceable behind semantic capabilities            | P1       | integration: multi-transport semantic conformance       | Plan pending  |
 
 ## Open Questions
 
