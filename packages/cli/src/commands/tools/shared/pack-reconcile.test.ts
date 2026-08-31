@@ -21,6 +21,9 @@ function inventory(
       pack,
       scope,
       enabled,
+      direct: enabled,
+      requiredBy: [],
+      state: enabled ? 'direct' : 'absent',
       source: enabled ? 'declared' : 'none',
       configPath: '/scope/.oat/config.json',
       diagnostics: [],
@@ -169,5 +172,92 @@ describe('planPackReconcile', () => {
     expect(serializePackReconcilePlan(planPackReconcile(input))).toBe(
       serializePackReconcilePlan(planPackReconcile(input)),
     );
+  });
+
+  it('plans only selected dependency assets and persists the lease separately', () => {
+    const scoped = inventory('workflows', 'user');
+    const plan = planPackReconcile({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot: '/scope',
+      assetsRoot: '/assets',
+      action: 'install',
+      inventory: scoped,
+      assetIds: ['skill:oat-project-new'],
+      dependency: { requiredBy: 'research', lease: 'acquire' },
+    });
+
+    expect(plan.operations).toEqual([
+      expect.objectContaining({
+        kind: 'copy-dir',
+        assetId: 'skill:oat-project-new',
+      }),
+      {
+        kind: 'write-lease',
+        pack: 'workflows',
+        scope: 'user',
+        requiredBy: 'research',
+        enabled: true,
+      },
+    ]);
+    expect(plan.selectedAssetIds).toEqual(['skill:oat-project-new']);
+    expect(plan.expectedCompleteness).toBeNull();
+    expect(plan.expectedAssetStatus).toBe('current');
+  });
+
+  it('retains dependency assets until direct intent and every other lease are absent', () => {
+    const scoped = inventory(
+      'workflows',
+      'user',
+      { 'skill:oat-project-new': 'current' },
+      false,
+    );
+    scoped.intent = {
+      ...scoped.intent,
+      enabled: true,
+      requiredBy: ['brainstorm', 'research'],
+      state: 'transitive',
+      source: 'declared',
+    };
+    const retained = planPackReconcile({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot: '/scope',
+      assetsRoot: '/assets',
+      action: 'remove',
+      inventory: scoped,
+      assetIds: ['skill:oat-project-new'],
+      dependency: { requiredBy: 'research', lease: 'release' },
+    });
+    expect(retained.operations).toEqual([
+      {
+        kind: 'write-lease',
+        pack: 'workflows',
+        scope: 'user',
+        requiredBy: 'research',
+        enabled: false,
+      },
+    ]);
+    expect(retained.expectedAssetStatus).toBe('current');
+
+    scoped.intent.requiredBy = ['research'];
+    const removed = planPackReconcile({
+      pack: 'workflows',
+      scope: 'user',
+      scopeRoot: '/scope',
+      assetsRoot: '/assets',
+      action: 'remove',
+      inventory: scoped,
+      assetIds: ['skill:oat-project-new'],
+      dependency: { requiredBy: 'research', lease: 'release' },
+    });
+    expect(removed.operations).toEqual([
+      expect.objectContaining({
+        kind: 'remove-dir',
+        assetId: 'skill:oat-project-new',
+      }),
+      expect.objectContaining({ kind: 'write-lease', enabled: false }),
+    ]);
+    expect(removed.expectedAssetStatus).toBe('missing');
   });
 });

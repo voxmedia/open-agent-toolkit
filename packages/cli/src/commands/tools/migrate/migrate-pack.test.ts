@@ -365,6 +365,10 @@ describe('executeMigrationDestination', () => {
       migrationPreview(),
       '/user',
       {
+        acquireDependencies: async () => {
+          events.push('dependency:acquire');
+          return [];
+        },
         applyDependencies: destinationDependencies({ events }),
         sync: async ({ scope, canonicalPaths }) => {
           events.push(`sync:${scope}:${canonicalPaths.join(',')}`);
@@ -377,6 +381,7 @@ describe('executeMigrationDestination', () => {
       completeness: 'complete',
       intent: { enabled: true, source: 'declared' },
     });
+    expect(events[0]).toBe('dependency:acquire');
     expect(events.slice(-4, -1)).toEqual(['inventory', 'intent', 'inventory']);
     expect(events.at(-1)).toMatch(/^sync:user:/);
     expect(events).not.toContain('source');
@@ -555,7 +560,13 @@ describe('completeMigrationSourceRemoval', () => {
 
   it('removes the source, clears intent after verification, then syncs exact canonical paths', async () => {
     const events: string[] = [];
-    const dependencies = sourceRemovalDependencies({ events });
+    const dependencies = {
+      ...sourceRemovalDependencies({ events }),
+      releaseDependencies: async () => {
+        events.push('dependency:release');
+        return [];
+      },
+    };
     const result = await completeMigrationSourceRemoval(
       verifiedDestination(),
       {
@@ -575,6 +586,10 @@ describe('completeMigrationSourceRemoval', () => {
     const syncEvent = events.find((event) => event.startsWith('sync:'));
     expect(intentIndex).toBeGreaterThan(lastRemovalIndex);
     expect(events.indexOf(syncEvent!)).toBeGreaterThan(intentIndex);
+    expect(events.indexOf('dependency:release')).toBeGreaterThan(intentIndex);
+    expect(events.indexOf(syncEvent!)).toBeGreaterThan(
+      events.indexOf('dependency:release'),
+    );
     expect(syncEvent).toContain('sync:project:.agents/skills/oat-idea-new');
     expect(syncEvent).not.toContain('.oat/templates');
     expect(result.sourceInventory).toMatchObject({

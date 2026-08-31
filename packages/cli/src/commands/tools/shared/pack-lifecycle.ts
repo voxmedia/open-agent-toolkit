@@ -11,15 +11,26 @@ import {
   preflightPackReconcilePlans,
 } from './apply-pack-reconcile';
 import {
+  dependencyRetainedAssetIds,
+  expandPackLifecycleRequests,
+  type ExpandedPackLifecycleRequest,
+  type PackDefinitionResolver,
+} from './pack-dependencies';
+import {
   inventoryScopedPack,
   type ScopedPackInventory,
 } from './pack-inventory';
 import {
   planPackReconcile,
+  resolveSharedOwnerRetentions,
   type PackReconcileAction,
   type PackReconcilePlan,
 } from './pack-reconcile';
-import { writeScopedPackIntent } from './scoped-pack-intent';
+import {
+  hasScopedPackOwnershipEvidence,
+  writeScopedPackIntent,
+  writeScopedPackLease,
+} from './scoped-pack-intent';
 import type { PackName } from './types';
 
 export interface PackLifecycleRequest {
@@ -31,7 +42,7 @@ export interface PackLifecycleRequest {
 }
 
 export interface PackLifecycleResult {
-  request: PackLifecycleRequest;
+  request: ExpandedPackLifecycleRequest;
   before: ScopedPackInventory;
   plan: PackReconcilePlan;
   apply: ApplyPackReconcileResult | null;
@@ -42,6 +53,8 @@ export interface PackLifecycleDependencies {
   plan?: typeof planPackReconcile;
   preflight?: typeof preflightPackReconcilePlans;
   apply?: typeof applyPackReconcilePlan;
+  getDefinition?: PackDefinitionResolver;
+  hasOwnershipEvidence?: typeof hasScopedPackOwnershipEvidence;
   applyDependencies?: Partial<ApplyPackReconcileDependencies>;
 }
 
@@ -76,15 +89,48 @@ export async function reconcilePackLifecycles(
   } = {},
 ): Promise<PackLifecycleResult[]> {
   const dependencies = options.dependencies ?? {};
+  const getDefinition = dependencies.getDefinition;
   const inventory = dependencies.inventory ?? inventoryScopedPack;
   const plan = dependencies.plan ?? planPackReconcile;
+  const expanded = expandPackLifecycleRequests(requests, getDefinition);
   const planned = await Promise.all(
-    requests.map(async (request) => {
+    expanded.map(async (request) => {
       const before = await inventory(request);
+      const retainedAssets =
+        request.action === 'remove'
+          ? await resolveSharedOwnerRetentions({
+              packs: [request.pack],
+              scope: request.scope,
+              scopeRoot: request.scopeRoot,
+              hasOwnershipEvidence: async (pack, scope, scopeRoot) =>
+                (
+                  dependencies.hasOwnershipEvidence ??
+                  hasScopedPackOwnershipEvidence
+                )({
+                  pack,
+                  scope,
+                  scopeRoot,
+                }),
+            })
+          : [];
+      const retainedConsumers = before.intent.requiredBy.filter(
+        (consumer) =>
+          request.dependency?.lease !== 'release' ||
+          consumer !== request.dependency.requiredBy,
+      );
       return {
         request,
         before,
-        plan: plan({ ...request, inventory: before }),
+        plan: plan({
+          ...request,
+          inventory: before,
+          retainedAssets,
+          retainedDependencyAssetIds: dependencyRetainedAssetIds(
+            request.pack,
+            retainedConsumers,
+            getDefinition,
+          ),
+        }),
         apply: null,
       } satisfies PackLifecycleResult;
     }),
@@ -116,6 +162,14 @@ export async function reconcilePackLifecycles(
             scopeRoot: request.scopeRoot,
             enabled: operation.enabled,
           }),
+        writeLease: async (operation) =>
+          writeScopedPackLease({
+            pack: operation.pack,
+            scope: operation.scope,
+            scopeRoot: request.scopeRoot,
+            requiredBy: operation.requiredBy,
+            enabled: operation.enabled,
+          }),
         inventory: async () => inventory(request),
       },
     );
@@ -131,5 +185,30 @@ export async function reconcilePackLifecycle(
     dependencies?: PackLifecycleDependencies;
   } = {},
 ): Promise<PackLifecycleResult> {
-  return (await reconcilePackLifecycles([request], options))[0]!;
+  const results = await reconcilePackLifecycles([request], options);
+  return (
+    results.find(
+      ({ request: candidate }) =>
+        candidate.pack === request.pack &&
+        candidate.scope === request.scope &&
+        candidate.scopeRoot === request.scopeRoot &&
+        candidate.action === request.action &&
+        !candidate.dependency,
+    ) ?? results[0]!
+  );
+}
+
+export async function reconcilePackDependencyLifecycles(
+  request: PackLifecycleRequest,
+  options: {
+    dryRun?: boolean;
+    dependencies?: PackLifecycleDependencies;
+  } = {},
+): Promise<PackLifecycleResult[]> {
+  const dependencyRequests = expandPackLifecycleRequests(
+    [request],
+    options.dependencies?.getDefinition,
+  ).filter(({ dependency }) => dependency !== undefined);
+  if (dependencyRequests.length === 0) return [];
+  return reconcilePackLifecycles(dependencyRequests, options);
 }

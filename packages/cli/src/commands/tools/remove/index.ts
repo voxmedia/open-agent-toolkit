@@ -12,6 +12,7 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
   hasScopedPackOwnershipEvidence,
@@ -59,6 +60,7 @@ const defaultDependencies: RemoveToolsDependencies = {
   },
   hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
     hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
+  reconcilePacks: reconcilePackLifecycles,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
@@ -130,7 +132,7 @@ export function createToolsRemoveCommand(
         dependencies,
       );
 
-      if (!dryRun && target.kind !== 'name') {
+      if (!dryRun && target.kind !== 'name' && !dependencies.reconcilePacks) {
         const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
         for (const scope of scopes) {
           const scopeRoot = await dependencies.resolveScopeRoot(

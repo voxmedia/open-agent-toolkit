@@ -2,10 +2,12 @@ import {
   applyPackReconcilePlan,
   type ApplyPackReconcileDependencies,
 } from '@commands/tools/shared/apply-pack-reconcile';
+import { canonicalPathsForPack } from '@commands/tools/shared/install-sync-context';
 import {
   hasScopedPackPlacementEvidence,
   type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
+import type { PackLifecycleResult } from '@commands/tools/shared/pack-lifecycle';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import {
   planPackReconcile,
@@ -66,6 +68,7 @@ export interface PackMigrationOutcome {
   sourceInventory?: ScopedPackInventory;
   recovery?: readonly string[];
   pendingSync?: MigrationPendingSync;
+  dependencyLifecycles?: readonly PackLifecycleResult[];
 }
 
 export interface PlanPackMigrationInput {
@@ -90,6 +93,7 @@ export interface ExecuteMigrationDestinationDependencies {
   apply?: typeof applyPackReconcilePlan;
   applyDependencies: ApplyPackReconcileDependencies;
   sync?: (input: MigrationSyncInput) => Promise<void>;
+  acquireDependencies?: () => Promise<PackLifecycleResult[]>;
 }
 
 export interface CompleteMigrationSourceRemovalInput {
@@ -104,7 +108,9 @@ export interface CompleteMigrationSourceRemovalDependencies {
   apply?: typeof applyPackReconcilePlan;
   applyDependencies: Omit<ApplyPackReconcileDependencies, 'inventory'>;
   resolveSourceRetentions?: () => Promise<PackSharedOwnerRetention[]>;
+  resolveRetainedDependencyAssetIds?: () => Promise<string[]>;
   sync?: (input: MigrationSyncInput) => Promise<void>;
+  releaseDependencies?: () => Promise<PackLifecycleResult[]>;
 }
 
 function assertInventory(
@@ -192,6 +198,7 @@ export function planPackMigration(
     operations: unfilteredDestinationPlan.operations.filter(
       (operation) =>
         operation.kind === 'write-intent' ||
+        operation.kind === 'write-lease' ||
         !conflictIds.has(operation.assetId),
     ),
     changedCanonicalPaths:
@@ -201,7 +208,9 @@ export function planPackMigration(
   };
   const additionIds = new Set(
     destinationPlan.operations.flatMap((operation) =>
-      operation.kind === 'write-intent' ? [] : [operation.assetId],
+      operation.kind === 'write-intent' || operation.kind === 'write-lease'
+        ? []
+        : [operation.assetId],
     ),
   );
   const additions = input.destinationInventory.assets
@@ -306,6 +315,8 @@ export async function executeMigrationDestination(
     );
   }
 
+  const dependencyLifecycles =
+    (await dependencies.acquireDependencies?.()) ?? [];
   const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
     preview.destinationPlan,
     destinationRoot,
@@ -329,12 +340,7 @@ export async function executeMigrationDestination(
     );
   }
 
-  const canonicalPaths = getPackDefinition(preview.pack)
-    .assets.filter(
-      ({ kind, scopes }) =>
-        scopes.includes(preview.to) && (kind === 'skill' || kind === 'agent'),
-    )
-    .map(({ destination }) => destination);
+  const canonicalPaths = canonicalPathsForPack(preview.pack);
   try {
     await dependencies.sync?.({
       scope: preview.to,
@@ -365,6 +371,7 @@ export async function executeMigrationDestination(
     preview,
     status: 'destination-verified',
     destinationInventory,
+    dependencyLifecycles,
   };
 }
 
@@ -486,6 +493,8 @@ export async function completeMigrationSourceRemoval(
   assertInventory(sourceBefore, preview.pack, preview.from, 'source');
   const sourceRetentions =
     (await dependencies.resolveSourceRetentions?.()) ?? [];
+  const retainedDependencyAssetIds =
+    (await dependencies.resolveRetainedDependencyAssetIds?.()) ?? [];
   const sourcePlan = (dependencies.plan ?? planPackReconcile)({
     pack: preview.pack,
     scope: preview.from,
@@ -494,6 +503,7 @@ export async function completeMigrationSourceRemoval(
     action: 'remove',
     inventory: sourceBefore,
     retainedAssets: sourceRetentions,
+    retainedDependencyAssetIds,
   });
 
   try {
@@ -506,24 +516,38 @@ export async function completeMigrationSourceRemoval(
         sync: undefined,
       },
     );
+    const dependencyLifecycles =
+      (await dependencies.releaseDependencies?.()) ?? [];
+    const removedCanonicalPaths = [
+      ...new Set([
+        ...sourcePlan.changedCanonicalPaths,
+        ...dependencyLifecycles.flatMap(
+          ({ plan }) => plan.changedCanonicalPaths,
+        ),
+      ]),
+    ];
     try {
       await dependencies.sync?.({
         scope: preview.from,
         action: 'remove',
-        canonicalPaths: sourcePlan.changedCanonicalPaths,
+        canonicalPaths: removedCanonicalPaths,
       });
     } catch (error) {
       const pendingSync = pendingSyncState(
         preview,
         preview.from,
         'remove',
-        sourcePlan.changedCanonicalPaths,
+        removedCanonicalPaths,
       );
       return {
         preview,
         status: 'source-sync-failed',
         destinationInventory: destination.destinationInventory,
         sourceInventory: applied.inventory,
+        dependencyLifecycles: [
+          ...(destination.dependencyLifecycles ?? []),
+          ...dependencyLifecycles,
+        ],
         pendingSync,
         recovery: [
           `Source provider sync failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -536,6 +560,10 @@ export async function completeMigrationSourceRemoval(
       status: 'migrated',
       destinationInventory: destination.destinationInventory,
       sourceInventory: applied.inventory,
+      dependencyLifecycles: [
+        ...(destination.dependencyLifecycles ?? []),
+        ...dependencyLifecycles,
+      ],
     };
   } catch (error) {
     let sourceInventory = sourceBefore;

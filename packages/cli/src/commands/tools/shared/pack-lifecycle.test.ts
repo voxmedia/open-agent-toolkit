@@ -24,6 +24,7 @@ import {
   readScopedPackIntent,
   writeScopedPackIntent,
 } from './scoped-pack-intent';
+import type { PackDefinition, PackName } from './types';
 
 const roots: string[] = [];
 
@@ -241,5 +242,80 @@ describe('production pack lifecycle', () => {
     await expect(readFile(join(outsideRoot, 'sentinel'), 'utf8')).resolves.toBe(
       'outside\n',
     );
+  });
+
+  it('reconciles selected dependency assets and leases idempotently across install and removal', async () => {
+    const scopeRoot = await temporaryRoot('oat-lifecycle-dependency-');
+    const assetsRoot = await resolveAssetsRoot();
+    const research: PackDefinition = {
+      ...getPackDefinition('research'),
+      dependencies: [
+        {
+          pack: 'utility',
+          scope: 'same',
+          assets: [
+            'skill:oat-dispatch-subagents',
+            'skill:subagent-orchestration',
+          ],
+        },
+      ],
+    };
+    const getDefinition = (pack: PackName) =>
+      pack === 'research' ? research : getPackDefinition(pack);
+    const dependencies = { getDefinition };
+    const request = {
+      pack: 'research' as const,
+      scope: 'user' as const,
+      scopeRoot,
+      assetsRoot,
+      action: 'install' as const,
+    };
+
+    const installed = await reconcilePackLifecycles([request], {
+      dependencies,
+    });
+    expect(installed.map(({ request: { pack } }) => pack)).toEqual([
+      'utility',
+      'research',
+    ]);
+    await expect(
+      readScopedPackIntent({ pack: 'utility', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({
+      direct: false,
+      requiredBy: ['research'],
+      state: 'transitive',
+    });
+    expect(
+      installed[0]?.apply?.inventory.assets
+        .filter(({ definition }) =>
+          [
+            'skill:oat-dispatch-subagents',
+            'skill:subagent-orchestration',
+          ].includes(definition.id),
+        )
+        .map(({ status }) => status),
+    ).toEqual(['current', 'current']);
+
+    const repeated = await reconcilePackLifecycles([request], {
+      dependencies,
+    });
+    expect(repeated.flatMap(({ plan }) => plan.operations)).toEqual([]);
+
+    const removed = await reconcilePackLifecycles(
+      [{ ...request, action: 'remove' }],
+      { dependencies },
+    );
+    expect(removed.map(({ request: { pack } }) => pack)).toEqual([
+      'research',
+      'utility',
+    ]);
+    await expect(
+      readScopedPackIntent({ pack: 'utility', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({
+      enabled: false,
+      direct: false,
+      requiredBy: [],
+      state: 'absent',
+    });
   });
 });

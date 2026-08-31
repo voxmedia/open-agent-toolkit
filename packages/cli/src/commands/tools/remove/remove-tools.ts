@@ -1,5 +1,10 @@
 import { join } from 'node:path';
 
+import { hasScopedPackPlacementEvidence } from '@commands/tools/shared/pack-inventory';
+import {
+  type PackLifecycleRequest,
+  type PackLifecycleResult,
+} from '@commands/tools/shared/pack-lifecycle';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -36,6 +41,10 @@ export interface RemoveToolsDependencies {
     scope: ConcreteScope,
     scopeRoot: string,
   ) => Promise<boolean>;
+  reconcilePacks?: (
+    requests: readonly PackLifecycleRequest[],
+    options?: { dryRun?: boolean },
+  ) => Promise<PackLifecycleResult[]>;
 }
 
 interface RemovedTool {
@@ -288,6 +297,7 @@ export async function removeTools(
   const removed: RemovedTool[] = [];
   const removedAssets: RemoveResult['removedAssets'] = [];
   const retainedOwnerData: RemoveResult['retainedOwnerData'] = [];
+  const packOutcomes: PackRemovalOutcome[] = [];
   const assetsRoot = await deps.resolveAssetsRoot();
 
   if (target.kind === 'name') {
@@ -310,7 +320,99 @@ export async function removeTools(
     };
   }
 
-  const packOutcomes: PackRemovalOutcome[] = [];
+  if (deps.reconcilePacks) {
+    const packs = selectedPacks(target);
+    const requests: PackLifecycleRequest[] = [];
+    const roots = new Map<ConcreteScope, string>();
+    for (const scope of scopes) {
+      const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
+      roots.set(scope, scopeRoot);
+      for (const pack of packs) {
+        const definition = PACK_MANIFEST.find(({ name }) => name === pack)!;
+        if (!definition.allowedScopes.includes(scope)) continue;
+        requests.push({
+          pack,
+          scope,
+          scopeRoot,
+          assetsRoot,
+          action: 'remove',
+        });
+      }
+    }
+    const lifecycle = await deps.reconcilePacks(requests, { dryRun });
+    for (const entry of lifecycle) {
+      for (const operation of entry.plan.operations) {
+        if (
+          operation.kind !== 'remove-dir' &&
+          operation.kind !== 'remove-file'
+        ) {
+          continue;
+        }
+        removedAssets.push({
+          path: operation.path,
+          scope: entry.request.scope,
+        });
+        const asset = entry.before.assets.find(
+          ({ definition }) => definition.id === operation.assetId,
+        )?.definition;
+        if (asset?.kind === 'skill' || asset?.kind === 'agent') {
+          removed.push({
+            name: asset.destination.split('/').at(-1)!.replace(/\.md$/, ''),
+            type: asset.kind,
+            scope: entry.request.scope,
+          });
+        }
+      }
+      retainedOwnerData.push(
+        ...entry.plan.retainedAssets.map(({ path }) => ({
+          path,
+          scope: entry.request.scope,
+          reason: 'retained shared owner data',
+        })),
+        ...entry.plan.retainedDependencyAssetIds.map((assetId) => ({
+          path:
+            entry.before.assets.find(
+              ({ definition }) => definition.id === assetId,
+            )?.path ?? assetId,
+          scope: entry.request.scope,
+          reason: 'retained dependency lease',
+        })),
+      );
+    }
+    for (const request of requests) {
+      const entry = lifecycle.find(
+        ({ request: candidate }) =>
+          !candidate.dependency &&
+          candidate.pack === request.pack &&
+          candidate.scope === request.scope,
+      );
+      packOutcomes.push({
+        pack: request.pack,
+        scope: request.scope,
+        removed: entry ? hasScopedPackPlacementEvidence(entry.before) : false,
+      });
+    }
+
+    if (target.kind === 'all') {
+      for (const scope of scopes) {
+        const scopeRoot = roots.get(scope)!;
+        const tools = await deps.scanTools({ scope, scopeRoot, assetsRoot });
+        for (const tool of tools.filter(({ pack }) => pack === 'custom')) {
+          await removeTool(tool, scopeRoot, dryRun, deps);
+          removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
+        }
+      }
+    }
+
+    return {
+      removed,
+      removedAssets,
+      retainedOwnerData,
+      packOutcomes,
+      notInstalled: [],
+    };
+  }
+
   const plans: ScopeRemovalPlan[] = [];
   for (const scope of scopes) {
     const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
