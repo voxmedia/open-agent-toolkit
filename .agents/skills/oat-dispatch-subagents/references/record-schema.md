@@ -69,6 +69,182 @@ retain the original role-based selection and fallback behavior. The legacy
 `explicit-downgrade` example above is valid only for an unconstrained request
 without task-class metadata or a declared class floor.
 
+## Approval-Bound Prepared Record
+
+Approval-bound records use `prepared_record_version: 1`. They extend the
+complete Record below: every baseline request, selection, route, payload,
+fallback, diagnostic, and invocation-evidence field remains required when it
+applies. Preparation fills all launch controls but performs no launch.
+
+```yaml
+prepared_record_version: 1
+operation: prepare
+dispatch_state: prepared
+run_id: recon-run-2026-07-12-001
+prepared_at: 2026-07-12T00:00:00Z
+waves:
+  - wave_id: gathering
+    conditional: false
+    task_class: intelligent-recon
+    model_class_floor: intelligent-recon
+    concurrency: 4
+    lane_cap: 6
+  - wave_id: contradiction-resolution
+    conditional: true
+    task_class: hard-reasoning
+    model_class_floor: hard-reasoning
+    concurrency: 1
+    lane_cap: 2
+run_maximum_floor: hard-reasoning
+pinned_target:
+  provider: codex
+  dispatch_context: nested-native
+  selected_route: native
+  role_selector: recon-worker
+  model_selector: exact-provider-model
+  model_selector_granularity: exact-native-model-choice
+  effort_selector: high
+  reasoning_mode_selector: null
+  service_tier_selector: standard
+approval_axes:
+  - prepared_record_version
+  - run_id
+  - prepared_at
+  - request_id
+  - caller
+  - objective
+  - action
+  - expected_output
+  - verification_evidence
+  - escalate_when
+  - provider
+  - dispatch_context
+  - dispatch_policy
+  - dispatch_ceiling
+  - selected_route
+  - selection_source
+  - candidates_considered
+  - selection_reason
+  - role_name
+  - role_class
+  - role_selector
+  - model_selector
+  - model_selector_granularity
+  - effort_selector
+  - reasoning_mode_selector
+  - service_tier_selector
+  - guidance_reference
+  - guidance_version
+  - guidance_verified_at
+  - guidance_status
+  - authority
+  - authorization_scope
+  - writable_roots
+  - deadline_seconds
+  - retry_limit
+  - fallback
+  - dispatch_mode
+  - context_fork_controls
+  - concurrency
+  - lane_cap
+  - wave_id
+  - lane_ids
+  - scope
+  - task_class
+  - model_class_floor
+  - run_maximum_floor
+  - pinned_target
+  - payload_digest
+  - catalog_observation
+catalog_observation:
+  id: nested-native-2026-07-12-001
+  source: tool-schema
+  dispatch_context: nested-native
+  observed_at: 2026-07-12T00:00:00Z
+  relevant_catalog_fingerprint: sha256:<64-lowercase-hex>
+approval_canonical_json: <RFC-8785-JSON-text>
+approval_fingerprint: sha256:<64-lowercase-hex>
+approved_at: null
+approval_evidence: null
+launch_acceptance: null
+terminal_outcome: null
+```
+
+`waves` lists every planned and conditional wave before selection. Each wave
+records its caller-classified task class and equal model-class floor. Compute
+`run_maximum_floor` using this increasing order:
+`mechanical-recon`, `intelligent-recon`, `default-implementation`,
+`hard-reasoning`, `consequential`. `pinned_target` is one exact target shared
+by every prepared wave and must satisfy the maximum; per-wave selection or
+floor weakening is invalid.
+
+The approval projection contains exactly every field named by `approval_axes`
+with absent optional values represented as JSON `null`. For wave data, preserve
+caller order for waves and lanes; for sets such as writable roots, require the
+caller to provide a stable sorted array. Do not normalize opaque provider
+values. Canonicalize the projection as canonical JSON using RFC 8785, encode
+that text as UTF-8, hash it with SHA-256, format lowercase hexadecimal, and
+prefix the value with `sha256:`. `payload_digest` is the same construction over
+the complete redacted launch payload. The approval timestamp is `approved_at`;
+`prepared_at` records when selection evidence was fixed.
+
+`catalog_observation` identifies the original source, dispatch context, and
+observation time. Its `relevant_catalog_fingerprint` covers the approved
+target's selectability plus the role, model, effort, reasoning-mode, service-
+tier, route, and launcher controls used to qualify it. Execution preserves the
+original observation and separately records its fresh recheck. A new unrelated
+candidate is not drift, but removal, renaming, changed semantics, or loss of
+selectability for an approved control is relevant catalog drift and makes the
+record stale.
+
+### Legal State Transitions
+
+- `prepared -> approved`: the caller explicitly approves the exact
+  `approval_fingerprint`; set `approved_at` and immutable approval evidence.
+- `prepared -> not-accepted`: the caller declines or cancels before approval.
+- `prepared -> stale`: a bound axis or relevant catalog fact changes before
+  approval is recorded.
+- `approved -> accepted`: `operation: execute` verifies the unchanged
+  fingerprint and current relevant catalog, invokes the exact payload once,
+  and receives positive launcher acceptance.
+- `approved -> not-accepted`: the exact launch is rejected before child start.
+- `approved -> stale`: fingerprint validation, an approval-bound axis, or the
+  relevant catalog comparison differs before launch.
+- `accepted -> completed`: record exactly one terminal child outcome, including
+  success, failure, timeout, interruption, `BLOCKED`, or contract refusal.
+
+`completed`, `not-accepted`, and `stale` are terminal record states. There is
+no transition from them back to `approved` or `accepted`; prepare a new record
+and obtain a new approval. `accepted` is terminal for replacement eligibility
+even before the child outcome changes the record to `completed`. An accepted
+record must not become `not-accepted` or `stale`, and must never authorize a
+replacement, alternate route, model substitution, provider substitution, or
+second child. Valid same-handle continuation and explicitly authorized
+same-target recovery retain the accepted selection and follow the main skill's
+recovery contract.
+
+### Execute Validation and Drift
+
+`operation: execute` accepts only `dispatch_state: approved`. First recompute
+the approval fingerprint from the stored projection to detect mutation. Then
+re-observe the same live catalog and resolve the actual launch controls without
+selecting alternatives. A changed model, effort, provider, route, role,
+service tier, authority, deadline, retry limit, concurrency, lane cap,
+reasoning mode, selector granularity, writable root, context control, fallback,
+wave topology, scope, lane identity, payload digest, floor, pinned target, or
+relevant catalog fact changes the record to `stale`. Refuse the launch and
+return for reapproval through a newly prepared record.
+
+### Legacy One-Step Compatibility
+
+Legacy callers that omit `operation`, or set `operation: dispatch`, retain the
+existing one-step selection-and-launch flow: selection and launch occur in the
+same operation and produce the existing Legacy Record or Record shapes. A
+legacy caller must not fabricate an `approval_fingerprint`, approval evidence,
+or a prepared record merely to remain compatible. `prepared_record_version`
+is required only for the approval-bound path; version `1` is the only supported
+prepared-record version, and unknown versions fail closed before launch.
+
 ## Legacy Record
 
 This baseline Record remains valid without optional model-guidance evidence:
