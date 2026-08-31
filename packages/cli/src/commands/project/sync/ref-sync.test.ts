@@ -2444,24 +2444,152 @@ describe('synced ref retirement', () => {
       await createPushedTarget('completed-prune');
     try {
       await retireSyncedRef(target, sourceSha, defaultGitRunner);
+      const completedRef = completedSyncedRefName(target.slug);
+      const calls: string[][] = [];
+      const recordingRunner: GitRunner = {
+        async run(args, options) {
+          calls.push(args);
+          return defaultGitRunner.run(args, options);
+        },
+      };
 
       await expect(
-        deleteCompletedSyncedRefForPrune(target, defaultGitRunner),
+        deleteCompletedSyncedRefForPrune(target, recordingRunner),
       ).resolves.toEqual({
-        completedRef: completedSyncedRefName(target.slug),
+        completedRef,
         deleted: true,
       });
+      expect(calls).toContainEqual([
+        'push',
+        `--force-with-lease=${completedRef}:${sourceSha}`,
+        target.remote,
+        `:${completedRef}`,
+      ]);
+      expect(calls).toContainEqual([
+        'update-ref',
+        '-d',
+        completedRef,
+        sourceSha,
+      ]);
       expect(
         git(fixture.cloneA, [
           'ls-remote',
           '--refs',
           target.remote,
-          completedSyncedRefName(target.slug),
+          completedRef,
         ]),
       ).toBe('');
-      expect(git(fixture.cloneA, ['show-ref'])).not.toContain(
-        completedSyncedRefName(target.slug),
+      expect(git(fixture.cloneA, ['show-ref'])).not.toContain(completedRef);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves a completed ref advanced before remote prune deletion', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'remote-completed-prune-race',
+    );
+    try {
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'remote-prune-race.md'),
+        'advanced\n',
+        'utf8',
       );
+      git(target.projectPath, ['add', 'remote-prune-race.md']);
+      git(target.projectPath, ['commit', '-m', 'advance remote completed ref']);
+      const advancedSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+      const completedRef = completedSyncedRefName(target.slug);
+      let raced = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (
+            !raced &&
+            args[0] === 'push' &&
+            args.includes(`:${completedRef}`)
+          ) {
+            raced = true;
+            git(fixture.cloneA, [
+              'push',
+              '-q',
+              '--force',
+              target.remote,
+              `${advancedSha}:${completedRef}`,
+            ]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        deleteCompletedSyncedRefForPrune(target, racingRunner),
+      ).rejects.toThrow(/remote completed ref.*advanced.*retry/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]).split(/\s/)[0],
+      ).toBe(advancedSha);
+      expect(
+        git(fixture.cloneA, ['show-ref', '--verify', completedRef]).split(
+          /\s/,
+        )[0],
+      ).toBe(sourceSha);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves a completed ref advanced before local prune deletion', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'local-completed-prune-race',
+    );
+    try {
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+      await writeFile(
+        join(target.projectPath, 'local-prune-race.md'),
+        'advanced\n',
+        'utf8',
+      );
+      git(target.projectPath, ['add', 'local-prune-race.md']);
+      git(target.projectPath, ['commit', '-m', 'advance local completed ref']);
+      const advancedSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+      const completedRef = completedSyncedRefName(target.slug);
+      git(fixture.cloneA, ['push', '-q', target.remote, `:${completedRef}`]);
+      let raced = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (
+            !raced &&
+            args[0] === 'update-ref' &&
+            args[1] === '-d' &&
+            args[2] === completedRef
+          ) {
+            raced = true;
+            git(fixture.cloneA, ['update-ref', completedRef, advancedSha]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        deleteCompletedSyncedRefForPrune(target, racingRunner),
+      ).rejects.toThrow(/local completed ref.*advanced.*retry/i);
+      expect(
+        git(fixture.cloneA, ['show-ref', '--verify', completedRef]).split(
+          /\s/,
+        )[0],
+      ).toBe(advancedSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]),
+      ).toBe('');
     } finally {
       await fixture.cleanup();
     }

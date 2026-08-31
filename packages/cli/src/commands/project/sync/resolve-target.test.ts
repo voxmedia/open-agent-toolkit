@@ -403,10 +403,11 @@ describe('probeSyncedTerminalRefs', () => {
   function gitRunner(refs: Record<string, string>) {
     return {
       run: vi.fn(async (args: string[]) => {
-        const ref = args.at(-1) ?? '';
-        const sha = refs[ref];
-        return sha
-          ? { code: 0, stdout: `${sha}\t${ref}`, stderr: '' }
+        const rows = args
+          .slice(3)
+          .flatMap((ref) => (refs[ref] ? [`${refs[ref]}\t${ref}`] : []));
+        return rows.length > 0
+          ? { code: 0, stdout: rows.join('\n'), stderr: '' }
           : { code: 2, stdout: '', stderr: '' };
       }),
     };
@@ -501,7 +502,72 @@ describe('probeSyncedTerminalRefs', () => {
       activeSha: null,
       completedSha: null,
     });
-    expect(git.run).toHaveBeenCalledTimes(2);
+    expect(git.run).toHaveBeenCalledTimes(1);
+    expect(git.run).toHaveBeenCalledWith(
+      [
+        'ls-remote',
+        '--exit-code',
+        'origin',
+        'refs/oat/projects/demo',
+        'refs/oat/completed/demo',
+      ],
+      { cwd: '/repo', allowFailure: true },
+    );
+  });
+
+  it('cannot assemble a matching terminal state from two torn observations', async () => {
+    const git = {
+      run: vi.fn(async (args: string[]) => {
+        const requestedRefs = args.slice(3);
+        if (requestedRefs.length === 1) {
+          const ref = requestedRefs[0];
+          return { code: 0, stdout: `${expectedSha}\t${ref}`, stderr: '' };
+        }
+        return {
+          code: 0,
+          stdout: [
+            `${otherSha}\trefs/oat/projects/demo`,
+            `${expectedSha}\trefs/oat/completed/demo`,
+          ].join('\n'),
+          stderr: '',
+        };
+      }),
+    };
+
+    await expect(
+      probeSyncedTerminalRefs(target, expectedSha, git),
+    ).resolves.toMatchObject({
+      state: 'wrong-sha',
+      activeSha: otherSha,
+      completedSha: expectedSha,
+    });
+    expect(git.run).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      label: 'duplicate requested ref',
+      stdout: [
+        `${expectedSha}\trefs/oat/projects/demo`,
+        `${otherSha}\trefs/oat/projects/demo`,
+      ].join('\n'),
+    },
+    {
+      label: 'unexpected ref',
+      stdout: `${expectedSha}\trefs/oat/projects/other`,
+    },
+    {
+      label: 'malformed row',
+      stdout: `not-a-sha\trefs/oat/projects/demo`,
+    },
+  ])('rejects a $label in the terminal advertisement', async ({ stdout }) => {
+    const git = {
+      run: vi.fn(async () => ({ code: 0, stdout, stderr: '' })),
+    };
+
+    await expect(
+      probeSyncedTerminalRefs(target, expectedSha, git),
+    ).rejects.toThrow(/duplicate|unexpected|malformed/i);
   });
 
   it('keeps ordinary missing-target resolution bound to the active ref', async () => {

@@ -1279,6 +1279,35 @@ export async function retireSyncedRef(
   };
 }
 
+function exactRemoteRefSha(
+  result: { code: number; stdout: string; stderr: string },
+  remote: string,
+  ref: string,
+): string | null {
+  if (classifyRemoteRefLookup(result, remote, ref) === 'absent') return null;
+
+  const rows = result.stdout.split('\n').filter((row) => row.length > 0);
+  if (rows.length !== 1) {
+    throw new CliError(
+      `Unable to verify ${remote}/${ref}: git ls-remote returned an unexpected number of exact-ref rows.`,
+      2,
+    );
+  }
+  const fields = rows[0]?.trim().split(/\s+/) ?? [];
+  if (
+    fields.length !== 2 ||
+    fields[1] !== ref ||
+    !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(fields[0] ?? '')
+  ) {
+    throw new CliError(
+      `Unable to verify ${remote}/${ref}: git ls-remote returned a malformed or unexpected row.`,
+      2,
+    );
+  }
+  const [sha] = fields as [string, string];
+  return sha;
+}
+
 export async function deleteCompletedSyncedRefForPrune(
   target: SyncTarget,
   git: GitRunner,
@@ -1292,46 +1321,87 @@ export async function deleteCompletedSyncedRefForPrune(
     }),
     localRefSha(target, completedRef, git),
   ]);
-  const remoteState = classifyRemoteRefLookup(
-    remote,
-    target.remote,
-    completedRef,
-  );
+  const remoteSha = exactRemoteRefSha(remote, target.remote, completedRef);
 
-  if (remoteState === 'present') {
+  if (remoteSha !== null) {
     const deletion = await git.run(
-      ['push', target.remote, `:${completedRef}`],
+      [
+        'push',
+        `--force-with-lease=${completedRef}:${remoteSha}`,
+        target.remote,
+        `:${completedRef}`,
+      ],
       { cwd: target.repoRoot, allowFailure: true },
     );
     if (deletion.code !== 0) {
-      throw new CliError(
-        `Explicit prune could not delete retained terminal history at ${completedRef}; the local completed ref was retained. Restore access to ${target.remote} and retry the destructive prune: ${deletion.stderr || deletion.stdout || 'unknown Git error'}`,
-        2,
+      const afterRejection = exactRemoteRefSha(
+        await git.run(
+          ['ls-remote', '--exit-code', target.remote, completedRef],
+          { cwd: target.repoRoot, allowFailure: true },
+        ),
+        target.remote,
+        completedRef,
       );
-    }
-    const verified = await git.run(
-      ['ls-remote', '--exit-code', target.remote, completedRef],
-      { cwd: target.repoRoot, allowFailure: true },
-    );
-    if (
-      classifyRemoteRefLookup(verified, target.remote, completedRef) !==
-      'absent'
-    ) {
-      throw new CliError(
-        `Explicit prune could not verify deletion of retained terminal history at ${completedRef}; the local completed ref was retained.`,
-        2,
+      if (afterRejection !== null) {
+        if (afterRejection !== remoteSha) {
+          throw new CliError(
+            `Explicit prune stopped because remote completed ref ${completedRef} advanced from observed ${remoteSha} to ${afterRejection}; the advanced ref was retained. Review the new terminal identity and retry the destructive prune.`,
+            2,
+          );
+        }
+        throw new CliError(
+          `Explicit prune could not delete retained terminal history at ${completedRef}; the local completed ref was retained. Restore access to ${target.remote} and retry the destructive prune: ${deletion.stderr || deletion.stdout || 'unknown Git error'}`,
+          2,
+        );
+      }
+    } else {
+      const verifiedSha = exactRemoteRefSha(
+        await git.run(
+          ['ls-remote', '--exit-code', target.remote, completedRef],
+          { cwd: target.repoRoot, allowFailure: true },
+        ),
+        target.remote,
+        completedRef,
       );
+      if (verifiedSha !== null) {
+        if (verifiedSha !== remoteSha) {
+          throw new CliError(
+            `Explicit prune stopped because remote completed ref ${completedRef} advanced from observed ${remoteSha} to ${verifiedSha}; the advanced ref was retained. Review the new terminal identity and retry the destructive prune.`,
+            2,
+          );
+        }
+        throw new CliError(
+          `Explicit prune could not verify deletion of retained terminal history at ${completedRef}; the local completed ref was retained.`,
+          2,
+        );
+      }
     }
   }
 
   if (localSha !== null) {
-    await git.run(['update-ref', '-d', completedRef], {
-      cwd: target.repoRoot,
-    });
+    const localDeletion = await git.run(
+      ['update-ref', '-d', completedRef, localSha],
+      { cwd: target.repoRoot, allowFailure: true },
+    );
+    if (localDeletion.code !== 0) {
+      const currentLocalSha = await localRefSha(target, completedRef, git);
+      if (currentLocalSha !== null) {
+        if (currentLocalSha !== localSha) {
+          throw new CliError(
+            `Explicit prune stopped because local completed ref ${completedRef} advanced from observed ${localSha} to ${currentLocalSha}; the advanced ref was retained. Review the new terminal identity and retry the destructive prune.`,
+            2,
+          );
+        }
+        throw new CliError(
+          `Explicit prune could not delete local completed ref ${completedRef} at observed SHA ${localSha}; the ref was retained. Retry after resolving the local Git error: ${localDeletion.stderr || localDeletion.stdout || 'unknown Git error'}`,
+          2,
+        );
+      }
+    }
   }
   return {
     completedRef,
-    deleted: remoteState === 'present' || localSha !== null,
+    deleted: remoteSha !== null || localSha !== null,
   };
 }
 
