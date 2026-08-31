@@ -60,6 +60,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-08-31 · structural · oat-project-complete · seal
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Completion sealed at 2026-08-31T01:52:01Z; project-log roll-up status: ok.
+
+## End-of-run synthesis
+
+Overall verdict: completed successfully with all 13 tasks, independent final review, and replacement configured exit gate passing. Adopted adjustments: reconciled the combined owner across active planning surfaces, preserved POSIX single-quoted backslashes in configured-command validation, restored migrated PJM metadata, and reran verification sequentially after detecting the shared asset-bundling race. Graduation: the log contains structural lifecycle evidence only; no new judgment entry requires promotion to the repo ledger or backlog because durable decisions and both delivered backlog outcomes are already recorded.

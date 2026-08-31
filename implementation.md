@@ -392,6 +392,16 @@ artifact, bound Reviews event, and review bookkeeping after the persisted
 pre-receive head. Receive is complete and the replacement configured exit-gate
 generation is `allowed/passed`.
 
+### Final HiLL Approval
+
+**Date:** 2026-08-31
+**Source:** user
+
+Thomas explicitly approved the final p03 checkpoint after all 13 tasks, the
+zero-finding final decision review, the replacement configured exit gate, and
+green PR checks were current. The immutable post-implementation sequence has
+no post-approval actions, so it can advance directly to complete.
+
 ---
 
 ## Orchestration Runs

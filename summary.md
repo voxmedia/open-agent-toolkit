@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_generated: true
-oat_summary_last_task: p03-t05
+oat_summary_last_task: p03-t09
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -39,10 +39,11 @@ exit without an artifact was diagnosed as a correlation mismatch.
 - Updated public docs and all five lockstep public packages to 0.2.49, retired
   the two superseded project trees, and archived both owned backlog items.
 
-All 9 tasks completed. Phase reviews passed, the final automatic re-review
-passed with zero findings, and the configured Claude exit gate passed at the
-Important threshold; its one Minor finding was received and dispositioned
-without expanding the approved implementation scope.
+All 13 tasks completed. Phase reviews passed, conflict reconciliation against
+current main preserved migrated PJM state, and the final independent decision
+review passed with zero findings. The replacement configured Claude exit gate
+then passed at the Important threshold with zero findings and was received
+durably.
 
 ## Key Decisions
 
@@ -73,6 +74,9 @@ without expanding the approved implementation scope.
   proof lives in `configured-gate.integration.test.ts`. The stale handoff was
   corrected to those accepted source-of-truth paths, and quick-mode `spec.md`
   was explicitly marked not applicable.
+- Conflict reconciliation absorbed current main's PJM migration and planning
+  state while retaining the two archived backlog records, the combined project
+  owner, regenerated indexes, and lockstep 0.2.49 release metadata.
 
 ## Notable Challenges
 
@@ -84,6 +88,13 @@ without expanding the approved implementation scope.
   p03-t04 corrected project references, p03-t05 completed the public
   `artifact_missing` assertion, and the independent re-review passed with zero
   findings.
+- The post-merge review found stale planning references, a POSIX
+  single-quoted-backslash tokenizer edge case, and a migrated scope estimate.
+  p03-t06 through p03-t09 resolved each item; two narrowed decision reviews
+  verified the combined project as the sole owner and ended with zero findings.
+- Running test and build concurrently exposed a shared CLI asset-bundling race.
+  The gates were rerun sequentially, where check, type-check, test, build,
+  lint, and format all exited 0.
 
 ## Tradeoffs Made
 
@@ -105,11 +116,9 @@ without expanding the approved implementation scope.
 
 ## Follow-up Items
 
-- The configured Claude gate's Minor observation about backslash handling
-  inside single-quoted shell text was intentionally deferred. Revisit only if
-  validation expands beyond the fixed direct lifecycle prefix, becomes a
-  security boundary, or general wrapper/pipeline integrity enters an approved
-  project scope.
+- None within the approved execution-contract scope. Receipt/event redesign,
+  ReviewPlan, bookkeeping-only re-review policy, and general review/gate
+  integrity remain owned by their existing work rather than this project.
 
 ## Associated Issues
 
@@ -135,3 +144,7 @@ Phase p03 passed root review with three task commits; full DoD, uncached verific
 ### 2026-08-31 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T000938Z.md
+
+### 2026-08-31 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
