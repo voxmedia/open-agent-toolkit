@@ -2,9 +2,9 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-30
+oat_last_updated: 2026-08-31
 oat_generated: true
-oat_summary_last_task: p04-t03
+oat_summary_last_task: p04-t05
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -21,34 +21,40 @@ state without taking over the broader provider-by-scope model.
 
 ## What Was Implemented
 
-- PJM migration now resolves canonical adoption for context while independently
-  inventorying recognized legacy inputs. A complete current scaffold reports
-  `already-migrated`; genuine legacy layouts may dry-run or apply from any
-  adoption state; and missing migration evidence produces state-specific,
-  write-free recovery guidance.
+- PJM migration treats judgment-only backlog and second-roadmap leftovers as
+  proposals, not mechanically migratable legacy input. They neither authorize
+  writes nor prevent a complete canonical repository from returning
+  `already-migrated`; complete and incomplete judgment-only layouts are
+  byte-for-byte write-free.
 - User-agent diagnostics now derive Codex and Cursor managed-role reachability
   from the same config-aware active-provider resolution used by sync. Explicit
   enablement, disablement, detection, and mixed-provider cases are covered
   without treating Claude as a user managed-role materialization path.
-- The shared pack inventory now attributes shared-owner observations only to
-  applicable installed or intended packs. `oat status` degrades inventory
-  failures into structured availability data and readable human output, while
-  doctor details use collision-free delimiters.
+- Shared-owner observations now have one canonical representation on the
+  selected applicable scope, with no duplicate parent-pack copy. Inventory,
+  doctor, status, and removal consume that scope-owned observation, while human
+  and JSON output render it exactly once.
 - Tests now assert production-reachable lifecycle, manifest, ownership, scope,
   and exception-safety behavior instead of tautological or impossible fixtures.
   CLI Vitest concurrency is capped at four workers so Git-heavy fixtures remain
   stable under the full workspace gate without weakening timeout contracts.
 - PR #244's narrow PJM generated-pointer cleanup was integrated first with no
   `pjm/doctor.ts` source conflict. The lockstep public release unit and bundled
-  version map advanced to `0.2.50` after integrating current `origin/main`, and backlog item
-  `BL-260827-correct-scope-and-adoption` was archived.
+  version map advanced to `0.2.50` after integrating current `origin/main`, and
+  backlog item `BL-260827-correct-scope-and-adoption` was archived.
+- PR #249's migration-eligibility and shared-owner representation findings were
+  resolved by `p04-t04` and `p04-t05`. A narrowed four-commit final review found
+  zero findings; fresh targeted verification passed 39/39 PJM tests and 181/181
+  shared-owner tests. Thomas directed completion without rerunning the now-stale
+  configured exit gate.
 
 ## Key Decisions
 
-- **Legacy evidence is independent.** Adoption labels
-  describe repository context but cannot prove that migration input exists.
-  Migration writes therefore require recognized legacy sources, while current
-  scaffold completeness separately determines `already-migrated`.
+- **Legacy evidence is independent.** Adoption labels and judgment proposals
+  describe repository context but cannot prove that mechanically migratable
+  input exists. Migration writes require recognized mechanical legacy sources,
+  while current scaffold completeness separately determines
+  `already-migrated`.
 - **Provider-aware reachability.** User-agent
   reachability uses config-aware provider activation rather than filesystem
   presence alone, keeping diagnostics aligned with sync behavior across
@@ -73,12 +79,17 @@ state without taking over the broader provider-by-scope model.
 - The full test gate exposed host-load-dependent Git fixture timeouts. One
   authorized recovery added only a four-worker CLI test cap; production code,
   assertions, fixtures, and timeout values remained unchanged.
+- PR #249 exposed two bounded contract gaps after closeout: judgment proposals
+  still counted as migration input, and one shared-owner observation was stored
+  at both scope and pack levels. The revision tightened those existing
+  contracts without expanding provider/scope ownership.
 
 ## Notable Challenges
 
 - The exact full test command failed repeatedly with changing timeout-only
   fixture sets even though focused behavior passed. Completion remained blocked
-  until the exact command passed 4,599/4,599 after the bounded concurrency fix.
+  until the exact command passed after the bounded concurrency fix; the final
+  revision subsequently passed all 4,648 CLI tests.
 - The configured Claude Fable exit gate accepted a run but could not refresh
   expired OAuth, so it produced no receive-eligible review. That generation was
   preserved and retired without consuming a remediation attempt; an explicit
@@ -89,8 +100,9 @@ state without taking over the broader provider-by-scope model.
 - Provider-aware diagnostics consume the existing active-adapter seam but do
   not define directory-level provider sync or the full provider-by-scope state
   model. This keeps the slice mergeable ahead of the umbrella project.
-- Shared-owner attribution favors truthful applicability over showing every
-  potential owner, preventing unintended packs from appearing installed.
+- Shared-owner attribution keeps one scope-owned observation rather than
+  duplicating it for convenient consumers. Callers consume the canonical scoped
+  representation instead of depending on hidden deduplication.
 - Test stability is controlled at runner concurrency rather than by extending
   timeouts, so slow regressions remain visible at the cost of less intra-package
   parallelism.
@@ -163,3 +175,7 @@ Observation: configured gate run 09b87ee3-2fde-4ed4-b863-67d2365a2e79 accepted c
 ### 2026-08-31 · structural · oat gate review · final
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
+
+### 2026-08-31 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/scope-adoption-diagnostics/references/project-retro.md evidence_used=archived-review-markdown,decision-records,gate-receipts,git-history,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=active-review-markdown,host-resource-telemetry,oat-execution-learnings,raw-gate-logs promotions=0 upstream=0 apply=skipped filing=skipped
