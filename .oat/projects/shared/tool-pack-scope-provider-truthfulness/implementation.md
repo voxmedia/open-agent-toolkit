@@ -1,8 +1,7 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02 terminal round-4 review found multi-pack, multi-scope post-removal failures emit recovery commands that cover only one invalidated scope
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -25,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | blocked  | 7     | 7/7       |
-| Phase 3 | pending  | 5     | 0/5       |
-| Phase 4 | pending  | 5     | 0/5       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 4     | 0/4       |
-| Phase 7 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | in progress | 7     | 7/7       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 5     | 0/5       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 4     | 0/4       |
+| Phase 7 | pending     | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -135,7 +134,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** blocked after 7/7 tasks and terminal operator-authorized review round 4
+**Status:** in progress after 7/7 tasks; bounded round-4 correction and review round 5 authorized
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -155,7 +154,10 @@ oat_generated: false
 - Terminal round 4 reproduced one new Important defect: multi-pack,
   multi-scope post-removal failures invalidate final evidence for both scopes
   but can emit a recovery command for only one scope. The authorization is
-  exhausted, so Phase 3 has not started.
+  exhausted, so Phase 3 did not start.
+- Thomas subsequently authorized exactly one bounded correction for that
+  finding and one fresh independent High review round. This raises the
+  review-fix retry limit to four without changing the plan or phase scope.
 
 | Task    | Status   | Commit      | Outcome                                                 |
 | ------- | -------- | ----------- | ------------------------------------------------------- |
@@ -242,6 +244,14 @@ oat_generated: false
   `e85ba38ae575e193a7084f1046798ca0827f6bef`; 0 critical, 1 important.
 - Verification: 29 files / 710 tests; focused blocker suite; CLI lint,
   type-check, formatting, and `git diff --check` all passed.
+
+**Operator-authorized round 5:**
+
+- Scope is restricted to the round-4 multi-pack/multi-scope recovery finding.
+- The exact `oat-phase-implementer-gpt-5-6-sol-medium` fix target and fresh
+  `oat-reviewer-gpt-5-6-sol-high` review target remain authoritative.
+- One append-only fix commit and one fresh review are permitted. A blocking
+  fifth review stops implementation without automatic extension.
 
 ---
 
