@@ -1815,6 +1815,13 @@ export async function archiveProjectOnCompletion(
     );
     warnings.push(...access.warnings);
 
+    if (syncTarget && !access.ok) {
+      throw new CliError(
+        `Synced archive durability for ${options.projectName} requires the configured S3 upload to succeed before terminal cleanup. ${access.warnings.join(' ') || 'Archive S3 access could not be verified.'}`,
+        1,
+      );
+    }
+
     if (access.ok) {
       const remoteRepoRoot = await resolvePrimaryRepoRoot(
         options.repoRoot,
@@ -1840,6 +1847,12 @@ export async function archiveProjectOnCompletion(
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (syncTarget) {
+          throw new CliError(
+            `Synced archive durability for ${options.projectName} requires the configured S3 upload to succeed before terminal cleanup: ${message}`,
+            1,
+          );
+        }
         warnings.push(`Archive S3 sync to \`${s3Path}\` failed: ${message}`);
         s3Path = null;
       }

@@ -3224,7 +3224,7 @@ describe('archive utils', () => {
       ),
     ),
   )(
-    'keeps $scope completion nonblocking on S3 $failure',
+    'handles $scope completion safely on S3 $failure',
     async ({ scope, failure }) => {
       const fixture = scope === 'synced' ? await createSyncedFixture() : null;
       try {
@@ -3264,7 +3264,7 @@ describe('archive utils', () => {
         const execFile = vi.fn(async () => {
           throw new Error('injected aws s3 sync failure');
         });
-        const result = await archiveProjectOnCompletion(
+        const completion = archiveProjectOnCompletion(
           {
             repoRoot,
             projectPath,
@@ -3281,6 +3281,28 @@ describe('archive utils', () => {
           },
         );
 
+        if (scope === 'synced') {
+          await expect(completion).rejects.toThrow(
+            /configured S3 upload to succeed before terminal cleanup/i,
+          );
+          await expect(access(projectPath)).resolves.toBeUndefined();
+          expect(recordPath).not.toBeNull();
+          await expect(readSyncedRecord(recordPath!)).resolves.toMatchObject({
+            status: 'active',
+            archiveSnapshot: `20260827-${slug}`,
+          });
+          expect(
+            (
+              await defaultGitRunner.run(['rev-parse', target!.ref], {
+                cwd: repoRoot,
+              })
+            ).stdout,
+          ).toMatch(/^[a-f0-9]{40}$/);
+          return;
+        }
+
+        const result = await completion;
+
         expect(result.s3Path).toBeNull();
         expect(result.summaryExportFile).not.toBeNull();
         await expect(readFile(result.summaryExportFile!, 'utf8')).resolves.toBe(
@@ -3292,15 +3314,7 @@ describe('archive utils', () => {
             : accessWarning,
         ]);
         await expect(access(projectPath)).rejects.toThrow();
-        if (recordPath) {
-          expect(result.lifecycleCommit).toMatch(/^[a-f0-9]{40}$/);
-          expect(await readSyncedRecord(recordPath)).toMatchObject({
-            status: 'complete',
-            archiveSnapshot: `20260827-${slug}`,
-          });
-        } else {
-          expect(result.lifecycleCommit).toBeNull();
-        }
+        expect(result.lifecycleCommit).toBeNull();
       } finally {
         await fixture?.cleanup();
       }
