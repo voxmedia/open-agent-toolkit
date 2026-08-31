@@ -377,6 +377,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Dispatch: scope=p-rev1-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p-rev1 review round 2
+
+- Request ID: `recon-skill-prev1-rereview-20260831T1533Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: independently re-review the complete p02-through-revision range
+  and the narrowed round-1 fix; write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with one blocking finding
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p-rev1-code-rereview-2026-08-31T153329Z.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Closed dispositions: all receipt drift/outcome gaps and all five p02
+  review-round-4 assurance bypasses close in direct probes
+- Remaining disposition: exactly gapped ineligible audit sources return before
+  canonical identity retention, leaving stale aliases/retargets publishable
+- Overengineering assessment: passed; the remaining fix belongs before the
+  existing ineligible-audit branch and requires no new abstraction
+- Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -559,6 +581,19 @@ context before p02 can advance.
 - Root validation confirmed the bounded eight-file fix range and 99/99 recon
   suite. A fresh independent re-review of the complete p02-through-revision
   range is next.
+
+### 2026-08-31 - p-rev1 review round 2 received
+
+- Fresh re-review confirms the receipt-selection, honest-partial, supported
+  assurance, normalized rendering, and all five p02 review-round-4 finding
+  classes are closed in their stated forms.
+- One Important residual remains within the same publication-identity
+  invariant: exactly gapped stale/invalid/unavailable audit sources return
+  before path canonicalization and identity retention, so their retained audit
+  paths may still be aliases or be retargeted before publication.
+- The second correction is limited to moving existing identity validation
+  before eligibility branching plus stale/invalid/unavailable mutations for
+  the five existing source discriminators. No design expansion is authorized.
 
 ## Deviations from Plan / Design
 
