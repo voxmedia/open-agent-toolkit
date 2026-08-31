@@ -105,6 +105,7 @@ Lightweight design - Collaborative section review in progress
 - ✓ Brainstorm decisions captured
 - ✓ Invocation, rigor-profile, destination, failure, and source boundaries resolved
 - ✓ Lightweight design selected
+- ✓ Architecture approved
 - ⧗ Reviewing design sections collaboratively
 
 ## Blockers

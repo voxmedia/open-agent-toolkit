@@ -116,16 +116,121 @@ from passes that did not complete.
 
 The provider-neutral skill lives at `.agents/skills/recon/` with a lean
 `SKILL.md`, focused references for packet and worker contracts, deterministic
-validation/rendering scripts, and fixtures. It is distributed through the
-existing research tool pack. The selection-only contract is added to
-`oat-dispatch-subagents` and its record schema rather than duplicated inside
-`recon`. No first-release changes are made to project discovery, quick start,
-`analyze`, `deep-research`, or other consumers; those integrations remain
-separate backlog work.
+validation/rendering scripts, and fixtures. A single canonical companion agent
+at `.agents/agents/recon-worker.md` provides the common worker invariants; pass
+roles remain assignment modes rather than separate agents or nested skills.
+Both assets are distributed through the existing research tool pack, which
+retains user- and project-scope installation and declares the utility-owned
+`oat-dispatch-subagents` and `subagent-orchestration` skills as dependencies.
+
+The selection-only contract is added to `oat-dispatch-subagents` and its record
+schema rather than duplicated inside `recon`. The utility pack retains
+ownership of both dispatch dependencies; research installation must reconcile
+them without duplicating ownership or removing an independently installed
+utility copy. No first-release changes are made to the core pack, project
+discovery, quick start, `analyze`, `deep-research`, or other consumers; those
+automatic integrations remain separate backlog work.
 
 ## Component Design
 
-_Pending collaborative review._
+### Recon Controller
+
+The main `SKILL.md` is the only user- and caller-facing controller. It completes
+a request from the supplied objective, scope, context, profile, and output
+override; asks only for information required to run safely; and owns all user
+interaction. It generates the run identifier, invokes preflight, prepares the
+approval manifest, sequences stages, evaluates publication eligibility, and
+returns the final packet path with a compact status summary.
+
+The controller never performs provider-specific model selection or launch
+construction. It also avoids reading raw dossiers unless a structural failure
+requires a targeted diagnosis.
+
+### Request, Destination, and Source Preflight
+
+Preflight normalizes the bounded question and decides the packet destination
+using explicit override, project evidence directory, repository evidence
+directory, then caller-approved fallback order. It refuses a destination that
+would escape or overwrite an existing run directory.
+
+It inventories source capabilities without mutating them, records unavailable
+sources, and pins the observable evidence boundary. Repository sources record
+revision, dirty state, relevant content hashes, and observation time; URLs and
+connected systems record stable identifiers, retrieval time, and available
+locator semantics. Preflight creates the directory skeleton and initial
+manifest, but not `packet.md`.
+
+### Profile and Lane Planner
+
+The planner expands `quick`, `standard`, or `thorough` into a pass graph and
+partitions the declared scope into non-overlapping lanes. Mechanical inventory
+drives the initial lane count. The approval manifest records exact planned
+lanes plus explicit caps for conditional work such as contradiction resolution;
+the controller cannot exceed that envelope without reapproval.
+
+All worker passes share the approved model and effort. A profile changes
+redundancy, review topology, and maximum concurrency—not the model tier.
+
+### Dispatch Approval Adapter
+
+This adapter supplies bounded homogeneous-wave requests to the new
+`oat-dispatch-subagents` `prepare` operation and assembles the returned
+selection evidence into the run-level approval manifest. After approval it
+submits only approval-bound records to `execute`, stores launch and outcome
+receipts under the packet directory, and stops for reapproval when a material
+dispatch axis changes.
+
+The preferred role selector is the globally installed `recon-worker`. If a
+provider cannot resolve that definition, a generic role with the complete
+worker contract may be prepared instead; because the role selector is part of
+the manifest, this fallback is visible before approval rather than occurring
+after launch.
+
+### Recon Worker
+
+`.agents/agents/recon-worker.md` defines the invariants shared by every lane:
+read only assigned inputs, write only the assigned artifact, preserve locators,
+emit the requested schema, surface uncertainty and contradictions, never
+interact with the user, and never launch another agent. The task assignment
+selects one mode:
+
+- `map` or `gather`: inspect an isolated source partition and write a raw
+  dossier.
+- `compile`: convert designated dossiers into provisional canonical claims.
+- `verify`: reopen cited sources and test claims without reading gatherer
+  reasoning.
+- `adversary`: seek counterevidence, unsupported inference, and missing
+  alternatives without reading prior review conclusions.
+- `coverage`: compare the requested scope and questions with ledger coverage.
+- `reconcile`: apply review dispositions and contradiction outcomes to a new
+  ledger version without inventing evidence.
+
+Multiple instances may run concurrently only when their input and output paths
+do not overlap.
+
+### Packet Workspace and Deterministic Helpers
+
+The workspace manager owns directory creation, unique stage paths, artifact
+hashing, and promotion of validated stage outputs. Workers never update shared
+JSON in place. The controller or helper promotes a complete candidate to the
+next canonical version after schema validation.
+
+Bundled scripts provide three deterministic operations:
+
+- Validate individual dossiers, claims, reviews, and manifests against their
+  versioned contracts.
+- Verify artifact references, hashes, allowed state transitions, and the
+  requested-versus-achieved assurance rules.
+- Render `packet.md` from the final canonical ledger and manifest, then publish
+  it atomically only when the packet passes structural validation.
+
+### Completion and Handoff
+
+The handoff reports the packet directory, requested and achieved profiles,
+claim-state counts, unresolved gaps, failed or omitted passes, and whether the
+packet is complete or partial. The normal consumer contract is the directory
+path. Raw dossier contents and worker transcripts are not copied into the
+parent response.
 
 ## Data Models
 
