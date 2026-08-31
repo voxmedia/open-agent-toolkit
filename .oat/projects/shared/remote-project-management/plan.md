@@ -203,6 +203,25 @@ modify packages/cli/src/commands/pjm/doctor.ts and doctor.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/doctor.test.ts src/commands/pjm/doctor.test.ts
 5. Commit: feat(p01-t09): add remote doctor foundations
 
+### Task p01-t10: Persist pre-create binding intent
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/schema.ts,
+packages/cli/src/commands/pjm/remote/schema.test.ts,
+packages/cli/src/commands/pjm/remote/store.ts, and
+packages/cli/src/commands/pjm/remote/store.test.ts.
+
+1. Add failing schemas and store cases for a reserved binding ID attached to an
+   unbound local target, explicit publication projection, provider context,
+   purposes, policy restrictions, provenance token, and operation ID before any
+   remote identity exists. Reject materialized binding metadata without a
+   verified durable remote identity.
+2. Add PlannedBindingCreate and store methods createBindingIntent() and
+   materializeVerifiedBinding(). Preserve an uncertain pre-create journal
+   without creating portable metadata or a compact association.
+3. Format: pnpm format:fix
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts
+5. Commit: feat(p01-t10): persist pre-create binding intent
+
 ## Phase 2: Reconciliation and Safety Engine
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
@@ -484,6 +503,31 @@ index.test.ts; modify packages/cli/src/commands/config/index.ts and index.test.t
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/shared-storage.test.ts src/commands/pjm/remote/index.test.ts src/commands/config/index.test.ts
 5. Commit: feat(p03-t11): gate shared remote storage
 
+### Task p03-t12: Materialize a binding through initial publish
+
+**Files:** Create packages/cli/src/commands/pjm/remote/create-binding.ts and
+packages/cli/src/commands/pjm/remote/create-binding.test.ts; modify
+packages/cli/src/commands/pjm/remote/lifecycle.ts,
+packages/cli/src/commands/pjm/remote/lifecycle.test.ts,
+packages/cli/src/commands/pjm/remote/association.ts,
+packages/cli/src/commands/pjm/remote/association.test.ts,
+packages/cli/src/commands/pjm/remote/index.ts, and
+packages/cli/src/commands/pjm/remote/index.test.ts.
+
+1. Add failing backlog and project-target cases for explicit publication
+   projection, reserved IDs, persist-before-create intent, verified create
+   readback, snapshot/baseline initialization, portable metadata, and compact
+   association materialization. Inject crashes after each boundary and cover
+   rejected and uncertain creates without blind retry.
+2. Implement createAndBindRemoteIssue() as an ordered local transaction:
+   reserve IDs and intent; execute one provider create; verify durable identity
+   and requested fields; atomically materialize binding state/metadata; then
+   write the compact association. Wire unbound publish through injected command
+   services and a resumable external-action handoff.
+3. Format: pnpm format:fix
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/lifecycle.test.ts src/commands/pjm/remote/association.test.ts src/commands/pjm/remote/index.test.ts
+5. Commit: feat(p03-t12): materialize initial remote binding
+
 ## Phase 4: GitHub Adapter and gh Transport
 
 > Peer lane after p03. Own only providers/github*, transports/gh*, and its
@@ -531,7 +575,7 @@ gh.test.ts.
 ### Task p04-t04: Plan GitHub create and field updates
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts and
-github.test.ts.
+packages/cli/src/commands/pjm/remote/providers/github.test.ts.
 
 1. Add operation-plan cases for create provenance, title, managed/full body,
    safe priority extension, unsupported masks, and exact postconditions.
@@ -595,6 +639,55 @@ github-publication-safety.test.ts; modify
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github-publication-safety.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
 5. Commit: feat(p04-t08): gate public github publication
+
+### Task p04-t09: Plan GitHub duplicate searches
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts and
+github.test.ts.
+
+1. Add failing provider-plan cases for provenance token, reserved binding ID,
+   historical aliases, exact repository context, unsupported search, ambiguous
+   matches, one verified match, and no match.
+2. Implement planDuplicateSearch() with explicit semantic capability and
+   bounded query/result contracts; a match is evidence until stable identity
+   and context verification completes.
+3. Format: pnpm format:fix
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
+5. Commit: feat(p04-t09): plan github duplicate searches
+
+### Task p04-t10: Execute GitHub duplicate searches through gh
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/transports/gh.ts,
+packages/cli/src/commands/pjm/remote/transports/gh.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
+
+1. Add failing fake-gh cases for exact-repository provenance/alias search,
+   unavailable capability, result bounds, ambiguity, transferred aliases,
+   no-match, and stable-identity verification.
+2. Implement searchDuplicates() through the safe runner and advertise the
+   capability only when the installed gh surface can return the required
+   identity/context evidence.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/gh.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
+5. Commit: feat(p04-t10): search github duplicates
+
+### Task p04-t11: Read bounded GitHub discussion evidence
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts,
+packages/cli/src/commands/pjm/remote/providers/github.test.ts,
+packages/cli/src/commands/pjm/remote/transports/gh.ts,
+packages/cli/src/commands/pjm/remote/transports/gh.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
+
+1. Add planDiscussionRead(), pagination, limit, sanitization, rate-limit,
+   permission, and non-persistence fixtures for issue comments and activity
+   evidence.
+2. Implement a bounded gh discussion read whose cursor and normalized page are
+   returned to the provider-neutral service but never enter binding snapshots
+   or journals.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts src/commands/pjm/remote/transports/gh.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
+5. Commit: feat(p04-t11): read github discussion evidence
 
 ## Phase 5: Linear Adapter and Transports
 
@@ -691,6 +784,39 @@ packages/cli/src/commands/pjm/remote/providers/linear.conformance.test.ts.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/linear.test.ts`
 5. Commit: test(p05-t07): integrate linear remote lifecycle
+
+### Task p05-t08: Search Linear duplicates through MCP actions
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts,
+packages/cli/src/commands/pjm/remote/providers/linear.test.ts,
+packages/cli/src/commands/pjm/remote/providers/linear-actions.ts,
+packages/cli/src/commands/pjm/remote/providers/linear-actions.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/linear.test.ts`.
+
+1. Add planDuplicateSearch() and connector action/observation cases for
+   provenance, historical identifiers, workspace/team context, unavailable
+   search, bounded ambiguous matches, one verified match, and no match.
+2. Implement MCP duplicate-search planning with catalog fingerprinting and
+   stable UUID/context verification before a result can be adopted.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts src/commands/pjm/remote/providers/linear-actions.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
+5. Commit: feat(p05-t08): search linear duplicates through mcp
+
+### Task p05-t09: Search Linear duplicates through optional CLI
+
+**Files:** Modify
+packages/cli/src/commands/pjm/remote/transports/linear-cli.ts,
+packages/cli/src/commands/pjm/remote/transports/linear-cli.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/linear.test.ts`.
+
+1. Add fake CLI cases for provenance/alias queries, missing search semantics,
+   version drift, bounded ambiguity, one stable UUID/context match, and no
+   match.
+2. Implement searchDuplicates() only when capability probing demonstrates
+   semantic equivalence with the adapter plan.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/linear-cli.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
+5. Commit: feat(p05-t09): search linear duplicates through cli
 
 ## Phase 6: Jira Cloud Adapter and Transports
 
@@ -800,6 +926,38 @@ packages/cli/src/commands/pjm/remote/providers/jira.conformance.test.ts.
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/jira.test.ts`
 5. Commit: test(p06-t08): integrate jira remote lifecycle
 
+### Task p06-t09: Search Jira duplicates through MCP actions
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/jira.ts,
+packages/cli/src/commands/pjm/remote/providers/jira.test.ts,
+packages/cli/src/commands/pjm/remote/providers/jira-actions.ts,
+packages/cli/src/commands/pjm/remote/providers/jira-actions.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/jira.test.ts`.
+
+1. Add planDuplicateSearch() and connector action/observation cases for
+   provenance, historical keys, site/project context, unavailable JQL/search,
+   lag, bounded ambiguity, one stable issue-ID match, and no match.
+2. Implement MCP duplicate-search planning with catalog fingerprinting and
+   stable issue-ID/context verification before adoption.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/jira.test.ts src/commands/pjm/remote/providers/jira-actions.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
+5. Commit: feat(p06-t09): search jira duplicates through mcp
+
+### Task p06-t10: Search Jira duplicates through optional ACLI
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/transports/acli.ts,
+packages/cli/src/commands/pjm/remote/transports/acli.test.ts, and
+`packages/cli/src/commands/pjm/remote/__integration__/jira.test.ts`.
+
+1. Add fake ACLI cases for provenance/JQL search, unavailable semantic fields,
+   changed keys, result lag, bounded ambiguity, one stable issue-ID/context
+   match, and no match.
+2. Implement searchDuplicates() only when capability probing demonstrates
+   semantic equivalence with the adapter plan.
+3. Format: pnpm format:fix
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/acli.test.ts src/commands/pjm/remote/__integration__/jira.test.ts`
+5. Commit: feat(p06-t10): search jira duplicates through acli
+
 ## Phase 7: Cross-Provider Convergence and Recovery
 
 ### Task p07-t01: Persist immutable reviewed batches
@@ -843,8 +1001,10 @@ modify packages/cli/src/commands/pjm/remote/index.ts and index.test.ts.
 
 ### Task p07-t04: Add bounded discussion evidence reads
 
-**Files:** Create packages/cli/src/commands/pjm/remote/discussion.ts and its
-test; modify remote/index.ts and index.test.ts.
+**Files:** Create packages/cli/src/commands/pjm/remote/discussion.ts and
+packages/cli/src/commands/pjm/remote/discussion.test.ts; modify
+packages/cli/src/commands/pjm/remote/index.ts and
+packages/cli/src/commands/pjm/remote/index.test.ts.
 
 1. Add pagination, page limit, sanitization, non-persistence, unavailable
    provider, and separate local-only distillation cases.
@@ -856,8 +1016,10 @@ test; modify remote/index.ts and index.test.ts.
 
 ### Task p07-t05: Resolve remote anomalies by relink or detach
 
-**Files:** Create packages/cli/src/commands/pjm/remote/resolution.ts and its
-test; modify remote/index.ts and index.test.ts.
+**Files:** Create packages/cli/src/commands/pjm/remote/resolution.ts and
+packages/cli/src/commands/pjm/remote/resolution.test.ts; modify
+packages/cli/src/commands/pjm/remote/index.ts and
+packages/cli/src/commands/pjm/remote/index.test.ts.
 
 1. Add stable replacement verification, duplicate rejection, history/snapshot
    retention, tombstoning, compact-link repair, crash recovery, and mandatory
@@ -871,12 +1033,16 @@ test; modify remote/index.ts and index.test.ts.
 ### Task p07-t06: Resolve uncertain creates and recreate safely
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/resolution.ts,
-resolution.test.ts, and remote/index.ts.
+packages/cli/src/commands/pjm/remote/resolution.test.ts,
+packages/cli/src/commands/pjm/remote/index.ts, and
+packages/cli/src/commands/pjm/remote/index.test.ts.
 
-1. Add provenance/alias duplicate search, found-existing adoption, no-match
-   approval, verified replacement, uncertain create freeze, and restart.
-2. Implement recreateBinding() with immutable approval floor, durable create
-   intent, identity history, and no blind retry.
+1. Add capability-aware found-existing, search-unavailable, ambiguous, and
+   no-match outcomes plus approval, verified replacement, uncertain create
+   freeze, restart, and recreate command-factory/invocation cases.
+2. Implement recreateBinding() by consuming provider duplicate-search
+   capabilities with immutable approval floor, durable create intent, identity
+   history, and no blind retry.
 3. Format: pnpm format:fix
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/resolution.test.ts src/commands/pjm/remote/index.test.ts
 5. Commit: feat(p07-t06): add duplicate-safe recreate recovery
@@ -979,19 +1145,21 @@ mismatch, with one final-PR frontmatter version bump if changed.
 
 ### Task p08-t04: Run evidence-grade focused and full verification
 
-**Files:** Modify only in-scope defects; record exact results in
-.oat/projects/shared/remote-project-management/implementation.md.
+**Files:** Always modify
+.oat/projects/shared/remote-project-management/implementation.md; modify only
+in-scope implementation files when a gate exposes a project defect.
 
 1. Run focused remote suites, pnpm test:smoke, pnpm test:skills,
    pnpm test:release, and pnpm oat:validate-skills separately.
 2. Run HOME=$(mktemp -d) pnpm exec turbo run test --force for live package tests.
 3. Run pnpm check, pnpm type-check, and pnpm build with explicit exit capture;
-   fix only in-scope defects.
-4. Format: run pnpm format:fix only if an in-scope repair was written
-   and then rerun every affected focused and full verification command to a
-   recorded zero exit.
-5. Commit bounded repairs as fix(p08-t04): resolve verification defects; make
-   no empty commit when no repair is needed.
+   record every command, exit, and cache/live-evidence distinction in
+   implementation.md. Fix only in-scope defects.
+4. Format: always run pnpm format:fix, then rerun every affected focused and
+   full verification command to a recorded zero exit.
+5. Commit: use docs(p08-t04): record verification evidence when no repair was
+   needed; otherwise use fix(p08-t04): resolve verification defects. Both
+   branches include the formatted implementation evidence.
 
 ### Task p08-t05: Apply the lockstep public-package version bump
 
@@ -1008,39 +1176,41 @@ packages/docs-transforms/package.json, and pnpm-lock.yaml.
 
 ### Task p08-t06: Run the complete CI-equivalent release gate
 
-**Files:** Modify only in-scope defects; update implementation.md with exact
-commands, exit codes, and cache/live-execution evidence.
+**Files:** Always modify
+.oat/projects/shared/remote-project-management/implementation.md; modify only
+in-scope implementation files when a gate exposes a project defect.
 
 1. Fetch origin/main immediately before the version gate.
 2. Run in CI order with explicit exits: pnpm check; pnpm type-check; pnpm test;
    pnpm build; pnpm run check:skill-bumps; pnpm release:check-versions;
    pnpm release:validate; pnpm build:docs.
-3. Also run pnpm lint and pnpm format because canonical skills change; report
-   Turbo cache replay separately from live evidence.
-4. Format: run pnpm format:fix only if an in-scope repair was written
-   and then rerun the complete step 2 and step 3 gate sequence with explicit
-   zero exits.
-5. Commit bounded repairs as fix(p08-t06): resolve release gate defects; finish
-   only when all required gates have explicit zero exits.
+3. Also run pnpm lint and pnpm format because canonical skills change; record
+   every command, exit, and Turbo cache/live-evidence distinction in
+   implementation.md. Fix only in-scope defects.
+4. Format: always run pnpm format:fix, then rerun the complete step 2 and step 3
+   gate sequence with explicit zero exits.
+5. Commit: use docs(p08-t06): record release gate evidence when no repair was
+   needed; otherwise use fix(p08-t06): resolve release gate defects. Both
+   branches include the formatted implementation evidence.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head | Invocation        | Gate Target    |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ------------- | ----------------- | -------------- |
-| p01    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p02    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p03    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p04    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p05    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p06    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p07    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| p08    | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| final  | code     | pending         | -          | -                                                    | -             | -                 | -              |
-| spec   | artifact | pending         | -          | -                                                    | -             | -                 | -              |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md | -             | manual-1          | cursor         |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md | -             | manual-2          | cursor         |
-| plan   | artifact | passed          | 2026-08-31 | -                                                    | -             | structured-auto-3 | codex:sol-high |
-| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T021338Z.md   | -             | -                 | -              |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation        | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ----------------- | ------------------------ |
+| p01    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p02    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p03    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p04    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p05    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p06    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p07    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| p08    | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| final  | code     | pending         | -          | -                                                           | -             | -                 | -                        |
+| spec   | artifact | pending         | -          | -                                                           | -             | -                 | -                        |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md        | -             | manual-1          | cursor                   |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md        | -             | manual-2          | cursor                   |
+| plan   | artifact | passed          | 2026-08-31 | -                                                           | -             | structured-auto-3 | codex:sol-high           |
+| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
@@ -1049,16 +1219,16 @@ passed.
 
 This is the planned execution rollup; all implementation phases remain pending.
 
-- Phase 1: 9 tasks - domain, configuration, persistence, compatibility, doctor
+- Phase 1: 10 tasks - domain, configuration, persistence, compatibility, doctor
 - Phase 2: 9 tasks - policy, projection, reconciliation, authority, verification
-- Phase 3: 11 tasks - provider/transport contracts, lifecycle, commands, skill
-- Phase 4: 8 tasks - GitHub adapter, gh, and public-publication safety
-- Phase 5: 7 tasks - Linear MCP actions and optional linear-cli
-- Phase 6: 8 tasks - Jira MCP actions, ADF, and optional ACLI
+- Phase 3: 12 tasks - provider/transport contracts, lifecycle, commands, skill
+- Phase 4: 11 tasks - GitHub adapter, gh, publication safety, search, discussion
+- Phase 5: 9 tasks - Linear MCP actions, duplicate search, optional linear-cli
+- Phase 6: 10 tasks - Jira MCP actions, ADF, duplicate search, optional ACLI
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
 
-**Total: 68 tasks**
+**Total: 77 tasks**
 
 ## References
 
