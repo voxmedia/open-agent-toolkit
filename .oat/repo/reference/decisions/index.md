@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status   | Title                                                                           | Legacy |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------- | ------ |
+| DR-260831-cause-specific-fail-closed     | 2026-08-31 | accepted | Cause-specific fail-closed runtime terminal                                     | -      |
+| DR-260831-conservative-direct-command    | 2026-08-31 | accepted | Conservative direct-command validation                                          | -      |
+| DR-260831-synchronous-configured-command | 2026-08-31 | accepted | Synchronous configured-command proof                                            | -      |
 | DR-260830-dependency-owned-provider      | 2026-08-30 | accepted | Dependency-owned provider roots                                                 | -      |
 | DR-260830-exact-canonical-identity       | 2026-08-30 | accepted | Exact canonical identity for loaded targets                                     | -      |
 | DR-260830-keep-legacy-false-values       | 2026-08-30 | accepted | Keep legacy false values readable but unwritable                                | -      |
