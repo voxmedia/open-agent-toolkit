@@ -1076,13 +1076,22 @@ async function fallbackRemoteRefTransition(
   target: SyncTarget,
   sourceSha: string,
   completedRef: string,
+  completedExpectedSha: string | null,
   git: GitRunner,
 ): Promise<void> {
   const create = await git.run(
-    ['push', target.remote, `${sourceSha}:${completedRef}`],
+    [
+      'push',
+      `--force-with-lease=${completedRef}:${completedExpectedSha ?? ''}`,
+      target.remote,
+      `${sourceSha}:${completedRef}`,
+    ],
     { cwd: target.repoRoot, allowFailure: true },
   );
   if (create.code !== 0) {
+    const afterFailure = await probeTerminalRefs(target, sourceSha, git);
+    assertRetirementProbe(target, sourceSha, afterFailure);
+    if (afterFailure.state === 'completed-only') return;
     throw new CliError(
       `Remote ref retirement for ${target.slug} was rejected while creating ${completedRef}: ${create.stderr || create.stdout || 'unknown Git error'}`,
       2,
@@ -1100,7 +1109,12 @@ async function fallbackRemoteRefTransition(
   }
 
   const removeActive = await git.run(
-    ['push', target.remote, `:${target.ref}`],
+    [
+      'push',
+      `--force-with-lease=${target.ref}:${sourceSha}`,
+      target.remote,
+      `:${target.ref}`,
+    ],
     { cwd: target.repoRoot, allowFailure: true },
   );
   if (removeActive.code === 0) return;
@@ -1119,6 +1133,7 @@ async function transitionRemoteRefs(
   target: SyncTarget,
   sourceSha: string,
   completedRef: string,
+  completedExpectedSha: string | null,
   git: GitRunner,
 ): Promise<void> {
   const result = await pushAtomicRefTransition(git, target.repoRoot, {
@@ -1126,10 +1141,17 @@ async function transitionRemoteRefs(
     sourceSha,
     activeRef: target.ref,
     completedRef,
+    completedExpectedSha,
   });
   if (result.code === 0) return;
   if (isAtomicPushUnsupported(result)) {
-    await fallbackRemoteRefTransition(target, sourceSha, completedRef, git);
+    await fallbackRemoteRefTransition(
+      target,
+      sourceSha,
+      completedRef,
+      completedExpectedSha,
+      git,
+    );
     return;
   }
 
@@ -1180,6 +1202,33 @@ async function reconcileLocalTerminalRefs(
   }
 
   if (completedSha === null) {
+    const object = await git.run(['cat-file', '-e', `${sourceSha}^{commit}`], {
+      cwd: target.repoRoot,
+      allowFailure: true,
+    });
+    if (object.code !== 0) {
+      await git.run(
+        [
+          'fetch',
+          '--no-tags',
+          '--no-write-fetch-head',
+          target.remote,
+          completedRef,
+        ],
+        { cwd: target.repoRoot },
+      );
+      const afterFetch = await probeTerminalRefs(target, sourceSha, git);
+      assertRetirementProbe(target, sourceSha, afterFetch);
+      if (afterFetch.state !== 'completed-only') {
+        throw new CliError(
+          `Refusing local ref reconciliation for ${target.slug}: remote terminal refs changed while fetching ${completedRef}.`,
+          2,
+        );
+      }
+      await git.run(['cat-file', '-e', `${sourceSha}^{commit}`], {
+        cwd: target.repoRoot,
+      });
+    }
     await git.run(['update-ref', completedRef, sourceSha], {
       cwd: target.repoRoot,
     });
@@ -1213,7 +1262,13 @@ export async function retireSyncedRef(
   const completedRef = initial.completedRef;
 
   if (initial.state !== 'completed-only') {
-    await transitionRemoteRefs(target, sourceSha, completedRef, git);
+    await transitionRemoteRefs(
+      target,
+      sourceSha,
+      completedRef,
+      initial.completedSha,
+      git,
+    );
   }
 
   const terminal = await probeTerminalRefs(target, sourceSha, git);

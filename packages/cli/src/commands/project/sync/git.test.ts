@@ -199,16 +199,39 @@ describe('remote ref transition primitives', () => {
         sourceSha: '1234567890123456789012345678901234567890',
         activeRef: 'refs/oat/projects/demo',
         completedRef: 'refs/oat/completed/demo',
+        completedExpectedSha: null,
       }),
     ).resolves.toEqual({ code: 0, stdout: '', stderr: '' });
     expect(run).toHaveBeenCalledWith(
       [
         'push',
         '--atomic',
+        '--force-with-lease=refs/oat/projects/demo:1234567890123456789012345678901234567890',
+        '--force-with-lease=refs/oat/completed/demo:',
         'origin',
         '1234567890123456789012345678901234567890:refs/oat/completed/demo',
         ':refs/oat/projects/demo',
       ],
+      { cwd: '/repo', allowFailure: true },
+    );
+  });
+
+  it('leases an existing completed ref to the previously verified SHA', async () => {
+    const run = vi.fn(async () => ({ code: 0, stdout: '', stderr: '' }));
+    const sourceSha = '1234567890123456789012345678901234567890';
+
+    await pushAtomicRefTransition({ run }, '/repo', {
+      remote: 'origin',
+      sourceSha,
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      completedExpectedSha: sourceSha,
+    });
+
+    expect(run).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        `--force-with-lease=refs/oat/completed/demo:${sourceSha}`,
+      ]),
       { cwd: '/repo', allowFailure: true },
     );
   });

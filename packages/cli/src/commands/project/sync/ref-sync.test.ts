@@ -1949,6 +1949,8 @@ describe('synced ref retirement', () => {
       expect(calls).toContainEqual([
         'push',
         '--atomic',
+        `--force-with-lease=${target.ref}:${sourceSha}`,
+        `--force-with-lease=${completedSyncedRefName(target.slug)}:`,
         target.remote,
         `${sourceSha}:${completedSyncedRefName(target.slug)}`,
         `:${target.ref}`,
@@ -2041,10 +2043,188 @@ describe('synced ref retirement', () => {
       });
       expect(calls).toContainEqual([
         'push',
+        `--force-with-lease=${completedSyncedRefName(target.slug)}:`,
         target.remote,
         `${sourceSha}:${completedSyncedRefName(target.slug)}`,
       ]);
-      expect(calls).toContainEqual(['push', target.remote, `:${target.ref}`]);
+      expect(calls).toContainEqual([
+        'push',
+        `--force-with-lease=${target.ref}:${sourceSha}`,
+        target.remote,
+        `:${target.ref}`,
+      ]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves competing refs when they advance before the atomic push', async () => {
+    const { fixture, target, sourceSha } =
+      await createPushedTarget('atomic-race');
+    try {
+      await writeFile(join(target.projectPath, 'race.md'), 'race\n', 'utf8');
+      git(target.projectPath, ['add', 'race.md']);
+      git(target.projectPath, ['commit', '-m', 'competing atomic advance']);
+      const competingSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+      const completedRef = completedSyncedRefName(target.slug);
+      let raced = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (!raced && args[0] === 'push' && args.includes('--atomic')) {
+            raced = true;
+            git(fixture.cloneA, [
+              'push',
+              '-q',
+              target.remote,
+              `${competingSha}:${target.ref}`,
+            ]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        retireSyncedRef(target, sourceSha, racingRunner),
+      ).rejects.toThrow(/different SHA|not the bound source SHA/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(competingSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]),
+      ).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves a concurrently created completed ref before the fallback create', async () => {
+    const {
+      fixture,
+      target,
+      sourceSha: competingSha,
+    } = await createPushedTarget('fallback-race');
+    try {
+      await writeFile(
+        join(target.projectPath, 'source.md'),
+        'source\n',
+        'utf8',
+      );
+      const pushed = await pushSynced(target, defaultGitRunner, {});
+      const sourceSha = pushed.sha;
+      const completedRef = completedSyncedRefName(target.slug);
+      let raced = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (args.includes('--atomic')) {
+            return {
+              code: 128,
+              stdout: '',
+              stderr: 'the receiving end does not support --atomic push',
+            };
+          }
+          if (
+            !raced &&
+            args[0] === 'push' &&
+            args.includes(`${sourceSha}:${completedRef}`)
+          ) {
+            raced = true;
+            git(fixture.cloneA, [
+              'push',
+              '-q',
+              target.remote,
+              `${competingSha}:${completedRef}`,
+            ]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        retireSyncedRef(target, sourceSha, racingRunner),
+      ).rejects.toThrow(/different SHA|not the bound source SHA/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]).split(/\s/)[0],
+      ).toBe(competingSha);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('preserves an active ref advanced before fallback deletion', async () => {
+    const { fixture, target, sourceSha } = await createPushedTarget(
+      'fallback-delete-race',
+    );
+    try {
+      await writeFile(join(target.projectPath, 'race.md'), 'race\n', 'utf8');
+      git(target.projectPath, ['add', 'race.md']);
+      git(target.projectPath, ['commit', '-m', 'competing fallback deletion']);
+      const competingSha = git(target.projectPath, ['rev-parse', 'HEAD']);
+      const completedRef = completedSyncedRefName(target.slug);
+      let raced = false;
+      const racingRunner: GitRunner = {
+        async run(args, options) {
+          if (args.includes('--atomic')) {
+            return {
+              code: 128,
+              stdout: '',
+              stderr: 'the receiving end does not support --atomic push',
+            };
+          }
+          if (!raced && args[0] === 'push' && args.includes(`:${target.ref}`)) {
+            raced = true;
+            git(fixture.cloneA, [
+              'push',
+              '-q',
+              target.remote,
+              `${competingSha}:${target.ref}`,
+            ]);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+
+      await expect(
+        retireSyncedRef(target, sourceSha, racingRunner),
+      ).rejects.toThrow(/not the bound source SHA/i);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          target.ref,
+        ]).split(/\s/)[0],
+      ).toBe(competingSha);
+      expect(
+        git(fixture.cloneA, [
+          'ls-remote',
+          '--refs',
+          target.remote,
+          completedRef,
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
     } finally {
       await fixture.cleanup();
     }
@@ -2066,6 +2246,57 @@ describe('synced ref retirement', () => {
         completedRef: completedSyncedRefName(target.slug),
         verifiedSha: sourceSha,
       });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('fetches a completed-only object into a separate parent checkout before local ref reconciliation', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    try {
+      const target = buildSyncTarget(
+        fixture.cloneA,
+        '.oat/projects/shared',
+        'completed-only-missing-object',
+      );
+      await createSyncedProject(target, defaultGitRunner);
+      await pushSynced(target, defaultGitRunner, {});
+      const sourceSha = git(fixture.cloneA, ['rev-parse', target.ref]);
+      await retireSyncedRef(target, sourceSha, defaultGitRunner);
+
+      const recoveryTarget = buildSyncTarget(
+        fixture.cloneB!,
+        '.oat/projects/shared',
+        target.slug,
+      );
+      await expect(
+        defaultGitRunner.run(['cat-file', '-e', `${sourceSha}^{commit}`], {
+          cwd: fixture.cloneB!,
+          allowFailure: true,
+        }),
+      ).resolves.not.toMatchObject({ code: 0 });
+
+      await expect(
+        retireSyncedRef(recoveryTarget, sourceSha, defaultGitRunner),
+      ).resolves.toMatchObject({
+        status: 'already-retired',
+        state: 'completed-only',
+        verifiedSha: sourceSha,
+      });
+      await expect(
+        defaultGitRunner.run(['cat-file', '-e', `${sourceSha}^{commit}`], {
+          cwd: fixture.cloneB!,
+          allowFailure: true,
+        }),
+      ).resolves.toMatchObject({ code: 0 });
+      expect(
+        git(fixture.cloneB!, [
+          'show-ref',
+          '--verify',
+          completedSyncedRefName(target.slug),
+        ]).split(/\s/)[0],
+      ).toBe(sourceSha);
+      expect(git(fixture.cloneB!, ['show-ref'])).not.toContain(target.ref);
     } finally {
       await fixture.cleanup();
     }

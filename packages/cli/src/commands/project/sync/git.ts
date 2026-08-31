@@ -27,6 +27,7 @@ export interface AtomicRefTransition {
   sourceSha: string;
   activeRef: string;
   completedRef: string;
+  completedExpectedSha: string | null;
 }
 
 export type ExecFileImplementation = (
@@ -49,6 +50,8 @@ export function pushAtomicRefTransition(
     [
       'push',
       '--atomic',
+      `--force-with-lease=${transition.activeRef}:${transition.sourceSha}`,
+      `--force-with-lease=${transition.completedRef}:${transition.completedExpectedSha ?? ''}`,
       transition.remote,
       `${transition.sourceSha}:${transition.completedRef}`,
       `:${transition.activeRef}`,
