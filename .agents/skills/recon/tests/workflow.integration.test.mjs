@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
@@ -17,7 +17,9 @@ afterEach(async () => {
 });
 
 async function roots() {
-  const root = await mkdtemp(join(tmpdir(), 'fake-recon-workflow-'));
+  const root = await realpath(
+    await mkdtemp(join(tmpdir(), 'fake-recon-workflow-')),
+  );
   tempRoots.push(root);
   return {
     sourceRoot: join(root, 'sources'),

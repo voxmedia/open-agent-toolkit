@@ -6,13 +6,20 @@ import { pathToFileURL } from 'node:url';
 
 import { hashCanonicalJson, hashFile } from './lib/canonical-json.mjs';
 import {
+  approvalSelectionAxes,
   isDigest,
   isObject,
   issue,
   profiles,
   validateArtifactShape,
 } from './lib/contracts.mjs';
-import { assertSafeExistingPath, isContainedPath } from './lib/safe-path.mjs';
+import {
+  assertCanonicalRoot,
+  assertSafeExistingPath,
+  assertUnchangedRoot,
+  isContainedPath,
+} from './lib/safe-path.mjs';
+import { createValidatedRun } from './lib/validated-run.mjs';
 
 const requiredStages = {
   quick: ['map', 'gather', 'compile', 'locator-validation'],
@@ -188,6 +195,27 @@ function redactSecrets(value) {
       (_match, key) => `${key}=[REDACTED]`,
     )
     .replace(/\b(?:sk|ghp|xox[baprs])[-_][A-Za-z0-9_-]{8,}\b/g, '[REDACTED]');
+}
+
+function containsSecret(value) {
+  if (typeof value === 'string') return redactSecrets(value) !== value;
+  if (Array.isArray(value)) return value.some(containsSecret);
+  if (isObject(value)) return Object.values(value).some(containsSecret);
+  return false;
+}
+
+function validatePersistedSecretSafety(values, errors) {
+  for (const [path, value] of values) {
+    if (containsSecret(value)) {
+      errors.push(
+        issue(
+          'UNREDACTED_SECRET',
+          'Persisted packet data contains a secret-like span',
+          path,
+        ),
+      );
+    }
+  }
 }
 
 function sourceHasMinimumProvenance(source) {
@@ -596,11 +624,20 @@ const stageArtifactContract = {
   },
 };
 
+function selectionFromEnvelope(envelope) {
+  return Object.fromEntries(
+    approvalSelectionAxes
+      .filter((axis) => envelope?.[axis] !== undefined)
+      .map((axis) => [axis, envelope[axis]]),
+  );
+}
+
 function stageArtifactIsComplete(
   stage,
   artifactsById,
   runId,
   approvalFingerprint,
+  approvalEnvelope,
 ) {
   const contract = stageArtifactContract[stage.mode];
   if (!contract || stage.status !== 'complete') return false;
@@ -637,9 +674,16 @@ function stageArtifactIsComplete(
         receipt.stageId !== stage.id ||
         receipt.laneId !== stage.laneId ||
         receipt.fingerprint !== approvalFingerprint ||
+        hashCanonicalJson(receipt.selection) !==
+          hashCanonicalJson(selectionFromEnvelope(approvalEnvelope)) ||
+        hashCanonicalJson(receipt.approvalEnvelope) !==
+          hashCanonicalJson(approvalEnvelope) ||
         receipt.fingerprint !== hashCanonicalJson(receipt.approvalEnvelope) ||
         (receipt.acceptedEnvelope &&
-          receipt.fingerprint !== hashCanonicalJson(receipt.acceptedEnvelope)),
+          (hashCanonicalJson(receipt.acceptedEnvelope) !==
+            hashCanonicalJson(approvalEnvelope) ||
+            receipt.fingerprint !==
+              hashCanonicalJson(receipt.acceptedEnvelope))),
     ) ||
     !receipts.some((receipt) => receipt.state === 'accepted') ||
     !receipts.some(
@@ -706,7 +750,13 @@ function validateStageTopology(
     }
     stageByLane.set(stage.laneId, stage);
     if (
-      stageArtifactIsComplete(stage, artifactsById, runId, approvalFingerprint)
+      stageArtifactIsComplete(
+        stage,
+        artifactsById,
+        runId,
+        approvalFingerprint,
+        manifest.execution?.approvalEnvelope,
+      )
     ) {
       const ids = completeArtifactIdsByMode.get(stage.mode) ?? [];
       ids.push(stage.artifactIds[0]);
@@ -754,6 +804,45 @@ function sameReference(left, right) {
   return left?.path === right?.path && left?.digest === right?.digest;
 }
 
+function resolveTerminalReconciliation(
+  artifactsById,
+  artifactsByPath,
+  topology,
+  reconciliationRequired,
+  errors,
+) {
+  const terminalId =
+    topology.completeArtifactIdsByMode.get('reconciliation')?.[0];
+  const reconciliationResults = [...artifactsById.values()].filter(
+    ({ value }) =>
+      value.kind === 'recon.review-result' &&
+      value.reviewKind === 'reconciliation',
+  );
+  const expectedCount = reconciliationRequired ? 1 : 0;
+  if (
+    reconciliationResults.length !== expectedCount ||
+    (reconciliationRequired &&
+      reconciliationResults[0]?.value.id !== terminalId)
+  ) {
+    errors.push(
+      issue(
+        'SHADOW_RECONCILIATION',
+        'The packet must contain exactly its one receipted terminal reconciliation',
+        terminalId ?? '$.artifacts',
+      ),
+    );
+  }
+  const reconciliation = artifactsById.get(terminalId)?.value ?? null;
+  const priorLedger = reconciliation
+    ? ([...artifactsByPath.values()].find(
+        ({ reference, value }) =>
+          sameReference(reference, reconciliation.inputLedger) &&
+          value.kind === 'recon.claim-ledger',
+      )?.value ?? null)
+    : null;
+  return { reconciliation, priorLedger };
+}
+
 function reviewBriefBindsClaim(brief, reviewKind, claim, ledger, manifest) {
   const projected =
     reviewKind === 'semantic' || reviewKind === 'redundant-verification'
@@ -799,17 +888,11 @@ function validateReviewBindings(
   ledger,
   artifactsById,
   artifactsByPath,
+  reconciliationContext,
   errors,
 ) {
   const claims = new Map(ledger.claims.map((claim) => [claim.id, claim]));
-  const reconciliation = [...artifactsById.values()].find(
-    ({ value }) => value.reviewKind === 'reconciliation',
-  )?.value;
-  const priorLedger = [...artifactsByPath.values()].find(
-    ({ reference, value }) =>
-      sameReference(reference, reconciliation?.inputLedger) &&
-      value.kind === 'recon.claim-ledger',
-  )?.value;
+  const priorLedger = reconciliationContext.priorLedger;
   const priorClaims = new Map(
     (priorLedger?.claims ?? []).map((claim) => [claim.id, claim]),
   );
@@ -862,7 +945,7 @@ function validateReviewBindings(
       ) {
         errors.push(
           issue(
-            'REVIEW_CLAIM_BINDING_MISMATCH',
+            'REVIEW_BRIEF_MISMATCH',
             `Review ${result.id} dispositions must exactly match claim-bearing brief projections`,
             result.id,
           ),
@@ -935,16 +1018,14 @@ function validateReconciliation(
   manifest,
   ledger,
   artifactsById,
-  artifactsByPath,
+  reconciliationContext,
   topology,
   receiptedReviewIds,
   exactEvidence,
   reconciliationRequired,
   errors,
 ) {
-  const reconciliationId =
-    topology.completeArtifactIdsByMode.get('reconciliation')?.[0];
-  const reconciliation = artifactsById.get(reconciliationId)?.value;
+  const { reconciliation, priorLedger: prior } = reconciliationContext;
   if (ledger.revision <= 1) {
     if (reconciliationRequired) {
       errors.push(
@@ -976,11 +1057,6 @@ function validateReconciliation(
       ),
     );
   }
-  const prior = [...artifactsByPath.values()].find(
-    ({ reference, value }) =>
-      sameReference(reference, reconciliation.inputLedger) &&
-      value.kind === 'recon.claim-ledger',
-  )?.value;
   if (
     !prior ||
     prior.revision !== reconciliation.inputLedger?.revision ||
@@ -1282,15 +1358,7 @@ function validateReconciliation(
   }
 }
 
-function validateAssurance(
-  manifest,
-  ledger,
-  exactEvidence,
-  achievedProfile,
-  artifactsById,
-  receiptedReviewIds,
-  errors,
-) {
+function validateDerivedSourceGaps(manifest, ledger, errors) {
   const evidenceById = new Map(
     (ledger.evidence ?? []).map((item) => [item.id, item]),
   );
@@ -1323,8 +1391,43 @@ function validateAssurance(
           `source:${source.id}`,
         ),
       );
+    } else if (gap.material !== true || manifest.run.status !== 'partial') {
+      errors.push(
+        issue(
+          'SOURCE_GAP_REQUIRES_MATERIAL_PARTIAL',
+          `Ineligible source ${source.id} requires a material gap and partial publication`,
+          `source:${source.id}`,
+        ),
+      );
+    }
+    if (
+      [...affectedClaims].some((claimId) =>
+        ['supported', 'verified'].includes(
+          ledger.claims.find((claim) => claim.id === claimId)?.status,
+        ),
+      )
+    ) {
+      errors.push(
+        issue(
+          'CLAIM_ASSURANCE_INVALID',
+          `Ineligible source ${source.id} cannot support assured claims`,
+          `source:${source.id}`,
+        ),
+      );
     }
   }
+}
+
+function validateAssurance(validatedRun, errors) {
+  const { manifest, ledger, achievedProfile } = validatedRun;
+  const exactEvidence = new Set(validatedRun.exactEvidenceIds);
+  const receiptedReviewIds = new Set(validatedRun.receiptedReviewIds);
+  const artifactsById = new Map(
+    validatedRun.artifacts.map((artifact) => [artifact.id, artifact]),
+  );
+  const evidenceById = new Map(
+    (ledger.evidence ?? []).map((item) => [item.id, item]),
+  );
   for (const claim of ledger.claims ?? []) {
     if (claim.status === 'verified' && achievedProfile === 'quick') {
       errors.push(
@@ -1585,10 +1688,24 @@ function validateAssurance(
   }
 }
 
-export async function validatePacket(packetDirectory, options = {}) {
+export async function compileValidatedRun(packetDirectory, options = {}) {
   const packetRoot = resolve(packetDirectory);
   const errors = [];
   const warnings = [];
+  let packetRootIdentity = null;
+  try {
+    packetRootIdentity = await assertCanonicalRoot(packetRoot);
+  } catch (error) {
+    errors.push(
+      issue(
+        error?.code === 'SYMLINK_ESCAPE'
+          ? 'SYMLINK_ESCAPE'
+          : 'NON_CANONICAL_ROOT',
+        'Packet root must be a stable canonical realpath',
+        packetRoot,
+      ),
+    );
+  }
   const manifest = await readManagedJson(
     packetRoot,
     resolve(packetRoot, 'manifest.json'),
@@ -1643,9 +1760,21 @@ export async function validatePacket(packetDirectory, options = {}) {
       ),
     );
   }
+  validatePersistedSecretSafety(
+    [
+      ['manifest.json', manifest],
+      ['claims.json', ledger],
+      ...[...artifactsByPath.entries()].map(([path, artifact]) => [
+        path,
+        artifact.value,
+      ]),
+    ],
+    errors,
+  );
 
   const exactEvidence = new Set();
   if (manifest && ledger) {
+    validateDerivedSourceGaps(manifest, ledger, errors);
     const sources = new Map(
       manifest.sources.map((source) => [source.id, source]),
     );
@@ -1697,33 +1826,68 @@ export async function validatePacket(packetDirectory, options = {}) {
       topology,
       errors,
     );
+    const reconciliationRequired =
+      achievedProfile === 'standard' || achievedProfile === 'thorough';
+    const reconciliationContext = resolveTerminalReconciliation(
+      artifactsById,
+      artifactsByPath,
+      topology,
+      reconciliationRequired,
+      errors,
+    );
     validateReviewBindings(
       manifest,
       ledger,
       artifactsById,
       artifactsByPath,
-      errors,
-    );
-    validateAssurance(
-      manifest,
-      ledger,
-      exactEvidence,
-      achievedProfile,
-      artifactsById,
-      receiptedReviewIds,
+      reconciliationContext,
       errors,
     );
     validateReconciliation(
       manifest,
       ledger,
       artifactsById,
-      artifactsByPath,
+      reconciliationContext,
       topology,
       receiptedReviewIds,
       exactEvidence,
-      achievedProfile === 'standard' || achievedProfile === 'thorough',
+      reconciliationRequired,
       errors,
     );
+    if (packetRootIdentity) {
+      try {
+        await assertUnchangedRoot(packetRootIdentity);
+      } catch {
+        errors.push(
+          issue(
+            'ROOT_IDENTITY_CHANGED',
+            'Packet root identity changed during validation',
+            packetRoot,
+          ),
+        );
+      }
+    }
+    let validatedRun = null;
+    if (
+      packetRootIdentity &&
+      isObject(manifest.run) &&
+      Array.isArray(ledger.claims) &&
+      Array.isArray(ledger.evidence)
+    ) {
+      validatedRun = createValidatedRun({
+        packetRoot,
+        packetRootIdentity,
+        manifest,
+        ledger,
+        artifactsById,
+        exactEvidence,
+        topology,
+        achievedProfile,
+        receiptedReviewIds,
+        reconciliationContext,
+      });
+      validateAssurance(validatedRun, errors);
+    }
 
     const valid = errors.length === 0;
     if (!valid && options.removePublishedOnFailure !== false) {
@@ -1741,6 +1905,7 @@ export async function validatePacket(packetDirectory, options = {}) {
       packetRoot,
       errors,
       warnings,
+      validatedRun: valid ? validatedRun : undefined,
     };
   }
 
@@ -1757,6 +1922,14 @@ export async function validatePacket(packetDirectory, options = {}) {
     errors,
     warnings,
   };
+}
+
+export async function validatePacket(packetDirectory, options = {}) {
+  const { validatedRun: _validatedRun, ...result } = await compileValidatedRun(
+    packetDirectory,
+    options,
+  );
+  return result;
 }
 
 async function main(argv) {

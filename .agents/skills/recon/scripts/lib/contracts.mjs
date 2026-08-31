@@ -49,6 +49,24 @@ export const stageModes = [
   'redundant-verification',
   'contradiction-resolution',
 ];
+export const approvalSelectionAxes = [
+  'provider',
+  'model',
+  'effort',
+  'reasoningMode',
+  'route',
+  'role',
+  'serviceTier',
+];
+export const approvalEnvelopeAxes = [
+  ...approvalSelectionAxes,
+  'authority',
+  'deadlineSeconds',
+  'retryLimit',
+  'concurrency',
+  'laneCap',
+  'waves',
+];
 
 const legalTransitions = new Set([
   'provisional:supported',
@@ -128,6 +146,18 @@ function requiredString(value, key, errors, path = '$') {
   }
 }
 
+function requiredInteger(value, key, errors, path = '$', minimum = 0) {
+  if (!Number.isInteger(value?.[key]) || value[key] < minimum) {
+    errors.push(
+      issue(
+        'MISSING_REQUIRED_FIELD',
+        `${key} must be an integer greater than or equal to ${minimum}`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
 function requiredArray(value, key, errors, path = '$') {
   if (!Array.isArray(value?.[key])) {
     errors.push(
@@ -182,6 +212,14 @@ function duplicateIds(values, path, errors) {
 
 function validateApprovalEnvelope(value, errors, path) {
   if (!isObject(value)) return;
+  closedObject(value, new Set(approvalEnvelopeAxes), errors, path);
+  for (const key of [...approvalSelectionAxes, 'authority']) {
+    requiredString(value, key, errors, path);
+  }
+  requiredInteger(value, 'deadlineSeconds', errors, path, 1);
+  requiredInteger(value, 'retryLimit', errors, path);
+  requiredInteger(value, 'concurrency', errors, path, 1);
+  requiredInteger(value, 'laneCap', errors, path, 1);
   requiredArray(value, 'waves', errors, path);
   const waveIds = new Set();
   const laneIds = new Set();
@@ -1368,24 +1406,12 @@ function validateDispatchReceipt(value, errors) {
   requiredObject(value, 'selection', errors);
   requiredObject(value, 'approvalEnvelope', errors);
   requiredString(value, 'fingerprint', errors);
-  const selectionKeys = new Set([
-    'provider',
-    'model',
-    'effort',
-    'route',
-    'role',
-    'serviceTier',
-  ]);
-  const envelopeKeys = new Set([
-    ...selectionKeys,
-    'authority',
-    'deadlineSeconds',
-    'retryLimit',
-    'concurrency',
-    'laneCap',
-    'waves',
-  ]);
+  const selectionKeys = new Set(approvalSelectionAxes);
+  const envelopeKeys = new Set(approvalEnvelopeAxes);
   closedObject(value.selection, selectionKeys, errors, '$.selection');
+  for (const key of approvalSelectionAxes) {
+    requiredString(value.selection, key, errors, '$.selection');
+  }
   closedObject(
     value.approvalEnvelope,
     envelopeKeys,

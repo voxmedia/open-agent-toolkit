@@ -22,6 +22,18 @@ export function reconcileLedger({
       'Reconciliation requires the exact prior ledger for this run',
     );
   }
+  if (!Array.isArray(reviewResults)) {
+    throw new Error('Reconciliation requires an exact review-result array');
+  }
+  const reviewKinds = reviewResults.map((review) => review.reviewKind);
+  if (
+    new Set(reviewKinds).size !== reviewKinds.length ||
+    reviewKinds.includes('reconciliation')
+  ) {
+    throw new Error(
+      'Reconciliation rejects duplicate, nested, or shadow review results',
+    );
+  }
   const reviews = new Map(
     reviewResults.map((review) => [review.reviewKind, review]),
   );

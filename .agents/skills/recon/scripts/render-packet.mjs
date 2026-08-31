@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { rename, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { hashFile } from './lib/canonical-json.mjs';
-import { assertSafeOutputPath } from './lib/safe-path.mjs';
-import { validatePacket } from './validate-packet.mjs';
+import { assertSafeOutputPath, assertUnchangedRoot } from './lib/safe-path.mjs';
+import { assertValidatedRun } from './lib/validated-run.mjs';
+import { compileValidatedRun } from './validate-packet.mjs';
 
 function escapeInline(value) {
   return String(value)
@@ -42,7 +43,8 @@ function bulletLines(values, empty = 'None.') {
     : [`- ${empty}`];
 }
 
-export function renderPacketDocument(manifest, ledger) {
+export function renderPacketDocument(validatedRun) {
+  const { manifest, ledger } = assertValidatedRun(validatedRun);
   const evidenceById = new Map(
     ledger.evidence.map((evidence) => [evidence.id, evidence]),
   );
@@ -166,22 +168,25 @@ function claimCounts(ledger) {
 
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
+  const validation = await compileValidatedRun(packetRoot, {
+    removePublishedOnFailure: true,
+  });
+  if (!validation.valid || !validation.publishable) {
+    throw new Error(
+      `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
+    );
+  }
+  return renderValidatedPacket(validation.validatedRun);
+}
+
+export async function renderValidatedPacket(validatedRun) {
+  const run = assertValidatedRun(validatedRun);
+  const { manifest, ledger, packetRoot } = run;
   const target = join(packetRoot, 'packet.md');
   const temporary = join(packetRoot, `.packet.md.${process.pid}.tmp`);
   try {
-    const validation = await validatePacket(packetRoot, {
-      removePublishedOnFailure: true,
-    });
-    if (!validation.valid || !validation.publishable) {
-      throw new Error(
-        `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
-      );
-    }
-    const [manifest, ledger] = await Promise.all([
-      readFile(join(packetRoot, 'manifest.json'), 'utf8').then(JSON.parse),
-      readFile(join(packetRoot, 'claims.json'), 'utf8').then(JSON.parse),
-    ]);
-    const document = renderPacketDocument(manifest, ledger);
+    await assertUnchangedRoot(run.packetRootIdentity);
+    const document = renderPacketDocument(run);
     await assertSafeOutputPath(packetRoot, temporary);
     await assertSafeOutputPath(packetRoot, target);
     await writeFile(temporary, document, { encoding: 'utf8', flag: 'wx' });
@@ -189,8 +194,8 @@ export async function renderPacket(packetDirectory) {
     return {
       directory: packetRoot,
       status: manifest.run.status,
-      requestedProfile: validation.requestedProfile,
-      achievedProfile: validation.achievedProfile,
+      requestedProfile: manifest.run.requestedProfile,
+      achievedProfile: run.achievedProfile,
       claimCounts: claimCounts(ledger),
       gapCount: manifest.gaps.length,
       failedOrOmittedPasses: [

@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
-import { readdir, readFile, rm } from 'node:fs/promises';
+import { readdir, readFile, rename, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import {
   renderPacket,
   renderPacketDocument,
+  renderValidatedPacket,
 } from '../scripts/render-packet.mjs';
+import { compileValidatedRun } from '../scripts/validate-packet.mjs';
 import { createPacketFixture } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
@@ -22,8 +24,10 @@ afterEach(async () => {
 test('packet rendering is deterministic and contains the complete consumer view', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
-  const first = renderPacketDocument(fixture.manifest, fixture.ledger);
-  const second = renderPacketDocument(fixture.manifest, fixture.ledger);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const first = renderPacketDocument(validation.validatedRun);
+  const second = renderPacketDocument(validation.validatedRun);
   assert.equal(first, second);
   for (const heading of [
     '# Recon Evidence Packet',
@@ -40,6 +44,33 @@ test('packet rendering is deterministic and contains the complete consumer view'
   assert.match(first, /\*\*verified\*\*/i);
   assert.match(first, /source\.txt:1/i);
   assert.doesNotMatch(first, /raw\/dossiers|gather\.json|compiler reasoning/i);
+});
+
+test('render core rejects raw or partially validated packet data', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  assert.throws(
+    () => renderPacketDocument(fixture.manifest, fixture.ledger),
+    /ValidatedRun/,
+  );
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(Object.isFrozen(validation.validatedRun), true);
+  assert.equal(Object.isFrozen(validation.validatedRun.manifest), true);
+  assert.doesNotThrow(() => renderPacketDocument(validation.validatedRun));
+});
+
+test('publication rejects a packet root retargeted after validation', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const moved = join(fixture.tempRoot, 'packet-moved');
+  await rename(fixture.packetRoot, moved);
+  await symlink(moved, fixture.packetRoot, 'dir');
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun),
+    /root|symlink/i,
+  );
 });
 
 test('renderer validates then atomically publishes stable bytes and digest', async () => {

@@ -20,12 +20,14 @@ export async function createPacketFixture({
   roots,
 } = {}) {
   const tempRoot = roots
-    ? resolve(dirname(roots.packetRoot))
-    : await mkdtemp(join(tmpdir(), 'recon-render-'));
+    ? await realpath(resolve(dirname(roots.packetRoot)))
+    : await realpath(await mkdtemp(join(tmpdir(), 'recon-render-')));
   const packetRoot = roots
-    ? resolve(roots.packetRoot)
+    ? await realpath(resolve(roots.packetRoot))
     : join(tempRoot, 'packet');
-  const sourceRoot = roots ? resolve(roots.sourceRoot) : tempRoot;
+  const sourceRoot = roots
+    ? await realpath(resolve(roots.sourceRoot))
+    : tempRoot;
   let sourcePath = join(sourceRoot, 'source.txt');
   await mkdir(join(packetRoot, 'raw', 'dossiers'), { recursive: true });
   await mkdir(join(packetRoot, 'reviews', 'briefs'), { recursive: true });
@@ -350,9 +352,15 @@ export async function createPacketFixture({
     provider: 'fixture',
     model: 'fixture-model',
     effort: 'high',
+    reasoningMode: 'fixture-reasoning',
     route: 'fake',
     role: 'recon-worker',
     serviceTier: 'fixture',
+    authority: 'contract-enforced',
+    deadlineSeconds: 60,
+    retryLimit: 0,
+    concurrency: achievedProfile === 'thorough' ? 4 : 2,
+    laneCap: achievedProfile === 'thorough' ? 20 : 10,
     waves: stageModes.map((mode) => ({
       id: `wave-${mode}`,
       mode,
@@ -422,7 +430,15 @@ export async function createPacketFixture({
         stageId,
         laneId,
         state,
-        selection: { provider: 'fixture', model: 'fixture-model' },
+        selection: {
+          provider: approvalEnvelope.provider,
+          model: approvalEnvelope.model,
+          effort: approvalEnvelope.effort,
+          reasoningMode: approvalEnvelope.reasoningMode,
+          route: approvalEnvelope.route,
+          role: approvalEnvelope.role,
+          serviceTier: approvalEnvelope.serviceTier,
+        },
         approvalEnvelope,
         fingerprint: hashCanonicalJson(approvalEnvelope),
         acceptedEnvelope: approvalEnvelope,

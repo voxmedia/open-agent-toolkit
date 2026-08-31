@@ -12,7 +12,8 @@ function contains(root, candidate) {
 }
 
 async function assertNoSymlinkComponents(root, candidate, allowMissing) {
-  const resolvedRoot = resolve(root);
+  const rootIdentity = await assertCanonicalRoot(root);
+  const resolvedRoot = rootIdentity.path;
   const resolvedCandidate = resolve(candidate);
   if (!contains(resolvedRoot, resolvedCandidate)) {
     throw Object.assign(new Error('Path escapes its managed root'), {
@@ -40,7 +41,7 @@ async function assertNoSymlinkComponents(root, candidate, allowMissing) {
       throw error;
     }
   }
-  const realRoot = await realpath(resolvedRoot);
+  const realRoot = rootIdentity.path;
   let existing = resolvedCandidate;
   while (true) {
     try {
@@ -59,6 +60,51 @@ async function assertNoSymlinkComponents(root, candidate, allowMissing) {
     });
   }
   return resolvedCandidate;
+}
+
+export async function assertCanonicalRoot(root) {
+  if (typeof root !== 'string' || !isAbsolute(root)) {
+    throw Object.assign(new Error('Managed root must be an absolute path'), {
+      code: 'NON_CANONICAL_ROOT',
+    });
+  }
+  const resolvedRoot = resolve(root);
+  const stat = await lstat(resolvedRoot);
+  if (stat.isSymbolicLink()) {
+    throw Object.assign(new Error('Managed root cannot be a symlink alias'), {
+      code: 'SYMLINK_ESCAPE',
+    });
+  }
+  const canonicalRoot = await realpath(resolvedRoot);
+  if (canonicalRoot !== resolvedRoot) {
+    throw Object.assign(
+      new Error('Managed root must be its canonical realpath'),
+      {
+        code: 'NON_CANONICAL_ROOT',
+      },
+    );
+  }
+  return Object.freeze({
+    path: canonicalRoot,
+    device: stat.dev,
+    inode: stat.ino,
+  });
+}
+
+export async function assertUnchangedRoot(identity) {
+  const current = await assertCanonicalRoot(identity?.path);
+  if (
+    current.device !== identity?.device ||
+    current.inode !== identity?.inode
+  ) {
+    throw Object.assign(
+      new Error('Managed root identity changed after validation'),
+      {
+        code: 'ROOT_IDENTITY_CHANGED',
+      },
+    );
+  }
+  return current;
 }
 
 export function isContainedPath(root, candidate) {

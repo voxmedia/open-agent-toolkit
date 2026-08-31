@@ -49,6 +49,19 @@ async function replaceApprovalEnvelope(packet, approvalEnvelope) {
     item.path.startsWith('raw/dispatch/'),
   )) {
     const receipt = await readJson(join(packet.packetRoot, reference.path));
+    receipt.selection = Object.fromEntries(
+      [
+        'provider',
+        'model',
+        'effort',
+        'reasoningMode',
+        'route',
+        'role',
+        'serviceTier',
+      ]
+        .filter((key) => approvalEnvelope[key] !== undefined)
+        .map((key) => [key, approvalEnvelope[key]]),
+    );
     receipt.approvalEnvelope = approvalEnvelope;
     receipt.acceptedEnvelope = approvalEnvelope;
     receipt.fingerprint = hashCanonicalJson(approvalEnvelope);
@@ -56,6 +69,76 @@ async function replaceApprovalEnvelope(packet, approvalEnvelope) {
   }
   await writeJson(packet.manifestPath, packet.manifest);
 }
+
+test('approval and receipt selection require every canonical execution axis', async () => {
+  const envelopeAxes = [
+    'provider',
+    'model',
+    'effort',
+    'reasoningMode',
+    'route',
+    'role',
+    'serviceTier',
+    'authority',
+    'deadlineSeconds',
+    'retryLimit',
+    'concurrency',
+    'laneCap',
+    'waves',
+  ];
+  for (const axis of envelopeAxes) {
+    const packet = await fixture();
+    const envelope = {
+      ...structuredClone(packet.manifest.execution.approvalEnvelope),
+      authority: 'contract-enforced',
+      deadlineSeconds: 60,
+      retryLimit: 0,
+      concurrency: 2,
+      laneCap: 10,
+    };
+    delete envelope[axis];
+    await replaceApprovalEnvelope(packet, envelope);
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(
+      validation.valid,
+      false,
+      `${axis} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
+    );
+  }
+
+  for (const axis of [
+    'provider',
+    'model',
+    'effort',
+    'reasoningMode',
+    'route',
+    'role',
+    'serviceTier',
+  ]) {
+    const packet = await fixture();
+    const envelope = {
+      ...structuredClone(packet.manifest.execution.approvalEnvelope),
+      authority: 'contract-enforced',
+      deadlineSeconds: 60,
+      retryLimit: 0,
+      concurrency: 2,
+      laneCap: 10,
+    };
+    await replaceApprovalEnvelope(packet, envelope);
+    const reference = packet.manifest.artifacts.find((item) =>
+      item.path.startsWith('raw/dispatch/'),
+    );
+    const receipt = await readJson(join(packet.packetRoot, reference.path));
+    delete receipt.selection[axis];
+    await replaceArtifact(packet, reference.path, receipt);
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(
+      validation.valid,
+      false,
+      `receipt ${axis} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
+    );
+  }
+});
 
 test('review dispositions bind exact claim-bearing typed immutable briefs', async () => {
   const packet = await fixture();
@@ -280,6 +363,15 @@ test('production reconciliation deterministically consumes the prior ledger and 
     priorLedger.claims[0].evidence,
   );
   assert.equal(first.ledger.claims[0].status, 'verified');
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: [...results, structuredClone(results[0])],
+        priorReference,
+      }),
+    /duplicate|shadow/i,
+  );
 });
 
 test('claim assurance and reconciliation reject an exact but unreceipted review result', async () => {
@@ -449,6 +541,99 @@ test('a receipted typed rejection can explicitly authorize prior claim removal',
   );
 });
 
+test('a shadow reconciliation cannot authorize removal from a forged prior ledger', async () => {
+  const packet = await fixture();
+  const actualPriorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const forgedPrior = await readJson(
+    join(packet.packetRoot, actualPriorReference.path),
+  );
+  forgedPrior.claims.find((claim) => claim.id === 'claim-2').statement =
+    'Forged prior statement that was never canonical.';
+  const forgedPriorPath = join(
+    packet.packetRoot,
+    'raw/drafts/claims-forged.json',
+  );
+  await writeJson(forgedPriorPath, forgedPrior);
+  const forgedPriorReference = {
+    path: 'raw/drafts/claims-forged.json',
+    digest: await hashFile(forgedPriorPath),
+  };
+
+  const brief = createReviewBrief({
+    id: 'brief-verify-shadow',
+    mode: 'verify',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: packet.manifest,
+    ledger: forgedPrior,
+    claimIds: ['claim-1', 'claim-2'],
+  });
+  const briefRef = await replaceArtifact(
+    packet,
+    'reviews/briefs/verify.json',
+    brief,
+  );
+  const semantic = await readJson(
+    join(packet.packetRoot, 'reviews/semantic.json'),
+  );
+  semantic.brief = { ...briefRef };
+  semantic.permittedInputs = [{ ...briefRef }];
+  semantic.dispositions.push({
+    claimId: 'claim-2',
+    disposition: 'rejected',
+  });
+  await replaceArtifact(packet, 'reviews/semantic.json', semantic);
+
+  packet.ledger.claims = packet.ledger.claims.filter(
+    (claim) => claim.id !== 'claim-2',
+  );
+  const terminal = await readJson(
+    join(packet.packetRoot, 'reviews/reconciliation.json'),
+  );
+  terminal.removals = ['claim-2'];
+  terminal.removalDispositions = [
+    {
+      claimId: 'claim-2',
+      reviewId: 'review-semantic',
+      disposition: 'rejected',
+    },
+  ];
+  await replaceArtifact(packet, 'reviews/reconciliation.json', terminal);
+
+  const shadow = structuredClone(terminal);
+  shadow.id = 'review-reconciliation-shadow';
+  shadow.inputLedger = {
+    ...forgedPriorReference,
+    revision: forgedPrior.revision,
+  };
+  const shadowPath = join(
+    packet.packetRoot,
+    'reviews/reconciliation-shadow.json',
+  );
+  await writeJson(shadowPath, shadow);
+  const shadowReference = {
+    path: 'reviews/reconciliation-shadow.json',
+    digest: await hashFile(shadowPath),
+  };
+  const terminalIndex = packet.manifest.artifacts.findIndex(
+    (item) => item.path === 'reviews/reconciliation.json',
+  );
+  packet.manifest.artifacts.splice(
+    terminalIndex,
+    0,
+    forgedPriorReference,
+    shadowReference,
+  );
+  await packet.persist();
+
+  const validation = await validatePacket(packet.packetRoot);
+  assert.ok(
+    validation.errors.some((error) => error.code === 'SHADOW_RECONCILIATION'),
+    JSON.stringify(validation, null, 2),
+  );
+});
+
 async function addMaterialCoverageGap(packet, { downgrade }) {
   const coverage = await readJson(
     join(packet.packetRoot, 'reviews/coverage.json'),
@@ -547,6 +732,72 @@ test('exactly gapped stale sources remain auditable below supported assurance', 
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
   assert.equal(validation.status, 'partial');
   assert.equal(packet.ledger.claims[0].status, 'contested');
+});
+
+test('ineligible audit evidence remains subject to secret-safe persistence', async () => {
+  for (const validationState of ['stale', 'invalid', 'unavailable']) {
+    const packet = await fixture('quick');
+    packet.manifest.sources[0].validationState = validationState;
+    packet.manifest.sources[0].available = validationState !== 'unavailable';
+    packet.ledger.evidence[0].locatorValidation.status =
+      validationState === 'unavailable' ? 'invalid' : validationState;
+    packet.ledger.evidence[0].displayExcerpt =
+      'api_key=round-four-secret-value';
+    for (const claim of packet.ledger.claims) claim.status = 'contested';
+    packet.ledger.transitions = packet.ledger.claims.map((claim) => ({
+      claimId: claim.id,
+      from: 'provisional',
+      to: 'contested',
+    }));
+    packet.manifest.run.status = 'partial';
+    packet.manifest.gaps.push({
+      id: `gap-${validationState}-source`,
+      code: 'SOURCE_INELIGIBLE',
+      message: 'The source is retained only for audit.',
+      material: true,
+      sourceIds: ['source-1'],
+      claimIds: ['claim-1', 'claim-2'],
+      coverageFindingIds: [],
+    });
+    await packet.persist();
+
+    const validation = await validatePacket(packet.packetRoot);
+    assert.ok(
+      validation.errors.some((error) => error.code === 'UNREDACTED_SECRET'),
+      `${validationState}: ${JSON.stringify(validation, null, 2)}`,
+    );
+    assert.doesNotMatch(JSON.stringify(validation), /round-four-secret-value/);
+  }
+});
+
+test('source ineligibility derives a material gap and partial publication', async () => {
+  const packet = await fixture('quick');
+  packet.manifest.sources[0].validationState = 'stale';
+  packet.ledger.evidence[0].locatorValidation.status = 'stale';
+  for (const claim of packet.ledger.claims) claim.status = 'contested';
+  packet.ledger.transitions = packet.ledger.claims.map((claim) => ({
+    claimId: claim.id,
+    from: 'provisional',
+    to: 'contested',
+  }));
+  packet.manifest.gaps.push({
+    id: 'gap-stale-non-material',
+    code: 'SOURCE_STALE',
+    message: 'The source changed after collection.',
+    material: false,
+    sourceIds: ['source-1'],
+    claimIds: ['claim-1', 'claim-2'],
+    coverageFindingIds: [],
+  });
+  await packet.persist();
+
+  const validation = await validatePacket(packet.packetRoot);
+  assert.ok(
+    validation.errors.some(
+      (error) => error.code === 'SOURCE_GAP_REQUIRES_MATERIAL_PARTIAL',
+    ),
+    JSON.stringify(validation, null, 2),
+  );
 });
 
 test('stale-source audit gaps must cover every affected claim and downgrade assurance', async () => {

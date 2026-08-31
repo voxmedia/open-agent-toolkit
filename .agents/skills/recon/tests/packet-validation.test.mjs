@@ -10,7 +10,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
@@ -64,7 +64,7 @@ async function makePacket({
   claimStatus = profile === 'quick' ? 'supported' : 'verified',
   sourceKind = 'file',
 } = {}) {
-  const root = await mkdtemp(join(tmpdir(), 'recon-packet-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'recon-packet-')));
   const packetRoot = join(root, 'packet');
   const sourceRoot = join(root, 'sources');
   tempRoots.push(root);
@@ -496,9 +496,15 @@ async function makePacket({
     provider: 'fixture-provider',
     model: 'fixture-model',
     effort: 'high',
+    reasoningMode: 'fixture-reasoning',
     route: 'fake',
     role: 'recon-worker',
     serviceTier: 'fixture',
+    authority: 'contract-enforced',
+    deadlineSeconds: 60,
+    retryLimit: 0,
+    concurrency: profile === 'thorough' ? 4 : 2,
+    laneCap: profile === 'thorough' ? 20 : 10,
     waves: stageDefinitions.map((stage) => ({
       id: `wave-${stage.mode}`,
       mode: stage.mode,
@@ -568,7 +574,15 @@ async function makePacket({
         stageId: stage.id,
         laneId,
         state,
-        selection: { provider: 'fixture-provider', model: 'fixture-model' },
+        selection: {
+          provider: approvalEnvelope.provider,
+          model: approvalEnvelope.model,
+          effort: approvalEnvelope.effort,
+          reasoningMode: approvalEnvelope.reasoningMode,
+          route: approvalEnvelope.route,
+          role: approvalEnvelope.role,
+          serviceTier: approvalEnvelope.serviceTier,
+        },
         approvalEnvelope,
         fingerprint: hashCanonicalJson(approvalEnvelope),
         acceptedEnvelope: approvalEnvelope,
@@ -1063,6 +1077,24 @@ test('managed packet and source paths reject ancestor and final-component symlin
   await rm(captureDirectory, { recursive: true });
   await symlink(realDirectory, captureDirectory);
   await expectInvalid(capture, 'SYMLINK_ESCAPE');
+});
+
+test('declared repository and packet trust roots reject symlink aliases', async () => {
+  const repository = await makePacket({ sourceKind: 'repository' });
+  const repositoryAlias = join(dirname(repository.sourceRoot), 'source-alias');
+  await symlink(repository.sourceRoot, repositoryAlias, 'dir');
+  repository.manifest.sources[0].root = repositoryAlias;
+  await persist(repository);
+  await expectInvalid(repository, 'SYMLINK_ESCAPE');
+
+  const packet = await makePacket();
+  const packetAlias = join(dirname(packet.packetRoot), 'packet-alias');
+  await symlink(packet.packetRoot, packetAlias, 'dir');
+  const validation = await validatePacket(packetAlias);
+  assert.ok(
+    validation.errors.some((error) => error.code === 'SYMLINK_ESCAPE'),
+    JSON.stringify(validation, null, 2),
+  );
 });
 
 test('material gaps permit honest same-profile partial but never complete publication', async () => {

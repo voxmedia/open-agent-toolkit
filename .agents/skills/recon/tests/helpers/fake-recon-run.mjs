@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { createReviewBrief } from '../../scripts/create-review-brief.mjs';
@@ -61,9 +61,17 @@ async function writeFailure(packetRoot, code, message) {
 }
 
 export async function runFakeRecon(options = {}) {
-  const roots = validateRoots(options.roots);
+  let roots = validateRoots(options.roots);
   await Promise.all(
     requiredRootNames.map((name) => mkdir(roots[name], { recursive: true })),
+  );
+  roots = Object.fromEntries(
+    await Promise.all(
+      requiredRootNames.map(async (name) => [
+        name,
+        await realpath(roots[name]),
+      ]),
+    ),
   );
 
   if (options.mutationCapableSource) {
@@ -107,6 +115,7 @@ export async function runFakeRecon(options = {}) {
     provider: 'fixture-provider',
     model: 'fixture-economical-model',
     effort: 'high',
+    reasoningMode: 'fixture-reasoning',
     route: 'fake-dispatch',
     role,
     serviceTier: 'fixture',
@@ -136,6 +145,7 @@ export async function runFakeRecon(options = {}) {
       provider: approvalEnvelope.provider,
       model: approvalEnvelope.model,
       effort: approvalEnvelope.effort,
+      reasoningMode: approvalEnvelope.reasoningMode,
       route: approvalEnvelope.route,
       role: approvalEnvelope.role,
       serviceTier: approvalEnvelope.serviceTier,
