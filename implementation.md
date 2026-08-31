@@ -465,6 +465,19 @@ The `document` sequence step is recorded complete and the rolling freshness
 checkpoint advances over its exact closeout-only source commit. The immutable
 reviewed implementation basis remains unchanged.
 
+**Final PR opened:** PR
+[`#246`](https://github.com/voxmedia/open-agent-toolkit/pull/246), titled
+`feat: harden gate execution contracts`, targets `main` from
+`gate-execution-contract-hardening`. The branch and remote both resolve to
+`1b9a236ee8ce1badc8dd37c50c9485adc8add2f8`; project-ref receipts
+`7f9536ea392fe5edc2a898105bf5546f9fc29236` and
+`29c4d0d9886039847bcb921bad6136d59dd9dd5c` preserve the PR artifact and
+authoritative open-PR metadata.
+
+The `pr` sequence step is recorded complete. No source-tree change occurred,
+so the qualified rolling freshness checkpoint remains at the documentation
+commit and its already corroborated fingerprint.
+
 ---
 
 ## Implementation Log
