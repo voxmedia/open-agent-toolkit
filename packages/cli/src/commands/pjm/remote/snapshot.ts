@@ -30,7 +30,7 @@ export interface SnapshotSanitizationOptions {
 }
 
 const QUOTED_CREDENTIAL_ASSIGNMENT =
-  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)(["'])(.*?)\5/gim;
+  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)(["'])((?:\\[\s\S]|\5\5|(?!\5)[\s\S])*)\5/gim;
 const CREDENTIAL_ASSIGNMENT =
   /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)([^\s,;}]+)/gim;
 const AUTHORIZATION_HEADER =

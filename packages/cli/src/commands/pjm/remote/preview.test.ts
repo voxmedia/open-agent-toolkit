@@ -173,6 +173,24 @@ describe('binding previews and approvals', () => {
     expect(JSON.stringify(preview)).not.toMatch(/super-secret|hunter2/);
   });
 
+  it.each([
+    ['quoted JSON key', '{"api_key":"quoted-preview-secret"}'],
+    ['quoted authorization key', '{"authorization":"Bearer auth-secret"}'],
+    ['unquoted YAML key', 'access_token: yaml-preview-secret'],
+    ['unquoted config key', 'password = config-preview-secret'],
+  ])('redacts %s from concise preview fields', (_fixture, title) => {
+    const preview = buildBindingPreview({
+      ...baseInput,
+      projection: { ...baseInput.projection, title },
+    });
+
+    expect(preview.renderedFields.title).toEqual({
+      kind: 'value',
+      value: '[REDACTED:CREDENTIAL]',
+    });
+    expect(JSON.stringify(preview)).not.toContain(title);
+  });
+
   it('accepts only fresh, matching, non-secret approval evidence', () => {
     const preview = buildBindingPreview(baseInput);
     const approval = {
@@ -226,4 +244,35 @@ describe('binding previews and approvals', () => {
       ),
     ).toEqual({ valid: false, reason: 'unsafe-evidence' });
   });
+
+  it.each([
+    ['quoted JSON source', 'source', '{"api_key":"approval-secret"}'],
+    [
+      'quoted JSON actor',
+      'actor',
+      '{"authorization":"Bearer approval-auth-secret"}',
+    ],
+    ['unquoted YAML source', 'source', 'access_token: approval-yaml-secret'],
+    ['unquoted config actor', 'actor', 'password = approval-config-secret'],
+  ] as const)(
+    'rejects %s as unsafe approval evidence',
+    (_fixture, field, value) => {
+      const preview = buildBindingPreview(baseInput);
+      const approval = {
+        previewDigest: preview.digest,
+        operationClass: 'update-fields' as const,
+        approvedAt: timestamp,
+        actor: 'user-123',
+        source: 'interactive-confirmation',
+        [field]: value,
+      };
+
+      expect(
+        validatePreviewApproval(preview, approval, {
+          now: '2026-08-31T12:05:00.000Z',
+          maxAgeMs: 10 * 60_000,
+        }),
+      ).toEqual({ valid: false, reason: 'unsafe-evidence' });
+    },
+  );
 });

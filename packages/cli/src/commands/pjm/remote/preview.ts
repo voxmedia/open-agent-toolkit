@@ -87,7 +87,7 @@ const FIELD_ORDER: readonly SharedRemoteField[] = [
   'priority',
 ];
 const CREDENTIAL_EVIDENCE =
-  /(?:authorization\s*:|bearer\s+|password\s*[:=]|api[_-]?key\s*[:=]|access[_-]?token\s*[:=]|secret\s*[:=]|token\s*[:=]|github_pat_|gh[pousr]_|sk-)/i;
+  /(?:(?:^|[\s{,[])["']?(?:authorization|password|passwd|api[_-]?key|access[_-]?token|secret|token)["']?\s*[:=]|bearer\s+|github_pat_|gh[pousr]_|sk-)/im;
 
 export function buildBindingPreview(
   input: BuildBindingPreviewInput,

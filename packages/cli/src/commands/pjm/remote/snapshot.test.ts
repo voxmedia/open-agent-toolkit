@@ -132,6 +132,43 @@ describe('sanitizeRemoteSnapshot', () => {
     });
   });
 
+  it('fully redacts multiline quoted assignments with escaped quotes across core fields', () => {
+    const input = rawSnapshot();
+    input.issue.title = `{"api_key": "title-prefix
+escaped \\"title quote\\"
+TITLE_SECRET_SUFFIX"}`;
+    input.issue.description = `access_token: 'description-prefix
+escaped ''description quote''
+DESCRIPTION_SECRET_SUFFIX'`;
+    input.issue.priority = `"password" = "priority-prefix
+escaped ""priority quote""
+PRIORITY_SECRET_SUFFIX"`;
+    input.issue.status = `{"authorization": "Bearer status-prefix
+escaped \\"status quote\\"
+STATUS_SECRET_SUFFIX"}`;
+
+    const result = sanitizeRemoteSnapshot(input);
+    const serialized = JSON.stringify(result);
+
+    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
+    expect(serialized).not.toMatch(
+      /title-prefix|TITLE_SECRET_SUFFIX|description-prefix|DESCRIPTION_SECRET_SUFFIX|priority-prefix|PRIORITY_SECRET_SUFFIX|status-prefix|STATUS_SECRET_SUFFIX|escaped.*quote/i,
+    );
+    expect(result).toMatchObject({
+      contentRedacted: true,
+      redactionCount: 4,
+      redactions: [
+        { field: 'title', reason: 'credential' },
+        { field: 'description', reason: 'credential' },
+        { field: 'priority', reason: 'credential' },
+        { field: 'status', reason: 'credential' },
+      ],
+    });
+  });
+
   it('drops allowlisted extensions containing credentials and marks the snapshot incomplete', () => {
     const input = rawSnapshot();
     input.extensions.workflow = {
