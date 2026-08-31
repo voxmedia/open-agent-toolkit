@@ -9,6 +9,7 @@ import {
   type GateConfig,
   type OatConfig,
   type OatLocalConfig,
+  type OatPjmRemoteProvider,
   type UserConfig,
 } from './oat-config';
 
@@ -144,6 +145,69 @@ const DEFAULT_WORKFLOW_CONFIG = {
   },
 } satisfies Record<string, unknown>;
 
+const DEFAULT_PJM_REMOTE_TRANSPORTS: Record<
+  OatPjmRemoteProvider,
+  readonly string[]
+> = {
+  github: ['gh'],
+  linear: ['mcp'],
+  jira: ['mcp'],
+};
+
+export interface ResolvedPjmRemoteTransportEntry {
+  value: string[];
+  source: 'local' | 'user' | 'default';
+}
+
+export type ResolvedPjmRemoteTransportConfig = Record<
+  OatPjmRemoteProvider,
+  ResolvedPjmRemoteTransportEntry
+>;
+
+export function resolvePjmRemoteTransportConfig(
+  local: OatLocalConfig,
+  user: UserConfig,
+): ResolvedPjmRemoteTransportConfig {
+  const localTransports = local.pjm?.remote?.transports;
+  const userTransports = user.pjm?.remote?.transports;
+  const resolved = {} as ResolvedPjmRemoteTransportConfig;
+
+  for (const provider of Object.keys(
+    DEFAULT_PJM_REMOTE_TRANSPORTS,
+  ) as OatPjmRemoteProvider[]) {
+    const localValue = localTransports?.[provider];
+    const userValue = userTransports?.[provider];
+    if (localValue !== undefined) {
+      resolved[provider] = {
+        value: deduplicateTransportList(localValue),
+        source: 'local',
+      };
+    } else if (userValue !== undefined) {
+      resolved[provider] = {
+        value: deduplicateTransportList(userValue),
+        source: 'user',
+      };
+    } else {
+      resolved[provider] = {
+        value: [...DEFAULT_PJM_REMOTE_TRANSPORTS[provider]],
+        source: 'default',
+      };
+    }
+  }
+
+  return resolved;
+}
+
+function deduplicateTransportList(transports: readonly string[]): string[] {
+  return [
+    ...new Set(
+      transports
+        .map((transport) => transport.trim())
+        .filter((transport) => transport.length > 0),
+    ),
+  ];
+}
+
 const ENV_OVERRIDE_MAP = {
   'projects.root': 'OAT_PROJECTS_ROOT',
   'projects.defaultScope': 'OAT_PROJECTS_DEFAULT_SCOPE',
@@ -227,6 +291,11 @@ export async function resolveEffectiveConfig(
       value: shared.autoReviewAtCheckpoints,
       source: 'shared',
     };
+  }
+
+  const remoteTransports = resolvePjmRemoteTransportConfig(local, user);
+  for (const [provider, entry] of Object.entries(remoteTransports)) {
+    resolved[`pjm.remote.transports.${provider}`] = entry;
   }
 
   return {

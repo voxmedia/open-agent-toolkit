@@ -17,6 +17,7 @@ import {
   resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
+  resolvePjmRemoteTransportConfig,
   type ResolvedConfig,
 } from './resolve';
 
@@ -246,6 +247,75 @@ describe('resolveEffectiveConfig', () => {
     expect(result.resolved['updateNotifications']).toEqual({
       value: true,
       source: 'default',
+    });
+    expect(result.resolved['pjm.remote.transports.github']).toEqual({
+      value: ['gh'],
+      source: 'default',
+    });
+    expect(result.resolved['pjm.remote.transports.linear']).toEqual({
+      value: ['mcp'],
+      source: 'default',
+    });
+    expect(result.resolved['pjm.remote.transports.jira']).toEqual({
+      value: ['mcp'],
+      source: 'default',
+    });
+  });
+
+  it('resolves remote transport lists by local then user then built-in precedence', () => {
+    const resolved = resolvePjmRemoteTransportConfig(
+      {
+        version: 1,
+        pjm: {
+          remote: {
+            transports: { github: ['mcp', 'gh', 'mcp'], linear: [] },
+          },
+        },
+      },
+      {
+        version: 1,
+        pjm: {
+          remote: {
+            transports: {
+              github: ['gh'],
+              linear: ['linear-cli', 'mcp'],
+              jira: ['acli', 'mcp', 'acli'],
+            },
+          },
+        },
+      },
+    );
+
+    expect(resolved).toEqual({
+      github: { value: ['mcp', 'gh'], source: 'local' },
+      linear: { value: [], source: 'local' },
+      jira: { value: ['acli', 'mcp'], source: 'user' },
+    });
+  });
+
+  it('replaces rather than concatenates lower-precedence transport lists', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({
+            version: 1,
+            pjm: { remote: { transports: { github: ['mcp', 'mcp'] } } },
+          }) satisfies OatLocalConfig,
+        readUserConfig: async () =>
+          ({
+            version: 1,
+            pjm: { remote: { transports: { github: ['gh', 'mcp'] } } },
+          }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved['pjm.remote.transports.github']).toEqual({
+      value: ['mcp'],
+      source: 'local',
     });
   });
 
