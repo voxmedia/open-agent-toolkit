@@ -1634,7 +1634,8 @@ git commit -m "feat(p07-t03): report runtime identity observations"
 **Step 1: Establish the release floor**
 
 Fetch `origin/main`, run `pnpm release:check-versions`, and choose one lockstep
-patch greater than every current public version. Do not assume `0.2.48`.
+patch greater than every current public version. The accepted p01 baseline is
+`0.2.50`; do not assume the next patch remains available at release time.
 
 **Step 2: Archive only accepted owned items**
 
@@ -1699,20 +1700,20 @@ gates exit 0 at the final reviewed head.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p05    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p06    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| p07    | code     | pending         | -          | -                                                             | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                             | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
-| design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
-| plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -             | -          | -           |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T003934Z.md   | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed          | 2026-08-31 | reviews/p01-review-2026-08-31T115349Z.md                      | 940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8 | manual     | oat-reviewer-gpt-5-6-sol-high |
+| p02    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p03    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p04    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p05    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p06    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| p07    | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| final  | code     | pending         | -          | -                                                             | -                                        | -          | -                             |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                             |
+| design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T003934Z.md   | -                                        | -          | -                             |
 
 The design review findings were resolved directly in `design.md`. Thomas
 approved planning without another design re-review, so that event remains
@@ -1743,8 +1744,9 @@ Status progression: `pending` -> `received` -> `fixes_added` ->
 
 **Total: 30 tasks**
 
-Implementation is not started. Completion requires all tasks, phase/final code
-reviews, owned backlog closeout, and the complete repository gate sequence.
+Implementation is in progress: p01 is complete and independently reviewed, and
+p02 is next. Completion requires all remaining tasks, phase/final code reviews,
+owned backlog closeout, and the complete repository gate sequence.
 
 ## References
 

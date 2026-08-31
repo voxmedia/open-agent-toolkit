@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T11:38:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T11:56:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,10 +98,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 1 is ready for a corrected relaunch. Thomas explicitly
-authorized a new p01 run after the prior accepted child failed closed before
-work on an incorrect expanded phase-base SHA. The aborted run remains recorded
-as history and made no edits or commits.
+Implementation - Phase 1 completed and passed independent review at
+`940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`. The prior invalid-run abort
+remains recorded as resolved history and made no edits or commits. Phase 2 now
+begins with the canonical pack evidence projector.
 
 ## Artifacts
 
@@ -109,7 +109,7 @@ as history and made no edits or commits.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (in progress — p01 complete)
 
 ## Progress
 
@@ -131,7 +131,9 @@ as history and made no edits or commits.
 - ✓ Clean plan artifact review passed
 - ✓ Configured plan gate passed and review received
 - ✓ Plan complete
-- ⧗ Phase 1 diagnostics-baseline reconciliation authorized for relaunch
+- ✓ Phase 1 diagnostics-baseline reconciliation complete
+- ✓ Phase 1 independent code review passed
+- ⧗ Phase 2 shared evidence and truthful scope
 
 ## Blockers
 
@@ -139,5 +141,5 @@ None
 
 ## Next Milestone
 
-Start the authorized corrected p01 launch from the clean post-abort bookkeeping
-head, then record PR #249's accepted interfaces and focused verification.
+Implement `p02-t01`, the canonical pack evidence projector, against the
+accepted PR #249 interfaces recorded by p01.

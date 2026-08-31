@@ -1403,9 +1403,9 @@ lockstep above freshly fetched `origin/main`.
 
 ### Deployment Steps
 
-1. Land the accepted `scope-adoption-diagnostics` implementation and record its
-   final SHA, or formally reconcile that project if its scope changes.
-2. Rebase and revalidate this project's plan against the landed inventory,
+1. Completed: accepted `scope-adoption-diagnostics` PR #249 landed at
+   `2c6005d64f45a19e8b9eedbc977959b066d3eda0`.
+2. Completed: this project rebased and p01 revalidated the landed inventory,
    doctor/status, and test seams.
 3. Land the shared evidence/placement/provider-registry contract before any
    child implementation consumes it.

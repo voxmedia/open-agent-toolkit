@@ -86,7 +86,7 @@ oat_generated: false
 ### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
 **Status:** complete
-**Commit:** recorded by the phase implementation report
+**Commit:** `940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`
 
 **Outcome (required when completed):**
 
@@ -119,6 +119,9 @@ oat_generated: false
 - Status inventory availability and unavailable scope reporting remain separate
   fields; future evidence projection must preserve partial known facts rather
   than collapse either condition into placement.
+- Independent p01 review passed at the task head with 0 critical, 0 important,
+  0 medium, and 1 non-blocking minor lifecycle-wording finding. The finding was
+  applied during root bookkeeping without reopening production work.
 
 **Issues Encountered:**
 
@@ -176,6 +179,39 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Evidence: clean worktree; expected base did not resolve; actual HEAD was
   `99d6de317cb1c670b8a1bc92efc4a57300de74fd`
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+### Run 2 — 2026-08-31T11:38:44Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — subagents, explicitly authorized corrected p01 relaunch
+- Dispatch policy: managed High from project state
+- Schedule: seven sequential phases; p01 completed and reviewed
+- Outcome: p01 passed; phases passed 1, failed 0, stopped 0
+- Outstanding: continue with `p02-t01`
+
+#### Dispatch record — `dispatch-p01-relaunch-20260831T113844Z-f6d777210`
+
+- Scope/action/role: `p01` / `implementation` / `implementer`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:medium`
+- Launch: accepted as a new user-authorized run from exact clean base
+  `f6d77721039086e5ce35f48549d91a98aeeb6612`
+- Child outcome: `DONE`; task commit
+  `940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`
+- Verification: exact focused suite passed 360/360 tests; formatting and
+  `git diff --check` passed; no production source or test edits
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Review record — `review-p01-20260831T115500Z-940e87e56`
+
+- Scope/action/role: `p01` / `review` / `reviewer`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Reviewed head: `940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`
+- Verdict: passed; findings critical 0, important 0, medium 0, minor 1
+- Artifact: `reviews/p01-review-2026-08-31T115349Z.md`
+- Reconnaissance: not attempted
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

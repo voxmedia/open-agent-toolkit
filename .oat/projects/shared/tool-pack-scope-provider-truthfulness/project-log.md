@@ -56,6 +56,10 @@ p01 launch dispatch-p01-20260831T052104Z-99d6de317 stopped as INVALID_RUN_ABORT 
 
 Thomas explicitly authorized a new p01 launch after the prior invalid-run abort; the aborted launch made zero edits or commits, and the corrected run will start from the clean post-abort bookkeeping head.
 
+### 2026-08-31 · structural · oat-project-implement · p01-passed
+
+p01 completed at 940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8 and independent High review passed with critical:0, important:0, medium:0, minor:1; the non-blocking lifecycle wording finding was applied in root bookkeeping; review artifact: reviews/p01-review-2026-08-31T115349Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
