@@ -1,7 +1,8 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02 terminal round-5 review found recovery prose claims canonical removal was applied for packs whose structured canonical status is unchanged
 oat_last_updated: 2026-08-31
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -24,15 +25,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | in progress | 7     | 7/7       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 5     | 0/5       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 4     | 0/4       |
-| Phase 7 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | blocked  | 7     | 7/7       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 5     | 0/5       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 4     | 0/4       |
+| Phase 7 | pending  | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -134,7 +135,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** in progress after 7/7 tasks; bounded round-4 correction and review round 5 authorized
+**Status:** blocked after 7/7 tasks and terminal operator-authorized review round 5
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -158,6 +159,9 @@ oat_generated: false
 - Thomas subsequently authorized exactly one bounded correction for that
   finding and one fresh independent High review round. This raises the
   review-fix retry limit to four without changing the plan or phase scope.
+- Commit `4e1cbac86` fixed the multi-scope command matrix and raised the p02
+  suite to 29 files / 714 tests. Terminal round 5 found one Important recovery
+  wording contradiction, so Phase 3 did not start.
 
 | Task    | Status   | Commit      | Outcome                                                 |
 | ------- | -------- | ----------- | ------------------------------------------------------- |
@@ -214,6 +218,8 @@ oat_generated: false
 - `9d557564f` - round-2 fix for provider-context and removal findings.
 - `e85ba38ae` - operator-authorized round-3 fix for immutable provider snapshot
   reuse and structured post-removal failure reporting.
+- `4e1cbac86` - operator-authorized round-4 fix covering every selected pack and
+  invalidated scope in post-removal recovery.
 
 **Round-3 review blockers (fixed by `e85ba38ae`):**
 
@@ -252,6 +258,17 @@ oat_generated: false
   `oat-reviewer-gpt-5-6-sol-high` review target remain authoritative.
 - One append-only fix commit and one fresh review are permitted. A blocking
   fifth review stops implementation without automatic extension.
+
+**Terminal round-5 blocker:**
+
+- Recovery now contains all 16 expected pack/scope commands for `--all --scope
+all`, but its prose unconditionally says canonical removal was applied. Six
+  absent packs in the review fixture correctly report `canonical.status:
+unchanged`, making the source-qualified recovery record contradictory.
+- Artifact: `reviews/p02-review-2026-08-31T164057Z.md`; reviewed head
+  `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`; 0 critical, 1 important.
+- Verification: focused 35 tests and combined 29 files / 714 tests; CLI lint,
+  type-check, formatting, and `git diff --check` all passed.
 
 ---
 
@@ -391,6 +408,39 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reviewed head: `e85ba38ae575e193a7084f1046798ca0827f6bef`
 - Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
 - Artifact: `reviews/p02-review-2026-08-31T155718Z.md`
+- Reconnaissance: attempted; orchestration evidence is recorded in the artifact
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 5 — 2026-08-31T16:15:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — original accepted implementer continuation plus fresh reviewer
+- Dispatch policy: managed High from project state
+- Scope: exactly the round-4 multi-pack/multi-scope recovery finding
+- Outcome: `BLOCKED`; correction completed, terminal review round 5 found one
+  Important recovery-evidence wording contradiction
+- Verification: 29 files / 714 tests plus CLI lint, type-check, formatting,
+  and whitespace checks pass at `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`
+- Review-fix rounds: 4/4 used; no automatic round 6 is authorized
+- Outstanding: explicit human disposition of
+  `reviews/p02-review-2026-08-31T164057Z.md`; do not start p03
+
+#### Fix continuation — `review-fix-p02-r04-20260831T161500Z`
+
+- Original request: `dispatch-p02-20260831T120200Z-492af17f6`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Commit: `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`
+- Outcome: every selected pack now receives exact recovery for every
+  invalidated project/user scope; focused 3 files / 41 tests and combined 29
+  files / 714 tests passed
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Review record — round 5
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`
+- Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
+- Artifact: `reviews/p02-review-2026-08-31T164057Z.md`
 - Reconnaissance: attempted; orchestration evidence is recorded in the artifact
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 

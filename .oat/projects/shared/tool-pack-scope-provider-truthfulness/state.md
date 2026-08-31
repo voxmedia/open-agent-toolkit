@@ -1,7 +1,8 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: e85ba38ae575e193a7084f1046798ca0827f6bef
-oat_blockers: []
+oat_last_commit: 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f
+oat_blockers:
+  - p02 terminal round-5 review found recovery prose claims canonical removal was applied for packs whose structured canonical status is unchanged
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -89,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T16:28:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T16:44:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -99,15 +100,16 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation in progress
+**Status:** Implementation blocked
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation - Thomas authorized one bounded correction and one fresh High
-review for the round-4 multi-pack, multi-scope recovery defect. Phase 2 is
-reopened only for that finding; Phase 3 starts only if review round 5 passes.
+Implementation - The authorized correction now emits every pack/scope recovery
+command, but terminal review round 5 found one Important contradiction: packs
+with `canonical.status: unchanged` are told canonical removal was already
+applied. Phase 3 has not started.
 
 ## Artifacts
 
@@ -115,7 +117,7 @@ reopened only for that finding; Phase 3 starts only if review round 5 passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01 passed; p02 round-4 correction authorized)
+- **Implementation:** `implementation.md` (blocked — p01 passed; p02 terminal round-5 review blocked)
 
 ## Progress
 
