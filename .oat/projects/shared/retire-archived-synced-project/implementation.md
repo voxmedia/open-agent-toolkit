@@ -406,6 +406,9 @@ Reviews event, and bookkeeping commit `237597d94`. Configured exit-gate run
 `42a1a4fe-e3a4-4830-8fbc-474ba966613d` is therefore allowed with disposition
 `passed`.
 
+The immutable configured closeout sequence is `summary → document → pr` before
+the post-p04 HiLL approval, with no post-approval steps.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
