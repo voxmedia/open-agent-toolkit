@@ -60,6 +60,57 @@ async function retainFilesystemIdentity(identities, path) {
   return identity;
 }
 
+async function retainDeclaredSourceIdentities(
+  packetRoot,
+  source,
+  filesystemIdentities,
+) {
+  const paths = [];
+  if (source.kind === 'repository' && typeof source.root === 'string') {
+    paths.push(source.root);
+  } else if (source.kind === 'file' && typeof source.path === 'string') {
+    paths.push(source.path);
+  } else if (source.kind === 'url') {
+    const capturePath =
+      source.capturePath ?? source.validatorState?.capturePath;
+    if (typeof capturePath === 'string') {
+      const path = packetPath(packetRoot, capturePath);
+      if (!path) {
+        throw Object.assign(new Error('Capture path escapes the packet root'), {
+          code: 'PATH_ESCAPE',
+        });
+      }
+      paths.push(path);
+    }
+  } else if (source.kind === 'command-output') {
+    if (typeof source.cwd === 'string') paths.push(source.cwd);
+    if (typeof source.outputPath === 'string') {
+      const path = packetPath(packetRoot, source.outputPath);
+      if (!path) {
+        throw Object.assign(
+          new Error('Command output path escapes the packet root'),
+          { code: 'PATH_ESCAPE' },
+        );
+      }
+      paths.push(path);
+    }
+  } else if (
+    source.kind === 'connected-resource' &&
+    typeof source.capturePath === 'string'
+  ) {
+    const path = packetPath(packetRoot, source.capturePath);
+    if (!path) {
+      throw Object.assign(new Error('Capture path escapes the packet root'), {
+        code: 'PATH_ESCAPE',
+      });
+    }
+    paths.push(path);
+  }
+  for (const path of paths) {
+    await retainFilesystemIdentity(filesystemIdentities, path);
+  }
+}
+
 async function readJson(path, code, errors) {
   try {
     return JSON.parse(await readFile(path, 'utf8'));
@@ -1845,6 +1896,30 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
     const sources = new Map(
       manifest.sources.map((source) => [source.id, source]),
     );
+    for (const source of sources.values()) {
+      try {
+        await retainDeclaredSourceIdentities(
+          packetRoot,
+          source,
+          filesystemIdentities,
+        );
+      } catch (error) {
+        const code = [
+          'SYMLINK_ESCAPE',
+          'PATH_ESCAPE',
+          'NON_CANONICAL_ROOT',
+        ].includes(error?.code)
+          ? error.code
+          : 'SOURCE_UNAVAILABLE';
+        errors.push(
+          issue(
+            code,
+            'Declared source filesystem identity is not stable and canonical',
+            `source:${source.id}`,
+          ),
+        );
+      }
+    }
     for (const evidence of ledger.evidence ?? []) {
       const source = sources.get(evidence.sourceId);
       if (!source) {

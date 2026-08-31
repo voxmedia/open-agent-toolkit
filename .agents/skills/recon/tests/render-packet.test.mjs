@@ -21,6 +21,64 @@ afterEach(async () => {
   );
 });
 
+async function markIneligibleAudit(fixture, validationState) {
+  const source = fixture.manifest.sources[0];
+  source.validationState = validationState;
+  source.available = validationState !== 'unavailable';
+  fixture.ledger.evidence[0].locatorValidation.status =
+    validationState === 'unavailable' ? 'invalid' : validationState;
+  for (const claim of fixture.ledger.claims) claim.status = 'contested';
+  fixture.ledger.transitions = fixture.ledger.claims.map((claim) => ({
+    claimId: claim.id,
+    from: 'provisional',
+    to: 'contested',
+  }));
+  fixture.manifest.run.status = 'partial';
+  fixture.manifest.gaps.push({
+    id: `gap-${validationState}-audit`,
+    code: 'SOURCE_INELIGIBLE',
+    message: `${validationState} source retained only for audit.`,
+    material: true,
+    sourceIds: ['source-1'],
+    claimIds: fixture.ledger.claims.map((claim) => claim.id),
+    coverageFindingIds: [],
+  });
+  await fixture.persist();
+}
+
+async function aliasSourcePath(fixture, sourceKind) {
+  const source = fixture.manifest.sources[0];
+  if (sourceKind === 'repository') {
+    const alias = join(fixture.tempRoot, 'repository-audit-alias');
+    await symlink(fixture.sourceRoot, alias, 'dir');
+    source.root = alias;
+  } else if (sourceKind === 'file') {
+    const alias = join(fixture.tempRoot, 'file-audit-alias.txt');
+    await symlink(fixture.sourcePath, alias, 'file');
+    source.path = alias;
+    fixture.ledger.evidence[0].locator.path = alias;
+  } else {
+    const aliasName = `${sourceKind}-audit-alias.txt`;
+    const alias = join(fixture.packetRoot, 'raw', 'captures', aliasName);
+    await symlink(fixture.sourcePath, alias, 'file');
+    if (sourceKind === 'command-output') {
+      source.outputPath = `raw/captures/${aliasName}`;
+      fixture.ledger.evidence[0].locator.artifactPath = source.outputPath;
+    } else {
+      source.capturePath = `raw/captures/${aliasName}`;
+    }
+  }
+  await fixture.persist();
+}
+
+async function retargetSourcePath(fixture, sourceKind) {
+  const original =
+    sourceKind === 'repository' ? fixture.sourceRoot : fixture.sourcePath;
+  const moved = join(fixture.tempRoot, `${sourceKind}-audit-moved`);
+  await rename(original, moved);
+  await symlink(moved, original, sourceKind === 'repository' ? 'dir' : 'file');
+}
+
 test('packet rendering is deterministic and contains the complete consumer view', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
@@ -133,6 +191,89 @@ for (const sourceKind of [
       original,
       sourceKind === 'repository' ? 'dir' : 'file',
     );
+    await assert.rejects(
+      renderValidatedPacket(validation.validatedRun),
+      /identity|root|symlink/i,
+    );
+  });
+}
+
+for (const validationState of ['stale', 'invalid', 'unavailable']) {
+  for (const sourceKind of [
+    'repository',
+    'file',
+    'url',
+    'command-output',
+    'connected-resource',
+  ]) {
+    test(`${validationState} ${sourceKind} audit source rejects a declared filesystem alias`, async () => {
+      const fixture = await createPacketFixture({
+        profile: 'quick',
+        sourceKind,
+      });
+      tempRoots.push(fixture.tempRoot);
+      await markIneligibleAudit(fixture, validationState);
+      await aliasSourcePath(fixture, sourceKind);
+      const validation = await compileValidatedRun(fixture.packetRoot);
+      assert.equal(
+        validation.valid,
+        false,
+        JSON.stringify(validation, null, 2),
+      );
+      assert.ok(
+        validation.errors.some((error) => error.code === 'SYMLINK_ESCAPE'),
+        JSON.stringify(validation, null, 2),
+      );
+    });
+
+    test(`publication rejects ${validationState} ${sourceKind} audit identity retargeted after compilation`, async () => {
+      const fixture = await createPacketFixture({
+        profile: 'quick',
+        sourceKind,
+      });
+      tempRoots.push(fixture.tempRoot);
+      await markIneligibleAudit(fixture, validationState);
+      const validation = await compileValidatedRun(fixture.packetRoot);
+      assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+      await retargetSourcePath(fixture, sourceKind);
+      await assert.rejects(
+        renderValidatedPacket(validation.validatedRun),
+        /identity|root|symlink/i,
+      );
+    });
+  }
+
+  test(`${validationState} command-output audit source rejects a working-directory alias`, async () => {
+    const fixture = await createPacketFixture({
+      profile: 'quick',
+      sourceKind: 'command-output',
+    });
+    tempRoots.push(fixture.tempRoot);
+    await markIneligibleAudit(fixture, validationState);
+    const alias = join(fixture.tempRoot, 'command-cwd-audit-alias');
+    await symlink(fixture.sourceRoot, alias, 'dir');
+    fixture.manifest.sources[0].cwd = alias;
+    await fixture.persist();
+    const validation = await compileValidatedRun(fixture.packetRoot);
+    assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
+    assert.ok(
+      validation.errors.some((error) => error.code === 'SYMLINK_ESCAPE'),
+      JSON.stringify(validation, null, 2),
+    );
+  });
+
+  test(`publication rejects ${validationState} command-output working-directory retarget`, async () => {
+    const fixture = await createPacketFixture({
+      profile: 'quick',
+      sourceKind: 'command-output',
+    });
+    tempRoots.push(fixture.tempRoot);
+    await markIneligibleAudit(fixture, validationState);
+    const validation = await compileValidatedRun(fixture.packetRoot);
+    assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+    const moved = join(fixture.tempRoot, 'command-cwd-audit-moved');
+    await rename(fixture.sourceRoot, moved);
+    await symlink(moved, fixture.sourceRoot, 'dir');
     await assert.rejects(
       renderValidatedPacket(validation.validatedRun),
       /identity|root|symlink/i,
