@@ -94,8 +94,8 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: "2026-08-31T01:54:13.973Z" # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-08-31T01:54:13.973Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-08-31T03:06:45.922Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-08-31T03:06:45.922Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -112,7 +112,7 @@ oat_lifecycle: complete
 
 ## Current Phase
 
-Lifecycle complete
+Lifecycle complete; archived locally
 
 ## Artifacts
 

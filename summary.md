@@ -148,3 +148,7 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 ### 2026-08-31 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
+
+### 2026-08-31 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-08-31T01:52:01Z; project-log roll-up status: ok.

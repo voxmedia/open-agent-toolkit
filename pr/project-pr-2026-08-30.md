@@ -68,12 +68,13 @@ intentionally not created.
 | p01   | code | passed | 2026-08-30 | `4b247ec29df914dc66f96ee134b538a6a81985d7` | auto       | -                             |
 | p02   | code | passed | 2026-08-30 | `76966f7fb2db9726b263d661be8f6805db5fab57` | auto       | -                             |
 | p03   | code | passed | 2026-08-30 | `7bba63b3db9401015405398995cc9bcc0fac6df1` | auto       | -                             |
-| final | code | passed | 2026-08-31 | `659547363032fd9f41eefadc947bb0496fe7457f` | auto       | -                             |
-| final | code | passed | 2026-08-31 | `659547363032fd9f41eefadc947bb0496fe7457f` | gate       | claude-fable-skip-permissions |
+| final | code | passed | 2026-08-31 | `c56ba6995a90eab7b1d06c2c79b016ca9940e54f` | auto       | -                             |
+| final | code | passed | 2026-08-31 | `c56ba6995a90eab7b1d06c2c79b016ca9940e54f` | gate       | claude-fable-skip-permissions |
 
 The configured cross-family exit review passed at the Important threshold with
-no Critical, Important, or Medium findings. Its one Minor observation was
-received and deferred outside this project's bounded direct-prefix validation
-contract without expanding the approved implementation scope.
+no Critical, Important, Medium, or Minor findings after the final reconciliation
+against the current implementation head.
 
 ## References
+
+- Project record: [20260831-gate-execution-contract-hardening.md](https://github.com/voxmedia/open-agent-toolkit/blob/gate-execution-contract-hardening/.oat/repo/reference/project-summaries/20260831-gate-execution-contract-hardening.md)
