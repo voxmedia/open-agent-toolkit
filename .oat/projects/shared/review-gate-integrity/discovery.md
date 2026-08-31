@@ -48,12 +48,14 @@ The linked backlog items are:
 - [`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto
   companion skill for autonomous closeouts](../../../repo/pjm/backlog/items/BL-260720-add-oat-project-complete-auto.md)
 
-The structured-output support item is intentionally a separate quick-start
-project for now:
+The bounded structured-output and headless no-yield items were delivered by
+the completed combined quick project `gate-execution-contract-hardening`:
 [`BL-260726-validate-structured-output` — Validate structured-output contract
-in gate skill commands](../../../repo/pjm/backlog/items/BL-260726-validate-structured-output.md).
-PR #190 may already subsume part of that item, so it must be reconciled before
-the quick project is planned.
+in gate skill commands](../../../repo/pjm/backlog/archived/BL-260726-validate-structured-output.md)
+and [`BL-260826-gate-targets-must-not-yield` — Gate targets must not yield on
+background work in headless mode](../../../repo/pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md).
+PR #190 was reconciled as compatibility input there; this project retains only
+the broader review/gate integrity scope.
 
 ## Problem Statement
 
@@ -290,8 +292,9 @@ opaque. The standalone quick project will validate the smallest safe slice.
    distinct from an artifact correlation mismatch.
 7. PR #190 is compatibility input, not current main; reconcile before
    overlapping implementation.
-8. Keep `BL-260726-validate-structured-output` as a separate quick project
-   until PR #190 coverage is verified.
+8. Treat the completed combined `gate-execution-contract-hardening` project as
+   the sole owner of `BL-260726` and `BL-260826`; retain PR #190 only as
+   compatibility input and do not recreate the superseded quick scaffolds.
 9. This discovery is non-exhaustive and must be revalidated before design.
 
 ## Constraints

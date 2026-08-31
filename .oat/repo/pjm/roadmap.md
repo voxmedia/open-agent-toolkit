@@ -95,7 +95,7 @@ flowchart TD
   AR["shipped provider-root contract\nPR #242 / archived BL-260829"] -. "canonical fallback contract" .-> SP["scope/provider truthfulness\nBL-260829-make-tool-pack-scope-selection"]
   SP --> SY["collection symlink adoption\nBL-260724-support-provider-directory"]
   SP --> AG["project OAT guidance\nBL-260828-add-project-level-oat-guidance"]
-  RP -. "shared review surfaces" .-> HG["headless no-yield + structured output\nquick projects"]
+  RP -. "shared review surfaces" .-> HG["completed gate-execution-contract-hardening\ncombined quick project"]
   CF --> AC["autonomous completion\nBL-260720-add-oat-project-complete-auto"]
 ```
 
