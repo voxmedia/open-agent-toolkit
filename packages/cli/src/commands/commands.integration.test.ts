@@ -1100,12 +1100,12 @@ describe('CLI command integration', () => {
         lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
       ).resolves.toBeDefined();
 
-      // User-scope path mappings are skill-only by contract
-      // (`SCOPE_CONTENT_TYPES.user`). Arbitrary user canonical agents are not
-      // mirrored into provider agent directories.
+      // User canonical agents materialize when the active provider declares
+      // user-agent capability. Claude owns a user-agent path mapping, so this
+      // generic canonical agent reaches its provider view.
       await expect(
         lstat(join(userRoot, '.claude', 'agents', 'agent-one')),
-      ).rejects.toMatchObject({ code: 'ENOENT' });
+      ).resolves.toBeDefined();
 
       // Managed user agents reach Codex through the materialization
       // extension, which sources bundled managed agent definitions.
