@@ -32,3 +32,19 @@ export {
   summarizeMaterializationPlan,
   toMaterializationOperations,
 } from './materialization-extension';
+export type {
+  ManagedContentKind,
+  ProviderActivationEvidence,
+  ProviderActivationSource,
+  ProviderCapabilitySupport,
+  ProviderCatalogRefreshPolicy,
+  ProviderContentCapability,
+  ProviderProjectionMode,
+  ProviderRegistration,
+  ProviderScopeContext,
+} from './registry';
+export {
+  getProviderRegistrations,
+  resolveProviderScopeContext,
+  validateProviderRegistrations,
+} from './registry';
