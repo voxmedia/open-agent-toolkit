@@ -19,23 +19,28 @@ reconciliation and outcome unit. Higher-level item, project, repository, and
 closeout workflows aggregate binding outcomes but never claim a distributed
 transaction.
 
-The implementation separates semantic provider adapters from transport
-execution. GitHub, Linear, and Jira adapters normalize provider records and map
-semantic operations. CLI transports run through a safe injected process runner.
-Host MCP or connector transports use a versioned external-action protocol:
-tested CLI code persists an intent and emits a bounded action envelope, an OAT
-skill invokes the host connector, and the CLI accepts a schema-validated,
-sanitized observation before deciding the next step. This boundary is required
-because OAuth connector tools are available to the agent host, not directly to
-the Node process.
+The implementation separates provider-neutral semantic planning from execution
+owned by the host agent. GitHub, Linear, and Jira adapters normalize provider
+records and validate semantic observations; they do not encode native MCP tool
+names, schemas, captured catalogs, or provider CLI dialects. For each operation,
+the host agent discovers currently granted MCP or connector capabilities from
+their live descriptions. Only when no suitable connector is available may it
+inspect the help surface of an already configured CLI and use that live surface.
+The core persists a semantic intent, emits a bounded action envelope, accepts a
+schema-validated sanitized observation, and alone decides the next state. This
+boundary is required because connector and CLI capabilities belong to the host
+environment, not to the Node process or bundled skill prose.
 
 All mutation flows resolve policy, probe exact provider context and capability,
-refresh remote state, create a digest-bound preview, persist intent before any
-effect, attempt once, and verify through authoritative read-back. Transport
-fallback is permitted only before an attempt starts. Any partial or unknown
-outcome freezes the route and requires reconciliation. The design deliberately
-does not introduce background synchronization, webhooks, locks, leases, or
-provider-to-provider mirroring.
+refresh remote state, build an explicit normalized outbound projection, pass
+that projection through one universal pre-write privacy and secret-safety gate,
+and bind the safety result and projection hash into a digest-bound preview.
+They then persist intent before any effect, attempt once, and verify through
+authoritative read-back. Execution fallback is permitted only before an attempt
+starts. Any partial or unknown outcome freezes the route and requires
+reconciliation. The design deliberately does not introduce arbitrary repository
+or codebase secret scanning, background synchronization, webhooks, locks,
+leases, or provider-to-provider mirroring.
 
 ## Resolved Design Questions
 
@@ -43,12 +48,12 @@ provider-to-provider mirroring.
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Association versus operational storage | Keep `associated_issues` compact. Store portable non-content metadata with its shared/synced owner, machine-local operational state in the Git common directory by default, and tracked operational state only after explicit opt-in. |
 | Legacy association shapes              | Accept legacy scalar and `{type, ref}` entries as reference-only. Only an explicit binding identifier enables remote operations.                                                                                                      |
-| Repository versus user policy          | Shared repository config owns mutation and description policy. User/local config owns transport preference. A dedicated resolver merges them without allowing user config to broaden repository authority.                            |
+| Repository versus user policy          | Shared repository config owns mutation and description policy. Host capability grants and already configured CLI availability remain runtime concerns and cannot broaden repository authority.                                        |
 | Managed description content            | Provider codecs own strict section location and replacement. Markdown uses visible OAT heading plus sentinels; Jira uses a uniquely anchored ADF container. Missing, duplicate, or malformed anchors fail closed.                     |
-| MCP execution                          | Use a host-executor action/observation protocol driven by `oat-pjm-remote`; do not add a direct MCP client or first-party Linear GraphQL client in V1.                                                                                |
+| Host execution                         | Use a provider-neutral action/observation protocol driven by `oat-pjm-remote`. The host discovers live connector capabilities and, only if needed, an already configured CLI help surface; OAT ships no native tool or CLI mappings.  |
 | Revision evidence                      | Prefer provider revision tokens; otherwise retain updated time plus canonical content hash and label the strength. Unknown revision strength degrades preview confidence but never removes read-back verification.                    |
 | Batch behavior                         | Produce one reviewed batch preview and one outcome per binding. Successful bindings are not rolled back when another binding fails.                                                                                                   |
-| Jira fidelity gaps                     | Advertise only capabilities demonstrated by Rovo MCP or ACLI. Missing changelog, custom-field, archive, or transition metadata returns a degraded or unsupported capability instead of silently adding Jira REST.                     |
+| Jira fidelity gaps                     | Advertise only capabilities demonstrated by the live host execution surface. Missing changelog, custom-field, archive, or transition metadata returns a degraded or unsupported capability instead of silently adding Jira REST.      |
 
 ## Architecture
 
@@ -67,8 +72,8 @@ separate from the existing Git-ref project sync subsystem.
 **Key Components:**
 
 - **Association codec:** Reads legacy and canonical human-facing links.
-- **Remote config resolver:** Computes effective authority, description policy,
-  and transport order from separately owned config layers.
+- **Remote config resolver:** Computes effective authority and description
+  policy from repository-owned configuration.
 - **Remote sync store:** Persists strict bindings and operation journals.
 - **Local projection resolver:** Maps a backlog item or explicit project
   publication projection into normalized shared fields.
@@ -76,13 +81,16 @@ separate from the existing Git-ref project sync subsystem.
   and proposed actions.
 - **Authority and preview engine:** Applies purpose defaults, configured policy,
   hard approval floors, and digest-bound approvals.
-- **Provider adapters:** Translate GitHub, Linear, and Jira records while
-  preserving extensions.
-- **Transport registry:** Probes and selects capable configured transports.
+- **Provider adapters:** Translate normalized GitHub, Linear, and Jira
+  observations while preserving allowlisted extensions.
+- **Outbound projection safety gate:** Accepts only the explicit normalized
+  fields proposed for a create or update and returns a fail-closed safety result
+  whose hash is bound to the preview.
 - **Mutation coordinator:** Enforces persist-before-effect, one attempt, and
   read-back verification.
-- **Agent-host executor bridge:** Lets skills execute MCP or connector actions
-  without moving correctness into skill prose.
+- **Agent-host executor bridge:** Lets the host discover and execute granted
+  capabilities without moving provider-native invocation details or correctness
+  into OAT core, skills, or tests.
 - **Lifecycle commands and skill:** Expose intake, publish, refresh, reconcile,
   and closeout.
 - **PJM doctor and migration:** Diagnose and explicitly upgrade compatibility
@@ -103,12 +111,14 @@ Local projection ---> Reconciler <--- Provider adapter <--- Remote snapshot
                               |
                        Policy + preview
                               |
+               Outbound projection safety
+                              |
                     Mutation coordinator
-                      /               \
-             Safe CLI runner      External-action bridge
-             gh / linear-cli /    OAT skill -> MCP connector
-             acli                      |
-                      \               /
+                              |
+                  Host-executor bridge
+                 live connector discovery
+                or configured CLI help only
+                              |
                        Provider read-back
                               |
                        Verified outcome
@@ -153,30 +163,36 @@ shared operational storage.
 
 All records use deterministic JSON with independent schema versions and stable
 IDs rather than mutable paths. Directories are created lazily and do not affect
-PJM adoption completeness. No credential, raw authentication header, comment
-thread, activity history, or assignee detail may be stored.
+PJM adoption completeness. Authentication headers, transport credentials, raw
+provider payloads, comment threads, activity history, and assignee detail are
+outside every persisted schema.
 
-The operational binding state contains the bounded core snapshot, including
-the complete non-secret remote description. “Bounded” refers to the allowed
-field set, not arbitrary truncation. High-confidence credential values are a
-hard safety exception: they are replaced with explicit redaction markers before
-persistence, the snapshot is marked `contentRedacted`, and the user is told
-that the locally retained description is not byte-complete. Provider extensions
-use an adapter allowlist and byte limits so an adapter cannot persist an
-unbounded raw response.
+The operational binding state contains only an explicit core field allowlist.
+Inbound remote-authored text is not subjected to repository scanning, arbitrary
+credential-value parsing, or a general DLP promise. Instead, a small
+conservative sensitive-content indicator runs on each allowed text field. When
+it fires, the entire affected field is replaced by an explicit suppression
+marker, the field is marked unavailable, and the user is told that the local
+snapshot is incomplete. The implementation never tries to retain a supposedly
+safe substring of a flagged field. Provider extensions use an adapter allowlist
+and byte limits so an adapter cannot persist an unbounded raw response.
 
 ### Data Flow
 
 #### Read-only refresh or intake
 
 1. Resolve the compact association or explicit provider reference.
-2. Resolve ordered transports and probe exact account, workspace, site, team,
-   and repository context.
-3. Select the first available transport that advertises the required read
-   capability.
+2. Emit a provider-neutral read intent. The host discovers currently granted
+   connectors from live descriptions and verifies exact account, workspace,
+   site, team, and repository context. If none can perform the intent, it may
+   inspect an already configured CLI help surface before selecting it.
+3. Persist bounded capability evidence for the selected host execution surface,
+   without capturing its native catalog or argument schema.
 4. Read and normalize the remote issue.
-5. Redact credential values, mark any redaction, and persist the complete
-   non-secret core snapshot and capability evidence atomically.
+5. Apply the inbound field allowlist. If a conservative sensitive-content
+   signal fires, suppress the whole affected field and visibly mark snapshot
+   incompleteness; then persist the bounded snapshot and capability evidence
+   atomically.
 6. For intake, create or enrich the local target and establish the initial
    inbound reconciliation baseline.
 7. Emit freshness, revision strength, and lifecycle condition without claiming
@@ -193,8 +209,12 @@ unbounded raw response.
    disjoint, or conflict.
 5. Add lifecycle anomalies and uncertain-operation blocks.
 6. Resolve effective authority and description mode for each proposed operation.
-7. Emit a preview with an exact digest over binding, target, baseline, observed
-   revision, capability fingerprint, and requested field mask.
+7. For each proposed outbound action, construct only its normalized outbound
+   projection and obtain a universal privacy/secret-safety result over that
+   projection. Emit a preview whose exact digest covers the binding, target,
+   baseline, observed revision, capability evidence, requested field mask,
+   projection hash, and safety-result hash. A blocked or missing safety result
+   cannot be approved.
 
 #### Mutation
 
@@ -203,26 +223,30 @@ unbounded raw response.
    actions always require fresh approval.
 2. Persist an operation in `planned`, then `authorized`, before external
    execution.
-3. Re-probe identity/capability and re-read the target. Reject a stale preview.
-4. Pin the selected transport and persist `attempt-started`.
+3. Re-probe identity/capability and re-read the target. Recompute the normalized
+   outbound projection and universal safety result; reject a stale preview or
+   any hash mismatch.
+4. Pin the selected host execution surface and persist `attempt-started`.
 5. Perform one mutation attempt.
-6. Read the target back through the pinned transport and the same provider
+6. Read the target back through the pinned execution surface and the same provider
    context. If that read is unavailable or ambiguous, persist `uncertain` and
-   enter reconciliation; a different transport may contribute evidence only in
+   enter reconciliation; a different execution surface may contribute evidence only in
    that separate flow after identity and context equivalence are re-established.
 7. Verify the requested field mask. Advance the binding snapshot and baseline
    only for verified postconditions.
 8. Persist `verified`, `partial`, `uncertain`, or `rejected`. Partial or
    uncertain outcomes block retry and transport switching until reconciliation.
 
-#### MCP or connector action
+#### Host-executed action
 
 1. The lifecycle CLI persists the operation and returns
    `external-action-required` with a versioned action envelope.
-2. `oat-pjm-remote` discovers the current host tool, validates provider
-   context, and invokes exactly the requested semantic action.
-3. The skill passes a schema-constrained, sanitized observation to the CLI over
-   stdin.
+2. `oat-pjm-remote` asks the host agent to discover a capable granted connector
+   from live descriptions. If none is suitable, the host may inspect an already
+   configured CLI's live help surface. The skill contains no provider-native
+   tool name, request schema, catalog, command, flag, or argument mapping.
+3. The skill passes a provider-neutral, schema-constrained, sanitized
+   observation to the CLI over stdin.
 4. The CLI validates the operation and step digests, updates the journal, and
    emits either a verification read action or a terminal outcome.
 5. The skill continues the same operation until the CLI returns a terminal
@@ -316,7 +340,7 @@ function composePurposePolicies(
 ### Remote Configuration Resolver
 
 **Purpose:** Resolve security-sensitive repository policy separately from
-machine/user transport preference.
+runtime execution discovery owned by the host agent.
 
 **Shared repository configuration:**
 
@@ -348,31 +372,13 @@ machine/user transport preference.
 }
 ```
 
-**User configuration (`~/.oat/config.json`):**
-
-```json
-{
-  "pjm": {
-    "remote": {
-      "transports": {
-        "github": ["gh", "mcp"],
-        "linear": ["mcp", "linear-cli"],
-        "jira": ["mcp", "acli"]
-      }
-    }
-  }
-}
-```
-
-**Repository-local override (`.oat/config.local.json`):**
-
-The same `pjm.remote.transports` shape may override the user default for one
-checkout or machine. Shared `.oat/config.json` does not accept transport order;
-it owns policy and storage only.
-
-Built-in transport defaults are `github: [gh]`, `linear: [mcp]`, and
-`jira: [mcp]`. Optional fallbacks are used only when configured and available.
-No external executable is installed by OAT.
+User and repository-local configuration do not contain provider tool names,
+connector catalogs, native request schemas, executable names, or CLI dialects.
+The host's granted connectors and already configured executables are runtime
+capabilities rather than OAT policy. Live connector discovery is preferred; a
+CLI is considered only when the host can establish from its current help
+surface that it can satisfy the semantic action. OAT never installs an external
+executable or treats historical capability evidence as current availability.
 
 **Interfaces:**
 
@@ -422,10 +428,6 @@ interface BindingPolicyRestriction {
   authority?: AuthorityPolicy;
 }
 
-interface OatPjmRemoteTransportConfig {
-  transports?: Partial<Record<ProviderName, string[]>>;
-}
-
 interface AuthorityResolutionTrace {
   builtIn: MutationAuthority;
   repository: { value: MutationAuthority; source: 'default' | 'operation' };
@@ -455,9 +457,9 @@ interface EffectiveRemotePolicy {
 - `OatConfig.pjm.remote` in `.oat/config.json` accepts only
   `OatPjmRemoteSharedConfig`; it is the only config surface that may broaden the
   built-in `read-only` and `none` defaults or opt into shared operational state.
-- `OatLocalConfig.pjm.remote` in `.oat/config.local.json` and
-  `UserConfig.pjm.remote` in `~/.oat/config.json` accept only
-  `OatPjmRemoteTransportConfig`.
+- `OatLocalConfig.pjm.remote` and `UserConfig.pjm.remote` do not define
+  execution-tool selection. Host capability grants and configured executable
+  availability are observed live and cannot modify repository policy.
 - Provider policy is nested inside the shared repository policy and may broaden
   or narrow the repository result for that provider. Authority for each
   mutation class is resolved independently by this exact algorithm:
@@ -487,17 +489,11 @@ interface EffectiveRemotePolicy {
   restrictions use `none < managed-section < replace`; provider description
   overrides replace the repository mode, then the binding mode clamps it toward
   the less permissive result.
-- Transport precedence is repository-local > user > built-in. Each provider
-  list replaces the lower-precedence list as an ordered, duplicate-free value;
-  lists are not concatenated. An empty list explicitly disables remote
-  transport for that provider.
-- Built-in defaults remain `github: [gh]`, `linear: [mcp]`, and `jira: [mcp]`.
 - `oat config get/list/dump/describe` exposes resolved values and sources.
   For example, `oat config set pjm.remote.policy.description managed-section
---shared` and `oat config set pjm.remote.transports.linear
-'["mcp","linear-cli"]' --user` enforce the owning surface; cross-surface
-  writes are rejected.
-- User/local transport preference cannot modify authority, description policy,
+--shared` enforces the owning surface; attempts to configure native tools or
+  transport order through shared remote policy are rejected.
+- Host execution discovery cannot modify authority, description policy,
   storage, adoption, or hard floors.
 - Unknown or invalid policy values fail closed and produce an actionable doctor
   finding instead of being normalized away.

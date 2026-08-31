@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-08-30
+oat_last_updated: 2026-08-31
 oat_generated: false
 ---
 
@@ -20,7 +20,7 @@ OAT needs deliberate, safe integration with GitHub Issues, Linear, and Jira
 Cloud without surrendering its complete, searchable, offline-capable local
 project-management surface. One local backlog item or project may relate to
 multiple remote records that serve different purposes and have different
-schemas, authorities, lifecycle rules, and available transports.
+schemas, authorities, lifecycle rules, and available host capabilities.
 
 A whole-record synchronization model cannot represent those boundaries safely.
 The system needs durable per-binding identity, purpose, policy, reconciliation
@@ -43,7 +43,9 @@ uncertain.
   verifiable, and recoverable after an uncertain outcome.
 - Support explicit intake, publish, refresh, reconcile, and closeout lifecycle
   operations.
-- Retain a bounded complete non-secret core-issue snapshot locally for offline use.
+- Retain a bounded allowlisted core-issue snapshot locally for offline use,
+  suppressing an entire inbound text field when a conservative sensitive-content
+  signal fires.
 - Support verified, policy-authorized completion annotations and lifecycle
   transitions per binding.
 
@@ -53,8 +55,9 @@ uncertain.
   duplicating one remote record.
 - Reconcile priority only when a binding advertises a safe mapping.
 - Fetch remote discussions on demand as read-only evidence.
-- Support user-configured external CLI fallbacks without bundling or installing
-  provider tools.
+- Let the host agent discover granted MCP/connectors and, when necessary,
+  inspect an already configured provider CLI at operation time without OAT
+  bundling or installing provider tools.
 - Preserve provider-native fields as extensions outside the shared field
   contract.
 
@@ -68,14 +71,19 @@ uncertain.
 - Jira Server or Jira Data Center support.
 - Distributed locks, leases, shared coordination, or a designated-writer
   guarantee.
-- Bundling or automatically installing `gh`, a community Linear CLI, or
-  Atlassian `acli`.
+- Bundling or automatically installing provider CLIs.
 - A first-party Linear GraphQL transport unless later capability analysis
   demonstrates that it is necessary.
 - Autonomous destructive actions or complete-description replacement without
   fresh approval.
 - Broad normalization of labels, due dates, estimates, provider-native types,
   or other fields outside the V1 shared contract.
+- Repository, worktree, Git history, or arbitrary-file secret scanning. Remote
+  writes consume only explicit normalized publication projections.
+- A general-purpose credential-value parser or DLP guarantee for remote-authored
+  ticket text.
+- Static MCP tool names, native connector argument schemas, captured tool
+  catalogs, or provider-specific CLI dialects in OAT core, skills, or tests.
 
 ## Requirements
 
@@ -252,15 +260,20 @@ uncertain.
 
 #### FR12: Bounded offline core snapshot
 
-- **Description:** Sync-down must retain a bounded complete non-secret core-issue
-  snapshot for useful offline work.
+- **Description:** Sync-down must retain a bounded allowlisted core-issue
+  snapshot for useful offline work without treating arbitrary ticket text as a
+  credential language that OAT must parse completely.
 - **Acceptance Criteria:**
-  - The snapshot includes durable identity and aliases, title, complete
-    non-secret description, status and other core provider fields, and revision
-    and freshness evidence.
-  - High-confidence credential values are a hard exception: they are redacted
-    before persistence and the snapshot is visibly marked incomplete by
-    redaction rather than falsely reported as byte-complete.
+  - The snapshot allowlist includes durable identity and aliases, title,
+    description, status and other bounded core provider fields, and revision
+    and freshness evidence. Raw provider payloads, authentication headers,
+    comments, activity history, and assignees are excluded.
+  - A simple conservative sensitive-content signal suppresses or redacts the
+    complete affected inbound text field before persistence. The snapshot marks
+    that field unavailable or incomplete rather than retaining a parsed value.
+  - The signal is intentionally field-level and conservative; OAT does not
+    parse assignment grammar, try to extract credential values, scan the
+    repository or Git history, or claim general DLP coverage.
   - Full description retention is independent of remote description-write authority.
   - Snapshot and journal content is local and gitignored by default while
     remaining available across worktrees on the same machine. Shared tracked
@@ -315,21 +328,30 @@ uncertain.
   - Multi-binding closeout is a reviewed batch of independent outcomes.
 - **Priority:** P0
 
-#### FR16: Transport defaults, capability negotiation, and fallback
+#### FR16: Host-discovered execution capability and guarded fallback
 
-- **Description:** Providers must use configurable ordered transports selected
-  by capability and effective mutation authority.
+- **Description:** Provider operations must be executed by the host agent using
+  capabilities it discovers live, while OAT retains provider-neutral semantic
+  intent, policy, evidence, and verification.
 - **Acceptance Criteria:**
-  - GitHub defaults to an installed `gh` CLI.
-  - Linear and Jira default to MCP or connector OAuth.
-  - An installed community Linear CLI and Atlassian `acli` may be configured as
-    alternatives.
+  - At operation time the host agent inspects the granted MCP/connector tools
+    and their current descriptions to find a capability that can perform the
+    requested semantic operation in the required provider context.
+  - If no eligible granted tool exists, the host may inspect an already
+    configured provider CLI and its live help or schema before the first
+    attempt. OAT does not choose or encode a provider-specific CLI dialect.
   - OAT does not bundle or install external provider CLIs.
-  - The first available transport satisfying the requested capability and
-    authority is selected.
+  - OAT core, skills, and tests do not hard-code native MCP tool names,
+    connector argument schemas, captured catalogs, or provider-specific CLI
+    commands. They exchange provider-neutral semantic requests and bounded,
+    sanitized observations.
+  - Host selection must satisfy the requested semantic capability, exact
+    provider context, and effective mutation authority.
   - Fallback is allowed before mutation.
-  - After a write attempt or uncertain outcome, OAT reconciles before switching transports.
-  - Transport-specific behavior does not define the shared domain contract.
+  - After a write attempt or uncertain outcome, OAT reconciles before the host
+    selects another execution capability.
+  - Native tool behavior never defines the shared domain contract or success;
+    authoritative read-back does.
 - **Priority:** P0
 
 #### FR17: Representative cross-provider workflows
@@ -360,14 +382,28 @@ uncertain.
 
 ### Non-Functional Requirements
 
-#### NFR1: Credential and secret safety
+#### NFR1: Credential, content, and outbound-publication safety
 
-- **Description:** Core and synchronization evidence must never persist credential values.
+- **Description:** OAT-owned authentication material and unsafe outbound
+  content must not enter durable evidence or remote writes; inbound ticket
+  content uses a bounded, explicitly non-exhaustive field-suppression policy.
 - **Acceptance Criteria:**
-  - No credential value appears in local or tracked configuration, snapshots, logs,
-    previews, receipts, or error output.
-  - Provider authentication remains transport-managed.
-  - Automated secret scans over representative operations report no leaked credentials.
+  - Provider authentication remains owned by the host tool or configured CLI;
+    OAT never requests, reads, serializes, logs, or persists authentication
+    headers or credential material.
+  - Every remote create or update accepts only an explicit normalized outbound
+    projection. The complete projection passes one provider-neutral pre-write
+    privacy and secret-safety gate whose result and digest are bound to the
+    preview; failure blocks the write.
+  - The outbound gate assesses only the proposed projection and supporting
+    OAT-owned evidence. It does not scan the repository, worktree, Git history,
+    or arbitrary files.
+  - Inbound allowlisted ticket fields use FR12's conservative whole-field
+    suppression and visible incompleteness marker; this is not a guarantee that
+    arbitrary remote-authored text is free of secrets.
+  - Automated tests use representative synthetic fixtures to verify auth
+    non-persistence, whole-field inbound suppression, explicit projections,
+    and fail-closed outbound blocking without claiming exhaustive DLP.
 - **Priority:** P0
 
 #### NFR2: Fail-closed mutation safety
@@ -396,8 +432,8 @@ uncertain.
 - **Description:** Local PJM must remain useful with all remote capabilities unavailable.
 - **Acceptance Criteria:**
   - The local-only workflow suite passes with network and provider transports disabled.
-  - Previously refreshed items expose freshness and the complete non-secret
-    bounded core snapshot plus any redaction status.
+  - Previously refreshed items expose freshness and the bounded allowlisted
+    core snapshot plus any field-suppression status.
   - Pending remote actions are visibly distinguished from completed work.
 - **Priority:** P0
 
@@ -432,15 +468,17 @@ uncertain.
   - Existing human-facing issue associations remain usable.
 - **Priority:** P0
 
-#### NFR8: Replaceable transport capability layer
+#### NFR8: Replaceable host-execution capability layer
 
-- **Description:** Transport evolution must not alter provider-neutral lifecycle
-  and reconciliation semantics.
+- **Description:** Changes to granted tools, connectors, or configured CLIs
+  must not alter provider-neutral lifecycle and reconciliation semantics.
 - **Acceptance Criteria:**
-  - Equivalent semantic conformance scenarios pass through each supported
-    transport for the capabilities it advertises.
-  - Unavailable capability is reported before mutation.
-  - Transport version and capability evidence is retained with operation evidence.
+  - Equivalent semantic conformance scenarios pass through generic host-action
+    and sanitized-observation fixtures rather than provider-native tool schemas.
+  - Missing capability, context mismatch, or unavailable authorization is
+    reported before mutation.
+  - Bounded host capability and tool-version evidence is retained with the
+    operation without persisting a native tool catalog or request schema.
 - **Priority:** P1
 
 ## Constraints
@@ -465,7 +503,9 @@ uncertain.
 
 - Existing local project-management commands, records, and project lifecycle.
 - GitHub Issues, Linear, and Jira Cloud provider capabilities.
-- GitHub `gh`, Linear and Jira MCP connectors, and optionally user-installed external CLIs.
+- An agent host able to inspect granted MCP/connector tool descriptions and,
+  when no eligible tool exists, an operator-configured provider CLI and its
+  live help surface.
 - Provider authentication managed outside tracked project files.
 - Provider capability, schema, permission, revision, and transition discovery.
 - Provider-native branch, pull-request, merge, and tracker automation where teams use it.
@@ -474,18 +514,20 @@ uncertain.
 
 The selected approach is a local-first PJM core surrounded by explicit remote
 bindings. Each binding identifies one remote record and carries purposes,
-effective policy, a complete non-secret offline snapshot, a narrower writable baseline,
+effective policy, a bounded allowlisted offline snapshot, a narrower writable baseline,
 revision evidence, pending operations, receipts, capabilities, and lifecycle
 condition. The binding—not the item, project, repository, or provider—is the
 reconciliation and outcome boundary.
 
 A provider-neutral lifecycle layer exposes intake, publish, refresh, reconcile,
 and closeout. It resolves repository, provider, and tightening-only binding
-policy; negotiates a capable configured transport; compares base, local, and
-remote state; produces a preview; and executes guarded writes with durable
-evidence and read-back verification. GitHub, Linear, and Jira adapters translate
-semantic operations without defining the shared contract or erasing
-provider-native capabilities.
+policy; compares base, local, and remote state; produces a preview; and hands a
+provider-neutral semantic action
+to the host for live capability discovery and execution. Every outbound action
+uses an explicit normalized projection that passes a universal pre-write
+safety gate. GitHub, Linear, and Jira adapters translate semantic observations
+without defining the host's native tool contract or erasing provider-native
+capabilities.
 
 Higher-level item, project, repository, and reviewed-batch workflows may
 orchestrate many bindings, but aggregate independent outcomes rather than
@@ -501,7 +543,8 @@ simulating a distributed transaction.
 - **Reconciliation engine:** Per-binding three-way classification and preview.
 - **Lifecycle orchestrator:** Explicit remote operations across independent bindings.
 - **Provider adapters:** GitHub Issues, Linear, and Jira Cloud semantic translation.
-- **Transport capability layer:** Ordered configurable transport selection and guarded fallback.
+- **Host-executor bridge:** Live capability discovery, semantic handoff,
+  bounded observations, and guarded pre-attempt fallback.
 - **Durable operation journal:** Intent, attempts, receipts, uncertainty, and verification evidence.
 
 **Alternatives Considered:**
@@ -513,8 +556,8 @@ simulating a distributed transaction.
 - **Distributed coordination in V1:** Rejected as disproportionate to the
   accepted rare simultaneous-writer case; guarded write-once-and-verify is the
   approved boundary.
-- **First-party Linear GraphQL baseline:** Deferred because MCP or connector
-  OAuth and configurable external CLI options are the approved initial path.
+- **First-party Linear GraphQL baseline:** Deferred because live host-agent
+  capability discovery is the approved initial path.
 
 ## Success Metrics
 
@@ -522,8 +565,9 @@ simulating a distributed transaction.
   closeout conformance scenarios pass for GitHub Issues, Linear, and Jira Cloud.
 - 100% of existing local-only PJM tests pass with no providers configured and
   with all remote access disabled.
-- 100% of sync-down fixtures retain the bounded core snapshot; none retain
-  comments, activity, or assignees by default.
+- 100% of sync-down fixtures retain the available bounded core fields; fields
+  that trigger the conservative sensitive-content signal are wholly suppressed
+  and visibly marked, and none retain comments, activity, or assignees by default.
 - 100% of same-field conflict and uncertain-operation fixtures require explicit
   resolution; none silently choose a winner.
 - 100% of description modes, authority modes, precedence combinations, and
@@ -534,8 +578,12 @@ simulating a distributed transaction.
   until explicit resolution.
 - 100% of multi-binding operations report an independent outcome for every
   binding and never claim cross-provider atomicity.
-- No credential values appear in tracked artifacts, previews, receipts, logs,
-  test snapshots, or error output.
+- No OAT-owned authentication credential or blocked outbound secret fixture
+  appears in tracked artifacts, previews, receipts, logs, test snapshots, error
+  output, or a remote write.
+- Every remote create/update fixture proves that its complete explicit outbound
+  projection passed the same provider-neutral safety gate; no test scans the
+  repository as a publication input.
 
 ## Requirement Index
 
@@ -552,21 +600,21 @@ simulating a distributed transaction.
 | FR9  | Perform preview-first three-way reconciliation                      | P0       | unit + integration: reconciliation classification suite | p02-t05, p02-t07, p03-t06                                                                         |
 | FR10 | Treat each binding as the atomic outcome unit                       | P0       | integration: reviewed batch and partial failure         | p01-t04, p07-t01, p07-t02                                                                         |
 | FR11 | Refresh, write once, verify, and stop after uncertainty             | P0       | integration: guarded mutation and race fixtures         | p02-t08, p02-t09, p03-t06                                                                         |
-| FR12 | Retain the bounded complete non-secret core issue                   | P0       | integration: sync-down snapshot contract                | p01-t05, p02-t03, p03-t05, p03-t11, p07-t04                                                       |
+| FR12 | Retain a bounded allowlisted core issue with field suppression      | P0       | integration: sync-down snapshot contract                | p01-t05, p02-t03, p02-t10, p03-t05, p03-t11, p07-t04                                              |
 | FR13 | Preserve evidence across remote lifecycle anomalies                 | P0       | integration: lifecycle anomaly suite                    | p01-t04, p07-t05, p07-t06, p07-t07                                                                |
 | FR14 | Persist create intent and reconcile uncertain creates               | P0       | integration: duplicate-create recovery                  | p01-t10, p02-t08, p03-t06, p03-t12, p04-t09, p04-t10, p05-t08, p05-t09, p06-t09, p06-t10, p07-t06 |
 | FR15 | Close out and annotate eligible bindings independently              | P0       | e2e: multi-binding project completion                   | p02-t01, p02-t08, p07-t01, p07-t02, p07-t03                                                       |
-| FR16 | Select capable configured transports with guarded fallback          | P0       | integration: transport capability and fallback matrix   | p01-t02, p03-t02, p03-t03, p03-t04, p04-t02, p05-t02, p05-t04, p06-t03, p06-t05                   |
+| FR16 | Discover capable host execution with guarded fallback               | P0       | integration: semantic host capability and fallback      | p01-t02, p03-t02, p03-t04, p03-t09, p04-t02, p05-t02, p05-t04, p06-t03, p06-t05                   |
 | FR17 | Support GitHub-to-Linear, GitHub-to-Jira, and GitHub-only workflows | P0       | e2e: representative provider workflows                  | p04-t06, p05-t06, p06-t07, p07-t08                                                                |
 | FR18 | Keep detailed OAT artifacts local and discussion informational      | P1       | integration + manual: information-boundary review       | p02-t02, p04-t11, p07-t04, p07-t08                                                                |
-| NFR1 | Prevent credentials from entering durable or displayed evidence     | P0       | integration + security scan: credential leakage         | p01-t05, p02-t03, p03-t03, p04-t08, p07-t09                                                       |
+| NFR1 | Protect auth, inbound fields, and outbound projections              | P0       | integration: bounded content-safety contracts           | p01-t05, p02-t03, p02-t10, p03-t03, p04-t08, p07-t09                                              |
 | NFR2 | Fail closed on ambiguous or unsafe mutation conditions              | P0       | integration: safety-failure matrix                      | p02-t06, p02-t07, p02-t09, p03-t11, p04-t08, p07-t07                                              |
 | NFR3 | Recover safely across ephemeral sessions and interruptions          | P0       | integration: restart and uncertain-operation recovery   | p01-t06, p01-t07, p01-t10, p02-t08, p03-t12, p07-t03, p07-t09                                     |
 | NFR4 | Keep local PJM useful while offline                                 | P0       | e2e: disconnected operation                             | p01-t05, p03-t05, p07-t09                                                                         |
 | NFR5 | Preserve provider-specific semantics and capabilities               | P0       | integration: provider extension conformance             | p03-t01, p04-t01, p05-t01, p06-t01, p06-t02                                                       |
 | NFR6 | Clearly expose previews, freshness, conflicts, and outcomes         | P1       | manual + e2e: preview and result UX                     | p02-t07, p03-t07, p07-t01, p07-t10                                                                |
 | NFR7 | Preserve compatibility with existing local PJM                      | P0       | integration: local regression suite                     | p01-t08, p01-t09, p07-t09, p07-t10                                                                |
-| NFR8 | Keep transports replaceable behind semantic capabilities            | P1       | integration: multi-transport semantic conformance       | p03-t01, p03-t02, p04-t06, p05-t06, p06-t07                                                       |
+| NFR8 | Keep host execution replaceable behind semantic capabilities        | P1       | integration: generic host-executor conformance          | p03-t01, p03-t02, p03-t04, p04-t06, p05-t06, p06-t07                                              |
 
 ## Open Questions
 
@@ -578,31 +626,33 @@ simulating a distributed transaction.
   GitHub and Linear Markdown and Jira ADF?
 - **Provider mapping:** Which provider-specific priority and status mappings can
   advertise safe shared capabilities?
-- **Transport equivalence:** What evidence establishes that a fallback transport
-  can perform the requested operation with equivalent safety?
+- **Host capability evidence:** What bounded observation establishes that a
+  discovered host capability can perform the requested semantic operation in
+  the exact provider context?
 - **Interaction:** How should previews, reviewed batches, partial failures, and
   reconciliation choices be rendered in CLI and agent workflows?
 
 ## Assumptions
 
 - Every provider exposes or permits a durable identity distinct from its current display alias.
-- At least one supported read transport can expose revision or freshness
+- At least one host-discovered read capability can expose revision or freshness
   evidence sufficient for guarded reconciliation, even when no strong compare-
   and-swap primitive exists.
 - Existing local PJM record formats can evolve compatibly to reference richer
   remote state without requiring remote setup.
-- Provider connectors and installed CLIs can advertise availability and
-  operation capabilities without exposing credential values.
+- The host can inspect granted connector descriptions or a configured CLI's
+  live help without exposing authentication material to OAT.
 - Completion annotations can be implemented as a distinct operation even when
   the provider surface represents them as comments.
 
 ## Risks
 
-- **Provider schema drift:** Jira fields and workflows and transport-level schemas may change.
+- **Provider schema drift:** Provider fields, workflows, and host tool surfaces may change.
   - **Likelihood:** High
   - **Impact:** High
-  - **Mitigation:** Discover capabilities and schema at operation time, retain
-    evidence, and fail closed when mappings are no longer safe.
+  - **Mitigation:** The host discovers capabilities at operation time; OAT
+    retains bounded semantic evidence and fails closed when mappings or context
+    are no longer safe.
 - **Uncertain mutation outcomes:** Interrupted or ambiguous calls may have committed remotely.
   - **Likelihood:** Medium
   - **Impact:** High

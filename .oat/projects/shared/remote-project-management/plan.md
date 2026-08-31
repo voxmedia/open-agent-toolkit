@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-30
+oat_last_updated: 2026-08-31
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_source: spec-driven
@@ -26,9 +26,11 @@ restart-safe reconciliation evidence, and no provider-to-provider mirroring.
 
 **Architecture:** A provider-neutral domain, policy, reconciliation, operation,
 and persistence core lives under oat pjm remote. Provider adapters preserve
-native semantics, while transports execute only capability-matched operations
-and return observations for core verification. Compact portable associations
-remain separate from privacy-sensitive operational state.
+native semantics as semantic intents and normalized observations. The host
+agent discovers currently granted MCP/connectors or, when needed, a configured
+CLI through live help at operation time; OAT does not encode provider tool
+names, native schemas, captured catalogs, or CLI dialects. Compact portable
+associations remain separate from privacy-sensitive operational state.
 
 **Tech Stack:** Node.js 22.17+, TypeScript ESM, Commander, Zod, YAML, Vitest,
 canonical OAT Markdown skills, and injected process/filesystem/tool seams.
@@ -65,9 +67,10 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
   depends on p04-p06; p08 depends on p07.
 - **Peer lanes:** p04, p05, and p06 may proceed independently after p03. Their
   numbering does not imply serial execution.
-- **Shared-file coordination:** p04-p06 own distinct provider and transport
-  modules. They import the immutable p03 conformance harness and supply fixtures
-  in provider-local tests; changes to shared interfaces return to p03 ownership.
+- **Shared-file coordination:** p04-p06 own distinct provider semantic adapters.
+  They import the immutable p03 conformance harness and supply provider-local
+  intent/observation fixtures; changes to shared interfaces return to p03
+  ownership.
 - **Execution setting:** no oat_plan_parallel_groups value is recorded. The
   implement workflow must confirm parallel execution separately before
   dispatching the peer lanes concurrently.
@@ -408,7 +411,37 @@ packages/cli/src/commands/pjm/remote/verification.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/verification.test.ts
 5. Commit: feat(p02-t09): verify remote mutation postconditions
 
+### Task p02-t10: Replace credential parsing with field-level content safety
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/credential-safety.ts,
+packages/cli/src/commands/pjm/remote/credential-safety.test.ts,
+packages/cli/src/commands/pjm/remote/snapshot.ts,
+packages/cli/src/commands/pjm/remote/snapshot.test.ts,
+packages/cli/src/commands/pjm/remote/preview.ts, and
+packages/cli/src/commands/pjm/remote/preview.test.ts.
+
+1. Add failing cases proving that a conservative sensitive-content signal in
+   an allowlisted inbound ticket field suppresses the whole field across
+   snapshots and previews, marks the result incomplete, and blocks approval.
+   Include bracketed and multi-segment credential-key signals plus ordinary
+   identifier-like negative cases.
+2. Remove credential assignment/value parsing in favor of simple field-level
+   suppression. This boundary applies only to explicitly allowlisted inbound
+   remote ticket content: it does not scan the repository or codebase and does
+   not claim general DLP or exhaustive secret detection.
+3. Format: pnpm format:fix
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/credential-safety.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/preview.test.ts
+5. Commit: fix(p02-t10): simplify credential content safety
+
 ## Phase 3: Execution Substrate and Lifecycle UX
+
+> Approved boundary revision: OAT owns provider-neutral semantic intent,
+> explicit outbound projections, policy/approval, journals/state, sanitized
+> observations, and postcondition verification. The host agent discovers live
+> MCP/connectors from granted tool descriptions at operation time or inspects a
+> configured CLI and its help when no capable connector is available. Core,
+> skills, and tests do not hardcode provider tool names, native request schemas,
+> captured catalogs, or provider-specific CLI commands/arguments.
 
 ### Task p03-t01: Define provider adapter and conformance contract
 
@@ -416,48 +449,60 @@ packages/cli/src/commands/pjm/remote/verification.test.ts.
 provider-conformance.ts, and provider-conformance.test.ts.
 
 1. Add a fake adapter proving stable identity, aliases, normalization,
-   capability discovery, operation planning, and verification field masks.
+   semantic operation planning, normalized observations, and verification field
+   masks.
 2. Define ProviderAdapter and reusable conformance cases without importing a
-   provider-specific payload into the core domain.
+   provider-native tool schema or payload into the core domain.
 3. Format: pnpm format:fix
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/provider-conformance.test.ts
 5. Commit: feat(p03-t01): define remote provider contract
 
-### Task p03-t02: Select transports by semantic capability
+### Task p03-t02: Select host execution by semantic capability evidence
 
-**Files:** Create packages/cli/src/commands/pjm/remote/transport-registry.ts
-and transport-registry.test.ts.
+**Files:** Create packages/cli/src/commands/pjm/remote/host-execution.ts and
+host-execution.test.ts.
 
-1. Add ordered probe cases for unavailable, auth-required, context-mismatched,
-   capability-missing, equivalent fallback, explicit disablement, and no route.
-2. Implement selectRemoteTransport() with provider/context/capability
-   fingerprints and fallback only before an attempt starts.
+1. Add provider-neutral cases for unavailable, auth-required,
+   context-mismatched, capability-missing, equivalent pre-attempt fallback,
+   explicit disablement, and no route using sanitized host-reported evidence.
+2. Implement selectHostExecution() over semantic provider/context/capability
+   evidence. Do not retain a tool catalog or provider-native schema, and permit
+   fallback only before an attempt starts.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transport-registry.test.ts
-5. Commit: feat(p03-t02): select capable remote transports
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/host-execution.test.ts
+5. Commit: feat(p03-t02): select host execution capabilities
 
-### Task p03-t03: Add a safe external-command runner
+### Task p03-t03: Gate explicit outbound projections before host execution
 
-**Files:** Create packages/cli/src/commands/pjm/remote/safe-command-runner.ts
-and safe-command-runner.test.ts.
+**Files:** Create
+packages/cli/src/commands/pjm/remote/outbound-projection-safety.ts and
+outbound-projection-safety.test.ts.
 
-1. Add fake executable cases for argv injection, stdin, environment allowlist,
-   timeout, output caps, invalid JSON, nonzero exit, partial output, and redaction.
-2. Implement injected spawn execution with argv arrays, no shell, bounded I/O,
-   sanitized diagnostics, and executable identity/version evidence.
+1. Add failing cases for explicit normalized field projections, prohibited
+   private-artifact markers, representative synthetic secret signals, safe
+   content, blocked verdicts, sanitized diagnostics, and digest invalidation.
+   Prove the gate receives only the intended outbound projection and never
+   scans the repository or codebase.
+2. Implement assessOutboundProjectionSafety() as a universal pre-write gate.
+   Bind its safe verdict and projection digest into preview/approval/action
+   evidence; any failure blocks host execution without persisting the detected
+   value.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/safe-command-runner.test.ts
-5. Commit: feat(p03-t03): add safe remote command runner
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/outbound-projection-safety.test.ts
+5. Commit: feat(p03-t03): gate outbound remote projections
 
 ### Task p03-t04: Define the host-executor action protocol
 
 **Files:** Create packages/cli/src/commands/pjm/remote/external-action.ts and
 external-action.test.ts.
 
-1. Add schema/digest tests for action and observation envelopes, stale steps,
-   duplicates, mismatched provider/context, size limits, and sanitization.
-2. Implement buildExternalAction() and acceptExternalObservation(); connector
-   observations remain evidence and cannot directly set success.
+1. Add schema/digest tests for provider-neutral semantic action and sanitized
+   observation envelopes, stale steps, duplicates, mismatched provider/context,
+   size limits, and sanitization. Assert native tool schemas and captured
+   catalogs are rejected from durable evidence.
+2. Implement buildExternalAction() and acceptExternalObservation(); the host
+   selects and invokes a live capability, while observations remain evidence
+   and cannot directly set success.
 3. Format: pnpm format:fix
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/external-action.test.ts
 5. Commit: feat(p03-t04): define host executor protocol
@@ -468,8 +513,8 @@ external-action.test.ts.
 lifecycle.test.ts.
 
 1. Add injected-provider tests for refresh persistence, intake create/enrich,
-   initial inbound baseline, redaction, freshness, no mutation, and offline
-   failure that leaves local PJM unaffected.
+   initial inbound baseline, allowlisted-field whole-field suppression,
+   freshness, no mutation, and offline failure that leaves local PJM unaffected.
 2. Implement refreshBinding() and intakeRemoteIssue() with provider-neutral
    dependencies and atomic local transitions.
 3. Format: pnpm format:fix
@@ -484,7 +529,8 @@ lifecycle.test.ts.
 1. Add preview-only, exact user-instruction-authorized, fresh-approved,
    conflict, read-only, stale-preview, and no-transitive-propagation cases.
    Prove autonomous mode is blocked without matching active-workflow authority
-   evidence and allowed only while that evidence remains current.
+   evidence and allowed only while that evidence remains current. Require the
+   universal outbound-projection safety verdict and digest for every write.
 2. Implement publishBinding() and reconcileRemoteBinding() using persisted
    intent, immediate pre-read, one attempt, pinned readback, and verification.
    Persist the instruction/workflow evidence in the preview and operation
@@ -528,9 +574,13 @@ references/external-action-protocol.md, and tests/contract.test.mjs.
 
 1. Add contract tests requiring oat pjm doctor --json, CLI-owned policy and
    verdicts, exact action/observation continuation, bounded discussion reads,
-   and no direct skill-authored remote success.
-2. Author version 1.0.0 skill guidance for host connector discovery or CLI
-   lifecycle invocation, including schema-constrained stdin handoff.
+   and no direct skill-authored remote success. Reject static provider tool
+   names, native schemas, captured catalogs, and provider-specific CLI dialects.
+2. Author version 1.0.0 skill guidance that tells the host agent to discover
+   currently granted MCP/connectors from live descriptions, then, only when no
+   capable connector is available, inspect a configured CLI and its live help.
+   The skill passes semantic intents and sanitized observations without
+   encoding native invocations.
 3. Format: pnpm format:fix
 4. Run: node --test .agents/skills/oat-pjm-remote/tests/\*.test.mjs && pnpm oat:validate-skills && pnpm lint && pnpm format
 5. Commit: feat(p03-t09): add remote project management skill
@@ -541,9 +591,11 @@ references/external-action-protocol.md, and tests/contract.test.mjs.
 `packages/cli/src/commands/pjm/remote/__integration__/lifecycle-harness.ts` and
 `packages/cli/src/commands/pjm/remote/__integration__/lifecycle.test.ts`.
 
-1. Build reusable fake store, clock, IDs, provider, transport, and crash points.
+1. Build reusable fake store, clock, IDs, provider, generic host executor, and
+   crash points.
 2. Cover restart between every operation transition, stale approval, pinned
-   transport, uncertain readback, and local-only continued operation.
+   semantic capability evidence, uncertain readback, and local-only continued
+   operation without modeling a provider-native tool surface.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/lifecycle.test.ts`
 5. Commit: test(p03-t10): add remote lifecycle integration harness
@@ -582,7 +634,8 @@ packages/cli/src/commands/pjm/remote/index.test.ts.
    association materialization. Inject crashes after each boundary and cover
    rejected and uncertain creates without blind retry.
 2. Implement createAndBindRemoteIssue() as an ordered local transaction:
-   reserve IDs and intent; execute one provider create; verify durable identity
+   reserve IDs and intent; emit one semantic host create action after the
+   outbound gate passes; verify the sanitized observation's durable identity
    and requested fields; atomically materialize binding state/metadata; then
    write the compact association. Wire unbound publish through injected command
    services and a resumable external-action handoff.
@@ -590,10 +643,10 @@ packages/cli/src/commands/pjm/remote/index.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/lifecycle.test.ts src/commands/pjm/remote/association.test.ts src/commands/pjm/remote/index.test.ts
 5. Commit: feat(p03-t12): materialize initial remote binding
 
-## Phase 4: GitHub Adapter and gh Transport
+## Phase 4: GitHub Semantic Adapter
 
-> Peer lane after p03. Own only providers/github*, transports/gh*, and its
-> additive conformance fixture entries.
+> Peer lane after p03. Own only providers/github\* and its additive conformance
+> fixture entries. Host execution remains generic and live-discovered.
 
 ### Task p04-t01: Normalize GitHub identity and snapshots
 
@@ -608,30 +661,33 @@ github.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
 5. Commit: feat(p04-t01): normalize github issues
 
-### Task p04-t02: Probe gh identity and capabilities
+### Task p04-t02: Validate GitHub host context and capabilities
 
-**Files:** Create packages/cli/src/commands/pjm/remote/transports/gh.ts and
-gh.test.ts.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts and
+github.test.ts.
 
-1. Add fake gh cases for absence, auth/account mismatch, repo mismatch,
-   version drift, JSON field support, rate limits, and capability fingerprints.
-2. Implement read-only probe/read methods through the safe runner without
-   persisting auth material.
+1. Add sanitized host-observation cases for unavailable access, auth/account
+   mismatch, repository mismatch, missing semantic fields, rate limits, and
+   sufficient capability evidence without modeling any native tool schema.
+2. Validate provider identity, repository context, and semantic capability
+   evidence before accepting a GitHub read or mutation observation. Never
+   persist auth material or a discovered tool catalog.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/gh.test.ts
-5. Commit: feat(p04-t02): probe github gh capabilities
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
+5. Commit: feat(p04-t02): validate github host capabilities
 
 ### Task p04-t03: Read and refresh GitHub issues
 
-**Files:** Modify packages/cli/src/commands/pjm/remote/transports/gh.ts and
-gh.test.ts.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts and
+github.test.ts.
 
 1. Add current/renamed/transferred/archived/inaccessible/deleted/temporary
    failure fixtures with revision/freshness evidence.
-2. Implement readIssue() and lifecycle classification, distinguishing ambiguous
-   404 from authoritative deletion.
+2. Accept and normalize sanitized semantic read observations, then implement
+   lifecycle classification that distinguishes inaccessible or ambiguous
+   absence from authoritative deletion.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/gh.test.ts
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
 5. Commit: feat(p04-t03): read github issue state
 
 ### Task p04-t04: Plan GitHub create and field updates
@@ -646,18 +702,20 @@ packages/cli/src/commands/pjm/remote/providers/github.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
 5. Commit: feat(p04-t04): plan github issue mutations
 
-### Task p04-t05: Execute and verify GitHub mutations
+### Task p04-t05: Accept and verify GitHub mutation observations
 
-**Files:** Modify packages/cli/src/commands/pjm/remote/transports/gh.ts and
-gh.test.ts.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts and
+github.test.ts.
 
-1. Add one-attempt create/edit/close/reopen/comment fixtures, silently dropped
-   fields, rejection, timeout-after-write, and pinned readback.
-2. Implement mutation argv construction and adapter verification; never retry
-   an uncertain create or update.
+1. Add provider-neutral one-attempt create/edit/close/reopen/comment
+   observation fixtures, silently dropped fields, rejection,
+   unknown-after-attempt, and pinned readback.
+2. Validate sanitized host observations against the semantic plan and adapter
+   postconditions; never construct a native invocation or retry an uncertain
+   create or update.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/gh.test.ts
-5. Commit: feat(p04-t05): execute github issue mutations
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
+5. Commit: feat(p04-t05): verify github mutation observations
 
 ### Task p04-t06: Run GitHub adapter conformance
 
@@ -677,9 +735,11 @@ packages/cli/src/commands/pjm/remote/providers/github.conformance.test.ts.
 **Files:** Create
 `packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
 
-1. Exercise intake, refresh, publish, reconcile, and closeout through fake gh.
-2. Assert exact argv, persisted intent/receipt, readback verification, transfer
-   history, rate-limit failure, and per-binding outcomes.
+1. Exercise intake, refresh, publish, reconcile, and closeout through generic
+   fake-host observations.
+2. Assert persisted
+   semantic intent/receipt, readback verification, transfer history, rate-limit
+   failure, and per-binding outcomes without native invocation fixtures.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/github.test.ts`
 5. Commit: test(p04-t07): integrate github remote lifecycle
@@ -692,12 +752,14 @@ github-publication-safety.test.ts; modify
 `packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
 
 1. Add private/public repository classification, unavailable visibility,
-   prohibited private artifact content, credential-shaped content, safe
-   projection, sanitized preview, and blocked-publication fixtures.
-2. Implement assessGitHubPublicationSafety() before preview authorization.
-   Public or ambiguously public targets fail closed unless the exact projected
-   content passes the privacy and credential scan; readback verifies only the
-   approved sanitized projection.
+   prohibited private artifact content, safe projection, sanitized preview,
+   and blocked-publication fixtures that consume the p03 universal outbound
+   safety verdict.
+2. Implement assessGitHubPublicationSafety() as an additional visibility policy
+   before preview authorization. Public or ambiguously public targets fail
+   closed unless the exact projection passed the shared gate and contains no
+   prohibited private artifact content; readback verifies only that approved
+   projection.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github-publication-safety.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
 5. Commit: feat(p04-t08): gate public github publication
@@ -717,44 +779,42 @@ github.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts
 5. Commit: feat(p04-t09): plan github duplicate searches
 
-### Task p04-t10: Execute GitHub duplicate searches through gh
+### Task p04-t10: Validate GitHub duplicate-search observations
 
-**Files:** Modify packages/cli/src/commands/pjm/remote/transports/gh.ts,
-packages/cli/src/commands/pjm/remote/transports/gh.test.ts, and
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts,
+packages/cli/src/commands/pjm/remote/providers/github.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
 
-1. Add failing fake-gh cases for exact-repository provenance/alias search,
-   unavailable capability, result bounds, ambiguity, transferred aliases,
-   no-match, and stable-identity verification.
-2. Implement searchDuplicates() through the safe runner and advertise the
-   capability only when the installed gh surface can return the required
-   identity/context evidence.
+1. Add generic host-observation cases for exact-repository provenance/alias
+   search, unavailable capability, result bounds, ambiguity, transferred
+   aliases, no-match, and stable-identity verification.
+2. Accept duplicate-search results only when sanitized capability, identity,
+   and context evidence satisfy the provider semantic plan; retain no native
+   query schema or invocation mapping.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/gh.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
-5. Commit: feat(p04-t10): search github duplicates
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
+5. Commit: feat(p04-t10): validate github duplicate results
 
 ### Task p04-t11: Read bounded GitHub discussion evidence
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/providers/github.ts,
 packages/cli/src/commands/pjm/remote/providers/github.test.ts,
-packages/cli/src/commands/pjm/remote/transports/gh.ts,
-packages/cli/src/commands/pjm/remote/transports/gh.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/github.test.ts`.
 
 1. Add planDiscussionRead(), pagination, limit, sanitization, rate-limit,
    permission, and non-persistence fixtures for issue comments and activity
    evidence.
-2. Implement a bounded gh discussion read whose cursor and normalized page are
-   returned to the provider-neutral service but never enter binding snapshots
-   or journals.
+2. Plan a bounded semantic discussion read and validate the sanitized cursor
+   and normalized page returned by the host; discussion content never enters
+   binding snapshots or journals.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts src/commands/pjm/remote/transports/gh.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/github.test.ts src/commands/pjm/remote/__integration__/github.test.ts`
 5. Commit: feat(p04-t11): read github discussion evidence
 
-## Phase 5: Linear Adapter and Transports
+## Phase 5: Linear Semantic Adapter
 
-> Peer lane after p03. Own only providers/linear*, transports/linear-cli*,
-> Linear action codecs, and its additive conformance fixture entries.
+> Peer lane after p03. Own only providers/linear\* and its additive conformance
+> fixture entries. Host execution remains generic and live-discovered.
 
 ### Task p05-t01: Normalize Linear identity and snapshots
 
@@ -769,65 +829,69 @@ linear.test.ts.
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts
 5. Commit: feat(p05-t01): normalize linear issues
 
-### Task p05-t02: Map Linear MCP read actions
+### Task p05-t02: Plan Linear semantic read intents
 
-**Files:** Create
-packages/cli/src/commands/pjm/remote/providers/linear-actions.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts and
+linear.test.ts.
 
-1. Add captured catalog cases for available/missing operations, workspace/team
-   ambiguity, auth-required, partial responses, and catalog fingerprints.
-2. Implement external-action schemas for probe, lookup, refresh, and bounded
-   discussion reads without a first-party GraphQL client.
+1. Add semantic plan cases for lookup, refresh, bounded discussion reads,
+   workspace/team ambiguity, missing capability, and required observation
+   evidence without any captured tool catalog or native schema.
+2. Implement provider-neutral read intents and expected normalized observation
+   shapes; the host discovers and invokes an available capability at runtime.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear-actions.test.ts
-5. Commit: feat(p05-t02): map linear connector reads
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts
+5. Commit: feat(p05-t02): plan linear read intents
 
-### Task p05-t03: Map Linear MCP mutation actions
+### Task p05-t03: Plan Linear semantic mutation intents
 
-**Files:** Modify
-packages/cli/src/commands/pjm/remote/providers/linear-actions.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts and
+linear.test.ts.
 
-1. Add create/update/transition/comment action and observation fixtures,
-   missing capability, stale catalog, partial error, and verification masks.
-2. Implement connector action plans that keep approval, journaling, and verdicts
-   in the CLI core.
+1. Add create/update/transition/comment intent fixtures, missing capability,
+   partial/unknown outcome, explicit projections, and verification masks.
+2. Implement semantic mutation plans that keep outbound safety, approval,
+   journaling, state, and verdicts in OAT without encoding a provider-native
+   invocation.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear-actions.test.ts
-5. Commit: feat(p05-t03): map linear connector mutations
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts
+5. Commit: feat(p05-t03): plan linear mutation intents
 
-### Task p05-t04: Probe optional linear-cli
+### Task p05-t04: Validate Linear read observations
 
-**Files:** Create
-packages/cli/src/commands/pjm/remote/transports/linear-cli.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts and
+linear.test.ts.
 
-1. Add installed/unavailable/version/schema/auth/context/capability fixtures
-   against a fake executable.
-2. Implement opt-in probe and read methods through the safe runner; never
-   install the community CLI or treat it as the default transport.
+1. Add sanitized host-observation cases for unavailable/auth-required,
+   workspace/team mismatch, partial response, archived issue, discussion page,
+   and sufficient semantic capability evidence.
+2. Validate context and normalize read observations without retaining native
+   response schemas, live tool descriptions, or CLI help output.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/linear-cli.test.ts
-5. Commit: feat(p05-t04): probe optional linear cli
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts
+5. Commit: feat(p05-t04): validate linear read observations
 
-### Task p05-t05: Execute optional linear-cli mutations
+### Task p05-t05: Validate Linear mutation observations
 
-**Files:** Modify
-packages/cli/src/commands/pjm/remote/transports/linear-cli.ts and its test.
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts and
+linear.test.ts.
 
-1. Add create/update/transition/comment, invalid JSON, rejected operation,
-   timeout-after-write, and pinned readback fixtures.
-2. Implement only capability-demonstrated semantic operations and leave gaps
-   unavailable for fallback selection.
+1. Add sanitized create/update/transition/comment observation cases for
+   rejection, unknown-after-attempt, silently dropped fields, and pinned
+   readback.
+2. Validate observations against the semantic plan and postconditions; leave
+   missing capabilities unavailable and never map native commands or arguments.
 3. Format: pnpm format:fix
-4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/linear-cli.test.ts
-5. Commit: feat(p05-t05): execute optional linear cli operations
+4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts
+5. Commit: feat(p05-t05): validate linear mutation observations
 
 ### Task p05-t06: Run Linear adapter conformance
 
 **Files:** Create
 packages/cli/src/commands/pjm/remote/providers/linear.conformance.test.ts.
 
-1. Cover priority mapping, moved-team aliases, MCP default, optional CLI
-   equivalence, unavailable transition, and provider extensions.
+1. Cover priority mapping, moved-team aliases, unavailable transition,
+   provider extensions, semantic intents, and sanitized host observations.
 2. Import the immutable p03 conformance harness and supply Linear fixtures
    locally; keep all shared interfaces and shared files unchanged.
 3. Format: pnpm format:fix
@@ -840,45 +904,45 @@ packages/cli/src/commands/pjm/remote/providers/linear.conformance.test.ts.
 `packages/cli/src/commands/pjm/remote/__integration__/linear.test.ts`.
 
 1. Exercise intake, refresh, publish, reconcile, closeout, and external-action
-   continuation through fake MCP observations and optional CLI fallback.
-2. Assert no GraphQL transport, context equivalence before fallback, pinned
-   readback, archived lifecycle, and independent outcomes.
+   continuation through generic fake-host capability evidence and observations.
+2. Assert live-discovery boundaries, context equivalence before any pre-attempt
+   fallback, pinned readback, archived lifecycle, and independent outcomes
+   without provider-native request fixtures.
 3. Format: pnpm format:fix
 4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/__integration__/linear.test.ts`
 5. Commit: test(p05-t07): integrate linear remote lifecycle
 
-### Task p05-t08: Search Linear duplicates through MCP actions
+### Task p05-t08: Plan Linear duplicate-search intents
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts,
 packages/cli/src/commands/pjm/remote/providers/linear.test.ts,
-packages/cli/src/commands/pjm/remote/providers/linear-actions.ts,
-packages/cli/src/commands/pjm/remote/providers/linear-actions.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/linear.test.ts`.
 
-1. Add planDuplicateSearch() and connector action/observation cases for
+1. Add planDuplicateSearch() semantic intent cases for
    provenance, historical identifiers, workspace/team context, unavailable
    search, bounded ambiguous matches, one verified match, and no match.
-2. Implement MCP duplicate-search planning with catalog fingerprinting and
-   stable UUID/context verification before a result can be adopted.
+2. Implement a bounded provider-neutral search plan and required stable
+   UUID/context verification without a native query schema or catalog
+   fingerprint.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts src/commands/pjm/remote/providers/linear-actions.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
-5. Commit: feat(p05-t08): search linear duplicates through mcp
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
+5. Commit: feat(p05-t08): plan linear duplicate searches
 
-### Task p05-t09: Search Linear duplicates through optional CLI
+### Task p05-t09: Validate Linear duplicate-search observations
 
-**Files:** Modify
-packages/cli/src/commands/pjm/remote/transports/linear-cli.ts,
-packages/cli/src/commands/pjm/remote/transports/linear-cli.test.ts, and
+**Files:** Modify packages/cli/src/commands/pjm/remote/providers/linear.ts,
+packages/cli/src/commands/pjm/remote/providers/linear.test.ts, and
 `packages/cli/src/commands/pjm/remote/__integration__/linear.test.ts`.
 
-1. Add fake CLI cases for provenance/alias queries, missing search semantics,
-   version drift, bounded ambiguity, one stable UUID/context match, and no
-   match.
-2. Implement searchDuplicates() only when capability probing demonstrates
-   semantic equivalence with the adapter plan.
+1. Add generic host-observation cases for provenance/alias search, unavailable
+   search semantics, context mismatch, bounded ambiguity, one stable
+   UUID/context match, and no match.
+2. Accept a duplicate result only when sanitized capability, identity, and
+   context evidence satisfy the semantic plan; retain no native invocation
+   mapping.
 3. Format: pnpm format:fix
-4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/transports/linear-cli.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
-5. Commit: feat(p05-t09): search linear duplicates through cli
+4. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/providers/linear.test.ts src/commands/pjm/remote/__integration__/linear.test.ts`
+5. Commit: feat(p05-t09): validate linear duplicate results
 
 ## Phase 6: Jira Cloud Adapter and Transports
 
