@@ -1,11 +1,13 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
+import { createReviewBrief } from '../../scripts/create-review-brief.mjs';
 import {
   canonicalJson,
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
+import { reconcileLedger } from '../../scripts/reconcile-ledger.mjs';
 import { renderPacket } from '../../scripts/render-packet.mjs';
 import {
   quarantineInvalidArtifact,
@@ -125,6 +127,9 @@ export async function runFakeRecon(options = {}) {
     kind: 'recon.dispatch-receipt',
     schemaVersion: 1,
     id: 'dispatch-prepared',
+    runId: fixture.manifest.run.id,
+    stageId: 'dispatch-preflight',
+    laneId: 'lane-controller',
     state: 'prepared',
     selection: {
       provider: approvalEnvelope.provider,
@@ -185,6 +190,103 @@ export async function runFakeRecon(options = {}) {
     approvalEnvelope,
     approvalFingerprint: prepared.fingerprint,
   };
+  for (const stage of fixture.manifest.stages) {
+    for (const receiptId of stage.dispatchReceiptIds) {
+      const reference = fixture.manifest.artifacts.find((item) =>
+        item.path.endsWith(`${receiptId}.json`),
+      );
+      const path = join(roots.packetRoot, reference.path);
+      const receipt = JSON.parse(await readFile(path, 'utf8'));
+      receipt.selection = prepared.selection;
+      receipt.approvalEnvelope = approvalEnvelope;
+      receipt.fingerprint = prepared.fingerprint;
+      receipt.acceptedEnvelope = approvalEnvelope;
+      await writeJson(path, receipt);
+      reference.digest = await hashFile(path);
+    }
+  }
+
+  if (requestedProfile !== 'quick' && !degraded) {
+    const priorPath = join(roots.packetRoot, 'raw', 'drafts', 'claims-v1.json');
+    const priorLedger = JSON.parse(await readFile(priorPath, 'utf8'));
+    const priorReference = fixture.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v1.json',
+    );
+    const resultSpecs = [
+      ['semantic', 'verify', 'affirmed'],
+      ['adversarial', 'adversary', 'unchallenged'],
+      ['coverage', 'coverage', 'covered'],
+    ];
+    const results = [];
+    for (const [reviewKind, mode, disposition] of resultSpecs) {
+      const brief = createReviewBrief({
+        id: `brief-${mode}`,
+        mode,
+        createdAt: '2026-08-31T00:03:00.000Z',
+        manifest: fixture.manifest,
+        ledger: priorLedger,
+        claimIds: ['claim-1'],
+      });
+      const briefRelative = `reviews/briefs/${mode}.json`;
+      const briefPath = join(roots.packetRoot, briefRelative);
+      await writeJson(briefPath, brief);
+      const briefReference = {
+        path: briefRelative,
+        digest: await hashFile(briefPath),
+      };
+      const manifestBriefReference = fixture.manifest.artifacts.find(
+        (item) => item.path === briefRelative,
+      );
+      Object.assign(manifestBriefReference, briefReference);
+      const id = `review-${reviewKind}`;
+      const result = {
+        kind: 'recon.review-result',
+        schemaVersion: 1,
+        id,
+        runId: fixture.manifest.run.id,
+        reviewKind,
+        reviewerLane: `lane-${reviewKind}`,
+        status: 'complete',
+        brief: briefReference,
+        permittedInputs: [briefReference],
+        excludedInputs: ['prior_reasoning'],
+        dispositions: [{ claimId: 'claim-1', disposition }],
+        newEvidence: [],
+        coverageFindings: [],
+        unresolvedIssues: [],
+      };
+      const resultRelative = `reviews/${reviewKind}.json`;
+      const resultPath = join(roots.packetRoot, resultRelative);
+      await writeJson(resultPath, result);
+      const resultReference = {
+        path: resultRelative,
+        digest: await hashFile(resultPath),
+      };
+      Object.assign(
+        fixture.manifest.artifacts.find((item) => item.path === resultRelative),
+        resultReference,
+      );
+      results.push({ ...result, artifactReference: resultReference });
+    }
+    const reconciled = reconcileLedger({
+      priorLedger,
+      reviewResults: results,
+      priorReference,
+      runId: fixture.manifest.run.id,
+    });
+    Object.keys(fixture.ledger).forEach((key) => delete fixture.ledger[key]);
+    Object.assign(fixture.ledger, reconciled.ledger);
+    const reconciliationPath = join(
+      roots.packetRoot,
+      'reviews',
+      'reconciliation.json',
+    );
+    await writeJson(reconciliationPath, reconciled.reconciliation);
+    const reconciliationReference = fixture.manifest.artifacts.find(
+      (item) => item.path === 'reviews/reconciliation.json',
+    );
+    reconciliationReference.digest = await hashFile(reconciliationPath);
+  }
   for (const [path, file] of [
     ['raw/dispatch/prepared.json', preparedPath],
     ['raw/dispatch/approved.json', approvedPath],

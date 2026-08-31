@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
+import { createReviewBrief } from '../../scripts/create-review-brief.mjs';
 import {
   hashCanonicalJson,
   hashFile,
@@ -36,6 +37,7 @@ export async function createPacketFixture({
   await writeJson(dossierPath, {
     kind: 'recon.raw-dossier',
     schemaVersion: 1,
+    id: 'dossier-input',
     runId: 'run-render',
     waveId: 'wave-gather',
     laneId: 'lane-gather',
@@ -153,33 +155,33 @@ export async function createPacketFixture({
       path: 'raw/drafts/claims-v1.json',
       digest: await hashFile(priorPath),
     };
+    ledger.transitions = ledger.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    );
     ledger.inputArtifacts.push(priorRef);
     reviewArtifacts.push(priorRef);
-    const briefs = {
-      verify: {
-        kind: 'recon.review-brief',
-        schemaVersion: 1,
-        id: 'brief-verify',
-        runId: 'run-render',
-        mode: 'verify',
-        createdAt: '2026-08-31T00:03:00.000Z',
-        excludedInputs: ['prior_reasoning'],
-        claims: [],
-        sources: [],
-      },
-      adversary: {
-        kind: 'recon.review-brief',
-        schemaVersion: 1,
-        id: 'brief-adversary',
-        runId: 'run-render',
-        mode: 'adversary',
-        createdAt: '2026-08-31T00:03:00.000Z',
-        excludedInputs: ['prior_reasoning'],
-        scope: { included: ['source-1'], excluded: [] },
+    const briefManifest = {
+      run: { id: 'run-render' },
+      request: {
+        includedScope: ['source-1'],
+        excludedScope: [],
         questions: ['What evidence exists?'],
-        provisionalStatements: [],
       },
+      sources: [source],
     };
+    const briefs = Object.fromEntries(
+      ['verify', 'adversary', 'coverage'].map((mode) => [
+        mode,
+        createReviewBrief({
+          id: `brief-${mode}`,
+          mode,
+          createdAt: '2026-08-31T00:03:00.000Z',
+          manifest: briefManifest,
+          ledger: priorLedger,
+          claimIds: ['claim-1'],
+        }),
+      ]),
+    );
     const briefRefs = {};
     for (const [mode, brief] of Object.entries(briefs)) {
       const path = join(packetRoot, 'reviews', 'briefs', `${mode}.json`);
@@ -193,7 +195,7 @@ export async function createPacketFixture({
     for (const [id, reviewKind, briefMode, disposition] of [
       ['review-semantic', 'semantic', 'verify', 'affirmed'],
       ['review-adversarial', 'adversarial', 'adversary', 'unchallenged'],
-      ['review-coverage', 'coverage', 'adversary', 'covered'],
+      ['review-coverage', 'coverage', 'coverage', 'covered'],
     ]) {
       const result = {
         kind: 'recon.review-result',
@@ -234,6 +236,9 @@ export async function createPacketFixture({
         'review-coverage',
       ],
       transitions: structuredClone(ledger.transitions),
+      additions: [],
+      removals: [],
+      coverageDispositions: [],
       permittedInputs: [...reviewArtifacts],
       excludedInputs: [],
       dispositions: [],
@@ -281,6 +286,90 @@ export async function createPacketFixture({
     serviceTier: 'fixture',
     waves: [{ id: 'wave-gather', laneCap: 1, concurrency: 1 }],
   };
+  const stageArtifacts = [];
+  const stageRows = [];
+  for (const [index, mode] of stageModes.entries()) {
+    const stageId = `stage-${index + 1}`;
+    const laneId =
+      mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
+    let artifactId;
+    if (mode === 'semantic-verification') artifactId = 'review-semantic';
+    else if (mode === 'adversarial') artifactId = 'review-adversarial';
+    else if (mode === 'coverage') artifactId = 'review-coverage';
+    else if (mode === 'reconciliation') artifactId = 'review-reconciliation';
+    else {
+      artifactId = `dossier-${mode}`;
+      const dossierMode =
+        mode === 'locator-validation' || mode === 'redundant-verification'
+          ? 'verify'
+          : mode === 'contradiction-resolution'
+            ? 'reconcile'
+            : mode === 'redundant-gather'
+              ? 'gather'
+              : mode;
+      const artifactPath = join(
+        packetRoot,
+        'raw',
+        'dossiers',
+        `stage-${mode}.json`,
+      );
+      await writeJson(artifactPath, {
+        kind: 'recon.raw-dossier',
+        schemaVersion: 1,
+        id: artifactId,
+        runId: 'run-render',
+        waveId: `wave-${mode}`,
+        laneId,
+        mode: dossierMode,
+        outcome: 'complete',
+        allowedInputs: ['source-1'],
+        excludedInputs: [],
+        findings: [],
+        uncertainty: [],
+        contradictions: [],
+        gaps: [],
+      });
+      stageArtifacts.push({
+        path: `raw/dossiers/stage-${mode}.json`,
+        digest: await hashFile(artifactPath),
+      });
+    }
+    const dispatchReceiptIds = [];
+    for (const state of ['accepted', 'completed']) {
+      const id = `dispatch-${stageId}-${state}`;
+      const path = join(packetRoot, 'raw', 'dispatch', `${id}.json`);
+      await mkdir(dirname(path), { recursive: true });
+      await writeJson(path, {
+        kind: 'recon.dispatch-receipt',
+        schemaVersion: 1,
+        id,
+        runId: 'run-render',
+        stageId,
+        laneId,
+        state,
+        selection: { provider: 'fixture', model: 'fixture-model' },
+        approvalEnvelope,
+        fingerprint: hashCanonicalJson(approvalEnvelope),
+        acceptedEnvelope: approvalEnvelope,
+        ...(state === 'completed' ? { artifactIds: [artifactId] } : {}),
+      });
+      stageArtifacts.push({
+        path: `raw/dispatch/${id}.json`,
+        digest: await hashFile(path),
+      });
+      dispatchReceiptIds.push(id);
+    }
+    stageRows.push({
+      kind: 'recon.stage-result',
+      schemaVersion: 1,
+      id: stageId,
+      mode,
+      laneId,
+      status: 'complete',
+      artifactIds: [artifactId],
+      dispatchReceiptIds,
+    });
+  }
   const manifest = {
     kind: 'recon.packet-manifest',
     schemaVersion: 1,
@@ -306,30 +395,17 @@ export async function createPacketFixture({
       approvalEnvelope,
       approvalFingerprint: hashCanonicalJson(approvalEnvelope),
     },
-    stages: stageModes.map((mode, index) => ({
-      kind: 'recon.stage-result',
-      schemaVersion: 1,
-      id: `stage-${index + 1}`,
-      mode,
-      status: 'complete',
-      artifactIds:
-        mode === 'semantic-verification'
-          ? ['review-semantic']
-          : mode === 'adversarial'
-            ? ['review-adversarial']
-            : mode === 'coverage'
-              ? ['review-coverage']
-              : mode === 'reconciliation'
-                ? ['review-reconciliation']
-                : [],
-    })),
-    artifacts: [claimsRef, dossierRef, ...reviewArtifacts],
+    stages: stageRows,
+    artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...stageArtifacts],
     gaps: [
       {
         id: 'gap-1',
         code: 'OPTIONAL_SOURCE_UNAVAILABLE',
         message: 'An optional comparison source was unavailable.',
         material: false,
+        sourceIds: [],
+        claimIds: [],
+        coverageFindingIds: [],
       },
     ],
   };

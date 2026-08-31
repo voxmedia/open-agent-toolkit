@@ -239,6 +239,16 @@ function sourceHasMinimumProvenance(source) {
 }
 
 async function reopenEvidence(packetRoot, source, evidence, errors) {
+  if (source?.available !== true || source?.validationState !== 'pinned') {
+    errors.push(
+      issue(
+        'INELIGIBLE_SOURCE_STATE',
+        `Source ${source?.id ?? 'unknown'} is not available and pinned`,
+        `source:${source?.id ?? 'unknown'}`,
+      ),
+    );
+    return false;
+  }
   if (!sourceHasMinimumProvenance(source)) {
     errors.push(
       issue(
@@ -553,32 +563,100 @@ async function reopenEvidence(packetRoot, source, evidence, errors) {
   return true;
 }
 
-function stageArtifactIsComplete(stage, artifactsById) {
-  const requiredReviewKind = {
-    'semantic-verification': 'semantic',
-    adversarial: 'adversarial',
-    coverage: 'coverage',
-    reconciliation: 'reconciliation',
-  }[stage.mode];
-  if (!requiredReviewKind) return stage.status === 'complete';
-  return (
-    stage.status === 'complete' &&
-    Array.isArray(stage.artifactIds) &&
-    stage.artifactIds.some((id) => {
-      const artifact = artifactsById.get(id)?.value;
-      return (
-        artifact?.kind === 'recon.review-result' &&
-        artifact.reviewKind === requiredReviewKind &&
-        artifact.status === 'complete'
-      );
-    })
+const stageArtifactContract = {
+  map: { kind: 'recon.raw-dossier', mode: 'map' },
+  gather: { kind: 'recon.raw-dossier', mode: 'gather' },
+  compile: { kind: 'recon.raw-dossier', mode: 'compile' },
+  'locator-validation': { kind: 'recon.raw-dossier', mode: 'verify' },
+  'semantic-verification': {
+    kind: 'recon.review-result',
+    reviewKind: 'semantic',
+  },
+  adversarial: { kind: 'recon.review-result', reviewKind: 'adversarial' },
+  coverage: { kind: 'recon.review-result', reviewKind: 'coverage' },
+  reconciliation: {
+    kind: 'recon.review-result',
+    reviewKind: 'reconciliation',
+  },
+  'redundant-gather': { kind: 'recon.raw-dossier', mode: 'gather' },
+  'redundant-verification': { kind: 'recon.raw-dossier', mode: 'verify' },
+  'contradiction-resolution': { kind: 'recon.raw-dossier', mode: 'reconcile' },
+};
+
+function stageArtifactIsComplete(
+  stage,
+  artifactsById,
+  runId,
+  approvalFingerprint,
+) {
+  const contract = stageArtifactContract[stage.mode];
+  if (!contract || stage.status !== 'complete') return false;
+  if (!Array.isArray(stage.artifactIds) || stage.artifactIds.length !== 1) {
+    return false;
+  }
+  const artifact = artifactsById.get(stage.artifactIds[0])?.value;
+  if (
+    !artifact ||
+    artifact.kind !== contract.kind ||
+    artifact.runId !== runId ||
+    (contract.mode && artifact.mode !== contract.mode) ||
+    (contract.reviewKind && artifact.reviewKind !== contract.reviewKind) ||
+    (artifact.laneId ?? artifact.reviewerLane) !== stage.laneId ||
+    ('status' in artifact && artifact.status !== 'complete') ||
+    ('outcome' in artifact && artifact.outcome !== 'complete')
+  ) {
+    return false;
+  }
+  if (
+    !Array.isArray(stage.dispatchReceiptIds) ||
+    stage.dispatchReceiptIds.length !== 2
+  ) {
+    return false;
+  }
+  const receipts = stage.dispatchReceiptIds.map(
+    (id) => artifactsById.get(id)?.value,
   );
+  if (
+    receipts.some(
+      (receipt) =>
+        receipt?.kind !== 'recon.dispatch-receipt' ||
+        receipt.runId !== runId ||
+        receipt.stageId !== stage.id ||
+        receipt.laneId !== stage.laneId ||
+        receipt.fingerprint !== approvalFingerprint ||
+        receipt.fingerprint !== hashCanonicalJson(receipt.approvalEnvelope) ||
+        (receipt.acceptedEnvelope &&
+          receipt.fingerprint !== hashCanonicalJson(receipt.acceptedEnvelope)),
+    ) ||
+    !receipts.some((receipt) => receipt.state === 'accepted') ||
+    !receipts.some(
+      (receipt) =>
+        receipt.state === 'completed' &&
+        JSON.stringify(receipt.artifactIds) ===
+          JSON.stringify(stage.artifactIds),
+    )
+  ) {
+    return false;
+  }
+  return true;
 }
 
-function deriveAchievedProfile(stages, artifactsById) {
+function deriveAchievedProfile(
+  stages,
+  artifactsById,
+  runId,
+  approvalFingerprint,
+) {
   const complete = new Set(
     stages
-      .filter((stage) => stageArtifactIsComplete(stage, artifactsById))
+      .filter((stage) =>
+        stageArtifactIsComplete(
+          stage,
+          artifactsById,
+          runId,
+          approvalFingerprint,
+        ),
+      )
       .map((stage) => stage.mode),
   );
   let achieved = null;
@@ -593,7 +671,110 @@ function sameReference(left, right) {
   return left?.path === right?.path && left?.digest === right?.digest;
 }
 
+function reviewBriefBindsClaim(brief, reviewKind, claim, ledger, manifest) {
+  const projected =
+    reviewKind === 'semantic'
+      ? brief?.claims?.find((item) => item.id === claim.id)
+      : reviewKind === 'adversarial'
+        ? brief?.provisionalStatements?.find((item) => item.id === claim.id)
+        : brief?.claims?.find((item) => item.id === claim.id);
+  if (!projected || projected.statement !== claim.statement) return false;
+  if (reviewKind !== 'semantic') {
+    return Object.keys(projected).sort().join(',') === 'id,statement';
+  }
+  const evidenceById = new Map(ledger.evidence.map((item) => [item.id, item]));
+  const expectedEvidence = claim.evidence.map((link) => {
+    const evidence = evidenceById.get(link.evidenceId);
+    return evidence
+      ? {
+          id: evidence.id,
+          sourceId: evidence.sourceId,
+          displayExcerpt: evidence.displayExcerpt,
+          locator: evidence.locator,
+        }
+      : null;
+  });
+  if (
+    expectedEvidence.some((item) => !item) ||
+    hashCanonicalJson(projected.evidence) !==
+      hashCanonicalJson(expectedEvidence)
+  ) {
+    return false;
+  }
+  const sourceIds = new Set(expectedEvidence.map((item) => item.sourceId));
+  const expectedSources = manifest.sources.filter((source) =>
+    sourceIds.has(source.id),
+  );
+  return (
+    hashCanonicalJson(brief.sources) === hashCanonicalJson(expectedSources)
+  );
+}
+
+function validateReviewBindings(
+  manifest,
+  ledger,
+  artifactsById,
+  artifactsByPath,
+  errors,
+) {
+  const claims = new Map(ledger.claims.map((claim) => [claim.id, claim]));
+  for (const { value: result } of artifactsById.values()) {
+    if (
+      result.kind !== 'recon.review-result' ||
+      result.reviewKind === 'reconciliation'
+    ) {
+      continue;
+    }
+    const brief = [...artifactsByPath.values()].find(
+      ({ reference, value }) =>
+        sameReference(reference, result.brief) &&
+        value.kind === 'recon.review-brief',
+    )?.value;
+    const expectedMode =
+      result.reviewKind === 'semantic'
+        ? 'verify'
+        : result.reviewKind === 'adversarial'
+          ? 'adversary'
+          : 'coverage';
+    if (!brief || brief.mode !== expectedMode || brief.runId !== ledger.runId) {
+      errors.push(
+        issue(
+          'REVIEW_BRIEF_MISMATCH',
+          `Review ${result.id} does not resolve its exact typed brief`,
+          result.id,
+        ),
+      );
+      continue;
+    }
+    const seen = new Set();
+    for (const disposition of result.dispositions) {
+      const claim = claims.get(disposition.claimId);
+      if (
+        !claim ||
+        seen.has(disposition.claimId) ||
+        !reviewBriefBindsClaim(
+          brief,
+          result.reviewKind,
+          claim,
+          ledger,
+          manifest,
+        )
+      ) {
+        errors.push(
+          issue(
+            'REVIEW_CLAIM_BINDING_MISMATCH',
+            `Review ${result.id} dispositions must exactly match claim-bearing brief projections`,
+            result.id,
+          ),
+        );
+      }
+      seen.add(disposition.claimId);
+    }
+  }
+}
+
 function validateReconciliation(
+  manifest,
   ledger,
   artifactsById,
   artifactsByPath,
@@ -643,6 +824,147 @@ function validateReconciliation(
       ),
     );
   }
+  if (!prior) return;
+  const priorClaims = new Map(prior.claims.map((claim) => [claim.id, claim]));
+  const currentClaims = new Map(
+    ledger.claims.map((claim) => [claim.id, claim]),
+  );
+  const expectedAdditions = [...currentClaims.keys()].filter(
+    (id) => !priorClaims.has(id),
+  );
+  const expectedRemovals = [...priorClaims.keys()].filter(
+    (id) => !currentClaims.has(id),
+  );
+  if (
+    JSON.stringify(reconciliation.additions) !==
+      JSON.stringify(expectedAdditions) ||
+    JSON.stringify(reconciliation.removals) !== JSON.stringify(expectedRemovals)
+  ) {
+    errors.push(
+      issue(
+        'RECONCILIATION_MEMBERSHIP_MISMATCH',
+        'Reconciliation additions and removals must exactly match ledger membership changes',
+        reconciliation.id,
+      ),
+    );
+  }
+  const transitions = reconciliation.transitions ?? [];
+  const transitionCounts = new Map();
+  for (const transition of transitions) {
+    transitionCounts.set(
+      transition.claimId,
+      (transitionCounts.get(transition.claimId) ?? 0) + 1,
+    );
+  }
+  for (const [claimId, priorClaim] of priorClaims) {
+    const currentClaim = currentClaims.get(claimId);
+    if (!currentClaim) continue;
+    for (const field of ['statement', 'evidence', 'qualifications']) {
+      if (
+        hashCanonicalJson(priorClaim[field]) !==
+        hashCanonicalJson(currentClaim[field])
+      ) {
+        errors.push(
+          issue(
+            'RECONCILIATION_CONTINUITY_MISMATCH',
+            `Claim ${claimId} changed ${field} across reconciliation`,
+            claimId,
+          ),
+        );
+      }
+    }
+    for (const field of ['derivedFrom', 'challenges']) {
+      if (
+        hashCanonicalJson(priorClaim[field]) !==
+        hashCanonicalJson(currentClaim[field])
+      ) {
+        errors.push(
+          issue(
+            'RECONCILIATION_CONTINUITY_MISMATCH',
+            `Claim ${claimId} changed ${field} without a typed reconciliation input`,
+            claimId,
+          ),
+        );
+      }
+    }
+    const expectedReviewIds = [
+      ...new Set([
+        ...priorClaim.reviewIds,
+        ...[...artifactsById.values()]
+          .filter(
+            ({ value }) =>
+              reconciliation.incorporatedReviewIds.includes(value.id) &&
+              value.dispositions?.some((item) => item.claimId === claimId),
+          )
+          .map(({ value }) => value.id),
+      ]),
+    ];
+    if (
+      hashCanonicalJson(expectedReviewIds) !==
+      hashCanonicalJson(currentClaim.reviewIds)
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_REVIEW_MISMATCH',
+          `Claim ${claimId} review membership is not derived from incorporated results`,
+          claimId,
+        ),
+      );
+    }
+    const expectedCount = priorClaim.status === currentClaim.status ? 0 : 1;
+    const transition = transitions.find((item) => item.claimId === claimId);
+    if (
+      (transitionCounts.get(claimId) ?? 0) !== expectedCount ||
+      (expectedCount === 1 &&
+        (transition.from !== priorClaim.status ||
+          transition.to !== currentClaim.status))
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_TRANSITION_BINDING_MISMATCH',
+          `Claim ${claimId} is not bound to exactly its prior/current state transition`,
+          claimId,
+        ),
+      );
+    }
+  }
+  const priorEvidence = new Map(prior.evidence.map((item) => [item.id, item]));
+  const allowedNewEvidence = new Map(
+    [...artifactsById.values()]
+      .filter(({ value }) =>
+        reconciliation.incorporatedReviewIds?.includes(value.id),
+      )
+      .flatMap(({ value }) => value.newEvidence ?? [])
+      .map((item) => [item.id, item]),
+  );
+  for (const evidence of ledger.evidence) {
+    const previous = priorEvidence.get(evidence.id);
+    if (
+      previous &&
+      hashCanonicalJson(previous) !== hashCanonicalJson(evidence)
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_EVIDENCE_DRIFT',
+          `Evidence ${evidence.id} changed`,
+          evidence.id,
+        ),
+      );
+    }
+    const allowed = allowedNewEvidence.get(evidence.id);
+    if (
+      !previous &&
+      (!allowed || hashCanonicalJson(allowed) !== hashCanonicalJson(evidence))
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_EVIDENCE_INVENTION',
+          `Evidence ${evidence.id} was not supplied by an incorporated review`,
+          evidence.id,
+        ),
+      );
+    }
+  }
   if (
     JSON.stringify(reconciliation.transitions) !==
     JSON.stringify(ledger.transitions)
@@ -675,6 +997,51 @@ function validateReconciliation(
       ),
     );
   }
+
+  const coverage = [...artifactsById.values()].find(
+    ({ value }) => value.reviewKind === 'coverage',
+  )?.value;
+  const coverageDispositions = new Map(
+    (reconciliation.coverageDispositions ?? []).map((item) => [
+      item.findingId,
+      item,
+    ]),
+  );
+  for (const finding of coverage?.coverageFindings ?? []) {
+    const gap = manifest.gaps.find((item) => item.id === finding.gapId);
+    const claimsExist = finding.claimIds.every((id) => currentClaims.has(id));
+    if (
+      !gap ||
+      gap.material !== finding.material ||
+      gap.code !== finding.code ||
+      gap.message !== finding.message ||
+      !gap.coverageFindingIds.includes(finding.id) ||
+      !finding.claimIds.every((id) => gap.claimIds.includes(id)) ||
+      !claimsExist
+    ) {
+      errors.push(
+        issue(
+          'COVERAGE_GAP_MISMATCH',
+          `Coverage finding ${finding.id} is not bound to an exact manifest gap and affected claims`,
+          finding.id,
+        ),
+      );
+    }
+    const disposition = coverageDispositions.get(finding.id);
+    if (
+      !disposition ||
+      disposition.gapId !== finding.gapId ||
+      disposition.disposition !== 'accepted-gap'
+    ) {
+      errors.push(
+        issue(
+          'COVERAGE_RECONCILIATION_MISMATCH',
+          `Coverage finding ${finding.id} lacks an exact reconciliation disposition`,
+          finding.id,
+        ),
+      );
+    }
+  }
 }
 
 function validateAssurance(
@@ -688,6 +1055,37 @@ function validateAssurance(
   const evidenceById = new Map(
     (ledger.evidence ?? []).map((item) => [item.id, item]),
   );
+  const claimsBySource = new Map();
+  for (const claim of ledger.claims ?? []) {
+    for (const link of claim.evidence ?? []) {
+      const sourceId = evidenceById.get(link.evidenceId)?.sourceId;
+      if (!sourceId) continue;
+      const ids = claimsBySource.get(sourceId) ?? new Set();
+      ids.add(claim.id);
+      claimsBySource.set(sourceId, ids);
+    }
+  }
+  for (const source of manifest.sources ?? []) {
+    if (source.available === true && source.validationState === 'pinned')
+      continue;
+    const affectedClaims = claimsBySource.get(source.id) ?? new Set();
+    const gap = (manifest.gaps ?? []).find(
+      (item) =>
+        item.sourceIds?.includes(source.id) &&
+        [...affectedClaims].every((claimId) =>
+          item.claimIds?.includes(claimId),
+        ),
+    );
+    if (!gap) {
+      errors.push(
+        issue(
+          'MISSING_SOURCE_GAP',
+          `Ineligible source ${source.id} requires an explicit affected-claim gap`,
+          `source:${source.id}`,
+        ),
+      );
+    }
+  }
   for (const claim of ledger.claims ?? []) {
     if (claim.status === 'verified' && achievedProfile === 'quick') {
       errors.push(
@@ -786,11 +1184,22 @@ function validateAssurance(
             value.kind === 'recon.review-brief',
         )?.value;
         const expectedMode =
-          artifact.reviewKind === 'semantic' ? 'verify' : 'adversary';
+          artifact.reviewKind === 'semantic'
+            ? 'verify'
+            : artifact.reviewKind === 'adversarial'
+              ? 'adversary'
+              : 'coverage';
         if (
           !brief ||
           brief.runId !== ledger.runId ||
           brief.mode !== expectedMode ||
+          !reviewBriefBindsClaim(
+            brief,
+            artifact.reviewKind,
+            claim,
+            ledger,
+            manifest,
+          ) ||
           !artifact.permittedInputs?.some((reference) =>
             sameReference(reference, artifact.brief),
           )
@@ -993,6 +1402,15 @@ export async function validatePacket(packetDirectory, options = {}) {
     const achievedProfile = deriveAchievedProfile(
       manifest.stages ?? [],
       artifactsById,
+      manifest.run.id,
+      manifest.execution.approvalFingerprint,
+    );
+    validateReviewBindings(
+      manifest,
+      ledger,
+      artifactsById,
+      artifactsByPath,
+      errors,
     );
     validateAssurance(
       manifest,
@@ -1002,7 +1420,13 @@ export async function validatePacket(packetDirectory, options = {}) {
       artifactsById,
       errors,
     );
-    validateReconciliation(ledger, artifactsById, artifactsByPath, errors);
+    validateReconciliation(
+      manifest,
+      ledger,
+      artifactsById,
+      artifactsByPath,
+      errors,
+    );
 
     const valid = errors.length === 0;
     if (!valid && options.removePublishedOnFailure !== false) {

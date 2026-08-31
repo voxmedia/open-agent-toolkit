@@ -20,6 +20,13 @@ export const claimStates = [
   'unsupported',
 ];
 export const locatorStates = ['exact', 'redacted-exact', 'stale', 'invalid'];
+export const sourceValidationStates = [
+  'pinned',
+  'unpinned',
+  'stale',
+  'invalid',
+  'unavailable',
+];
 export const workerModes = [
   'map',
   'gather',
@@ -28,6 +35,19 @@ export const workerModes = [
   'adversary',
   'coverage',
   'reconcile',
+];
+export const stageModes = [
+  'map',
+  'gather',
+  'compile',
+  'locator-validation',
+  'semantic-verification',
+  'adversarial',
+  'coverage',
+  'reconciliation',
+  'redundant-gather',
+  'redundant-verification',
+  'contradiction-resolution',
 ];
 
 const legalTransitions = new Set([
@@ -306,6 +326,27 @@ function validateManifest(value, errors) {
         ),
       );
     }
+    if (!sourceValidationStates.includes(source.validationState)) {
+      errors.push(
+        issue(
+          'INVALID_SOURCE_VALIDATION_STATE',
+          'Unknown source validation state',
+          `$.sources[${index}].validationState`,
+        ),
+      );
+    }
+    if (
+      (source.available === false) !==
+      (source.validationState === 'unavailable')
+    ) {
+      errors.push(
+        issue(
+          'SOURCE_AVAILABILITY_MISMATCH',
+          'Unavailable sources must use unavailable validation state and vice versa',
+          `$.sources[${index}]`,
+        ),
+      );
+    }
     const common = [
       'kind',
       'id',
@@ -375,7 +416,15 @@ function validateManifest(value, errors) {
     }
     closedObject(
       gap,
-      new Set(['id', 'code', 'message', 'material']),
+      new Set([
+        'id',
+        'code',
+        'message',
+        'material',
+        'sourceIds',
+        'claimIds',
+        'coverageFindingIds',
+      ]),
       errors,
       `$.gaps[${index}]`,
     );
@@ -385,6 +434,17 @@ function validateManifest(value, errors) {
     requiredString(stage, 'mode', errors, `$.stages[${index}]`);
     requiredString(stage, 'status', errors, `$.stages[${index}]`);
     requiredArray(stage, 'artifactIds', errors, `$.stages[${index}]`);
+    requiredArray(stage, 'dispatchReceiptIds', errors, `$.stages[${index}]`);
+    requiredString(stage, 'laneId', errors, `$.stages[${index}]`);
+    if (!stageModes.includes(stage.mode)) {
+      errors.push(
+        issue(
+          'INVALID_STAGE_MODE',
+          'Unknown stage mode',
+          `$.stages[${index}].mode`,
+        ),
+      );
+    }
     if (!['complete', 'failed', 'omitted'].includes(stage.status)) {
       errors.push(
         issue(
@@ -415,6 +475,8 @@ function validateManifest(value, errors) {
         'mode',
         'status',
         'artifactIds',
+        'dispatchReceiptIds',
+        'laneId',
         'message',
       ]),
       errors,
@@ -653,7 +715,10 @@ function validateLedger(value, errors) {
     lastTransitionByClaim.set(transition.claimId, transition);
   }
   for (const claim of value.claims ?? []) {
-    if (lastTransitionByClaim.get(claim.id)?.to !== claim.status) {
+    if (
+      value.revision === 1 &&
+      lastTransitionByClaim.get(claim.id)?.to !== claim.status
+    ) {
       errors.push(
         issue(
           'CLAIM_TRANSITION_MISMATCH',
@@ -671,6 +736,7 @@ function validateDossier(value, errors) {
     new Set([
       'kind',
       'schemaVersion',
+      'id',
       'runId',
       'waveId',
       'laneId',
@@ -690,6 +756,11 @@ function validateDossier(value, errors) {
   }
   if (!workerModes.includes(value.mode)) {
     errors.push(issue('INVALID_WORKER_MODE', 'Unknown worker mode', '$.mode'));
+  }
+  if (!['complete', 'partial', 'failed'].includes(value.outcome)) {
+    errors.push(
+      issue('INVALID_DOSSIER_OUTCOME', 'Unknown dossier outcome', '$.outcome'),
+    );
   }
   for (const key of [
     'allowedInputs',
@@ -812,6 +883,45 @@ function validateReviewBriefArtifact(value, errors) {
         `$.provisionalStatements[${index}]`,
       );
     }
+  } else if (value.mode === 'coverage') {
+    requiredObject(value, 'scope', errors);
+    requiredArray(value, 'questions', errors);
+    requiredArray(value, 'claims', errors);
+    closedObject(
+      value,
+      new Set([
+        'kind',
+        'schemaVersion',
+        'id',
+        'runId',
+        'mode',
+        'createdAt',
+        'excludedInputs',
+        'scope',
+        'questions',
+        'claims',
+      ]),
+      errors,
+    );
+    closedObject(
+      value.scope,
+      new Set(['included', 'excluded']),
+      errors,
+      '$.scope',
+    );
+    for (const key of ['included', 'excluded']) {
+      requiredArray(value.scope, key, errors, '$.scope');
+    }
+    for (const [index, claim] of (value.claims ?? []).entries()) {
+      requiredString(claim, 'id', errors, `$.claims[${index}]`);
+      requiredString(claim, 'statement', errors, `$.claims[${index}]`);
+      closedObject(
+        claim,
+        new Set(['id', 'statement']),
+        errors,
+        `$.claims[${index}]`,
+      );
+    }
   } else {
     errors.push(
       issue('INVALID_REVIEW_MODE', 'Unknown review brief mode', '$.mode'),
@@ -878,6 +988,69 @@ function validateReviewResult(value, errors) {
     }
     requiredArray(value, 'incorporatedReviewIds', errors);
     requiredArray(value, 'transitions', errors);
+    requiredArray(value, 'additions', errors);
+    requiredArray(value, 'removals', errors);
+    requiredArray(value, 'coverageDispositions', errors);
+    for (const key of ['additions', 'removals']) {
+      const seen = new Set();
+      for (const [index, id] of (value[key] ?? []).entries()) {
+        if (typeof id !== 'string' || id.length === 0 || seen.has(id)) {
+          errors.push(
+            issue(
+              'INVALID_RECONCILIATION_MEMBERSHIP',
+              `${key} must contain unique non-empty claim IDs`,
+              `$.${key}[${index}]`,
+            ),
+          );
+        }
+        seen.add(id);
+      }
+    }
+    for (const [index, transition] of (value.transitions ?? []).entries()) {
+      closedObject(
+        transition,
+        new Set(['claimId', 'from', 'to']),
+        errors,
+        `$.transitions[${index}]`,
+      );
+      requiredString(transition, 'claimId', errors, `$.transitions[${index}]`);
+      if (!legalTransitions.has(`${transition.from}:${transition.to}`)) {
+        errors.push(
+          issue(
+            'ILLEGAL_CLAIM_TRANSITION',
+            `Illegal claim transition ${transition.from} -> ${transition.to}`,
+            `$.transitions[${index}]`,
+          ),
+        );
+      }
+    }
+    for (const [index, disposition] of (
+      value.coverageDispositions ?? []
+    ).entries()) {
+      for (const key of ['findingId', 'gapId', 'disposition']) {
+        requiredString(
+          disposition,
+          key,
+          errors,
+          `$.coverageDispositions[${index}]`,
+        );
+      }
+      if (disposition.disposition !== 'accepted-gap') {
+        errors.push(
+          issue(
+            'INVALID_COVERAGE_DISPOSITION',
+            'Coverage dispositions must be accepted-gap',
+            `$.coverageDispositions[${index}].disposition`,
+          ),
+        );
+      }
+      closedObject(
+        disposition,
+        new Set(['findingId', 'gapId', 'disposition']),
+        errors,
+        `$.coverageDispositions[${index}]`,
+      );
+    }
   } else {
     validateExactReference(value.brief, '$.brief', errors);
   }
@@ -897,6 +1070,88 @@ function validateReviewResult(value, errors) {
       new Set(['claimId', 'disposition']),
       errors,
       `$.dispositions[${index}]`,
+    );
+    const allowed = {
+      semantic: ['affirmed', 'rejected', 'uncertain'],
+      adversarial: ['unchallenged', 'challenged'],
+      coverage: ['covered', 'gap'],
+      reconciliation: [],
+    }[value.reviewKind];
+    if (allowed && !allowed.includes(disposition.disposition)) {
+      errors.push(
+        issue(
+          'INVALID_REVIEW_DISPOSITION',
+          'Disposition does not belong to this review kind',
+          `$.dispositions[${index}].disposition`,
+        ),
+      );
+    }
+  }
+  for (const [index, finding] of (value.coverageFindings ?? []).entries()) {
+    for (const key of ['id', 'gapId', 'code', 'message']) {
+      requiredString(finding, key, errors, `$.coverageFindings[${index}]`);
+    }
+    requiredArray(finding, 'claimIds', errors, `$.coverageFindings[${index}]`);
+    if (typeof finding.material !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'material must be a boolean',
+          `$.coverageFindings[${index}].material`,
+        ),
+      );
+    }
+    closedObject(
+      finding,
+      new Set(['id', 'gapId', 'code', 'message', 'material', 'claimIds']),
+      errors,
+      `$.coverageFindings[${index}]`,
+    );
+  }
+  if (
+    value.reviewKind !== 'coverage' &&
+    value.reviewKind !== 'reconciliation' &&
+    (value.coverageFindings ?? []).length > 0
+  ) {
+    errors.push(
+      issue(
+        'INVALID_COVERAGE_FINDING_OWNER',
+        'Only coverage results may report coverage findings',
+        '$.coverageFindings',
+      ),
+    );
+  }
+  for (const [index, evidence] of (value.newEvidence ?? []).entries()) {
+    closedObject(
+      evidence,
+      new Set([
+        'id',
+        'sourceId',
+        'locator',
+        'displayExcerpt',
+        'observedAt',
+        'contentHash',
+        'locatorValidation',
+        'provenance',
+        'redaction',
+      ]),
+      errors,
+      `$.newEvidence[${index}]`,
+    );
+    for (const key of ['id', 'sourceId', 'displayExcerpt', 'observedAt']) {
+      requiredString(evidence, key, errors, `$.newEvidence[${index}]`);
+    }
+    requiredObject(evidence, 'locator', errors, `$.newEvidence[${index}]`);
+    requiredObject(
+      evidence,
+      'locatorValidation',
+      errors,
+      `$.newEvidence[${index}]`,
+    );
+    validateExactReference(
+      evidence.provenance,
+      `$.newEvidence[${index}].provenance`,
+      errors,
     );
   }
   const common = [
@@ -924,6 +1179,9 @@ function validateReviewResult(value, errors) {
             'outputRevision',
             'incorporatedReviewIds',
             'transitions',
+            'additions',
+            'removals',
+            'coverageDispositions',
           ]
         : [...common, 'brief'],
     ),
@@ -932,37 +1190,84 @@ function validateReviewResult(value, errors) {
 }
 
 function validateDispatchReceipt(value, errors) {
-  for (const key of ['id', 'state']) requiredString(value, key, errors);
+  for (const key of ['id', 'runId', 'stageId', 'laneId', 'state']) {
+    requiredString(value, key, errors);
+  }
   requiredObject(value, 'selection', errors);
   requiredObject(value, 'approvalEnvelope', errors);
   requiredString(value, 'fingerprint', errors);
-  if (!['prepared', 'approved', 'accepted'].includes(value.state)) {
+  const selectionKeys = new Set([
+    'provider',
+    'model',
+    'effort',
+    'route',
+    'role',
+    'serviceTier',
+  ]);
+  const envelopeKeys = new Set([
+    ...selectionKeys,
+    'authority',
+    'deadlineSeconds',
+    'retryLimit',
+    'concurrency',
+    'laneCap',
+    'waves',
+  ]);
+  closedObject(value.selection, selectionKeys, errors, '$.selection');
+  closedObject(
+    value.approvalEnvelope,
+    envelopeKeys,
+    errors,
+    '$.approvalEnvelope',
+  );
+  if (
+    !['prepared', 'approved', 'accepted', 'completed', 'failed'].includes(
+      value.state,
+    )
+  ) {
     errors.push(
       issue('INVALID_DISPATCH_STATE', 'Unknown dispatch state', '$.state'),
     );
   }
-  if (value.state === 'accepted')
+  if (['accepted', 'completed', 'failed'].includes(value.state))
     requiredObject(value, 'acceptedEnvelope', errors);
+  if (isObject(value.acceptedEnvelope)) {
+    closedObject(
+      value.acceptedEnvelope,
+      envelopeKeys,
+      errors,
+      '$.acceptedEnvelope',
+    );
+  }
+  if (value.state === 'completed') requiredArray(value, 'artifactIds', errors);
   closedObject(
     value,
     new Set([
       'kind',
       'schemaVersion',
       'id',
+      'runId',
+      'stageId',
+      'laneId',
       'state',
       'selection',
       'approvalEnvelope',
       'fingerprint',
       'acceptedEnvelope',
+      'artifactIds',
     ]),
     errors,
   );
 }
 
 function validateStageResult(value, errors) {
-  for (const key of ['id', 'mode', 'status'])
+  for (const key of ['id', 'mode', 'laneId', 'status'])
     requiredString(value, key, errors);
   requiredArray(value, 'artifactIds', errors);
+  requiredArray(value, 'dispatchReceiptIds', errors);
+  if (!stageModes.includes(value.mode)) {
+    errors.push(issue('INVALID_STAGE_MODE', 'Unknown stage mode', '$.mode'));
+  }
   if (!['complete', 'failed', 'omitted'].includes(value.status)) {
     errors.push(
       issue('INVALID_STAGE_STATUS', 'Unknown stage status', '$.status'),
@@ -975,8 +1280,10 @@ function validateStageResult(value, errors) {
       'schemaVersion',
       'id',
       'mode',
+      'laneId',
       'status',
       'artifactIds',
+      'dispatchReceiptIds',
       'message',
     ]),
     errors,

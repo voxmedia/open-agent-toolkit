@@ -51,11 +51,13 @@ execution axis in the approval envelope.
 - discriminated `sources`;
 - `execution`: exact approval envelope, fingerprint, and immutable dispatch
   receipt references;
-- `stages`: `recon.stage-result` records whose `artifactIds` bind completed
-  review passes to hashed result artifacts;
+- `stages`: `recon.stage-result` records whose single artifact ID, lane, and
+  accepted/completed receipt IDs bind every completed pass to one hashed
+  same-run artifact of the required kind;
 - `artifacts`: direct references; and
 - `gaps`: categorical omitted, unavailable, stale, or failed work, each with an
-  explicit boolean `material` classification.
+  explicit boolean `material` classification and affected source, claim, and
+  coverage-finding IDs when applicable.
 
 Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`,
 or `failed`. The validator—not a worker—derives achieved profile.
@@ -64,6 +66,10 @@ or `failed`. The validator—not a worker—derives achieved profile.
 
 All source descriptors carry `kind`, stable `id`, `available`, `authority`,
 `observedAt`, and `validationState`.
+
+Validation state is closed to `pinned`, `unpinned`, `stale`, `invalid`, or
+`unavailable`. Only an available `pinned` source is assurance-eligible;
+everything else requires an explicit affected-source/claim gap.
 
 - `repository`: canonical `root`, revision, dirty state, and per-path content
   hashes. Locator: relative path, matching revision, line start/end.
@@ -109,7 +115,10 @@ immutable brief digest and the claim's required disposition. A material
 unresolved challenge prevents verification. Review workers propose; only a
 reconciler writes a new ledger candidate. Reconciliation binds the prior ledger
 reference and revision, the next revision, the incorporated review IDs, and the
-exact canonical claim transitions.
+exact canonical claim transitions. It also binds additions, removals, and every
+prior/current state change; preserves statement, evidence-link, and
+qualification continuity; and accepts new evidence only when an incorporated
+review supplied the exact record.
 
 ## Evidence and Secret Redaction
 
@@ -130,9 +139,11 @@ nor a digest of the sensitive span. Diagnostics must never echo the span.
 - `recon.review-result`: review kind, lane, exact brief reference,
   permitted/excluded inputs, dispositions, new evidence, coverage findings,
   unresolved issues, and completion status. Reconciliation results replace the
-  brief reference with prior-ledger and revision bindings.
-- `recon.stage-result`: stable stage ID, mode, status, artifact IDs, and safe
-  diagnostics.
+  brief reference with prior-ledger/revision, additions/removals, exact
+  transitions, and coverage-disposition bindings. Coverage findings are closed
+  records bound to affected claims and exact manifest gaps.
+- `recon.stage-result`: stable stage ID, mode, lane, status, exactly one output
+  artifact ID, accepted/completed receipt IDs, and safe diagnostics.
 - `recon.dispatch-receipt`: immutable prepared, approved, accepted, or terminal
   dispatch evidence.
 
@@ -140,7 +151,8 @@ Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim
 statements, display excerpts, typed locators, and required source descriptors.
 Adversarial briefs expose only scope, questions, and provisional statements.
-Both reject dossier paths, compiler reasoning, synthesis prose, provenance
+Coverage briefs expose only scope, questions, and claim ID/statement pairs.
+All reject dossier paths, compiler reasoning, synthesis prose, provenance
 references, and prior review IDs.
 
 ## Validation and Publication

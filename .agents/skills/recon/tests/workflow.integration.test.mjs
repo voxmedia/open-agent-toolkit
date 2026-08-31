@@ -238,6 +238,13 @@ test('standard workflow emits all typed review results and reconciles revision o
     assert.equal(result.reviewKind, reviewKind);
     assert.equal(result.status, 'complete');
     assert.equal(result.dispositions[0].claimId, 'claim-1');
+    const brief = JSON.parse(
+      await readFile(join(injectedRoots.packetRoot, result.brief.path), 'utf8'),
+    );
+    const projectedClaims =
+      brief.mode === 'adversary' ? brief.provisionalStatements : brief.claims;
+    assert.equal(projectedClaims[0].id, 'claim-1');
+    assert.equal(typeof projectedClaims[0].statement, 'string');
   }
   const reconciliation = JSON.parse(
     await readFile(
@@ -250,5 +257,32 @@ test('standard workflow emits all typed review results and reconciles revision o
   assert.deepEqual(
     reconciliation.incorporatedReviewIds.sort(),
     ['review-adversarial', 'review-coverage', 'review-semantic'].sort(),
+  );
+  const prior = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, reconciliation.inputLedger.path),
+      'utf8',
+    ),
+  );
+  const current = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'claims.json'), 'utf8'),
+  );
+  assert.equal(current.revision, 2);
+  assert.equal(reconciliation.transitions[0].from, prior.claims[0].status);
+  assert.deepEqual(current.claims[0].evidence, prior.claims[0].evidence);
+  assert.deepEqual(
+    current.claims[0].qualifications,
+    prior.claims[0].qualifications,
+  );
+  assert.deepEqual(
+    current.inputArtifacts
+      .filter((reference) => reference.path.startsWith('reviews/'))
+      .map((reference) => reference.path)
+      .sort(),
+    [
+      'reviews/adversarial.json',
+      'reviews/coverage.json',
+      'reviews/semantic.json',
+    ],
   );
 });

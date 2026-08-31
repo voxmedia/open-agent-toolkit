@@ -25,6 +25,7 @@ const allowedKeys = {
     'questions',
     'provisionalStatements',
   ]),
+  coverage: new Set([...commonKeys, 'scope', 'questions', 'claims']),
 };
 const forbiddenKeys = new Set([
   'derivedFrom',
@@ -115,8 +116,37 @@ function adversarialBrief(input) {
   };
 }
 
+function coverageBrief(input) {
+  return {
+    kind: 'recon.review-brief',
+    schemaVersion: 1,
+    id: input.id,
+    runId: input.manifest.run.id,
+    mode: 'coverage',
+    createdAt: input.createdAt,
+    excludedInputs: [
+      'worker_intermediates',
+      'prior_reasoning',
+      'consumer_summary',
+      'artifact_lineage',
+      'earlier_reviews',
+      'verification_conclusions',
+      'adversarial_conclusions',
+    ],
+    scope: {
+      included: structuredClone(input.manifest.request.includedScope ?? []),
+      excluded: structuredClone(input.manifest.request.excludedScope ?? []),
+    },
+    questions: structuredClone(input.manifest.request.questions ?? []),
+    claims: selectedClaims(input.ledger, input.claimIds).map((claim) => ({
+      id: claim.id,
+      statement: claim.statement,
+    })),
+  };
+}
+
 export function createReviewBrief(input) {
-  if (!['verify', 'adversary'].includes(input.mode)) {
+  if (!['verify', 'adversary', 'coverage'].includes(input.mode)) {
     throw new Error(`Unsupported review brief mode: ${input.mode}`);
   }
   if (!input.id || !input.createdAt || !input.manifest || !input.ledger) {
@@ -127,7 +157,9 @@ export function createReviewBrief(input) {
   const brief =
     input.mode === 'verify'
       ? verificationBrief(input)
-      : adversarialBrief(input);
+      : input.mode === 'adversary'
+        ? adversarialBrief(input)
+        : coverageBrief(input);
   const result = validateReviewBrief(brief);
   if (!result.valid) {
     throw new Error(
@@ -185,7 +217,7 @@ export function validateReviewBrief(brief) {
     errors.push(
       issue(
         'INVALID_REVIEW_MODE',
-        'Review mode must be verify or adversary',
+        'Review mode must be verify, adversary, or coverage',
         '$.mode',
       ),
     );
@@ -239,9 +271,10 @@ export function validateReviewBrief(brief) {
       }
     }
   } else if (
-    !Array.isArray(brief.questions) ||
-    !Array.isArray(brief.provisionalStatements) ||
-    !isObject(brief.scope)
+    brief.mode === 'adversary' &&
+    (!Array.isArray(brief.questions) ||
+      !Array.isArray(brief.provisionalStatements) ||
+      !isObject(brief.scope))
   ) {
     errors.push(
       issue(
@@ -249,6 +282,30 @@ export function validateReviewBrief(brief) {
         'Adversarial brief needs scope, questions, and provisional statements',
       ),
     );
+  } else if (brief.mode === 'coverage') {
+    if (
+      !Array.isArray(brief.questions) ||
+      !Array.isArray(brief.claims) ||
+      !isObject(brief.scope)
+    ) {
+      errors.push(
+        issue(
+          'INVALID_REVIEW_BRIEF',
+          'Coverage brief needs scope, questions, and claims',
+        ),
+      );
+    }
+    for (const [index, claim] of (brief.claims ?? []).entries()) {
+      if (Object.keys(claim).sort().join(',') !== 'id,statement') {
+        errors.push(
+          issue(
+            'BLINDNESS_VIOLATION',
+            'Coverage claims have an invalid projection',
+            `$.claims[${index}]`,
+          ),
+        );
+      }
+    }
   }
   return { valid: errors.length === 0, errors };
 }
