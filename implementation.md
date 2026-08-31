@@ -367,6 +367,11 @@ envelope. Run, project, invocation, and artifact correlation all matched;
 found zero Critical, Important, Medium, or Minor findings. The result is
 persisted before review receipt.
 
+**Receive intent:** The exact source artifact, collision-free archive
+destination, `final|code|final-review-2026-08-31T014107Z.md` event identity,
+handoff correlation, and pre-receive project-ref head are persisted before
+review receipt begins.
+
 ---
 
 ## Orchestration Runs

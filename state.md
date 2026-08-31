@@ -68,17 +68,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'sha256:1e541061e1fc4b34b10cd4468dc87fe243a179fcb3d4b038e7ecdb55b71fb77a'
+  receive_source_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
+  receive_archived_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/archived/final-review-2026-08-31T014107Z.md
+  receive_event_identity: 'final|code|final-review-2026-08-31T014107Z.md'
+  receive_pre_head: 4e3be2eea753fbc0c8c1175a65be00f1364936ce
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T01:42:46Z'
+  updated_at: '2026-08-31T01:43:43Z'
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T01:42:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T01:43:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
