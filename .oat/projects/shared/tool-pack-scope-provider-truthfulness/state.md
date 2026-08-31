@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f
+oat_last_commit: eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -89,7 +89,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T16:56:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T17:12:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -105,9 +105,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized the final bounded correction for the
-round-5 recovery-prose contradiction and one fresh High review. Phase 2 is
-reopened only for that finding; Phase 3 starts only if the review passes.
+Implementation - Phase 2 passed its final independent High review with zero
+findings after commit `eb218a7a2` made recovery prose derive from canonical
+status. Phase 3 begins at `p03-t01`.
 
 ## Artifacts
 
@@ -115,7 +115,7 @@ reopened only for that finding; Phase 3 starts only if the review passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01 passed; p02 final correction authorized)
+- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 next)
 
 ## Progress
 

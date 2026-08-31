@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | in progress | 7     | 7/7       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 5     | 0/5       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 4     | 0/4       |
-| Phase 7 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 5     | 0/5       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 4     | 0/4       |
+| Phase 7 | pending  | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -134,7 +134,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** in progress after 7/7 tasks; final bounded correction and review authorized
+**Status:** completed after 7/7 tasks and final independent review pass
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -219,6 +219,8 @@ oat_generated: false
   reuse and structured post-removal failure reporting.
 - `4e1cbac86` - operator-authorized round-4 fix covering every selected pack and
   invalidated scope in post-removal recovery.
+- `eb218a7a2` - final operator-authorized fix deriving recovery prose from each
+  pack's actual canonical status and asserting complete human/JSON records.
 
 **Round-3 review blockers (fixed by `e85ba38ae`):**
 
@@ -277,6 +279,15 @@ unchanged`, making the source-qualified recovery record contradictory.
   fix commit and one fresh independent High review are permitted.
 - A blocking review stops implementation without another extension; a passing
   review advances directly to Phase 3.
+
+**Final disposition:**
+
+- Commit `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab` completed the final
+  correction without widening scope.
+- `reviews/p02-review-2026-08-31T170932Z.md` reviewed the complete p02 range at
+  that head and passed with 0 critical, 0 important, 0 medium, and 0 minor.
+- Focused removal and combined 29-file / 714-test suites, CLI lint, type-check,
+  formatting, and `git diff --check` passed. Phase 3 may begin.
 
 ---
 
@@ -450,6 +461,38 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
 - Artifact: `reviews/p02-review-2026-08-31T164057Z.md`
 - Reconnaissance: attempted; orchestration evidence is recorded in the artifact
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 6 — 2026-08-31T17:00:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — original accepted implementer continuation plus fresh reviewer
+- Dispatch policy: managed High from project state
+- Scope: exactly the round-5 recovery-prose contradiction
+- Outcome: p02 passed; correction completed and final independent review found
+  zero findings at every severity
+- Verification: 29 files / 714 tests plus CLI lint, type-check, formatting,
+  and whitespace checks pass at `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab`
+- Review-fix rounds: 5/5 used; final disposition passed
+- Outstanding: none for p02; continue with `p03-t01`
+
+#### Fix continuation — `review-fix-p02-r05-20260831T170000Z`
+
+- Original request: `dispatch-p02-20260831T120200Z-492af17f6`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Commit: `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab`
+- Outcome: recovery prose now matches canonical status and complete ordered
+  human/JSON records are asserted; focused 3 files / 41 tests and combined 29
+  files / 714 tests passed
+- Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Review record — round 6
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab`
+- Verdict: passed; findings critical 0, important 0, medium 0, minor 0
+- Artifact: `reviews/p02-review-2026-08-31T170932Z.md`
+- Reconnaissance: not attempted
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
