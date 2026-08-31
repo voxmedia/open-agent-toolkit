@@ -627,6 +627,55 @@ describe('updateTools', () => {
     },
   );
 
+  it('keeps a research-only utility dependency transitive and selected during update-all', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-transitive-only-'));
+    try {
+      const assetsRoot = await resolveAssetsRoot();
+      await reconcilePackLifecycles([
+        {
+          pack: 'research',
+          scope: 'user',
+          scopeRoot: root,
+          assetsRoot,
+          action: 'install',
+        },
+      ]);
+      const deps = createDeps();
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => root;
+      deps.inventoryScopedPack = inventoryScopedPack;
+      deps.reconcilePacks = reconcilePackLifecycles;
+
+      await updateTools({ kind: 'all' }, ['user'], root, root, false, deps);
+
+      const utility = await inventoryScopedPack({
+        pack: 'utility',
+        scope: 'user',
+        scopeRoot: root,
+        assetsRoot,
+      });
+      expect(utility).toMatchObject({
+        completeness: 'partial',
+        intent: {
+          direct: false,
+          requiredBy: ['research'],
+          state: 'transitive',
+        },
+      });
+      const selected = new Set([
+        'skill:oat-dispatch-subagents',
+        'skill:subagent-orchestration',
+      ]);
+      expect(
+        utility.assets
+          .filter(({ status }) => status !== 'missing')
+          .map(({ definition }) => definition.id),
+      ).toEqual([...selected]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it('handles not-bundled tools', async () => {
     const tool = createTool({
       name: 'custom-skill',

@@ -507,6 +507,8 @@ export async function completeMigrationSourceRemoval(
   });
 
   try {
+    const dependencyLifecycles =
+      (await dependencies.releaseDependencies?.()) ?? [];
     const applied = await (dependencies.apply ?? applyPackReconcilePlan)(
       sourcePlan,
       input.sourceRoot,
@@ -516,8 +518,6 @@ export async function completeMigrationSourceRemoval(
         sync: undefined,
       },
     );
-    const dependencyLifecycles =
-      (await dependencies.releaseDependencies?.()) ?? [];
     const removedCanonicalPaths = [
       ...new Set([
         ...sourcePlan.changedCanonicalPaths,

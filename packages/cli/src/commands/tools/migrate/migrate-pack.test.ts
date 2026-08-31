@@ -586,7 +586,7 @@ describe('completeMigrationSourceRemoval', () => {
     const syncEvent = events.find((event) => event.startsWith('sync:'));
     expect(intentIndex).toBeGreaterThan(lastRemovalIndex);
     expect(events.indexOf(syncEvent!)).toBeGreaterThan(intentIndex);
-    expect(events.indexOf('dependency:release')).toBeGreaterThan(intentIndex);
+    expect(events.indexOf('dependency:release')).toBeLessThan(lastRemovalIndex);
     expect(events.indexOf(syncEvent!)).toBeGreaterThan(
       events.indexOf('dependency:release'),
     );
@@ -639,6 +639,53 @@ describe('completeMigrationSourceRemoval', () => {
       dependencies,
     );
     expect(retried.status).toBe('migrated');
+  });
+
+  it('retains the source until dependency release succeeds and converges on retry', async () => {
+    const events: string[] = [];
+    let failRelease = true;
+    const dependencies = {
+      ...sourceRemovalDependencies({ events }),
+      releaseDependencies: async () => {
+        events.push('dependency:release');
+        if (failRelease) throw new Error('injected dependency release failure');
+        return [];
+      },
+    };
+    const failed = await completeMigrationSourceRemoval(
+      verifiedDestination(),
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+
+    expect(failed).toMatchObject({
+      status: 'source-removal-failed',
+      sourceInventory: {
+        completeness: 'complete',
+        intent: { enabled: true, source: 'declared' },
+      },
+    });
+    expect(failed.recovery).toContain(
+      'Re-run interactively: oat --cwd /project tools migrate --pack ideas --from project --to user',
+    );
+    expect(events.some((event) => event.startsWith('remove:'))).toBe(false);
+    expect(events).not.toContain('intent:false');
+
+    failRelease = false;
+    const recovered = await completeMigrationSourceRemoval(
+      failed,
+      {
+        confirmation: 'confirmed',
+        sourceRoot: '/project',
+        assetsRoot: '/assets',
+      },
+      dependencies,
+    );
+    expect(recovered.status).toBe('migrated');
   });
 
   it('returns exact source sync recovery and converges without repeating removal', async () => {

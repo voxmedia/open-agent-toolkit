@@ -58,6 +58,15 @@ export interface PackLifecycleDependencies {
   applyDependencies?: Partial<ApplyPackReconcileDependencies>;
 }
 
+function lifecycleInventoryKey(request: ExpandedPackLifecycleRequest): string {
+  return JSON.stringify({
+    pack: request.pack,
+    scope: request.scope,
+    scopeRoot: request.scopeRoot,
+    assetsRoot: request.assetsRoot,
+  });
+}
+
 async function writeGenerated(
   scopeRoot: string,
   operation: Parameters<ApplyPackReconcileDependencies['writeGenerated']>[0],
@@ -93,48 +102,69 @@ export async function reconcilePackLifecycles(
   const inventory = dependencies.inventory ?? inventoryScopedPack;
   const plan = dependencies.plan ?? planPackReconcile;
   const expanded = expandPackLifecycleRequests(requests, getDefinition);
-  const planned = await Promise.all(
-    expanded.map(async (request) => {
-      const before = await inventory(request);
-      const retainedAssets =
-        request.action === 'remove'
-          ? await resolveSharedOwnerRetentions({
-              packs: [request.pack],
-              scope: request.scope,
-              scopeRoot: request.scopeRoot,
-              hasOwnershipEvidence: async (pack, scope, scopeRoot) =>
-                (
-                  dependencies.hasOwnershipEvidence ??
-                  hasScopedPackOwnershipEvidence
-                )({
-                  pack,
-                  scope,
-                  scopeRoot,
-                }),
-            })
-          : [];
-      const retainedConsumers = before.intent.requiredBy.filter(
-        (consumer) =>
-          request.dependency?.lease !== 'release' ||
-          consumer !== request.dependency.requiredBy,
-      );
-      return {
-        request,
-        before,
-        plan: plan({
-          ...request,
-          inventory: before,
-          retainedAssets,
-          retainedDependencyAssetIds: dependencyRetainedAssetIds(
-            request.pack,
-            retainedConsumers,
-            getDefinition,
-          ),
-        }),
-        apply: null,
-      } satisfies PackLifecycleResult;
-    }),
-  );
+  const projectedLeaseConsumers = new Map<string, PackName[]>();
+  const planned: PackLifecycleResult[] = [];
+  for (const request of expanded) {
+    const key = lifecycleInventoryKey(request);
+    const inventoried = await inventory(request);
+    const projectedConsumers = projectedLeaseConsumers.get(key);
+    const before = projectedConsumers
+      ? {
+          ...inventoried,
+          intent: {
+            ...inventoried.intent,
+            requiredBy: projectedConsumers,
+          },
+        }
+      : inventoried;
+    const retainedAssets =
+      request.action === 'remove'
+        ? await resolveSharedOwnerRetentions({
+            packs: [request.pack],
+            scope: request.scope,
+            scopeRoot: request.scopeRoot,
+            hasOwnershipEvidence: async (pack, scope, scopeRoot) =>
+              (
+                dependencies.hasOwnershipEvidence ??
+                hasScopedPackOwnershipEvidence
+              )({
+                pack,
+                scope,
+                scopeRoot,
+              }),
+          })
+        : [];
+    const retainedConsumers = before.intent.requiredBy.filter(
+      (consumer) =>
+        request.dependency?.lease !== 'release' ||
+        consumer !== request.dependency.requiredBy,
+    );
+    const reconcilePlan = plan({
+      ...request,
+      inventory: before,
+      retainedAssets,
+      retainedDependencyAssetIds: dependencyRetainedAssetIds(
+        request.pack,
+        retainedConsumers,
+        getDefinition,
+      ),
+    });
+    planned.push({
+      request,
+      before,
+      plan: reconcilePlan,
+      apply: null,
+    });
+    if (request.dependency) {
+      const nextConsumers = new Set(before.intent.requiredBy);
+      if (request.dependency.lease === 'acquire') {
+        nextConsumers.add(request.dependency.requiredBy);
+      } else {
+        nextConsumers.delete(request.dependency.requiredBy);
+      }
+      projectedLeaseConsumers.set(key, [...nextConsumers].sort());
+    }
+  }
 
   if (options.dryRun) return planned;
 

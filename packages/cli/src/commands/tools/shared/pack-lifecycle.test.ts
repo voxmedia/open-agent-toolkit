@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { resolveAssetsRoot } from '@fs/assets';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { inventoryScopedPack } from './pack-inventory';
 import {
   reconcilePackLifecycle,
   reconcilePackLifecycles,
@@ -317,5 +318,63 @@ describe('production pack lifecycle', () => {
       requiredBy: [],
       state: 'absent',
     });
+  });
+
+  it('releases the final dependency leases against the post-batch state', async () => {
+    const scopeRoot = await temporaryRoot('oat-lifecycle-batch-release-');
+    const assetsRoot = await resolveAssetsRoot();
+    const selected = [
+      'skill:oat-dispatch-subagents',
+      'skill:subagent-orchestration',
+    ];
+    const consumers = ['research', 'brainstorm'] as const;
+    const getDefinition = (pack: PackName): PackDefinition => {
+      if (consumers.includes(pack as (typeof consumers)[number])) {
+        return {
+          ...getPackDefinition(pack),
+          dependencies: [{ pack: 'utility', scope: 'same', assets: selected }],
+        };
+      }
+      return getPackDefinition(pack);
+    };
+    const requests = consumers.map((pack) => ({
+      pack,
+      scope: 'user' as const,
+      scopeRoot,
+      assetsRoot,
+      action: 'install' as const,
+    }));
+    await reconcilePackLifecycles(requests, {
+      dependencies: { getDefinition },
+    });
+
+    await reconcilePackLifecycles(
+      requests.map((request) => ({ ...request, action: 'remove' as const })),
+      { dependencies: { getDefinition } },
+    );
+
+    const utility = await inventoryScopedPack({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+    });
+    expect(utility).toMatchObject({
+      completeness: 'absent',
+      intent: {
+        direct: false,
+        requiredBy: [],
+        state: 'absent',
+      },
+    });
+    for (const assetId of selected) {
+      const asset = getPackDefinition('utility').assets.find(
+        ({ id }) => id === assetId,
+      );
+      expect(asset).toBeDefined();
+      await expect(exists(join(scopeRoot, asset!.destination))).resolves.toBe(
+        false,
+      );
+    }
   });
 });

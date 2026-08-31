@@ -7,10 +7,7 @@ import type {
   InventoryScopedPackInput,
   ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
-import {
-  hasScopedPackPlacementEvidence,
-  inventoryScopedPack,
-} from '@commands/tools/shared/pack-inventory';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
@@ -120,6 +117,14 @@ interface PackAssetTarget {
   scopeRoot: string;
 }
 
+function isRootUpdateCandidate(inventory: ScopedPackInventory): boolean {
+  return (
+    inventory.intent.direct ||
+    (inventory.intent.state === 'legacy-inferred' &&
+      inventory.completeness === 'complete')
+  );
+}
+
 export async function updateTools(
   target: UpdateTarget,
   scopes: ConcreteScope[],
@@ -159,7 +164,7 @@ export async function updateTools(
           scopeRoot,
           assetsRoot,
         });
-        if (!hasScopedPackPlacementEvidence(before)) continue;
+        if (!isRootUpdateCandidate(before)) continue;
         requests.push({
           pack: definition.name,
           scope,
