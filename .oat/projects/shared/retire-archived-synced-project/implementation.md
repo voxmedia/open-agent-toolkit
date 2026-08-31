@@ -19,12 +19,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | completed | 3     | 3/3       |
-| p03   | completed | 3     | 3/3       |
-| p04   | pending   | 2     | 0/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 2     | 2/2       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | completed   | 3     | 3/3       |
+| p04   | in progress | 2     | 0/2       |
 
 **Total:** 8/10 tasks completed
 
@@ -102,12 +102,12 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ## Phase 4: Integration, Documentation, and Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** in progress
+**Started:** 2026-08-31
 
 ### Task p04-t01: Prove the terminal lifecycle end to end
 
-**Status:** pending
+**Status:** in progress
 **Commit:** -
 
 ### Task p04-t02: Document, version, and validate the shipped contract
@@ -245,6 +245,16 @@ _Orchestration runs from `oat-project-implement` are appended here._
   214/214, CLI/control-plane type-checks, CLI check, and skill-bump validation
   passed. `pnpm oat:validate-skills` exposed three stale synced-bookkeeping
   inventory anchors in pull, links, and prune for p04 integration.
+
+### Run 5 — p04 final phase
+
+- Checkpoint interpretation corrected: `oat_hill_checkpoints: [p04]` is
+  evaluated after p04 completes, not before the phase starts.
+- p04 starts from combined branch head `067a3683e` with p01-p03 passed.
+- Known integration seam: refresh three stale synced-bookkeeping inventory
+  anchors for pull, links, and prune before full validation.
+- The configured Cursor Fable exit gate remains deferred until p04
+  implementation, review, and repository gates are complete.
 
 <!-- orchestration-runs-end -->
 

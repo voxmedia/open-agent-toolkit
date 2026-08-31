@@ -82,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:50:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T16:19:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** p01-p03 passed; awaiting p04 HiLL approval
+**Status:** p01-p03 passed; p04 implementation in progress
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p04 integration, documentation, and release validation checkpoint
+Implement - p04 integration, documentation, and release validation
 
 ## Artifacts
 
@@ -102,7 +102,7 @@ Implement - p04 integration, documentation, and release validation checkpoint
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (8/10 tasks complete; p04 pending)
+- **Implementation:** `implementation.md` (8/10 tasks complete; p04 in progress)
 
 ## Progress
 
@@ -131,7 +131,8 @@ Implement - p04 integration, documentation, and release validation checkpoint
 - ✓ Fresh p02 fix/review generation passed with 0 findings
 - ✓ p02 merged at `1637fe31f`; combined behavior/type/package checks pass
 - ⚠ Combined skill validation identified three stale synced-bookkeeping inventory anchors for p04
-- → Await p04 HiLL approval before integration and release work
+- ✓ Corrected HiLL timing: the p04 checkpoint is evaluated after p04 completes
+- → Execute p04 integration, documentation, release validation, and final exit gate
 
 ## Blockers
 
@@ -141,5 +142,6 @@ rerun validation.
 
 ## Next Milestone
 
-Receive p04 HiLL approval, then complete end-to-end integration, documentation,
-versioning, full definition-of-done gates, and the configured Cursor Fable exit gate
+Complete p04 end-to-end integration, documentation, versioning, full
+definition-of-done gates, and the configured Cursor Fable exit gate; then
+evaluate the p04 HiLL checkpoint

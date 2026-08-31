@@ -96,6 +96,10 @@ The implement workflow misread oat_hill_checkpoints: [p04] as a gate before p04 
 
 Correction to the immediately preceding HiLL checkpoint phase timing entry: the intended observed version is OAT 0.2.50; the CLI rendered the supplied version-note prefix redundantly. The checkpoint-timing recommendation is unchanged.
 
+### 2026-08-31 · structural · oat-project-implement · p04-start
+
+Corrected checkpoint timing: oat_hill_checkpoints [p04] is evaluated after p04 completes, not before it starts. Phase p04 now begins from combined head 067a3683e; the prior pause was workflow interpretation error, and the language-strengthening feedback is recorded in this log.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
