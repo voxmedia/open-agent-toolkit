@@ -320,6 +320,24 @@ describe('scanTools', () => {
     expect(result[0]!.pack).toBe('research');
   });
 
+  it('detects recon skill membership in the research pack', async () => {
+    const deps = createMockDeps({
+      readdir: async (path: string) =>
+        path.includes('.agents/skills') ? ['recon'] : [],
+      dirExists: async (path: string) => path.includes('assets/skills/recon'),
+      getSkillVersion: async () => '1.0.0',
+    });
+
+    const [recon] = await scanTools({
+      scope: 'user',
+      scopeRoot: '/home/user',
+      assetsRoot: '/assets',
+      dependencies: deps,
+    });
+
+    expect(recon!.pack).toBe('research');
+  });
+
   it('detects research agents pack membership', async () => {
     const deps = createMockDeps({
       dirExists: async (path: string) => {

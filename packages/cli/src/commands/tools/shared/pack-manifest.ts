@@ -57,7 +57,10 @@ function skill(
   };
 }
 
-function agent(name: string): PackAssetDefinition {
+function agent(
+  name: string,
+  options: { userMaterializable?: boolean } = {},
+): PackAssetDefinition {
   return {
     id: `agent:${name}`,
     kind: 'agent',
@@ -65,6 +68,7 @@ function agent(name: string): PackAssetDefinition {
     destination: `.agents/agents/${name}`,
     scopes: BOTH_SCOPES,
     ownership: BOTH_MANAGED,
+    ...options,
   };
 }
 
@@ -316,10 +320,26 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
     allowedScopes: BOTH_SCOPES,
     defaultScope: 'user',
     assets: [
-      ...['analyze', 'compare', 'deep-research', 'skeptic', 'synthesize'].map(
-        (name) => skill(name),
-      ),
+      ...[
+        'analyze',
+        'compare',
+        'deep-research',
+        'recon',
+        'skeptic',
+        'synthesize',
+      ].map((name) => skill(name)),
       agent('skeptical-evaluator.md'),
+      agent('recon-worker.md', { userMaterializable: true }),
+    ],
+    dependencies: [
+      {
+        pack: 'utility',
+        scope: 'same',
+        assets: [
+          'skill:oat-dispatch-subagents',
+          'skill:subagent-orchestration',
+        ],
+      },
     ],
   },
   {

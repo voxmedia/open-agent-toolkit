@@ -881,7 +881,37 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-08-27T01:35:23.287Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/recon",
+      "providerPath": ".claude/skills/recon",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-08-31T18:05:27.318Z"
+    },
+    {
+      "canonicalPath": ".agents/agents/recon-worker.md",
+      "providerPath": ".claude/agents/recon-worker.md",
+      "provider": "claude",
+      "contentType": "agent",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": true,
+      "lastSynced": "2026-08-31T18:05:27.318Z"
+    },
+    {
+      "canonicalPath": ".agents/agents/recon-worker.md",
+      "providerPath": ".cursor/agents/recon-worker.md",
+      "provider": "cursor",
+      "contentType": "agent",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": true,
+      "lastSynced": "2026-08-31T18:05:27.318Z"
     }
   ],
-  "lastUpdated": "2026-08-27T01:35:23.288Z"
+  "lastUpdated": "2026-08-31T18:05:27.318Z"
 }

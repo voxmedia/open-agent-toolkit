@@ -152,6 +152,39 @@ describe('PACK_MANIFEST', () => {
     ]);
   });
 
+  it('registers recon as a research-owned skill and user-materializable agent with utility-owned dependencies', () => {
+    const research = PACK_MANIFEST.find(({ name }) => name === 'research')!;
+    const utility = PACK_MANIFEST.find(({ name }) => name === 'utility')!;
+
+    expect(research.assets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'skill:recon', kind: 'skill' }),
+        expect.objectContaining({
+          id: 'agent:recon-worker.md',
+          kind: 'agent',
+          userMaterializable: true,
+        }),
+      ]),
+    );
+    expect(research.dependencies).toEqual([
+      {
+        pack: 'utility',
+        scope: 'same',
+        assets: [
+          'skill:oat-dispatch-subagents',
+          'skill:subagent-orchestration',
+        ],
+      },
+    ]);
+    for (const id of [
+      'skill:oat-dispatch-subagents',
+      'skill:subagent-orchestration',
+    ]) {
+      expect(utility.assets.some((asset) => asset.id === id)).toBe(true);
+      expect(research.assets.some((asset) => asset.id === id)).toBe(false);
+    }
+  });
+
   it('validates same-scope selected-asset dependency declarations', () => {
     const utility = fixture({
       name: 'utility',
