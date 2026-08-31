@@ -659,16 +659,16 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | -------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -        | -                                        | -          | -           |
+| p02    | code     | pending | -          | -        | -                                        | -          | -           |
+| p03    | code     | pending | -          | -        | -                                        | -          | -           |
+| p04    | code     | pending | -          | -        | -                                        | -          | -           |
+| final  | code     | pending | -          | -        | -                                        | -          | -           |
+| spec   | artifact | pending | -          | -        | -                                        | -          | -           |
+| design | artifact | pending | -          | -        | -                                        | -          | -           |
+| plan   | artifact | passed  | 2026-08-31 | plan.md  | 4acc4bed89f5f5cddc2350ae7b7b10682cdf16da | auto       | -           |
 
 Status progression:
 `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
