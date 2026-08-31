@@ -52,14 +52,13 @@ oxfmt/oxlint, Markdown skills, and Fumadocs.
 
 ## Coordination and Sequencing
 
-- `scope-adoption-diagnostics` owns its narrow provider-materialization input,
-  shared-owner attribution, inventory availability, doctor/status rendering,
-  PJM fixes, and release/backlog fan-in. Its laptop run was observed at
-  `30b29ef38d5b2d3def7609443c48c7cc00140515` with 5/9 tasks complete; that
-  is progress evidence, not an accepted baseline.
-- Coordinate with that predecessor only at landing: obtain its accepted merge
-  SHA, rebase, inspect actual exported seams, and rerun focused suites. No
-  routine cross-project coordination is required.
+- `scope-adoption-diagnostics` landed through PR #249 at accepted merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`. It owns the narrow
+  provider-materialization input, shared-owner attribution, inventory
+  availability, doctor/status rendering, PJM fixes, and release/backlog
+  fan-in.
+- Treat that accepted SHA and its exported seams as the predecessor baseline.
+  No routine cross-project coordination is required after p01 revalidation.
 - Preserve PR #227's project-artifact `shared | local | synced` axis, PR #240's
   content-aware inventory/lifecycle safety, and PR #242's exact canonical-role
   and native-first contracts.
@@ -1752,8 +1751,8 @@ reviews, owned backlog closeout, and the complete repository gate sequence.
 - Design: `design.md`
 - Specification: `spec.md`
 - Discovery: `discovery.md`
-- Diagnostics predecessor: `../scope-adoption-diagnostics/plan.md` (laptop run
-  active; accepted landing SHA pending)
+- Diagnostics predecessor: PR #249,
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` (accepted and landed)
 - Backlog: `BL-260829-make-tool-pack-scope-selection`
 - Child: `BL-260724-support-provider-directory`
 - Child: `BL-260828-add-project-level-oat-guidance`

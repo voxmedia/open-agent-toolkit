@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,69 +24,108 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 1     | 0/1       |
-| Phase 2 | pending     | 7     | 0/7       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 5     | 0/5       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 4     | 0/4       |
-| Phase 7 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | pending  | 7     | 0/7       |
+| Phase 3 | pending  | 5     | 0/5       |
+| Phase 4 | pending  | 5     | 0/5       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 4     | 0/4       |
+| Phase 7 | pending  | 4     | 0/4       |
 
-**Total:** 0/30 tasks completed
+**Total:** 1/30 tasks completed
 
 ---
 
 ## Phase 1: Accepted Diagnostics Baseline
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-08-31
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Accepted PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` is recorded as the diagnostics
+  baseline and is present in this branch's ancestry.
+- Future phases now target the landed caller-resolved materialization input,
+  batch shared-owner attribution, and structured doctor/status availability
+  seams.
+- No production source or test files changed, and no requirement, stable task,
+  architecture, or file-boundary remap was required.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `implementation.md` - records the accepted baseline, interface inspection,
+  and p01 verification.
+- `design.md` - replaces predecessor-pending language with the exact landed
+  interfaces.
+- `plan.md` - records the accepted SHA and removes stale active-run references.
+- `spec.md` - closes the predecessor-SHA question without changing scope.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused p01 Vitest command from `plan.md`; `git diff --check`
+- Result: pass; the accepted SHA ancestry check also returned exit code 0.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- PR #249 exposes a boolean capability input rather than the future provider
+  matrix: `InventoryPackInput.userManagedRoleMaterialization` delegates the
+  config-aware decision to doctor/status, while the scoped input uses
+  `managedRoleMaterialization`.
+- `attributeSharedOwnerDiagnostics()` consumes the complete inventory batch and
+  attaches one observation to the first applicable owner in canonical pack
+  order. Shared presence still cannot establish placement.
+- Status degrades asset or pack inventory failures into a redacted
+  `packs:inventory` availability diagnostic, while doctor keeps scope
+  unavailability and inventory warnings in its existing check model.
 
 ### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** recorded by the phase implementation report
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Established PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` as the accepted current-main
+  diagnostics predecessor and adapted lifecycle artifacts to its actual seams.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md`
+  - accepted SHA, inspection conclusions, and verification evidence.
+- `.oat/projects/shared/tool-pack-scope-provider-truthfulness/design.md` -
+  landed interface dependencies and resolved predecessor gate.
+- `.oat/projects/shared/tool-pack-scope-provider-truthfulness/plan.md` - accepted
+  predecessor status and reference.
+- `.oat/projects/shared/tool-pack-scope-provider-truthfulness/spec.md` - resolved
+  dependency and open-question language.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm src/commands/tools/shared/pack-inventory.test.ts src/commands/doctor/index.test.ts src/commands/status/index.test.ts src/commands/sync/index.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts`
+- Result: pass.
+- Run: `git diff --check`
+- Result: pass.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- The landed capability boolean is an input seam, not a replacement for the
+  planned provider registry and evidence matrix.
+- Status inventory availability and unavailable scope reporting remain separate
+  fields; future evidence projection must preserve partial known facts rather
+  than collapse either condition into placement.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- The first p01 dispatch stopped before work because its supplied expanded base
+  SHA was invalid. Thomas explicitly authorized this corrected new run; the
+  relaunch began from clean exact base
+  `f6d77721039086e5ce35f48549d91a98aeeb6612` and preserved that evidence.
 
 ---
 
@@ -174,9 +213,38 @@ Chronological log of implementation progress.
 
 ### 2026-08-31
 
-**Session Start:** {time}
+**Session Start:** 11:38 UTC
 
-{Continue log...}
+- [x] p01-t01: Land, rebase, and record the diagnostics predecessor
+
+**What changed (high level):**
+
+- Recorded accepted PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` and its exact current-main
+  inventory, attribution, availability, and renderer seams.
+- Replaced stale active-run and pending-SHA language in the design, plan, and
+  specification without changing requirements, architecture, task IDs, or
+  source boundaries.
+
+**Decisions:**
+
+- Preserve PR #249's caller-resolved materialization boolean and batch
+  shared-owner projector as predecessor inputs; the planned provider registry
+  will enrich rather than replace those contracts.
+- Keep status inventory availability distinct from unavailable scopes and
+  preserve doctor's existing check-based warning model.
+
+**Follow-ups / TODO:**
+
+- Phase p02 begins with `p02-t01` against the recorded current-main seams.
+
+**Blockers:**
+
+- None. The first focused run found a stale built asset bundle (`0.2.49`
+  assets with CLI `0.2.50`); rebuilding `@open-agent-toolkit/cli` refreshed the
+  ignored generated bundle, and the no-edit rerun passed all 360 tests.
+
+**Session End:** 11:46 UTC
 
 ---
 
@@ -184,18 +252,18 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                | Source of Truth        | Follow-up |
+| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------- | --------- |
+| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work | PR #249 / current main | none      |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                        | Passed | Failed | Coverage      |
+| ----- | ------------------------------------------------ | ------ | ------ | ------------- |
+| 1     | Focused p01 Vitest suite after CLI asset rebuild | 360    | 0      | 11 test files |
+| 2     | -                                                | -      | -      | -             |
 
 ## Final Summary (for PR/docs)
 

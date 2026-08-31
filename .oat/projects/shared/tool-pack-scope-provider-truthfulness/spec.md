@@ -309,10 +309,11 @@ selection authoritative.
   enabled intent.
 - The directory-symlink and `AGENTS.md` workstreams retain their existing
   backlog acceptance boundaries even when implemented as child slices.
-- The active `scope-adoption-diagnostics` quick project is an implementation
-  predecessor for its planned inventory, doctor/status, shared-owner, and
-  diagnostic-fault-tolerance corrections. The two implementations must not run
-  concurrently across their overlapping write sets.
+- PR #249 (`scope-adoption-diagnostics`) is the accepted implementation
+  predecessor at merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`. Its inventory, doctor/status,
+  shared-owner, and diagnostic-fault-tolerance corrections are current-main
+  baseline behavior, not work for this project to repeat.
 - Changes to bundled skills, agents, docs, or CLI behavior are shipped
   functionality and trigger lockstep package/release validation.
 
@@ -325,9 +326,9 @@ selection authoritative.
   materialization extensions, manifest ownership, and CLI output conventions.
 - Backlog children `BL-260724`, `BL-260828`, and `BL-260826`; restart/refresh
   diagnosis remains directly owned by the umbrella.
-- The reviewed `scope-adoption-diagnostics` plan supplies the narrow diagnostic
-  baseline. This project expands provider materialization and end-to-end scope
-  truth only after that plan lands or is formally reconciled.
+- PR #249 supplies the narrow landed diagnostic baseline. This project expands
+  provider materialization and end-to-end scope truth from its accepted
+  current-main interfaces.
 
 ## High-Level Design (Proposed)
 
@@ -426,9 +427,10 @@ _Detailed schemas, interfaces, and ownership transitions are resolved in
   and strict no-replacement boundaries?
 - Can the four child slices share one release while retaining independent
   implementation/review ownership, or should planning stage them across PRs?
-- Which exact `scope-adoption-diagnostics` completion SHA becomes the umbrella
-  implementation base, and which planned tasks must be revised if that sibling
-  changes its accepted diagnostic interfaces?
+- No open predecessor-SHA question remains: PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` is the umbrella implementation
+  base. Its landed interfaces require adaptation notes but no requirement or
+  stable-task remap.
 
 ## Assumptions
 
@@ -480,6 +482,6 @@ _Detailed schemas, interfaces, and ownership transitions are resolved in
 - `BL-260724-support-provider-directory`
 - `BL-260828-add-project-level-oat-guidance`
 - `BL-260826-populate-native-subagent`
-- PR #227, PR #240, and PR #242 merged contracts
+- PR #227, PR #240, PR #242, and PR #249 merged contracts
 - Knowledge Base: `.oat/repo/knowledge/project-index.md` (orientation only;
   generated before the merged baselines)

@@ -26,17 +26,13 @@ safe lifecycle transaction, and PR #242's dependency-owned exact canonical
 role resolution plus native-first dispatch. It does not create a universal
 runtime catalog and does not let filesystem presence prove session visibility.
 
-`scope-adoption-diagnostics` is an active predecessor, not a parallel
-implementation lane. Its finalized plan was explicitly approved after its
-bounded review override and implementation was initialized on the laptop at
-head `30b29ef38d5b2d3def7609443c48c7cc00140515`; at the later 2026-08-30
-observation it had `5/9` tasks complete. This remains progress evidence, not an
-accepted baseline. This project may continue design and review, but it must not
-begin shared-source implementation until that predecessor lands. It then
-records the accepted completion SHA, rebases, and adapts to the actual narrow
-provider-materialization input, shared-owner attribution, inventory
-availability, and doctor/status rendering seams. It never duplicates those
-corrections.
+`scope-adoption-diagnostics` is the landed predecessor, not a parallel
+implementation lane. PR #249 was accepted at merge SHA
+`2c6005d64f45a19e8b9eedbc977959b066d3eda0`. Its current-main contracts are
+the narrow caller-resolved user managed-role materialization input, batch
+shared-owner attribution, structured inventory availability, and doctor/status
+rendering seams. This project builds on those contracts and never duplicates
+their corrections.
 
 ## Architecture
 
@@ -314,7 +310,12 @@ function projectPackEvidence(input: {
 ```
 
 **Dependencies:** Current pack manifest, scoped intent, content digest, and the
-predecessor's normalized provider input and diagnostic-availability seams.
+PR #249 predecessor seams: `InventoryPackInput.userManagedRoleMaterialization`
+and `InventoryScopedPackInput.managedRoleMaterialization`,
+`attributeSharedOwnerDiagnostics()`, and the status/doctor inventory- and
+scope-availability diagnostics. The boolean materialization input is capability
+evidence supplied by config-aware callers; the richer provider registry remains
+owned by this design.
 
 **Design Decisions:**
 
@@ -1493,10 +1494,10 @@ No database or remote data migration is required.
 
 ## Open Questions
 
-- **Diagnostics predecessor:** Which final landed
-  `scope-adoption-diagnostics` SHA and implemented interfaces become the
-  planning baseline? Its approved plan is active on the laptop, but its
-  observed `25c28dbd1` head is not a completion or landing SHA.
+- **Diagnostics predecessor:** Resolved. PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` and its current-main inventory,
+  shared-owner, availability, and renderer interfaces are the planning
+  baseline.
 - **Release grouping:** Should the shared contract and four child slices ship
   as several sequential PRs, as recommended, or one large release PR? The
   design keeps one umbrella project either way.
@@ -1509,12 +1510,11 @@ No database or remote data migration is required.
 
 **Tasks:**
 
-- Allow the approved laptop `scope-adoption-diagnostics` run to complete its
-  sequential nine-task plan; do not edit its shared source files from this
-  project while it is active.
-- Record the landed SHA and compare actual types/renderers/tests with this
-  design.
-- Rebase and revise only affected interfaces before planning execution.
+- Confirm PR #249 merge SHA
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` is in branch ancestry.
+- Compare its landed types, renderers, and tests with this design.
+- Record only the current-main interface adaptations before shared-source
+  implementation.
 
 **Verification:** The predecessor is merged at the recorded SHA, its focused
 and release gates pass there, and no overlapping umbrella source
@@ -1636,7 +1636,8 @@ depends on provider transcript metadata already scoped by `BL-260826`.
 - Merged PR #227 project-artifact scope and config preservation.
 - Merged PR #240 inventory, lifecycle, seed, drift, ownership, and mode rules.
 - Merged PR #242 canonical-role identity and native-first dispatch rules.
-- Final accepted and landed `scope-adoption-diagnostics` baseline.
+- Accepted and landed PR #249 diagnostics baseline at
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`.
 - Provider adapters, scanner, sync planner/executor, extensions, manifest,
   status/doctor renderers, and dispatch report/stamp modules.
 - Backlog children `BL-260724`, `BL-260828`, and `BL-260826`.
@@ -1733,10 +1734,8 @@ tooling are sufficient.
 
 - Specification: `spec.md`
 - Discovery: `discovery.md`
-- Laptop-clone sibling project
-  `scope-adoption-diagnostics/.oat/projects/shared/scope-adoption-diagnostics/plan.md`
-  (explicitly approved; implementation initialized at observed head
-  `25c28dbd1`; final landed SHA still pending)
+- PR #249 diagnostics predecessor,
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`
 - `BL-260829-make-tool-pack-scope-selection`
 - `BL-260724-support-provider-directory`
 - `BL-260828-add-project-level-oat-guidance`
