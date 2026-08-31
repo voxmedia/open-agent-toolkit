@@ -17,7 +17,7 @@ import {
 } from '@shared/types';
 
 import { digestDirectory, digestFile } from './content-digest';
-import { getPackDefinition } from './pack-manifest';
+import { getPackDefinition, PACK_NAMES } from './pack-manifest';
 import {
   type PackIntentDiagnostic,
   type ScopedPackIntent,
@@ -70,6 +70,7 @@ export interface InventoryScopedPackInput {
   scope: ConcreteScope;
   scopeRoot: string;
   assetsRoot: string;
+  managedRoleMaterialization?: boolean;
 }
 
 export interface InventoryPackInput {
@@ -77,6 +78,7 @@ export interface InventoryPackInput {
   assetsRoot: string;
   projectRoot?: string;
   userRoot?: string;
+  userManagedRoleMaterialization?: boolean;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -316,17 +318,19 @@ function intentDiagnostic(diagnostic: PackIntentDiagnostic): PackDiagnostic {
 }
 
 /**
- * User-scope canonical agents are installed into `~/.agents/agents/` but no
- * provider view is generated for them: `SCOPE_CONTENT_TYPES.user` enumerates
- * skills only, and the sole user-scope agent materialization is the bundled
- * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`). Completeness alone
- * therefore reports such a pack as complete while the declared agent surface is
- * unreachable, so the gap is named here instead of staying silent.
+ * User-scope canonical agents are installed into `~/.agents/agents/`, while
+ * native provider-role materialization is caller-resolved from the active
+ * config-aware adapter set. When that capability is active, only the bundled
+ * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`) is supplied to the
+ * extension. Completeness alone therefore cannot describe native
+ * materialization, so the remaining gap is named here instead of staying
+ * silent. Canonical instruction-read availability is a separate contract.
  */
 function userAgentMaterializationDiagnostics(
   pack: PackName,
   scope: ConcreteScope,
   assets: PackAssetInventory[],
+  managedRoleMaterialization: boolean,
 ): PackDiagnostic[] {
   if (scope !== 'user') return [];
   const bundledRoleFiles = new Set<string>(USER_SCOPE_MANAGED_AGENT_FILES);
@@ -335,13 +339,14 @@ function userAgentMaterializationDiagnostics(
       definition.kind === 'agent' &&
       definition.ownership.user === 'managed' &&
       status !== 'missing' &&
-      !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? ''),
+      (!managedRoleMaterialization ||
+        !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? '')),
   );
   if (unmaterialized.length === 0) return [];
   return [
     {
       code: 'user-agent-unmaterialized',
-      message: `Pack ${pack} installs user-scope canonical agents that no provider view materializes; user-scope agent materialization is limited to the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to make these agents available to providers.`,
+      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to materialize the affected agents.`,
       paths: unmaterialized.map(({ path }) => path),
     },
   ];
@@ -374,7 +379,12 @@ export async function inventoryScopedPack(
   ]);
   const diagnostics = [
     ...intent.diagnostics.map(intentDiagnostic),
-    ...userAgentMaterializationDiagnostics(input.pack, input.scope, assets),
+    ...userAgentMaterializationDiagnostics(
+      input.pack,
+      input.scope,
+      assets,
+      input.managedRoleMaterialization ?? false,
+    ),
   ];
   return {
     pack: input.pack,
@@ -400,6 +410,81 @@ export function hasScopedPackPlacementEvidence(
   );
 }
 
+/**
+ * Attribute each present shared asset only after every candidate pack has been
+ * inventoried. Shared presence cannot establish placement, so applicable
+ * owners are limited to packs with independent intent or non-shared managed
+ * assets. The observation is attached once to the first applicable owner in
+ * canonical pack order while naming the complete applicable owner set.
+ */
+export function attributeSharedOwnerDiagnostics(
+  inventories: PackInventory[],
+): PackInventory[] {
+  const attributed = inventories.map((inventory) => ({
+    ...inventory,
+    scopes: inventory.scopes.map((scoped) => ({
+      ...scoped,
+      diagnostics: scoped.diagnostics.filter(
+        ({ code }) => code !== 'shared-owner-observation',
+      ),
+    })),
+    diagnostics: inventory.diagnostics.filter(
+      ({ code }) => code !== 'shared-owner-observation',
+    ),
+  }));
+  const groups = new Map<
+    string,
+    {
+      owner: string;
+      destination: string;
+      scope: ConcreteScope;
+      candidates: Array<{ pack: PackName; scoped: ScopedPackInventory }>;
+      paths: Set<string>;
+    }
+  >();
+
+  for (const inventory of attributed) {
+    for (const scoped of inventory.scopes) {
+      for (const asset of scoped.assets) {
+        const owner = asset.definition.sharedOwner;
+        if (!owner || asset.status === 'missing') continue;
+        const key = `${scoped.scope}:${owner}:${asset.definition.destination}`;
+        const group = groups.get(key) ?? {
+          owner,
+          destination: asset.definition.destination,
+          scope: scoped.scope,
+          candidates: [],
+          paths: new Set<string>(),
+        };
+        group.candidates.push({ pack: inventory.pack, scoped });
+        group.paths.add(asset.path);
+        groups.set(key, group);
+      }
+    }
+  }
+
+  const packOrder = new Map(PACK_NAMES.map((pack, index) => [pack, index]));
+  for (const group of groups.values()) {
+    const applicable = group.candidates
+      .filter(({ scoped }) => hasScopedPackPlacementEvidence(scoped))
+      .sort(
+        (left, right) => packOrder.get(left.pack)! - packOrder.get(right.pack)!,
+      );
+    if (applicable.length === 0) continue;
+
+    const applicableOwners = applicable.map(({ pack }) => pack);
+    const diagnostic: PackDiagnostic = {
+      code: 'shared-owner-observation',
+      message: `Shared managed asset ${group.destination} (${group.owner}) at ${group.scope} scope applies to installed or intended pack owner(s): ${applicableOwners.join(', ')}`,
+      paths: [...group.paths].sort(),
+    };
+    const selected = applicable[0]!;
+    selected.scoped.diagnostics.push(diagnostic);
+  }
+
+  return attributed;
+}
+
 export async function inventoryPack(
   input: InventoryPackInput,
 ): Promise<PackInventory> {
@@ -418,6 +503,10 @@ export async function inventoryPack(
               scope,
               scopeRoot,
               assetsRoot: input.assetsRoot,
+              managedRoleMaterialization:
+                scope === 'user'
+                  ? (input.userManagedRoleMaterialization ?? false)
+                  : false,
             }),
           ]
         : [];
@@ -433,19 +522,6 @@ export async function inventoryPack(
           ? 'user'
           : 'unavailable';
   const diagnostics = scopes.flatMap(({ diagnostics: values }) => values);
-  for (const scoped of scopes) {
-    const shared = scoped.assets.filter(
-      ({ definition: asset, status }) =>
-        asset.sharedOwner !== undefined && status !== 'missing',
-    );
-    if (shared.length > 0 && !hasScopedPackPlacementEvidence(scoped)) {
-      diagnostics.push({
-        code: 'shared-owner-observation',
-        message: `Pack ${input.pack} has shared managed assets at ${scoped.scope} scope without pack ownership evidence`,
-        paths: shared.map(({ path }) => path),
-      });
-    }
-  }
 
   if (placement === 'both') {
     const assets = active.flatMap(({ assets: values }) =>

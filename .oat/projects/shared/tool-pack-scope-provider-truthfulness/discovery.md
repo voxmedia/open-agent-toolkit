@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-29
+oat_last_updated: 2026-08-30
 oat_generated: false
 ---
 
@@ -10,14 +10,15 @@ oat_generated: false
 
 > Discovery status: initial, non-exhaustive starting point. This artifact is
 > intentionally not a complete specification. Revalidate it in a fresh thread
-> and worktree against the post-PR-#227 baseline before approving design,
-> changing workflow mode, or generating a plan.
+> and worktree against current main, including landed PRs #227, #240, and #242,
+> before approving design, changing workflow mode, or generating a plan.
 
-> Boundary update after PR #231: the sibling `agent-provider-root` project is
-> now spec-driven and owns portable skill-to-canonical-agent references. This
-> project owns canonical installation, provider materialization, catalog
-> visibility, restart notices, picker truth, and dispatch-state reporting. The
-> relationship and affected files must be revalidated before implementation.
+> Boundary update after PR #242: the completed `agent-provider-root` project
+> owns portable canonical-agent reads and the loaded -> user -> project
+> resolution contract. This project owns canonical installation, provider
+> materialization, catalog visibility, restart notices, picker truth, and
+> dispatch-state reporting. The relationship and affected files must be
+> revalidated before implementation.
 
 ## Phase Guardrails (Discovery)
 
@@ -51,14 +52,12 @@ guidance, and tool-pack lifecycle/configuration edges:
   config contracts](../../../repo/pjm/backlog/archived/BL-260827-clean-up-tool-pack-lifecycle.md)
 - [`BL-260829-unified-agent-provider-root` — Unified AGENT_PROVIDER_ROOT binding
   for portable skill and agent references](../../../repo/pjm/backlog/items/BL-260829-unified-agent-provider-root.md)
-- [`agent-provider-root`](../agent-provider-root/) — Spec-driven sibling project
-  owning canonical skill-to-agent reference resolution.
+- [`agent-provider-root` completion summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
+  — landed PR #242 and owns canonical skill-to-agent reference resolution.
 
-The user supplied a future PR #227 baseline at
-`/Users/tstang/Code/open-agent-toolkit/.oat/projects/shared/synced-project-scope`.
-That path is not available on this host, so PR #227 is an explicit assumption,
-not locally verified evidence. The local repository does not currently contain
-those supplied artifacts.
+PR #227, PR #240, and PR #242 are present on current main. Their shipped
+contracts are the local baseline for further discovery; the completed project
+summaries replace the removed active-project directories as durable context.
 
 ## Problem Statement
 
@@ -92,15 +91,16 @@ implementation inventory:
 
 - `packages/cli/src/commands/tools/shared/pack-manifest.ts` defines pack
   assets, allowed scopes, ownership, and canonical/provider destinations.
-- `packages/cli/src/commands/tools/shared/pack-inventory.ts:31-64` reports
+- `packages/cli/src/commands/tools/shared/pack-inventory.ts:33-80` reports
   scoped assets and pack placement as `project`, `user`, `both`, or
-  `unavailable`. Lines `216-245` use the fixed
+  `unavailable`. Lines `318-348` use the fixed
   `USER_SCOPE_MANAGED_AGENT_FILES` set for the user-agent diagnostic; lines
-  `301-360` derive placement and duplicate/shared-owner diagnostics.
-- `pack-inventory.ts:97-197` compares versioned skill/agent assets by
-  frontmatter version and static assets by digest while validating managed
-  paths. That is canonical installation evidence, not proof of provider
-  visibility.
+  `350-462` derive scoped inventory, placement, and duplicate/shared-owner
+  diagnostics.
+- `pack-inventory.ts:99-300` compares same-version skills and agents by content
+  as well as version, compares static assets by digest, and preserves generated
+  or seed-if-missing semantics while validating managed paths. That is
+  canonical installation evidence, not proof of provider visibility.
 - `packages/cli/src/commands/sync/index.ts:276-380` resolves concrete scopes,
   config-aware active adapters, canonical entries, and user-scope
   materialization extensions. Lines `386-418` emit non-interactive provider
@@ -123,12 +123,11 @@ implementation inventory:
   coverage for placement truth, reachability, directory adoption/divergence,
   restart requirements, and native-dispatch provenance.
 
-### Assumed PR #227 baseline
+### Landed PR #227 baseline
 
-PR #227 is assumed to merge before implementation. Prior PR recon indicates
-that it adds a `synced` project-artifact scope, project-scope commands,
+PR #227 added a `synced` project-artifact scope, project-scope commands,
 project-config defaults, pack inventory/reconciliation, migration, and
-project-review skill behavior, while preserving existing `config.projects` on
+project-review skill behavior while preserving existing `config.projects` on
 tool-pack install/reconcile. It is not the same axis as tool-pack installation
 scope (`project` versus `user`). This project must prevent “synced project
 artifact” scope from being conflated with “user-scope tool pack” or provider
@@ -280,7 +279,7 @@ automatic restart is provider-specific and an unexpected process mutation.
    model/effort controls, and authorization basis.
 8. Init and standalone workflow installation announce the distinction between
    user-scope assets and project-level OAT guidance and ask whether to add it.
-9. PR #227 is an assumed incoming baseline, but its project-artifact `synced`
+9. PR #227 is a landed baseline, but its project-artifact `synced`
    scope must not leak into tool-pack project/user scope.
 10. This discovery is non-exhaustive and must be revalidated before design.
 
@@ -296,9 +295,15 @@ automatic restart is provider-specific and an unexpected process mutation.
 - Maintain managed-root containment and home-path redaction guarantees.
 - Shipped CLI, provider adapters, bundled skills/agents, and docs require the
   repository’s lockstep package-version/release validation.
-- Existing `scope-adoption-diagnostics` and
-  `tool-pack-lifecycle-config-cleanup` projects contain narrower quick plans;
-  this project must define ownership and avoid duplicate implementation.
+- The active `scope-adoption-diagnostics` project and the completed
+  `tool-pack-lifecycle-config-cleanup` slice contain narrower ownership; this
+  project must preserve their shipped or diagnostics-first contracts and avoid
+  duplicate implementation.
+- Merge `scope-adoption-diagnostics` first. This project must rebase before
+  touching `pack-inventory.ts`, doctor/status, or tool-pack docs, preserve that
+  slice's PJM migration, shared-owner, inventory-failure, delimiter, and
+  test-quality fixes, and treat its provider input as a narrow compatibility
+  seam rather than the final provider × scope × content-type state model.
 
 ## Success Criteria
 
@@ -319,8 +324,9 @@ automatic restart is provider-specific and an unexpected process mutation.
 - Tests exercise project-only, user-only, both, missing, partial, provider
   disabled/detected, enabled/undetected, alias, divergent, missing-role,
   restart-required, native-reject, and generic-fallback cases.
-- Behavior remains compatible with PR #227’s config preservation and project
-  scope without overwriting `config.projects` data.
+- Behavior remains compatible with PR #227's config preservation and project
+  scope without overwriting `config.projects` data, PR #240's content-aware
+  inventory/lifecycle contracts, and PR #242's canonical-agent resolution.
 
 ## Out of Scope
 
@@ -338,8 +344,8 @@ automatic restart is provider-specific and an unexpected process mutation.
 - Provider-specific automatic reload integrations where a stable API exists.
 - A persisted catalog handshake proving that a running provider reloaded a
   synced directory.
-- Consolidating the existing scope/adoption and lifecycle quick projects after
-  their plans are compared with this accepted design.
+- Consolidating superseded discovery notes after the diagnostics slice merges
+  and this project rebases onto it.
 
 ## Open Questions
 
@@ -385,8 +391,9 @@ automatic restart is provider-specific and an unexpected process mutation.
 
 ## Assumptions
 
-- PR #227 merges and its synced-project-scope artifacts become authoritative for
-  that adjacent project scope.
+- PRs #227, #240, and #242 are authoritative current-main dependencies for
+  synced-project scope, lifecycle/inventory semantics, and canonical-agent
+  reads respectively.
 - The issue-#228 transcript is accurate as an incident report, but current
   behavior claims still require source/test verification after revalidation.
 - Provider adapters can expose enough evidence to distinguish projection from
@@ -414,7 +421,8 @@ automatic restart is provider-specific and an unexpected process mutation.
   - **Impact:** High
   - **Mitigation Ideas:** Keep projection, visibility, and unknown states
     distinct.
-- **PR config regression:** Tool-pack writes overwrite PR #227 project config.
+- **PR config regression:** Tool-pack writes overwrite PR #227 project config
+  or regress PR #240's lifecycle/inventory preservation contracts.
   - **Likelihood:** Medium
   - **Impact:** High
   - **Mitigation Ideas:** Add preservation tests around install, reconcile,
@@ -431,31 +439,43 @@ automatic restart is provider-specific and an unexpected process mutation.
 - [`review-plan-workflow` — ReviewPlan-first reviewer workflow](../review-plan-workflow/)
   remains the ReviewPlan QA baseline and is not duplicated here.
 - [`scope-adoption-diagnostics` — Scope and Adoption Diagnostics](../scope-adoption-diagnostics/)
-  is a narrower quick project to compare and reconcile.
-- [`tool-pack-lifecycle-config-cleanup` — Tool-Pack Lifecycle and Config Cleanup](../tool-pack-lifecycle-config-cleanup/)
-  is another narrower quick project to compare and reconcile.
+  is the diagnostics-first quick slice. It owns PJM migration semantics,
+  provider-aware user-agent diagnostics, shared-owner attribution,
+  inventory-failure/delimiter rendering, and targeted test quality. Merge it
+  before this project implements shared provider-state surfaces, then rebase
+  and consume or supersede its narrow provider capability input without
+  duplicating its renderers.
+- [`tool-pack-lifecycle-config-cleanup` completion summary](../../../repo/reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
+  records the shipped PR #240 lifecycle, config, and content-aware inventory
+  contracts this project must preserve.
 - [PR #227 — add synced project scope](https://github.com/voxmedia/open-agent-toolkit/pull/227)
-  is assumed incoming work; its supplied worktree was unavailable here.
+  is landed current-main work and the authority for the adjacent synced-project
+  scope.
+- [PR #242 — make canonical agent reads provider-aware](https://github.com/voxmedia/open-agent-toolkit/pull/242)
+  is landed current-main work and the authority for canonical-agent reads.
 
 ## References
 
 - [GitHub issue #228 comment](https://github.com/voxmedia/open-agent-toolkit/issues/228#issuecomment-5459103358)
 - [PR #227 — add synced project scope](https://github.com/voxmedia/open-agent-toolkit/pull/227)
+- [PR #240 — clean up tool-pack lifecycle and config handling](https://github.com/voxmedia/open-agent-toolkit/pull/240)
+- [PR #242 — make canonical agent reads provider-aware](https://github.com/voxmedia/open-agent-toolkit/pull/242)
+- [Tool-Pack Lifecycle and Config Cleanup completion summary](../../../repo/reference/project-summaries/20260830-tool-pack-lifecycle-config-cleanup.md)
+- [Agent Provider Root completion summary](../../../repo/reference/project-summaries/20260830-agent-provider-root.md)
 - `packages/cli/src/commands/tools/shared/pack-inventory.ts`
 - `packages/cli/src/commands/tools/shared/pack-manifest.ts`
 - `packages/cli/src/commands/sync/index.ts`
 - `packages/cli/src/providers/codex/codec/sync-extension.ts`
 - `packages/cli/src/providers/cursor/codec/sync-extension.ts`
 - `packages/cli/src/commands/init/index.ts`
-- User-supplied but unavailable here:
-  `/Users/tstang/Code/open-agent-toolkit/.oat/projects/shared/synced-project-scope`
 
 ## Next Steps
 
-1. In a fresh worktree/thread, verify the transcript and current source/tests
-   after PR #227 is merged.
-2. Compare the two existing scope/lifecycle quick projects with this dossier
-   and decide whether they become child slices, are narrowed, or retired.
+1. Rebase onto the diagnostics-first slice after it merges, preserving its PJM
+   migration, provider-aware diagnostic seam, shared-owner attribution,
+   inventory-failure rendering, delimiter, and targeted test-quality fixes.
+2. Revalidate source and tests against landed PRs #227, #240, and #242 plus the
+   merged diagnostics slice before assigning final implementation files.
 3. Resolve the state vocabulary, provider matrix, directory-adoption safety,
    AGENTS.md ownership, restart, and fallback questions with the user.
 4. Complete discovery only after revalidation; then use `oat-project-design`

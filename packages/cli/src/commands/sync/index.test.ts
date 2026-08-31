@@ -2250,7 +2250,7 @@ describe('createSyncCommand', () => {
           ],
           user: [
             createCanonicalEntry('skill-user', '/tmp/home'),
-            createAgentCanonicalEntry('agent-user.md', '/tmp/home'),
+            createCanonicalEntry('skill-user-secondary', '/tmp/home'),
           ],
         },
       });
@@ -2280,7 +2280,10 @@ describe('createSyncCommand', () => {
           scopeRoot: '/tmp/home',
           canonical: [
             expect.objectContaining({ name: 'skill-user', type: 'skill' }),
-            expect.objectContaining({ name: 'agent-user.md', type: 'agent' }),
+            expect.objectContaining({
+              name: 'skill-user-secondary',
+              type: 'skill',
+            }),
           ],
         }),
       );
