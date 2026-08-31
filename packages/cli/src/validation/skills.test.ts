@@ -6602,3 +6602,22 @@ describe('validateOatSkills', () => {
     expect(content).not.toContain('ITEM_PATH=');
   });
 });
+
+describe('recon canonical contracts', () => {
+  it('keeps the recon skill and worker provider-neutral and versioned', async () => {
+    const [skill, worker] = await Promise.all([
+      readRepoFile('.agents/skills/recon/SKILL.md'),
+      readRepoFile('.agents/agents/recon-worker.md'),
+    ]);
+
+    expect(skill).toMatch(/^name:\s*recon$/m);
+    expect(skill).toMatch(/^version:\s*1\.0\.0$/m);
+    expect(skill).toMatch(/provider-neutral/i);
+    expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
+    expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
+    expect(skill).toMatch(/same\s+approved model and effort/i);
+    expect(skill).toMatch(/packet directory/i);
+    expect(worker).toMatch(/never interact with the user/i);
+    expect(worker).toMatch(/never dispatch/i);
+  });
+});
