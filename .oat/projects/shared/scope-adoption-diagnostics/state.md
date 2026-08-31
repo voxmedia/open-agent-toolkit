@@ -51,17 +51,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=f8fd1422-ed90-466c-b3c7-9e25a562d96a; handoff=Run oat-project-review-receive for .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md before treating this gate review as consumed.; source=.oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md; scope=final; type=code; filename=final-review-2026-08-31T013235Z.md'
+  receive_source_artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/final-review-2026-08-31T013235Z.md
+  receive_archived_artifact: .oat/projects/shared/scope-adoption-diagnostics/reviews/archived/final-review-2026-08-31T013235Z.md
+  receive_event_identity: 'final|code|final-review-2026-08-31T013235Z.md'
+  receive_pre_head: 1fa0eac2ca10010dac9701cb2eed39590dc451b4
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T01:35:36Z'
+  updated_at: '2026-08-31T01:36:18Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
