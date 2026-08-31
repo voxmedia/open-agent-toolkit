@@ -921,24 +921,59 @@ describe('removeTools', () => {
               (scope) => `oat tools remove --pack ${pack} --scope ${scope}`,
             ),
           );
+          const detail =
+            stage === 'intent-write'
+              ? 'later intent failure'
+              : 'later inventory failure';
+          const stageLabel =
+            stage === 'intent-write'
+              ? 'durable intent update failed'
+              : 'final inventory failed';
+          const expectedRecovery = packs.map((pack) => {
+            const canonicalApplied = pack === 'ideas' || pack === 'docs';
+            const canonicalSummary = canonicalApplied
+              ? `Canonical removal was applied for ${pack}, but final state is unverified`
+              : `No canonical removal was observed for ${pack}; final state remains unverified`;
+            return {
+              selection: { pack },
+              canonical: {
+                status: canonicalApplied ? 'applied' : 'unchanged',
+              },
+              recovery: ['project', 'user'].map((scope) => ({
+                code: 'final-inventory-unverified',
+                message: `${canonicalSummary} because ${stageLabel} for docs at user scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${scope}`,
+              })),
+            };
+          });
           if (json) {
             const payload = JSON.parse(stdout.join('')) as {
               lifecycle: Array<{
                 selection: { pack: string };
-                recovery: Array<{ message: string }>;
+                canonical: { status: string };
+                recovery: Array<{ code: string; message: string }>;
               }>;
             };
-            const recoveryCommands = payload.lifecycle.flatMap(({ recovery }) =>
-              recovery.map(({ message }) =>
-                message.slice(message.indexOf('Rerun ') + 6),
+            expect(
+              payload.lifecycle.map(({ selection, canonical, recovery }) => ({
+                selection: { pack: selection.pack },
+                canonical: { status: canonical.status },
+                recovery,
+              })),
+            ).toEqual(expectedRecovery);
+            expect(
+              payload.lifecycle.flatMap(({ recovery }) => recovery),
+            ).toHaveLength(expectedCommands.length);
+          } else {
+            const warningLines = stderr.join('').trim().split('\n');
+            expect(warningLines).toEqual(
+              expectedRecovery.map(({ recovery }) =>
+                recovery.map(({ message }) => message).join('; '),
               ),
             );
-            expect(recoveryCommands).toEqual(expectedCommands);
-          } else {
-            const output = `${stdout.join('')} ${stderr.join('')}`;
-            for (const command of expectedCommands) {
-              expect(output).toContain(`Rerun ${command}`);
-            }
+            expect(warningLines).toHaveLength(packs.length);
+            expect(
+              warningLines.join('\n').match(/Rerun oat tools remove/g),
+            ).toHaveLength(expectedCommands.length);
           }
         } finally {
           process.exitCode = previousExitCode;
