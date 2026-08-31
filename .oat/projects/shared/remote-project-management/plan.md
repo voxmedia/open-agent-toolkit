@@ -170,7 +170,8 @@ packages/cli/src/commands/pjm/remote/storage-locator.test.ts.
 
 ### Task p01-t06: Persist remote records atomically
 
-**Implementation:** in progress
+**Implementation:** completed in
+`c4cc34e687d3df0cc1eff2b19368c790f5603346`
 
 **Files:** Create packages/cli/src/commands/pjm/remote/store.ts and
 packages/cli/src/commands/pjm/remote/store.test.ts.
@@ -185,6 +186,8 @@ packages/cli/src/commands/pjm/remote/store.test.ts.
 5. Commit: feat(p01-t06): add restart-safe remote sync store
 
 ### Task p01-t07: Preserve simultaneous operation intents
+
+**Implementation:** in progress
 
 **Files:** Modify packages/cli/src/commands/pjm/remote/store.ts and
 packages/cli/src/commands/pjm/remote/store.test.ts.

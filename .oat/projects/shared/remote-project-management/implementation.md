@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t06
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -160,8 +160,17 @@ and lint passed.
 
 ### Task p01-t06: Persist remote records atomically
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c4cc34e687d3df0cc1eff2b19368c790f5603346
+
+**Outcome:** Added an injected-filesystem RemoteSyncStore with restrictive
+directories/files, unique temporary files, file and directory fsync, atomic
+rename, schema/filename validation, exclusive operation creation,
+compare-before-transition, duplicate-step rejection, and distinct portable and
+operational record roots.
+
+**Verification:** Focused store suite passed (5 tests); CLI type-check and lint
+passed after a pre-commit caught-error-cause correction.
 
 ---
 
@@ -298,7 +307,8 @@ Chronological log of implementation progress.
 - [x] p01-t03: Expose remote configuration through config commands - 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
 - [x] p01-t04: Define strict remote record schemas - b67d6e45097049687de95cca2c5fdce9497e5049
 - [x] p01-t05: Resolve portable and operational storage locations - 56ed685b95af7663bddbbb7998119efe055ff895
-- [ ] p01-t06: Persist remote records atomically - in progress
+- [x] p01-t06: Persist remote records atomically - c4cc34e687d3df0cc1eff2b19368c790f5603346
+- [ ] p01-t07: Preserve simultaneous operation intents - in progress
 
 **What changed (high level):**
 
@@ -311,6 +321,7 @@ Chronological log of implementation progress.
   provider extensions.
 - Added deterministic portable/local/shared storage location resolution across
   clones and worktrees.
+- Added restart-safe atomic persistence and guarded operation transitions.
 
 **Decisions:**
 
