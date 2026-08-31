@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 1 fixes complete; round 2 pending
+**Status:** review round 2 received; fixes pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -382,6 +382,27 @@ unchanged`, making the source-qualified recovery record contradictory.
 - A first post-commit full test run hit an unrelated `ENOTEMPTY` temporary-dir
   cleanup race. The no-edit focused rerun passed 18/18 and the complete no-edit
   `pnpm test` rerun passed; no recovery or source change was needed.
+
+### Review Round 2
+
+- Artifact: `reviews/p03-review-2026-08-31T193945Z.md`
+- Reviewed head: `2132804175242aa706791c03e12577a87f849ad4`
+- Verdict: changes requested; 0 Critical, 1 Important, 1 Medium, 2 Minor.
+- Reconnaissance: attempted through one bounded read-only intelligent-recon
+  lane; complete orchestration evidence is in the review artifact and its log
+  entry is deferred to the terminal p03 outcome.
+- Bounded fix scope:
+  1. Render extension operation results—not just plans—on the human apply
+     surface with stable identity, reason, outcome, and redacted failure.
+  2. Stop assigning aggregate-only counts to named assets; preserve them as
+     unknown or aggregate evidence when exact operation records are absent.
+  3. Update provider command help/reference to describe project as the default
+     and expose explicit project/user scope selection.
+  4. Correct the provider overview's user-scope summary to include
+     capability-supported ordinary agents separately from managed extensions.
+- `apps/oat-docs/docs/provider-sync/commands.md` is accepted as one
+  mechanically derived p03-t04 documentation boundary; no production scope is
+  expanded.
 
 ---
 
@@ -641,6 +662,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   expanded phase 498, and full repository tests passed
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Review record — round 2
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `2132804175242aa706791c03e12577a87f849ad4`
+- Verdict: changes requested; findings critical 0, important 1, medium 1,
+  minor 2
+- Artifact: `reviews/p03-review-2026-08-31T193945Z.md`
+- Reconnaissance: attempted; complete orchestration evidence is in the artifact
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -761,6 +792,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work   | PR #249 / current main | none                              |
 | p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture      | Round-1 review finding | recorded; no production expansion |
 | p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                | Mechanically derived full-suite fixture | p03-t01 behavior       | recovery attempt 1/10 reserved    |
+| p03 review r2 | plan file union  | p03-t04 named command source/tests only  | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                       | Mechanically derived docs reference     | Round-2 review finding | recorded; no production expansion |
 
 ## Test Results
 

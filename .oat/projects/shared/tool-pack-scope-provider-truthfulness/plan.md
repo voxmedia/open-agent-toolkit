@@ -674,6 +674,8 @@ git commit -m "feat(p03-t03): expose provider role materialization evidence"
 - Modify: `packages/cli/src/commands/providers/inspect/inspect.test.ts`
 - Modify: `packages/cli/src/config/user-sync-config.ts`
 - Modify: `packages/cli/src/config/user-sync-config.test.ts`
+- Modify: `apps/oat-docs/docs/provider-sync/commands.md` (mechanically derived
+  provider-command reference correction)
 
 **Step 1: Write tests (RED)**
 
@@ -1712,7 +1714,7 @@ gates exit 0 at the final reviewed head.
 | p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T164057Z.md                      | 4e1cbac86f3f0bb5acefe446d8df8c81df3f025f | manual     | -           |
 | p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T170932Z.md                      | eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab | manual     | -           |
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T184315Z.md                      | 810f0788d6034b12997e2154f14ac50dce8623df | manual     | -           |
-| p03    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T193945Z.md                      | 2132804175242aa706791c03e12577a87f849ad4 | manual     | -           |
 | p04    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
