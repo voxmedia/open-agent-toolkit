@@ -37,6 +37,22 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.49` (gate-execution-contract-hardening, implementation complete;
+  pending PR/release) enforces the configured lifecycle gate contract from
+  configuration through headless completion. Recognized direct review commands
+  must use canonical `oat --json gate review` placement before any shared,
+  local, or user config write, while unknown wrappers and provider
+  `baseCommand` values remain outside the conservative classifier. A clean
+  accepted child that produces no artifact now returns the fail-closed
+  `artifact_missing` diagnosis instead of a correlation mismatch; observed
+  wrong-run or otherwise mismatched artifacts retain
+  `targeting_correlation_failed`, and neither path is receive-eligible or
+  remediable in the accepted run. Five lifecycle skills and the runner prompt
+  require synchronous completion, and a configuration-driven subprocess suite
+  proves exact stored-command success, missing-artifact failure, and wrong-run
+  mismatch. Both owned backlog items are closed, public docs are updated, and
+  the complete repository gate sequence plus configured exit-gate review
+  passed.
 - CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
   `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
   pointer correctness to `oat instructions validate`. The repository's 23
