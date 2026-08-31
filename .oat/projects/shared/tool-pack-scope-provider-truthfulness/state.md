@@ -1,10 +1,7 @@
 ---
 oat_current_task: p04-t01
 oat_last_commit: a65ba0ce2f30d072666938c16de79e6a561e40d2
-oat_blockers:
-  - task_id: p03-review-r5
-    reason: 'Exact successful provider configuration changes are filtered out of new-session advice; p04 remains gated pending operator-authorized correction and fresh review.'
-    since: 2026-08-31
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:49:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:57:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,11 +108,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 remains blocked after review round 5 at
-`73a0488bea5`. The approved conservative new-session policy is implemented and
-verified, but exact successful provider configuration changes are currently
-filtered out of its advice input. Phase 4 stays gated pending operator
-authorization for a bounded correction and fresh review.
+Implementation - Thomas authorized one bounded Phase 3 correction for review
+round 5 and one fresh independent High review. The correction covers exact
+config-only provider changes plus the adjacent provider-policy precedence
+guardrail. Phase 4 remains gated until that review passes.
 
 ## Artifacts
 
@@ -123,7 +119,7 @@ authorization for a bounded correction and fresh review.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 review round 5 blocked)
+- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 round 5 correction authorized)
 
 ## Progress
 
@@ -148,15 +144,14 @@ authorization for a bounded correction and fresh review.
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
-- ! Phase 3 blocked after review round 5; operator disposition required
+- ⧗ Phase 3 review round 5 correction authorized
 
 ## Blockers
 
-- Exact successful provider configuration changes do not currently produce the
-  approved conservative new-session advice. Another bounded p03 correction and
-  fresh review require explicit operator authorization.
+- None. The bounded p03 correction and fresh review are authorized; Phase 4
+  remains gated on a passing review.
 
 ## Next Milestone
 
-Obtain operator authorization to correct the config-only advice gap and run a
-fresh p03 review before beginning Phase 4.
+Apply and verify the bounded p03 correction, then run a fresh independent High
+review. Continue to Phase 4 only if it passes.

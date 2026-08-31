@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p03-review-r5
-    reason: 'Exact successful provider configuration changes are filtered out of new-session advice; p04 remains gated pending operator-authorized correction and fresh review.'
-    since: 2026-08-31
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -296,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** blocked after review round 5; operator disposition required
+**Status:** review round 5 correction authorized
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -690,6 +687,17 @@ high confidence. The original commit remains the source authority.
 - The authorization covered one policy correction and this fresh review. The
   review did not pass, so no sixth correction or Phase 4 launch is authorized
   without operator direction.
+
+### Review Round 5 Correction Authorization
+
+- Thomas explicitly authorized one additional bounded Phase 3 correction and
+  one fresh independent High review.
+- The correction owns the blocking exact config-only provider-change advice
+  gap and the adjacent provider-policy precedence validation/test guardrail.
+  The stale state-body finding was already corrected during review receipt.
+- The original exact High Phase 3 implementer target remains authoritative.
+  A passing fresh review completes Phase 3 and advances directly to Phase 4;
+  another blocking review is terminal for this authorization.
 
 ---
 

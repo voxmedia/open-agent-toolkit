@@ -116,6 +116,10 @@ Operator-authorized HiLL policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 mak
 
 Approved policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 resolved the unknown-policy blocker, but terminal High review round 5 remained blocked with critical:0, important:1, medium:2 because exact successful provider configuration changes are filtered out of new-session advice. Reconnaissance was not attempted in reviews/p03-review-2026-08-31T234602Z.md; no additional correction or p04 launch is authorized without operator direction.
 
+### 2026-08-31 · structural · oat-project-implement · p03-round6-authorized
+
+Thomas authorized one bounded correction for the exact config-only new-session advice gap and adjacent provider-policy precedence guardrail in reviews/p03-review-2026-08-31T234602Z.md, followed by one fresh independent High review. A blocking review is terminal for this authorization; p04 remains gated until pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
