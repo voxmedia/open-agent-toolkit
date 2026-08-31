@@ -77,6 +77,15 @@ shapes, duplicate or shadow reconciliation results, symlink root aliases,
 retargeted roots, raw secret-bearing stale excerpts, and caller-downgraded gap
 materiality. Equivalent-looking inputs do not excuse a failed invariant.
 
+The approved, accepted, and completed receipts carry the manifest's exact
+`approvedAt` value. The accepted and completed receipts also carry one
+identical launch-acceptance record, including the accepted child handle; a
+different terminal handle is a replacement and fails validation. The catalog
+recheck is a distinct observation from the projection's original catalog
+observation, occurs strictly after approval and strictly before launch
+acceptance, and retains the approved catalog source, context, and relevant
+fingerprint. Copied or non-fresh catalog evidence cannot support publication.
+
 ## Manifest
 
 `recon.packet-manifest` version 1 contains:

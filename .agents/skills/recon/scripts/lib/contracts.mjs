@@ -135,6 +135,22 @@ function requiredString(value, key, errors, path = '$') {
   }
 }
 
+function requiredTimestamp(value, key, errors, path = '$') {
+  requiredString(value, key, errors, path);
+  if (
+    typeof value?.[key] === 'string' &&
+    !Number.isFinite(Date.parse(value[key]))
+  ) {
+    errors.push(
+      issue(
+        'INVALID_TIMESTAMP',
+        `${key} must be a parseable timestamp`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
 function requiredInteger(value, key, errors, path = '$', minimum = 0) {
   if (!Number.isInteger(value?.[key]) || value[key] < minimum) {
     errors.push(
@@ -576,9 +592,10 @@ function validateApprovalEvidence(value, errors, path) {
 function validateCatalogRecheck(value, errors, path) {
   if (!isObject(value)) return;
   closedObject(value, catalogKeys, errors, path);
-  for (const key of ['id', 'source', 'dispatch_context', 'observed_at']) {
+  for (const key of ['id', 'source', 'dispatch_context']) {
     requiredString(value, key, errors, path);
   }
+  requiredTimestamp(value, 'observed_at', errors, path);
   if (!isDigest(value.relevant_catalog_fingerprint)) {
     errors.push(
       issue(
@@ -726,7 +743,7 @@ function validateManifest(value, errors) {
       errors,
       '$.execution',
     );
-    requiredString(value.execution, 'approvedAt', errors, '$.execution');
+    requiredTimestamp(value.execution, 'approvedAt', errors, '$.execution');
     requiredObject(value.execution, 'approvalEvidence', errors, '$.execution');
     requiredObject(value.execution, 'catalogRecheck', errors, '$.execution');
     validateApprovalProjection(
@@ -1786,7 +1803,7 @@ function validateDispatchReceipt(value, errors) {
   );
   const launched = ['accepted', 'completed', 'failed'].includes(value.state);
   if (approved) {
-    requiredString(value, 'approvedAt', errors);
+    requiredTimestamp(value, 'approvedAt', errors);
     requiredObject(value, 'approvalEvidence', errors);
     validateApprovalEvidence(
       value.approvalEvidence,
@@ -1822,7 +1839,7 @@ function validateDispatchReceipt(value, errors) {
           ),
         );
       }
-      requiredString(
+      requiredTimestamp(
         value.launchAcceptance,
         'acceptedAt',
         errors,
@@ -1863,7 +1880,7 @@ function validateDispatchReceipt(value, errors) {
           ),
         );
       }
-      requiredString(
+      requiredTimestamp(
         value.terminalOutcome,
         'completedAt',
         errors,

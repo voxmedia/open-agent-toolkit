@@ -67,6 +67,20 @@ async function replaceApprovalProjection(packet, approvalProjection) {
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
+async function replaceCatalogRecheck(packet, catalogRecheck) {
+  packet.manifest.execution.catalogRecheck = catalogRecheck;
+  for (const reference of packet.manifest.artifacts.filter((item) =>
+    item.path.startsWith('raw/dispatch/'),
+  )) {
+    const receipt = await readJson(join(packet.packetRoot, reference.path));
+    if (receipt.state === 'accepted' || receipt.state === 'completed') {
+      receipt.catalogRecheck = catalogRecheck;
+      await replaceArtifact(packet, reference.path, receipt);
+    }
+  }
+  await writeJson(packet.manifestPath, packet.manifest);
+}
+
 const omittedAxisMutations = [
   [
     'wave task class',
@@ -344,6 +358,90 @@ test('approval evidence, canonical fingerprint, and catalog recheck are immutabl
       `${state} receipt drift remained valid`,
     );
   }
+});
+
+test('accepted receipt chain binds approval time, child handle, and fresh catalog chronology', async () => {
+  const receiptCases = [
+    [
+      'accepted handle',
+      'accepted',
+      (receipt) => (receipt.launchAcceptance.handle = 'replacement-child'),
+    ],
+    [
+      'completed handle',
+      'completed',
+      (receipt) => (receipt.launchAcceptance.handle = 'replacement-child'),
+    ],
+    [
+      'approved receipt time',
+      'approved',
+      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
+    ],
+    [
+      'accepted receipt time',
+      'accepted',
+      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
+    ],
+    [
+      'completed receipt time',
+      'completed',
+      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
+    ],
+  ];
+  const unexpectedlyValid = [];
+  for (const [label, state, mutate] of receiptCases) {
+    const packet = await fixture();
+    const reference = packet.manifest.artifacts.find(
+      (item) =>
+        item.path.startsWith('raw/dispatch/') &&
+        item.path.endsWith(`-${state}.json`),
+    );
+    const receipt = await readJson(join(packet.packetRoot, reference.path));
+    mutate(receipt);
+    await replaceArtifact(packet, reference.path, receipt);
+    const validation = await validatePacket(packet.packetRoot);
+    if (validation.valid) unexpectedlyValid.push(label);
+  }
+
+  {
+    const packet = await fixture();
+    packet.manifest.execution.approvedAt = '2026-08-31T00:00:46.000Z';
+    await writeJson(packet.manifestPath, packet.manifest);
+    const validation = await validatePacket(packet.packetRoot);
+    if (validation.valid) unexpectedlyValid.push('manifest approval time');
+  }
+
+  const catalogCases = [
+    [
+      'copied original catalog observation',
+      (packet) =>
+        structuredClone(
+          packet.manifest.execution.approvalProjection.catalog_observation,
+        ),
+    ],
+    [
+      'catalog recheck at approval time',
+      (packet) => ({
+        ...packet.manifest.execution.catalogRecheck,
+        observed_at: packet.manifest.execution.approvedAt,
+      }),
+    ],
+    [
+      'catalog recheck after launch acceptance',
+      (packet) => ({
+        ...packet.manifest.execution.catalogRecheck,
+        observed_at: '2026-08-31T00:01:01.000Z',
+      }),
+    ],
+  ];
+  for (const [label, createRecheck] of catalogCases) {
+    const packet = await fixture();
+    await replaceCatalogRecheck(packet, createRecheck(packet));
+    const validation = await validatePacket(packet.packetRoot);
+    if (validation.valid) unexpectedlyValid.push(label);
+  }
+
+  assert.deepEqual(unexpectedlyValid, []);
 });
 
 test('declared-complete stages reject selection drift under complete and partial outcomes', async () => {

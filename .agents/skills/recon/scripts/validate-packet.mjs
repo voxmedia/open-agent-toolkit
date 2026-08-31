@@ -715,6 +715,23 @@ function stageArtifactIsComplete(
   const receipts = stage.dispatchReceiptIds.map(
     (id) => artifactsById.get(id)?.value,
   );
+  const approvedReceipt = receipts.find(
+    (receipt) => receipt?.state === 'approved',
+  );
+  const acceptedReceipt = receipts.find(
+    (receipt) => receipt?.state === 'accepted',
+  );
+  const completedReceipt = receipts.find(
+    (receipt) => receipt?.state === 'completed',
+  );
+  const approvalTime = Date.parse(approvalExecution?.approvedAt);
+  const recheckTime = Date.parse(
+    approvalExecution?.catalogRecheck?.observed_at,
+  );
+  const acceptedTime = Date.parse(
+    acceptedReceipt?.launchAcceptance?.acceptedAt,
+  );
+  const originalCatalog = approvalProjection?.catalog_observation;
   if (
     receipts.some(
       (receipt) =>
@@ -732,7 +749,8 @@ function stageArtifactIsComplete(
         canonicalJson(receipt.approvalProjection) !==
           canonicalJson(approvalProjection) ||
         (receipt.state !== 'prepared' &&
-          (!approvalExecution.approvalEvidence ||
+          (receipt.approvedAt !== approvalExecution.approvedAt ||
+            !approvalExecution.approvalEvidence ||
             !receipt.approvalEvidence ||
             canonicalJson(receipt.approvalEvidence) !==
               canonicalJson(approvalExecution.approvalEvidence))) ||
@@ -743,14 +761,23 @@ function stageArtifactIsComplete(
               canonicalJson(approvalExecution.catalogRecheck))),
     ) ||
     !receipts.some((receipt) => receipt.state === 'prepared') ||
-    !receipts.some((receipt) => receipt.state === 'approved') ||
-    !receipts.some((receipt) => receipt.state === 'accepted') ||
-    !receipts.some(
-      (receipt) =>
-        receipt.state === 'completed' &&
-        JSON.stringify(receipt.artifactIds) ===
-          JSON.stringify(stage.artifactIds),
-    )
+    !approvedReceipt ||
+    !acceptedReceipt ||
+    !completedReceipt ||
+    JSON.stringify(completedReceipt.artifactIds) !==
+      JSON.stringify(stage.artifactIds) ||
+    !acceptedReceipt.launchAcceptance ||
+    !completedReceipt.launchAcceptance ||
+    canonicalJson(acceptedReceipt.launchAcceptance) !==
+      canonicalJson(completedReceipt.launchAcceptance) ||
+    !originalCatalog ||
+    !approvalExecution.catalogRecheck ||
+    approvalExecution.catalogRecheck.id === originalCatalog.id ||
+    !Number.isFinite(approvalTime) ||
+    !Number.isFinite(recheckTime) ||
+    !Number.isFinite(acceptedTime) ||
+    recheckTime <= approvalTime ||
+    recheckTime >= acceptedTime
   ) {
     return false;
   }
