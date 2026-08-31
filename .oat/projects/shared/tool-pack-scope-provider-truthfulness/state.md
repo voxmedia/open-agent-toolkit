@@ -1,7 +1,12 @@
 ---
 oat_current_task: p01-t01
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t01
+    reason: >-
+      The first accepted phase launch was invalidated before work because the
+      root supplied an incorrect expanded phase-base SHA. A new launch requires
+      explicit operator direction under the invalid-run-abort contract.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -82,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:21:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T05:24:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -98,11 +103,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 1 is establishing the accepted PR #249 diagnostics
-baseline before overlapping source work begins. Seven sequential phases and
-thirty stable tasks cover the approved spec and design. Managed High is
-persisted, the final phase is the configured HiLL checkpoint, automatic HiLL
-review is enabled, and optional phase-gate review remains disabled.
+Implementation - Phase 1 is stopped at an invalid-run boundary after the root
+supplied an incorrect expanded phase-base SHA. The accepted child made no edits
+or commits. p01-t01 remains the next task, and a new phase launch requires
+explicit operator direction.
 
 ## Artifacts
 
@@ -132,14 +136,14 @@ review is enabled, and optional phase-gate review remains disabled.
 - ✓ Clean plan artifact review passed
 - ✓ Configured plan gate passed and review received
 - ✓ Plan complete
-- ⧗ Phase 1 diagnostics-baseline reconciliation in progress
+- ⚠ Phase 1 launch invalidated before work; awaiting operator direction
 
 ## Blockers
 
-None
+- p01-t01: invalid-run abort after incorrect expanded phase-base SHA; no work
+  was performed.
 
 ## Next Milestone
 
-Complete p01-t01 by recording the accepted PR #249 SHA, reconciling landed
-interfaces, and passing the focused predecessor suites before any shared-source
-implementation begins.
+Obtain explicit operator direction before starting a new p01 launch with the
+verified base `99d6de317cb1c670b8a1bc92efc4a57300de74fd`.

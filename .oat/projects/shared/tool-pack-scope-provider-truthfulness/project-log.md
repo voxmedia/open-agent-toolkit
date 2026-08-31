@@ -48,6 +48,10 @@ target=claude-fable-skip-permissions threshold=important exit=1 status=review_fa
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/tool-pack-scope-provider-truthfulness/reviews/artifact-plan-review-2026-08-31T003934Z.md
 
+### 2026-08-31 · structural · oat-project-implement · p01-invalid-run
+
+p01 launch dispatch-p01-20260831T052104Z-99d6de317 stopped as INVALID_RUN_ABORT before work: configured base 99d6de317a22aa70e8f68027936060d03907ffcf did not match clean HEAD 99d6de317cb1c670b8a1bc92efc4a57300de74fd; zero edits, commits, tests, or recovery attempts.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

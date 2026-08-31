@@ -1,7 +1,12 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t01
+    reason: >-
+      The first accepted phase launch was invalidated before work because the
+      root supplied an incorrect expanded phase-base SHA. A new launch requires
+      explicit operator direction under the invalid-run-abort contract.
 oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -24,15 +29,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 1     | 0/1       |
-| Phase 2 | pending     | 7     | 0/7       |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 5     | 0/5       |
-| Phase 5 | pending     | 4     | 0/4       |
-| Phase 6 | pending     | 4     | 0/4       |
-| Phase 7 | pending     | 4     | 0/4       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | blocked | 1     | 0/1       |
+| Phase 2 | pending | 7     | 0/7       |
+| Phase 3 | pending | 5     | 0/5       |
+| Phase 4 | pending | 5     | 0/5       |
+| Phase 5 | pending | 4     | 0/4       |
+| Phase 6 | pending | 4     | 0/4       |
+| Phase 7 | pending | 4     | 0/4       |
 
 **Total:** 0/30 tasks completed
 
@@ -40,7 +45,7 @@ oat_generated: false
 
 ## Phase 1: Accepted Diagnostics Baseline
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-08-31
 
 ### Phase Summary (fill when phase is complete)
@@ -64,8 +69,12 @@ oat_generated: false
 
 ### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
-**Status:** in_progress
+**Status:** blocked
 **Commit:** -
+**Blocker:** The accepted phase launch failed exact-base preflight because the
+root supplied `99d6de317a22aa70e8f68027936060d03907ffcf`; the clean worktree was
+actually at `99d6de317cb1c670b8a1bc92efc4a57300de74fd`. The invalid run made no
+edits or commits and cannot be replaced without operator direction.
 
 **Outcome (required when completed):**
 
@@ -114,6 +123,29 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-08-31T05:21:04Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — subagents, authorized by the explicit implementation invocation
+- Dispatch policy: managed High from project state
+- Schedule: seven sequential phases; p01 attempted
+- Outcome: `INVALID_RUN_ABORT`; phases passed 0, failed 0, stopped 1
+- Outstanding: p01-t01 remains the next task and requires operator direction
+
+#### Dispatch record — `dispatch-p01-20260831T052104Z-99d6de317`
+
+- Scope/action/role: `p01` / `implementation` / `implementer`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:medium`
+- Selection: native catalog; floor `default-implementation` satisfied
+- Candidates: `oat-phase-implementer-gpt-5-6-sol-medium`, `oat-phase-implementer-gpt-5-6-sol-high`
+- Launch: accepted
+- Child outcome: `INVALID_RUN_ABORT`
+- Authority: Phase p01 artifact files only; no source writes
+- Evidence: clean worktree; expected base did not resolve; actual HEAD was
+  `99d6de317cb1c670b8a1bc92efc4a57300de74fd`
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -126,7 +158,7 @@ Chronological log of implementation progress.
 
 **Session Start:** 05:21 UTC
 
-- [ ] p01-t01: Land, rebase, and record the diagnostics predecessor - in progress
+- [ ] p01-t01: Land, rebase, and record the diagnostics predecessor - blocked before work by invalid-run abort
 
 **What changed (high level):**
 
@@ -142,7 +174,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- Invalid p01 run from an incorrect expanded base SHA; no work was performed - pending operator direction
 
 **Session End:** {time}
 
