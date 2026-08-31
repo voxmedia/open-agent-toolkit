@@ -619,6 +619,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z continuation_event=recon-skill-p03-fix-r2-20260831T1920Z scope=p03-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p03 review round 3
+
+- Request ID: `recon-skill-p03-rereview-r3-20260831T1948Z`
+- Role/class: `oat-reviewer` / reviewer
+- Provider/context: Codex / fresh root-native session
+- Authority: independently re-review the complete p03 history and combined
+  round-2 fix head; write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with one blocking finding
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p03-review-2026-08-31T200338Z.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Reviewed head: `c3d9da4ccb9e76006df5bfafb40abd9b65817b1e`
+- Closed dispositions: all six prior p03 findings close; sync, migration, and
+  identical-selected-set mixed batches pass direct probes
+- Blocking disposition: partially overlapping selected dependency assets remain
+  order-dependent because release-wide retention overrides per-asset final use
+- Overengineering assessment: no generalized state/transaction framework;
+  correction should remain per-asset
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -920,6 +943,18 @@ context before p02 can advance.
 - Exact reviewer commands and the complete 741/741 Phase 3 surface pass, along
   with CLI type-check, lint, format, and diff checks. Fresh re-review is next.
 
+### 2026-08-31 - p03 review round 3 received
+
+- Fresh re-review closes all six earlier p03 findings and verifies real
+  Claude/Codex/Cursor materialization, containment, migration cleanup/retry,
+  both identical-selection batch orders, and global preflight.
+- One Important per-asset edge remains: when incoming and outgoing consumers
+  select partially overlapping utility assets, install-before-remove retains
+  all selected assets while remove-before-install retains only the final set.
+- The third and final configured fix round is limited to removing the
+  release-wide retain-all override, enforcing final-consumer retention per
+  asset, and verifying mixed current/missing selected states in both orders.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -983,6 +1018,9 @@ context before p02 can advance.
 - After p03 fix round 2 and the pre-review correction, exact real sync passes
   3/3, lifecycle 8/8, migration 30/30, and the complete Phase 3 surface
   741/741; CLI type-check, lint, format, and diff checks pass.
+- Phase 3 review round 3 passes all six prior finding probes, 742/742 skill
+  tests, canonical validation, type/lint/format/diff checks, and project sync;
+  one direct partial-overlap lifecycle probe remains blocking.
 
 ## Final Summary (for PR/docs)
 
