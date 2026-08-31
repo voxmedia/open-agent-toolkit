@@ -1,7 +1,10 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: c8ff68a82f9fd8beef352bd45da7a429ff5c2d11
-oat_blockers: []
+oat_blockers:
+  - task_id: p03
+    reason: third governed High review retained two Important findings; a fourth fix/re-review cycle requires explicit operator authorization
+    since: 2026-08-31
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -92,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T20:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T20:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,9 +111,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 review-fix round 2 corrected all four findings at
-`c8ff68a82`. Focused 128, expanded phase 501, static, help, and full repository
-tests pass. Fresh independent High review round 3 is next.
+Implementation - Phase 3 is blocked after its third governed High review. All
+round-2 findings are fixed, but round 3 found two Important defects: invalid
+provider scopes can mutate project config, and core human apply output still
+labels plans as applied without actual or unknown outcomes.
 
 ## Artifacts
 
@@ -143,12 +147,13 @@ tests pass. Fresh independent High review round 3 is next.
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
-- ! Phase 3 review round 2 fixes complete; round 3 pending
+- ! Phase 3 blocked after review round 3; operator disposition required
 
 ## Blockers
 
-None.
+- A fourth p03 fix/re-review cycle requires explicit operator authorization.
 
 ## Next Milestone
 
-Run fresh independent High p03 review round 3.
+Obtain operator disposition for the two round-3 Important findings before any
+additional p03 fix or review dispatch.

@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 2 fixes complete; round 3 pending
+**Status:** blocked after review round 3; operator disposition required
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -418,6 +418,25 @@ unchanged`, making the source-qualified recovery record contradictory.
   `git diff --check`, and full `pnpm test` pass.
 - A pre-commit full run had one unrelated smoke failure; the no-edit smoke rerun
   passed 140/140 and the authoritative post-commit full run passed completely.
+
+### Review Round 3 — Terminal Governance Boundary
+
+- Artifact: `reviews/p03-review-2026-08-31T202630Z.md`
+- Reviewed head: `d7762061f9db31db06160a1b87eeca08981dd39a`
+- Verdict: changes requested; 0 Critical, 2 Important, 0 Medium, 0 Minor.
+- Reconnaissance: attempted through one bounded read-only intelligent-recon
+  lane; the artifact contains complete orchestration evidence.
+- All four round-2 findings are fixed. The two new Important findings are:
+  1. `providers set --scope <invalid>` accepts arbitrary values, writes project
+     config, and reports the invalid scope instead of rejecting before writes.
+  2. Core human apply output renders immutable plans under an applied heading
+     without the exact mixed results or aggregate-only unknown outcomes already
+     present in JSON.
+- Focused 128, expanded phase 501, CLI lint/type-check/format, live help,
+  `pnpm check`, full `pnpm test`, and whitespace checks pass; the invalid-scope
+  mutation was reproduced separately.
+- This is the third governed p03 review cycle. No fourth fix or review is
+  authorized automatically; explicit operator disposition is required.
 
 ---
 
@@ -695,6 +714,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: all one Important, one Medium, and two Minor findings corrected;
   focused 128, expanded phase 501, and full repository tests passed
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review record — round 3
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `d7762061f9db31db06160a1b87eeca08981dd39a`
+- Verdict: changes requested; findings critical 0, important 2, medium 0,
+  minor 0
+- Artifact: `reviews/p03-review-2026-08-31T202630Z.md`
+- Reconnaissance: attempted; complete orchestration evidence is in the artifact
+- Outcome: terminal governance boundary after the third p03 review cycle;
+  operator disposition required before any fourth cycle
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
