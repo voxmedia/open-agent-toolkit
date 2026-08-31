@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- Synced-project completion cleanup is now tracked as high priority in
+  `BL-260831-retire-archived-synced-project`: a successfully archived project
+  should leave no record in the active synced namespace, while its durable
+  archive identity, pinned links, migration path, and retry safety remain
+  intact.
 - External planning now distinguishes plan readiness from execution readiness:
   well-scoped items remain eligible for dated, current-main-pinned plans while
   hard dependencies keep execution explicitly blocked. The missing
@@ -206,6 +211,7 @@
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task       | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature    | M        |
+| BL-260831-retire-archived-synced-project | Retire archived synced project records from the active namespace                                      | open   | high     | feature    | L        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
