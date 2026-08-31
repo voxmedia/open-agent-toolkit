@@ -14,6 +14,10 @@ import { join } from 'node:path';
 import { resolveAssetsRoot } from '@fs/assets';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+  applyPackReconcilePlan,
+  preflightPackReconcilePlans,
+} from './apply-pack-reconcile';
 import { inventoryScopedPack } from './pack-inventory';
 import {
   reconcilePackLifecycle,
@@ -453,6 +457,114 @@ describe('production pack lifecycle', () => {
         direct: false,
         requiredBy: ['brainstorm'],
         selectedStatuses: ['current', 'current'],
+      },
+      research: { completeness: 'absent', direct: false },
+      brainstorm: { completeness: 'complete', direct: true },
+    });
+  });
+
+  it('converges partially overlapping dependency transfers after one global preflight', async () => {
+    const assetsRoot = await resolveAssetsRoot();
+    const dispatch = 'skill:oat-dispatch-subagents';
+    const orchestration = 'skill:subagent-orchestration';
+    const brainstorm: PackDefinition = {
+      ...getPackDefinition('brainstorm'),
+      dependencies: [{ pack: 'utility', scope: 'same', assets: [dispatch] }],
+    };
+    const getDefinition = (pack: PackName) =>
+      pack === 'brainstorm' ? brainstorm : getPackDefinition(pack);
+
+    const run = async (installFirst: boolean) => {
+      const scopeRoot = await temporaryRoot('oat-lifecycle-overlap-');
+      const base = {
+        scope: 'user' as const,
+        scopeRoot,
+        assetsRoot,
+      };
+      await reconcilePackLifecycles(
+        [{ ...base, pack: 'research', action: 'install' }],
+        { dependencies: { getDefinition } },
+      );
+      const removeResearch = {
+        ...base,
+        pack: 'research' as const,
+        action: 'remove' as const,
+      };
+      const installBrainstorm = {
+        ...base,
+        pack: 'brainstorm' as const,
+        action: 'install' as const,
+      };
+      let preflightComplete = false;
+      let preflightCalls = 0;
+      let applyCalls = 0;
+      await reconcilePackLifecycles(
+        installFirst
+          ? [installBrainstorm, removeResearch]
+          : [removeResearch, installBrainstorm],
+        {
+          dependencies: {
+            getDefinition,
+            preflight: async (entries) => {
+              preflightCalls += 1;
+              await preflightPackReconcilePlans(entries);
+              preflightComplete = true;
+            },
+            apply: async (...args) => {
+              expect(preflightComplete).toBe(true);
+              applyCalls += 1;
+              return applyPackReconcilePlan(...args);
+            },
+          },
+        },
+      );
+
+      const [utility, research, installedBrainstorm] = await Promise.all([
+        inventoryScopedPack({ ...base, pack: 'utility' }),
+        inventoryScopedPack({ ...base, pack: 'research' }),
+        inventoryScopedPack({ ...base, pack: 'brainstorm' }),
+      ]);
+      const selectedStatuses = Object.fromEntries(
+        utility.assets
+          .filter(({ definition }) =>
+            [dispatch, orchestration].includes(definition.id),
+          )
+          .map(({ definition, status }) => [definition.id, status]),
+      );
+      return {
+        preflightCalls,
+        applyCalls,
+        utility: {
+          completeness: utility.completeness,
+          direct: utility.intent.direct,
+          requiredBy: utility.intent.requiredBy,
+          selectedStatuses,
+        },
+        research: {
+          completeness: research.completeness,
+          direct: research.intent.direct,
+        },
+        brainstorm: {
+          completeness: installedBrainstorm.completeness,
+          direct: installedBrainstorm.intent.direct,
+        },
+      };
+    };
+
+    const removeThenInstall = await run(false);
+    const installThenRemove = await run(true);
+    expect(removeThenInstall).toEqual(installThenRemove);
+    expect(removeThenInstall).toEqual({
+      preflightCalls: 1,
+      applyCalls: 4,
+      utility: {
+        completeness: 'partial',
+        direct: false,
+        requiredBy: ['brainstorm'],
+        selectedStatuses: {
+          [dispatch]: 'current',
+          [orchestration]: 'missing',
+        },
       },
       research: { completeness: 'absent', direct: false },
       brainstorm: { completeness: 'complete', direct: true },

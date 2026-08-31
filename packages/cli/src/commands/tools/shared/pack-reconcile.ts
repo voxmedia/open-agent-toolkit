@@ -56,6 +56,7 @@ export interface PackReconcilePlan {
   expectedCompleteness: PackCompleteness | null;
   selectedAssetIds: readonly string[];
   expectedAssetStatus: 'current' | 'missing' | null;
+  expectedAssetStatuses?: Readonly<Record<string, 'current' | 'missing'>>;
   changedCanonicalPaths: readonly string[];
   retainedAssets: readonly PackSharedOwnerRetention[];
   retainedDependencyAssetIds: readonly string[];
@@ -267,17 +268,13 @@ export function planPackReconcile(
   const operations: PackReconcileOperation[] = [];
   const retainedAssets = input.retainedAssets ?? [];
 
-  const otherDependencyRetention =
-    input.dependency?.lease === 'release' &&
-    (input.inventory.intent.direct ||
-      input.inventory.intent.requiredBy.some(
-        (pack) => pack !== input.dependency?.requiredBy,
-      ));
+  const directDependencyRetention =
+    input.dependency?.lease === 'release' && input.inventory.intent.direct;
   for (const asset of applicableAssets) {
     const assetOperations =
       input.action === 'remove'
         ? [
-            otherDependencyRetention ? null : removalOperation(asset, input),
+            directDependencyRetention ? null : removalOperation(asset, input),
           ].filter(
             (operation): operation is PackReconcileOperation =>
               operation !== null,
@@ -348,6 +345,20 @@ export function planPackReconcile(
       : retainedSelectedAssets === applicableAssets.length
         ? 'current'
         : null;
+  const expectedAssetStatuses =
+    requestedAssetIds.size === 0
+      ? undefined
+      : (Object.fromEntries(
+          applicableAssets.map((asset) => [
+            asset.id,
+            input.action !== 'remove' ||
+            directDependencyRetention ||
+            retainedAssets.some(({ assetId }) => assetId === asset.id) ||
+            input.retainedDependencyAssetIds?.includes(asset.id)
+              ? 'current'
+              : 'missing',
+          ]),
+        ) satisfies Record<string, 'current' | 'missing'>);
 
   return {
     pack: input.pack,
@@ -364,9 +375,10 @@ export function planPackReconcile(
     expectedAssetStatus:
       requestedAssetIds.size === 0
         ? null
-        : input.action !== 'remove' || otherDependencyRetention
+        : input.action !== 'remove' || directDependencyRetention
           ? 'current'
           : expectedSelectedRemovalStatus,
+    expectedAssetStatuses,
     changedCanonicalPaths: [...new Set(changedCanonicalPaths)],
     retainedAssets,
     retainedDependencyAssetIds: input.retainedDependencyAssetIds ?? [],

@@ -129,7 +129,17 @@ function assertExpectedInventory(
       `Pack ${plan.pack} ${plan.scope} verification expected ${plan.expectedCompleteness} but found ${inventory.completeness}`,
     );
   }
-  if (plan.expectedAssetStatus) {
+  if (plan.expectedAssetStatuses) {
+    const invalid = inventory.assets.filter(({ definition, status }) => {
+      const expected = plan.expectedAssetStatuses?.[definition.id];
+      return expected !== undefined && status !== expected;
+    });
+    if (invalid.length > 0) {
+      throw new Error(
+        `Pack ${plan.pack} ${plan.scope} verification expected selected asset states: ${invalid.map(({ definition, status }) => `${definition.id} expected ${plan.expectedAssetStatuses?.[definition.id]} (${status})`).join(', ')}`,
+      );
+    }
+  } else if (plan.expectedAssetStatus) {
     const invalid = inventory.assets.filter(
       ({ definition, status }) =>
         plan.selectedAssetIds.includes(definition.id) &&

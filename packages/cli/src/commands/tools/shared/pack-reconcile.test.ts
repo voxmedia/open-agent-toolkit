@@ -9,7 +9,7 @@ import {
 } from './pack-reconcile';
 
 function inventory(
-  pack: 'workflows' | 'ideas',
+  pack: 'workflows' | 'ideas' | 'utility',
   scope: 'project' | 'user',
   statuses: Record<string, 'missing' | 'current' | 'outdated'> = {},
   enabled = false,
@@ -205,7 +205,7 @@ describe('planPackReconcile', () => {
     expect(plan.expectedAssetStatus).toBe('current');
   });
 
-  it('retains dependency assets until direct intent and every other lease are absent', () => {
+  it('retains dependency assets for direct intent and removes the final lease selection', () => {
     const scoped = inventory(
       'workflows',
       'user',
@@ -215,8 +215,9 @@ describe('planPackReconcile', () => {
     scoped.intent = {
       ...scoped.intent,
       enabled: true,
-      requiredBy: ['brainstorm', 'research'],
-      state: 'transitive',
+      direct: true,
+      requiredBy: ['research'],
+      state: 'direct',
       source: 'declared',
     };
     const retained = planPackReconcile({
@@ -240,7 +241,8 @@ describe('planPackReconcile', () => {
     ]);
     expect(retained.expectedAssetStatus).toBe('current');
 
-    scoped.intent.requiredBy = ['research'];
+    scoped.intent.direct = false;
+    scoped.intent.state = 'transitive';
     const removed = planPackReconcile({
       pack: 'workflows',
       scope: 'user',
@@ -259,5 +261,50 @@ describe('planPackReconcile', () => {
       expect.objectContaining({ kind: 'write-lease', enabled: false }),
     ]);
     expect(removed.expectedAssetStatus).toBe('missing');
+  });
+
+  it('plans mixed selected dependency retention per asset', () => {
+    const selected = [
+      'skill:oat-dispatch-subagents',
+      'skill:subagent-orchestration',
+    ];
+    const scoped = inventory(
+      'utility',
+      'user',
+      Object.fromEntries(selected.map((assetId) => [assetId, 'current'])),
+      false,
+    );
+    scoped.intent = {
+      ...scoped.intent,
+      enabled: true,
+      requiredBy: ['brainstorm', 'research'],
+      state: 'transitive',
+      source: 'declared',
+    };
+
+    const plan = planPackReconcile({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot: '/scope',
+      assetsRoot: '/assets',
+      action: 'remove',
+      inventory: scoped,
+      assetIds: selected,
+      retainedDependencyAssetIds: ['skill:oat-dispatch-subagents'],
+      dependency: { requiredBy: 'research', lease: 'release' },
+    });
+
+    expect(plan.operations).toEqual([
+      expect.objectContaining({
+        kind: 'remove-dir',
+        assetId: 'skill:subagent-orchestration',
+      }),
+      expect.objectContaining({ kind: 'write-lease', enabled: false }),
+    ]);
+    expect(plan.expectedAssetStatus).toBeNull();
+    expect(plan.expectedAssetStatuses).toEqual({
+      'skill:oat-dispatch-subagents': 'current',
+      'skill:subagent-orchestration': 'missing',
+    });
   });
 });
