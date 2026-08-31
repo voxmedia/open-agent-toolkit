@@ -359,6 +359,10 @@ _Orchestration runs from `oat-project-implement` are appended here._
   after the Cursor keychain remained locked. The unlaunched Cursor generation
   was preserved as stale before changing the local gate declaration; no
   remediation attempt was consumed.
+- A fresh configured generation resolved `claude-fable-skip-permissions` with
+  `available=true`, retained reviewed head `98b005960`, and reproduced the
+  unchanged implementation fingerprint. Launch provenance remains empty until
+  the preselected receipt and attempt ID are committed.
 
 <!-- orchestration-runs-end -->
 

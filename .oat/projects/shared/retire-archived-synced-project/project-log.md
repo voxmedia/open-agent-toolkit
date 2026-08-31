@@ -124,6 +124,10 @@ Configured Cursor Fable exit gate was not launched: source CLI target probe repo
 
 Operator selected the available non-Cursor Claude Fable target after cursor-fable-5-high remained unavailable. The Cursor generation never launched, is preserved as stale in state.md, and consumed no remediation attempt.
 
+### 2026-08-31 · structural · oat-project-implement · exit-gate-generation-resolved
+
+Resolved a fresh configured exit-gate generation for available target claude-fable-skip-permissions. Reviewed head and implementation fingerprint are unchanged; launch provenance remains empty pending the committed launch-intent transition.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

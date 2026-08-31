@@ -43,27 +43,27 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
-  config_fingerprint: sha256:0e5a923055d2929f4e095487738186557932cc15414d013cf017125ea4045949
+  config_fingerprint: sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f
   resolved_command: >-
     oat --json gate review --project "$PROJECT_PATH" --review-type code
-    --review-scope final --target cursor-fable-5-high --exit-nonzero-on
+    --review-scope final --target claude-fable-skip-permissions --exit-nonzero-on
     important "Use the oat-project-review-provide skill to review the current
     project. Use project state to determine the most appropriate review scope.
     If the project is complete, provide a final independent code review of the
     entire project. Return blocking findings clearly, or say no blocking
     findings."
-  resolved_description: Project-local Cursor Fable final implementation review.
+  resolved_description: Project-local Claude Fable final implementation review.
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
   reviewed_head: 98b005960b2c5f282fadb8781d990d2ed4a159c9
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:e7105d60d6c8f52e63b2f1b1895b7e8a4739dc00c945241499edec5b6b4dbc02
-  freshness_head: 3f404499238c37a250305f6ec105f42c7d920081
-  freshness_fingerprint: sha256:effective-delta-v1:4380070d661f0aeee498d6486f0fbeb87b2c71c0475b9186d5aed00f4289bef6
+  freshness_head: 40a32c3a4ca224cb26f9aede8c8aa6323f3a7608
+  freshness_fingerprint: sha256:effective-delta-v1:840d0a81e2f3ac04ae135615ac1cb4113fa09f4a2bb986b9787caef1656663bd
   launch_state: not_started
   launch_attempt_id: null
   launch_started_at: null
@@ -82,29 +82,26 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: >-
-    superseded_before_launch: cursor-fable-5-high remained unavailable because
-    the macOS login keychain was locked; the operator explicitly selected the
-    available non-Cursor Claude Fable target for a new gate generation
-  updated_at: '2026-08-31T23:17:45Z'
+  failure: null
+  updated_at: '2026-08-31T23:18:58Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:17:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:18:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** final review passed; replacing the unlaunched Cursor gate generation
+**Status:** final review passed; Claude Fable exit gate pending launch
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - configured exit gate target override
+Implement - configured Claude Fable exit gate
 
 ## Artifacts
 
@@ -148,7 +145,8 @@ Implement - configured exit gate target override
 - ✓ Completed p04-t03 through p04-t05; combined regression passes 156/156
 - ✓ Full final verification and focused re-review passed with zero findings
 - ✓ Cursor Fable gate remained unlaunched and its blocked generation was preserved as stale
-- → Resolve a fresh gate generation with the operator-selected non-Cursor Claude Fable target
+- ✓ Fresh Claude Fable gate generation resolved against the unchanged reviewed implementation basis
+- → Persist launch intent, run the gate, receive its structured result, then evaluate the post-p04 HiLL checkpoint
 
 ## Blockers
 
