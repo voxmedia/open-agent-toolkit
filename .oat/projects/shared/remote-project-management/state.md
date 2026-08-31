@@ -1,8 +1,7 @@
 ---
-oat_current_task: p03-t01
+oat_current_task: p02-t10
 oat_last_commit: 831e110beff1aa8065926409f4819fec834cfc3c
-oat_blockers:
-  - 'p02 operator review: multi-segment credential values are only partially redacted and bracket-notation assignments bypass snapshot, preview, and approval-evidence boundaries'
+oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -29,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T18:08:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -41,9 +40,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 tasks and the operator-authorized third review-fix
-round are complete, but the single authorized fourth review is blocked by two
-Critical credential-safety findings. Phase 3 has not started.
+Implementation — Phase 2 is reopened at 9/10 tasks under the approved
+field-level content-safety correction. The cross-artifact revision passed its
+plan-writing review, and p02-t10 is next. Phase 3 has not started.
 
 ## Artifacts
 
@@ -51,7 +50,7 @@ Critical credential-safety findings. Phase 3 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; ready for implementation)
-- **Implementation:** implementation.md (initialized; execution not started)
+- **Implementation:** implementation.md (in progress; resumed at p02-t10)
 
 ## Progress
 
@@ -102,18 +101,18 @@ Critical credential-safety findings. Phase 3 has not started.
 - ⧗ One additional bounded Phase 2 fix/review cycle authorized
 - ✓ Operator-extension credential-boundary fix committed as `831e110be`
 - ⚠ Phase 2 operator review blocked with 2 Critical and 2 Medium findings
+- ✓ Approved field-safety and host-execution boundary revision completed and
+  passed a fresh cross-artifact plan-writing review in `a9aa20d52`
+- ⧗ p02-t10 will replace the retired credential parser with bounded
+  whole-field suppression and explicit incompleteness evidence
 
 ## Blockers
 
-- Phase 2 exhausted normal governance and the one-cycle operator exception.
-  Multi-segment or escaped values may be only partly redacted, while
-  bracket-notation assignments can bypass snapshot, preview, and
-  approval-evidence boundaries. See
-  `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md`.
+None. The prior operator-review failure remains historical evidence for the
+retired parser design; it is no longer the active requirements blocker.
 
 ## Next Milestone
 
-Phase 2 is terminally blocked; no fifth fix/review cycle is authorized. If an
-operator later changes that boundary, the future-phase artifacts must still be
-amended before any Phase 3 dispatch to preserve the runtime-discovered MCP/CLI
-constraint confirmed on 2026-08-31.
+Implement p02-t10, run its focused and phase verification, then perform a fresh
+Phase 2 code review against the revised requirement before any Phase 3
+dispatch.

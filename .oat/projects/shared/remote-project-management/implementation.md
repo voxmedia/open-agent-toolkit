@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t10
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 10    | 10/10     |
-| Phase 2 | blocked   | 9     | 9/9       |
-| Phase 3 | pending   | 12    | 0/12      |
-| Phase 4 | pending   | 11    | 0/11      |
-| Phase 5 | pending   | 9     | 0/9       |
-| Phase 6 | pending   | 10    | 0/10      |
-| Phase 7 | pending   | 10    | 0/10      |
-| Phase 8 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 10    | 10/10     |
+| Phase 2 | in_progress | 10    | 9/10      |
+| Phase 3 | pending     | 12    | 0/12      |
+| Phase 4 | pending     | 11    | 0/11      |
+| Phase 5 | pending     | 9     | 0/9       |
+| Phase 6 | pending     | 10    | 0/10      |
+| Phase 7 | pending     | 10    | 0/10      |
+| Phase 8 | pending     | 6     | 0/6       |
 
-**Total:** 19/77 tasks completed
+**Total:** 19/78 tasks completed
 
 ---
 
@@ -261,7 +261,7 @@ and lint passed.
 
 ## Phase 2: Reconciliation and Safety Engine
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-08-31T12:48:00Z
 
 ### Phase Summary
@@ -277,6 +277,12 @@ Phase 2 suite passed 110/110; format, CLI type-check, lint, check, and build
 passed; the uncached full CLI suite passed 327 files and 4,838 tests with 0
 cached tasks. Before the first review, root independently reran the then-current
 79-test phase suite.
+
+**Approved requirements correction:** The prior parser-based implementation and
+its terminal operator-review failure remain historical evidence. The reviewed
+spec/design/plan revision at `a9aa20d52` supersedes that parser contract with
+bounded whole-field suppression for allowlisted inbound fields. p02-t10 is the
+only remaining Phase 2 task and must pass a fresh Phase 2 review before Phase 3.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -418,6 +424,23 @@ retry or transport change.
 
 **Verification:** Postcondition-verification suite passed (8 tests); CLI
 format/build, type-check, and lint passed.
+
+---
+
+### Task p02-t10: Replace credential parsing with field-level content safety
+
+**Status:** pending
+
+**Planned outcome:** Replace assignment/value parsing with one conservative
+field signal. A signaled core or adapter-allowlisted extension field retains
+only a whole-field marker plus bounded field-specific incompleteness evidence.
+Concise preview and approval evidence reject the same signal, while p03-t03
+remains the universal outbound projection gate.
+
+**Artifact/code divergence before implementation:** Current code still
+implements the retired credential parser and partial redaction behavior. The
+reviewed spec, design, and plan are authoritative for p02-t10; no repository,
+worktree, Git-history, or arbitrary-file scan is authorized.
 
 ---
 
@@ -805,6 +828,19 @@ continuation_events:
   reviewed under the plan-writing contract before Phase 3 dispatch. This
   correction does not rewrite completed p01/p02 history.
 
+#### Approved boundary revision and Phase 2 resumption
+
+- The user replaced the parser-based credential boundary with bounded
+  whole-field suppression for allowlisted inbound fields and approved the
+  provider-neutral host-execution contract.
+- The spec/design/plan revision passed the required fresh plan-writing review
+  with zero findings and was committed as `a9aa20d52`.
+- The prior Phase 2 operator-review failure and all four review rows remain
+  historical evidence. They are not the active requirements blocker and do not
+  authorize retaining or extending the retired parser.
+- Phase 2 is reopened at 9/10 tasks. p02-t10 is the next task, followed by a
+  fresh independent Phase 2 code review before any Phase 3 dispatch.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -886,9 +922,10 @@ Chronological log of implementation progress.
 
 Document any deviations from the original plan.
 
-| Task | Planned | Actual | Reason |
-| ---- | ------- | ------ | ------ |
-| -    | -       | -      | -      |
+| Task           | Planned                                                | Actual                                                                                                          | Reason                                                                            |
+| -------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| p02-t10        | Continue expanding credential assignment/value parsing | Replace the parser with conservative whole-field suppression and bounded field-specific incompleteness evidence | Operator-approved requirements correction after the parser approach failed review |
+| p03-t02 onward | OAT-owned transport catalogs and provider CLI dialects | Live host capability discovery with provider-neutral semantic evidence; migration is assigned to p03-t02        | Operator-approved execution-boundary correction before Phase 3                    |
 
 ## Test Results
 
