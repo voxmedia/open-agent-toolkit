@@ -496,6 +496,23 @@ freshness fingerprint still matches
 The exit gate therefore remains fresh, but the PR must be reconciled before it
 can merge.
 
+**Conflict reconciliation committed:** Thomas selected conflict resolution
+before final approval. `origin/main` advanced to
+`efd4294b4fcf73bfa606a70dd7d17e3a5adada96`; merge commit
+`3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e` preserves the completed archived
+gate backlog records, incorporates main's PJM migration and planning evidence,
+regenerates the backlog and decision indexes, and retains the `0.2.49` public
+package lockstep. `oat pjm doctor --json` passes every declared-adoption check.
+
+The unique merge base is now `efd4294b4fcf73bfa606a70dd7d17e3a5adada96`.
+The reconciled effective delta hashes to
+`sha256:effective-delta-v1:0ad5370015c33d4184d78780d8fb192f65dc6ebb57c2c060e00a552fa1572a8b`,
+which differs from the rolling checkpoint. Per the configured-gate freshness
+contract, the prior allowed generation is marked `stale`; final verification,
+final lifecycle review, and a new configured exit-gate generation must complete
+before the approval boundary can reopen. The immutable pre-approval sequence
+and its completed summary/document/PR receipts remain preserved.
+
 ---
 
 ## Implementation Log

@@ -45,7 +45,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -78,9 +78,9 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-08-31T00:13:34Z'
+  updated_at: '2026-08-31T00:55:37Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: pre_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:42:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:55:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -111,8 +111,8 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — PR open; all pre-approval work is complete and final HiLL
-approval is pending.
+Implementation — PR open; conflict reconciliation is committed and the prior
+exit-gate generation is stale pending fresh verification and review.
 
 ## Artifacts
 
