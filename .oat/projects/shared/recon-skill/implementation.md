@@ -1,9 +1,7 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-t04
-    reason: 'Phase p02 final re-review remains blocked after the configured two fix iterations; see reviews/p02-code-final-rereview-2026-08-31T065541Z.md.'
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t04
 oat_generated: false
@@ -39,12 +37,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 2: Recon Skill, Worker, and Packet Pipeline
 
-| Task    | Status    | Commit      |
-| ------- | --------- | ----------- |
-| p02-t01 | completed | `eaf8a652c` |
-| p02-t02 | completed | `c6e168f3e` |
-| p02-t03 | completed | `b32325079` |
-| p02-t04 | blocked   | `133cf2e8d` |
+| Task    | Status      | Commit      |
+| ------- | ----------- | ----------- |
+| p02-t01 | completed   | `eaf8a652c` |
+| p02-t02 | completed   | `c6e168f3e` |
+| p02-t03 | completed   | `b32325079` |
+| p02-t04 | in_progress | `133cf2e8d` |
 
 ### Phase 3: Research-Pack Distribution and Provider Materialization
 
@@ -366,6 +364,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   and permit correctly gapped stale-source partials.
 - The configured two review-fix iterations are exhausted. Phase p02 and task
   `p02-t04` are blocked pending explicit correction authorization.
+
+### 2026-08-31 - p02 correction round 3 authorized
+
+- The user explicitly authorized one additional bounded Phase 2 correction
+  iteration followed by a fresh independent review.
+- The durable review-fix limit is extended from 2 to 3 for this project. The
+  authorization does not widen Phase 2 file boundaries, requirements, or the
+  managed `high` dispatch ceiling.
+- The original phase handle is no longer available across the resumed run, so
+  the lifecycle permits one fresh same-target implementer for this bounded fix,
+  linked to request `recon-skill-p02-implementation-20260831T0510Z`.
 
 ## Deviations from Plan / Design
 

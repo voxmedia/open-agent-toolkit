@@ -1,9 +1,7 @@
 ---
 oat_current_task: p02-t04
 oat_last_commit: c58c148136284cea9548e4398662e53585d674c1
-oat_blockers:
-  - task_id: p02-t04
-    reason: 'Phase p02 final re-review remains blocked after the configured two fix iterations; see reviews/p02-code-final-rereview-2026-08-31T065541Z.md.'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -15,7 +13,7 @@ oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -70,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T06:59:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T07:08:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation blocked at p02-t04 - packet workflow assurance contracts
+Implementing p02-t04 review fixes - packet workflow assurance contracts
 
 ## Artifacts
 
@@ -112,16 +110,14 @@ Implementation blocked at p02-t04 - packet workflow assurance contracts
 - ✓ Planning PR opened as #248
 - ✓ Implementation started with a final-phase HiLL checkpoint at p04
 - ✓ p01 passed independent review after one bounded fix iteration
-- ⧗ p02 implementation completed, but final independent re-review remains
-  blocked after two fix iterations
+- ⧗ p02 correction round 3 authorized; bounded fix and fresh independent
+  review are in progress
 
 ## Blockers
 
-- Phase p02 has four Critical and one Important finding at reviewed head
-  `c58c148136284cea9548e4398662e53585d674c1`; continuing requires explicit
-  authorization for another correction iteration.
+None
 
 ## Next Milestone
 
-Resolve the exhausted p02 review-fix blocker, then obtain a passing fresh
+Complete the authorized p02 correction round and obtain a passing fresh
 independent review
