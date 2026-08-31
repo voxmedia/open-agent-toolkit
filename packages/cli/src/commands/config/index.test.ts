@@ -671,6 +671,110 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('sets, gets, lists, dumps, and describes closed PJM remote config keys', async () => {
+    const root = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+    tempDirs.push(home);
+
+    const sharedSet = createHarness({ cwd: root, home });
+    await runCommand(sharedSet.command, [
+      'set',
+      'pjm.remote.policy.description',
+      'managed-section',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(0);
+
+    const userSet = createHarness({ cwd: root, home });
+    await runCommand(userSet.command, [
+      'set',
+      'pjm.remote.transports.linear',
+      '["mcp","linear-cli","mcp"]',
+      '--user',
+    ]);
+    expect(process.exitCode).toBe(0);
+
+    const getHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      getHarness.command,
+      ['get', 'pjm.remote.transports.linear'],
+      ['--json'],
+    );
+    expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'pjm.remote.transports.linear',
+      value: ['mcp', 'linear-cli'],
+      source: 'user',
+    });
+
+    const listHarness = createHarness({ cwd: root, home });
+    await runCommand(listHarness.command, ['list']);
+    expect(listHarness.capture.info[0]).toContain(
+      'pjm.remote.policy.description',
+    );
+    expect(listHarness.capture.info[0]).toContain(
+      'pjm.remote.transports.linear',
+    );
+
+    const dumpHarness = createHarness({ cwd: root, home });
+    await runCommand(dumpHarness.command, ['dump'], ['--json']);
+    expect(dumpHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      resolved: {
+        'pjm.remote.policy.description': {
+          value: 'managed-section',
+          source: 'shared',
+        },
+        'pjm.remote.transports.linear': {
+          value: ['mcp', 'linear-cli'],
+          source: 'user',
+        },
+      },
+    });
+
+    const describeHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      describeHarness.command,
+      ['describe', 'pjm.remote.transports.linear'],
+      ['--json'],
+    );
+    expect(describeHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      entries: [
+        expect.objectContaining({
+          key: 'pjm.remote.transports.linear',
+          scope: 'repo local or user',
+          type: 'string[]',
+        }),
+      ],
+    });
+  });
+
+  it('rejects PJM remote writes on non-owning config surfaces', async () => {
+    const root = await createRepoRoot();
+
+    const sharedTransport = createHarness({ cwd: root });
+    await runCommand(sharedTransport.command, [
+      'set',
+      'pjm.remote.transports.github',
+      '["gh"]',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(sharedTransport.capture.error[0]).toMatch(/local.*user/i);
+
+    process.exitCode = undefined;
+    const localPolicy = createHarness({ cwd: root });
+    await runCommand(localPolicy.command, [
+      'set',
+      'pjm.remote.policy.authority.default',
+      'user-approved',
+      '--local',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(localPolicy.capture.error[0]).toMatch(/shared/i);
+  });
+
   it('list includes dynamic dispatch matrix provider keys', async () => {
     const root = await createRepoRoot();
     await writeFile(
