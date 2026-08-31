@@ -171,15 +171,92 @@ test('complete prepared projection rejects deletion of every formerly omitted di
       packet.manifest.execution.approvalProjection,
     );
     mutate(projection);
-    packet.manifest.execution = createApprovalBinding(projection);
-    await writeJson(packet.manifestPath, packet.manifest);
+    await replaceApprovalProjection(packet, projection);
     const validation = await validatePacket(packet.packetRoot);
     assert.equal(
       validation.valid,
       false,
       `${label} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
     );
+    assert.ok(
+      validation.errors.some(
+        (error) =>
+          error.path?.includes('approvalProjection') &&
+          error.code !== 'APPROVAL_FINGERPRINT_MISMATCH',
+      ),
+      `${label} deletion lacked a projection-structure error: ${JSON.stringify(validation, null, 2)}`,
+    );
   }
+});
+
+test('canonical projection string-set arrays reject invalid members, duplicates, and unstable order', async () => {
+  const arrayCases = [
+    [
+      'writable roots null',
+      (projection) => (projection.execution.waves[0].writable_roots = [null]),
+    ],
+    [
+      'writable roots empty',
+      (projection) => (projection.execution.waves[0].writable_roots = ['']),
+    ],
+    [
+      'writable roots duplicate',
+      (projection) =>
+        (projection.execution.waves[0].writable_roots = ['raw/a', 'raw/a']),
+    ],
+    [
+      'writable roots unstable order',
+      (projection) =>
+        (projection.execution.waves[0].writable_roots = ['raw/z', 'raw/a']),
+    ],
+    [
+      'escalate when null',
+      (projection) => (projection.request.escalate_when = [null]),
+    ],
+    [
+      'escalate when empty',
+      (projection) => (projection.request.escalate_when = ['']),
+    ],
+    [
+      'escalate when duplicate',
+      (projection) =>
+        (projection.request.escalate_when = ['scope drift', 'scope drift']),
+    ],
+    [
+      'escalate when unstable order',
+      (projection) => (projection.request.escalate_when = ['zeta', 'alpha']),
+    ],
+    [
+      'candidates considered null',
+      (projection) => (projection.selection.candidates_considered = [null]),
+    ],
+    [
+      'candidates considered empty',
+      (projection) => (projection.selection.candidates_considered = ['']),
+    ],
+    [
+      'candidates considered duplicate',
+      (projection) =>
+        (projection.selection.candidates_considered = ['model-a', 'model-a']),
+    ],
+    [
+      'candidates considered unstable order',
+      (projection) =>
+        (projection.selection.candidates_considered = ['model-z', 'model-a']),
+    ],
+  ];
+  const unexpectedlyValid = [];
+  for (const [label, mutate] of arrayCases) {
+    const packet = await fixture();
+    const projection = structuredClone(
+      packet.manifest.execution.approvalProjection,
+    );
+    mutate(projection);
+    await replaceApprovalProjection(packet, projection);
+    const validation = await validatePacket(packet.packetRoot);
+    if (validation.valid) unexpectedlyValid.push(label);
+  }
+  assert.deepEqual(unexpectedlyValid, []);
 });
 
 test('every immutable receipt state binds every formerly omitted projection axis', async () => {

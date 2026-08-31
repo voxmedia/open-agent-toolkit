@@ -41,6 +41,11 @@ prepared projection without reducing or renaming its fields. Fingerprints use
 canonical JSON: UTF-8, object keys sorted lexicographically, array order
 preserved, no insignificant whitespace, and SHA-256 with the `sha256:` prefix.
 The stored canonical JSON text and fingerprint cover the whole projection.
+Every `writable_roots`, `escalate_when`, and `candidates_considered` member is a
+non-empty string. These arrays use stable sorted-set form: entries are unique
+and lexicographically ordered before approval, and packet validation rejects
+nulls, empty strings, duplicates, or unstable ordering rather than normalizing
+them after approval.
 
 ## One Validation Boundary
 

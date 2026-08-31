@@ -175,6 +175,44 @@ function requiredArray(value, key, errors, path = '$') {
   }
 }
 
+function requiredCanonicalStringSet(value, key, errors, path = '$') {
+  requiredArray(value, key, errors, path);
+  if (!Array.isArray(value?.[key])) return;
+  const entries = value[key];
+  for (const [index, entry] of entries.entries()) {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      errors.push(
+        issue(
+          'INVALID_ARRAY_ENTRY',
+          `${key} entries must be non-empty strings`,
+          `${path}.${key}[${index}]`,
+        ),
+      );
+    }
+  }
+  if (new Set(entries).size !== entries.length) {
+    errors.push(
+      issue(
+        'DUPLICATE_ARRAY_ENTRY',
+        `${key} entries must be unique`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+  const sorted = entries.every((entry) => typeof entry === 'string')
+    ? [...entries].sort()
+    : null;
+  if (sorted && entries.some((entry, index) => entry !== sorted[index])) {
+    errors.push(
+      issue(
+        'NON_CANONICAL_ARRAY_ORDER',
+        `${key} entries must use stable sorted order`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
 function requiredObject(value, key, errors, path = '$') {
   if (!isObject(value?.[key])) {
     errors.push(
@@ -333,7 +371,12 @@ export function validateApprovalProjection(value, errors, path) {
   ]) {
     requiredString(value.request, key, errors, `${path}.request`);
   }
-  requiredArray(value.request, 'escalate_when', errors, `${path}.request`);
+  requiredCanonicalStringSet(
+    value.request,
+    'escalate_when',
+    errors,
+    `${path}.request`,
+  );
 
   closedObject(value.selection, selectionKeys, errors, `${path}.selection`);
   for (const key of [...selectionKeys].filter(
@@ -347,7 +390,7 @@ export function validateApprovalProjection(value, errors, path) {
     }
     requiredString(value.selection, key, errors, `${path}.selection`);
   }
-  requiredArray(
+  requiredCanonicalStringSet(
     value.selection,
     'candidates_considered',
     errors,
@@ -385,7 +428,7 @@ export function validateApprovalProjection(value, errors, path) {
       requiredString(wave, key, errors, wavePath);
     }
     requiredArray(wave, 'lanes', errors, wavePath);
-    requiredArray(wave, 'writable_roots', errors, wavePath);
+    requiredCanonicalStringSet(wave, 'writable_roots', errors, wavePath);
     requiredObject(wave, 'fallback', errors, wavePath);
     requiredObject(wave, 'context_fork_controls', errors, wavePath);
     requiredInteger(wave, 'deadline_seconds', errors, wavePath, 1);
