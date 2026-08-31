@@ -1,5 +1,12 @@
 import assert from 'node:assert/strict';
-import { readdir, readFile, rename, rm, symlink } from 'node:fs/promises';
+import {
+  copyFile,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  symlink,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
@@ -77,6 +84,26 @@ async function retargetSourcePath(fixture, sourceKind) {
   const moved = join(fixture.tempRoot, `${sourceKind}-audit-moved`);
   await rename(original, moved);
   await symlink(moved, original, sourceKind === 'repository' ? 'dir' : 'file');
+}
+
+async function declareDualUrlCapture(fixture) {
+  const validatorPath = join(
+    fixture.packetRoot,
+    'raw',
+    'captures',
+    'url-validator.txt',
+  );
+  await copyFile(fixture.sourcePath, validatorPath);
+  const source = fixture.manifest.sources[0];
+  source.validatorState = {
+    capturePath: 'raw/captures/url-validator.txt',
+    captureDigest: source.captureDigest,
+  };
+  await fixture.persist();
+  return {
+    direct: fixture.sourcePath,
+    validator: validatorPath,
+  };
 }
 
 test('packet rendering is deterministic and contains the complete consumer view', async () => {
@@ -279,6 +306,69 @@ for (const validationState of ['stale', 'invalid', 'unavailable']) {
       /identity|root|symlink/i,
     );
   });
+
+  for (const captureForm of ['direct', 'validator']) {
+    test(`${validationState} dual-form URL audit rejects an alias in its ${captureForm} capture`, async () => {
+      const fixture = await createPacketFixture({
+        profile: 'quick',
+        sourceKind: 'url',
+      });
+      tempRoots.push(fixture.tempRoot);
+      await markIneligibleAudit(fixture, validationState);
+      const captures = await declareDualUrlCapture(fixture);
+      const aliasName = `url-${captureForm}-dual-alias.txt`;
+      const alias = join(fixture.packetRoot, 'raw', 'captures', aliasName);
+      await symlink(captures[captureForm], alias, 'file');
+      const source = fixture.manifest.sources[0];
+      if (captureForm === 'direct') {
+        source.capturePath = `raw/captures/${aliasName}`;
+      } else {
+        source.validatorState.capturePath = `raw/captures/${aliasName}`;
+      }
+      await fixture.persist();
+      const validation = await compileValidatedRun(fixture.packetRoot);
+      assert.equal(
+        validation.valid,
+        false,
+        JSON.stringify(validation, null, 2),
+      );
+      assert.ok(
+        validation.errors.some((error) => error.code === 'DUAL_URL_CAPTURE'),
+        JSON.stringify(validation, null, 2),
+      );
+    });
+
+    test(`${validationState} dual-form URL audit cannot reach publication before a ${captureForm} capture retarget`, async () => {
+      const fixture = await createPacketFixture({
+        profile: 'quick',
+        sourceKind: 'url',
+      });
+      tempRoots.push(fixture.tempRoot);
+      await markIneligibleAudit(fixture, validationState);
+      const captures = await declareDualUrlCapture(fixture);
+      const validation = await compileValidatedRun(fixture.packetRoot);
+      assert.equal(
+        validation.valid,
+        false,
+        JSON.stringify(validation, null, 2),
+      );
+      assert.ok(
+        validation.errors.some((error) => error.code === 'DUAL_URL_CAPTURE'),
+        JSON.stringify(validation, null, 2),
+      );
+      assert.equal(validation.validatedRun, undefined);
+      const moved = join(
+        fixture.tempRoot,
+        `url-${captureForm}-dual-retargeted.txt`,
+      );
+      await rename(captures[captureForm], moved);
+      await symlink(moved, captures[captureForm], 'file');
+      await assert.rejects(
+        renderValidatedPacket(validation.validatedRun),
+        /ValidatedRun/,
+      );
+    });
+  }
 }
 
 test('validation binds the declared output path to the canonical packet root', async () => {

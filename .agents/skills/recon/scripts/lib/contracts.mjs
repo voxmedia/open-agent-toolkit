@@ -500,6 +500,21 @@ function validateManifest(value, errors) {
           errors,
           `$.sources[${index}].validatorState`,
         );
+        const hasDirectCapture =
+          Object.hasOwn(source, 'capturePath') ||
+          Object.hasOwn(source, 'captureDigest');
+        const hasValidatorCapture =
+          Object.hasOwn(source.validatorState, 'capturePath') ||
+          Object.hasOwn(source.validatorState, 'captureDigest');
+        if (hasDirectCapture && hasValidatorCapture) {
+          errors.push(
+            issue(
+              'DUAL_URL_CAPTURE',
+              'URL sources must declare exactly one capture representation',
+              `$.sources[${index}]`,
+            ),
+          );
+        }
       }
     }
   }
