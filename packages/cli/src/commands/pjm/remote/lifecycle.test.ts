@@ -2,10 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   intakeRemoteIssue,
+  publishBinding,
+  reconcileRemoteBinding,
   refreshBinding,
   type LifecycleBinding,
   type LifecycleDependencies,
 } from './lifecycle';
+import { assessOutboundProjectionSafety } from './outbound-projection-safety';
 import {
   semanticDigest,
   type ProviderAdapter,
@@ -173,5 +176,194 @@ describe('remote lifecycle reads', () => {
     ).rejects.toThrow('offline');
     expect(harness.commitRefresh).not.toHaveBeenCalled();
     expect(harness.commitIntake).not.toHaveBeenCalled();
+  });
+});
+
+function createMutationHarness() {
+  const readHarness = createHarness();
+  const projection = { title: 'Published title' };
+  const safety = assessOutboundProjectionSafety(projection, {
+    assessedAt: now,
+  });
+  const persistPlanned = vi.fn();
+  const markAttemptStarted = vi.fn();
+  const markTerminal = vi.fn();
+  const execute = vi.fn(async () => ({
+    classification: 'committed' as const,
+    evidenceDigest: 'sha256:attempt',
+  }));
+  const readBack = vi.fn(async () => ({
+    fields: projection,
+    revisionDigest: 'sha256:readback',
+  }));
+  const input = {
+    operationId: 'op_publish_001',
+    stepId: 'step_publish_001',
+    binding: readHarness.binding,
+    operation: 'update' as const,
+    projection,
+    outboundSafety: safety,
+    preview: {
+      digest: 'sha256:preview',
+      observedRevisionDigest: 'sha256:observed',
+      projectionDigest: safety.projectionDigest,
+      safetyResultDigest: safety.resultDigest,
+    },
+    authority: {
+      mode: 'user-approved' as const,
+      approvalPreviewDigest: 'sha256:preview',
+    },
+  };
+  const dependencies = {
+    store: { persistPlanned, markAttemptStarted, markTerminal },
+    preRead: vi.fn(async () => ({ revisionDigest: 'sha256:observed' })),
+    execute,
+    readBack,
+  };
+  return {
+    input,
+    dependencies,
+    persistPlanned,
+    markAttemptStarted,
+    markTerminal,
+    execute,
+    readBack,
+  };
+}
+
+describe('remote lifecycle mutations', () => {
+  it('persists intent, pre-reads, attempts once, and verifies pinned readback', async () => {
+    const harness = createMutationHarness();
+    await expect(
+      publishBinding(harness.input, harness.dependencies),
+    ).resolves.toMatchObject({ status: 'verified' });
+    expect(harness.persistPlanned).toHaveBeenCalledOnce();
+    expect(harness.markAttemptStarted).toHaveBeenCalledOnce();
+    expect(harness.execute).toHaveBeenCalledOnce();
+    expect(harness.readBack).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [{ mode: 'read-only' as const }, /read-only/],
+    [
+      {
+        mode: 'user-authorized' as const,
+        instructionDigest: 'sha256:wrong',
+        expectedInstructionDigest: 'sha256:expected',
+      },
+      /instruction/,
+    ],
+    [
+      { mode: 'user-approved' as const, approvalPreviewDigest: 'sha256:stale' },
+      /approval/,
+    ],
+    [
+      {
+        mode: 'autonomous' as const,
+        workflowId: 'workflow-1',
+        workflowRevision: 'rev-1',
+        active: false,
+      },
+      /active-workflow/,
+    ],
+  ])(
+    'blocks absent or stale caller authority %#',
+    async (authority, message) => {
+      const harness = createMutationHarness();
+      await expect(
+        publishBinding({ ...harness.input, authority }, harness.dependencies),
+      ).rejects.toThrow(message);
+      expect(harness.persistPlanned).not.toHaveBeenCalled();
+      expect(harness.execute).not.toHaveBeenCalled();
+    },
+  );
+
+  it('allows matching explicit instruction and current autonomous workflow evidence', async () => {
+    const instruction = createMutationHarness();
+    await expect(
+      publishBinding(
+        {
+          ...instruction.input,
+          authority: {
+            mode: 'user-authorized',
+            instructionDigest: 'sha256:instruction',
+            expectedInstructionDigest: 'sha256:instruction',
+          },
+        },
+        instruction.dependencies,
+      ),
+    ).resolves.toMatchObject({ status: 'verified' });
+    const autonomous = createMutationHarness();
+    await expect(
+      publishBinding(
+        {
+          ...autonomous.input,
+          authority: {
+            mode: 'autonomous',
+            workflowId: 'workflow-1',
+            workflowRevision: 'rev-1',
+            active: true,
+          },
+        },
+        autonomous.dependencies,
+      ),
+    ).resolves.toMatchObject({ status: 'verified' });
+  });
+
+  it('blocks stale revisions and conflicts without a host attempt or transitive propagation', async () => {
+    const stale = createMutationHarness();
+    stale.dependencies.preRead.mockResolvedValueOnce({
+      revisionDigest: 'sha256:changed',
+    });
+    await expect(
+      publishBinding(stale.input, stale.dependencies),
+    ).resolves.toEqual({ status: 'blocked' });
+    expect(stale.execute).not.toHaveBeenCalled();
+    const conflict = createMutationHarness();
+    await expect(
+      reconcileRemoteBinding(
+        { ...conflict.input, conflicts: ['title'] },
+        conflict.dependencies,
+      ),
+    ).resolves.toEqual({ status: 'blocked' });
+    expect(conflict.persistPlanned).not.toHaveBeenCalled();
+    expect(conflict.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects stale safety digests before persistence or host execution', async () => {
+    const harness = createMutationHarness();
+    await expect(
+      publishBinding(
+        {
+          ...harness.input,
+          preview: {
+            ...harness.input.preview,
+            safetyResultDigest: 'sha256:stale',
+          },
+        },
+        harness.dependencies,
+      ),
+    ).rejects.toThrow(/stale|mismatched/);
+    expect(harness.persistPlanned).not.toHaveBeenCalled();
+    expect(harness.execute).not.toHaveBeenCalled();
+  });
+
+  it('marks ambiguous attempts and unavailable readback uncertain without retry', async () => {
+    const ambiguous = createMutationHarness();
+    ambiguous.execute.mockResolvedValueOnce({
+      classification: 'unknown',
+      evidenceDigest: 'sha256:unknown',
+    });
+    await expect(
+      publishBinding(ambiguous.input, ambiguous.dependencies),
+    ).resolves.toMatchObject({ status: 'uncertain' });
+    expect(ambiguous.execute).toHaveBeenCalledOnce();
+    expect(ambiguous.readBack).not.toHaveBeenCalled();
+    const unavailable = createMutationHarness();
+    unavailable.readBack.mockRejectedValueOnce(new Error('offline'));
+    await expect(
+      publishBinding(unavailable.input, unavailable.dependencies),
+    ).resolves.toMatchObject({ status: 'uncertain' });
+    expect(unavailable.execute).toHaveBeenCalledOnce();
   });
 });
