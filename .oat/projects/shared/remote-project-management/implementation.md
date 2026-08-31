@@ -296,6 +296,22 @@ type-check, and lint passed.
 
 ### Task p02-t03: Redact and bound retained remote snapshots
 
+**Status:** completed
+**Commit:** 9e3df8f1cb4efd3a42b0903f4a563691ac1297fb
+
+**Outcome:** Added strict snapshot sanitization that retains only core issue
+fields and adapter-allowlisted bounded extensions. Credential-shaped core
+values are replaced with visible markers, sensitive extensions are dropped,
+and comments, activity, assignees, auth headers, and raw payloads never enter
+the output schema.
+
+**Verification:** Snapshot suite passed (4 tests); CLI format/build, type-check,
+and lint passed.
+
+---
+
+### Task p02-t04: Implement managed Markdown boundaries
+
 **Status:** pending
 **Commit:** -
 
@@ -513,6 +529,7 @@ Chronological log of implementation progress.
 - [x] p01-t10: Persist pre-create binding intent - cd6608947699b6431216fa8364b67729b7583866
 - [x] p02-t01: Compose binding-purpose policy by intersection - f7a8dc493557e619d8004aaa52a0ce47bdaf7263
 - [x] p02-t02: Project local backlog and project content safely - 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
+- [x] p02-t03: Redact and bound retained remote snapshots - 9e3df8f1cb4efd3a42b0903f4a563691ac1297fb
 
 **What changed (high level):**
 

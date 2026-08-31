@@ -294,6 +294,9 @@ packages/cli/src/commands/pjm/remote/local-projection.test.ts.
 
 ### Task p02-t03: Redact and bound retained remote snapshots
 
+**Implementation:** completed in
+`9e3df8f1cb4efd3a42b0903f4a563691ac1297fb`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/snapshot.ts and
 packages/cli/src/commands/pjm/remote/snapshot.test.ts.
 

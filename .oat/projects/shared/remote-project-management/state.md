@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t03
-oat_last_commit: 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
+oat_current_task: p02-t04
+oat_last_commit: 9e3df8f1cb4efd3a42b0903f4a563691ac1297fb
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T13:00:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T13:05:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,8 +40,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 is in progress. p02-t01 completed fail-closed purpose
-composition, and p02-t02 added privacy-safe local publication projections.
+Implementation — Phase 2 is in progress. Purpose composition, local projection,
+and bounded credential-safe remote snapshot sanitization are complete.
 
 ## Artifacts
 
@@ -86,6 +86,7 @@ composition, and p02-t02 added privacy-safe local publication projections.
 - ✓ Phase 1 operator-extension review passed at `c8ef3d593`
 - ✓ p02-t01 composed binding-purpose policies by strict intersection
 - ✓ p02-t02 projected only explicit backlog and project publication content
+- ✓ p02-t03 sanitized bounded remote snapshots before retention or display
 
 ## Blockers
 
@@ -93,4 +94,4 @@ None.
 
 ## Next Milestone
 
-Implement p02-t03 bounded, credential-redacted remote snapshots.
+Implement p02-t04 structural managed Markdown boundaries.
