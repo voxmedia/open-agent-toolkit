@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-03-15
+oat_last_updated: 2026-08-30
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: remote-project-management
 
 **Started:** 2026-03-15
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-08-30
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,14 +26,20 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 10    | 0/10      |
+| Phase 2 | pending     | 9     | 0/9       |
+| Phase 3 | pending     | 12    | 0/12      |
+| Phase 4 | pending     | 11    | 0/11      |
+| Phase 5 | pending     | 9     | 0/9       |
+| Phase 6 | pending     | 10    | 0/10      |
+| Phase 7 | pending     | 10    | 0/10      |
+| Phase 8 | pending     | 6     | 0/6       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/77 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Domain, Configuration, and Persistence
 
 **Status:** in_progress
 **Started:** 2026-03-15
@@ -57,10 +63,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Define remote configuration types
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,7 +91,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Resolve transport preferences by owning scope
 
 **Status:** pending
 **Commit:** -
@@ -96,7 +102,63 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Expose remote configuration through config commands
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t04: Define strict remote record schemas
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t05: Resolve portable and operational storage locations
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t06: Persist remote records atomically
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t07: Preserve simultaneous operation intents
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t08: Add backward-compatible association codec
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t09: Add foundational remote doctor checks
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t10: Persist pre-create binding intent
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Reconciliation and Safety Engine
 
 **Status:** pending
 **Started:** -
