@@ -442,6 +442,18 @@ checkpoint advanced to the decision-promotion commit and the recomputed full
 effective-delta fingerprint; the immutable reviewed implementation basis is
 unchanged.
 
+**Documentation analysis pending approval:** The automatic declared-PJM
+reference sync updated only `current-state.md` and `roadmap.md` in closeout
+commit `a289b05fe411754fae56b41a9c8337e6548ebfb3`. The docs scan found one
+non-destructive correction in `apps/oat-docs/docs/contributing/skills.md`: its
+stored lifecycle gate example and checklist must use canonical global
+`oat --json gate review` placement. No docs write, `oat_docs_updated` mutation,
+or document-step completion is recorded before approval.
+
+The rolling freshness checkpoint advances over the reference-sync commit while
+the immutable sequence remains at `pre_approval` with only `summary`
+completed.
+
 ---
 
 ## Implementation Log
