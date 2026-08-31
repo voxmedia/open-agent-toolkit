@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: e2b8b40771dd64d22dc3e16e2faa1110db1e792a
+oat_current_task: null
+oat_last_commit: 4ef59b00498a88e36c482e27f74d43a7e9ca6c38
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T22:03:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T22:46:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev2 - Bind the complete approved dispatch projection
+Implementation - Revision fix complete; awaiting fresh final review
 
 ## Artifacts
 
@@ -88,7 +88,7 @@ Revision p-rev2 - Bind the complete approved dispatch projection
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (13/14 tasks complete; final review fix queued)
+- **Implementation:** `implementation.md` (14/14 tasks complete; final re-review pending)
 
 ## Progress
 
@@ -152,7 +152,9 @@ Revision p-rev2 - Bind the complete approved dispatch projection
 - ✓ Terminal Phase 4 review passed with zero findings and no overengineering
 - ✓ All 13 implementation and revision tasks complete
 - ⧗ Final lifecycle review found one Critical approval-envelope binding gap
-- ⧗ Revision task prev2-t01 queued for bounded correction and fresh re-review
+- ✓ Revision task prev2-t01 binds the complete canonical dispatch projection
+- ✓ Exhaustive deletion and receipt-mutation coverage passes
+- ⧗ Awaiting fresh final independent review
 
 ## Blockers
 
@@ -160,5 +162,5 @@ None.
 
 ## Next Milestone
 
-Complete prev2-t01, pass fresh final lifecycle review and the configured
-implementation exit gate, then request final HiLL approval
+Pass fresh final lifecycle review and the configured implementation exit gate,
+then run pre-approved closeout steps and request final HiLL approval

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,16 +18,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status  | Tasks | Completed |
-| ------------ | ------- | ----- | --------- |
-| Phase 1      | passed  | 1     | 1/1       |
-| Phase 2      | passed  | 4     | 4/4       |
-| Phase 3      | passed  | 4     | 4/4       |
-| Phase 4      | passed  | 2     | 2/2       |
-| Phase p-rev1 | passed  | 2     | 2/2       |
-| Phase p-rev2 | pending | 1     | 0/1       |
+| Phase        | Status          | Tasks | Completed |
+| ------------ | --------------- | ----- | --------- |
+| Phase 1      | passed          | 1     | 1/1       |
+| Phase 2      | passed          | 4     | 4/4       |
+| Phase 3      | passed          | 4     | 4/4       |
+| Phase 4      | passed          | 2     | 2/2       |
+| Phase p-rev1 | passed          | 2     | 2/2       |
+| Phase p-rev2 | fixes_completed | 1     | 1/1       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ## Task Status
 
@@ -71,9 +71,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev2: Revision 2 — Bind the Complete Approved Dispatch Projection
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev2-t01 | pending | -      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev2-t01 | completed | `4ef59b004` |
 
 ## Orchestration Runs
 
@@ -762,6 +762,34 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Accepted deviations: generated release-version asset, two mechanical
   autonomy inventory rows, and no lockfile diff for workspace self versions
 
+#### Dispatch p-rev2 implementation
+
+- Request ID: `recon-skill-prev2-implementation-20260831T2205Z`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Authority: execute only prev2-t01 inside the six planned recon files, plus
+  two explicitly authorized mechanical test migrations
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Task commit: `4ef59b00498a88e36c482e27f74d43a7e9ca6c38`
+- Recovery attempts: 0; no recovery event
+- Optional nested dispatches: none
+- RED evidence: complete-projection fixtures exposed 10 legacy-validator
+  failures; the full intermediate suite reached 140/158 before migration
+- GREEN evidence: 22/22 formerly omitted axes reject deletion, 22/22 reject
+  mutation across each of four receipt states (88 receipt-axis cases), combined
+  recon/dispatch 158/158, CLI validation 164/164, and skill suite 744/744
+- Accepted adjacent files: `tests/helpers/fake-recon-run.mjs` migrated from the
+  removed reduced wave shape; exactly two workflow integration assertions now
+  read the canonical role selector
+- Overengineering assessment: one existing canonical projection is nested and
+  validated at the existing packet boundary; no new profile, engine, persisted
+  artifact, generic schema framework, or state machine
+- Dispatch: request_id=recon-skill-prev2-implementation-20260831T2205Z scope=p-rev2 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -1134,8 +1162,20 @@ context before p02 can advance.
 **Design drift / artifact alignment notes:** None. The implementation must be
 corrected to meet the existing discovery, design, and dispatch contracts.
 
-**Next:** Execute `prev2-t01` via `oat-project-implement`, then run a fresh final
-independent review before the configured exit gate.
+**Next:** `prev2-t01` is complete. Run a fresh final independent review before
+the configured exit gate.
+
+### 2026-08-31 - p-rev2 fix completed
+
+- Commit `4ef59b004` replaces the reduced approval envelope with the complete
+  `oat-dispatch-approval/v1` projection in manifest execution and all four
+  immutable receipt states.
+- Root verification passes 79/79 focused approval, integrity, packet, and
+  workflow tests; implementer verification passes 158/158 combined,
+  164/164 CLI validation, 744/744 skill tests, canonical validation, check,
+  lint, format, type-check, and skill-bump gates.
+- The final review event is now `fixes_completed`; a fresh independent final
+  re-review is required before the configured exit gate may run.
 
 ## Deviations from Plan / Design
 
@@ -1152,6 +1192,9 @@ independent review before the configured exit gate.
   autonomy-contract inventory rows required by existing release and prompt-site
   gates. `pnpm-lock.yaml` correctly remains unchanged because only package self
   versions changed and internal dependencies remain `workspace:*`.
+- p-rev2 adds two mechanical test-file migrations adjacent to the six planned
+  files: the shared fake-run helper and exactly two workflow assertions now
+  consume the canonical projection instead of removed reduced fields.
 
 ## Test Results
 
@@ -1221,6 +1264,10 @@ independent review before the configured exit gate.
 - Terminal p04 review independently passes the exact two-commit range with zero
   findings, validates all 12 changed files, and confirms release `0.2.51` is
   strictly above fetched `origin/main` `0.2.50` for all five public packages.
+- Revision p-rev2 passes 22/22 approval-axis deletion cases, 88 receipt-axis
+  mutations across prepared/approved/accepted/completed states, 158/158 combined
+  recon/dispatch tests, 164/164 CLI validation, and 744/744 skill tests. Root
+  independently reran the 79/79 load-bearing focused set.
 
 ## Final Summary (for PR/docs)
 
@@ -1255,5 +1302,7 @@ through revision p-rev1, p03, and p04. Review fixes stayed inside existing
 contracts and lifecycle seams; no generalized transaction/state framework or
 automatic discovery, quick-start, analyze, or deep-research integration was
 added. Those broader integrations remain separate backlog items. Final review
-then found one Critical approval-binding gap, now queued as bounded task
-`prev2-t01`; closeout remains in progress until that fix and re-review pass.
+then found one Critical approval-binding gap. Bounded task `prev2-t01` now
+retains and validates the complete canonical projection with exhaustive
+deletion and receipt-mutation coverage; closeout remains in progress until a
+fresh final re-review passes.
