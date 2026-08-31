@@ -1,7 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p02-t04
+    reason: 'Phase p02 fresh re-review after the authorized third correction remains blocked with 3 Critical and 2 Important findings; see reviews/p02-code-rereview-r4-2026-08-31T123548Z.md.'
 oat_last_updated: 2026-08-31
 oat_current_task_id: p02-t04
 oat_generated: false
@@ -37,12 +39,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 2: Recon Skill, Worker, and Packet Pipeline
 
-| Task    | Status      | Commit      |
-| ------- | ----------- | ----------- |
-| p02-t01 | completed   | `eaf8a652c` |
-| p02-t02 | completed   | `c6e168f3e` |
-| p02-t03 | completed   | `b32325079` |
-| p02-t04 | in_progress | `133cf2e8d` |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p02-t01 | completed | `eaf8a652c` |
+| p02-t02 | completed | `c6e168f3e` |
+| p02-t03 | completed | `b32325079` |
+| p02-t04 | blocked   | `133cf2e8d` |
 
 ### Phase 3: Research-Pack Distribution and Provider Materialization
 
@@ -282,6 +284,34 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   passes 79/79
 - Dispatch: scope=p02-fix-r3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p02 review round 4
+
+- Request ID: `recon-skill-p02-rereview-r4-20260831T1217Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: independently review the complete p02 implementation and three
+  correction commits; write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+- Findings: 3 Critical, 2 Important, 0 Medium, 0 Minor
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase p02 outcome after operator extension
+
+- Verdict: blocked
+- Planned task commits: 4 (three accepted as completed; p02-t04 remains the
+  blocked lifecycle task)
+- Fix iterations: 3/3 exhausted, including the explicit operator extension
+- Recovery attempts: 0
+- Optional nested dispatches: none
+- Worktree: root checkout, clean before terminal bookkeeping
+- Outstanding items: three Critical and two Important findings in
+  `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -405,6 +435,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   79/79 recon suite.
 - A fresh independent review of the complete p02 range is next.
 
+### 2026-08-31 - p02 remains blocked after review round 4
+
+- Fresh independent probes confirmed the five findings from review round 3 are
+  closed in their direct forms, then reproduced three Critical and two
+  Important adjacent bypasses.
+- The remaining gaps cover required approval/dispatch axes, one terminal
+  reconciliation identity, secret validation for ineligible audit evidence,
+  materiality of stale-source gaps, and symlinked declared roots.
+- The operator-extended limit of three correction iterations is exhausted.
+  Phase p02 and task `p02-t04` remain blocked pending a new decision.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -419,6 +460,9 @@ source artifact and follow-up disposition.
 - p02 focused recon suite: 68/68 passed at reviewed head `c58c14813`.
 - p02 focused recon suite after authorized fix round 3: 79/79 passed at
   `cf4e5fbf1`.
+- Review round 4 independently reran the 79/79 recon suite, 164/164 focused CLI
+  validation, 674/674 full skill tests, canonical validation, format, lint, and
+  range whitespace checks; direct probes still reproduced the blocking paths.
 - p02 focused CLI skill validation, complete skill suite, canonical skill
   validation, format, lint, CLI type-check, and `pnpm check` passed.
 - Passing tests do not override the final independent review's reproduced

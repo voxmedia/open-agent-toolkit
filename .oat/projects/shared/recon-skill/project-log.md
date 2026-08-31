@@ -56,6 +56,10 @@ Phase p01 passed after 1 fix loop; final review artifact: reviews/p01-code-rerev
 
 Phase p02 blocked after exhausting 2 review-fix iterations; final artifact: reviews/p02-code-final-rereview-2026-08-31T065541Z.md (4 Critical, 1 Important). Explicit correction authorization is required to continue.
 
+### 2026-08-31 · structural · oat-project-implement · p02
+
+Phase p02 remains blocked after operator-authorized review-fix iteration 3/3; fresh review artifact reviews/p02-code-rereview-r4-2026-08-31T123548Z.md reports 3 Critical and 2 Important findings.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
