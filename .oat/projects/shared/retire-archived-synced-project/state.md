@@ -1,7 +1,8 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: c59bcc4c0f54c8541a43090eea6ebfe33e34244d
-oat_blockers: []
+oat_current_task: p02-t03
+oat_last_commit: 2a8d84388376ef0f8f367dd321010182fe1afc93
+oat_blockers:
+  - p02 final review found that archive-resume exits before required post-archive durability and closeout; automatic budget exhausted at 2 fixes and 3 reviews
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -12,7 +13,7 @@ oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
-oat_parallel_execution: true
+oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -82,19 +83,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T11:50:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T14:11:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation in progress; p01 passed
+**Status:** Implementation blocked in p02; p01 and p03 passed
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - parallel p02 archive transaction and p03 terminal semantics
+Implement - p02 archive completion closeout requires an authorized fresh fix generation
 
 ## Artifacts
 
@@ -102,7 +103,7 @@ Implement - parallel p02 archive transaction and p03 terminal semantics
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress from p01-t01)
+- **Implementation:** `implementation.md` (blocked at p02 closeout review)
 
 ## Progress
 
@@ -124,14 +125,21 @@ Implement - parallel p02 archive transaction and p03 terminal semantics
 - ✓ p01 re-review passed with 0 findings; 134 focused tests pass
 - ✓ Merged `origin/main` at `2c6005d64`; post-merge p01 checks pass
 - ✓ Strict p02/p03 worktree bootstrap passed from `e7c60215e`
-- → Parallel p02/p03 implementation in progress
+- ✓ p03 implementation and bounded re-review passed; merged at `aa7f0b8f8`
+- ✓ p03 post-merge verification passed 214/214 focused tests and package checks
+- ✗ p02 final review found one Critical after 2 fix iterations and 3 review rounds
+- → Automatic implementation is blocked pending authorization for a fresh p02 fix/review generation
 
 ## Blockers
 
-None. The prior atomic no-op blocker was resolved by the approved contract:
-completed-only and matching active/completed refs are both terminal; differing
-SHAs still fail closed.
+The p02 terminal retry branch correctly skips pull and active Steps 2-7, but it
+currently exits the whole completion skill. That bypasses required post-archive
+links, dashboard regeneration, bookkeeping commit/push, PR closeout, and final
+confirmation. The configured automatic budget is exhausted at 2 fix iterations
+and 3 review rounds; continuing requires explicit authorization for a fresh
+bounded p02 generation.
 
 ## Next Milestone
 
-Complete and review p02/p03, merge both branches, then enter p04 integration
+Authorize and complete a fresh p02 fix/review generation, merge p02 only after
+it passes, then enter the p04 HiLL checkpoint

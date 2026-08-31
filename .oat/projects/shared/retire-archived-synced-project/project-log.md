@@ -68,6 +68,14 @@ Merged origin/main at 2c6005d64f45a19e8b9eedbc977959b066d3eda0 after p01 passed,
 
 Started parallel p02/p03 implementation from logical base e7c60215e639d7b7de077101bb863509c3d807f6. Strict autonomous bootstrap passed in both worktrees; each has isolated setup commit 79dfa969d updating only the sync manifest. p02 owns archive/completion files and p03 owns terminal list/action semantics.
 
+### 2026-08-31 · structural · oat-project-implement · p03-passed
+
+Phase p03 passed re-review at 28162dae60ac623c3f680a608e374afa1d0c24c5 with zero findings and merged at aa7f0b8f8. Combined-branch verification passed 214 focused tests plus CLI/control-plane type-checks and CLI check; review evidence is in reviews/p03-review-2026-08-31T134913Z.md.
+
+### 2026-08-31 · structural · oat-project-implement · p02-review-budget-exhausted
+
+Phase p02 remains blocked after 2 fix iterations and 3 review rounds. Final review at 2a8d84388376ef0f8f367dd321010182fe1afc93 found one Critical: the archive-resume branch skips active Steps 2-7 but exits before required post-archive durability and closeout; evidence is in reviews/p02-review-2026-08-31T140841Z.md. The p02 branch is preserved and unmerged pending explicit authorization for a fresh bounded generation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

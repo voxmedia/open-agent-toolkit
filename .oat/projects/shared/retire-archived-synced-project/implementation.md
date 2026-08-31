@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02 final review found that archive-resume exits before required post-archive durability and closeout; automatic budget exhausted at 2 fixes and 3 reviews
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -19,14 +20,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 2     | 2/2       |
-| p02   | in progress | 3     | 0/3       |
-| p03   | in progress | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | blocked   | 3     | 3/3       |
+| p03   | completed | 3     | 3/3       |
+| p04   | pending   | 2     | 0/2       |
 
-**Total:** 2/10 tasks completed
+**Total:** 8/10 tasks implemented; p02 remains review-blocked
 
 ---
 
@@ -52,45 +53,49 @@ inert alias. Differing SHAs still fail closed.
 
 ## Phase 2: Archive Transaction and Completion Integration
 
-**Status:** in progress
+**Status:** blocked
 **Started:** 2026-08-31
 
 ### Task p02-t01: Gate terminal cleanup on archive durability
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2199e913e
 
 ### Task p02-t02: Seal synced archives without an active record
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** df66fa927
 
 ### Task p02-t03: Integrate archive reporting and completion workflow
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 04b2ce008
+**Review fixes:** `87c7d690e`, `2a8d84388`
+**Blocker:** The final retry branch exits before required post-archive closeout.
 
 ---
 
 ## Phase 3: Terminal Discovery and Action Semantics
 
-**Status:** in progress
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Task p03-t01: Classify legacy completed synced records precisely
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6a457bde6
 
 ### Task p03-t02: Prevent archived project resurrection through pull and open
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8ab559a16
 
 ### Task p03-t03: Align terminal links and destructive pruning
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 71b350d9a
+**Review fix:** `28162dae6`
+**Merged:** `aa7f0b8f8`
 
 ---
 
@@ -193,6 +198,25 @@ _Orchestration runs from `oat-project-implement` are appended here._
   `79dfa969d` updating only `.oat/sync/manifest.json` to OAT 0.2.50.
 - p02 and p03 have disjoint plan ownership; p03 consumes but does not modify
   p01 transition primitives.
+- p03 task commits: `6a457bde6`, `8ab559a16`, `71b350d9a`.
+- p03 review round 1 blocked on an unleased active-alias prune race and stale
+  local rows masking completed authority; fix `28162dae6` closed both findings.
+- The p03 fix added the narrowly required leased active-alias deletion primitive
+  in p01-owned `ref-sync.ts`; this was an authorized implementation deviation.
+- p03 re-review passed with 0 findings. The branch merged at `aa7f0b8f8`, and
+  combined-branch verification passed 214/214 focused tests, CLI/control-plane
+  type-checks, and CLI check.
+- p02 task commits: `2199e913e`, `df66fa927`, `04b2ce008`.
+- p02 review round 1 found 3 Critical and 1 Important; fix `87c7d690e` closed
+  three findings. Review round 2 retained one Critical because the retry router
+  skipped pull without changing the skill's active-workflow control flow.
+- p02 fix round 2 commit `2a8d84388` added a real early archive-resume branch.
+  Final review proved the branch skips pull and Steps 2-7 for both terminal ref
+  shapes, but found one Critical: whole-skill `exit 0` also skips required
+  post-archive durability and closeout.
+- p02 exhausted 2 of 2 fix iterations and 3 of 3 review rounds. Its branch is
+  preserved but unmerged pending explicit authorization for a fresh bounded
+  generation.
 
 <!-- orchestration-runs-end -->
 
@@ -202,21 +226,25 @@ The original p01 generation exhausted its review budget on Git's omission of a
 no-op completed-ref update. The operator resolved that blocker by making the
 completed ref authoritative and accepting a matching active ref as an inert
 terminal alias. The fresh generation passed after one bounded fix round; p01 is
-complete at `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`.
+complete at `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`. p03 passed after one
+bounded fix and is merged. p02 implemented all planned tasks but remains blocked
+after exhausting its automatic review budget on the post-archive continuation
+gap recorded in `reviews/p02-review-2026-08-31T140841Z.md`.
 
 ## Deviations from Plan / Design
 
 | Task / Review | Source Artifact | Planned / Documented              | Actual / Accepted                                              | Reason                                                                          | Source of Truth                 | Follow-up                                                         |
 | ------------- | --------------- | --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
 | p01-t02       | User decision   | Completion deletes the active ref | Completed is authoritative; a same-SHA active alias may remain | Git cannot include a no-op completed update and lease in the atomic transaction | Operator-approved plan revision | Revalidate p01 and consume the terminal classification in p02/p03 |
+| p03 review    | Code review     | p03 consumes p01 primitives only  | Added leased active-alias deletion to p01-owned ref-sync       | Safe prune required an atomic lease at the shared primitive boundary            | Reviewed p03 fix                | Preserve the lease/race coverage                                  |
 
 ## Test Results
 
 | Phase | Tests Run         | Passed | Failed | Coverage                                  |
 | ----- | ----------------- | ------ | ------ | ----------------------------------------- |
 | p01   | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery |
-| p02   | -                 | -      | -      | -                                         |
-| p03   | -                 | -      | -      | -                                         |
+| p02   | 162 focused tests | 162    | 0      | Archive transaction and completion retry  |
+| p03   | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune    |
 | p04   | -                 | -      | -      | -                                         |
 
 ## Final Summary (for PR/docs)
