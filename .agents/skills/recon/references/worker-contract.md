@@ -54,6 +54,11 @@ Persist minimal excerpts only. Detect and redact secret spans before writing;
 never persist the secret or its sensitive-span digest. Finish by returning the
 artifact path and compact outcome only.
 
+The controller validates the candidate against `packet-contract.md` with the
+bundled deterministic artifact validator. A validation failure quarantines the
+candidate; it never authorizes the worker to rewrite a shared artifact, retry,
+or launch a replacement.
+
 ## Invariants
 
 - Read only the assignment's allowed inputs using its source-read authority.

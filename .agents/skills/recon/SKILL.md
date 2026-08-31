@@ -159,6 +159,10 @@ Run the stages in this order:
 Use `references/worker-contract.md` for every assignment. Never allow two
 workers to share a write path.
 
+Read `references/packet-contract.md` before creating any packet artifact. Run
+`scripts/validate-artifact.mjs` on each candidate and record its canonical
+digest before the next stage consumes it.
+
 ### Step 6: Preserve the Context Firewall
 
 Treat `raw/` as worker-facing audit material, not normal consumer input. A
@@ -174,10 +178,10 @@ approved model performs every pass.
 
 ### Step 7: Validate and Publish
 
-Run the bundled artifact validator on every candidate, then the packet
-validator on the complete directory. Quarantine invalid candidates under
-`raw/`; never promote shared artifacts in place and never overwrite the last
-valid ledger.
+Run `scripts/validate-artifact.mjs` on every candidate, then
+`scripts/validate-packet.mjs` on the complete directory. Quarantine invalid
+candidates under `raw/`; never promote shared artifacts in place and never
+overwrite the last valid ledger.
 
 Derive the achieved profile from completed valid stages. Do not accept a worker
 or manifest assertion of achievement. A `quick` run can reach `supported` but
