@@ -335,6 +335,23 @@ Important, Medium, or Minor findings. Reconnaissance was not attempted.
 **Next:** Start a replacement configured exit-gate generation from this exact
 reviewed implementation basis.
 
+### Replacement Configured Exit Gate Generation
+
+**Date:** 2026-08-31
+**Status:** `pending` / `not_started`
+**Reviewed head:** `c56ba6995a90eab7b1d06c2c79b016ca9940e54f`
+**Implementation base:** `origin/main` (unique merge base
+`efd4294b4fcf73bfa606a70dd7d17e3a5adada96`)
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:cf6b525b96d6317381a227e9da9f156a1065e944489ea67334530401cc7af15d`
+**Configuration fingerprint:**
+`sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+
+The resolved blocking command, description, failure policy, and two-attempt
+limit are persisted in `state.md` before launch. The immutable reviewed basis
+is the clean final decision-review head above; rolling freshness begins at the
+same head and fingerprint.
+
 ---
 
 ## Orchestration Runs
