@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { defaultGitRunner } from './git';
 import { buildSyncTarget, createSyncedProject } from './ref-sync';
-import { resolveSyncedTarget } from './resolve-target';
+import { probeSyncedTerminalRefs, resolveSyncedTarget } from './resolve-target';
 
 function deps(
   options: {
@@ -391,6 +391,149 @@ describe('resolveSyncedTarget', () => {
       slug: 'demo',
       adopt: false,
       adoptionRecord: 'durable',
+    });
+  });
+});
+
+describe('probeSyncedTerminalRefs', () => {
+  const expectedSha = '1234567890123456789012345678901234567890';
+  const otherSha = 'abcdefabcdefabcdefabcdefabcdefabcdefabcd';
+  const target = buildSyncTarget('/repo', '.oat/projects/shared', 'demo');
+
+  function gitRunner(refs: Record<string, string>) {
+    return {
+      run: vi.fn(async (args: string[]) => {
+        const ref = args.at(-1) ?? '';
+        const sha = refs[ref];
+        return sha
+          ? { code: 0, stdout: `${sha}\t${ref}`, stderr: '' }
+          : { code: 2, stdout: '', stderr: '' };
+      }),
+    };
+  }
+
+  it.each([
+    {
+      label: 'active only',
+      refs: { 'refs/oat/projects/demo': expectedSha },
+      state: 'active-only',
+      activeSha: expectedSha,
+      completedSha: null,
+    },
+    {
+      label: 'completed only',
+      refs: { 'refs/oat/completed/demo': expectedSha },
+      state: 'completed-only',
+      activeSha: null,
+      completedSha: expectedSha,
+    },
+    {
+      label: 'both refs during recovery',
+      refs: {
+        'refs/oat/projects/demo': expectedSha,
+        'refs/oat/completed/demo': expectedSha,
+      },
+      state: 'both',
+      activeSha: expectedSha,
+      completedSha: expectedSha,
+    },
+  ] as const)(
+    'reports $label without changing active target resolution',
+    async ({ refs, state, activeSha, completedSha }) => {
+      await expect(
+        probeSyncedTerminalRefs(target, expectedSha, gitRunner(refs)),
+      ).resolves.toEqual({
+        state,
+        activeRef: 'refs/oat/projects/demo',
+        completedRef: 'refs/oat/completed/demo',
+        expectedSha,
+        activeSha,
+        completedSha,
+      });
+    },
+  );
+
+  it.each([
+    {
+      label: 'active ref',
+      refs: { 'refs/oat/projects/demo': otherSha },
+      activeSha: otherSha,
+      completedSha: null,
+    },
+    {
+      label: 'completed ref',
+      refs: { 'refs/oat/completed/demo': otherSha },
+      activeSha: null,
+      completedSha: otherSha,
+    },
+    {
+      label: 'split refs',
+      refs: {
+        'refs/oat/projects/demo': expectedSha,
+        'refs/oat/completed/demo': otherSha,
+      },
+      activeSha: expectedSha,
+      completedSha: otherSha,
+    },
+  ] as const)(
+    'reports a wrong SHA for the $label',
+    async ({ refs, activeSha, completedSha }) => {
+      await expect(
+        probeSyncedTerminalRefs(target, expectedSha, gitRunner(refs)),
+      ).resolves.toEqual({
+        state: 'wrong-sha',
+        activeRef: 'refs/oat/projects/demo',
+        completedRef: 'refs/oat/completed/demo',
+        expectedSha,
+        activeSha,
+        completedSha,
+      });
+    },
+  );
+
+  it('reports absent when neither namespace contains the project', async () => {
+    const git = gitRunner({});
+
+    await expect(
+      probeSyncedTerminalRefs(target, expectedSha, git),
+    ).resolves.toMatchObject({
+      state: 'absent',
+      activeSha: null,
+      completedSha: null,
+    });
+    expect(git.run).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps ordinary missing-target resolution bound to the active ref', async () => {
+    const injected = deps();
+    injected.gitRunner = gitRunner({
+      'refs/oat/completed/demo': expectedSha,
+    });
+
+    await expect(
+      resolveSyncedTarget({ repoRoot: '/repo', env: {} }, 'demo', injected, {
+        allowMissingCheckout: true,
+      }),
+    ).rejects.toThrow('No synced project named demo locally or on origin');
+    expect(injected.gitRunner.run).toHaveBeenCalledWith(
+      ['ls-remote', '--exit-code', 'origin', 'refs/oat/projects/demo'],
+      { cwd: '/repo', allowFailure: true },
+    );
+  });
+
+  it('fails closed when either remote ref cannot be inspected', async () => {
+    const git = gitRunner({});
+    git.run.mockResolvedValueOnce({
+      code: 128,
+      stdout: '',
+      stderr: 'fatal: injected transport failure',
+    });
+
+    await expect(
+      probeSyncedTerminalRefs(target, expectedSha, git),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('injected transport failure'),
+      exitCode: 2,
     });
   });
 });

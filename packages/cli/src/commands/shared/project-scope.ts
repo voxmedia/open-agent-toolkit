@@ -22,6 +22,7 @@ export const PROJECT_SCOPES = [
   'synced',
 ] as const satisfies readonly ProjectScope[];
 export const SYNCED_REF_NAMESPACE = 'refs/oat/projects';
+export const COMPLETED_SYNCED_REF_NAMESPACE = 'refs/oat/completed';
 export const SYNCED_REMOTE = 'origin';
 
 const PROJECT_SLUG_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -127,6 +128,11 @@ export function assertValidProjectSlug(
 export function syncedRefName(slug: string): string {
   assertValidProjectSlug(slug);
   return `${SYNCED_REF_NAMESPACE}/${slug}`;
+}
+
+export function completedSyncedRefName(slug: string): string {
+  assertValidProjectSlug(slug);
+  return `${COMPLETED_SYNCED_REF_NAMESPACE}/${slug}`;
 }
 
 export function syncedRecordPath(scopeRoot: string, slug: string): string {

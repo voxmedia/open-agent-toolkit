@@ -5,6 +5,7 @@ import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   assertValidProjectSlug,
+  completedSyncedRefName,
   resolveProjectScope,
   resolveScopeRoot,
   syncedRecordPath,
@@ -43,6 +44,80 @@ export interface ResolveSyncedTargetDependencies {
 export interface ResolvedSyncTarget extends SyncTarget {
   adopt: boolean;
   adoptionRecord: AdoptionRecordState;
+}
+
+export type SyncedTerminalRefState =
+  | 'absent'
+  | 'active-only'
+  | 'completed-only'
+  | 'both'
+  | 'wrong-sha';
+
+export interface SyncedTerminalRefProbe {
+  state: SyncedTerminalRefState;
+  activeRef: string;
+  completedRef: string;
+  expectedSha: string;
+  activeSha: string | null;
+  completedSha: string | null;
+}
+
+async function remoteRefSha(
+  target: SyncTarget,
+  ref: string,
+  git: GitRunner,
+): Promise<string | null> {
+  const result = await git.run(
+    ['ls-remote', '--exit-code', target.remote, ref],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (classifyRemoteRefLookup(result, target.remote, ref) === 'absent') {
+    return null;
+  }
+
+  const fields = result.stdout.split(/\s+/);
+  if (fields.length !== 2 || fields[1] !== ref || !fields[0]) {
+    throw new CliError(
+      `Unable to verify ${target.remote}/${ref}: git ls-remote returned an unexpected result.`,
+      2,
+    );
+  }
+  return fields[0];
+}
+
+export async function probeSyncedTerminalRefs(
+  target: SyncTarget,
+  expectedSha: string,
+  git: GitRunner,
+): Promise<SyncedTerminalRefProbe> {
+  const activeRef = target.ref;
+  const completedRef = completedSyncedRefName(target.slug);
+  const [activeSha, completedSha] = await Promise.all([
+    remoteRefSha(target, activeRef, git),
+    remoteRefSha(target, completedRef, git),
+  ]);
+
+  const wrongSha =
+    (activeSha !== null && activeSha !== expectedSha) ||
+    (completedSha !== null && completedSha !== expectedSha);
+  const state: SyncedTerminalRefState = wrongSha
+    ? 'wrong-sha'
+    : activeSha !== null && completedSha !== null
+      ? 'both'
+      : activeSha !== null
+        ? 'active-only'
+        : completedSha !== null
+          ? 'completed-only'
+          : 'absent';
+
+  return {
+    state,
+    activeRef,
+    completedRef,
+    expectedSha,
+    activeSha,
+    completedSha,
+  };
 }
 
 async function pathExists(path: string): Promise<boolean> {

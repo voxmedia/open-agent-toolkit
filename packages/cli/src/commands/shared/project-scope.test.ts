@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   canonicalizePath,
+  completedSyncedRefName,
   isSyncedCheckout,
   resolveDefaultScope,
   resolveProjectScope,
@@ -210,12 +211,16 @@ describe('project scope paths', () => {
 
   it('builds validated ref and record paths', () => {
     expect(syncedRefName('my-slug')).toBe('refs/oat/projects/my-slug');
+    expect(completedSyncedRefName('my-slug')).toBe(
+      'refs/oat/completed/my-slug',
+    );
     expect(syncedRecordPath('/repo/.oat/projects/synced', 'my-slug')).toBe(
       '/repo/.oat/projects/synced/my-slug.json',
     );
 
     for (const slug of ['-leading', '../escape', 'has space', '']) {
       expect(() => syncedRefName(slug)).toThrow(CliError);
+      expect(() => completedSyncedRefName(slug)).toThrow(CliError);
     }
   });
 });
