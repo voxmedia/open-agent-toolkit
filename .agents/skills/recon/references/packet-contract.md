@@ -123,6 +123,13 @@ nor a digest of the sensitive span. Diagnostics must never echo the span.
 - `recon.dispatch-receipt`: immutable prepared, approved, accepted, or terminal
   dispatch evidence.
 
+Create immutable mode-specific review projections with
+`scripts/create-review-brief.mjs`. Verification briefs expose only claim
+statements, display excerpts, typed locators, and required source descriptors.
+Adversarial briefs expose only scope, questions, and provisional statements.
+Both reject dossier paths, compiler reasoning, synthesis prose, provenance
+references, and prior review IDs.
+
 ## Validation and Publication
 
 Run `scripts/validate-artifact.mjs` on every candidate. Use
@@ -134,3 +141,8 @@ It validates schemas, IDs, references, containment, hashes, source reopening,
 locators, approval fingerprint, legal transitions, assurance, and requested vs
 achieved profile. Structural failure removes any stale `packet.md`. Only a
 valid `complete` or honest `partial` packet is publishable.
+
+Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
+consumer view. It writes a temporary sibling and atomically promotes
+`packet.md` only after full validation. Its result is the directory path plus a
+compact status summary and digest, never raw dossier content.

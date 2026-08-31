@@ -153,7 +153,8 @@ Run the stages in this order:
 2. `compile` writes a candidate canonical claim ledger.
 3. deterministic validation reopens sources and validates locators.
 4. profile-required `verify`, `adversary`, and `coverage` workers consume only
-   immutable selectively blind briefs.
+   immutable selectively blind briefs created by
+   `scripts/create-review-brief.mjs` at unique paths.
 5. `reconcile` writes a new candidate ledger without mutating the prior ledger.
 
 Use `references/worker-contract.md` for every assignment. Never allow two
@@ -187,11 +188,12 @@ Derive the achieved profile from completed valid stages. Do not accept a worker
 or manifest assertion of achievement. A `quick` run can reach `supported` but
 never `verified`. Unresolved material challenge prevents verification.
 
-Render `packet.md` only from the final validated manifest and ledger. Publish
-through a temporary sibling followed by atomic promotion. A complete run meets
-the requested profile. An honest partial records requested profile, achieved
-profile, failed or omitted passes, coverage gaps, and claim downgrades. A
-structural failure publishes no `packet.md` and leaves a safe failure record.
+Render `packet.md` with `scripts/render-packet.mjs` only from the final validated
+manifest and ledger. Publish through a temporary sibling followed by atomic
+promotion. A complete run meets the requested profile. An honest partial
+records requested profile, achieved profile, failed or omitted passes, coverage
+gaps, and claim downgrades. A structural failure publishes no `packet.md` and
+leaves a safe failure record.
 
 ### Step 8: Return the Directory-Only Handoff
 
