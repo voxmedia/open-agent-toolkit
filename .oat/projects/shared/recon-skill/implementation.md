@@ -216,6 +216,24 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Findings: 4 Critical, 2 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p02 fix round 2
+
+- Original request ID: `recon-skill-p02-implementation-20260831T0510Z`
+- Continuation event: `recon-skill-p02-fix-r2-20260831T0630Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: second and final bounded correction of the six round-2 findings
+  in the existing p02 file boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `c58c148136284cea9548e4398662e53585d674c1`
+- Finding disposition: 4 Critical and 2 Important fixed; expanded recon suite
+  passes 68/68
+- Dispatch: scope=p02-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -297,6 +315,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   projection/reconciliation helpers.
 - This consumes the second and final configured phase review-fix iteration; a
   fresh passing re-review is required to advance.
+
+### 2026-08-31 - p02 review fixes round 2 completed
+
+- The original phase handle added append-only fix commit `c58c14813` without
+  rewriting prior task or fix commits.
+- Claim-bearing review briefs, all stage artifacts and dispatch receipts,
+  source eligibility, prior-ledger reconciliation, material coverage findings,
+  and the production fake workflow are now bound by executable contracts.
+- Root validation confirmed the expanded 68/68 recon suite. The final allowed
+  fresh phase re-review is next.
 
 ## Deviations from Plan / Design
 
