@@ -1,9 +1,7 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02 review governance cap reached while interactive init and sync still re-detect providers within one scope observation
-  - p02 review governance cap reached while post-removal intent or final-inventory failures can escape structured lifecycle reporting
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -26,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | blocked  | 7     | 7/7       |
-| Phase 3 | pending  | 5     | 0/5       |
-| Phase 4 | pending  | 5     | 0/5       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 4     | 0/4       |
-| Phase 7 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | in progress | 7     | 7/7       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 5     | 0/5       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 4     | 0/4       |
+| Phase 7 | pending     | 4     | 0/4       |
 
 **Total:** 8/30 tasks completed
 
@@ -42,7 +40,7 @@ oat_generated: false
 
 ## Phase 1: Accepted Diagnostics Baseline
 
-**Status:** complete
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -87,7 +85,7 @@ oat_generated: false
 
 ### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
-**Status:** complete
+**Status:** completed
 **Commit:** `940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`
 
 **Outcome (required when completed):**
@@ -136,7 +134,7 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** blocked after 7/7 tasks and three governed review cycles
+**Status:** in progress after 7/7 tasks; one operator-authorized correction and review cycle active
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -149,9 +147,11 @@ oat_generated: false
   recovery-settlement commits, and two review-fix commits.
 - Combined p02 verification passes 29 files / 701 tests plus CLI lint,
   type-check, formatting, and `git diff --check`.
-- The third governed review still found two Important blockers. The automatic
-  review-fix cap is exhausted, so p03 may not start without explicit human
-  disposition.
+- The third governed review still found two Important blockers. On 2026-08-31,
+  Thomas explicitly authorized exactly one additional bounded correction and
+  one additional High review cycle. This raises the review-fix retry limit from
+  two to three for this run without changing the plan or phase scope. Phase 3
+  starts only if review round 4 passes; another blocking round is terminal.
 
 | Task    | Status   | Commit      | Outcome                                                 |
 | ------- | -------- | ----------- | ------------------------------------------------------- |
@@ -162,6 +162,41 @@ oat_generated: false
 | p02-t05 | complete | `926ae0624` | Realized-placement aggregate/direct installs            |
 | p02-t06 | complete | `06275a123` | Normalized inspection and diagnostics evidence          |
 | p02-t07 | complete | `23efb17c7` | Update/remove lifecycle compatibility                   |
+
+### Task p02-t01: Add the canonical pack evidence projector
+
+**Status:** completed
+**Commit:** `fa6f129fe`
+
+### Task p02-t02: Define the provider registry and scope context
+
+**Status:** completed
+**Commit:** `1f81e62de`
+
+### Task p02-t03: Route provider consumers through the registry
+
+**Status:** completed
+**Commit:** `90164f3a0`
+
+### Task p02-t04: Add additive scope selection and lifecycle outcomes
+
+**Status:** completed
+**Commit:** `572237850`
+
+### Task p02-t05: Make aggregate and direct installs use realized placement
+
+**Status:** completed
+**Commit:** `926ae0624`
+
+### Task p02-t06: Project evidence through inspection and diagnostics
+
+**Status:** completed
+**Commit:** `06275a123`
+
+### Task p02-t07: Extend lifecycle compatibility across update and removal
+
+**Status:** completed
+**Commit:** `23efb17c7`
 
 **Recovery and review-fix commits:**
 
@@ -180,6 +215,15 @@ oat_generated: false
 2. Intent-write or final-inventory failure after canonical removal occurs
    outside the structured lifecycle boundary, so the command can reject after
    a partial write instead of returning source-qualified recovery evidence.
+
+**Operator-authorized round 4:**
+
+- Scope is restricted to the two round-3 findings above.
+- The original accepted p02 implementer and exact
+  `oat-phase-implementer-gpt-5-6-sol-medium` target remain authoritative.
+- One append-only fix commit and one fresh independent High reviewer round are
+  permitted. A blocking fourth review stops implementation without automatic
+  extension.
 
 ---
 

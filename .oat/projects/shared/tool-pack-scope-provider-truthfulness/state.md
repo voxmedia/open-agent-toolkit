@@ -1,9 +1,7 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: 9d557564faa2430001483ed823a07d2cc920a3c1
-oat_blockers:
-  - p02 review governance cap reached while interactive init and sync still re-detect providers within one scope observation
-  - p02 review governance cap reached while post-removal intent or final-inventory failures can escape structured lifecycle reporting
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -29,7 +27,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_orchestration_retry_limit: 3 # Thomas authorized exactly one additional p02 fix/re-review cycle on 2026-08-31
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -91,7 +89,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T14:53:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:32:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -101,16 +99,16 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation blocked
+**Status:** Implementation in progress
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation - Phase 2 completed all seven planned tasks and passes 29 files /
-701 tests, but its third governed review cycle still found two Important
-findings. The two configured review-fix rounds are exhausted. Phase 3 must not
-start without explicit human disposition.
+Implementation - Thomas authorized exactly one additional bounded Phase 2
+correction and one additional High review cycle for the two Important findings
+from round 3. Phase 2 remains the active execution boundary; Phase 3 starts
+only if that fourth review passes.
 
 ## Artifacts
 
@@ -118,7 +116,7 @@ start without explicit human disposition.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p01 passed; p02 tasks complete, review blocked)
+- **Implementation:** `implementation.md` (in progress — p01 passed; p02 authorized correction active)
 
 ## Progress
 
