@@ -1,3 +1,4 @@
+import type { ToolPackEvidence } from '@commands/tools/shared/pack-evidence';
 import type { PackInventory } from '@commands/tools/shared/pack-inventory';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 
@@ -76,6 +77,26 @@ export function buildPackInstallStateMapFromInventory<TPack extends PackName>(
         inventory?.placement === 'project' || inventory?.placement === 'both';
       const user =
         inventory?.placement === 'user' || inventory?.placement === 'both';
+      return [
+        pack,
+        { project, user, location: resolvePackInstallLocation(project, user) },
+      ];
+    }),
+  ) as Record<TPack, PackInstallState>;
+}
+
+export function buildPackInstallStateMapFromEvidence<TPack extends PackName>(
+  packs: readonly TPack[],
+  evidence: readonly ToolPackEvidence[],
+): Record<TPack, PackInstallState> {
+  return Object.fromEntries(
+    packs.map((pack) => {
+      const packEvidence = evidence.find(
+        (candidate) => candidate.pack === pack,
+      );
+      const project =
+        packEvidence?.knownRealizedScopes.includes('project') ?? false;
+      const user = packEvidence?.knownRealizedScopes.includes('user') ?? false;
       return [
         pack,
         { project, user, location: resolvePackInstallLocation(project, user) },
