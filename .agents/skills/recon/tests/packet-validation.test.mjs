@@ -15,6 +15,10 @@ import { afterEach, test } from 'node:test';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
 import { validatePacket } from '../scripts/validate-packet.mjs';
+import {
+  createApprovalBinding,
+  createApprovalProjection,
+} from './fixtures/packet-fixture.mjs';
 
 const fixtureRoot = new URL('./fixtures/', import.meta.url);
 const tempRoots = [];
@@ -48,6 +52,7 @@ function stagesFor(profile) {
     kind: 'recon.stage-result',
     schemaVersion: 1,
     id: `stage-${index + 1}`,
+    waveId: `wave-${mode}`,
     mode,
     status: 'complete',
     artifactIds: [],
@@ -492,26 +497,14 @@ async function makePacket({
     stage.mode === 'semantic-verification'
       ? 'lane-semantic'
       : `lane-${stage.mode}`;
-  const approvalEnvelope = {
-    provider: 'fixture-provider',
-    model: 'fixture-model',
-    effort: 'high',
-    reasoningMode: 'fixture-reasoning',
-    route: 'fake',
-    role: 'recon-worker',
-    serviceTier: 'fixture',
-    authority: 'contract-enforced',
-    deadlineSeconds: 60,
-    retryLimit: 0,
+  const approvalProjection = createApprovalProjection({
+    runId: 'run-1',
+    stages: stageDefinitions,
+    laneIdForStage: stageLaneId,
     concurrency: profile === 'thorough' ? 4 : 2,
     laneCap: profile === 'thorough' ? 20 : 10,
-    waves: stageDefinitions.map((stage) => ({
-      id: `wave-${stage.mode}`,
-      mode: stage.mode,
-      required: true,
-      lanes: [{ id: stageLaneId(stage), required: true }],
-    })),
-  };
+  });
+  const approvalBinding = createApprovalBinding(approvalProjection);
   const stageArtifacts = [];
   const stageRows = [];
   for (const stage of stageDefinitions) {
@@ -562,7 +555,7 @@ async function makePacket({
       });
     }
     const dispatchReceiptIds = [];
-    for (const state of ['accepted', 'completed']) {
+    for (const state of ['prepared', 'approved', 'accepted', 'completed']) {
       const id = `dispatch-${stage.id}-${state}`;
       const path = join(packetRoot, 'raw', 'dispatch', `${id}.json`);
       await mkdir(join(packetRoot, 'raw', 'dispatch'), { recursive: true });
@@ -574,18 +567,31 @@ async function makePacket({
         stageId: stage.id,
         laneId,
         state,
-        selection: {
-          provider: approvalEnvelope.provider,
-          model: approvalEnvelope.model,
-          effort: approvalEnvelope.effort,
-          reasoningMode: approvalEnvelope.reasoningMode,
-          route: approvalEnvelope.route,
-          role: approvalEnvelope.role,
-          serviceTier: approvalEnvelope.serviceTier,
-        },
-        approvalEnvelope,
-        fingerprint: hashCanonicalJson(approvalEnvelope),
-        acceptedEnvelope: approvalEnvelope,
+        approvalProjection,
+        approvalCanonicalJson: approvalBinding.approvalCanonicalJson,
+        approvalFingerprint: approvalBinding.approvalFingerprint,
+        approvedAt: state === 'prepared' ? null : approvalBinding.approvedAt,
+        approvalEvidence:
+          state === 'prepared' ? null : approvalBinding.approvalEvidence,
+        catalogRecheck:
+          state === 'accepted' || state === 'completed'
+            ? approvalBinding.catalogRecheck
+            : null,
+        launchAcceptance:
+          state === 'accepted' || state === 'completed'
+            ? {
+                status: 'accepted',
+                acceptedAt: '2026-08-31T00:01:00.000Z',
+                handle: `handle-${stage.id}`,
+              }
+            : null,
+        terminalOutcome:
+          state === 'completed'
+            ? {
+                status: 'completed',
+                completedAt: '2026-08-31T00:01:30.000Z',
+              }
+            : null,
         ...(state === 'completed' ? { artifactIds: [artifactId] } : {}),
       });
       stageArtifacts.push({
@@ -623,8 +629,7 @@ async function makePacket({
     },
     sources: [source],
     execution: {
-      approvalEnvelope,
-      approvalFingerprint: hashCanonicalJson(approvalEnvelope),
+      ...approvalBinding,
     },
     stages: stageRows,
     artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...stageArtifacts],
@@ -816,7 +821,8 @@ test('rejects connected-resource version drift and insufficient provenance', asy
 
 test('rejects approval fingerprint drift and unresolved verification challenge', async () => {
   const approval = await makePacket();
-  approval.manifest.execution.approvalEnvelope.effort = 'low';
+  approval.manifest.execution.approvalProjection.selection.effort_selector =
+    'low';
   await writeJson(approval.manifestPath, approval.manifest);
   await expectInvalid(approval, 'APPROVAL_FINGERPRINT_MISMATCH');
 

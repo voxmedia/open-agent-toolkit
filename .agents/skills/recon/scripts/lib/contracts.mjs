@@ -49,23 +49,12 @@ export const stageModes = [
   'redundant-verification',
   'contradiction-resolution',
 ];
-export const approvalSelectionAxes = [
-  'provider',
-  'model',
-  'effort',
-  'reasoningMode',
-  'route',
-  'role',
-  'serviceTier',
-];
-export const approvalEnvelopeAxes = [
-  ...approvalSelectionAxes,
-  'authority',
-  'deadlineSeconds',
-  'retryLimit',
-  'concurrency',
-  'laneCap',
-  'waves',
+export const taskClasses = [
+  'mechanical-recon',
+  'intelligent-recon',
+  'default-implementation',
+  'hard-reasoning',
+  'consequential',
 ];
 
 const legalTransitions = new Set([
@@ -210,70 +199,394 @@ function duplicateIds(values, path, errors) {
   }
 }
 
-function validateApprovalEnvelope(value, errors, path) {
+const projectionKeys = new Set([
+  'schema',
+  'prepared_record_version',
+  'run_id',
+  'prepared_at',
+  'request',
+  'selection',
+  'execution',
+  'catalog_observation',
+]);
+const requestKeys = new Set([
+  'request_id',
+  'caller',
+  'objective',
+  'action',
+  'expected_output',
+  'verification_evidence',
+  'escalate_when',
+]);
+const selectionKeys = new Set([
+  'provider',
+  'dispatch_context',
+  'dispatch_policy',
+  'dispatch_ceiling',
+  'selected_route',
+  'selection_source',
+  'candidates_considered',
+  'selection_reason',
+  'role_name',
+  'role_class',
+  'role_selector',
+  'model_selector',
+  'model_selector_granularity',
+  'effort_selector',
+  'reasoning_mode_selector',
+  'service_tier_selector',
+  'guidance_reference',
+  'guidance_version',
+  'guidance_verified_at',
+  'guidance_status',
+]);
+const pinnedTargetKeys = new Set([
+  'provider',
+  'dispatch_context',
+  'selected_route',
+  'role_selector',
+  'model_selector',
+  'model_selector_granularity',
+  'effort_selector',
+  'reasoning_mode_selector',
+  'service_tier_selector',
+]);
+const waveKeys = new Set([
+  'wave_id',
+  'conditional',
+  'task_class',
+  'model_class_floor',
+  'scope',
+  'lanes',
+  'authority',
+  'authorization_scope',
+  'writable_roots',
+  'deadline_seconds',
+  'retry_limit',
+  'fallback',
+  'dispatch_mode',
+  'context_fork_controls',
+  'concurrency',
+  'lane_cap',
+  'payload_digest',
+]);
+const catalogKeys = new Set([
+  'id',
+  'source',
+  'dispatch_context',
+  'observed_at',
+  'relevant_catalog_fingerprint',
+]);
+
+export function validateApprovalProjection(value, errors, path) {
   if (!isObject(value)) return;
-  closedObject(value, new Set(approvalEnvelopeAxes), errors, path);
-  for (const key of [...approvalSelectionAxes, 'authority']) {
-    requiredString(value, key, errors, path);
+  closedObject(value, projectionKeys, errors, path);
+  if (value.schema !== 'oat-dispatch-approval/v1') {
+    errors.push(
+      issue(
+        'INVALID_APPROVAL_SCHEMA',
+        'Approval projection must use oat-dispatch-approval/v1',
+        `${path}.schema`,
+      ),
+    );
   }
-  requiredInteger(value, 'deadlineSeconds', errors, path, 1);
-  requiredInteger(value, 'retryLimit', errors, path);
-  requiredInteger(value, 'concurrency', errors, path, 1);
-  requiredInteger(value, 'laneCap', errors, path, 1);
-  requiredArray(value, 'waves', errors, path);
+  if (value.prepared_record_version !== 1) {
+    errors.push(
+      issue(
+        'INVALID_PREPARED_RECORD_VERSION',
+        'Prepared record version must be 1',
+        `${path}.prepared_record_version`,
+      ),
+    );
+  }
+  requiredString(value, 'run_id', errors, path);
+  requiredString(value, 'prepared_at', errors, path);
+  requiredObject(value, 'request', errors, path);
+  requiredObject(value, 'selection', errors, path);
+  requiredObject(value, 'execution', errors, path);
+  requiredObject(value, 'catalog_observation', errors, path);
+
+  closedObject(value.request, requestKeys, errors, `${path}.request`);
+  for (const key of [
+    'request_id',
+    'caller',
+    'objective',
+    'action',
+    'expected_output',
+    'verification_evidence',
+  ]) {
+    requiredString(value.request, key, errors, `${path}.request`);
+  }
+  requiredArray(value.request, 'escalate_when', errors, `${path}.request`);
+
+  closedObject(value.selection, selectionKeys, errors, `${path}.selection`);
+  for (const key of [...selectionKeys].filter(
+    (item) => item !== 'candidates_considered',
+  )) {
+    if (
+      key === 'reasoning_mode_selector' &&
+      value.selection?.reasoning_mode_selector === null
+    ) {
+      continue;
+    }
+    requiredString(value.selection, key, errors, `${path}.selection`);
+  }
+  requiredArray(
+    value.selection,
+    'candidates_considered',
+    errors,
+    `${path}.selection`,
+  );
+
+  closedObject(
+    value.execution,
+    new Set(['waves', 'run_maximum_floor', 'pinned_target']),
+    errors,
+    `${path}.execution`,
+  );
+  requiredArray(value.execution, 'waves', errors, `${path}.execution`);
+  requiredString(
+    value.execution,
+    'run_maximum_floor',
+    errors,
+    `${path}.execution`,
+  );
+  requiredObject(value.execution, 'pinned_target', errors, `${path}.execution`);
   const waveIds = new Set();
   const laneIds = new Set();
-  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
-    const wavePath = `${path}.waves[${waveIndex}]`;
-    requiredString(wave, 'id', errors, wavePath);
-    requiredString(wave, 'mode', errors, wavePath);
+  for (const [waveIndex, wave] of (value.execution?.waves ?? []).entries()) {
+    const wavePath = `${path}.execution.waves[${waveIndex}]`;
+    closedObject(wave, waveKeys, errors, wavePath);
+    for (const key of [
+      'wave_id',
+      'task_class',
+      'model_class_floor',
+      'scope',
+      'authority',
+      'authorization_scope',
+      'dispatch_mode',
+    ]) {
+      requiredString(wave, key, errors, wavePath);
+    }
     requiredArray(wave, 'lanes', errors, wavePath);
-    if (typeof wave.required !== 'boolean') {
+    requiredArray(wave, 'writable_roots', errors, wavePath);
+    requiredObject(wave, 'fallback', errors, wavePath);
+    requiredObject(wave, 'context_fork_controls', errors, wavePath);
+    requiredInteger(wave, 'deadline_seconds', errors, wavePath, 1);
+    requiredInteger(wave, 'retry_limit', errors, wavePath);
+    requiredInteger(wave, 'concurrency', errors, wavePath, 1);
+    requiredInteger(wave, 'lane_cap', errors, wavePath, 1);
+    if (typeof wave.conditional !== 'boolean') {
       errors.push(
         issue(
           'MISSING_REQUIRED_FIELD',
-          'required must be a boolean',
-          `${wavePath}.required`,
+          'conditional must be a boolean',
+          `${wavePath}.conditional`,
         ),
       );
     }
-    if (!stageModes.includes(wave.mode)) {
+    if (!taskClasses.includes(wave.task_class)) {
       errors.push(
-        issue('INVALID_STAGE_MODE', 'Unknown wave mode', `${wavePath}.mode`),
+        issue(
+          'INVALID_TASK_CLASS',
+          'Unknown wave task class',
+          `${wavePath}.task_class`,
+        ),
       );
     }
-    if (waveIds.has(wave.id)) {
+    if (wave.model_class_floor !== wave.task_class) {
       errors.push(
-        issue('DUPLICATE_ID', `Duplicate wave ${wave.id}`, `${wavePath}.id`),
+        issue(
+          'MODEL_CLASS_FLOOR_MISMATCH',
+          'Wave model class floor must equal its task class',
+          `${wavePath}.model_class_floor`,
+        ),
       );
     }
-    waveIds.add(wave.id);
+    if (!isDigest(wave.payload_digest)) {
+      errors.push(
+        issue(
+          'INVALID_PAYLOAD_DIGEST',
+          'Wave payload digest must be sha256',
+          `${wavePath}.payload_digest`,
+        ),
+      );
+    }
+    if (waveIds.has(wave.wave_id)) {
+      errors.push(
+        issue(
+          'DUPLICATE_ID',
+          `Duplicate wave ${wave.wave_id}`,
+          `${wavePath}.wave_id`,
+        ),
+      );
+    }
+    waveIds.add(wave.wave_id);
     closedObject(
-      wave,
-      new Set(['id', 'mode', 'required', 'lanes']),
+      wave.fallback,
+      new Set(['mode']),
       errors,
-      wavePath,
+      `${wavePath}.fallback`,
+    );
+    requiredString(wave.fallback, 'mode', errors, `${wavePath}.fallback`);
+    closedObject(
+      wave.context_fork_controls,
+      new Set(['fork_turns']),
+      errors,
+      `${wavePath}.context_fork_controls`,
+    );
+    requiredString(
+      wave.context_fork_controls,
+      'fork_turns',
+      errors,
+      `${wavePath}.context_fork_controls`,
     );
     for (const [laneIndex, lane] of (wave.lanes ?? []).entries()) {
       const lanePath = `${wavePath}.lanes[${laneIndex}]`;
-      requiredString(lane, 'id', errors, lanePath);
-      if (typeof lane.required !== 'boolean') {
+      closedObject(lane, new Set(['lane_id', 'scope']), errors, lanePath);
+      requiredString(lane, 'lane_id', errors, lanePath);
+      requiredString(lane, 'scope', errors, lanePath);
+      if (laneIds.has(lane.lane_id)) {
         errors.push(
           issue(
-            'MISSING_REQUIRED_FIELD',
-            'required must be a boolean',
-            `${lanePath}.required`,
+            'DUPLICATE_ID',
+            `Duplicate lane ${lane.lane_id}`,
+            `${lanePath}.lane_id`,
           ),
         );
       }
-      if (laneIds.has(lane.id)) {
-        errors.push(
-          issue('DUPLICATE_ID', `Duplicate lane ${lane.id}`, `${lanePath}.id`),
-        );
-      }
-      laneIds.add(lane.id);
-      closedObject(lane, new Set(['id', 'required']), errors, lanePath);
+      laneIds.add(lane.lane_id);
     }
+  }
+
+  const floors = (value.execution?.waves ?? [])
+    .map((wave) => taskClasses.indexOf(wave.model_class_floor))
+    .filter((index) => index >= 0);
+  const maximumFloor = taskClasses[Math.max(...floors)];
+  if (maximumFloor && value.execution?.run_maximum_floor !== maximumFloor) {
+    errors.push(
+      issue(
+        'RUN_MAXIMUM_FLOOR_MISMATCH',
+        'Run maximum floor does not equal the strongest wave floor',
+        `${path}.execution.run_maximum_floor`,
+      ),
+    );
+  }
+  if (!taskClasses.includes(value.execution?.run_maximum_floor)) {
+    errors.push(
+      issue(
+        'INVALID_TASK_CLASS',
+        'Unknown run maximum floor',
+        `${path}.execution.run_maximum_floor`,
+      ),
+    );
+  }
+  closedObject(
+    value.execution?.pinned_target,
+    pinnedTargetKeys,
+    errors,
+    `${path}.execution.pinned_target`,
+  );
+  for (const key of pinnedTargetKeys) {
+    if (
+      key === 'reasoning_mode_selector' &&
+      value.execution?.pinned_target?.reasoning_mode_selector === null
+    ) {
+      continue;
+    }
+    requiredString(
+      value.execution?.pinned_target,
+      key,
+      errors,
+      `${path}.execution.pinned_target`,
+    );
+  }
+  for (const key of pinnedTargetKeys) {
+    if (value.execution?.pinned_target?.[key] !== value.selection?.[key]) {
+      errors.push(
+        issue(
+          'PINNED_TARGET_MISMATCH',
+          `${key} differs from the approved selection`,
+          `${path}.execution.pinned_target.${key}`,
+        ),
+      );
+    }
+  }
+
+  closedObject(
+    value.catalog_observation,
+    catalogKeys,
+    errors,
+    `${path}.catalog_observation`,
+  );
+  for (const key of ['id', 'source', 'dispatch_context', 'observed_at']) {
+    requiredString(
+      value.catalog_observation,
+      key,
+      errors,
+      `${path}.catalog_observation`,
+    );
+  }
+  if (!isDigest(value.catalog_observation?.relevant_catalog_fingerprint)) {
+    errors.push(
+      issue(
+        'INVALID_CATALOG_FINGERPRINT',
+        'Catalog fingerprint must be sha256',
+        `${path}.catalog_observation.relevant_catalog_fingerprint`,
+      ),
+    );
+  }
+  if (
+    value.catalog_observation?.dispatch_context !==
+    value.selection?.dispatch_context
+  ) {
+    errors.push(
+      issue(
+        'CATALOG_CONTEXT_MISMATCH',
+        'Catalog context differs from the approved selection',
+        `${path}.catalog_observation.dispatch_context`,
+      ),
+    );
+  }
+}
+
+function validateApprovalEvidence(value, errors, path) {
+  if (!isObject(value)) return;
+  closedObject(value, new Set(['type', 'fingerprint']), errors, path);
+  if (value.type !== 'explicit-user-approval') {
+    errors.push(
+      issue(
+        'INVALID_APPROVAL_EVIDENCE',
+        'Approval evidence must record explicit user approval',
+        `${path}.type`,
+      ),
+    );
+  }
+  if (!isDigest(value.fingerprint)) {
+    errors.push(
+      issue(
+        'INVALID_APPROVAL_FINGERPRINT',
+        'Approval evidence fingerprint must be sha256',
+        `${path}.fingerprint`,
+      ),
+    );
+  }
+}
+
+function validateCatalogRecheck(value, errors, path) {
+  if (!isObject(value)) return;
+  closedObject(value, catalogKeys, errors, path);
+  for (const key of ['id', 'source', 'dispatch_context', 'observed_at']) {
+    requiredString(value, key, errors, path);
+  }
+  if (!isDigest(value.relevant_catalog_fingerprint)) {
+    errors.push(
+      issue(
+        'INVALID_CATALOG_FINGERPRINT',
+        'Catalog recheck fingerprint must be sha256',
+        `${path}.relevant_catalog_fingerprint`,
+      ),
+    );
   }
 }
 
@@ -384,21 +697,52 @@ function validateManifest(value, errors) {
   if (isObject(value.execution)) {
     closedObject(
       value.execution,
-      new Set(['approvalEnvelope', 'approvalFingerprint']),
+      new Set([
+        'approvalProjection',
+        'approvalCanonicalJson',
+        'approvalFingerprint',
+        'approvedAt',
+        'approvalEvidence',
+        'catalogRecheck',
+      ]),
       errors,
       '$.execution',
     );
-    requiredObject(value.execution, 'approvalEnvelope', errors, '$.execution');
+    requiredObject(
+      value.execution,
+      'approvalProjection',
+      errors,
+      '$.execution',
+    );
+    requiredString(
+      value.execution,
+      'approvalCanonicalJson',
+      errors,
+      '$.execution',
+    );
     requiredString(
       value.execution,
       'approvalFingerprint',
       errors,
       '$.execution',
     );
-    validateApprovalEnvelope(
-      value.execution.approvalEnvelope,
+    requiredString(value.execution, 'approvedAt', errors, '$.execution');
+    requiredObject(value.execution, 'approvalEvidence', errors, '$.execution');
+    requiredObject(value.execution, 'catalogRecheck', errors, '$.execution');
+    validateApprovalProjection(
+      value.execution.approvalProjection,
       errors,
-      '$.execution.approvalEnvelope',
+      '$.execution.approvalProjection',
+    );
+    validateApprovalEvidence(
+      value.execution.approvalEvidence,
+      errors,
+      '$.execution.approvalEvidence',
+    );
+    validateCatalogRecheck(
+      value.execution.catalogRecheck,
+      errors,
+      '$.execution.catalogRecheck',
     );
   }
   if (Array.isArray(value.sources))
@@ -548,6 +892,7 @@ function validateManifest(value, errors) {
   }
   for (const [index, stage] of (value.stages ?? []).entries()) {
     requiredString(stage, 'id', errors, `$.stages[${index}]`);
+    requiredString(stage, 'waveId', errors, `$.stages[${index}]`);
     requiredString(stage, 'mode', errors, `$.stages[${index}]`);
     requiredString(stage, 'status', errors, `$.stages[${index}]`);
     requiredArray(stage, 'artifactIds', errors, `$.stages[${index}]`);
@@ -589,6 +934,7 @@ function validateManifest(value, errors) {
         'kind',
         'schemaVersion',
         'id',
+        'waveId',
         'mode',
         'status',
         'artifactIds',
@@ -1418,20 +1764,13 @@ function validateDispatchReceipt(value, errors) {
   for (const key of ['id', 'runId', 'stageId', 'laneId', 'state']) {
     requiredString(value, key, errors);
   }
-  requiredObject(value, 'selection', errors);
-  requiredObject(value, 'approvalEnvelope', errors);
-  requiredString(value, 'fingerprint', errors);
-  const selectionKeys = new Set(approvalSelectionAxes);
-  const envelopeKeys = new Set(approvalEnvelopeAxes);
-  closedObject(value.selection, selectionKeys, errors, '$.selection');
-  for (const key of approvalSelectionAxes) {
-    requiredString(value.selection, key, errors, '$.selection');
-  }
-  closedObject(
-    value.approvalEnvelope,
-    envelopeKeys,
+  requiredObject(value, 'approvalProjection', errors);
+  requiredString(value, 'approvalCanonicalJson', errors);
+  requiredString(value, 'approvalFingerprint', errors);
+  validateApprovalProjection(
+    value.approvalProjection,
     errors,
-    '$.approvalEnvelope',
+    '$.approvalProjection',
   );
   if (
     !['prepared', 'approved', 'accepted', 'completed', 'failed'].includes(
@@ -1442,29 +1781,104 @@ function validateDispatchReceipt(value, errors) {
       issue('INVALID_DISPATCH_STATE', 'Unknown dispatch state', '$.state'),
     );
   }
-  if (['accepted', 'completed', 'failed'].includes(value.state))
-    requiredObject(value, 'acceptedEnvelope', errors);
-  if (isObject(value.acceptedEnvelope)) {
-    closedObject(
-      value.acceptedEnvelope,
-      envelopeKeys,
-      errors,
-      '$.acceptedEnvelope',
-    );
-  }
-  validateApprovalEnvelope(
-    value.approvalEnvelope,
-    errors,
-    '$.approvalEnvelope',
+  const approved = ['approved', 'accepted', 'completed', 'failed'].includes(
+    value.state,
   );
-  if (isObject(value.acceptedEnvelope)) {
-    validateApprovalEnvelope(
-      value.acceptedEnvelope,
+  const launched = ['accepted', 'completed', 'failed'].includes(value.state);
+  if (approved) {
+    requiredString(value, 'approvedAt', errors);
+    requiredObject(value, 'approvalEvidence', errors);
+    validateApprovalEvidence(
+      value.approvalEvidence,
       errors,
-      '$.acceptedEnvelope',
+      '$.approvalEvidence',
+    );
+  } else if (value.approvedAt !== null || value.approvalEvidence !== null) {
+    errors.push(
+      issue(
+        'INVALID_DISPATCH_STATE_EVIDENCE',
+        'Prepared receipt cannot contain approval evidence',
+        '$.approvalEvidence',
+      ),
     );
   }
-  if (value.state === 'completed') requiredArray(value, 'artifactIds', errors);
+  if (launched) {
+    requiredObject(value, 'catalogRecheck', errors);
+    requiredObject(value, 'launchAcceptance', errors);
+    validateCatalogRecheck(value.catalogRecheck, errors, '$.catalogRecheck');
+    if (isObject(value.launchAcceptance)) {
+      closedObject(
+        value.launchAcceptance,
+        new Set(['status', 'acceptedAt', 'handle']),
+        errors,
+        '$.launchAcceptance',
+      );
+      if (value.launchAcceptance.status !== 'accepted') {
+        errors.push(
+          issue(
+            'INVALID_LAUNCH_ACCEPTANCE',
+            'Launch was not accepted',
+            '$.launchAcceptance.status',
+          ),
+        );
+      }
+      requiredString(
+        value.launchAcceptance,
+        'acceptedAt',
+        errors,
+        '$.launchAcceptance',
+      );
+      requiredString(
+        value.launchAcceptance,
+        'handle',
+        errors,
+        '$.launchAcceptance',
+      );
+    }
+  } else if (value.catalogRecheck !== null || value.launchAcceptance !== null) {
+    errors.push(
+      issue(
+        'INVALID_DISPATCH_STATE_EVIDENCE',
+        'Pre-launch receipt cannot contain catalog or acceptance evidence',
+        '$.catalogRecheck',
+      ),
+    );
+  }
+  if (value.state === 'completed') {
+    requiredArray(value, 'artifactIds', errors);
+    requiredObject(value, 'terminalOutcome', errors);
+    if (isObject(value.terminalOutcome)) {
+      closedObject(
+        value.terminalOutcome,
+        new Set(['status', 'completedAt']),
+        errors,
+        '$.terminalOutcome',
+      );
+      if (value.terminalOutcome.status !== 'completed') {
+        errors.push(
+          issue(
+            'INVALID_TERMINAL_OUTCOME',
+            'Terminal outcome is not completed',
+            '$.terminalOutcome.status',
+          ),
+        );
+      }
+      requiredString(
+        value.terminalOutcome,
+        'completedAt',
+        errors,
+        '$.terminalOutcome',
+      );
+    }
+  } else if (value.terminalOutcome !== null) {
+    errors.push(
+      issue(
+        'INVALID_DISPATCH_STATE_EVIDENCE',
+        'Non-completed receipt cannot contain a terminal outcome',
+        '$.terminalOutcome',
+      ),
+    );
+  }
   closedObject(
     value,
     new Set([
@@ -1475,10 +1889,14 @@ function validateDispatchReceipt(value, errors) {
       'stageId',
       'laneId',
       'state',
-      'selection',
-      'approvalEnvelope',
-      'fingerprint',
-      'acceptedEnvelope',
+      'approvalProjection',
+      'approvalCanonicalJson',
+      'approvalFingerprint',
+      'approvedAt',
+      'approvalEvidence',
+      'catalogRecheck',
+      'launchAcceptance',
+      'terminalOutcome',
       'artifactIds',
     ]),
     errors,
@@ -1486,7 +1904,7 @@ function validateDispatchReceipt(value, errors) {
 }
 
 function validateStageResult(value, errors) {
-  for (const key of ['id', 'mode', 'laneId', 'status'])
+  for (const key of ['id', 'waveId', 'mode', 'laneId', 'status'])
     requiredString(value, key, errors);
   requiredArray(value, 'artifactIds', errors);
   requiredArray(value, 'dispatchReceiptIds', errors);
@@ -1504,6 +1922,7 @@ function validateStageResult(value, errors) {
       'kind',
       'schemaVersion',
       'id',
+      'waveId',
       'mode',
       'laneId',
       'status',

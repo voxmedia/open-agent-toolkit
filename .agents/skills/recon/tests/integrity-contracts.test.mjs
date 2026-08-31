@@ -4,10 +4,13 @@ import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
-import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
+import { hashFile } from '../scripts/lib/canonical-json.mjs';
 import { reconcileLedger } from '../scripts/reconcile-ledger.mjs';
 import { validatePacket } from '../scripts/validate-packet.mjs';
-import { createPacketFixture } from './fixtures/packet-fixture.mjs';
+import {
+  createApprovalBinding,
+  createPacketFixture,
+} from './fixtures/packet-fixture.mjs';
 
 const roots = [];
 afterEach(async () => {
@@ -41,118 +44,312 @@ async function replaceArtifact(packet, relative, value) {
   return reference;
 }
 
-async function replaceApprovalEnvelope(packet, approvalEnvelope) {
-  packet.manifest.execution.approvalEnvelope = approvalEnvelope;
-  packet.manifest.execution.approvalFingerprint =
-    hashCanonicalJson(approvalEnvelope);
+async function replaceApprovalProjection(packet, approvalProjection) {
+  const binding = createApprovalBinding(approvalProjection);
+  packet.manifest.execution = binding;
   for (const reference of packet.manifest.artifacts.filter((item) =>
     item.path.startsWith('raw/dispatch/'),
   )) {
     const receipt = await readJson(join(packet.packetRoot, reference.path));
-    receipt.selection = Object.fromEntries(
-      [
-        'provider',
-        'model',
-        'effort',
-        'reasoningMode',
-        'route',
-        'role',
-        'serviceTier',
-      ]
-        .filter((key) => approvalEnvelope[key] !== undefined)
-        .map((key) => [key, approvalEnvelope[key]]),
-    );
-    receipt.approvalEnvelope = approvalEnvelope;
-    receipt.acceptedEnvelope = approvalEnvelope;
-    receipt.fingerprint = hashCanonicalJson(approvalEnvelope);
+    receipt.approvalProjection = approvalProjection;
+    receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
+    receipt.approvalFingerprint = binding.approvalFingerprint;
+    receipt.approvedAt =
+      receipt.state === 'prepared' ? null : binding.approvedAt;
+    receipt.approvalEvidence =
+      receipt.state === 'prepared' ? null : binding.approvalEvidence;
+    receipt.catalogRecheck =
+      receipt.state === 'accepted' || receipt.state === 'completed'
+        ? binding.catalogRecheck
+        : null;
     await replaceArtifact(packet, reference.path, receipt);
   }
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
-test('approval and receipt selection require every canonical execution axis', async () => {
-  const envelopeAxes = [
-    'provider',
-    'model',
-    'effort',
-    'reasoningMode',
-    'route',
-    'role',
-    'serviceTier',
-    'authority',
-    'deadlineSeconds',
-    'retryLimit',
-    'concurrency',
-    'laneCap',
-    'waves',
-  ];
-  for (const axis of envelopeAxes) {
+const omittedAxisMutations = [
+  [
+    'wave task class',
+    (projection) => delete projection.execution.waves[0].task_class,
+  ],
+  [
+    'wave floor',
+    (projection) => delete projection.execution.waves[0].model_class_floor,
+  ],
+  ['wave scope', (projection) => delete projection.execution.waves[0].scope],
+  [
+    'lane scope',
+    (projection) => delete projection.execution.waves[0].lanes[0].scope,
+  ],
+  [
+    'wave authority',
+    (projection) => delete projection.execution.waves[0].authority,
+  ],
+  [
+    'authorization scope',
+    (projection) => delete projection.execution.waves[0].authorization_scope,
+  ],
+  [
+    'writable roots',
+    (projection) => delete projection.execution.waves[0].writable_roots,
+  ],
+  [
+    'deadline',
+    (projection) => delete projection.execution.waves[0].deadline_seconds,
+  ],
+  [
+    'retry limit',
+    (projection) => delete projection.execution.waves[0].retry_limit,
+  ],
+  ['fallback', (projection) => delete projection.execution.waves[0].fallback],
+  [
+    'dispatch mode',
+    (projection) => delete projection.execution.waves[0].dispatch_mode,
+  ],
+  [
+    'context controls',
+    (projection) => delete projection.execution.waves[0].context_fork_controls,
+  ],
+  [
+    'wave concurrency',
+    (projection) => delete projection.execution.waves[0].concurrency,
+  ],
+  [
+    'wave lane cap',
+    (projection) => delete projection.execution.waves[0].lane_cap,
+  ],
+  [
+    'payload digest',
+    (projection) => delete projection.execution.waves[0].payload_digest,
+  ],
+  [
+    'run maximum floor',
+    (projection) => delete projection.execution.run_maximum_floor,
+  ],
+  ['pinned target', (projection) => delete projection.execution.pinned_target],
+  [
+    'catalog identity',
+    (projection) => delete projection.catalog_observation.id,
+  ],
+  [
+    'catalog source',
+    (projection) => delete projection.catalog_observation.source,
+  ],
+  [
+    'catalog context',
+    (projection) => delete projection.catalog_observation.dispatch_context,
+  ],
+  [
+    'catalog observation time',
+    (projection) => delete projection.catalog_observation.observed_at,
+  ],
+  [
+    'catalog fingerprint',
+    (projection) =>
+      delete projection.catalog_observation.relevant_catalog_fingerprint,
+  ],
+];
+
+test('complete prepared projection rejects deletion of every formerly omitted dispatch axis', async () => {
+  for (const [label, mutate] of omittedAxisMutations) {
     const packet = await fixture();
-    const envelope = {
-      ...structuredClone(packet.manifest.execution.approvalEnvelope),
-      authority: 'contract-enforced',
-      deadlineSeconds: 60,
-      retryLimit: 0,
-      concurrency: 2,
-      laneCap: 10,
-    };
-    delete envelope[axis];
-    await replaceApprovalEnvelope(packet, envelope);
+    const projection = structuredClone(
+      packet.manifest.execution.approvalProjection,
+    );
+    mutate(projection);
+    packet.manifest.execution = createApprovalBinding(projection);
+    await writeJson(packet.manifestPath, packet.manifest);
     const validation = await validatePacket(packet.packetRoot);
     assert.equal(
       validation.valid,
       false,
-      `${axis} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
+      `${label} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
     );
   }
+});
 
-  for (const axis of [
-    'provider',
-    'model',
-    'effort',
-    'reasoningMode',
-    'route',
-    'role',
-    'serviceTier',
-  ]) {
+test('every immutable receipt state binds every formerly omitted projection axis', async () => {
+  const mutationCases = [
+    [
+      'task class',
+      (projection) =>
+        (projection.execution.waves[0].task_class = 'hard-reasoning'),
+    ],
+    [
+      'wave floor',
+      (projection) =>
+        (projection.execution.waves[0].model_class_floor = 'hard-reasoning'),
+    ],
+    [
+      'wave scope',
+      (projection) => (projection.execution.waves[0].scope = 'packet:drift'),
+    ],
+    [
+      'lane scope',
+      (projection) =>
+        (projection.execution.waves[0].lanes[0].scope = 'packet/drift'),
+    ],
+    [
+      'authority',
+      (projection) =>
+        (projection.execution.waves[0].authority = 'provider-enforced'),
+    ],
+    [
+      'authorization scope',
+      (projection) =>
+        (projection.execution.waves[0].authorization_scope = 'other-run'),
+    ],
+    [
+      'writable root',
+      (projection) =>
+        projection.execution.waves[0].writable_roots.push('raw/drift'),
+    ],
+    [
+      'deadline',
+      (projection) => projection.execution.waves[0].deadline_seconds++,
+    ],
+    [
+      'retry limit',
+      (projection) => projection.execution.waves[0].retry_limit++,
+    ],
+    [
+      'fallback',
+      (projection) =>
+        (projection.execution.waves[0].fallback.mode = 'alternate'),
+    ],
+    [
+      'dispatch mode',
+      (projection) =>
+        (projection.execution.waves[0].dispatch_mode = 'foreground'),
+    ],
+    [
+      'context control',
+      (projection) =>
+        (projection.execution.waves[0].context_fork_controls.fork_turns =
+          'none'),
+    ],
+    [
+      'wave concurrency',
+      (projection) => projection.execution.waves[0].concurrency++,
+    ],
+    ['wave lane cap', (projection) => projection.execution.waves[0].lane_cap++],
+    [
+      'payload digest',
+      (projection) =>
+        (projection.execution.waves[0].payload_digest = `sha256:${'f'.repeat(64)}`),
+    ],
+    [
+      'run maximum floor',
+      (projection) =>
+        (projection.execution.run_maximum_floor = 'hard-reasoning'),
+    ],
+    [
+      'pinned target',
+      (projection) =>
+        (projection.execution.pinned_target.effort_selector = 'low'),
+    ],
+    [
+      'catalog identity',
+      (projection) => (projection.catalog_observation.id = 'catalog-drift'),
+    ],
+    [
+      'catalog source',
+      (projection) => (projection.catalog_observation.source = 'stale-catalog'),
+    ],
+    [
+      'catalog context',
+      (projection) =>
+        (projection.catalog_observation.dispatch_context = 'stale-context'),
+    ],
+    [
+      'catalog observation time',
+      (projection) =>
+        (projection.catalog_observation.observed_at = '2026-07-12T01:00:00Z'),
+    ],
+    [
+      'catalog fingerprint',
+      (projection) =>
+        (projection.catalog_observation.relevant_catalog_fingerprint = `sha256:${'e'.repeat(64)}`),
+    ],
+  ];
+  for (const state of ['prepared', 'approved', 'accepted', 'completed']) {
+    for (const [label, mutate] of mutationCases) {
+      const packet = await fixture();
+      const reference = packet.manifest.artifacts.find(
+        (item) =>
+          item.path.startsWith('raw/dispatch/') &&
+          item.path.endsWith(`-${state}.json`),
+      );
+      const receipt = await readJson(join(packet.packetRoot, reference.path));
+      mutate(receipt.approvalProjection);
+      const binding = createApprovalBinding(receipt.approvalProjection);
+      receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
+      receipt.approvalFingerprint = binding.approvalFingerprint;
+      if (receipt.approvalEvidence) {
+        receipt.approvalEvidence.fingerprint = binding.approvalFingerprint;
+      }
+      await replaceArtifact(packet, reference.path, receipt);
+      const validation = await validatePacket(packet.packetRoot);
+      assert.equal(
+        validation.valid,
+        false,
+        `${state} receipt ${label} drift remained valid: ${JSON.stringify(validation, null, 2)}`,
+      );
+    }
+  }
+});
+
+test('approval evidence, canonical fingerprint, and catalog recheck are immutable across state receipts', async () => {
+  const manifestMutations = [
+    ['canonical JSON', (execution) => (execution.approvalCanonicalJson += ' ')],
+    [
+      'approval evidence',
+      (execution) =>
+        (execution.approvalEvidence.fingerprint = `sha256:${'a'.repeat(64)}`),
+    ],
+    ['catalog recheck', (execution) => delete execution.catalogRecheck],
+  ];
+  for (const [label, mutate] of manifestMutations) {
     const packet = await fixture();
-    const envelope = {
-      ...structuredClone(packet.manifest.execution.approvalEnvelope),
-      authority: 'contract-enforced',
-      deadlineSeconds: 60,
-      retryLimit: 0,
-      concurrency: 2,
-      laneCap: 10,
-    };
-    await replaceApprovalEnvelope(packet, envelope);
-    const reference = packet.manifest.artifacts.find((item) =>
-      item.path.startsWith('raw/dispatch/'),
+    mutate(packet.manifest.execution);
+    await writeJson(packet.manifestPath, packet.manifest);
+    const validation = await validatePacket(packet.packetRoot);
+    assert.equal(validation.valid, false, `${label} drift remained valid`);
+  }
+
+  const receiptMutations = new Map([
+    ['prepared', (receipt) => delete receipt.approvalCanonicalJson],
+    ['approved', (receipt) => delete receipt.approvalEvidence],
+    ['accepted', (receipt) => delete receipt.catalogRecheck],
+    [
+      'completed',
+      (receipt) =>
+        (receipt.catalogRecheck.relevant_catalog_fingerprint = `sha256:${'b'.repeat(64)}`),
+    ],
+  ]);
+  for (const [state, mutate] of receiptMutations) {
+    const packet = await fixture();
+    const reference = packet.manifest.artifacts.find(
+      (item) =>
+        item.path.startsWith('raw/dispatch/') &&
+        item.path.endsWith(`-${state}.json`),
     );
     const receipt = await readJson(join(packet.packetRoot, reference.path));
-    delete receipt.selection[axis];
+    mutate(receipt);
     await replaceArtifact(packet, reference.path, receipt);
     const validation = await validatePacket(packet.packetRoot);
     assert.equal(
       validation.valid,
       false,
-      `receipt ${axis} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
+      `${state} receipt drift remained valid`,
     );
   }
 });
 
-test('declared-complete stages reject every receipt selection drift under complete and partial outcomes', async () => {
-  const selectionAxes = [
-    'provider',
-    'model',
-    'effort',
-    'reasoningMode',
-    'route',
-    'role',
-    'serviceTier',
-  ];
+test('declared-complete stages reject selection drift under complete and partial outcomes', async () => {
   for (const status of ['complete', 'partial']) {
     for (const receiptState of ['accepted', 'completed']) {
-      for (const axis of selectionAxes) {
+      for (const axis of ['provider', 'model_selector', 'effort_selector']) {
         const packet = await createPacketFixture({ profile: 'quick', status });
         roots.push(packet.tempRoot);
         if (status === 'partial') {
@@ -174,7 +371,12 @@ test('declared-complete stages reject every receipt selection drift under comple
             item.path.endsWith(`-${receiptState}.json`),
         );
         const receipt = await readJson(join(packet.packetRoot, reference.path));
-        receipt.selection[axis] = `${receipt.selection[axis]}-drift`;
+        const selection = receipt.approvalProjection.selection;
+        selection[axis] = `${selection[axis]}-drift`;
+        const binding = createApprovalBinding(receipt.approvalProjection);
+        receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
+        receipt.approvalFingerprint = binding.approvalFingerprint;
+        receipt.approvalEvidence.fingerprint = binding.approvalFingerprint;
         await replaceArtifact(packet, reference.path, receipt);
 
         const validation = await validatePacket(packet.packetRoot);
@@ -231,7 +433,7 @@ test('review dispositions bind exact claim-bearing typed immutable briefs', asyn
   ]);
 });
 
-test('every stage requires one same-run typed artifact and accepted/completed receipts', async () => {
+test('every stage requires one same-run typed artifact and all four immutable receipts', async () => {
   const packet = await fixture('thorough');
   for (const stage of packet.manifest.stages) {
     const original = structuredClone(stage);
@@ -261,11 +463,12 @@ test('every stage requires one same-run typed artifact and accepted/completed re
       item.path.includes(`${receiptId}.json`),
     );
     const receipt = await readJson(join(packet.packetRoot, reference.path));
+    const originalReceiptState = receipt.state;
     receipt.state = 'failed';
     await replaceArtifact(packet, reference.path, receipt);
     const failed = await validatePacket(packet.packetRoot);
     assert.notEqual(failed.achievedProfile, 'thorough', stage.mode);
-    receipt.state = 'accepted';
+    receipt.state = originalReceiptState;
     await replaceArtifact(packet, reference.path, receipt);
 
     receipt.runId = 'wrong-run';
@@ -275,7 +478,9 @@ test('every stage requires one same-run typed artifact and accepted/completed re
     receipt.runId = packet.manifest.run.id;
     await replaceArtifact(packet, reference.path, receipt);
 
-    const completedId = stage.dispatchReceiptIds[1];
+    const completedId = stage.dispatchReceiptIds.find((id) =>
+      id.endsWith('-completed'),
+    );
     const completedReference = packet.manifest.artifacts.find((item) =>
       item.path.includes(`${completedId}.json`),
     );
@@ -466,16 +671,18 @@ test('claim assurance and reconciliation reject an exact but unreceipted review 
 
 test('approved required lanes cannot disappear from the terminal stage topology', async () => {
   const packet = await fixture();
-  const approvalEnvelope = structuredClone(
-    packet.manifest.execution.approvalEnvelope,
+  const approvalProjection = structuredClone(
+    packet.manifest.execution.approvalProjection,
   );
-  approvalEnvelope.waves.push({
-    id: 'wave-approved-extra',
-    mode: 'gather',
-    required: true,
-    lanes: [{ id: 'lane-approved-extra', required: true }],
+  approvalProjection.execution.waves.push({
+    ...structuredClone(approvalProjection.execution.waves[0]),
+    wave_id: 'wave-approved-extra',
+    scope: 'packet:approved-extra',
+    lanes: [{ lane_id: 'lane-approved-extra', scope: 'packet/approved-extra' }],
+    writable_roots: ['raw/approved-extra'],
+    payload_digest: `sha256:${'d'.repeat(64)}`,
   });
-  await replaceApprovalEnvelope(packet, approvalEnvelope);
+  await replaceApprovalProjection(packet, approvalProjection);
 
   const validation = await validatePacket(packet.packetRoot);
   assert.ok(

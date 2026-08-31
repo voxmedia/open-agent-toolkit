@@ -4,9 +4,12 @@ import { readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { hashCanonicalJson, hashFile } from './lib/canonical-json.mjs';
 import {
-  approvalSelectionAxes,
+  canonicalJson,
+  hashCanonicalJson,
+  hashFile,
+} from './lib/canonical-json.mjs';
+import {
   isDigest,
   isObject,
   issue,
@@ -677,21 +680,14 @@ const stageArtifactContract = {
   },
 };
 
-function selectionFromEnvelope(envelope) {
-  return Object.fromEntries(
-    approvalSelectionAxes
-      .filter((axis) => envelope?.[axis] !== undefined)
-      .map((axis) => [axis, envelope[axis]]),
-  );
-}
-
 function stageArtifactIsComplete(
   stage,
   artifactsById,
   runId,
   approvalFingerprint,
-  approvalEnvelope,
+  approvalExecution,
 ) {
+  const approvalProjection = approvalExecution?.approvalProjection;
   const contract = stageArtifactContract[stage.mode];
   if (!contract || stage.status !== 'complete') return false;
   if (!Array.isArray(stage.artifactIds) || stage.artifactIds.length !== 1) {
@@ -712,7 +708,7 @@ function stageArtifactIsComplete(
   }
   if (
     !Array.isArray(stage.dispatchReceiptIds) ||
-    stage.dispatchReceiptIds.length !== 2
+    stage.dispatchReceiptIds.length !== 4
   ) {
     return false;
   }
@@ -726,18 +722,28 @@ function stageArtifactIsComplete(
         receipt.runId !== runId ||
         receipt.stageId !== stage.id ||
         receipt.laneId !== stage.laneId ||
-        receipt.fingerprint !== approvalFingerprint ||
-        hashCanonicalJson(receipt.selection) !==
-          hashCanonicalJson(selectionFromEnvelope(approvalEnvelope)) ||
-        hashCanonicalJson(receipt.approvalEnvelope) !==
-          hashCanonicalJson(approvalEnvelope) ||
-        receipt.fingerprint !== hashCanonicalJson(receipt.approvalEnvelope) ||
-        (receipt.acceptedEnvelope &&
-          (hashCanonicalJson(receipt.acceptedEnvelope) !==
-            hashCanonicalJson(approvalEnvelope) ||
-            receipt.fingerprint !==
-              hashCanonicalJson(receipt.acceptedEnvelope))),
+        !receipt.approvalProjection ||
+        typeof receipt.approvalCanonicalJson !== 'string' ||
+        receipt.approvalFingerprint !== approvalFingerprint ||
+        receipt.approvalCanonicalJson !== canonicalJson(approvalProjection) ||
+        hashCanonicalJson(receipt.approvalProjection) !== approvalFingerprint ||
+        receipt.approvalCanonicalJson !==
+          canonicalJson(receipt.approvalProjection) ||
+        canonicalJson(receipt.approvalProjection) !==
+          canonicalJson(approvalProjection) ||
+        (receipt.state !== 'prepared' &&
+          (!approvalExecution.approvalEvidence ||
+            !receipt.approvalEvidence ||
+            canonicalJson(receipt.approvalEvidence) !==
+              canonicalJson(approvalExecution.approvalEvidence))) ||
+        (['accepted', 'completed'].includes(receipt.state) &&
+          (!approvalExecution.catalogRecheck ||
+            !receipt.catalogRecheck ||
+            canonicalJson(receipt.catalogRecheck) !==
+              canonicalJson(approvalExecution.catalogRecheck))),
     ) ||
+    !receipts.some((receipt) => receipt.state === 'prepared') ||
+    !receipts.some((receipt) => receipt.state === 'approved') ||
     !receipts.some((receipt) => receipt.state === 'accepted') ||
     !receipts.some(
       (receipt) =>
@@ -751,11 +757,11 @@ function stageArtifactIsComplete(
   return true;
 }
 
-function approvedRequiredLanes(approvalEnvelope) {
-  return (approvalEnvelope?.waves ?? []).flatMap((wave) =>
+function approvedRequiredLanes(approvalProjection) {
+  return (approvalProjection?.execution?.waves ?? []).flatMap((wave) =>
     (wave.lanes ?? [])
-      .filter((lane) => wave.required === true && lane.required === true)
-      .map((lane) => ({ waveId: wave.id, mode: wave.mode, laneId: lane.id })),
+      .filter(() => wave.conditional === false)
+      .map((lane) => ({ waveId: wave.wave_id, laneId: lane.lane_id })),
   );
 }
 
@@ -767,25 +773,26 @@ function validateStageTopology(
   errors,
 ) {
   const requiredLanes = approvedRequiredLanes(
-    manifest.execution?.approvalEnvelope,
+    manifest.execution?.approvalProjection,
   );
   const plannedByLane = new Map(
-    (manifest.execution?.approvalEnvelope?.waves ?? []).flatMap((wave) =>
-      (wave.lanes ?? []).map((lane) => [
-        lane.id,
-        { mode: wave.mode, required: wave.required && lane.required },
-      ]),
+    (manifest.execution?.approvalProjection?.execution?.waves ?? []).flatMap(
+      (wave) =>
+        (wave.lanes ?? []).map((lane) => [
+          lane.lane_id,
+          { waveId: wave.wave_id, required: !wave.conditional },
+        ]),
     ),
   );
   const stageByLane = new Map();
   const completeArtifactIdsByMode = new Map();
   for (const stage of manifest.stages ?? []) {
     const planned = plannedByLane.get(stage.laneId);
-    if (!planned || planned.mode !== stage.mode) {
+    if (!planned || planned.waveId !== stage.waveId) {
       errors.push(
         issue(
           'UNAPPROVED_STAGE_TOPOLOGY',
-          `Stage ${stage.id} is not the exact approved lane and mode`,
+          `Stage ${stage.id} is not the exact approved wave and lane`,
           stage.id,
         ),
       );
@@ -807,7 +814,7 @@ function validateStageTopology(
       artifactsById,
       runId,
       approvalFingerprint,
-      manifest.execution?.approvalEnvelope,
+      manifest.execution,
     );
     if (stage.status === 'complete' && !artifactIsComplete) {
       errors.push(
@@ -875,7 +882,9 @@ function deriveAchievedProfile(topology) {
   let achieved = null;
   for (const profile of profiles) {
     const complete = requiredStages[profile].every((mode) => {
-      const lanes = topology.requiredLanes.filter((lane) => lane.mode === mode);
+      const lanes = topology.requiredLanes.filter(
+        (lane) => topology.stageByLane.get(lane.laneId)?.mode === mode,
+      );
       return (
         lanes.length > 0 &&
         lanes.every((lane) => {
@@ -1844,14 +1853,56 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
     errors.push(issue('RUN_ID_MISMATCH', 'Manifest and ledger run IDs differ'));
   }
 
-  if (manifest?.execution?.approvalEnvelope) {
-    const expected = hashCanonicalJson(manifest.execution.approvalEnvelope);
-    if (expected !== manifest.execution.approvalFingerprint) {
+  if (manifest?.execution?.approvalProjection) {
+    const projection = manifest.execution.approvalProjection;
+    const expected = hashCanonicalJson(projection);
+    if (
+      expected !== manifest.execution.approvalFingerprint ||
+      canonicalJson(projection) !== manifest.execution.approvalCanonicalJson
+    ) {
       errors.push(
         issue(
           'APPROVAL_FINGERPRINT_MISMATCH',
-          'Execution envelope no longer matches its approval fingerprint',
+          'Prepared projection no longer matches its canonical approval fingerprint',
           '$.execution.approvalFingerprint',
+        ),
+      );
+    }
+    if (
+      manifest.execution.approvalEvidence?.fingerprint !== expected ||
+      manifest.execution.approvalEvidence?.type !== 'explicit-user-approval'
+    ) {
+      errors.push(
+        issue(
+          'APPROVAL_EVIDENCE_MISMATCH',
+          'Approval evidence does not bind the canonical prepared projection',
+          '$.execution.approvalEvidence',
+        ),
+      );
+    }
+    const observation = projection.catalog_observation;
+    const recheck = manifest.execution.catalogRecheck;
+    if (
+      !recheck ||
+      recheck.source !== observation?.source ||
+      recheck.dispatch_context !== observation?.dispatch_context ||
+      recheck.relevant_catalog_fingerprint !==
+        observation?.relevant_catalog_fingerprint
+    ) {
+      errors.push(
+        issue(
+          'CATALOG_RECHECK_MISMATCH',
+          'Catalog recheck does not retain the approved live catalog identity',
+          '$.execution.catalogRecheck',
+        ),
+      );
+    }
+    if (projection.run_id !== manifest.run?.id) {
+      errors.push(
+        issue(
+          'RUN_ID_MISMATCH',
+          'Prepared projection and packet manifest run IDs differ',
+          '$.execution.approvalProjection.run_id',
         ),
       );
     }

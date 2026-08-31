@@ -87,8 +87,8 @@ test('generic worker-role fallback is fixed before approval', async () => {
       'utf8',
     ),
   );
-  assert.equal(prepared.selection.role, 'generic');
-  assert.equal(approved.approvalEnvelope.role, 'generic');
+  assert.equal(prepared.approvalProjection.selection.role_selector, 'generic');
+  assert.equal(approved.approvalProjection.selection.role_selector, 'generic');
 });
 
 test('dispatch-axis drift stops before accepted launch and publication', async () => {

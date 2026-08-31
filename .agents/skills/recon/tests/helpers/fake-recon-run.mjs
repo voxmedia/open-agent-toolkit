@@ -13,7 +13,10 @@ import {
   quarantineInvalidArtifact,
   validateArtifactFile,
 } from '../../scripts/validate-artifact.mjs';
-import { createPacketFixture } from '../fixtures/packet-fixture.mjs';
+import {
+  createApprovalBinding,
+  createPacketFixture,
+} from '../fixtures/packet-fixture.mjs';
 
 const requiredRootNames = [
   'sourceRoot',
@@ -112,26 +115,16 @@ export async function runFakeRecon(options = {}) {
 
   const role =
     options.workerRoleAvailable === false ? 'generic' : 'recon-worker';
-  const approvalEnvelope = {
-    provider: 'fixture-provider',
-    model: 'fixture-economical-model',
-    effort: 'high',
-    reasoningMode: 'fixture-reasoning',
-    route: 'fake-dispatch',
-    role,
-    serviceTier: 'fixture',
-    authority: authorityLevel,
-    deadlineSeconds: 60,
-    retryLimit: 0,
-    concurrency: requestedProfile === 'thorough' ? 4 : 2,
-    laneCap:
-      requestedProfile === 'quick'
-        ? 4
-        : requestedProfile === 'thorough'
-          ? 20
-          : 10,
-    waves: structuredClone(fixture.manifest.execution.approvalEnvelope.waves),
-  };
+  const approvalProjection = structuredClone(
+    fixture.manifest.execution.approvalProjection,
+  );
+  approvalProjection.selection.role_name = role;
+  approvalProjection.selection.role_selector = role;
+  approvalProjection.execution.pinned_target.role_selector = role;
+  for (const wave of approvalProjection.execution.waves) {
+    wave.authority = authorityLevel;
+  }
+  const approvalBinding = createApprovalBinding(approvalProjection);
   const dispatchRoot = join(roots.packetRoot, 'raw', 'dispatch');
   await mkdir(dispatchRoot, { recursive: true });
   const prepared = {
@@ -142,17 +135,14 @@ export async function runFakeRecon(options = {}) {
     stageId: 'dispatch-preflight',
     laneId: 'lane-controller',
     state: 'prepared',
-    selection: {
-      provider: approvalEnvelope.provider,
-      model: approvalEnvelope.model,
-      effort: approvalEnvelope.effort,
-      reasoningMode: approvalEnvelope.reasoningMode,
-      route: approvalEnvelope.route,
-      role: approvalEnvelope.role,
-      serviceTier: approvalEnvelope.serviceTier,
-    },
-    approvalEnvelope,
-    fingerprint: hashCanonicalJson(approvalEnvelope),
+    approvalProjection,
+    approvalCanonicalJson: approvalBinding.approvalCanonicalJson,
+    approvalFingerprint: approvalBinding.approvalFingerprint,
+    approvedAt: null,
+    approvalEvidence: null,
+    catalogRecheck: null,
+    launchAcceptance: null,
+    terminalOutcome: null,
   };
   const preparedPath = join(dispatchRoot, 'prepared.json');
   await writeJson(preparedPath, prepared);
@@ -160,22 +150,21 @@ export async function runFakeRecon(options = {}) {
     ...prepared,
     id: 'dispatch-approved',
     state: 'approved',
+    approvedAt: approvalBinding.approvedAt,
+    approvalEvidence: approvalBinding.approvalEvidence,
   };
   const approvedPath = join(dispatchRoot, 'approved.json');
   await writeJson(approvedPath, approved);
 
-  const acceptedEnvelope = {
-    ...approvalEnvelope,
-    ...(options.dispatchDrift ?? {}),
-  };
-  if (hashCanonicalJson(acceptedEnvelope) !== prepared.fingerprint) {
+  const acceptedProjection = structuredClone(approvalProjection);
+  if (options.dispatchDrift?.effort) {
+    acceptedProjection.selection.effort_selector = options.dispatchDrift.effort;
+  }
+  if (hashCanonicalJson(acceptedProjection) !== prepared.approvalFingerprint) {
     fixture.manifest.run.status = 'awaiting-approval';
     fixture.manifest.run.achievedProfile = null;
     fixture.manifest.stages = [];
-    fixture.manifest.execution = {
-      approvalEnvelope,
-      approvalFingerprint: prepared.fingerprint,
-    };
+    fixture.manifest.execution = approvalBinding;
     await fixture.persist();
     await writeFailure(
       roots.packetRoot,
@@ -193,15 +182,17 @@ export async function runFakeRecon(options = {}) {
     ...approved,
     id: 'dispatch-accepted',
     state: 'accepted',
-    acceptedEnvelope,
+    catalogRecheck: approvalBinding.catalogRecheck,
+    launchAcceptance: {
+      status: 'accepted',
+      acceptedAt: '2026-08-31T00:01:00.000Z',
+      handle: 'handle-controller',
+    },
   };
   const acceptedPath = join(dispatchRoot, 'accepted.json');
   await writeJson(acceptedPath, accepted);
 
-  fixture.manifest.execution = {
-    approvalEnvelope,
-    approvalFingerprint: prepared.fingerprint,
-  };
+  fixture.manifest.execution = approvalBinding;
   for (const stage of fixture.manifest.stages) {
     for (const receiptId of stage.dispatchReceiptIds) {
       const reference = fixture.manifest.artifacts.find((item) =>
@@ -209,10 +200,17 @@ export async function runFakeRecon(options = {}) {
       );
       const path = join(roots.packetRoot, reference.path);
       const receipt = JSON.parse(await readFile(path, 'utf8'));
-      receipt.selection = prepared.selection;
-      receipt.approvalEnvelope = approvalEnvelope;
-      receipt.fingerprint = prepared.fingerprint;
-      receipt.acceptedEnvelope = approvalEnvelope;
+      receipt.approvalProjection = approvalProjection;
+      receipt.approvalCanonicalJson = approvalBinding.approvalCanonicalJson;
+      receipt.approvalFingerprint = approvalBinding.approvalFingerprint;
+      receipt.approvedAt =
+        receipt.state === 'prepared' ? null : approvalBinding.approvedAt;
+      receipt.approvalEvidence =
+        receipt.state === 'prepared' ? null : approvalBinding.approvalEvidence;
+      receipt.catalogRecheck =
+        receipt.state === 'accepted' || receipt.state === 'completed'
+          ? approvalBinding.catalogRecheck
+          : null;
       await writeJson(path, receipt);
       reference.digest = await hashFile(path);
     }

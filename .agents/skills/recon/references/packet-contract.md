@@ -36,10 +36,11 @@ An artifact reference is `{ "path": "packet-relative/path", "digest":
 "sha256:<64 lowercase hex>" }`. Paths must remain inside the packet directory.
 Digests cover the exact bytes on disk.
 
-Approval fingerprints use canonical JSON: UTF-8, object keys sorted
-lexicographically, array order preserved, no insignificant whitespace, and
-SHA-256 with the `sha256:` prefix. The fingerprint covers every selection and
-execution axis in the approval envelope.
+Approval evidence embeds the existing `oat-dispatch-approval/v1` canonical
+prepared projection without reducing or renaming its fields. Fingerprints use
+canonical JSON: UTF-8, object keys sorted lexicographically, array order
+preserved, no insignificant whitespace, and SHA-256 with the `sha256:` prefix.
+The stored canonical JSON text and fingerprint cover the whole projection.
 
 ## One Validation Boundary
 
@@ -52,9 +53,11 @@ reconciliation artifacts.
 
 Construction is all-or-nothing. A valid graph contains:
 
-- one complete canonical approval envelope with every provider, model, effort,
-  reasoning, service-tier, route, role, authority, deadline, retry,
-  concurrency, wave, lane, and execution-cap axis;
+- one complete `oat-dispatch-approval/v1` projection with its request,
+  selection, every planned and conditional wave, per-wave task class and model
+  floor, lane scope, authority and authorization scope, writable roots,
+  fallback and context controls, payload digest, run maximum floor, pinned
+  target, and original live catalog identity;
 - one exact approved wave/lane topology, with one terminal stage and matching
   accepted/completed receipt resolution for every required lane;
 - exactly one terminal reconciliation for standard or thorough runs and one
@@ -82,12 +85,13 @@ materiality. Equivalent-looking inputs do not excuse a failed invariant.
 - `request`: objective, questions, included/excluded scope, stable context
   references, confirmed output path;
 - discriminated `sources`;
-- `execution`: exact approval envelope, fingerprint, and immutable dispatch
-  receipt references. The envelope closes every wave to one stage mode and an
-  explicit list of required or conditional lane IDs;
+- `execution`: exact prepared projection, canonical JSON, fingerprint,
+  explicit-user approval evidence, approval timestamp, and fresh catalog
+  recheck. The projection is identical to the dispatch dependency's canonical
+  v1 object rather than a packet-local summary;
 - `stages`: `recon.stage-result` records whose single artifact ID, lane, and
-  accepted/completed receipt IDs bind every completed pass to one hashed
-  same-run artifact of the required kind;
+  exact `waveId` plus prepared/approved/accepted/completed receipt IDs bind
+  every completed pass to one hashed same-run artifact of the required kind;
 - `artifacts`: direct references; and
 - `gaps`: categorical omitted, unavailable, stale, or failed work, each with an
   explicit boolean `material` classification and affected source, claim, and
@@ -201,8 +205,12 @@ branch; source ineligibility never bypasses persistence safety.
   affected-contradiction dispositions.
 - `recon.stage-result`: stable stage ID, mode, lane, status, exactly one output
   artifact ID, accepted/completed receipt IDs, and safe diagnostics.
-- `recon.dispatch-receipt`: immutable prepared, approved, accepted, or terminal
-  dispatch evidence.
+- `recon.dispatch-receipt`: immutable prepared, approved, accepted, or
+  completed evidence. Every state repeats the exact canonical projection,
+  canonical JSON, and fingerprint. Approved and later states bind the same
+  explicit approval evidence; accepted and completed states bind the fresh
+  catalog recheck and launch acceptance; completed binds the terminal outcome
+  and artifact IDs.
 
 Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim

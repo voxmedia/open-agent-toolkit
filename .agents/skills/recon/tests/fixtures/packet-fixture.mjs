@@ -4,9 +4,124 @@ import { dirname, join, resolve } from 'node:path';
 
 import { createReviewBrief } from '../../scripts/create-review-brief.mjs';
 import {
+  canonicalJson,
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
+
+export function createApprovalProjection({
+  runId,
+  stages,
+  laneIdForStage,
+  concurrency = 2,
+  laneCap = 10,
+}) {
+  const selection = {
+    provider: 'fixture-provider',
+    dispatch_context: 'nested-native',
+    dispatch_policy: 'economy',
+    dispatch_ceiling: 'high',
+    selected_route: 'fake',
+    selection_source: 'native-default',
+    candidates_considered: ['fixture-model'],
+    selection_reason: 'native-catalog',
+    role_name: 'recon-worker',
+    role_class: 'recon',
+    role_selector: 'recon-worker',
+    model_selector: 'fixture-model',
+    model_selector_granularity: 'exact-native-model-choice',
+    effort_selector: 'high',
+    reasoning_mode_selector: 'fixture-reasoning',
+    service_tier_selector: 'fixture',
+    guidance_reference: 'subagent-orchestration/references/provider-fixture.md',
+    guidance_version: '2026-08-31',
+    guidance_verified_at: '2026-08-31',
+    guidance_status: 'fresh',
+  };
+  const pinnedTarget = {
+    provider: selection.provider,
+    dispatch_context: selection.dispatch_context,
+    selected_route: selection.selected_route,
+    role_selector: selection.role_selector,
+    model_selector: selection.model_selector,
+    model_selector_granularity: selection.model_selector_granularity,
+    effort_selector: selection.effort_selector,
+    reasoning_mode_selector: selection.reasoning_mode_selector,
+    service_tier_selector: selection.service_tier_selector,
+  };
+  return {
+    schema: 'oat-dispatch-approval/v1',
+    prepared_record_version: 1,
+    run_id: runId,
+    prepared_at: '2026-08-31T00:00:30.000Z',
+    request: {
+      request_id: `dispatch-${runId}`,
+      caller: 'recon',
+      objective: 'Find fixture evidence.',
+      action: 'analysis',
+      expected_output: 'versioned-dossiers',
+      verification_evidence: 'artifact-digests',
+      escalate_when: ['approved scope is insufficient'],
+    },
+    selection,
+    execution: {
+      waves: stages.map((stage) => {
+        const laneId = laneIdForStage(stage);
+        return {
+          wave_id: `wave-${stage.mode}`,
+          conditional: false,
+          task_class: 'intelligent-recon',
+          model_class_floor: 'intelligent-recon',
+          scope: `packet:${stage.mode}`,
+          lanes: [{ lane_id: laneId, scope: `packet/${stage.mode}` }],
+          authority: 'contract-enforced',
+          authorization_scope: `run:${runId}`,
+          writable_roots: [`raw/${stage.mode}/${laneId}`],
+          deadline_seconds: 60,
+          retry_limit: 0,
+          fallback: { mode: 'block' },
+          dispatch_mode: 'background',
+          context_fork_controls: { fork_turns: 'all' },
+          concurrency,
+          lane_cap: laneCap,
+          payload_digest: hashCanonicalJson({
+            runId,
+            mode: stage.mode,
+            laneId,
+          }),
+        };
+      }),
+      run_maximum_floor: 'intelligent-recon',
+      pinned_target: pinnedTarget,
+    },
+    catalog_observation: {
+      id: `catalog-${runId}`,
+      source: 'tool-schema',
+      dispatch_context: selection.dispatch_context,
+      observed_at: '2026-08-31T00:00:00.000Z',
+      relevant_catalog_fingerprint: hashCanonicalJson(pinnedTarget),
+    },
+  };
+}
+
+export function createApprovalBinding(approvalProjection) {
+  const approvalFingerprint = hashCanonicalJson(approvalProjection);
+  return {
+    approvalProjection,
+    approvalCanonicalJson: canonicalJson(approvalProjection),
+    approvalFingerprint,
+    approvedAt: '2026-08-31T00:00:45.000Z',
+    approvalEvidence: {
+      type: 'explicit-user-approval',
+      fingerprint: approvalFingerprint,
+    },
+    catalogRecheck: {
+      ...approvalProjection.catalog_observation,
+      id: `${approvalProjection.catalog_observation.id}-recheck`,
+      observed_at: '2026-08-31T00:00:50.000Z',
+    },
+  };
+}
 
 async function writeJson(path, value) {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
@@ -435,26 +550,14 @@ export async function createPacketFixture({
   const completedModes = new Set(stagesByProfile[achievedProfile] ?? []);
   const stageLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
-  const approvalEnvelope = {
-    provider: 'fixture',
-    model: 'fixture-model',
-    effort: 'high',
-    reasoningMode: 'fixture-reasoning',
-    route: 'fake',
-    role: 'recon-worker',
-    serviceTier: 'fixture',
-    authority: 'contract-enforced',
-    deadlineSeconds: 60,
-    retryLimit: 0,
+  const approvalProjection = createApprovalProjection({
+    runId: 'run-render',
+    stages: stageModes.map((mode) => ({ mode })),
+    laneIdForStage: ({ mode }) => stageLaneId(mode),
     concurrency: requestedProfile === 'thorough' ? 4 : 2,
     laneCap: requestedProfile === 'thorough' ? 20 : 10,
-    waves: stageModes.map((mode) => ({
-      id: `wave-${mode}`,
-      mode,
-      required: true,
-      lanes: [{ id: stageLaneId(mode), required: true }],
-    })),
-  };
+  });
+  const approvalBinding = createApprovalBinding(approvalProjection);
   const stageArtifacts = [];
   const stageRows = [];
   for (const [index, mode] of stageModes.entries()) {
@@ -466,6 +569,7 @@ export async function createPacketFixture({
         kind: 'recon.stage-result',
         schemaVersion: 1,
         id: stageId,
+        waveId: `wave-${mode}`,
         mode,
         laneId,
         status: stageStatus,
@@ -520,7 +624,7 @@ export async function createPacketFixture({
       });
     }
     const dispatchReceiptIds = [];
-    for (const state of ['accepted', 'completed']) {
+    for (const state of ['prepared', 'approved', 'accepted', 'completed']) {
       const id = `dispatch-${stageId}-${state}`;
       const path = join(packetRoot, 'raw', 'dispatch', `${id}.json`);
       await mkdir(dirname(path), { recursive: true });
@@ -532,18 +636,31 @@ export async function createPacketFixture({
         stageId,
         laneId,
         state,
-        selection: {
-          provider: approvalEnvelope.provider,
-          model: approvalEnvelope.model,
-          effort: approvalEnvelope.effort,
-          reasoningMode: approvalEnvelope.reasoningMode,
-          route: approvalEnvelope.route,
-          role: approvalEnvelope.role,
-          serviceTier: approvalEnvelope.serviceTier,
-        },
-        approvalEnvelope,
-        fingerprint: hashCanonicalJson(approvalEnvelope),
-        acceptedEnvelope: approvalEnvelope,
+        approvalProjection,
+        approvalCanonicalJson: approvalBinding.approvalCanonicalJson,
+        approvalFingerprint: approvalBinding.approvalFingerprint,
+        approvedAt: state === 'prepared' ? null : approvalBinding.approvedAt,
+        approvalEvidence:
+          state === 'prepared' ? null : approvalBinding.approvalEvidence,
+        catalogRecheck:
+          state === 'accepted' || state === 'completed'
+            ? approvalBinding.catalogRecheck
+            : null,
+        launchAcceptance:
+          state === 'accepted' || state === 'completed'
+            ? {
+                status: 'accepted',
+                acceptedAt: '2026-08-31T00:01:00.000Z',
+                handle: `handle-${stageId}`,
+              }
+            : null,
+        terminalOutcome:
+          state === 'completed'
+            ? {
+                status: 'completed',
+                completedAt: '2026-08-31T00:01:30.000Z',
+              }
+            : null,
         ...(state === 'completed' ? { artifactIds: [artifactId] } : {}),
       });
       stageArtifacts.push({
@@ -556,6 +673,7 @@ export async function createPacketFixture({
       kind: 'recon.stage-result',
       schemaVersion: 1,
       id: stageId,
+      waveId: `wave-${mode}`,
       mode,
       laneId,
       status: 'complete',
@@ -596,8 +714,7 @@ export async function createPacketFixture({
     },
     sources: [source],
     execution: {
-      approvalEnvelope,
-      approvalFingerprint: hashCanonicalJson(approvalEnvelope),
+      ...approvalBinding,
     },
     stages: stageRows,
     artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...stageArtifacts],
