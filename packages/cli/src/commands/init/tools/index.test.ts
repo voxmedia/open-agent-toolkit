@@ -1663,6 +1663,7 @@ describe('createInitToolsCommand', () => {
 
       const payload = capture.jsonPayloads.at(-1) as {
         lifecycle: Array<{ status: string }> | { status: string };
+        providerVisibility: { state: string; source: string };
       };
       const outcomes = Array.isArray(payload.lifecycle)
         ? payload.lifecycle
@@ -1672,6 +1673,10 @@ describe('createInitToolsCommand', () => {
           expect.objectContaining({ status: 'complete' }),
         ]),
       );
+      expect(payload.providerVisibility).toMatchObject({
+        state: 'not-reported',
+        source: 'runtime-observation',
+      });
       expect(process.exitCode).toBe(0);
     },
   );

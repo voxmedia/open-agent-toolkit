@@ -91,6 +91,20 @@ describe('provider registry', () => {
     });
     expect(
       registrations[0]!.capabilities.find(
+        ({ scope, contentKind }) => scope === 'user' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      catalogRefresh: {
+        state: 'manual-refresh',
+        provenance: {
+          kind: 'official-contract',
+          reference: 'https://code.claude.com/docs/en/sub-agents',
+          verifiedAt: '2026-08-31',
+        },
+      },
+    });
+    expect(
+      registrations[0]!.capabilities.find(
         ({ scope, contentKind }) => scope === 'user' && contentKind === 'rule',
       ),
     ).toMatchObject({

@@ -115,6 +115,10 @@ import {
 import type { AdoptionSource } from '@providers/shared/adapter.types';
 import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
+import {
   type ConcreteScope,
   type ContentType,
   SCOPE_CONTENT_TYPES,
@@ -238,7 +242,15 @@ interface StatusJsonPayload {
   summary: StatusSummary;
   packs: StatusPackReport;
   packEvidence: PackEvidenceBlockV1;
+  providerRefreshAdvice: ProviderCatalogStatus[];
   remediation?: string;
+}
+
+interface ProviderCatalogStatus {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: ContentType | 'directory';
+  visibility: ProviderVisibilityEvidence;
 }
 
 interface StatusDependencies {
@@ -365,6 +377,52 @@ interface ScopeReportCollection {
   reports: DriftReport[];
   strayCandidates: StatusStrayCandidate[];
   activeAdapterNames: string[];
+  providerContext: ProviderScopeContext | null;
+}
+
+function collectProviderRefreshAdvice(
+  collections: readonly ScopeReportCollection[],
+): ProviderCatalogStatus[] {
+  return collections.flatMap((collection) => {
+    const providerContext = collection.providerContext;
+    if (!providerContext) return [];
+    const active = new Set(providerContext.activeProviders);
+    return providerContext.registrations.flatMap((registration) => {
+      if (!active.has(registration.adapter.name)) return [];
+      return registration.capabilities
+        .filter(
+          ({ scope, support }) =>
+            scope === collection.scope && support === 'supported',
+        )
+        .map((capability) => ({
+          scope: collection.scope,
+          provider: registration.adapter.name,
+          contentKind: capability.contentKind,
+          visibility: adviseProviderRefresh({
+            policy: capability.catalogRefresh,
+            materialization: 'unknown',
+            observation: {
+              state: 'not-reported',
+              reference:
+                'oat status inspects managed files but does not query the active provider catalog',
+            },
+          }),
+        }));
+    });
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly ProviderCatalogStatus[],
+): string | null {
+  if (advice.length === 0) return null;
+  return [
+    'Provider catalog visibility:',
+    ...advice.map(
+      ({ scope, provider, contentKind, visibility }) =>
+        `  [${scope}] ${provider}/${contentKind}: ${visibility.state} (${visibility.policy.state})`,
+    ),
+  ].join('\n');
 }
 
 const DEFAULT_DEPENDENCIES: StatusDependencies = {
@@ -1058,6 +1116,7 @@ async function collectScopeReports(
     reports: filtered.reports,
     strayCandidates: filtered.candidates,
     activeAdapterNames: activeAdapters.map((adapter) => adapter.name),
+    providerContext,
   };
 }
 
@@ -1095,6 +1154,7 @@ async function runStatusCommand(
   }
 
   const summary = summarizeReports(reports);
+  const providerRefreshAdvice = collectProviderRefreshAdvice(scopeCollections);
   const hasIssues = summary.total > 0 && summary.inSync !== summary.total;
 
   if (options.hook) {
@@ -1130,6 +1190,7 @@ async function runStatusCommand(
       summary,
       packs: packReport,
       packEvidence: packReport.evidence,
+      providerRefreshAdvice,
     };
     if (!context.interactive && summary.stray > 0) {
       payload.remediation = DEFAULT_REMEDIATION;
@@ -1141,6 +1202,8 @@ async function runStatusCommand(
     if (packSummary) {
       context.logger.info(packSummary);
     }
+    const providerSummary = formatProviderRefreshAdvice(providerRefreshAdvice);
+    if (providerSummary) context.logger.info(providerSummary);
   }
 
   if (summary.stray > 0) {

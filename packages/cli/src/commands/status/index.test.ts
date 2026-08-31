@@ -42,6 +42,7 @@ import {
   getConfigAwareAdapters,
   getSyncMappings,
 } from '@providers/shared/adapter.utils';
+import { getProviderRegistrations } from '@providers/shared/registry';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -599,6 +600,41 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.info[0]).toContain('in_sync');
+  });
+
+  it('reports sourced refresh policy separately from unobserved provider visibility', async () => {
+    const { capture, command } = createHarness({
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['claude'],
+        detectedProviders: ['claude'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<{
+        provider: string;
+        contentKind: string;
+        visibility: { state: string; policy: { state: string } };
+      }>;
+    };
+    expect(
+      payload.providerRefreshAdvice.find(
+        ({ provider, contentKind }) =>
+          provider === 'claude' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      visibility: {
+        state: 'not-reported',
+        policy: { state: 'manual-refresh' },
+      },
+    });
   });
 
   it('uses a registry-only provider context for status reachability', async () => {

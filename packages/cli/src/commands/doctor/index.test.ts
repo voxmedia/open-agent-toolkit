@@ -35,6 +35,7 @@ import {
   type ProviderAdapter,
   type ProviderScopeContext,
 } from '@providers/shared';
+import { getProviderRegistrations } from '@providers/shared/registry';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -516,6 +517,41 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('providers');
     expect(capture.info[0]).toContain('claude@2.0.0');
+  });
+
+  it('reports sourced refresh policy separately from unobserved provider visibility', async () => {
+    const { command, capture } = createHarness({
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['claude'],
+        detectedProviders: ['claude'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<{
+        provider: string;
+        contentKind: string;
+        visibility: { state: string; policy: { state: string } };
+      }>;
+    };
+    expect(
+      payload.providerRefreshAdvice.find(
+        ({ provider, contentKind }) =>
+          provider === 'claude' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      visibility: {
+        state: 'not-reported',
+        policy: { state: 'manual-refresh' },
+      },
+    });
   });
 
   it('uses registry-only provider context for doctor detection', async () => {

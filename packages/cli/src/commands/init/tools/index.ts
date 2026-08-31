@@ -62,6 +62,10 @@ import {
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
 import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 
@@ -774,6 +778,7 @@ function reportSuccess(
   adoptedPacks: ToolPack[],
   lifecycle: readonly PackLifecycleOutcome[],
 ): void {
+  const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
     context.logger.json({
       status: 'ok',
@@ -781,6 +786,7 @@ function reportSuccess(
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
       lifecycle,
+      ...(providerVisibility ? { providerVisibility } : {}),
     });
     return;
   }
@@ -799,12 +805,35 @@ function reportSuccess(
   });
   if (syncScopes.length === 0) {
     context.logger.info('No sync needed.');
+  } else if (providerVisibility) {
+    context.logger.info(
+      `Provider catalog visibility: ${providerVisibility.state} — ${providerVisibility.reason}`,
+    );
   }
   for (const outcome of lifecycle) {
     context.logger.info(
       `Lifecycle ${outcome.selection.pack}: ${outcome.status} (${outcome.canonical.status})`,
     );
   }
+}
+
+function initProviderVisibility(
+  syncScopes: readonly ConcreteScope[],
+): ProviderVisibilityEvidence | null {
+  if (syncScopes.length === 0) return null;
+  return adviseProviderRefresh({
+    policy: {
+      state: 'unknown',
+      reason:
+        'Init does not select one provider/content refresh contract for the aggregate sync',
+    },
+    materialization: 'unknown',
+    observation: {
+      state: 'not-reported',
+      reference:
+        'oat init records provider sync completion but does not query any active provider catalog',
+    },
+  });
 }
 
 function reportOutdatedSkills(
@@ -1748,6 +1777,11 @@ function createReconciledPackCommand(
             ).adoptedPacks
           : [];
 
+        const providerVisibility = initProviderVisibility(
+          results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope),
+        );
         if (context.json) {
           context.logger.json({
             status: 'ok',
@@ -1755,6 +1789,7 @@ function createReconciledPackCommand(
             scopes,
             results,
             lifecycle: lifecycleOutcome,
+            ...(providerVisibility ? { providerVisibility } : {}),
             ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
           });
         } else {
@@ -1765,6 +1800,11 @@ function createReconciledPackCommand(
           context.logger.info(
             `Lifecycle: ${lifecycleOutcome.status} (${lifecycleOutcome.canonical.status})`,
           );
+          if (providerVisibility) {
+            context.logger.info(
+              `Provider catalog visibility: ${providerVisibility.state} — ${providerVisibility.reason}`,
+            );
+          }
           for (const result of results) {
             context.logger.info(`Scope: ${result.request.scope}`);
             context.logger.info(`Target root: ${result.request.scopeRoot}`);

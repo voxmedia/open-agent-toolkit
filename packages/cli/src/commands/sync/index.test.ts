@@ -538,6 +538,59 @@ describe('createSyncCommand', () => {
     expect(capture.success).toContain('\nSync applied successfully.');
   });
 
+  it('reports sourced provider refresh advice only after a successful relevant change', async () => {
+    const canonical = createAgentCanonicalEntry('reviewer.md');
+    const adapter = createScopedAdapter('claude');
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      canonicalEntries: [canonical],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/reviewer.md',
+              operation: 'create_copy',
+              strategy: 'copy',
+              reason: 'missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providerRefreshAdvice: [
+        {
+          scope: 'user',
+          provider: 'claude',
+          contentKind: 'agent',
+          materialization: 'changed',
+          visibility: {
+            state: 'refresh-required',
+            source: 'provider-refresh-policy',
+            policy: {
+              state: 'manual-refresh',
+              provenance: {
+                kind: 'official-contract',
+                verifiedAt: '2026-08-31',
+              },
+            },
+            recovery: [{ command: '/agents' }],
+          },
+        },
+      ],
+    });
+  });
+
   it('apply (default): executes skip-only plans to reconcile manifest state', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('skip')],

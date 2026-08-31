@@ -178,7 +178,7 @@ declares for that scope is present, **partial** when only some are, and
 | Asset kind        | Project scope                                                                      | User scope                   | Ownership                                           |
 | ----------------- | ---------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------- |
 | Skill             | `.agents/skills/<name>/`                                                           | `~/.agents/skills/<name>/`   | Managed — updated and removed by OAT                |
-| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed (see the user-scope agent limitation below) |
+| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed; provider projection is capability-driven   |
 | Template          | `.oat/templates/<name>`                                                            | `~/.oat/templates/<name>`    | Seeded once at project scope; managed at user scope |
 | Script            | `.oat/scripts/<name>`                                                              | `~/.oat/scripts/<name>`      | Managed, executable                                 |
 | Bundled docs tree | not applicable                                                                     | `~/.oat/docs/`               | Managed directory (core pack)                       |
@@ -189,30 +189,26 @@ creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
 `workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
 and the project `.gitkeep` files — are pinned to project scope.
 
-#### User-scope agents have limited native materialization
+#### User-scope agent projection is provider-capability driven
 
-Canonical **agents** are installed at either scope. At user scope, native
-Codex or Cursor role materialization is active only when that adapter is active
-under the resolved sync config: explicit enablement wins without filesystem
-detection, explicit disablement wins despite detection, and an unset adapter
-follows detection. That native materialization supplies the bundled managed
-role files (`oat-phase-implementer.md` and `oat-reviewer.md`); it does not
-materialize other pack-owned user agents. For example, a user-scope workflows
-install leaves `oat-codebase-mapper` without a native provider role, and a
-user-scope research install does the same for `skeptical-evaluator`. When no
-Codex or Cursor adapter is active, even the bundled managed roles lack native
-materialization.
+Canonical **agents** are installed at either scope. User sync scans them when
+an active provider declares user-agent capability. Explicit enablement wins
+without filesystem detection, explicit disablement wins despite detection, and
+an unset adapter follows detection. Provider mappings and registered
+materialization extensions then determine the output: entry sync, native read,
+extension-owned role materialization, or explicit unsupported evidence.
 
-This diagnostic concerns native provider roles only. Providers may read
-canonical agent instructions through a separate loaded, user, and project
-lookup contract; that read availability does not establish native
-materialization and does not suppress this finding.
+Core sync does not write extension-owned role paths. Codex and Cursor own their
+generated managed-role outputs through provider extensions, while other user
+agents continue through each active adapter's declared mapping. Per-asset sync
+results distinguish changed, current, missing, failed, unsupported, and unknown
+outcomes, so one failed or unsupported asset does not erase evidence for its
+siblings.
 
-`oat status` and `oat doctor` name the affected agents with a
-`user-agent-unmaterialized` finding rather than reporting the pack as complete
-without qualification. Install the pack at **project scope** when you need its
-native provider roles; `oat tools update` cannot repair this, because it is a
-scope limitation rather than drift.
+Materialization is not runtime visibility. `oat status` and `oat doctor` report
+the registered refresh policy separately and say `not-reported` when they did
+not inspect a running provider catalog. A provider file being current therefore
+does not mean the active session is proven to see it.
 
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
@@ -771,11 +767,11 @@ brainstorm`, and `oat tools remove --pack brainstorm` manage the skill plus
 
 ### Auto-sync behavior
 
-All mutation commands (`install`, `update`, `remove`, `migrate`) automatically run `oat sync --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
+All mutation commands (`install`, `update`, `remove`, `migrate`) automatically run `oat sync --scope <scope>` after successful operations. This reconciles provider files without manual intervention; it does not prove that an already-running provider catalog has loaded them.
 
 Use `--no-sync` on any mutation command to skip this step.
 
-For `oat tools install`, the follow-up sync still refreshes provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
+For `oat tools install`, the follow-up sync still reconciles provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. Refresh or restart advice is shown only when a sourced provider/content policy applies to a successful current-run change. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
 
 Removal and migration use the symmetric contract: the follow-up sync prunes exactly the provider views for the canonical paths that were removed, in that scope only, and only after the canonical source is confirmed absent.
 

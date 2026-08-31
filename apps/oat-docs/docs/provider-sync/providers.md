@@ -13,6 +13,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
     - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
+    - Claude's official subagent contract says manually added agent files require either `/agents` to load immediately or a session restart. OAT records this as a manual-refresh policy, verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
 
@@ -62,7 +63,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - All project-generated Codex variants and config registrations are repository-owned, version-controlled output and are never auto-ignored by OAT. User-config output remains under `~/.codex`.
     - A single role can be materialized directly with `oat providers codex materialize <agent-name> --model <model-id> --effort <reasoning-effort>`; `--agent-path` selects a specific canonical markdown agent, `--role-name` overrides the generated role name, and `--scope user` writes a user-config-owned role.
     - Aggregate Codex config drift metadata (`aggregateConfigHash`) is emitted in sync/status codex extension output and intentionally not stored as a separate manifest row
-    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions, and does not require provider restart/hot reload
+    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions. Codex catalog refresh behavior remains `unknown` until a versioned provider contract or reproducible local validation is registered; file creation alone does not prove that an already-running session sees the role.
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
@@ -102,6 +103,26 @@ target-preserving route. An accepted child, including one that later returns
 Claude binds the exact model argument described above. Cursor launches the
 exact native variant. A missing or unselectable managed target blocks rather
 than falling back to the root target or a base role.
+
+## Materialization, refresh, and visibility
+
+OAT reports three separate facts rather than collapsing them into “available”:
+
+1. **Materialization** says whether the canonical asset's provider output was
+   changed, current, missing, failed, unsupported, or unknown.
+2. **Catalog refresh policy** is provider- and content-specific. A policy is
+   `live`, `manual-refresh`, `restart-required`, or `unknown`, with its source
+   and verification date.
+3. **Runtime visibility** says whether the active provider catalog was actually
+   observed. `oat sync`, `oat status`, `oat doctor`, and install-triggered sync
+   do not query a running provider session, so they report visibility as
+   `not-reported` or `unknown`, never `visible`.
+
+After a successful relevant change, `oat sync` emits refresh advice from the
+registered policy. Today Claude agents have a sourced `manual-refresh` policy;
+unsupported or unsourced provider/content combinations remain explicit rather
+than inheriting Claude's advice. A current file with no current-session catalog
+probe is still not proof of provider visibility.
 
 ## Scope rules
 

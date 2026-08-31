@@ -95,12 +95,66 @@ import {
   type ProviderAdapter,
   type ProviderScopeContext,
 } from '@providers/shared';
+import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
 
 import { checkStaleInvocations } from './stale-invocations';
 import { checkSyncedProjects } from './synced-projects';
+
+interface DoctorProviderRefreshAdvice {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: string;
+  visibility: ProviderVisibilityEvidence;
+}
+
+function collectProviderRefreshAdvice(
+  contexts: ReadonlyMap<ConcreteScope, ProviderScopeContext>,
+): DoctorProviderRefreshAdvice[] {
+  return [...contexts.entries()].flatMap(([scope, context]) => {
+    const active = new Set(context.activeProviders);
+    return context.registrations.flatMap((registration) => {
+      if (!active.has(registration.adapter.name)) return [];
+      return registration.capabilities
+        .filter(
+          (capability) =>
+            capability.scope === scope && capability.support === 'supported',
+        )
+        .map((capability) => ({
+          scope,
+          provider: registration.adapter.name,
+          contentKind: capability.contentKind,
+          visibility: adviseProviderRefresh({
+            policy: capability.catalogRefresh,
+            materialization: 'unknown',
+            observation: {
+              state: 'not-reported',
+              reference:
+                'oat doctor validates managed state but does not query the active provider catalog',
+            },
+          }),
+        }));
+    });
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly DoctorProviderRefreshAdvice[],
+): string | null {
+  if (advice.length === 0) return null;
+  return [
+    'Provider catalog visibility:',
+    ...advice.map(
+      ({ scope, provider, contentKind, visibility }) =>
+        `  [${scope}] ${provider}/${contentKind}: ${visibility.state} (${visibility.policy.state})`,
+    ),
+  ].join('\n');
+}
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -1446,15 +1500,19 @@ async function runDoctorCommand(
     dependencies,
   );
   checks.push(...packState.checks);
+  const providerRefreshAdvice = collectProviderRefreshAdvice(providerContexts);
 
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       checks,
       packEvidence: packState.evidence,
+      providerRefreshAdvice,
     });
   } else {
     context.logger.info(formatDoctorResults(checks));
+    const providerSummary = formatProviderRefreshAdvice(providerRefreshAdvice);
+    if (providerSummary) context.logger.info(providerSummary);
   }
 
   const hasFail = checks.some((check) => check.status === 'fail');

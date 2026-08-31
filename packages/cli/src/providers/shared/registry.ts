@@ -90,10 +90,21 @@ const UNKNOWN_REFRESH: ProviderCatalogRefreshPolicy = {
   state: 'unknown',
   reason: 'No sourced provider-version refresh contract is registered',
 };
+const CLAUDE_AGENT_REFRESH: ProviderCatalogRefreshPolicy = {
+  state: 'manual-refresh',
+  provenance: {
+    kind: 'official-contract',
+    reference: 'https://code.claude.com/docs/en/sub-agents',
+    verifiedAt: '2026-08-31',
+  },
+};
 
 function capabilitiesFor(
   adapter: ProviderAdapter,
   extensionContentKinds: readonly ManagedContentKind[] = [],
+  refreshPolicies: Partial<
+    Record<ManagedContentKind, ProviderCatalogRefreshPolicy>
+  > = {},
 ): ProviderContentCapability[] {
   return SCOPES.flatMap((scope) => {
     const mappings =
@@ -120,7 +131,7 @@ function capabilitiesFor(
           contentKind === 'skill' && mapping !== undefined
             ? 'supported'
             : 'unsupported',
-        catalogRefresh: UNKNOWN_REFRESH,
+        catalogRefresh: refreshPolicies[contentKind] ?? UNKNOWN_REFRESH,
         ...(supported
           ? {}
           : {
@@ -135,7 +146,9 @@ const REGISTRATIONS: readonly ProviderRegistration[] = [
   {
     adapter: claudeAdapter,
     extensions: [],
-    capabilities: capabilitiesFor(claudeAdapter),
+    capabilities: capabilitiesFor(claudeAdapter, [], {
+      agent: CLAUDE_AGENT_REFRESH,
+    }),
   },
   {
     adapter: cursorAdapter,

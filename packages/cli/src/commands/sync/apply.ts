@@ -1,6 +1,17 @@
 import type { CommandContext } from '@app/command-context';
 import type { SyncOperationResult } from '@engine/engine.types';
 import type { SyncPlan, SyncResult } from '@engine/index';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
+import {
+  getProviderRegistrations,
+  type ManagedContentKind,
+} from '@providers/shared/registry';
+import {
+  adviseProviderRefresh,
+  type ProviderMaterializationState,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
+import type { ConcreteScope } from '@shared/types';
 
 import type {
   ScopeSyncPlan,
@@ -8,6 +19,78 @@ import type {
   SyncSummary,
 } from './sync.types';
 import { countPlannedOperations } from './sync.utils';
+
+interface ProviderRefreshAdvice {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: ManagedContentKind;
+  materialization: ProviderMaterializationState;
+  visibility: ProviderVisibilityEvidence;
+}
+
+function buildProviderRefreshAdvice(input: {
+  operationResults: readonly SyncOperationResult[];
+  extensionResults: readonly (MaterializationOperationResult & {
+    scope: ConcreteScope;
+  })[];
+}): ProviderRefreshAdvice[] {
+  const changed = [
+    ...input.operationResults
+      .filter(({ status }) => status === 'changed')
+      .map(({ scope, provider, contentKind }) => ({
+        scope,
+        provider,
+        contentKind,
+      })),
+    ...input.extensionResults
+      .filter(({ status, target }) => status === 'changed' && target === 'role')
+      .map(({ scope, provider }) => ({
+        scope,
+        provider,
+        contentKind: 'agent' as const,
+      })),
+  ];
+  const seen = new Set<string>();
+  const registrations = getProviderRegistrations();
+
+  return changed.flatMap(({ scope, provider, contentKind }) => {
+    const key = `${scope}:${provider}:${contentKind}`;
+    if (seen.has(key)) return [];
+    seen.add(key);
+    const policy = registrations
+      .find(({ adapter }) => adapter.name === provider)
+      ?.capabilities.find(
+        (capability) =>
+          capability.scope === scope && capability.contentKind === contentKind,
+      )?.catalogRefresh ?? {
+      state: 'unknown' as const,
+      reason: 'Provider or capability is not registered',
+    };
+    return [
+      {
+        scope,
+        provider,
+        contentKind,
+        materialization: 'changed' as const,
+        visibility: adviseProviderRefresh({
+          policy,
+          materialization: 'changed',
+        }),
+      },
+    ];
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly ProviderRefreshAdvice[],
+): string {
+  return advice
+    .map(({ scope, provider, contentKind, visibility }) => {
+      const recovery = visibility.recovery[0]?.message;
+      return `Provider visibility [${scope}] ${provider}/${contentKind}: ${visibility.state} — ${recovery ?? visibility.reason}`;
+    })
+    .join('\n');
+}
 
 function countSkippedExtensionEntries(scopePlans: ScopeSyncPlan[]): number {
   return scopePlans.reduce((total, scopePlan) => {
@@ -158,6 +241,9 @@ export async function runSyncApply(
   let extensionApplied = 0;
   let extensionFailed = 0;
   const operationResults: SyncOperationResult[] = [];
+  const extensionOperationResults: Array<
+    MaterializationOperationResult & { scope: ConcreteScope }
+  > = [];
 
   for (const scopePlan of scopePlans) {
     const hasSyncEntries =
@@ -210,6 +296,12 @@ export async function runSyncApply(
       );
       extensionApplied += result.applied;
       extensionFailed += result.failed;
+      extensionOperationResults.push(
+        ...(result.operations ?? []).map((operation) => ({
+          ...operation,
+          scope: scopePlan.scope,
+        })),
+      );
       const summary = scopePlan.materializationExtensions.find(
         (candidate) => candidate.provider === plan.provider,
       );
@@ -250,6 +342,10 @@ export async function runSyncApply(
       failed: extension.failed,
       skipped: extension.skipped,
     }));
+  const providerRefreshAdvice = buildProviderRefreshAdvice({
+    operationResults,
+    extensionResults: extensionOperationResults,
+  });
   if (context.json) {
     context.logger.json({
       scope: context.scope,
@@ -261,6 +357,7 @@ export async function runSyncApply(
       materializationExtensions,
       operationResults,
       codexExtensions,
+      providerRefreshAdvice,
     });
   } else {
     context.logger.info(formatAppliedOutput(scopePlans, dependencies));
@@ -270,6 +367,11 @@ export async function runSyncApply(
       context.logger.warn('\nSync completed with partial failures.');
     } else {
       context.logger.success('\nSync applied successfully.');
+    }
+    if (providerRefreshAdvice.length > 0) {
+      context.logger.info(
+        `\n${formatProviderRefreshAdvice(providerRefreshAdvice)}`,
+      );
     }
   }
 
