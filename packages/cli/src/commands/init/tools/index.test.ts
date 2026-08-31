@@ -124,6 +124,11 @@ function createHarness(options: HarnessOptions = {}) {
     ],
     user: [createScannedTool('oat-docs', 'core', 'user')],
   };
+  const realizedPlacements = new Set(
+    (['project', 'user'] as const).flatMap((scope) =>
+      (toolsByScope[scope] ?? []).map((tool) => `${tool.pack}:${scope}`),
+    ),
+  );
 
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
@@ -248,8 +253,11 @@ function createHarness(options: HarnessOptions = {}) {
   }));
   const removeAgentsMdSection = vi.fn(async () => false);
   const reconcilePacks = vi.fn(
-    async (requests: readonly PackLifecycleRequest[]) =>
-      requests.map((request) => {
+    async (requests: readonly PackLifecycleRequest[]) => {
+      for (const request of requests) {
+        realizedPlacements.add(`${request.pack}:${request.scope}`);
+      }
+      return requests.map((request) => {
         const inventory = {
           pack: request.pack,
           scope: request.scope,
@@ -286,7 +294,8 @@ function createHarness(options: HarnessOptions = {}) {
           plan,
           apply: { applied: [operation], inventory, synced: false },
         };
-      }),
+      });
+    },
   );
   const inventoryPack = vi.fn(
     async ({
@@ -303,10 +312,9 @@ function createHarness(options: HarnessOptions = {}) {
         if (scope === 'user' && !userRoot) return [];
         if (pack === 'core' && scope === 'project') return [];
         const declared = options.declaredPlacement?.[pack];
-        const enabled =
-          declared === scope ||
-          declared === 'both' ||
-          (toolsByScope[scope] ?? []).some((tool) => tool.pack === pack);
+        const isDeclared = declared === scope || declared === 'both';
+        const realized = realizedPlacements.has(`${pack}:${scope}`);
+        const enabled = isDeclared || realized;
         return [
           {
             pack,
@@ -315,14 +323,34 @@ function createHarness(options: HarnessOptions = {}) {
               pack,
               scope,
               enabled,
-              source: enabled
-                ? ('inferred-legacy' as const)
-                : ('none' as const),
+              source: isDeclared
+                ? ('declared' as const)
+                : realized
+                  ? ('inferred-legacy' as const)
+                  : ('none' as const),
               configPath: `/${scope}/.oat/config.json`,
               diagnostics: [],
             },
-            completeness: enabled ? ('complete' as const) : ('absent' as const),
-            assets: [],
+            completeness: realized
+              ? ('complete' as const)
+              : ('absent' as const),
+            assets: realized
+              ? [
+                  {
+                    definition: {
+                      id: `${pack}-fixture`,
+                      kind: 'skill' as const,
+                      destination: `.agents/skills/${pack}-fixture`,
+                      scopes: [scope],
+                      ownership: { [scope]: 'managed' as const },
+                    },
+                    path: `/${scope}/.agents/skills/${pack}-fixture`,
+                    status: 'current' as const,
+                    installedVersion: '1.0.0',
+                    bundledVersion: '1.0.0',
+                  },
+                ]
+              : [],
             diagnostics: [],
           },
         ];
@@ -1436,6 +1464,86 @@ describe('createInitToolsCommand', () => {
     expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
   });
 
+  it.each(['project', 'user', 'both'] as const)(
+    'preserves project config subtrees through direct %s placement',
+    async (scope) => {
+      const projects = {
+        defaultScope: 'synced' as const,
+        root: '.custom/projects',
+        futureSibling: { mode: 'future', enabled: true },
+      };
+      configPersistence.readOatConfig.mockResolvedValue({
+        version: 1,
+        projects,
+      } as never);
+      const { command } = createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: {
+          project:
+            scope === 'user'
+              ? []
+              : [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+          user: [],
+        },
+      });
+
+      await runCommand(
+        command,
+        ['docs'],
+        ['--scope', scope === 'both' ? 'all' : scope],
+      );
+
+      if (scope === 'user') {
+        expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
+      } else {
+        expect(configPersistence.writeOatConfig).toHaveBeenCalledWith(
+          '/tmp/workspace',
+          expect.objectContaining({ projects }),
+        );
+      }
+    },
+  );
+
+  it.each(['project', 'user', 'both'] as const)(
+    'preserves project config subtrees through aggregate %s placement',
+    async (scope) => {
+      const projects = {
+        defaultScope: 'synced' as const,
+        root: '.custom/projects',
+        futureSibling: ['kept-byte-for-byte'],
+      };
+      configPersistence.readOatConfig.mockResolvedValue({
+        version: 1,
+        projects,
+      } as never);
+      const { command } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: [scope],
+        toolsByScope: {
+          project:
+            scope === 'user'
+              ? []
+              : [createScannedTool('oat-docs-analyze', 'docs', 'project')],
+          user: [],
+        },
+      });
+
+      await runCommand(command, [], ['--scope', 'all']);
+
+      if (scope === 'user') {
+        expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
+      } else {
+        expect(configPersistence.writeOatConfig).toHaveBeenCalledWith(
+          '/tmp/workspace',
+          expect.objectContaining({ projects }),
+        );
+      }
+    },
+  );
+
   it('does not write shared config for a direct user-only brainstorm install', async () => {
     const { command, installBrainstorm, scanTools, writeOatConfig } =
       createHarness({
@@ -1515,7 +1623,7 @@ describe('createInitToolsCommand', () => {
     expect(installProjectManagement).not.toHaveBeenCalled();
   });
 
-  it('preserves declared placement while repairing a fully missing aggregate pack', async () => {
+  it('does not preserve declared-only placement when repairing a fully missing aggregate pack', async () => {
     const { command, reconcilePacks } = createHarness({
       interactive: false,
       useLifecycle: true,
@@ -1527,10 +1635,10 @@ describe('createInitToolsCommand', () => {
 
     const requests = reconcilePacks.mock.calls[0]![0];
     expect(requests).toContainEqual(
-      expect.objectContaining({ pack: 'docs', scope: 'project' }),
+      expect.objectContaining({ pack: 'docs', scope: 'user' }),
     );
     expect(requests).not.toContainEqual(
-      expect.objectContaining({ pack: 'docs', scope: 'user' }),
+      expect.objectContaining({ pack: 'docs', scope: 'project' }),
     );
   });
 
@@ -1542,17 +1650,24 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, ['docs'], ['--scope', 'user']);
 
-    expect(reconcilePacks).toHaveBeenCalledWith([
-      expect.objectContaining({
-        pack: 'docs',
-        scope: 'user',
-        action: 'install',
-      }),
-    ]);
+    expect(reconcilePacks).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pack: 'docs',
+          scope: 'project',
+          action: 'install',
+        }),
+        expect.objectContaining({
+          pack: 'docs',
+          scope: 'user',
+          action: 'install',
+        }),
+      ]),
+    );
     expect(installDocs).not.toHaveBeenCalled();
   });
 
-  it('keeps a direct pack install at its existing project placement', async () => {
+  it('does not treat declared-only project intent as an existing direct placement', async () => {
     // Upgrade path for every pre-user-scope install: the pack's defaultScope is
     // now `user`, so a bare re-install must consult existing placement or it
     // silently creates a second copy at the other scope.
@@ -1568,7 +1683,7 @@ describe('createInitToolsCommand', () => {
     expect(reconcilePacks).toHaveBeenCalledWith([
       expect.objectContaining({
         pack: 'docs',
-        scope: 'project',
+        scope: 'user',
         action: 'install',
       }),
     ]);
@@ -1610,6 +1725,21 @@ describe('createInitToolsCommand', () => {
         action: 'install',
       }),
     ]);
+  });
+
+  it('fails closed when direct pack placement inventory is unavailable', async () => {
+    const { command, capture, inventoryPack, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+    inventoryPack.mockRejectedValueOnce(new Error('inventory unavailable'));
+
+    await runCommand(command, ['docs']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error).toContain('inventory unavailable');
+    expect(reconcilePacks).not.toHaveBeenCalled();
   });
 
   it('does not write repository AGENTS guidance from the production project-scope PJM placement', async () => {

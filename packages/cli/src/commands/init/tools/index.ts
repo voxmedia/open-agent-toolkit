@@ -29,6 +29,11 @@ import {
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
 import {
+  packScopeFactsFromInventory,
+  projectPackEvidence,
+  type ToolPackEvidence,
+} from '@commands/tools/shared/pack-evidence';
+import {
   inventoryPack,
   type InventoryPackInput,
   type PackInventory,
@@ -38,6 +43,7 @@ import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
 } from '@commands/tools/shared/pack-lifecycle';
+import { resolveAdditivePackScopeSelection } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
@@ -80,7 +86,7 @@ import {
 } from './ideas/install-ideas';
 import {
   buildPackInstallStateMap,
-  buildPackInstallStateMapFromInventory,
+  buildPackInstallStateMapFromEvidence,
   type PackInstallState,
 } from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
@@ -276,6 +282,39 @@ function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
   return USER_ELIGIBLE_PACKS.has(pack);
 }
 
+async function loadPackEvidence(
+  pack: ToolPack,
+  projectRoot: string | null,
+  userRoot: string,
+  assetsRoot: string,
+  inventory: NonNullable<InitToolsDependencies['inventoryPack']>,
+): Promise<ToolPackEvidence> {
+  const canonical = await inventory({
+    pack,
+    assetsRoot,
+    ...(projectRoot ? { projectRoot } : {}),
+    userRoot,
+  });
+  return projectPackEvidence({
+    canonical,
+    scopes: canonical.scopes.map(packScopeFactsFromInventory),
+  });
+}
+
+function assertVerifiedPackScopes(
+  evidence: ToolPackEvidence,
+  expected: readonly ConcreteScope[],
+): void {
+  if (
+    evidence.unknownScopes.length > 0 ||
+    expected.some((scope) => !evidence.knownRealizedScopes.includes(scope))
+  ) {
+    throw new Error(
+      `Pack ${evidence.pack} placement verification failed for ${expected.join(', ')} scope`,
+    );
+  }
+}
+
 /**
  * Concrete scopes implied by a desired end-state placement.
  */
@@ -384,7 +423,15 @@ async function loadInstalledPackStates(
         }),
       ),
     );
-    return buildPackInstallStateMapFromInventory(ALL_TOOL_PACKS, inventories);
+    return buildPackInstallStateMapFromEvidence(
+      ALL_TOOL_PACKS,
+      inventories.map((canonical) =>
+        projectPackEvidence({
+          canonical,
+          scopes: canonical.scopes.map(packScopeFactsFromInventory),
+        }),
+      ),
+    );
   }
   const [projectTools, userTools] = await Promise.all([
     projectRoot
@@ -670,12 +717,18 @@ function buildPackEndStateChoices(
     {
       label: `Project scope (${pack})`,
       value: 'project',
-      description: 'Install at project scope only',
+      description:
+        currentLocation === 'user' || currentLocation === 'both'
+          ? 'Add or refresh project scope; keep user scope'
+          : 'Install at project scope',
     },
     {
       label: `User scope (${pack})`,
       value: 'user',
-      description: 'Install at user scope only',
+      description:
+        currentLocation === 'project' || currentLocation === 'both'
+          ? 'Add or refresh user scope; keep project scope'
+          : 'Install at user scope',
     },
     {
       label: `Project + user (${pack})`,
@@ -929,6 +982,26 @@ export async function runInitTools(
       const lifecycle = await dependencies.reconcilePacks(requests);
       for (const { plan } of lifecycle) {
         if (plan.operations.length > 0) affectedScopes.add(plan.scope);
+      }
+      if (dependencies.inventoryPack) {
+        const finalEvidence = await Promise.all(
+          selectedPacks.map((pack) =>
+            loadPackEvidence(
+              pack,
+              projectRoot,
+              userRoot,
+              assetsRoot,
+              dependencies.inventoryPack!,
+            ),
+          ),
+        );
+        for (const evidence of finalEvidence) {
+          const target =
+            evidence.pack === 'core'
+              ? (['user'] as const)
+              : scopesForEndState(packScopes[evidence.pack]);
+          assertVerifiedPackScopes(evidence, target);
+        }
       }
       if (
         requests.some(
@@ -1360,38 +1433,47 @@ async function resolvePackCommandScopes(
   context: CommandContext,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
+  requested?: ConcreteScope | 'both',
 ): Promise<ConcreteScope[]> {
   const definition = getPackDefinition(pack);
   const inventory = dependencies.inventoryPack;
-  if (!inventory) return [definition.defaultScope];
-
-  try {
-    const userRoot = dependencies.resolveScopeRoot(
-      'user',
-      context.cwd,
-      context.home,
+  if (!inventory) {
+    const fallback = requested ?? definition.defaultScope;
+    const fallbackScopes: ConcreteScope[] =
+      fallback === 'both' ? ['project', 'user'] : [fallback];
+    return fallbackScopes.filter((scope) =>
+      definition.allowedScopes.includes(scope),
     );
-    const projectRoot = definition.allowedScopes.includes('project')
-      ? await dependencies
-          .resolveProjectRoot(context.cwd)
-          .catch(() => undefined)
-      : undefined;
-    const packInventory = await inventory({
-      pack,
-      assetsRoot,
-      ...(projectRoot ? { projectRoot } : {}),
-      userRoot,
-    });
-    const states = buildPackInstallStateMapFromInventory(
-      [pack],
-      [packInventory],
-    );
-    return scopesForEndState(
-      resolvePackDefaultEndState(pack, states[pack].location),
-    ).filter((scope) => definition.allowedScopes.includes(scope));
-  } catch {
-    return [definition.defaultScope];
   }
+
+  const userRoot = dependencies.resolveScopeRoot(
+    'user',
+    context.cwd,
+    context.home,
+  );
+  const projectRoot = definition.allowedScopes.includes('project')
+    ? await dependencies.resolveProjectRoot(context.cwd).catch(() => undefined)
+    : undefined;
+  const canonical = await inventory({
+    pack,
+    assetsRoot,
+    ...(projectRoot ? { projectRoot } : {}),
+    userRoot,
+  });
+  const evidence = projectPackEvidence({
+    canonical,
+    scopes: canonical.scopes.map(packScopeFactsFromInventory),
+  });
+  const defaultRequest =
+    evidence.knownRealizedScopes.length === 2
+      ? 'both'
+      : (evidence.knownRealizedScopes[0] ?? definition.defaultScope);
+  return resolveAdditivePackScopeSelection({
+    pack,
+    requested: requested ?? defaultRequest,
+    knownRealizedScopes: evidence.knownRealizedScopes,
+    unknownScopes: evidence.unknownScopes,
+  }).targetScopes.filter((scope) => definition.allowedScopes.includes(scope));
 }
 
 function createReconciledPackCommand(
@@ -1426,17 +1508,17 @@ function createReconciledPackCommand(
           context.scope === 'project' || context.scope === 'user'
             ? context.scope
             : null;
-        const scopes: ConcreteScope[] =
+        const scopes = await resolvePackCommandScopes(
+          pack,
+          context,
+          assetsRoot,
+          dependencies,
           explicitScope && context.scope === 'all'
-            ? [...definition.allowedScopes]
-            : requestedScope
-              ? [requestedScope]
-              : await resolvePackCommandScopes(
-                  pack,
-                  context,
-                  assetsRoot,
-                  dependencies,
-                );
+            ? 'both'
+            : explicitScope && requestedScope
+              ? requestedScope
+              : undefined,
+        );
         for (const scope of scopes) {
           if (!definition.allowedScopes.includes(scope)) {
             throw new Error(`Pack ${pack} does not allow ${scope} scope`);
@@ -1461,9 +1543,23 @@ function createReconciledPackCommand(
           ),
         );
         const results = await dependencies.reconcilePacks!(requests);
+        if (dependencies.inventoryPack) {
+          const finalEvidence = await loadPackEvidence(
+            pack,
+            requests.some(({ scope }) => scope === 'project')
+              ? await dependencies.resolveProjectRoot(context.cwd)
+              : null,
+            dependencies.resolveScopeRoot('user', context.cwd, context.home),
+            assetsRoot,
+            dependencies.inventoryPack,
+          );
+          assertVerifiedPackScopes(finalEvidence, scopes);
+        }
         appliedScopesByCommand.set(
           command,
-          results.map(({ request }) => request.scope),
+          results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope),
         );
         setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
 
