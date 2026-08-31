@@ -684,6 +684,9 @@ continuation_events:
     target: oat-phase-implementer-gpt-5-6-sol-high
     outcome: done
     commit: bbbb3857cc793eb9a6def31e75cf6af65cccfa9f
+  - id: review-fix-p02-r2-20260831T1444Z
+    reason: bounded fixes for Phase 2 round-2 Critical credential-safety findings
+    target: oat-phase-implementer-gpt-5-6-sol-high
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
