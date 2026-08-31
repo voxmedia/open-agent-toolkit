@@ -393,9 +393,11 @@ surface.
 
 Launch acceptance remains terminal for replacement eligibility. After a
 prepared launch is accepted, no alternate route, replacement, or target
-substitution is allowed; record the eventual terminal child outcome and use
-only the existing continuation and caller-authorized same-target recovery
-rules.
+substitution is allowed. Only continuation through the already accepted handle
+is permitted. A linked fresh same-target launch is forbidden, regardless of
+the generic caller lifecycle recovery exception. If that accepted handle is
+lost or cannot resume, record the terminal outcome and stop; the approval-bound
+record never authorizes a second child.
 
 ### One-Step Backwards Compatibility
 

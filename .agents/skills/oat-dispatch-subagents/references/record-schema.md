@@ -80,88 +80,7 @@ applies. Preparation fills all launch controls but performs no launch.
 prepared_record_version: 1
 operation: prepare
 dispatch_state: prepared
-run_id: recon-run-2026-07-12-001
-prepared_at: 2026-07-12T00:00:00Z
-waves:
-  - wave_id: gathering
-    conditional: false
-    task_class: intelligent-recon
-    model_class_floor: intelligent-recon
-    concurrency: 4
-    lane_cap: 6
-  - wave_id: contradiction-resolution
-    conditional: true
-    task_class: hard-reasoning
-    model_class_floor: hard-reasoning
-    concurrency: 1
-    lane_cap: 2
-run_maximum_floor: hard-reasoning
-pinned_target:
-  provider: codex
-  dispatch_context: nested-native
-  selected_route: native
-  role_selector: recon-worker
-  model_selector: exact-provider-model
-  model_selector_granularity: exact-native-model-choice
-  effort_selector: high
-  reasoning_mode_selector: null
-  service_tier_selector: standard
-approval_axes:
-  - prepared_record_version
-  - run_id
-  - prepared_at
-  - request_id
-  - caller
-  - objective
-  - action
-  - expected_output
-  - verification_evidence
-  - escalate_when
-  - provider
-  - dispatch_context
-  - dispatch_policy
-  - dispatch_ceiling
-  - selected_route
-  - selection_source
-  - candidates_considered
-  - selection_reason
-  - role_name
-  - role_class
-  - role_selector
-  - model_selector
-  - model_selector_granularity
-  - effort_selector
-  - reasoning_mode_selector
-  - service_tier_selector
-  - guidance_reference
-  - guidance_version
-  - guidance_verified_at
-  - guidance_status
-  - authority
-  - authorization_scope
-  - writable_roots
-  - deadline_seconds
-  - retry_limit
-  - fallback
-  - dispatch_mode
-  - context_fork_controls
-  - concurrency
-  - lane_cap
-  - wave_id
-  - lane_ids
-  - scope
-  - task_class
-  - model_class_floor
-  - run_maximum_floor
-  - pinned_target
-  - payload_digest
-  - catalog_observation
-catalog_observation:
-  id: nested-native-2026-07-12-001
-  source: tool-schema
-  dispatch_context: nested-native
-  observed_at: 2026-07-12T00:00:00Z
-  relevant_catalog_fingerprint: sha256:<64-lowercase-hex>
+approval_projection: <exact Canonical Approval Projection v1 object below>
 approval_canonical_json: <RFC-8785-JSON-text>
 approval_fingerprint: sha256:<64-lowercase-hex>
 approved_at: null
@@ -170,23 +89,152 @@ launch_acceptance: null
 terminal_outcome: null
 ```
 
-`waves` lists every planned and conditional wave before selection. Each wave
-records its caller-classified task class and equal model-class floor. Compute
-`run_maximum_floor` using this increasing order:
-`mechanical-recon`, `intelligent-recon`, `default-implementation`,
-`hard-reasoning`, `consequential`. `pinned_target` is one exact target shared
-by every prepared wave and must satisfy the maximum; per-wave selection or
-floor weakening is invalid.
+### Canonical Approval Projection v1
 
-The approval projection contains exactly every field named by `approval_axes`
-with absent optional values represented as JSON `null`. For wave data, preserve
-caller order for waves and lanes; for sets such as writable roots, require the
-caller to provide a stable sorted array. Do not normalize opaque provider
-values. Canonicalize the projection as canonical JSON using RFC 8785, encode
-that text as UTF-8, hash it with SHA-256, format lowercase hexadecimal, and
-prefix the value with `sha256:`. `payload_digest` is the same construction over
-the complete redacted launch payload. The approval timestamp is `approved_at`;
-`prepared_at` records when selection evidence was fixed.
+`approval_projection` is exactly the object shape below. Its object keys and
+nested structure are immutable for `prepared_record_version: 1`; missing or
+extra keys are invalid. The complete ordered `execution.waves` array and every
+ordered wave-local `lanes` array are values in the projection, not paths to be
+looked up elsewhere. Any future field or aggregation change requires a new
+prepared-record version. Scalar values and example array lengths below are
+illustrative; field names, nesting, value types, and each wave and lane element
+shape are normative. Wave and lane arrays may vary in length only within their
+approved caps.
+
+```json
+{
+  "schema": "oat-dispatch-approval/v1",
+  "prepared_record_version": 1,
+  "run_id": "recon-run-2026-07-12-001",
+  "prepared_at": "2026-07-12T00:00:00Z",
+  "request": {
+    "request_id": "dispatch-recon-001",
+    "caller": "recon",
+    "objective": "Gather bounded evidence",
+    "action": "analysis",
+    "expected_output": "versioned-dossiers",
+    "verification_evidence": "artifact-digests",
+    "escalate_when": ["approved scope is insufficient"]
+  },
+  "selection": {
+    "provider": "codex",
+    "dispatch_context": "nested-native",
+    "dispatch_policy": "economy",
+    "dispatch_ceiling": "high",
+    "selected_route": "native",
+    "selection_source": "native-default",
+    "candidates_considered": ["exact-provider-model"],
+    "selection_reason": "native-catalog",
+    "role_name": "recon-worker",
+    "role_class": "recon",
+    "role_selector": "recon-worker",
+    "model_selector": "exact-provider-model",
+    "model_selector_granularity": "exact-native-model-choice",
+    "effort_selector": "high",
+    "reasoning_mode_selector": null,
+    "service_tier_selector": "standard",
+    "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+    "guidance_version": "2026-07-21",
+    "guidance_verified_at": "2026-07-21",
+    "guidance_status": "fresh"
+  },
+  "execution": {
+    "waves": [
+      {
+        "wave_id": "gathering",
+        "conditional": false,
+        "task_class": "intelligent-recon",
+        "model_class_floor": "intelligent-recon",
+        "scope": "repo:packages/cli",
+        "lanes": [
+          {
+            "lane_id": "commands",
+            "scope": "packages/cli/src/commands"
+          },
+          {
+            "lane_id": "engine",
+            "scope": "packages/cli/src/engine"
+          }
+        ],
+        "authority": "read-only",
+        "authorization_scope": "this-recon-run",
+        "writable_roots": ["packet/raw/dossiers/gathering"],
+        "deadline_seconds": 300,
+        "retry_limit": 1,
+        "fallback": { "mode": "block" },
+        "dispatch_mode": "background",
+        "context_fork_controls": { "fork_turns": "all" },
+        "concurrency": 2,
+        "lane_cap": 4,
+        "payload_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "wave_id": "contradiction-resolution",
+        "conditional": true,
+        "task_class": "hard-reasoning",
+        "model_class_floor": "hard-reasoning",
+        "scope": "packet:claims",
+        "lanes": [
+          {
+            "lane_id": "reconcile",
+            "scope": "packet/reviews"
+          }
+        ],
+        "authority": "read-only",
+        "authorization_scope": "this-recon-run",
+        "writable_roots": ["packet/reviews/reconciliation"],
+        "deadline_seconds": 300,
+        "retry_limit": 0,
+        "fallback": { "mode": "block" },
+        "dispatch_mode": "background",
+        "context_fork_controls": { "fork_turns": "all" },
+        "concurrency": 1,
+        "lane_cap": 1,
+        "payload_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    ],
+    "run_maximum_floor": "hard-reasoning",
+    "pinned_target": {
+      "provider": "codex",
+      "dispatch_context": "nested-native",
+      "selected_route": "native",
+      "role_selector": "recon-worker",
+      "model_selector": "exact-provider-model",
+      "model_selector_granularity": "exact-native-model-choice",
+      "effort_selector": "high",
+      "reasoning_mode_selector": null,
+      "service_tier_selector": "standard"
+    }
+  },
+  "catalog_observation": {
+    "id": "nested-native-2026-07-12-001",
+    "source": "tool-schema",
+    "dispatch_context": "nested-native",
+    "observed_at": "2026-07-12T00:00:00Z",
+    "relevant_catalog_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}
+```
+
+The values in the complete Record and launch payload must exactly match their
+counterparts in `approval_projection`; a mismatch is invalid rather than an
+implicit override. `execution.waves` lists every planned and conditional wave
+before selection. Each wave records its caller-classified task class, equal
+model-class floor, conditionality, ordered lane identities and scopes, and all
+wave-local execution controls. Compute `run_maximum_floor` using this increasing
+order: `mechanical-recon`, `intelligent-recon`, `default-implementation`,
+`hard-reasoning`, `consequential`. `pinned_target` is one exact target shared by
+every prepared wave and must satisfy the maximum; per-wave selection or floor
+weakening is invalid.
+
+Absent optional values in the projection are JSON `null`. Preserve caller order
+for waves and lanes; for sets such as writable roots, require the caller to
+provide a stable sorted array. Do not normalize opaque provider values.
+Canonicalize the whole `approval_projection` as canonical JSON using RFC 8785,
+encode that text as UTF-8, hash it with SHA-256, format lowercase hexadecimal,
+and prefix the value with `sha256:`. `payload_digest` is the same construction
+over that wave's complete redacted launch payload. The approval timestamp is
+`approved_at`; `prepared_at` records when selection evidence was fixed.
 
 `catalog_observation` identifies the original source, dispatch context, and
 observation time. Its `relevant_catalog_fingerprint` covers the approved
@@ -219,9 +267,11 @@ and obtain a new approval. `accepted` is terminal for replacement eligibility
 even before the child outcome changes the record to `completed`. An accepted
 record must not become `not-accepted` or `stale`, and must never authorize a
 replacement, alternate route, model substitution, provider substitution, or
-second child. Valid same-handle continuation and explicitly authorized
-same-target recovery retain the accepted selection and follow the main skill's
-recovery contract.
+second child. Only continuation through the already accepted handle is
+permitted. A linked fresh same-target launch is forbidden, regardless of the
+generic lifecycle recovery exception. Handle loss or inability to resume is a
+terminal stop for this approval-bound record; generic recovery remains
+unchanged for non-approval-bound dispatches.
 
 ### Execute Validation and Drift
 
