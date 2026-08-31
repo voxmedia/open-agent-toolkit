@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -114,8 +114,16 @@ oat_generated: false
 
 ### Task p01-t03: Expose remote configuration through config commands
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
+
+**Outcome:** Config get/list/dump/describe/set now expose the closed remote
+policy, storage, provider override, and transport surfaces with source
+attribution and owning-surface enforcement.
+
+**Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/commands/config/index.test.ts` passed (168 tests); CLI type-check and lint
+passed.
 
 ---
 
@@ -270,13 +278,16 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Define remote configuration types - 6f5de98828e8b71c62014677cb7f4391cf0e8941
 - [x] p01-t02: Resolve transport preferences by owning scope - b3479ac367467fcdc381c277e6da6399d78fcdaf
-- [ ] p01-t03: Expose remote configuration through config commands - in progress
+- [x] p01-t03: Expose remote configuration through config commands - 89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5
+- [ ] p01-t04: Define strict remote record schemas - in progress
 
 **What changed (high level):**
 
 - Added ownership-safe shared remote policy/storage and local/user transport
   configuration surfaces.
 - Added provider-specific transport resolution with per-value source evidence.
+- Exposed remote configuration through the command catalog and mutations while
+  enforcing shared versus local/user ownership.
 
 **Decisions:**
 

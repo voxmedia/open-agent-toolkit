@@ -121,7 +121,8 @@ packages/cli/src/config/resolve.test.ts.
 
 ### Task p01-t03: Expose remote configuration through config commands
 
-**Implementation:** in progress
+**Implementation:** completed in
+`89b3efa73ee5dd5fb6c8ec57b30f5402a5f1aca5`
 
 **Files:** Modify packages/cli/src/commands/config/index.ts and
 packages/cli/src/commands/config/index.test.ts.
@@ -135,6 +136,8 @@ packages/cli/src/commands/config/index.test.ts.
 5. Commit: feat(p01-t03): expose remote configuration commands
 
 ### Task p01-t04: Define strict remote record schemas
+
+**Implementation:** in progress
 
 **Files:** Create packages/cli/src/commands/pjm/remote/schema.ts and
 packages/cli/src/commands/pjm/remote/schema.test.ts.
