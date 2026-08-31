@@ -1,7 +1,10 @@
 ---
 oat_status: complete
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - task_id: p01
+    reason: 'Phase-wide live CLI tests failed twice with varying unrelated five-second Git-fixture timeouts; direction is required before review or Phase 2.'
+    since: 2026-08-30
 oat_last_updated: 2026-08-30
 oat_phase: plan
 oat_phase_status: complete
