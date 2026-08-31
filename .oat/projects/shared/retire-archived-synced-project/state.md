@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01-t02
-oat_last_commit: ce631f78b9ebdce4746ec2f1614ffb30362c3ddf
+oat_last_commit: 2ccde026814c4c3f09d21d2267fe0d394c58490d
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:22:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T05:40:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -115,7 +115,8 @@ Implement - p01 review fixes in progress
 - ✓ Four-phase, ten-task implementation tracker initialized
 - ✓ Remaining implementation gate pinned locally to Cursor Fable High
 - ✓ p01 implementation completed in two bounded task commits
-- ⧗ p01 review fixes required: one Critical and one Important
+- ✓ p01 review round 1 fixed one Critical and one Important
+- ⧗ p01 review round 2 requires one final Critical fallback fix
 
 ## Blockers
 
@@ -123,4 +124,4 @@ None
 
 ## Next Milestone
 
-Fix and re-review the two blocking p01 findings
+Fail closed on non-atomic fallback and re-review p01

@@ -134,17 +134,26 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Review result: blocked — 1 Critical, 1 Important, 0 Medium, 0 Minor.
 - Review dispatch: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Review reconnaissance: not attempted.
-- Fix iterations: 0 of 2 used; bounded fix continuation is next.
+- Fix round 1: `2ccde026814c4c3f09d21d2267fe0d394c58490d`
+  closed the missing-object Important finding and partially closed the
+  concurrent-ref Critical finding.
+- Re-review request: `1578e833-870e-419a-a304-0af2a6ae1b0b`
+- Re-review artifact: `reviews/p01-review-2026-08-31T053841Z.md`
+- Re-review result: blocked — 1 remaining Critical, 0 Important, 0 Medium,
+  0 Minor.
+- Fix iterations: 1 of 2 used; final bounded fix continuation is next.
 - Optional nested dispatches: none.
-- Outstanding items: lease both remote ref mutations and fetch/verify the
-  completed object before local completed-ref reconciliation.
+- Outstanding item: a non-atomic remote cannot jointly condition active-ref
+  deletion on the completed ref remaining unchanged. Preserve both refs and
+  return an explicit recoverable state instead of attempting deletion.
 
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
 
-Phase p01 implementation completed in two commits. Its first independent review
-found two blocking defects; bounded fix continuation is pending.
+Phase p01 implementation completed in two commits. Fix round 1 closed one
+blocking finding and narrowed the remaining Critical defect to unsafe
+non-atomic fallback deletion. Final bounded fix continuation is pending.
 
 ## Deviations from Plan / Design
 
