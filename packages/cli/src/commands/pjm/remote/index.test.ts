@@ -168,4 +168,39 @@ describe('pjm remote command family', () => {
       expect.stringContaining('"status":"pending"'),
     );
   });
+
+  it('wires shared-storage preview and approved apply requests', async () => {
+    const preview = harness();
+    const common = [
+      'node',
+      'oat',
+      'remote',
+      'storage',
+      'shared',
+      '--repository-fingerprint',
+      'sha256:repository',
+      '--config-target',
+      '.oat/config.json',
+      '--current-mode',
+      'local',
+      '--proposed-path',
+      '.oat/repo/pjm/remote',
+    ];
+    await preview.root.parseAsync(common);
+    expect(preview.requests[0]).toMatchObject({
+      operation: 'storage-transition',
+      storage: { apply: false },
+    });
+    const apply = harness();
+    await apply.root.parseAsync([
+      ...common,
+      '--apply',
+      '--approval-digest',
+      'sha256:preview',
+    ]);
+    expect(apply.requests[0]).toMatchObject({
+      authority: { kind: 'fresh-approval', digest: 'sha256:preview' },
+      storage: { apply: true },
+    });
+  });
 });

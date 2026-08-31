@@ -2040,6 +2040,11 @@ function applyPjmRemoteSharedValue(
         `Invalid value for ${key}: expected one of local | shared, got '${rawValue}'.`,
       );
     }
+    if (state === 'shared') {
+      throw new Error(
+        "Shared operational storage requires 'oat pjm remote storage shared' preview and approval; direct config set is blocked.",
+      );
+    }
     remote.storage = { state };
     return remote;
   }

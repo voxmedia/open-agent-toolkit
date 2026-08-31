@@ -13,6 +13,7 @@ export type RemoteLifecycleOperation =
   | 'publish'
   | 'refresh'
   | 'reconcile'
+  | 'storage-transition'
   | 'operation-continue';
 
 export interface RemoteCommandRequest {
@@ -22,6 +23,13 @@ export interface RemoteCommandRequest {
   providerRef?: string;
   backlogId?: string;
   observationStdin?: boolean;
+  storage?: {
+    repositoryFingerprint: string;
+    configTarget: string;
+    currentMode: 'local' | 'shared';
+    proposedPaths: string[];
+    apply: boolean;
+  };
   authority?:
     | { kind: 'explicit-instruction'; digest: string }
     | { kind: 'fresh-approval'; digest: string }
@@ -115,6 +123,53 @@ export function createPjmRemoteCommand(
     dependencies,
     true,
   );
+
+  remote
+    .command('storage')
+    .description('Preview or apply shared operational storage')
+    .command('shared')
+    .requiredOption('--repository-fingerprint <digest>')
+    .requiredOption('--config-target <path>')
+    .requiredOption('--current-mode <mode>')
+    .requiredOption('--proposed-path <paths...>')
+    .option('--apply')
+    .option('--approval-digest <digest>')
+    .action(
+      async (
+        options: {
+          repositoryFingerprint: string;
+          configTarget: string;
+          currentMode: 'local' | 'shared';
+          proposedPath: string[];
+          apply?: boolean;
+          approvalDigest?: string;
+        },
+        command: Command,
+      ) => {
+        if (options.apply && !options.approvalDigest) {
+          throw new Error(
+            'Applying shared storage requires preview approval evidence.',
+          );
+        }
+        await execute(
+          {
+            operation: 'storage-transition',
+            storage: {
+              repositoryFingerprint: options.repositoryFingerprint,
+              configTarget: options.configTarget,
+              currentMode: options.currentMode,
+              proposedPaths: options.proposedPath,
+              apply: options.apply ?? false,
+            },
+            authority: options.approvalDigest
+              ? { kind: 'fresh-approval', digest: options.approvalDigest }
+              : undefined,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
 
   remote
     .command('operation')

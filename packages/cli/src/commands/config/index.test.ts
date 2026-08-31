@@ -759,6 +759,21 @@ describe('oat config', () => {
     expect(localPolicy.capture.error[0]).toMatch(/shared/i);
   });
 
+  it('blocks direct opt-in to shared PJM operational storage', async () => {
+    const root = await createRepoRoot();
+    const command = createHarness({ cwd: root });
+    await runCommand(command.command, [
+      'set',
+      'pjm.remote.storage.state',
+      'shared',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(command.capture.error[0]).toMatch(
+      /remote storage shared.*preview.*approval/i,
+    );
+  });
+
   it('list includes dynamic dispatch matrix provider keys', async () => {
     const root = await createRepoRoot();
     await writeFile(
