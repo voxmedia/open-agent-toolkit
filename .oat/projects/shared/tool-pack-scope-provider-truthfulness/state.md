@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: 90a4c7a3e7d022813e97b972c4ec5c00044f54f7
+oat_last_commit: 646b9809271b73243e9b001006aa57cb5494a7a8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -44,18 +44,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p03:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p03-recovery-20260831T181500Z
-        original_request_id: dispatch-p03-20260831T171500Z-e3512dcbc
-        original_task_id: p03-t01
-        original_commit: 1120329eba12785717376dfe9b17733feea525fc
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 90a4c7a3e7d022813e97b972c4ec5c00044f54f7
-        status: completed
-        recovery_commit: 646b9809271b73243e9b001006aa57cb5494a7a8
-        verification: focused 23/23; phase 493/493; CLI lint, type-check, and format; pnpm check; git diff --check; and pnpm test passed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -103,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T18:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T18:27:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -119,10 +108,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 completed its five planned task commits. Focused phase
-verification passes 470/470, but the full test gate exposed one mechanically
-derived stale Claude user-agent assertion outside the original p03 file union.
-Recovery attempt 1/10 is reserved for that test-only correction.
+Implementation - Phase 3 completed its five planned task commits and one
+test-only recovery. Expanded phase verification passes 493/493, the full test
+gate passes, and the completed recovery reservation is settled. Independent
+High phase review is next.
 
 ## Artifacts
 
@@ -155,13 +144,12 @@ Recovery attempt 1/10 is reserved for that test-only correction.
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
-- ! Phase 3 tasks complete; bounded full-suite recovery in progress
+- ! Phase 3 tasks and recovery complete; independent review pending
 
 ## Blockers
 
-None. The full-suite failure is eligible for bounded automatic phase recovery.
+None.
 
 ## Next Milestone
 
-Complete and validate p03 recovery attempt 1, then run the independent High
-phase review.
+Run the independent High p03 phase review.

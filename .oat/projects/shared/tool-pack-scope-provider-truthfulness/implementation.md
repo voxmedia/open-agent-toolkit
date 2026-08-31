@@ -28,7 +28,7 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | recovery | 5     | 5/5       |
+| Phase 3 | review   | 5     | 5/5       |
 | Phase 4 | pending  | 5     | 0/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** recovery in progress after 5/5 planned task commits
+**Status:** implementation and recovery complete; independent review pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -307,8 +307,9 @@ unchanged`, making the source-qualified recovery record contradictory.
 - Full `pnpm test` exposed one stale integration assertion that still expects a
   Claude user agent not to materialize. The focused integration rerun reproduces
   the failure; the production behavior is the intended p03-t01 behavior.
-- The adjacent integration test is a mechanically derived in-phase boundary.
-  Recovery attempt 1/10 is reserved at the exact accepted High target.
+- The adjacent integration test was accepted as a mechanically derived in-phase
+  boundary. Recovery attempt 1/10 corrected only that fixture and all expanded
+  phase and repository verification now passes.
 
 | Task    | Status   | Commit      | Outcome                                         |
 | ------- | -------- | ----------- | ----------------------------------------------- |
@@ -335,14 +336,23 @@ unchanged`, making the source-qualified recovery record contradictory.
 - Reason: the assertion encodes the pre-p03 user-agent contract; no edit,
   reservation, or recovery commit occurred before the phase handoff.
 
-### Pending Recovery p03-recovery-20260831T181500Z
+### Recovery Event p03-recovery-20260831T181500Z
 
-- Attempt 1/10 is reserved against head
-  `90a4c7a3e7d022813e97b972c4ec5c00044f54f7`.
-- Scope is restricted to updating the stale Claude user-agent integration
-  expectation and rerunning that suite plus relevant Phase 3 verification.
-- Target and axes remain exactly
-  `oat-phase-implementer-gpt-5-6-sol-high`, `gpt-5.6-sol`, effort `high`.
+- Phase/task: p03 / p03-t01
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Original commit: `1120329eba12785717376dfe9b17733feea525fc`
+- Defect class: test
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: `646b9809271b73243e9b001006aa57cb5494a7a8`
+- Verification: focused 23/23; expanded phase 20 files / 493 tests; CLI
+  lint/type-check/format, `pnpm check`, `git diff --check`, and full
+  `pnpm test` passed before and after the source recovery commit
+- Reason: the stale assertion was mechanically aligned with p03-t01 provider
+  capability behavior; no production code changed.
 
 ---
 
@@ -556,13 +566,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Tier: Tier 1 — exact-target phase implementer
 - Dispatch policy: managed High from project state
 - Scope: p03 implementation, five sequential tasks
-- Outcome: `DONE_WITH_CONCERNS`; 5/5 planned tasks committed, bounded automatic
-  recovery reserved for one stale full-suite integration assertion
+- Outcome: 5/5 planned tasks committed; bounded automatic recovery completed
+  for one stale full-suite integration assertion
 - Verification: Phase 3 union 19 files / 470 tests, CLI lint, type-check,
   formatting, `pnpm check`, and whitespace checks pass at `90a4c7a3e`; full
   `pnpm test` and its focused reproduction fail one stale assertion
-- Recovery: attempt 1/10 reserved; exact accepted target retained
-- Outstanding: complete the test-only recovery, then run p03 review
+- Recovery: attempt 1/10 completed by `646b98092`; exact accepted target retained
+- Outstanding: run p03 review
 
 #### Dispatch record — `dispatch-p03-20260831T171500Z-e3512dcbc`
 
@@ -571,8 +581,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Phase range: `e3512dcbcfb54ea7e999ac9242291eed9f47bbac..90a4c7a3e7d022813e97b972c4ec5c00044f54f7`
 - Child outcome: five ordered task commits; one pre-attempt direction-required
-  event from the full test gate; clean worktree
+  event followed by one validated recovery; clean worktree
 - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Recovery continuation — `p03-recovery-20260831T181500Z`
+
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `646b9809271b73243e9b001006aa57cb5494a7a8`
+- Outcome: aligned the single stale Claude user-agent integration expectation;
+  focused 23/23, expanded phase 493/493, and full repository tests passed
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
