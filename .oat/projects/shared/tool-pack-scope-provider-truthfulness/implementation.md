@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -318,6 +318,153 @@ unchanged`, making the source-qualified recovery record contradictory.
 | p03-t03 | complete | `3b79113da` | Provider extension materialization evidence     |
 | p03-t04 | complete | `1375eeadd` | User provider configuration and inspection      |
 | p03-t05 | complete | `90a4c7a3e` | Sourced provider refresh advice and diagnostics |
+
+### Task p03-t01: Make user agent scanning capability-aware
+
+**Status:** completed
+**Commit:** `1120329eba12785717376dfe9b17733feea525fc` (reconciled)
+
+**Outcome:**
+
+- User-scope agent scanning now follows provider capability instead of a
+  hard-coded managed-agent exclusion.
+- The planner and sync command preserve provider-aware scan evidence.
+
+**Files changed:**
+
+- `packages/cli/src/shared/types.ts`
+- `packages/cli/src/engine/scanner.ts`
+- `packages/cli/src/engine/scanner.test.ts`
+- `packages/cli/src/engine/compute-plan.ts`
+- `packages/cli/src/engine/compute-plan.test.ts`
+- `packages/cli/src/commands/sync/index.ts`
+- `packages/cli/src/commands/sync/index.test.ts`
+
+**Verification:** focused p03-t01 suite passed 95/95 tests; formatting and
+`git diff --check` passed.
+
+**Notes:** Reconciled on 2026-08-31 from the exact task-ID commit signal with
+high confidence. The original commit remains the source authority.
+
+### Task p03-t02: Return per-operation core sync evidence
+
+**Status:** completed
+**Commit:** `3d518e69e0bff63cd0d202eeb4c63098b454e1f3` (reconciled)
+
+**Outcome:**
+
+- Core sync execution now returns per-operation outcomes separately from the
+  immutable plan.
+- Apply and dry-run reporting carry the structured evidence forward.
+
+**Files changed:**
+
+- `packages/cli/src/engine/engine.types.ts`
+- `packages/cli/src/engine/engine.types.test.ts`
+- `packages/cli/src/engine/execute-plan.ts`
+- `packages/cli/src/engine/execute-plan.test.ts`
+- `packages/cli/src/commands/sync/sync.types.ts`
+- `packages/cli/src/commands/sync/apply.ts`
+- `packages/cli/src/commands/sync/dry-run.ts`
+
+**Verification:** focused p03-t02 suite passed 81/81 tests; formatting and
+`git diff --check` passed.
+
+**Notes:** Reconciled on 2026-08-31 from the exact task-ID commit signal with
+high confidence. The original commit remains the source authority.
+
+### Task p03-t03: Return extension evidence and cover managed roles
+
+**Status:** completed
+**Commit:** `3b79113dafeb813b6b87a023fdfbbe4df2d11303` (reconciled)
+
+**Outcome:**
+
+- Provider extensions now expose role materialization evidence.
+- Codex and Cursor managed-role coverage is explicit and Claude behavior is
+  pinned by integration tests.
+
+**Files changed:**
+
+- `packages/cli/src/providers/shared/materialization-extension.ts`
+- `packages/cli/src/providers/shared/materialization-extension.test.ts`
+- `packages/cli/src/providers/codex/codec/sync-extension.ts`
+- `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- `packages/cli/src/providers/cursor/codec/sync-extension.ts`
+- `packages/cli/src/providers/cursor/codec/sync-extension.test.ts`
+- `packages/cli/src/providers/claude/adapter.test.ts`
+- `packages/cli/src/engine/engine.integration.test.ts`
+
+**Verification:** focused p03-t03 suite passed 74/74 tests; formatting and
+`git diff --check` passed.
+
+**Notes:** Reconciled on 2026-08-31 from the exact task-ID commit signal with
+high confidence. The original commit remains the source authority.
+
+### Task p03-t04: Support user provider config and truthful inspection
+
+**Status:** completed
+**Commit:** `1375eeaddfa5d1332965be1eadc6e65fbdf8169b` (reconciled)
+
+**Outcome:**
+
+- Provider configuration supports project and user scope.
+- Provider list and inspect surfaces expose scoped configuration and detected
+  state without conflating them.
+
+**Files changed:**
+
+- `packages/cli/src/commands/providers/providers.types.ts`
+- `packages/cli/src/commands/providers/set/index.ts`
+- `packages/cli/src/commands/providers/set/index.test.ts`
+- `packages/cli/src/commands/providers/list/list.ts`
+- `packages/cli/src/commands/providers/list/list.test.ts`
+- `packages/cli/src/commands/providers/inspect/inspect.ts`
+- `packages/cli/src/commands/providers/inspect/inspect.test.ts`
+- `packages/cli/src/config/user-sync-config.ts`
+- `packages/cli/src/config/user-sync-config.test.ts`
+
+**Verification:** focused p03-t04 suite passed 38/38 tests; formatting and
+`git diff --check` passed.
+
+**Notes:** Reconciled on 2026-08-31 from the exact task-ID commit signal with
+high confidence. The original commit remains the source authority.
+
+### Task p03-t05: Add sourced refresh policy and lifecycle advice
+
+**Status:** completed
+**Commit:** `90a4c7a3e7d022813e97b972c4ec5c00044f54f7` (reconciled)
+
+**Outcome:**
+
+- Restart guidance is derived from sourced provider policy and operation
+  evidence.
+- Sync, init, status, doctor, and documentation expose conservative lifecycle
+  advice without claiming unverified runtime visibility.
+
+**Files changed:**
+
+- `packages/cli/src/providers/shared/restart-adviser.ts`
+- `packages/cli/src/providers/shared/restart-adviser.test.ts`
+- `packages/cli/src/providers/shared/registry.ts`
+- `packages/cli/src/providers/shared/registry.test.ts`
+- `packages/cli/src/commands/sync/apply.ts`
+- `packages/cli/src/commands/sync/index.test.ts`
+- `packages/cli/src/commands/init/tools/index.ts`
+- `packages/cli/src/commands/init/tools/index.test.ts`
+- `packages/cli/src/commands/status/index.ts`
+- `packages/cli/src/commands/status/index.test.ts`
+- `packages/cli/src/commands/doctor/index.ts`
+- `packages/cli/src/commands/doctor/index.test.ts`
+- `apps/oat-docs/docs/provider-sync/providers.md`
+- `apps/oat-docs/docs/provider-sync/scope-and-surface.md`
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md`
+
+**Verification:** focused p03-t05 suite passed 303/303 tests; `pnpm check`,
+formatting, and `git diff --check` passed.
+
+**Notes:** Reconciled on 2026-08-31 from the exact task-ID commit signal with
+high confidence. The original commit remains the source authority.
 
 ### Recovery Event p03-test-boundary-20260831T130906Z
 
