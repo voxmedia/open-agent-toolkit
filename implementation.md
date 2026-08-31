@@ -372,6 +372,20 @@ destination, `final|code|final-review-2026-08-31T014107Z.md` event identity,
 handoff correlation, and pre-receive project-ref head are persisted before
 review receipt begins.
 
+### Replacement Configured Exit Gate Review Received
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T014107Z.md`
+**Gate run:** `d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a`
+**Gate target:** `claude-fable-skip-permissions`
+**Threshold result:** passed (`0` Critical, `0` Important, `0` Medium, `0`
+Minor)
+
+The autonomous judgment sweep created no fix task because the gate review had
+no findings. The exact Reviews event is marked passed and the artifact is
+archived; the bookkeeping commit will be reconciled before the generation is
+marked allowed.
+
 ---
 
 ## Orchestration Runs

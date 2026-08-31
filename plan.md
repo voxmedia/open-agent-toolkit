@@ -677,7 +677,7 @@ git commit -m "docs(p03-t09): finish combined owner reconciliation"
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T010800Z.md         | 3e40f1ab804176fb1e04ce46dc5d4728fe7ec69e | auto       | -                             |
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T012845Z.md         | 74da4bca17c5d3575e0908f72e070c42a8ac4018 | auto       | -                             |
 | final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T013431Z.md         | c56ba6995a90eab7b1d06c2c79b016ca9940e54f | auto       | -                             |
-| final  | code     | received        | 2026-08-31 | reviews/final-review-2026-08-31T014107Z.md                  | c56ba6995a90eab7b1d06c2c79b016ca9940e54f | gate       | claude-fable-skip-permissions |
+| final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T014107Z.md         | c56ba6995a90eab7b1d06c2c79b016ca9940e54f | gate       | claude-fable-skip-permissions |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
