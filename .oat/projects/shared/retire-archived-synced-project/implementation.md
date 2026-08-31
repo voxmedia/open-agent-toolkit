@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: retire-archived-synced-project
 
-**Started:** Not started
+**Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 > This document is used to resume interrupted implementation sessions.
@@ -118,7 +118,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 
 ## Implementation Log
 
-No implementation sessions yet.
+Implementation initialized at `p01-t01`; no phase worker has been dispatched yet.
 
 ## Deviations from Plan / Design
 

@@ -7,6 +7,8 @@ oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
   - [p02, p03]
+oat_plan_hill_phases: [p04]
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -41,7 +43,7 @@ Turborepo, Fumadocs documentation.
 - [x] Requirements confirmed with user
 - [x] Evaluated phases for parallelism opportunities
 - [x] Declared file-disjoint parallel group for p02 and p03
-- [x] Confirm implementation HiLL checkpoints when execution starts (none)
+- [x] Confirm implementation HiLL checkpoints when execution starts (final phase p04)
 
 ## Parallelism
 
