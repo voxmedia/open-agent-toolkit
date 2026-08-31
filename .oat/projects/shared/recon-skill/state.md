@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 841a7164a4f789f244b1e7adac47b44365d09dfb
+oat_current_task: p03-t04
+oat_last_commit: 3d5eaa12aad12282808d18728bd01db1c0e11c1a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T17:07:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T18:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 3 - Research-Pack Distribution and Provider Materialization
+Phase 3 - review fixes required
 
 ## Artifacts
 
@@ -129,12 +129,17 @@ Phase 3 - Research-Pack Distribution and Provider Materialization
 - ✓ Terminal p-rev1 review passed with zero findings and explicitly closed the
   complete p02 blocking review history
 - ✓ Phase 2 and revision p-rev1 passed after three authorized revision fix rounds
-- ⧗ Phase 3 implementation begins at p03-t01
+- ✓ Phase 3 implementation completed as four planned commits
+- ✓ Research pack ownership, user-agent materialization, bundle inventory, and
+  project provider behavior passed independent review
+- ⧗ Phase 3 review found three Important lifecycle defects requiring one
+  bounded fix and fresh re-review
 
 ## Blockers
 
-None.
+Three Important Phase 3 lifecycle findings are recorded in
+`reviews/p03-review-2026-08-31T183356Z.md` and are queued for bounded correction.
 
 ## Next Milestone
 
-Complete Phase 3 research-pack distribution and provider materialization
+Fix the three Phase 3 lifecycle findings and obtain a passing fresh re-review

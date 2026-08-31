@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 oat_template: false
 ---
@@ -22,11 +22,11 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | ------------ | ------- | ----- | --------- |
 | Phase 1      | passed  | 1     | 1/1       |
 | Phase 2      | passed  | 4     | 4/4       |
-| Phase 3      | pending | 4     | 0/4       |
+| Phase 3      | blocked | 4     | 3/4       |
 | Phase 4      | pending | 2     | 0/2       |
 | Phase p-rev1 | passed  | 2     | 2/2       |
 
-**Total:** 7/13 tasks completed
+**Total:** 10/13 tasks completed
 
 ## Task Status
 
@@ -47,12 +47,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 3: Research-Pack Distribution and Provider Materialization
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p03-t01 | pending | -      |
-| p03-t02 | pending | -      |
-| p03-t03 | pending | -      |
-| p03-t04 | pending | -      |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p03-t01 | completed | `050d16a1f` |
+| p03-t02 | completed | `879cd62d3` |
+| p03-t03 | completed | `ba1e6cd78` |
+| p03-t04 | blocked   | `3d5eaa12a` |
 
 ### Phase 4: Documentation, Release Packaging, and Completion Gates
 
@@ -498,6 +498,54 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Phase p02 is also passed at this terminal closure; all four planned p02 tasks
   are completed and its full blocking review history is resolved.
 
+#### Dispatch p03 implementation
+
+- Request ID: `recon-skill-p03-implementation-20260831T1710Z`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Authority: execute exactly p03-t01 through p03-t04 with one planned commit per
+  task; project tracking remained root-owned/read-only
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Task commits: `050d16a1f81dea436ef76762022008e32dc4b23f`,
+  `879cd62d367e9210ca707dc293bdf3a3cf5461f7`,
+  `ba1e6cd78426021b1cdc195a522ca5b8cbef3097`, and
+  `3d5eaa12aad12282808d18728bd01db1c0e11c1a`
+- Recovery attempts: 0; no recovery event
+- Optional nested dispatches: none
+- Accepted adjacent outputs: migration runtime seam, scanner type export, and
+  source-CLI-generated project provider state
+- Plan correction: Cursor reads project skills natively, so no obsolete
+  `.cursor/skills/recon` view was created
+- Verification: focused phase suite 782/782, skill suite 742/742, canonical
+  validation, CLI type-check, lint, format, project sync, provider links, and
+  diff checks pass
+- Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z scope=p03 role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Dispatch p03 review round 1
+
+- Request ID: `recon-skill-p03-review-20260831T1935Z`
+- Role/class: `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: independently review the exact four-commit p03 range and write
+  only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p03-review-2026-08-31T183356Z.md`
+- Findings: 0 Critical, 3 Important, 0 Medium, 0 Minor
+- Reviewed head: `3d5eaa12aad12282808d18728bd01db1c0e11c1a`
+- Blocking dispositions: update-all promotes transitive placement to direct
+  intent; simultaneous final lease releases orphan selected assets; migration
+  dependency-release failure leaves an unrecoverable source lease
+- Overengineering assessment: passed
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -742,10 +790,30 @@ context before p02 can advance.
   and does not introduce a generalized validation framework.
 - Phase p02 and task `p02-t04` are now passed. Next task: `p03-t01`.
 
+### 2026-08-31 - p03 review round 1 received
+
+- Four planned Phase 3 commits completed from `050d16a1f` through `3d5eaa12a`;
+  focused 782/782 and skill 742/742 suites, CLI type-check, canonical
+  validation, provider sync/link checks, lint, format, and diff checks pass.
+- Independent review confirmed pack ownership, materialization, bundle, and
+  provider behavior, then reproduced three Important lifecycle defects in
+  production functions: transitive update promotion, stale-snapshot batch
+  release orphaning, and unrecoverable migration release failure.
+- The findings remain within existing Phase 3 lifecycle/update/migration files
+  and return to the original p03 implementer for one bounded append-only fix
+  and fresh re-review.
+
 ## Deviations from Plan / Design
 
-None. Add accepted implementation deviations here as they arise, with their
-source artifact and follow-up disposition.
+- p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
+  runtime seam required to supply the planned migration lease dependencies.
+- p03-t03 uses `packages/cli/src/engine/index.ts` only to export the scanner
+  options type required by established alias imports.
+- p03-t04 retains source-CLI-generated project provider outputs and corrects
+  the stale planned Cursor skill-link assertion: Cursor reads canonical project
+  skills natively and must not receive an obsolete `.cursor/skills/recon` view.
+- These deviations were independently reviewed as proportionate integration
+  consequences rather than scope expansion.
 
 ## Test Results
 
@@ -784,6 +852,11 @@ source artifact and follow-up disposition.
   suite, complete 147/147 recon suite, 164/164 CLI validation, 742/742 skill
   suite, canonical validation, skill-bump validation, lint, format, CLI
   type-check, `pnpm check`, plan validation, and diff checks.
+- Phase p03 implementation and independent review both pass the fresh focused
+  782/782 suite, CLI type-check, 742/742 skill suite, canonical skill
+  validation, project provider sync/link verification, and diff checks.
+- Passing gates do not override the three production-function lifecycle
+  failures recorded in `reviews/p03-review-2026-08-31T183356Z.md`.
 
 ## Final Summary (for PR/docs)
 
