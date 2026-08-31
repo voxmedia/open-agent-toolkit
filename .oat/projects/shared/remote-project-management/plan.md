@@ -261,6 +261,9 @@ packages/cli/src/commands/pjm/remote/store.test.ts.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
+**Implementation:** completed in
+`f7a8dc493557e619d8004aaa52a0ce47bdaf7263`
+
 **Files:** Create packages/cli/src/commands/pjm/remote/purpose-policy.ts and
 packages/cli/src/commands/pjm/remote/purpose-policy.test.ts.
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: a13b3b4a8981e85d763354f98edcec1ce5c55e84
+oat_current_task: p02-t02
+oat_last_commit: f7a8dc493557e619d8004aaa52a0ce47bdaf7263
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T12:42:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T12:54:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,10 +40,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 completed p01-t01 through p01-t10, passed phase-wide
-verification after origin/main incorporated PR #249's four-worker Vitest cap,
-and passed the authorized independent operator-extension review with zero
-Critical and zero Important findings. Phase 2 is next.
+Implementation — Phase 2 is in progress. p02-t01 completed the binding-purpose
+policy composer with fail-closed field, lifecycle, and closeout intersections.
 
 ## Artifacts
 
@@ -86,6 +84,7 @@ Critical and zero Important findings. Phase 2 is next.
 - ✓ Phase 1 tasks complete and phase-wide verification passed
 - ✓ Phase 1 operator-extension fix committed as `a13b3b4a8`
 - ✓ Phase 1 operator-extension review passed at `c8ef3d593`
+- ✓ p02-t01 composed binding-purpose policies by strict intersection
 
 ## Blockers
 
@@ -93,4 +92,4 @@ None.
 
 ## Next Milestone
 
-Begin Phase 2 reconciliation and safety-engine implementation.
+Implement p02-t02 safe local backlog and project projections.

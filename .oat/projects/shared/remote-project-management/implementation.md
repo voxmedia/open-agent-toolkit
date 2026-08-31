@@ -261,10 +261,25 @@ and lint passed.
 
 ## Phase 2: Reconciliation and Safety Engine
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-08-31T12:48:00Z
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Compose binding-purpose policy by intersection
+
+**Status:** completed
+**Commit:** f7a8dc493557e619d8004aaa52a0ce47bdaf7263
+
+**Outcome:** Added immutable provider-neutral purpose defaults and strict
+intersection across title, description, priority, lifecycle, and closeout
+policy. Empty intersections remain explicit no-ops, while incompatible
+transition ownership requires a choice instead of granting authority.
+
+**Verification:** Purpose-policy suite passed (8 tests); CLI format/build,
+type-check, and lint passed.
+
+---
+
+### Task p02-t02: Project local backlog and project content safely
 
 **Status:** pending
 **Commit:** -
@@ -481,6 +496,7 @@ Chronological log of implementation progress.
 - [x] p01-t08: Add backward-compatible association codec - 68e882fac52f808ae2f78320dec8fb8c8b66d408
 - [x] p01-t09: Add foundational remote doctor checks - 373839ef12a713d18fd5e1422cbcf02dfbebff17
 - [x] p01-t10: Persist pre-create binding intent - cd6608947699b6431216fa8364b67729b7583866
+- [x] p02-t01: Compose binding-purpose policy by intersection - f7a8dc493557e619d8004aaa52a0ce47bdaf7263
 
 **What changed (high level):**
 
