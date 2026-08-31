@@ -1,9 +1,7 @@
 ---
-oat_current_task: p04-t02
-oat_last_commit: ac380219d444c54c18629fc23c44b7de8beaec0e
-oat_blockers:
-  - task_id: p04-t02
-    reason: 'Required pnpm test remains nonzero from changing load-sensitive Git-fixture timeouts; no assertion or implementation-linked failure was found.'
+oat_current_task: null
+oat_last_commit: 16214137968769833972c039947034fe423144ca
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260827-correct-scope-and-adoption
@@ -28,16 +26,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p04-recovery-001
-        original_request_id: 154d1fc9-9f72-483d-b918-c03e62a90bb4
-        original_task_id: p04-t02
-        original_commit: ac380219d444c54c18629fc23c44b7de8beaec0e
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 4354601215d595d8f0c4fb1df06a02822e490d63
-        status: completed
+      pending_attempt: null
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
@@ -45,7 +34,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T00:06:00Z'
+oat_project_state_updated: '2026-08-31T00:18:31Z'
 oat_generated: false
 ---
 
@@ -57,12 +46,11 @@ oat_generated: false
 
 ## Current Phase
 
-Phases p01-p03 passed their High reviews and p04-t01 completed the `0.2.49`
-release/archive commit. PR #244 is integrated without PJM doctor source
-conflicts. p04-t02 is blocked at the required full-test gate; final p04 review
-and the final HiLL checkpoint have not run. Thomas approved one bounded p04
-recovery attempt to reduce CLI test-runner concurrency without changing
-timeouts or production behavior.
+Implementation tasks are complete. PR #244 is integrated without PJM doctor
+source conflicts, the release/archive commit targets `0.2.49`, and bounded p04
+recovery stabilized the exact full-test gate without changing timeouts or
+production behavior. p04 and final reviews remain before the final HiLL
+checkpoint.
 
 ## Artifacts
 
@@ -70,7 +58,7 @@ timeouts or production behavior.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 9 tasks)
-- **Implementation:** `implementation.md` (blocked; 8/9 tasks complete)
+- **Implementation:** `implementation.md` (tasks complete; 9/9, awaiting review)
 
 ## Progress
 
@@ -100,23 +88,17 @@ timeouts or production behavior.
   item through the CLI
 - ✓ Focused final suite 417/417, timeout-file subset 250/250, seven other CI
   gates, lint, format, and every supplemental suite passed
-- ⚠ Required `pnpm test` remains nonzero after repeated runs because different
-  Git-heavy fixtures exceed their existing timeouts; the latest retry passed
-  4,593/4,599 with six timeout-only failures and no assertion failure
-- ⧗ p04 recovery attempt 1/10 is reserved for a test-runner concurrency-only
-  correction under the original High implementer target
+- ✓ p04 recovery attempt 1/10 capped CLI Vitest at four workers without
+  changing timeout contracts; exact `pnpm test` passed 4,599/4,599
+- ✓ All eight repository gates pass on the final implementation head
+- ⧗ p04 High review and final lifecycle review remain pending
 
 ## Blockers
 
-Task p04-t02 is in bounded recovery because the required `pnpm test` gate has
-not exited 0. Passing focused and isolated reruns demonstrate no
-implementation-linked assertion failure but do not satisfy the repository
-gate. Recovery attempt 1/10 may change only CLI test-runner concurrency; the
-cleanup-first merge dependency is resolved.
+None. Recovery accounting is settled at p02 1/10 and p04 1/10, both with no
+pending attempt. The cleanup-first merge dependency is resolved.
 
 ## Next Milestone
 
-Complete p04 recovery attempt 1/10 through the original High implementer, then
-rerun the exact `pnpm test` gate. A zero exit permits the p04 and final reviews;
-a failed recovery preserves the blocker without widening into timeout or
-production changes.
+Run the required p04 High review, then the final lifecycle review and configured
+implementation closeout gates before the final HiLL checkpoint.

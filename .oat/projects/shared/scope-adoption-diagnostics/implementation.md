@@ -1,11 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p04-t02
-    reason: 'Required pnpm test remains nonzero from changing load-sensitive Git-fixture timeouts; no assertion or implementation-linked failure was found.'
+oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p04-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,9 +22,9 @@ oat_generated: false
 | Phase 1 | completed | 2     | 2/2       |
 | Phase 2 | completed | 3     | 3/3       |
 | Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | blocked   | 2     | 1/2       |
+| Phase 4 | completed | 2     | 2/2       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -127,8 +125,9 @@ findings.
 
 ## Phase 4: Integrated Release Readiness
 
-**Status:** blocked
+**Status:** completed
 **Started:** 2026-08-30 22:59 UTC
+**Completed:** 2026-08-31 00:18 UTC
 
 ### Task p04-t01: Advance lockstep public package versions
 
@@ -140,8 +139,8 @@ Selected lockstep version `0.2.49` above freshly fetched `origin/main` at
 
 ### Task p04-t02: Run the complete repository gate sequence
 
-**Status:** blocked
-**Commit:** -
+**Status:** completed
+**Recovery Commit:** `16214137968769833972c039947034fe423144ca`
 
 **Blocker:** The required `pnpm test` gate exited 1 in four ordinary runs and
 one uncached forced run because different Git-heavy fixtures exceeded their
@@ -152,11 +151,14 @@ and supplemental suite passed. The gate remains non-passing until its own
 command exits 0. The latest exact retry improved to 4,593/4,599 passing with six
 timeout-only failures across four files.
 
-**Approved recovery:** Thomas approved one bounded in-project p04 recovery on
-2026-08-30. Attempt 1/10 is reserved to reduce CLI test-runner worker
-concurrency in `packages/cli/vitest.config.ts`; production behavior, timeouts,
+**Recovered:** Thomas approved one bounded in-project p04 recovery on
+2026-08-30. Attempt 1/10 reduced CLI test-runner worker concurrency in
+`packages/cli/vitest.config.ts`; production behavior, timeouts,
 assertions, and lifecycle fixtures remain out of bounds. Acceptance requires
-the exact `pnpm test` command to exit 0.
+the exact `pnpm test` command to exit 0. The four-worker cap passed that gate
+before and after commit with all 4,599 CLI tests, then the remaining final-head
+gates passed. Recovery accounting is settled at 1/10 used and no pending
+attempt.
 
 ## Orchestration Runs
 
@@ -170,17 +172,16 @@ the exact `pnpm test` command to exit 0.
 **Schedule:** p01 → p02 → p03 → p04 (sequential)
 **HiLL checkpoint:** p04 only; automatic checkpoint review enabled
 **Retry limit:** 2
-**Status:** p01-p03 passed; p04-t01 completed; p04-t02 blocked on the full-test
-gate
+**Status:** all implementation tasks complete; p04 and final reviews pending
 
 #### Phase Outcomes
 
-| Phase | Implementer        | Review  | Fix Iterations | Disposition                   |
-| ----- | ------------------ | ------- | -------------- | ----------------------------- |
-| p01   | DONE               | pass    | 1/2            | accepted                      |
-| p02   | DONE_WITH_CONCERNS | pass    | 0/2            | accepted; one phase recovery  |
-| p03   | DONE               | pass    | 0/2            | accepted                      |
-| p04   | DONE_WITH_CONCERNS | pending | 0/2            | blocked by `pnpm test` exit 1 |
+| Phase | Implementer        | Review  | Fix Iterations | Disposition                  |
+| ----- | ------------------ | ------- | -------------- | ---------------------------- |
+| p01   | DONE               | pass    | 1/2            | accepted                     |
+| p02   | DONE_WITH_CONCERNS | pass    | 0/2            | accepted; one phase recovery |
+| p03   | DONE               | pass    | 0/2            | accepted                     |
+| p04   | DONE               | pending | 0/2            | recovered; awaiting review   |
 
 #### p01 Dispatch and Evidence
 
@@ -261,7 +262,33 @@ gate
   change was initially authorized under p04's verification-only ownership.
 - Operator scope extension: one concurrency-only recovery was approved after
   the fourth exact retry again failed only from changing timeouts. Attempt 1/10
-  is reserved as `p04-recovery-001` under the original High implementer target.
+  was recovered in `162141379` under the original High implementer target.
+- An explicit four-worker CLI Vitest cap made the exact `pnpm test` gate pass
+  before and after commit: 310/310 CLI files and 4,599/4,599 tests, followed by
+  smoke 140/140, skills 586/586, and release 39 passed/1 skipped.
+- Final-head gates 4-8 all exited 0 after a fresh `origin/main` fetch:
+  build, skill version bumps, release version check, release validation, and
+  docs build. Recovery accounting is settled at 1/10 used and no pending
+  attempt.
+
+### Recovery Event p04-recovery-001
+
+- Phase/task: p04 / p04-t02
+- Original request: 154d1fc9-9f72-483d-b918-c03e62a90bb4
+- Original commit: ac380219d444c54c18629fc23c44b7de8beaec0e
+- Defect class: test
+- Discovered by: exact `pnpm test` repeatedly exited 1 from changing
+  Git-heavy fixture timeouts under workspace concurrency
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 16214137968769833972c039947034fe423144ca
+- Verification: exact `pnpm test`, `pnpm check`, `pnpm type-check`, and
+  `git diff --check` passed before and after the committed correction; final
+  gates 4-8 also exited 0
+- Reason: an explicit four-worker CLI Vitest cap removed host-load-dependent
+  Git-fixture timeouts while preserving test behavior and timeout contracts
 
 <!-- orchestration-runs-end -->
 
@@ -271,7 +298,7 @@ gate
 | ----------------- | --------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------ |
 | plan revalidation | plan.md         | Pre-PR-#240 inventory/provider assumptions and parallel p01-p03 execution | Current-main-adapted tasks; sequential diagnostics-first merge | PRs #240/#242 changed shared contracts and the umbrella reserved broader provider semantics | Revalidated plan.md | Umbrella rebases onto the merged diagnostic input/renderer seams   |
 | p04 integration   | plan.md         | Rebase after the narrow PJM cleanup lands                                 | PR #244 merged into append-only phase history at `ac380219d`   | Preserve immutable task commits while integrating the cleanup-first baseline                | Git history         | No doctor-source overlap; umbrella still rebases after diagnostics |
-| p04 verification  | plan.md         | All eight gates exit 0                                                    | Seven pass; `pnpm test` remains nonzero from variable timeouts | Exact gate status cannot be inferred from passing focused or isolated reruns                | Gate logs           | Rerun exact gate after load issue clears; then review p04/final    |
+| p04 verification  | plan.md         | All eight gates exit 0                                                    | All pass after a bounded four-worker CLI Vitest cap            | Exact gate had to pass without weakening assertions or timeout contracts                    | Gate logs           | Review p04 and final implementation                                |
 
 ## Test Results
 
@@ -282,17 +309,18 @@ gate
 | 3     | Test-quality phase suite            | 179    | 0      | Production-reachable assertions and safe globals     |
 | 4     | Focused integrated suite            | 417    | 0      | Final diagnostics, PJM, sync, lifecycle, and harness |
 | 4     | Timeout-affected file subset        | 250    | 0      | Nine Git-heavy files outside full workspace load     |
-| 4     | Latest full `pnpm test` retry       | 4593   | 6      | Timeout-only failures; required gate remains blocked |
+| 4     | Final full `pnpm test`              | 4599   | 0      | Four-worker cap; exact root command passed           |
 
 ## Final Summary (for PR/docs)
 
-In progress. The implementation ships adoption-aware PJM migration,
+Tasks complete; awaiting p04 and final review. The implementation ships adoption-aware PJM migration,
 provider-aware user-agent diagnostics, precise shared-owner attribution,
 fault-tolerant inventory rendering, and targeted test-quality ratchets. PR
 #244's cleanup-first baseline is integrated without doctor-source overlap and
-the release unit is staged at `0.2.49`. Final closeout is blocked only because
-the required full test command has not produced a zero exit code; review and
-completion have not been advanced past that boundary.
+the release unit is staged at `0.2.49`. A bounded four-worker CLI Vitest cap
+stabilizes Git-heavy fixtures without changing timeout contracts, and all
+eight repository gates pass on the final implementation head. Review and
+approval-aware closeout remain outstanding.
 
 ## References
 

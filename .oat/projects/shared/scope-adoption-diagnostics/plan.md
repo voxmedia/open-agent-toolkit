@@ -656,12 +656,12 @@ review result.
 
 **Total: 9 tasks**
 
-Implementation is 8/9 tasks complete. Current-main revalidation retained all
+Implementation tasks are 9/9 complete. Current-main revalidation retained all
 nine tasks, adapting five without expanding into umbrella ownership; PR #244's
-cleanup-first dependency is now integrated. p04-t02 remains blocked because
-the exact `pnpm test` gate is nonzero from changing timeout-only failures, even
-though focused and affected-file reruns pass. Completion still requires that
-gate to exit 0, followed by p04/final review and closeout.
+cleanup-first dependency is integrated. A bounded p04 recovery capped CLI
+Vitest at four workers and made the exact `pnpm test` gate pass without changing
+timeouts or assertions. Completion still requires p04/final review and
+approval-aware closeout.
 
 ## References
 
