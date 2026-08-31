@@ -29,8 +29,10 @@ export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
 }
 
+const QUOTED_CREDENTIAL_ASSIGNMENT =
+  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)(["'])(.*?)\5/gim;
 const CREDENTIAL_ASSIGNMENT =
-  /\b(password|passwd|api[_-]?key|access[_-]?token|secret|token)\s*[:=]\s*([^\s,;]+)/gi;
+  /(^|[\s{,[])(["']?)(password|passwd|api[_-]?key|access[_-]?token|secret|token|authorization)\2(\s*[:=]\s*)([^\s,;}]+)/gim;
 const AUTHORIZATION_HEADER =
   /(\bAuthorization\s*:\s*(?:Bearer|Basic)\s+)([^\s]+)/gi;
 const STANDALONE_CREDENTIAL =
@@ -148,12 +150,31 @@ function sanitizeExtensions(
 function redactCredentials(value: string): string {
   return value
     .replace(
+      QUOTED_CREDENTIAL_ASSIGNMENT,
+      (
+        _match,
+        leading: string,
+        keyQuote: string,
+        name: string,
+        operator: string,
+        valueQuote: string,
+      ) =>
+        `${leading}${keyQuote}${name}${keyQuote}${operator}${valueQuote}${REDACTION_MARKER}${valueQuote}`,
+    )
+    .replace(
       AUTHORIZATION_HEADER,
       (_match, prefix: string) => `${prefix}${REDACTION_MARKER}`,
     )
     .replace(
       CREDENTIAL_ASSIGNMENT,
-      (_match, name: string) => `${name}=${REDACTION_MARKER}`,
+      (
+        _match,
+        leading: string,
+        keyQuote: string,
+        name: string,
+        operator: string,
+      ) =>
+        `${leading}${keyQuote}${name}${keyQuote}${operator}${REDACTION_MARKER}`,
     )
     .replace(STANDALONE_CREDENTIAL, REDACTION_MARKER);
 }

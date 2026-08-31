@@ -69,6 +69,31 @@ describe('binding previews and approvals', () => {
     });
   });
 
+  it('binds approval digests to a specific generated preview instance', () => {
+    const original = buildBindingPreview(baseInput);
+    const regenerated = buildBindingPreview({
+      ...baseInput,
+      createdAt: '2026-08-31T12:01:00.000Z',
+    });
+
+    expect(regenerated.renderedFields).toEqual(original.renderedFields);
+    expect(regenerated.componentDigests).toEqual(original.componentDigests);
+    expect(regenerated.digest).not.toBe(original.digest);
+    expect(
+      validatePreviewApproval(
+        regenerated,
+        {
+          previewDigest: original.digest,
+          operationClass: 'update-fields',
+          approvedAt: '2026-08-31T12:01:00.000Z',
+          actor: 'user-123',
+          source: 'interactive-confirmation',
+        },
+        { now: '2026-08-31T12:02:00.000Z', maxAgeMs: 10 * 60_000 },
+      ),
+    ).toEqual({ valid: false, reason: 'digest-mismatch' });
+  });
+
   it.each([
     [
       'binding',
@@ -166,6 +191,13 @@ describe('binding previews and approvals', () => {
     expect(
       validatePreviewApproval(
         preview,
+        { ...approval, approvedAt: '2026-08-31T11:59:59.999Z' },
+        { now: '2026-08-31T12:05:00.000Z', maxAgeMs: 10 * 60_000 },
+      ),
+    ).toEqual({ valid: false, reason: 'approval-before-preview' });
+    expect(
+      validatePreviewApproval(
+        preview,
         { ...approval, operationClass: 'annotate' },
         {
           now: '2026-08-31T12:05:00.000Z',
@@ -179,6 +211,13 @@ describe('binding previews and approvals', () => {
         maxAgeMs: 10 * 60_000,
       }),
     ).toEqual({ valid: false, reason: 'expired' });
+    expect(
+      validatePreviewApproval(
+        preview,
+        { ...approval, approvedAt: '2026-08-31T12:06:00.000Z' },
+        { now: '2026-08-31T12:05:00.000Z', maxAgeMs: 10 * 60_000 },
+      ),
+    ).toEqual({ valid: false, reason: 'future-approval' });
     expect(
       validatePreviewApproval(
         preview,

@@ -76,6 +76,7 @@ export type ApprovalValidationReason =
   | 'digest-mismatch'
   | 'operation-mismatch'
   | 'invalid-time'
+  | 'approval-before-preview'
   | 'future-approval'
   | 'expired'
   | 'unsafe-evidence';
@@ -113,6 +114,7 @@ export function buildBindingPreview(
     binding: input.binding,
     operationClass: input.operationClass,
     fieldMask,
+    createdAt: input.createdAt,
     componentDigests,
   });
 
@@ -147,14 +149,19 @@ export function validatePreviewApproval(
     return { valid: false, reason: 'operation-mismatch' };
   }
   const approvedAt = Date.parse(approval.approvedAt);
+  const previewCreatedAt = Date.parse(preview.createdAt);
   const now = Date.parse(options.now);
   if (
     !Number.isFinite(approvedAt) ||
+    !Number.isFinite(previewCreatedAt) ||
     !Number.isFinite(now) ||
     !Number.isFinite(options.maxAgeMs) ||
     options.maxAgeMs < 0
   ) {
     return { valid: false, reason: 'invalid-time' };
+  }
+  if (approvedAt < previewCreatedAt) {
+    return { valid: false, reason: 'approval-before-preview' };
   }
   if (approvedAt > now) return { valid: false, reason: 'future-approval' };
   if (now - approvedAt > options.maxAgeMs) {

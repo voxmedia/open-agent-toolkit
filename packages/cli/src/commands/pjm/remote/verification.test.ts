@@ -53,6 +53,27 @@ describe('verifyRemotePostconditions', () => {
     expect(result.retryDisposition).toBe('reconcile-required');
   });
 
+  it('treats an accepted all-mismatch read-back as uncertain and blocks blind retry', () => {
+    const result = verifyRemotePostconditions({
+      ...exactInput,
+      readback: {
+        values: { title: 'Provider title', priority: 'low' },
+        unavailableFields: [],
+      },
+    });
+
+    expect(result.fields.map((field) => field.status)).toEqual([
+      'mismatch',
+      'mismatch',
+    ]);
+    expect(result).toMatchObject({
+      classification: 'uncertain',
+      reason: 'postconditions-mismatched',
+      retryDisposition: 'reconcile-required',
+      requiresReconciliation: true,
+    });
+  });
+
   it('preserves an authoritative provider rejection as rejected', () => {
     const result = verifyRemotePostconditions({
       ...exactInput,

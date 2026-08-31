@@ -170,11 +170,11 @@ export function verifyRemotePostconditions(
     );
   }
   return result(
-    'rejected',
-    'postconditions-not-applied',
+    'uncertain',
+    'postconditions-mismatched',
     requestDigest,
     fields,
-    false,
+    true,
   );
 }
 

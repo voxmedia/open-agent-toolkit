@@ -102,6 +102,36 @@ describe('sanitizeRemoteSnapshot', () => {
     ]);
   });
 
+  it('redacts quoted credential assignments across every retained core field', () => {
+    const input = rawSnapshot();
+    input.issue.title = '{"api_key" : "json-api-secret"}';
+    input.issue.description = "access_token: 'yaml-access-secret'";
+    input.issue.priority = '\'password\' = "config-password-secret"';
+    input.issue.status =
+      '{"authorization":"Bearer authorization-header-secret"}';
+
+    const result = sanitizeRemoteSnapshot(input);
+    const serialized = JSON.stringify(result);
+
+    expect(result.issue.title).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.priority).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.status).toContain('[REDACTED:CREDENTIAL]');
+    expect(serialized).not.toMatch(
+      /json-api-secret|yaml-access-secret|config-password-secret|authorization-header-secret/,
+    );
+    expect(result).toMatchObject({
+      contentRedacted: true,
+      redactionCount: 4,
+      redactions: [
+        { field: 'title', reason: 'credential' },
+        { field: 'description', reason: 'credential' },
+        { field: 'priority', reason: 'credential' },
+        { field: 'status', reason: 'credential' },
+      ],
+    });
+  });
+
   it('drops allowlisted extensions containing credentials and marks the snapshot incomplete', () => {
     const input = rawSnapshot();
     input.extensions.workflow = {
