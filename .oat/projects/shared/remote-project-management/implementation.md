@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,7 +27,7 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 10    | 10/10     |
-| Phase 2 | pending   | 9     | 0/9       |
+| Phase 2 | completed | 9     | 9/9       |
 | Phase 3 | pending   | 12    | 0/12      |
 | Phase 4 | pending   | 11    | 0/11      |
 | Phase 5 | pending   | 9     | 0/9       |
@@ -35,7 +35,7 @@ oat_generated: false
 | Phase 7 | pending   | 10    | 0/10      |
 | Phase 8 | pending   | 6     | 0/6       |
 
-**Total:** 10/77 tasks completed
+**Total:** 19/77 tasks completed
 
 ---
 
@@ -261,8 +261,21 @@ and lint passed.
 
 ## Phase 2: Reconciliation and Safety Engine
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-31T12:48:00Z
+
+### Phase Summary
+
+**Outcome:** Added intersected binding-purpose policy, safe local projection,
+sanitized snapshots, structural managed Markdown, pure three-way
+reconciliation, exact authority resolution, preview-bound approvals,
+terminal-safe operation reduction, and postcondition verification that blocks
+blind retries.
+
+**Verification:** Combined Phase 2 suite passed 79/79; format, CLI type-check,
+lint, check, and build passed; the uncached full CLI suite passed 326 files and
+4,794 tests with 0 cached tasks. Root independently reran the 79-test phase
+suite.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -404,6 +417,27 @@ retry or transport change.
 
 **Verification:** Postcondition-verification suite passed (8 tests); CLI
 format/build, type-check, and lint passed.
+
+---
+
+### Recovery Event p02-t02-composition-20260831T134500Z
+
+- Phase/task: p02 / p02-t02
+- Original request: implement-p02-20260831T1248Z
+- Original commit: 222d6e7986557d34b06479eb6e7c8dcb1bb3edaa
+- Defect class: composition
+- Discovered by: phase-wide composition self-review against RemoteBindingStateSchema
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Reservation commit: 0a52ed8c2
+- Recovery commit: c5be765e5fdabf175643994e93a2b5540e8fb1e4
+- Verification: focused 4/4; Phase 2 79/79; uncached full CLI 4,794/4,794 with 0 cached
+- Reason: removed an enumerable projection evidence field incompatible with the
+  strict p01 persistence schema while retaining source and source-revision
+  evidence. Root validated immutable history and cleared only the completed
+  pending marker; usage remains 1/10.
 
 ---
 
@@ -594,6 +628,41 @@ continuation_events:
   effective default-config exposure, and direct substep approval-digest
   regression coverage.
 - Status: Phase 1 complete; Phase 2 may begin.
+
+### Run 2 — Phase p02
+
+```yaml
+request_id: implement-p02-20260831T1248Z
+caller: oat-project-implement
+scope: p02
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+role_selector: oat-phase-implementer-gpt-5-6-sol-high
+model_selector: gpt-5.6-sol
+model_selector_granularity: materialized-role
+effort_selector: high
+service_tier_selector: priority
+selection_source: policy-resolved
+selection_reason: candidate-requested
+task_class: hard-reasoning
+model_class_floor: hard-reasoning
+classification_source: caller
+classification_reason: Phase p02 combines privacy-safe projection, three-way reconciliation, exact authority, preview-bound approval, terminal-safe state reduction, and blind-retry prevention.
+floor_satisfaction: satisfied
+launch_status: accepted
+child_outcome: done
+phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
+phase_head: c5be765e5fdabf175643994e93a2b5540e8fb1e4
+recovery_usage: 1/10
+pending_attempt: null
+```
+
+**Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
