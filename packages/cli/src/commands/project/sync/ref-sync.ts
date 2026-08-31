@@ -1079,6 +1079,11 @@ async function fallbackRemoteRefTransition(
   completedExpectedSha: string | null,
   git: GitRunner,
 ): Promise<void> {
+  const unsupportedAtomicTransitionError = (): CliError =>
+    new CliError(
+      `Remote ${target.remote} does not support atomic ref retirement for ${target.slug}; completed ref ${completedRef} was verified at ${sourceSha}, and active ref ${target.ref} was retained. Both refs remain for a recoverable retry.`,
+      2,
+    );
   const create = await git.run(
     [
       'push',
@@ -1092,6 +1097,9 @@ async function fallbackRemoteRefTransition(
     const afterFailure = await probeTerminalRefs(target, sourceSha, git);
     assertRetirementProbe(target, sourceSha, afterFailure);
     if (afterFailure.state === 'completed-only') return;
+    if (afterFailure.state === 'both') {
+      throw unsupportedAtomicTransitionError();
+    }
     throw new CliError(
       `Remote ref retirement for ${target.slug} was rejected while creating ${completedRef}: ${create.stderr || create.stdout || 'unknown Git error'}`,
       2,
@@ -1103,30 +1111,11 @@ async function fallbackRemoteRefTransition(
   if (afterCreate.state === 'completed-only') return;
   if (afterCreate.state !== 'both') {
     throw new CliError(
-      `Remote ref retirement for ${target.slug} did not preserve both refs before active-ref deletion.`,
+      `Remote ref retirement for ${target.slug} did not preserve both refs after completed-ref creation.`,
       2,
     );
   }
-
-  const removeActive = await git.run(
-    [
-      'push',
-      `--force-with-lease=${target.ref}:${sourceSha}`,
-      target.remote,
-      `:${target.ref}`,
-    ],
-    { cwd: target.repoRoot, allowFailure: true },
-  );
-  if (removeActive.code === 0) return;
-
-  const afterFailure = await probeTerminalRefs(target, sourceSha, git);
-  assertRetirementProbe(target, sourceSha, afterFailure);
-  if (afterFailure.state !== 'completed-only') {
-    throw new CliError(
-      `Remote ref retirement for ${target.slug} was rejected while deleting ${target.ref}; ${completedRef} remains verified for retry: ${removeActive.stderr || removeActive.stdout || 'unknown Git error'}`,
-      2,
-    );
-  }
+  throw unsupportedAtomicTransitionError();
 }
 
 async function transitionRemoteRefs(
