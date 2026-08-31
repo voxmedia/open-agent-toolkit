@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** operator HiLL decision recorded; bounded policy correction authorized
+**Status:** fresh High review pending after verified HiLL policy correction
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -650,6 +650,25 @@ high confidence. The original commit remains the source authority.
   advice as FR7 delivery. The implementation and this decision are the source
   of truth for the bounded policy; no other requirement or phase boundary
   changes.
+
+### HiLL Policy Correction
+
+- Commit: `a65ba0ce2f30d072666938c16de79e6a561e40d2`
+- Every supported provider/content capability inherits the dated
+  `repository-decision` new-session policy unless a sourced provider-specific
+  policy overrides it; unsupported capability rows remain `unknown`.
+- Advice remains gated to successful `changed` evidence. Current/no-op,
+  planned, failed, missing, inactive, unsupported, and aggregate-only evidence
+  produce no advice, and runtime observation retains precedence.
+- Human guidance says “start a new provider session” and explicitly avoids
+  application-restart, hot-reload, or runtime-visibility guarantees. Existing
+  `restart-required` schema compatibility is preserved with recovery code
+  `start-new-provider-session`.
+- Verification: focused 317/317; expanded p03 20 files / 509 tests before and
+  after commit; CLI lint/type-check/format, `pnpm check`, `git diff --check`,
+  and full `pnpm test` pass. The live pre-commit CLI run passed 316 files /
+  4,762 tests; committed-head smoke, skills 586/586, and release 39 pass plus
+  one skip ran live.
 
 ---
 

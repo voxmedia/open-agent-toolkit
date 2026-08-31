@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: cb8156ab27a864e86fafcd857f7d98ecbb8266c1
+oat_last_commit: a65ba0ce2f30d072666938c16de79e6a561e40d2
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -92,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:23:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:39:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,12 +108,12 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 has an explicit operator HiLL decision for the
-remaining refresh-policy boundary: after a successful provider-visible file
-change, OAT conservatively advises starting a new provider session. The advice
-is an OAT repository decision, not a claim about provider hot reload or proof
-that the new session loaded the asset. A bounded correction and fresh High
-review are authorized before Phase 4.
+Implementation - Phase 3's operator HiLL policy correction is complete at
+`a65ba0ce2`. After a successful provider-visible file change, OAT
+conservatively advises starting a new provider session; unsupported rows stay
+unknown, no-op or failed changes produce no advice, and runtime visibility
+remains observation-only. Fresh independent High review is next; Phase 4 stays
+gated until it passes.
 
 ## Artifacts
 

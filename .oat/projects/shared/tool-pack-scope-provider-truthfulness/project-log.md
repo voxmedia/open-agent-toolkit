@@ -108,6 +108,10 @@ Operator-authorized fix cb8156ab27a864e86fafcd857f7d98ecbb8266c1 resolved both r
 
 Thomas resolved the p03 refresh-policy HiLL boundary: after a successful provider-visible file change, OAT will conservatively advise starting a new provider session. This is repository-decision safety guidance, not a provider hot-reload guarantee or runtime visibility proof; one bounded correction and one fresh High review are authorized, with p04 gated on pass.
 
+### 2026-08-31 · structural · oat-project-implement · p03-session-policy-fix-complete
+
+Operator-authorized HiLL policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 makes successful provider-visible changes conservatively advise starting a new provider session through dated repository-decision provenance. Unsupported/no-op/failed cases remain advice-free or unknown, focused 317 and expanded p03 509 plus full tests pass; fresh High review is next and p04 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
