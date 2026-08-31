@@ -381,6 +381,25 @@ _Orchestration runs from `oat-project-implement` are appended here._
   scope requires an explicit operator disposition for Minor `m1` before the
   receive bookkeeping can mark the event passed.
 
+### Review Received: final gate
+
+**Date:** 2026-08-31  
+**Review artifact:** `reviews/archived/final-review-2026-08-31T232653Z.md`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor.  
+**New tasks added:** none.
+
+**Disposition:**
+
+- `m1` — defer the shared remote-ref advertisement parser extraction. The six
+  current parsers are correct and independently tested; consolidating them now
+  would be a moderate multi-file refactor across validated terminal paths with
+  no behavior change. Revisit when any parser next changes, using that change
+  as the trigger to extract one shared typed parser.
+
+The operator explicitly agreed to this deferral. With no deferred Mediums and
+the sole Minor dispositioned, the final gate review event is passed.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
