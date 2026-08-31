@@ -104,6 +104,10 @@ Corrected checkpoint timing: oat_hill_checkpoints [p04] is evaluated after p04 c
 
 Phase p04 passed at 7d9e9e77275a9ffb09ec0989662ec2954b257960 after one bounded p02 backstop correction at 09c05e22c; final review artifact reviews/p04-review-2026-08-31T170239Z.md reports zero findings. Evidence includes 157/157 scoped tests, uncached CLI 4714/4714 and control-plane 78/78, plus all repository, release, docs, lint, format, and skill-validation gates.
 
+### 2026-08-31 · structural · oat-project-implement · final-review-fixes-added
+
+Automatic final review at fd9fe6615efc32a89ea977deeb6d4cc27b51c175 blocked with 1 Critical, 1 Important, and 1 Medium terminal-path finding; all three were converted to p04-t03 through p04-t05. The consumed artifact is reviews/archived/final-review-2026-08-31T171506Z.md; no finding was deferred.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

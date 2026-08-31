@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -19,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | completed | 3     | 3/3       |
-| p03   | completed | 3     | 3/3       |
-| p04   | completed | 2     | 2/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 2     | 2/2       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | completed   | 3     | 3/3       |
+| p04   | in progress | 5     | 2/5       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/13 tasks completed
 
 ---
 
@@ -102,7 +102,7 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ## Phase 4: Integration, Documentation, and Release Validation
 
-**Status:** completed
+**Status:** in progress
 **Started:** 2026-08-31
 
 ### Task p04-t01: Prove the terminal lifecycle end to end
@@ -117,6 +117,41 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 **Integration correction:** `09c05e22cff29b1de838a1e2d039d260c1aeb0d9`
 updated stale p02 completion-contract backstops discovered by the uncached
 combined test run; no runtime source changed.
+
+### Task p04-t03: (review) Prevent completed child resurrection
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t04: (review) Reconcile interrupted completed-only prune
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t05: (review) Fail closed on completed-ref lookup errors
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: final
+
+**Date:** 2026-08-31
+**Review artifact:** `reviews/archived/final-review-2026-08-31T171506Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p04-t03`, `p04-t04`, `p04-t05`
+
+**Disposition:** All findings were converted to fix tasks by the automatic
+final-review receive policy. No finding was deferred or dismissed.
+
+**Next:** Execute the three review-fix tasks, record them as completed, and run
+a focused final re-review before the configured Cursor Fable exit gate.
 
 ---
 
@@ -273,8 +308,12 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`.
 - Review target: `oat-reviewer-gpt-5-6-sol-high`.
 - Optional nested dispatches: none.
-- Outstanding item: final whole-project review, configured Cursor Fable exit
-  gate, and the post-p04 HiLL checkpoint.
+- Final whole-project review artifact:
+  `reviews/archived/final-review-2026-08-31T171506Z.md`.
+- Final review result: blocked — 1 Critical, 1 Important, 1 Medium, 0 Minor.
+- Review-fix tasks: `p04-t03`, `p04-t04`, and `p04-t05`.
+- Outstanding item: implement and re-review those fixes, then run the
+  configured Cursor Fable exit gate and post-p04 HiLL checkpoint.
 
 <!-- orchestration-runs-end -->
 

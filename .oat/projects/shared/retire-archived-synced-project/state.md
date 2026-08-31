@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t03
 oat_last_commit: 7d9e9e77275a9ffb09ec0989662ec2954b257960
 oat_blockers: []
 associated_issues:
@@ -82,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T17:07:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T17:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** p01-p04 passed; final lifecycle validation in progress
+**Status:** p04 final-review fixes in progress
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - final review, configured exit gate, and post-p04 HiLL checkpoint
+Implement - p04 final-review fixes
 
 ## Artifacts
 
@@ -102,7 +102,7 @@ Implement - final review, configured exit gate, and post-p04 HiLL checkpoint
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (10/10 tasks complete; final lifecycle validation in progress)
+- **Implementation:** `implementation.md` (10/13 tasks complete; three final-review fixes pending)
 
 ## Progress
 
@@ -134,13 +134,15 @@ Implement - final review, configured exit gate, and post-p04 HiLL checkpoint
 - ✓ Corrected HiLL timing: the p04 checkpoint is evaluated after p04 completes
 - ✓ p04 integration and documentation committed at `7d9e9e772`
 - ✓ p04 review passed with zero findings; all repository and release gates pass
-- → Run final whole-project review and configured Cursor Fable exit gate, then evaluate the post-p04 HiLL checkpoint
+- ✗ Final whole-project review found 1 Critical, 1 Important, and 1 Medium terminal-path gap
+- → Execute p04-t03 through p04-t05, re-review, run Cursor Fable, then evaluate the post-p04 HiLL checkpoint
 
 ## Blockers
 
-None.
+None. The final review findings are bounded implementation defects with
+approved contract behavior and do not require a product decision.
 
 ## Next Milestone
 
-Complete the final whole-project review and configured Cursor Fable exit gate,
-then evaluate the post-p04 HiLL checkpoint.
+Complete p04-t03 through p04-t05 and the focused final re-review, then run the
+configured Cursor Fable exit gate and evaluate the post-p04 HiLL checkpoint.

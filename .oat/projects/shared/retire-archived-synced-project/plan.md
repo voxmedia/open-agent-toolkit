@@ -681,6 +681,119 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 
 ---
 
+### Task p04-t03: (review) Prevent completed child resurrection
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.ts`
+- Modify: `packages/cli/src/commands/project/sync/ref-sync.test.ts`
+
+**Step 1: Add terminal-child regression tests**
+
+Cover coordination children whose remote state is completed-only, matching
+active/completed aliases, and differing SHAs. Assert that terminal children are
+diagnosed without creating a checkout or discovery record, while mismatches
+fail with the precise recovery diagnosis.
+
+**Step 2: Apply authoritative terminal classification**
+
+Probe each child's active and completed refs together before adoption or
+`pullSynced`. Treat completed-only and matching aliases as terminal and inert;
+fail closed on differing SHAs.
+
+**Step 3: Format and verify**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts
+```
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/sync/ref-sync.ts packages/cli/src/commands/project/sync/ref-sync.test.ts
+git commit -m "fix(p04-t03): suppress completed child pulls"
+```
+
+---
+
+### Task p04-t04: (review) Reconcile interrupted completed-only prune
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/prune/index.ts`
+- Modify: `packages/cli/src/commands/project/prune/index.test.ts`
+
+**Step 1: Add interrupted-state regression tests**
+
+Create a completed-only terminal fixture that still has a checkout, local
+active ref, and tracked discovery record. Cover cleanup failure and retry
+boundaries as well as the successful path.
+
+**Step 2: Make terminal prune fail closed**
+
+Remove any remaining checkout, local active ref, and discovery record before
+deleting the completed ref. Preserve the completed ref whenever local cleanup
+cannot finish safely, and continue preserving archive data.
+
+**Step 3: Format and verify**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/project/prune/index.ts packages/cli/src/commands/project/prune/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/prune/index.test.ts
+```
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/prune/index.ts packages/cli/src/commands/project/prune/index.test.ts
+git commit -m "fix(p04-t04): reconcile completed-only prune"
+```
+
+---
+
+### Task p04-t05: (review) Fail closed on completed-ref lookup errors
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/list.ts`
+- Modify: `packages/cli/src/commands/project/list.test.ts`
+- Modify: `packages/cli/src/commands/project/list.integration.test.ts`
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
+
+**Step 1: Add transport-failure regression tests**
+
+Cover unreachable and authentication-failing remotes for active listing and
+dashboard generation. Assert that lookup failure remains an actionable terminal
+diagnosis and never degrades to active or pullable guidance.
+
+**Step 2: Classify completed-ref lookup results**
+
+Use the shared remote-ref lookup classifier. Return absence only for a verified
+missing ref and propagate precise transport/authentication failures.
+
+**Step 3: Format and verify**
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/list.test.ts src/commands/project/list.integration.test.ts src/commands/state/generate.test.ts
+```
+
+**Step 4: Run combined review regression coverage**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/sync/ref-sync.test.ts src/commands/project/prune/index.test.ts src/commands/project/list.test.ts src/commands/project/list.integration.test.ts src/commands/state/generate.test.ts src/e2e/workflow.test.ts
+```
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/list.ts packages/cli/src/commands/project/list.test.ts packages/cli/src/commands/project/list.integration.test.ts packages/cli/src/commands/state/generate.test.ts
+git commit -m "fix(p04-t05): fail closed on terminal lookup errors"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
@@ -698,7 +811,7 @@ git commit -m "docs(p04-t02): document synced archive retirement"
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T131555Z.md                    | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
 | p03    | code     | passed          | 2026-08-31 | reviews/p03-review-2026-08-31T134913Z.md                    | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
 | p04    | code     | passed          | 2026-08-31 | reviews/p04-review-2026-08-31T170239Z.md                    | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
-| final  | code     | received        | 2026-08-31 | reviews/final-review-2026-08-31T171506Z.md                  | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
+| final  | code     | fixes_added     | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan   | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |
@@ -717,10 +830,10 @@ Status progression:
   completion integration.
 - Phase 3: 3 tasks — terminal classification, resurrection guards, links, and
   prune behavior.
-- Phase 4: 2 tasks — end-to-end proof, documentation, versioning, and release
-  validation.
+- Phase 4: 5 tasks — end-to-end proof, documentation, versioning, release
+  validation, and final-review terminal-path fixes.
 
-**Total: 10 tasks across 4 phases**
+**Total: 13 tasks across 4 phases**
 
 Implementation is complete when every task is committed, the final review has
 passed, and all repository definition-of-done gates exit 0 with uncached test
