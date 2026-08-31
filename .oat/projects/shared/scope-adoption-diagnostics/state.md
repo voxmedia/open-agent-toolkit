@@ -28,27 +28,27 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
-  config_fingerprint: 'sha256:cb8f1ea5cbd6ba4a1bb7234b2f28948c18d3cb9e38bdc52ece069e9d2c049bef'
-  resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
-  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  config_fingerprint: 'sha256:fecd028242fe42d4a81a916c10827ca38294640e2c2851ced9c1eb90dcfc2071'
+  resolved_command: 'OAT_GATE_EXEC_TIMEOUT_MS=2400000 oat --json gate review --target cursor-fable-5-xhigh --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings. Run every verification command in the foreground of your own turn: do not use background tasks, monitors, or waiters, and do not end your turn until the review artifact has been written and committed."'
+  resolved_description: 'Operator-selected Cursor Fable one-time final implementation review after the configured Claude target failed authentication.'
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: c32d4233d0295e34fd63734ef171b56ea701ce61
+  reviewed_head: c68032b004a29cfedccb63e02728c6446eb6a33c
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:fdedf505f65ef830c4596a0e1a8dda99a542877a55dba400839089ef100ba9ac'
-  freshness_head: c32d4233d0295e34fd63734ef171b56ea701ce61
-  freshness_fingerprint: 'sha256:effective-delta-v1:fdedf505f65ef830c4596a0e1a8dda99a542877a55dba400839089ef100ba9ac'
-  launch_state: result_persisted
-  launch_attempt_id: 82ce4580-8037-4d98-8521-4ee3daaa05a6
-  launch_started_at: '2026-08-31T00:51:28Z'
-  launch_result_receipt: /tmp/oat-implement-exit-gate-scope-adoption-diagnostics-82ce4580-8037-4d98-8521-4ee3daaa05a6.json
-  gate_run_marker: /var/folders/ch/kmbmcdfd4gb807zjsjt2td4h0000gp/T/oat-gate-runs/09b87ee3-2fde-4ed4-b863-67d2365a2e79.json
-  gate_run_id: 09b87ee3-2fde-4ed4-b863-67d2365a2e79
-  envelope_status: review_failed
+  implementation_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
+  freshness_head: c68032b004a29cfedccb63e02728c6446eb6a33c
+  freshness_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
   artifact: null
   handoff: null
   receive_state: not_started
@@ -60,8 +60,8 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: 'Configured target claude-fable-skip-permissions was accepted, then failed before review because the Claude OAuth session expired and could not be refreshed; Thomas retired this failed generation and explicitly selected the one-time cursor-fable-5-xhigh gate override.'
-  updated_at: '2026-08-31T01:15:50Z'
+  failure: null
+  updated_at: '2026-08-31T01:16:32Z'
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: null
