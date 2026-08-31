@@ -1,11 +1,9 @@
 ---
-oat_status: blocked
+oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-t04
-    reason: 'Phase p02 fresh re-review after the authorized third correction remains blocked with 3 Critical and 2 Important findings; see reviews/p02-code-rereview-r4-2026-08-31T123548Z.md.'
+oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t04
+oat_current_task_id: prev1-t01
 oat_generated: false
 oat_template: false
 ---
@@ -20,14 +18,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | passed  | 1     | 1/1       |
-| Phase 2 | blocked | 4     | 3/4       |
-| Phase 3 | pending | 4     | 0/4       |
-| Phase 4 | pending | 2     | 0/2       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | passed      | 1     | 1/1       |
+| Phase 2      | blocked     | 4     | 3/4       |
+| Phase 3      | pending     | 4     | 0/4       |
+| Phase 4      | pending     | 2     | 0/2       |
+| Phase p-rev1 | in_progress | 2     | 0/2       |
 
-**Total:** 4/11 tasks completed
+**Total:** 4/13 tasks completed
 
 ## Task Status
 
@@ -61,6 +60,13 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | ------- | ------- | ------ |
 | p04-t01 | pending | -      |
 | p04-t02 | pending | -      |
+
+### Phase p-rev1: Revision 1 — Simplify Packet Validation
+
+| Task      | Status      | Commit |
+| --------- | ----------- | ------ |
+| prev1-t01 | in_progress | -      |
+| prev1-t02 | pending     | -      |
 
 ## Orchestration Runs
 
@@ -445,6 +451,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   materiality of stale-source gaps, and symlinked declared roots.
 - The operator-extended limit of three correction iterations is exhausted.
   Phase p02 and task `p02-t04` remain blocked pending a new decision.
+
+### Revision Received: Inline Design Feedback
+
+**Date:** 2026-08-31
+**Source:** inline conversation plus
+`reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+
+**Changes requested:**
+
+- Reassess Phase 2 for over-engineering instead of continuing incremental
+  validator patches.
+- Preserve the recon product behavior while replacing distributed relationship
+  checks with one normalized validated-run boundary.
+- Close the five current review findings through simpler central invariants and
+  explicit v1 prohibitions, without adding profiles, persisted artifacts,
+  schema versions, or integration scope.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill. The
+root-owned revision review must use the complete p02 review history as acceptance
+context before p02 can advance.
 
 ## Deviations from Plan / Design
 

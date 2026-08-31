@@ -839,14 +839,153 @@ git add packages/cli/package.json packages/control-plane/package.json packages/d
 git commit -m "chore(p04-t02): prepare recon release"
 ```
 
+## Phase p-rev1: Revision 1 — Simplify Packet Validation
+
+Source: inline design feedback and
+`reviews/p02-code-rereview-r4-2026-08-31T123548Z.md` (2026-08-31)
+
+This revision preserves the user-facing recon profiles and packet contract while
+reducing internal flexibility. Version 1 will compile packet inputs exactly once
+into one non-persisted validated run graph. Assurance derivation and rendering
+may consume only that graph. The revision adds no new profile, persisted artifact
+kind, provider behavior, or integration surface.
+
+### Task prev1-t01: (revision) Simplify the Phase 2 validation design
+
+**Files:**
+
+- Modify: `.oat/projects/shared/recon-skill/design.md`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Define the minimum v1 invariant set**
+
+Revise the design and packet contract around one normalized `ValidatedRun`
+boundary:
+
+- one complete canonical approval envelope with every required dispatch and
+  execution axis; partial envelopes are invalid rather than extensible;
+- one exact approved wave/lane topology and one stage/receipt resolution;
+- exactly one terminal reconciliation and one immutable prior-ledger identity;
+- canonical absolute realpaths for every declared trust root;
+- persisted evidence is secret-safe before any assurance, audit, gap, or render
+  branch;
+- source ineligibility determines material gaps and partial status rather than
+  trusting caller-declared materiality; and
+- assurance derivation and rendering accept only the normalized validated graph,
+  never independently re-resolve raw manifest artifacts.
+
+Prefer prohibition over configurability in v1: reject extra reconciliation
+results, missing approval axes, symlink root aliases, raw stale excerpts, and
+caller-downgraded gap materiality. Preserve `quick`, `standard`, `thorough`,
+selective blindness, categorical claim states, directory-only handoff, and
+honest partial publication.
+
+**Step 2: Record explicit non-goals**
+
+State that this revision does not add another schema version, another review
+pass, another persisted intermediate, generalized plugin-style artifact kinds,
+or changes to p01 dispatch, research-pack distribution, documentation, or
+backlog integrations.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm format
+pnpm run cli -- project validate-plan --project-path .oat/projects/shared/recon-skill
+```
+
+Expected: the design and contract describe one authoritative validation boundary
+and the project plan remains valid.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/recon-skill/design.md .agents/skills/recon/references/packet-contract.md
+git commit -m "docs(prev1-t01): simplify recon validation design"
+```
+
+### Task prev1-t02: (revision) Centralize packet validation and publication
+
+**Files:**
+
+- Create: `.agents/skills/recon/scripts/lib/validated-run.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/safe-path.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`
+- Modify: `.agents/skills/recon/tests/helpers/fake-recon-run.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Reproduce the five review-round-4 bypasses**
+
+Add direct failing mutations for:
+
+- deletion of every required approval/receipt selection axis;
+- a shadow reconciliation whose forged prior ledger authorizes removal from a
+  different terminal prior ledger;
+- secret-bearing stale, invalid, and unavailable audit evidence;
+- a non-material stale-source gap under `complete` status; and
+- repository, file, capture, packet, and output roots declared through symlink
+  aliases or retargeted after validation.
+
+Expected: each case fails against the pre-revision implementation for the reason
+documented in the review artifact.
+
+**Step 2: Compile one validated run graph**
+
+Implement one deterministic normalization boundary that validates schemas,
+canonical roots, the complete approval envelope, exact topology and receipts,
+the single terminal reconciliation and prior ledger, secret-safe evidence,
+derived gaps, claim assurance, achieved profile, and publication status. Reject
+duplicate or shadow terminal artifacts. Return only normalized immutable data
+needed by assurance and rendering.
+
+Do not add another persisted artifact or schema version. Remove duplicated raw
+artifact resolution from downstream assurance and render paths; those paths must
+consume the normalized graph.
+
+**Step 3: Verify the complete packet pipeline**
+
+Run:
+
+```bash
+pnpm format:fix
+node --test .agents/skills/recon/tests/*.test.mjs
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm test:skills
+pnpm oat:validate-skills
+pnpm lint
+pnpm format
+pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit
+pnpm check
+```
+
+Expected: all prior 79 recon tests and the five new mutation groups pass; raw or
+partially validated packet data cannot reach assurance derivation or rendering.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/recon/scripts .agents/skills/recon/tests
+git commit -m "refactor(prev1-t02): centralize recon packet validation"
+```
+
 ## Reviews
 
 | Scope     | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
 | --------- | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01       | code     | passed          | 2026-08-31 | `reviews/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -           |
-| p02       | code     | blocked         | 2026-08-31 | `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`          | cf4e5fbf17743825484460ed32f1f522075eb552 | auto       | -           |
+| p02       | code     | fixes_added     | 2026-08-31 | `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`          | cf4e5fbf17743825484460ed32f1f522075eb552 | auto       | -           |
 | p03       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p04       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
+| p-rev1    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | final     | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
@@ -879,8 +1018,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Phase 3: 4 tasks — dependency leases, lifecycle reconciliation, user-agent
   materialization, and research-pack bundling.
 - Phase 4: 2 tasks — documentation, lockstep release packaging, and full gates.
+- Revision 1: 2 tasks — simplify the validation design and centralize packet
+  validation/publication behind one normalized run graph.
 
-**Total: 11 tasks**
+**Total: 13 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
