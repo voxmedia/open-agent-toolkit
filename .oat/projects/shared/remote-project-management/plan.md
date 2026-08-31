@@ -203,7 +203,8 @@ packages/cli/src/commands/pjm/remote/store.test.ts.
 
 ### Task p01-t08: Add backward-compatible association codec
 
-**Implementation:** in progress
+**Implementation:** completed in
+`68e882fac52f808ae2f78320dec8fb8c8b66d408`
 
 **Files:** Create packages/cli/src/commands/pjm/remote/association.ts and its
 test; modify packages/cli/src/commands/backlog/new.ts and new.test.ts.
@@ -218,6 +219,8 @@ test; modify packages/cli/src/commands/backlog/new.ts and new.test.ts.
 5. Commit: feat(p01-t08): add remote association codec
 
 ### Task p01-t09: Add foundational remote doctor checks
+
+**Implementation:** in progress
 
 **Files:** Create packages/cli/src/commands/pjm/remote/doctor.ts and its test;
 modify packages/cli/src/commands/pjm/doctor.ts and doctor.test.ts.

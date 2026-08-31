@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p01-t08
+oat_current_task_id: p01-t09
 oat_generated: false
 ---
 
@@ -190,8 +190,16 @@ writers; CLI type-check and lint passed.
 
 ### Task p01-t08: Add backward-compatible association codec
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 68e882fac52f808ae2f78320dec8fb8c8b66d408
+
+**Outcome:** Added lossless compatibility parsing/serialization for scalar,
+reference, canonical bound, and unrelated `associated_issues` values. Dangling
+binding IDs are detectable, associations never authorize mutations, and new
+backlog items can emit canonical links without rewriting other values.
+
+**Verification:** Association plus backlog creation suites passed (21 tests);
+CLI type-check and lint passed.
 
 ---
 
@@ -316,7 +324,8 @@ Chronological log of implementation progress.
 - [x] p01-t05: Resolve portable and operational storage locations - 56ed685b95af7663bddbbb7998119efe055ff895
 - [x] p01-t06: Persist remote records atomically - c4cc34e687d3df0cc1eff2b19368c790f5603346
 - [x] p01-t07: Preserve simultaneous operation intents - 8319af27338dc2abbf2ce5e88dba6f77ffa0b41d
-- [ ] p01-t08: Add backward-compatible association codec - in progress
+- [x] p01-t08: Add backward-compatible association codec - 68e882fac52f808ae2f78320dec8fb8c8b66d408
+- [ ] p01-t09: Add foundational remote doctor checks - in progress
 
 **What changed (high level):**
 
@@ -332,6 +341,7 @@ Chronological log of implementation progress.
 - Added restart-safe atomic persistence and guarded operation transitions.
 - Added journal-derived concurrent-intent detection that cannot lose a second
   writer behind a stale binding hint.
+- Added lossless associated-issue compatibility and canonical binding links.
 
 **Decisions:**
 
