@@ -373,6 +373,11 @@ remains. Mandatory post-fix test, lint, type-check, and build gates each exited
 The resolved blocking gate command, description, failure policy, and two-attempt
 limit are persisted in `state.md` before launch.
 
+**Launch intent:** Attempt `2fe424cc-a155-4b1a-bf18-c748203224c1` was persisted
+at `2026-08-31T00:05:01Z` with its closeout-owned structured result receipt
+selected before process start. No replacement launch is permitted unless
+durable evidence proves this attempt was not accepted.
+
 ---
 
 ## Implementation Log
