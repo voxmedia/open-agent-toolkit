@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** implementation and recovery complete; independent review pending
+**Status:** review round 1 received; fixes pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -353,6 +353,21 @@ unchanged`, making the source-qualified recovery record contradictory.
   `pnpm test` passed before and after the source recovery commit
 - Reason: the stale assertion was mechanically aligned with p03-t01 provider
   capability behavior; no production code changed.
+
+### Review Round 1
+
+- Artifact: `reviews/p03-review-2026-08-31T184315Z.md`
+- Reviewed head: `810f0788d6034b12997e2154f14ac50dce8623df`
+- Verdict: changes requested; 0 Critical, 3 Important, 1 Medium, 0 Minor.
+- Reconnaissance: not attempted.
+- Bounded fix scope:
+  1. Preserve planned extension operations and expose apply results separately.
+  2. Include Claude core user-agent materialization in status/doctor evidence.
+  3. Replace the contradicted Claude `/agents` refresh claim with conservative,
+     current-contract behavior and documentation.
+  4. Correct the documented `providers set` user-scope command syntax.
+- The original exact High p03 implementer remains the fix owner. A fresh High
+  reviewer will assess the complete range after verification.
 
 ---
 
@@ -592,6 +607,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: aligned the single stale Claude user-agent integration expectation;
   focused 23/23, expanded phase 493/493, and full repository tests passed
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review record — round 1
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `810f0788d6034b12997e2154f14ac50dce8623df`
+- Verdict: changes requested; findings critical 0, important 3, medium 1,
+  minor 0
+- Artifact: `reviews/p03-review-2026-08-31T184315Z.md`
+- Reconnaissance: not attempted
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
