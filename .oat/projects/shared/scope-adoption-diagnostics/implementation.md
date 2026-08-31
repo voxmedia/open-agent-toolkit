@@ -349,6 +349,32 @@ evidence complete at reviewed head
 **Outcome:** Resolved by `p04-t03`. Thomas explicitly waived a redundant second
 review after the artifact-only alignment; continue to configured closeout.
 
+### Review Received: final (Cursor Fable gate)
+
+**Date:** 2026-08-30
+**Review artifact:**
+`reviews/archived/final-review-2026-08-31T013235Z.md`
+
+**Gate run:** `f8fd1422-ed90-466c-b3c7-9e25a562d96a`
+**Target:** `cursor-fable-5-xhigh` (`claude-fable-5-xhigh`)
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** None.
+
+**Deferred Findings (Medium):** None.
+
+**Disposition:** Passed. The gate independently re-verified the resolved
+`p04-t03` alignment, focused behavior (417/417), forced uncached type-check
+(10/10 tasks), release lockstep, and project ownership boundaries.
+
+**Next:** Continue the configured approval-aware closeout sequence.
+
 <!-- orchestration-runs-end -->
 
 ## Deviations from Plan / Design
