@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -19,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 2     | 2/2       |
-| p02   | in progress | 3     | 3/3       |
-| p03   | completed   | 3     | 3/3       |
-| p04   | pending     | 2     | 0/2       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 3     | 3/3       |
+| p04   | pending   | 2     | 0/2       |
 
-**Total:** 8/10 tasks implemented; fresh p02 fix/review generation in progress
+**Total:** 8/10 tasks completed
 
 ---
 
@@ -52,7 +52,7 @@ inert alias. Differing SHAs still fail closed.
 
 ## Phase 2: Archive Transaction and Completion Integration
 
-**Status:** in progress
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Task p02-t01: Gate terminal cleanup on archive durability
@@ -70,8 +70,9 @@ inert alias. Differing SHAs still fail closed.
 **Status:** completed
 **Commit:** 04b2ce008
 **Review fixes:** `87c7d690e`, `2a8d84388`
-**Fresh generation:** Authorized to replace the whole-skill exit with a
-post-archive continuation and re-review the narrow fix.
+**Fresh generation:** `294d74678` replaced the whole-skill exit with a
+post-archive continuation; `95bb21121` closed recap-evidence and PR-closeout
+retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ---
 
@@ -228,6 +229,22 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Fresh fix iterations: 0 of 2 used; review rounds: 0 of 3 used.
 - Starting branch head: `ff648a46b` (p02 implementation plus all prior review
   evidence); source fix head before this generation: `2a8d84388`.
+- Fresh implementation commit: `294d74678`; review artifact:
+  `reviews/p02-review-2026-08-31T151747Z.md`.
+- Review round 1 result: blocked — 2 Critical, 0 Important, 0 Medium, 0 Minor.
+  Recordless recap retries discarded the exact evidence receipt, and applicable
+  tracked-PR update failures could still clear the pointer.
+- Fix iteration 1 commit: `95bb21121`. It reuses the existing exact Git receipt
+  primitives for archived recap evidence and makes required synced-archive PR
+  closeout failures stop before pointer clearing.
+- Re-review artifact: `reviews/p02-review-2026-08-31T154620Z.md`.
+- Re-review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Fresh fix iterations: 1 of 2 used; review rounds: 2 of 3 used.
+- p02 branch merged into the combined branch at `1637fe31f`.
+- Combined verification: completion skill 16/16, p02 CLI 162/162, p03 CLI
+  214/214, CLI/control-plane type-checks, CLI check, and skill-bump validation
+  passed. `pnpm oat:validate-skills` exposed three stale synced-bookkeeping
+  inventory anchors in pull, links, and prune for p04 integration.
 
 <!-- orchestration-runs-end -->
 
@@ -242,6 +259,7 @@ bounded fix and is merged. p02 implemented all planned tasks but remains blocked
 after exhausting its automatic review budget on the post-archive continuation
 gap recorded in `reviews/p02-review-2026-08-31T140841Z.md`. The operator then
 authorized one fresh bounded generation to close that single continuation gap.
+That generation passed after one fix round and p02 is now merged.
 
 ## Deviations from Plan / Design
 

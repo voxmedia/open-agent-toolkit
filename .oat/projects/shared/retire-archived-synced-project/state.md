@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t03
-oat_last_commit: 2a8d84388376ef0f8f367dd321010182fe1afc93
+oat_current_task: p04-t01
+oat_last_commit: 1637fe31f
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -82,19 +82,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T14:31:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:50:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** Fresh bounded p02 fix/review generation authorized; p01 and p03 passed
+**Status:** p01-p03 passed; awaiting p04 HiLL approval
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - p02 post-archive continuation fix and bounded re-review
+Implement - p04 integration, documentation, and release validation checkpoint
 
 ## Artifacts
 
@@ -102,7 +102,7 @@ Implement - p02 post-archive continuation fix and bounded re-review
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (fresh p02 fix/review generation in progress)
+- **Implementation:** `implementation.md` (8/10 tasks complete; p04 pending)
 
 ## Progress
 
@@ -128,15 +128,18 @@ Implement - p02 post-archive continuation fix and bounded re-review
 - ✓ p03 post-merge verification passed 214/214 focused tests and package checks
 - ✗ p02 final review found one Critical after 2 fix iterations and 3 review rounds
 - ✓ Operator authorized one fresh bounded p02 fix/review generation
-- → Implement p02 post-archive continuation and re-review the narrow fix
+- ✓ Fresh p02 fix/review generation passed with 0 findings
+- ✓ p02 merged at `1637fe31f`; combined behavior/type/package checks pass
+- ⚠ Combined skill validation identified three stale synced-bookkeeping inventory anchors for p04
+- → Await p04 HiLL approval before integration and release work
 
 ## Blockers
 
-None. The prior p02 review-budget stop was explicitly reopened for one fresh
-bounded generation. The required fix remains narrow: skip active Steps 2-7 for
-terminal retries, then rejoin the existing post-archive closeout path.
+None. The stale inventory anchors are a bounded p04 integration task, not an
+unresolved product decision: refresh the pull, links, and prune anchors and
+rerun validation.
 
 ## Next Milestone
 
-Complete and review the fresh p02 fix, merge p02 only after it passes, then
-enter the p04 HiLL checkpoint
+Receive p04 HiLL approval, then complete end-to-end integration, documentation,
+versioning, full definition-of-done gates, and the configured Cursor Fable exit gate

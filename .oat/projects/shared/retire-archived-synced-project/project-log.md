@@ -80,6 +80,14 @@ Phase p02 remains blocked after 2 fix iterations and 3 review rounds. Final revi
 
 Operator explicitly authorized one fresh bounded p02 fix/review generation after the prior automatic budget stop. Scope is limited to replacing the whole-skill terminal retry exit with a continuation that skips active Steps 2-7 but completes required post-archive durability and closeout.
 
+### 2026-08-31 · structural · oat-project-implement · p02-passed
+
+Fresh p02 generation passed re-review at 95bb211215e469645fb9fd7e371cf665cd4b0bab with zero findings and merged at 1637fe31f. Exact recap evidence recovery and fail-closed tracked-PR closeout were verified; combined completion tests passed 16/16 and p02 CLI tests passed 162/162.
+
+### 2026-08-31 · structural · oat-project-implement · p04-preflight
+
+After p02/p03 merge, combined behavior tests, type-checks, CLI check, and skill-bump validation passed. pnpm oat:validate-skills identified three stale synced-bookkeeping inventory anchors in pull, links, and prune; this is a bounded p04 integration task before full definition-of-done gates.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
