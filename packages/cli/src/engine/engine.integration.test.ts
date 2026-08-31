@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
 import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import { claudeAdapter } from '@providers/claude/adapter';
 import { copilotAdapter } from '@providers/copilot/adapter';
 import { cursorAdapter } from '@providers/cursor/adapter';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
@@ -551,6 +552,52 @@ describe('sync engine integration', () => {
     await expect(
       lstat(join(root, '.claude', 'agents', 'agent-one')),
     ).rejects.toThrow();
+  });
+
+  it('materializes Claude reviewer and implementer files at user scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    for (const name of ['oat-reviewer.md', 'oat-phase-implementer.md']) {
+      await writeFile(
+        join(root, '.agents', 'agents', name),
+        `---\nname: ${name.replace('.md', '')}\ndescription: managed\n---\n`,
+        'utf8',
+      );
+    }
+
+    const canonical = await scanCanonical(
+      root,
+      'user',
+      claudeAdapter.userMappings.map(({ contentType, canonicalDir }) => ({
+        contentType,
+        canonicalDir,
+      })),
+    );
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [claudeAdapter],
+      manifest: createEmptyManifest(),
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+    );
+
+    expect(result.operations?.map(({ status }) => status)).toEqual([
+      'changed',
+      'changed',
+    ]);
+    for (const name of ['oat-reviewer.md', 'oat-phase-implementer.md']) {
+      await expect(
+        lstat(join(root, '.claude', 'agents', name)),
+      ).resolves.toMatchObject({});
+    }
   });
 
   it('retires project Cursor skill copies without affecting active mappings or local skills', async () => {
