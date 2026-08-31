@@ -108,7 +108,10 @@ function operation(
       revisionDigest: 'sha256:revision',
       policyDigest: 'sha256:policy',
     },
-    authority: null,
+    authority: {
+      effective: 'user-approved',
+      sourceDigest: 'sha256:policy',
+    },
     approval: null,
     createdAt: timestamp,
     updatedAt: timestamp,

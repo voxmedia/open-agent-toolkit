@@ -46,7 +46,10 @@ function remoteOperationRecord(
       revisionDigest: 'sha256:revision',
       policyDigest: 'sha256:policy',
     },
-    authority: null,
+    authority: {
+      effective: 'read-only',
+      sourceDigest: 'sha256:policy',
+    },
     approval: null,
     createdAt: '2026-08-31T00:00:00.000Z',
     updatedAt: '2026-08-31T00:00:00.000Z',

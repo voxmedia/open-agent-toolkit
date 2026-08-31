@@ -234,7 +234,13 @@ export class RemoteSyncStore {
         revisionDigest: 'unbound',
         policyDigest: parsed.provenanceToken,
       },
-      authority: null,
+      authority: {
+        effective:
+          parsed.policyRestrictions.authority?.operations?.create ??
+          parsed.policyRestrictions.authority?.default ??
+          'read-only',
+        sourceDigest: parsed.provenanceToken,
+      },
       approval: null,
       createdAt: parsed.createdAt,
       updatedAt: parsed.createdAt,

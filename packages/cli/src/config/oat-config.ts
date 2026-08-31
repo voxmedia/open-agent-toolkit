@@ -1007,7 +1007,10 @@ function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   return Object.keys(tools).length > 0 ? tools : undefined;
 }
 
-function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
+function normalizePjmConfig(
+  value: unknown,
+  configPath: string,
+): OatPjmConfig | undefined {
   if (!isRecord(value)) {
     return undefined;
   }
@@ -1030,7 +1033,7 @@ function normalizePjmConfig(value: unknown): OatPjmConfig | undefined {
         2,
       );
     }
-    const remote = normalizePjmRemoteSharedConfig(value.remote);
+    const remote = normalizePjmRemoteSharedConfig(value.remote, configPath);
     if (remote) {
       pjm.remote = remote;
     }
@@ -1075,7 +1078,9 @@ function isPjmRemoteAuthority(
 
 function normalizePjmRemoteSharedConfig(
   value: Record<string, unknown>,
+  configPath: string,
 ): OatPjmRemoteSharedConfig | undefined {
+  assertClosedPjmRemoteSharedConfig(value, configPath);
   if (value.schemaVersion !== 1 || !isRecord(value.policy)) return undefined;
   const description =
     typeof value.policy.description === 'string' &&
@@ -1130,6 +1135,97 @@ function normalizePjmRemoteSharedConfig(
     remote.storage = { state: value.storage.state };
   }
   return remote;
+}
+
+function assertClosedPjmRemoteSharedConfig(
+  value: Record<string, unknown>,
+  configPath: string,
+): void {
+  const unknownPaths: string[] = [];
+  collectUnknownPjmRemoteKeys(
+    value,
+    ['schemaVersion', 'storage', 'policy'],
+    'pjm.remote',
+    unknownPaths,
+  );
+  if (isRecord(value.storage)) {
+    collectUnknownPjmRemoteKeys(
+      value.storage,
+      ['state'],
+      'pjm.remote.storage',
+      unknownPaths,
+    );
+  }
+  if (isRecord(value.policy)) {
+    collectUnknownPjmRemoteKeys(
+      value.policy,
+      ['description', 'authority', 'providers'],
+      'pjm.remote.policy',
+      unknownPaths,
+    );
+    collectUnknownPjmRemoteAuthorityKeys(
+      value.policy.authority,
+      'pjm.remote.policy.authority',
+      unknownPaths,
+    );
+    if (isRecord(value.policy.providers)) {
+      collectUnknownPjmRemoteKeys(
+        value.policy.providers,
+        PJM_REMOTE_PROVIDERS,
+        'pjm.remote.policy.providers',
+        unknownPaths,
+      );
+      for (const provider of PJM_REMOTE_PROVIDERS) {
+        const providerPolicy = value.policy.providers[provider];
+        if (!isRecord(providerPolicy)) continue;
+        collectUnknownPjmRemoteKeys(
+          providerPolicy,
+          ['description', 'authority'],
+          `pjm.remote.policy.providers.${provider}`,
+          unknownPaths,
+        );
+        collectUnknownPjmRemoteAuthorityKeys(
+          providerPolicy.authority,
+          `pjm.remote.policy.providers.${provider}.authority`,
+          unknownPaths,
+        );
+      }
+    }
+  }
+  if (unknownPaths.length === 0) return;
+  throw new CliError(
+    `Unknown PJM remote policy field${unknownPaths.length === 1 ? '' : 's'} in ${configPath}: ${unknownPaths.join(', ')}. Repair the named field paths before running any remote mutation.`,
+    2,
+  );
+}
+
+function collectUnknownPjmRemoteAuthorityKeys(
+  value: unknown,
+  path: string,
+  findings: string[],
+): void {
+  if (!isRecord(value)) return;
+  collectUnknownPjmRemoteKeys(value, ['default', 'operations'], path, findings);
+  if (isRecord(value.operations)) {
+    collectUnknownPjmRemoteKeys(
+      value.operations,
+      PJM_REMOTE_OPERATION_CLASSES,
+      `${path}.operations`,
+      findings,
+    );
+  }
+}
+
+function collectUnknownPjmRemoteKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  path: string,
+  findings: string[],
+): void {
+  const allowedKeys = new Set(allowed);
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.has(key)) findings.push(`${path}.${key}`);
+  }
 }
 
 function normalizePjmTransportConfig(
@@ -1401,7 +1497,7 @@ function normalizeOatConfig(
     next.tools = tools;
   }
 
-  const pjm = normalizePjmConfig(parsed.pjm);
+  const pjm = normalizePjmConfig(parsed.pjm, configPath);
   if (pjm) {
     next.pjm = pjm;
   }

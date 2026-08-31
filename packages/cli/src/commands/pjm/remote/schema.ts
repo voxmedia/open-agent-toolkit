@@ -23,6 +23,11 @@ const OperationClassSchema = z.enum([
   'detach',
   'recreate',
 ]);
+const OperationRecordClassSchema = z.union([
+  OperationClassSchema,
+  z.literal('composite'),
+  z.null(),
+]);
 const DescriptionModeSchema = z.enum(['none', 'managed-section', 'replace']);
 const MutationAuthoritySchema = z.enum([
   'read-only',
@@ -513,7 +518,7 @@ export const RemoteOperationRecordSchema = z
       'detach',
       'recreate',
     ]),
-    operationClass: OperationClassSchema,
+    operationClass: OperationRecordClassSchema,
     state: OperationStateSchema,
     reason: z
       .object({
@@ -553,6 +558,90 @@ export const RemoteOperationRecordSchema = z
   })
   .strict()
   .superRefine((record, context) => {
+    const readOnlyLifecycleOperations = new Set([
+      'intake',
+      'refresh',
+      'discussion',
+    ]);
+    if (record.operationClass === null) {
+      if (!readOnlyLifecycleOperations.has(record.lifecycleOperation)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifecycleOperation'],
+          message:
+            'Read-only operation lifecycle must be intake, refresh, or discussion.',
+        });
+      }
+      if (record.authority !== null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['authority'],
+          message: 'Read-only operations must not retain mutation authority.',
+        });
+      }
+      if (record.approval !== null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['approval'],
+          message: 'Read-only operations must not retain mutation approval.',
+        });
+      }
+      if (record.attempts.length > 0 || record.steps.length > 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['attempts'],
+          message:
+            'Read-only operations must not retain mutation attempts or substeps.',
+        });
+      }
+    } else if (record.operationClass === 'composite') {
+      if (record.lifecycleOperation !== 'closeout') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifecycleOperation'],
+          message: 'Composite operation lifecycle must be closeout.',
+        });
+      }
+      if (record.authority !== null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['authority'],
+          message: 'Composite parent authority must be null.',
+        });
+      }
+      if (record.approval !== null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['approval'],
+          message: 'Composite parent approval must be null.',
+        });
+      }
+      if (record.steps.length === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['steps'],
+          message: 'Composite operations require authoritative substeps.',
+        });
+      }
+    } else {
+      if (record.authority === null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['authority'],
+          message: 'Mutation operations require an authority decision.',
+        });
+      }
+      for (const [index, step] of record.steps.entries()) {
+        if (step.semanticOperation !== record.operationClass) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['steps', index, 'semanticOperation'],
+            message:
+              'Ordinary operation substeps must match the parent mutation class.',
+          });
+        }
+      }
+    }
     const seen = new Set<string>();
     for (const [index, step] of record.steps.entries()) {
       if (seen.has(step.stepId)) {

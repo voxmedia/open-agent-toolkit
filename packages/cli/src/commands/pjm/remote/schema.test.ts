@@ -369,6 +369,119 @@ describe('remote record schemas', () => {
     ).toThrow(/outcomes.*membership/i);
   });
 
+  it('enforces read-only, composite, and ordinary mutation governance', () => {
+    const mutation = RemoteOperationRecordSchema.parse({
+      recordType: 'operation',
+      schemaVersion: 1,
+      operationId: 'op_governance_123',
+      correlationId: 'corr_governance_123',
+      bindingId: 'bnd_binding_123',
+      provider: 'github',
+      providerContext,
+      lifecycleOperation: 'reconcile',
+      operationClass: 'update-fields',
+      state: 'planned',
+      reason: null,
+      lastSafeStep: 'planned',
+      preview: {
+        digest: 'sha256:governance-preview',
+        bindingId: 'bnd_binding_123',
+        provider: 'github',
+        providerContext,
+        capabilityDigest: 'sha256:capability',
+        revisionDigest: 'sha256:revision',
+        policyDigest: 'sha256:policy',
+      },
+      authority,
+      approval: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      transport: null,
+      selectedTransport: null,
+      attempts: [],
+      observations: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt',
+      steps: [],
+      outcome: { classification: 'pending', message: null, verifiedAt: null },
+    });
+    const readOnly = {
+      ...mutation,
+      operationId: 'op_read_only_123',
+      correlationId: 'corr_read_only_123',
+      lifecycleOperation: 'refresh' as const,
+      operationClass: null,
+      authority: null,
+    };
+    const composite = {
+      ...mutation,
+      operationId: 'op_composite_123',
+      correlationId: 'corr_composite_123',
+      lifecycleOperation: 'closeout' as const,
+      operationClass: 'composite' as const,
+      authority: null,
+      steps: [
+        {
+          stepId: 'step_annotate_123',
+          semanticOperation: 'annotate' as const,
+          state: 'planned' as const,
+          actionDigest: 'sha256:annotate',
+          previewDigest: 'sha256:governance-preview',
+          authority,
+          approvalRequirement: 'fresh-approval' as const,
+          approval: null,
+          attempts: [],
+          verification: [],
+          retryDisposition: 'safe-before-attempt' as const,
+        },
+        {
+          stepId: 'step_transition_123',
+          semanticOperation: 'transition' as const,
+          state: 'planned' as const,
+          actionDigest: 'sha256:transition',
+          previewDigest: 'sha256:governance-preview',
+          authority,
+          approvalRequirement: 'fresh-approval' as const,
+          approval: null,
+          attempts: [],
+          verification: [],
+          retryDisposition: 'safe-before-attempt' as const,
+        },
+      ],
+    };
+
+    expect(
+      RemoteOperationRecordSchema.parse(readOnly).operationClass,
+    ).toBeNull();
+    expect(RemoteOperationRecordSchema.parse(composite).operationClass).toBe(
+      'composite',
+    );
+    expect(() =>
+      RemoteOperationRecordSchema.parse({ ...readOnly, authority }),
+    ).toThrow(/read-only.*authority/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...readOnly,
+        lifecycleOperation: 'publish',
+      }),
+    ).toThrow(/read-only.*lifecycle/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({ ...composite, authority }),
+    ).toThrow(/composite.*parent authority/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({ ...composite, steps: [] }),
+    ).toThrow(/composite.*substep/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({ ...mutation, authority: null }),
+    ).toThrow(/mutation.*authority/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...mutation,
+        steps: [composite.steps[0]],
+      }),
+    ).toThrow(/mutation class/i);
+  });
+
   it('rejects unsupported independent schema versions and unstable IDs', () => {
     expect(() =>
       RemoteSnapshotRecordSchema.parse({

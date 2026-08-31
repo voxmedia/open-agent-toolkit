@@ -27,6 +27,18 @@ interface LoadedRecord<T> {
   parsed: T | null;
 }
 
+type RemoteContext = RemoteBindingMetadata['remoteIdentity']['context'];
+const REMOTE_CONTEXT_FIELDS = [
+  'host',
+  'owner',
+  'repositoryId',
+  'workspaceId',
+  'teamId',
+  'cloudId',
+  'siteId',
+  'projectId',
+] as const satisfies readonly (keyof RemoteContext)[];
+
 export async function runRemoteDoctorChecks(
   input: RemoteDoctorInput,
 ): Promise<DoctorCheck[]> {
@@ -215,14 +227,47 @@ function collectMetadataStateFindings(
   const findings: string[] = [];
   for (const record of metadata) {
     const state = statesById.get(record.bindingId);
-    if (state && state.metadataUpdatedAt !== record.updatedAt) {
-      findings.push(record.bindingId);
+    if (!state) continue;
+    if (state.metadataUpdatedAt !== record.updatedAt) {
+      findings.push(`${record.bindingId}:metadata-timestamp`);
+    }
+    if (state.provider !== record.provider) {
+      findings.push(`${record.bindingId}:provider`);
+    }
+    if (state.snapshot) {
+      if (state.snapshot.identity.stableId !== record.remoteIdentity.stableId) {
+        findings.push(`${record.bindingId}:identity`);
+      }
+      if (
+        !remoteContextsMatch(
+          state.snapshot.identity.context,
+          record.remoteIdentity.context,
+        )
+      ) {
+        findings.push(`${record.bindingId}:identity-context`);
+      }
+    }
+    if (
+      state.capability &&
+      !remoteContextsMatch(
+        state.capability.context,
+        record.remoteIdentity.context,
+      )
+    ) {
+      findings.push(`${record.bindingId}:capability-context`);
     }
   }
   for (const state of states) {
     if (!metadataById.has(state.bindingId)) findings.push(state.bindingId);
   }
   return [...new Set(findings)];
+}
+
+function remoteContextsMatch(
+  left: RemoteContext,
+  right: RemoteContext,
+): boolean {
+  return REMOTE_CONTEXT_FIELDS.every((field) => left[field] === right[field]);
 }
 
 function containsForbiddenPortableKey(

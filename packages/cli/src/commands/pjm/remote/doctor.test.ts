@@ -35,7 +35,10 @@ function operationRecord(
       revisionDigest: 'sha256:revision',
       policyDigest: 'sha256:policy',
     },
-    authority: null,
+    authority: {
+      effective: 'read-only',
+      sourceDigest: 'sha256:policy',
+    },
     approval: null,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -168,6 +171,154 @@ describe('runRemoteDoctorChecks', () => {
       status: 'fail',
       message: expect.stringContaining('bnd_binding_456'),
     });
+  });
+
+  it('reports same-timestamp provider and identity-context divergence without exposing values', async () => {
+    const paths = await createPaths();
+    const secret = 'ghp_context_value_must_not_leak';
+    const metadata = {
+      recordType: 'binding-metadata',
+      schemaVersion: 1,
+      provider: 'github',
+      target: {
+        kind: 'backlog',
+        scope: 'shared',
+        id: 'item-123',
+        path: '.oat/repo/pjm/backlog/item-123.md',
+      },
+      remoteIdentity: {
+        stableId: 'remote-123',
+        context: { host: 'github.com', repositoryId: 'repo-123' },
+        aliases: [],
+      },
+      identityHistory: [],
+      purposes: ['source'],
+      policyRestrictions: {},
+      publicationProjection: {
+        title: 'frontmatter',
+        description: 'description-section',
+        priority: 'frontmatter',
+      },
+      provenanceToken: 'oat-binding:bnd_binding_123',
+      lifecycle: 'active',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    for (const bindingId of ['bnd_binding_123', 'bnd_binding_456']) {
+      await writeFile(
+        join(paths.portableBindingsDir, `${bindingId}.json`),
+        JSON.stringify({
+          ...metadata,
+          bindingId,
+          provenanceToken: `oat-binding:${bindingId}`,
+          remoteIdentity: {
+            ...metadata.remoteIdentity,
+            stableId: `remote-${bindingId}`,
+          },
+        }),
+      );
+    }
+    await writeFile(
+      join(paths.operationalBindingsDir, 'bnd_binding_123.json'),
+      JSON.stringify({
+        recordType: 'binding-state',
+        schemaVersion: 1,
+        bindingId: 'bnd_binding_123',
+        provider: 'linear',
+        metadataUpdatedAt: timestamp,
+        localProjection: {
+          title: 'Local title',
+          description: null,
+          priority: null,
+          source: 'backlog-description',
+          sourceRevision: 'sha256:local',
+          observedAt: timestamp,
+        },
+        snapshot: null,
+        baseline: null,
+        capability: null,
+        contentRedacted: false,
+        lifecycle: 'active',
+        lifecycleCondition: 'active',
+        activeOperationIds: [],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }),
+    );
+    const divergentContext = {
+      host: 'github.com',
+      repositoryId: secret,
+    };
+    await writeFile(
+      join(paths.operationalBindingsDir, 'bnd_binding_456.json'),
+      JSON.stringify({
+        recordType: 'binding-state',
+        schemaVersion: 1,
+        bindingId: 'bnd_binding_456',
+        provider: 'github',
+        metadataUpdatedAt: timestamp,
+        localProjection: {
+          title: 'Local title',
+          description: null,
+          priority: null,
+          source: 'backlog-description',
+          sourceRevision: 'sha256:local',
+          observedAt: timestamp,
+        },
+        snapshot: {
+          recordType: 'snapshot',
+          schemaVersion: 1,
+          snapshotId: 'snap_snapshot_456',
+          bindingId: 'bnd_binding_456',
+          provider: 'github',
+          observedAt: timestamp,
+          observedBy: {
+            provider: 'github',
+            transport: 'gh',
+            context: divergentContext,
+            capabilityDigest: 'sha256:capability',
+          },
+          identity: {
+            stableId: 'remote-bnd_binding_456',
+            context: divergentContext,
+            aliases: [],
+          },
+          revision: {
+            strength: 'hash-only',
+            token: null,
+            updatedAt: timestamp,
+            contentHash: 'sha256:remote',
+          },
+          issue: {
+            title: 'Remote title',
+            description: '',
+            priority: null,
+            status: 'open',
+          },
+          lifecycle: 'active',
+          contentRedacted: false,
+          redactionCount: 0,
+          redactions: [],
+        },
+        baseline: null,
+        capability: null,
+        contentRedacted: false,
+        lifecycle: 'active',
+        lifecycleCondition: 'active',
+        activeOperationIds: [],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }),
+    );
+
+    const checks = await runRemoteDoctorChecks(paths);
+    const agreement = checks.find(
+      (check) => check.name === 'pjm:remote_metadata_state',
+    );
+    expect(agreement).toMatchObject({ status: 'fail' });
+    expect(agreement?.message).toMatch(/bnd_binding_123:provider/);
+    expect(agreement?.message).toMatch(/bnd_binding_456:identity-context/);
+    expect(JSON.stringify(agreement)).not.toContain(secret);
   });
 
   it('reports forbidden portable content, invalid policy, and concurrent active intents', async () => {

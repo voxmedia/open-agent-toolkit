@@ -376,7 +376,6 @@ describe('oat-config', () => {
                 default: 'autonomous',
                 operations: {
                   'update-fields': 'misspelled-read-only',
-                  unknownOperation: 'autonomous',
                 },
               },
               providers: {
@@ -385,11 +384,8 @@ describe('oat-config', () => {
                   authority: {
                     operations: { delete: 'misspelled-read-only' },
                   },
-                  unknownProviderPolicy: true,
                 },
-                unknownProvider: { authority: { default: 'autonomous' } },
               },
-              unknownPolicy: true,
             },
           },
         },
@@ -416,6 +412,49 @@ describe('oat-config', () => {
       },
     });
   });
+
+  it.each([
+    [
+      'operation',
+      {
+        authority: {
+          default: 'autonomous',
+          operations: { 'update-fileds': 'read-only' },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations\.update-fileds/,
+    ],
+    [
+      'provider',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          gitub: { authority: { default: 'read-only' } },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.gitub/,
+    ],
+  ] as const)(
+    'rejects an unknown %s narrowing key before permissive authority reaches runtime',
+    async (_kind, policy, expectedPath) => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          pjm: {
+            remote: {
+              schemaVersion: 1,
+              policy: { description: 'replace', ...policy },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).rejects.toThrow(expectedPath);
+    },
+  );
 
   it('reads transport preferences from local and user PJM config', async () => {
     const repoRoot = await createRepoRoot();
