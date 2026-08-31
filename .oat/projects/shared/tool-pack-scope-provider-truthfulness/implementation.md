@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: p03-review-r5
+    reason: 'Exact successful provider configuration changes are filtered out of new-session advice; p04 remains gated pending operator-authorized correction and fresh review.'
+    since: 2026-08-31
 oat_last_updated: 2026-08-31
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -293,7 +296,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** fresh High review pending after verified HiLL policy correction
+**Status:** blocked after review round 5; operator disposition required
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -669,6 +672,24 @@ high confidence. The original commit remains the source authority.
   and full `pnpm test` pass. The live pre-commit CLI run passed 316 files /
   4,762 tests; committed-head smoke, skills 586/586, and release 39 pass plus
   one skip ran live.
+
+### Review Round 5 — Terminal Governance Boundary
+
+- Artifact: `reviews/p03-review-2026-08-31T234602Z.md`
+- Reviewed head: `73a0488bea572ec927eb10abfd94bdd1e6849e09`
+- Verdict: changes requested; 0 Critical, 1 Important, 2 Medium, 0 Minor.
+- Reconnaissance: not attempted.
+- The prior unknown-policy blocker is resolved, every earlier p03 finding
+  remains fixed, and focused 317/317 plus expanded p03 509/509 tests pass.
+- Remaining blocking defect: `sync/apply.ts` filters exact extension refresh
+  evidence to role targets, so a successful config-only provider-visible
+  change receives no approved new-session advice.
+- Non-blocking hardening remains for provider-policy precedence validation and
+  tests. The stale round-3 wording in `state.md` was corrected while receiving
+  this review.
+- The authorization covered one policy correction and this fresh review. The
+  review did not pass, so no sixth correction or Phase 4 launch is authorized
+  without operator direction.
 
 ---
 

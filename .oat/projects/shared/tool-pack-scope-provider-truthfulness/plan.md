@@ -1719,7 +1719,7 @@ gates exit 0 at the final reviewed head.
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T193945Z.md                      | 2132804175242aa706791c03e12577a87f849ad4 | manual     | -           |
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T202630Z.md                      | d7762061f9db31db06160a1b87eeca08981dd39a | manual     | -           |
 | p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T223136Z.md                      | 4ddd2e4dcf42ccc5e8fe2252bcb4168fff24dc3c | manual     | -           |
-| p03    | code     | pending         | -          | -                                                             | -                                        | manual     | -           |
+| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T234602Z.md                      | 73a0488bea572ec927eb10abfd94bdd1e6849e09 | manual     | -           |
 | p04    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |

@@ -112,6 +112,10 @@ Thomas resolved the p03 refresh-policy HiLL boundary: after a successful provide
 
 Operator-authorized HiLL policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 makes successful provider-visible changes conservatively advise starting a new provider session through dated repository-decision provenance. Unsupported/no-op/failed cases remain advice-free or unknown, focused 317 and expanded p03 509 plus full tests pass; fresh High review is next and p04 remains gated.
 
+### 2026-08-31 · structural · oat-project-implement · p03-blocked-round5-session-policy
+
+Approved policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 resolved the unknown-policy blocker, but terminal High review round 5 remained blocked with critical:0, important:1, medium:2 because exact successful provider configuration changes are filtered out of new-session advice. Reconnaissance was not attempted in reviews/p03-review-2026-08-31T234602Z.md; no additional correction or p04 launch is authorized without operator direction.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

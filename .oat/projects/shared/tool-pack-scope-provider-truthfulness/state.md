@@ -1,7 +1,10 @@
 ---
 oat_current_task: p04-t01
 oat_last_commit: a65ba0ce2f30d072666938c16de79e6a561e40d2
-oat_blockers: []
+oat_blockers:
+  - task_id: p03-review-r5
+    reason: 'Exact successful provider configuration changes are filtered out of new-session advice; p04 remains gated pending operator-authorized correction and fresh review.'
+    since: 2026-08-31
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -92,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:39:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:49:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,12 +111,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3's operator HiLL policy correction is complete at
-`a65ba0ce2`. After a successful provider-visible file change, OAT
-conservatively advises starting a new provider session; unsupported rows stay
-unknown, no-op or failed changes produce no advice, and runtime visibility
-remains observation-only. Fresh independent High review is next; Phase 4 stays
-gated until it passes.
+Implementation - Phase 3 remains blocked after review round 5 at
+`73a0488bea5`. The approved conservative new-session policy is implemented and
+verified, but exact successful provider configuration changes are currently
+filtered out of its advice input. Phase 4 stays gated pending operator
+authorization for a bounded correction and fresh review.
 
 ## Artifacts
 
@@ -121,7 +123,7 @@ gated until it passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 round 4 authorized)
+- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 review round 5 blocked)
 
 ## Progress
 
@@ -146,13 +148,15 @@ gated until it passes.
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
-- ! Phase 3 blocked after review round 3; operator disposition required
+- ! Phase 3 blocked after review round 5; operator disposition required
 
 ## Blockers
 
-- A fourth p03 fix/re-review cycle requires explicit operator authorization.
+- Exact successful provider configuration changes do not currently produce the
+  approved conservative new-session advice. Another bounded p03 correction and
+  fresh review require explicit operator authorization.
 
 ## Next Milestone
 
-Obtain operator disposition for the two round-3 Important findings before any
-additional p03 fix or review dispatch.
+Obtain operator authorization to correct the config-only advice gap and run a
+fresh p03 review before beginning Phase 4.
