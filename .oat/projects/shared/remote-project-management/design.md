@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-plan
 oat_blockers: []
 oat_last_updated: 2026-08-30
 oat_generated: false
@@ -39,16 +39,16 @@ provider-to-provider mirroring.
 
 ## Resolved Design Questions
 
-| Question                               | Decision                                                                                                                                                                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Association versus operational storage | Keep `associated_issues` compact and compatible; store strict binding and operation records under `.oat/repo/pjm/remote/`.                                                                                         |
-| Legacy association shapes              | Accept legacy scalar and `{type, ref}` entries as reference-only. Only an explicit binding identifier enables remote operations.                                                                                   |
-| Repository versus user policy          | Shared repository config owns mutation and description policy. User/local config owns transport preference. A dedicated resolver merges them without allowing user config to broaden repository authority.         |
-| Managed description content            | Provider codecs own strict section location and replacement. Markdown uses visible OAT heading plus sentinels; Jira uses a uniquely anchored ADF container. Missing, duplicate, or malformed anchors fail closed.  |
-| MCP execution                          | Use a host-executor action/observation protocol driven by `oat-pjm-remote`; do not add a direct MCP client or first-party Linear GraphQL client in V1.                                                             |
-| Revision evidence                      | Prefer provider revision tokens; otherwise retain updated time plus canonical content hash and label the strength. Unknown revision strength degrades preview confidence but never removes read-back verification. |
-| Batch behavior                         | Produce one reviewed batch preview and one outcome per binding. Successful bindings are not rolled back when another binding fails.                                                                                |
-| Jira fidelity gaps                     | Advertise only capabilities demonstrated by Rovo MCP or ACLI. Missing changelog, custom-field, archive, or transition metadata returns a degraded or unsupported capability instead of silently adding Jira REST.  |
+| Question                               | Decision                                                                                                                                                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Association versus operational storage | Keep `associated_issues` compact. Store portable non-content metadata with its shared/synced owner, machine-local operational state in the Git common directory by default, and tracked operational state only after explicit opt-in. |
+| Legacy association shapes              | Accept legacy scalar and `{type, ref}` entries as reference-only. Only an explicit binding identifier enables remote operations.                                                                                                      |
+| Repository versus user policy          | Shared repository config owns mutation and description policy. User/local config owns transport preference. A dedicated resolver merges them without allowing user config to broaden repository authority.                            |
+| Managed description content            | Provider codecs own strict section location and replacement. Markdown uses visible OAT heading plus sentinels; Jira uses a uniquely anchored ADF container. Missing, duplicate, or malformed anchors fail closed.                     |
+| MCP execution                          | Use a host-executor action/observation protocol driven by `oat-pjm-remote`; do not add a direct MCP client or first-party Linear GraphQL client in V1.                                                                                |
+| Revision evidence                      | Prefer provider revision tokens; otherwise retain updated time plus canonical content hash and label the strength. Unknown revision strength degrades preview confidence but never removes read-back verification.                    |
+| Batch behavior                         | Produce one reviewed batch preview and one outcome per binding. Successful bindings are not rolled back when another binding fails.                                                                                                   |
+| Jira fidelity gaps                     | Advertise only capabilities demonstrated by Rovo MCP or ACLI. Missing changelog, custom-field, archive, or transition metadata returns a degraded or unsupported capability instead of silently adding Jira REST.                     |
 
 ## Architecture
 
@@ -426,10 +426,24 @@ interface OatPjmRemoteTransportConfig {
   transports?: Partial<Record<ProviderName, string[]>>;
 }
 
+interface AuthorityResolutionTrace {
+  builtIn: MutationAuthority;
+  repository: { value: MutationAuthority; source: 'default' | 'operation' };
+  provider: {
+    value: MutationAuthority | null;
+    source: 'inherit' | 'default' | 'operation';
+  };
+  bindingDefault: MutationAuthority | null;
+  bindingOperation: MutationAuthority | null;
+  hardFloor: MutationAuthority | null;
+  final: MutationAuthority;
+}
+
 interface EffectiveRemotePolicy {
   description: DescriptionMode;
   authority: Record<MutationClass, MutationAuthority>;
-  sources: Record<string, 'default' | 'shared' | 'provider' | 'binding'>;
+  authorityTrace: Record<MutationClass, AuthorityResolutionTrace>;
+  descriptionTrace: PolicyResolutionTrace<DescriptionMode>;
   hardFloors: Array<
     'replace-description' | 'destructive' | 'identity-resolution'
   >;
@@ -445,10 +459,34 @@ interface EffectiveRemotePolicy {
   `UserConfig.pjm.remote` in `~/.oat/config.json` accept only
   `OatPjmRemoteTransportConfig`.
 - Provider policy is nested inside the shared repository policy and may broaden
-  or narrow the repository default for that provider.
-- A binding override may only tighten:
-  `autonomous > user-authorized > user-approved > read-only` and
-  `replace > managed-section > none`.
+  or narrow the repository result for that provider. Authority for each
+  mutation class is resolved independently by this exact algorithm:
+  1. Start with the built-in `read-only` value.
+  2. Resolve the repository value as
+     `repository.operations[operation] ?? repository.default ?? read-only`.
+  3. Resolve the provider candidate as
+     `provider.operations[operation] ?? provider.default`. When present, that
+     candidate replaces the repository value; when absent, inherit the
+     repository value. This deliberately makes a provider default more specific
+     than a repository operation override because provider policy is allowed to
+     broaden or narrow repository policy.
+  4. Treat both binding entries as independent clamps. Compute the most
+     restrictive value among the provider result,
+     `binding.default` when present, and
+     `binding.operations[operation]` when present. An operation restriction can
+     never broaden either the provider result or the binding default.
+  5. Apply immutable floors last by clamping the result to no more permissive
+     than `user-approved` for complete-description replacement, destructive
+     operations, and identity resolution. `read-only` remains valid because it
+     is stricter than the floor.
+  6. Record every candidate, inherited source, binding clamp, hard-floor clamp,
+     and final winner in `EffectiveRemotePolicy.authorityTrace`; invalid values
+     become `read-only` with a doctor/error finding rather than being skipped.
+- The authority order from least to most permissive is
+  `read-only < user-approved < user-authorized < autonomous`. Description
+  restrictions use `none < managed-section < replace`; provider description
+  overrides replace the repository mode, then the binding mode clamps it toward
+  the less permissive result.
 - Transport precedence is repository-local > user > built-in. Each provider
   list replaces the lower-precedence list as an ordered, duplicate-free value;
   lists are not concatenated. An empty list explicitly disables remote
@@ -973,6 +1011,23 @@ type OperationState =
   | 'failed'
   | 'rejected';
 
+interface OperationSubstepRecord {
+  substepId: string;
+  previewDigest: string;
+  mutationClass: 'annotate' | 'transition';
+  authority: AuthorityDecision;
+  approvalRequirement: 'none' | 'explicit-instruction' | 'fresh-approval';
+  approval: ApprovalEvidence | null;
+  state: OperationState;
+  selectedTransport: CapabilityReference | null;
+  attempts: OperationAttempt[];
+  verification: FieldVerification[];
+  retryDisposition:
+    | 'not-applicable'
+    | 'safe-before-attempt'
+    | 'reconcile-required';
+}
+
 interface RemoteOperationRecord {
   schemaVersion: 1;
   operationId: string;
@@ -988,13 +1043,14 @@ interface RemoteOperationRecord {
     | 'relink'
     | 'detach'
     | 'recreate';
-  mutationClass: MutationClass | null;
+  mutationClass: MutationClass | 'composite' | null;
   state: OperationState;
   reason: OperationReason | null;
   lastSafeStep: OperationSafeStep;
   preview: OperationPreview;
-  authority: AuthorityDecision;
+  authority: AuthorityDecision | null;
   approval: ApprovalEvidence | null;
+  substeps: OperationSubstepRecord[];
   selectedTransport: CapabilityReference | null;
   attempts: OperationAttempt[];
   observations: ExternalObservationSummary[];
@@ -1026,6 +1082,39 @@ after an attempt. `partial` and `uncertain` always require reconciliation.
 Terminal records are retained, and terminal state never transitions back to an
 attempt state. Every command envelope is derived from the atomically persisted
 record; the CLI never returns a durable status that the record cannot represent.
+
+A composite closeout stores one digest-bound substep for annotation and one for
+transition when both are proposed. Each substep resolves its own mutation-class
+authority and approval requirement. One composite approval may be referenced by
+both substeps only when its digest covers the exact ordered substep previews and
+explicitly satisfies each requirement. Annotation precedes transition; a later
+substep cannot start until every dependency is verified.
+
+For a non-composite operation, parent `authority` and `approval` are populated
+and `substeps` is empty. For a composite, parent `mutationClass` is `composite`,
+parent authority/approval are null summaries, and the substeps are the
+authoritative effect records. The parent pins one transport before the first
+effect; every substep references that same capability. If it becomes unavailable
+between substeps, the parent becomes partial or uncertain and enters
+reconciliation instead of switching transports.
+
+Parent state reduces from durable substep states:
+
+- all required substeps verified (or explicitly omitted before preview) →
+  `verified`;
+- no substep attempted and a required substep is blocked/failed → that same
+  parent state;
+- any uncertain substep and no verified effect → `uncertain`;
+- any verified effect plus an uncertain, partial, rejected, blocked, or failed
+  sibling → `partial`;
+- any partial substep → `partial`.
+
+After a crash, verified substeps are never repeated. A never-attempted dependent
+substep may continue only when every dependency is verified and its preview,
+authority, approval, provider context, and pinned capability remain valid. An
+attempted non-verified substep requires reconciliation. Tests cover mixed
+annotation/transition authority and crashes before, during, and between the two
+substeps.
 
 ### Remote Batch Record
 
@@ -1122,6 +1211,7 @@ interface RemoteCommandEnvelope {
     | 'partial'
     | 'uncertain'
     | 'blocked'
+    | 'rejected'
     | 'failed';
   operation: string;
   projectRoot: string;
@@ -1145,6 +1235,7 @@ freshness, effective authority, and independent binding outcomes.
 | `partial`       | `partial`                                            | 1    | Some postconditions verified; reconciliation is required.                                      |
 | `uncertain`     | `uncertain`                                          | 1    | A remote effect may have occurred; reconciliation is required.                                 |
 | `blocked`       | `blocked`                                            | 1    | Policy, capability, lifecycle, or approval safely prevented progress.                          |
+| `rejected`      | `rejected`                                           | 1    | The provider authoritatively rejected the mutation without committing it.                      |
 | `failed`        | `failed`, or no record if initial persistence failed | 2    | Runtime or persistence failed before a safe durable handoff was established.                   |
 
 JSON and human modes use the same mapping. A host-executor skill treats
@@ -1308,25 +1399,25 @@ full comments, or unfiltered provider payloads.
 | ---- | --------------------------- | ----------------------------------------------------------------------------------- |
 | FR1  | integration + e2e           | Shared adapter conformance for GitHub, Linear, Jira; several same-provider bindings |
 | FR2  | e2e                         | Local PJM with every transport disabled; pending intent never shown as success      |
-| FR3  | unit + integration          | Purpose-policy intersection, incompatible purposes, combined closeout action        |
+| FR3  | unit + integration          | Purpose intersection plus mixed-authority composite closeout substeps               |
 | FR4  | integration                 | Intake, publish, refresh, reconcile, closeout; no transitive propagation            |
 | FR5  | unit + integration          | Strict binding persistence, identity aliases, restart recovery                      |
 | FR6  | unit                        | Title/description contract, optional safe priority, provider extensions             |
 | FR7  | unit + integration          | None/managed/replace matrix, malformed boundaries, binding tightening               |
-| FR8  | unit + integration          | Full authority truth table and immutable approval floors                            |
+| FR8  | unit + integration          | Cross-layer default/operation truth table, binding clamps, approval floors          |
 | FR9  | unit + integration          | B/L/R classification and explicit same-field conflict                               |
 | FR10 | integration                 | Reviewed batch partial failure with independent outcomes                            |
 | FR11 | integration                 | Refresh, one attempt, read-back, timeout, no blind retry                            |
 | FR12 | integration                 | Non-secret snapshot, local/shared storage, redaction, bounded discussion read       |
 | FR13 | integration                 | Anomalies plus approved relink, detach, and duplicate-safe recreate                 |
 | FR14 | integration                 | Persisted create intent, provenance search, uncertain create                        |
-| FR15 | e2e                         | Multi-binding closeout, annotation verification, delivery/reference defaults        |
+| FR15 | e2e                         | Closeout substep crash recovery, annotation/transition outcomes, purpose defaults   |
 | FR16 | integration                 | Ordered probes, capability matching, pre-start fallback, pinned uncertainty         |
 | FR17 | e2e                         | GitHub to Linear, GitHub to Jira, and GitHub-only workflows                         |
 | FR18 | integration + manual        | Project artifacts not published; discussion remains informational                   |
 | NFR1 | integration + security scan | Secret fixtures redacted; no local or shared record leakage                         |
 | NFR2 | integration                 | Ambiguity, permission, schema drift, and uncertainty all fail closed                |
-| NFR3 | integration                 | Crash injection, batch restart, and concurrent-intent preservation                  |
+| NFR3 | integration                 | Crash injection, substep/batch restart, rejected mapping, concurrent intents        |
 | NFR4 | e2e                         | Disconnected search and snapshot use with visible freshness                         |
 | NFR5 | integration                 | ADF, aliases, transition metadata, and extension retention                          |
 | NFR6 | manual + e2e                | Preview sources, freshness, conflicts, and per-binding outcomes                     |
@@ -1337,12 +1428,14 @@ full comments, or unfiltered provider payloads.
 
 - Strict Zod schemas, filename/identity agreement, and canonical serialization.
 - Association compatibility parser and canonical emitter.
-- Description and authority precedence truth tables.
+- Description and authority precedence truth tables, including repository
+  operation versus provider default and both binding clamps.
 - Pure reconciliation classifications and field direction.
 - Preview digest and approval invalidation.
 - Managed Markdown and ADF codec round trips and malformed boundaries.
 - Provider normalization, identity aliases, field masks, and verification.
 - Error/outcome taxonomy and safe human rendering.
+- Composite parent-state reduction and per-substep authority/approval rules.
 
 ### Integration Tests
 
