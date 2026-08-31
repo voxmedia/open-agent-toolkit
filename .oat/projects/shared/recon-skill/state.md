@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 3 - awaiting fresh independent re-review
+Phase 3 - second review fix required
 
 ## Artifacts
 
@@ -136,13 +136,15 @@ Phase 3 - awaiting fresh independent re-review
   bounded fix and fresh re-review
 - ✓ One bounded append-only fix closes the three reproduced lifecycle defects
   without adding a generalized state simulator
-- ⧗ Fresh independent Phase 3 re-review is next
+- ✓ Fresh re-review closed all three first-round findings
+- ⧗ One Critical user-sync regression and two Important adjacent lifecycle
+  findings require a second bounded fix
 
 ## Blockers
 
-None. The first bounded Phase 3 review fix is complete and awaits fresh
-independent re-review.
+One Critical and two Important Phase 3 findings are recorded in
+`reviews/p03-review-2026-08-31T191413Z.md` and are queued for bounded correction.
 
 ## Next Milestone
 
-Obtain a fresh independent Phase 3 re-review at fix head `63829d642`
+Fix the three round-2 Phase 3 findings and obtain a fresh re-review

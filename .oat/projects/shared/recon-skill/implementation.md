@@ -569,6 +569,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Dispatch: request_id=recon-skill-p03-implementation-20260831T1710Z continuation_event=recon-skill-p03-fix-r1-20260831T1845Z scope=p03-fix-r1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p03 review round 2
+
+- Request ID: `recon-skill-p03-rereview-20260831T1900Z`
+- Role/class: `oat-reviewer` / reviewer
+- Provider/context: Codex / fresh root-native session
+- Authority: independently re-review the complete p03 range and narrowed
+  round-1 correction; write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with blocking findings
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p03-review-2026-08-31T191413Z.md`
+- Findings: 1 Critical, 2 Important, 0 Medium, 0 Minor
+- Reviewed head: `63829d6426fc50df40598ac3c9bae4519360fc34`
+- Closed dispositions: all three round-1 findings close in their exact forms
+- Blocking dispositions: bundled built-in agent paths break real user sync;
+  mixed remove/install batches use stale asset availability; migration retry
+  omits dependency provider-cleanup paths after a root-apply failure
+- Overengineering assessment: narrow fix remains proportionate; no inventory
+  simulator is present or needed
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -839,6 +862,20 @@ context before p02 can advance.
 - Focused 52/52 and complete Phase 3 739/739 suites, CLI type-check, lint,
   format, and diff checks pass. A fresh independent re-review is next.
 
+### 2026-08-31 - p03 review round 2 received
+
+- Fresh re-review independently closes all three round-1 findings and confirms
+  the final fix uses only a narrow ordered lease projection.
+- Real command integration then reproduced one Critical user-sync failure:
+  bundled built-in agent paths enter ordinary scope-root planning and fail
+  before materialization.
+- Two Important adjacent lifecycle cases also reproduce: mixed
+  remove-old/install-new batches can delete dependency assets before acquire,
+  and a post-release source-root failure loses dependency cleanup paths on the
+  advertised migration retry.
+- The second bounded fix remains within existing Phase 3 sync,
+  lifecycle/migration, and test boundaries. Fresh re-review is required.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
@@ -896,6 +933,9 @@ context before p02 can advance.
 - After p03 fix round 1, the exact three production regressions pass 52/52 and
   the complete Phase 3 surface passes 739/739; CLI type-check, lint, format,
   and diff checks also pass.
+- Phase 3 review round 2 passes 576/576 changed-surface tests and all three
+  prior regressions, while isolated real user-sync integration fails 3/3 and
+  direct probes reproduce the two adjacent lifecycle/retry findings.
 
 ## Final Summary (for PR/docs)
 
