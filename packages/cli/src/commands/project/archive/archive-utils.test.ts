@@ -817,9 +817,19 @@ describe('archive utils', () => {
       await expect(readSyncedRecord(recordPath)).resolves.toBeNull();
       expect(result.recordRetired).toBe(true);
       expect(result.terminalReceipt).toMatchObject({
+        state: 'completed-only',
+        activeAliasRetained: false,
         completedRef: 'refs/oat/completed/demo',
         verifiedSha: expect.stringMatching(/^[a-f0-9]{40}$/),
       });
+      expect(
+        (
+          await defaultGitRunner.run(
+            ['ls-remote', 'origin', target.ref, 'refs/oat/completed/demo'],
+            { cwd: fixture.cloneA },
+          )
+        ).stdout.trim(),
+      ).toMatch(/^[a-f0-9]{40}\s+refs\/oat\/completed\/demo$/);
 
       const retried = await archiveProjectOnCompletion(options, {
         ...commonDependencies,

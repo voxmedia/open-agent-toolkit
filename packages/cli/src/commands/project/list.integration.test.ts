@@ -331,7 +331,11 @@ describe('oat project list coordination integration', () => {
   it('keeps matching terminal aliases out of remote active discovery and exposes mismatches', async () => {
     const fixture = await createSyncedFixture({ secondClone: true });
     tempDirs.push(fixture.rootDir);
-    for (const slug of ['matching-terminal', 'invalid-terminal']) {
+    for (const slug of [
+      'completed-only',
+      'matching-terminal',
+      'invalid-terminal',
+    ]) {
       const created = await runCli(fixture.cloneA, [
         'project',
         'new',
@@ -351,6 +355,15 @@ describe('oat project list coordination integration', () => {
         'origin',
         `${activeSha}:refs/oat/completed/${slug}`,
       ]);
+      if (slug === 'completed-only') {
+        git(fixture.cloneA, [
+          'push',
+          '-q',
+          'origin',
+          '--delete',
+          `refs/oat/projects/${slug}`,
+        ]);
+      }
     }
     const mainSha = git(fixture.cloneA, ['rev-parse', 'HEAD']);
     git(fixture.cloneA, [
@@ -373,6 +386,9 @@ describe('oat project list coordination integration', () => {
     };
     expect(payload.projects).not.toContainEqual(
       expect.objectContaining({ name: 'matching-terminal' }),
+    );
+    expect(payload.projects).not.toContainEqual(
+      expect.objectContaining({ name: 'completed-only' }),
     );
     expect(payload.projects).toContainEqual(
       expect.objectContaining({
