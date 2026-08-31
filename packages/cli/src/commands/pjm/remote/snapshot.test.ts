@@ -1,0 +1,139 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  MAX_PROVIDER_EXTENSION_BYTES,
+  MAX_REMOTE_DESCRIPTION_BYTES,
+} from './schema';
+import { sanitizeRemoteSnapshot } from './snapshot';
+
+const timestamp = '2026-08-31T12:00:00.000Z';
+const context = {
+  host: 'github.com',
+  owner: 'voxmedia',
+  repositoryId: 'repo-123',
+};
+
+function rawSnapshot() {
+  return {
+    snapshotId: 'snap_snapshot_123',
+    bindingId: 'bnd_binding_123',
+    provider: 'github' as const,
+    observedAt: timestamp,
+    observedBy: {
+      provider: 'github' as const,
+      transport: 'gh',
+      context,
+      capabilityDigest: 'sha256:capability',
+    },
+    identity: {
+      stableId: 'issue-node-123',
+      context,
+      aliases: [
+        { kind: 'url' as const, value: 'https://github.com/a/b/issues/1' },
+      ],
+    },
+    revision: {
+      strength: 'token' as const,
+      token: 'W/"123"',
+      updatedAt: timestamp,
+      contentHash: 'sha256:remote-content',
+    },
+    issue: {
+      title: 'Remote issue',
+      description: 'Ordinary non-secret description.',
+      priority: 'high',
+      status: 'open',
+      labels: ['never-retain'],
+    },
+    lifecycle: 'active' as const,
+    extensions: {
+      estimate: 3,
+      workflow: { name: 'Backlog' },
+      unknown: 'drop me',
+    },
+    comments: [{ body: 'never retain comments' }],
+    activity: [{ action: 'never retain activity' }],
+    assignees: [{ login: 'never-retain' }],
+    authHeaders: { authorization: 'Bearer top-secret' },
+    rawPayload: { everything: 'never retain payloads' },
+  };
+}
+
+describe('sanitizeRemoteSnapshot', () => {
+  it('retains only core fields and adapter-allowlisted bounded extensions', () => {
+    const result = sanitizeRemoteSnapshot(rawSnapshot(), {
+      allowedExtensionKeys: ['estimate', 'workflow'],
+    });
+
+    expect(result.issue).toEqual({
+      title: 'Remote issue',
+      description: 'Ordinary non-secret description.',
+      priority: 'high',
+      status: 'open',
+    });
+    expect(result.extensions).toEqual({
+      github: { estimate: 3, workflow: { name: 'Backlog' } },
+    });
+    expect(JSON.stringify(result)).not.toMatch(
+      /never retain|top-secret|rawPayload|comments|activity|assignees|authHeaders/,
+    );
+  });
+
+  it('redacts credential-shaped values and visibly marks incomplete content', () => {
+    const input = rawSnapshot();
+    input.issue.description = [
+      'Authorization: Bearer abc.def.ghi',
+      'password=hunter2',
+      'GitHub token: github_pat_1234567890abcdefghijklmnop',
+      'Keep surrounding prose.',
+    ].join('\n');
+
+    const result = sanitizeRemoteSnapshot(input);
+
+    expect(result.issue.description).not.toMatch(
+      /abc\.def\.ghi|hunter2|github_pat_1234567890/,
+    );
+    expect(result.issue.description).toContain('[REDACTED:CREDENTIAL]');
+    expect(result.issue.description).toContain('Keep surrounding prose.');
+    expect(result.contentRedacted).toBe(true);
+    expect(result.redactionCount).toBe(1);
+    expect(result.redactions).toEqual([
+      { field: 'description', reason: 'credential' },
+    ]);
+  });
+
+  it('drops allowlisted extensions containing credentials and marks the snapshot incomplete', () => {
+    const input = rawSnapshot();
+    input.extensions.workflow = {
+      token: 'ghp_abcdefghijklmnopqrstuvwxyz123456',
+    };
+
+    const result = sanitizeRemoteSnapshot(input, {
+      allowedExtensionKeys: ['estimate', 'workflow'],
+    });
+
+    expect(result.extensions).toEqual({ github: { estimate: 3 } });
+    expect(result.contentRedacted).toBe(true);
+    expect(JSON.stringify(result)).not.toContain('ghp_');
+  });
+
+  it('fails closed on oversized descriptions and provider extensions', () => {
+    const description = rawSnapshot();
+    description.issue.description = 'x'.repeat(
+      MAX_REMOTE_DESCRIPTION_BYTES + 1,
+    );
+    expect(() => sanitizeRemoteSnapshot(description)).toThrow(
+      /description.*byte limit/i,
+    );
+
+    const extension = rawSnapshot();
+    extension.extensions.workflow = {
+      text: 'x'.repeat(MAX_PROVIDER_EXTENSION_BYTES),
+    };
+    expect(() =>
+      sanitizeRemoteSnapshot(extension, {
+        allowedExtensionKeys: ['workflow'],
+      }),
+    ).toThrow(/extension.*byte limit/i);
+  });
+});
