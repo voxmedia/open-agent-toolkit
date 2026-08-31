@@ -1,12 +1,7 @@
 ---
 oat_current_task: p01-t01
 oat_last_commit: null
-oat_blockers:
-  - task_id: p01-t01
-    reason: >-
-      The first accepted phase launch was invalidated before work because the
-      root supplied an incorrect expanded phase-base SHA. A new launch requires
-      explicit operator direction under the invalid-run-abort contract.
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -87,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T05:24:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T11:38:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -103,10 +98,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 1 is stopped at an invalid-run boundary after the root
-supplied an incorrect expanded phase-base SHA. The accepted child made no edits
-or commits. p01-t01 remains the next task, and a new phase launch requires
-explicit operator direction.
+Implementation - Phase 1 is ready for a corrected relaunch. Thomas explicitly
+authorized a new p01 run after the prior accepted child failed closed before
+work on an incorrect expanded phase-base SHA. The aborted run remains recorded
+as history and made no edits or commits.
 
 ## Artifacts
 
@@ -136,14 +131,13 @@ explicit operator direction.
 - ✓ Clean plan artifact review passed
 - ✓ Configured plan gate passed and review received
 - ✓ Plan complete
-- ⚠ Phase 1 launch invalidated before work; awaiting operator direction
+- ⧗ Phase 1 diagnostics-baseline reconciliation authorized for relaunch
 
 ## Blockers
 
-- p01-t01: invalid-run abort after incorrect expanded phase-base SHA; no work
-  was performed.
+None
 
 ## Next Milestone
 
-Obtain explicit operator direction before starting a new p01 launch with the
-verified base `99d6de317cb1c670b8a1bc92efc4a57300de74fd`.
+Start the authorized corrected p01 launch from the clean post-abort bookkeeping
+head, then record PR #249's accepted interfaces and focused verification.

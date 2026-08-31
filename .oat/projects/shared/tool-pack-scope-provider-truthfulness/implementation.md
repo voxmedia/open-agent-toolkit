@@ -1,12 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p01-t01
-    reason: >-
-      The first accepted phase launch was invalidated before work because the
-      root supplied an incorrect expanded phase-base SHA. A new launch requires
-      explicit operator direction under the invalid-run-abort contract.
+oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -29,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 1     | 0/1       |
-| Phase 2 | pending | 7     | 0/7       |
-| Phase 3 | pending | 5     | 0/5       |
-| Phase 4 | pending | 5     | 0/5       |
-| Phase 5 | pending | 4     | 0/4       |
-| Phase 6 | pending | 4     | 0/4       |
-| Phase 7 | pending | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 1     | 0/1       |
+| Phase 2 | pending     | 7     | 0/7       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 5     | 0/5       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 4     | 0/4       |
+| Phase 7 | pending     | 4     | 0/4       |
 
 **Total:** 0/30 tasks completed
 
@@ -45,7 +40,7 @@ oat_generated: false
 
 ## Phase 1: Accepted Diagnostics Baseline
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-08-31
 
 ### Phase Summary (fill when phase is complete)
@@ -69,12 +64,8 @@ oat_generated: false
 
 ### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** -
-**Blocker:** The accepted phase launch failed exact-base preflight because the
-root supplied `99d6de317a22aa70e8f68027936060d03907ffcf`; the clean worktree was
-actually at `99d6de317cb1c670b8a1bc92efc4a57300de74fd`. The invalid run made no
-edits or commits and cannot be replaced without operator direction.
 
 **Outcome (required when completed):**
 
@@ -130,7 +121,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch policy: managed High from project state
 - Schedule: seven sequential phases; p01 attempted
 - Outcome: `INVALID_RUN_ABORT`; phases passed 0, failed 0, stopped 1
-- Outstanding: p01-t01 remains the next task and requires operator direction
+- Outstanding: resolved by Thomas's explicit 2026-08-31 authorization to start
+  a new p01 run from the corrected clean base
 
 #### Dispatch record — `dispatch-p01-20260831T052104Z-99d6de317`
 
@@ -158,7 +150,7 @@ Chronological log of implementation progress.
 
 **Session Start:** 05:21 UTC
 
-- [ ] p01-t01: Land, rebase, and record the diagnostics predecessor - blocked before work by invalid-run abort
+- [ ] p01-t01: Land, rebase, and record the diagnostics predecessor - relaunched with explicit operator authorization
 
 **What changed (high level):**
 
@@ -174,7 +166,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- Invalid p01 run from an incorrect expanded base SHA; no work was performed - pending operator direction
+- Invalid p01 run from an incorrect expanded base SHA; no work was performed - resolved by explicit operator relaunch authorization
 
 **Session End:** {time}
 

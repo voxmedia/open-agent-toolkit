@@ -52,6 +52,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 p01 launch dispatch-p01-20260831T052104Z-99d6de317 stopped as INVALID_RUN_ABORT before work: configured base 99d6de317a22aa70e8f68027936060d03907ffcf did not match clean HEAD 99d6de317cb1c670b8a1bc92efc4a57300de74fd; zero edits, commits, tests, or recovery attempts.
 
+### 2026-08-31 · structural · oat-project-implement · p01-relaunch-authorized
+
+Thomas explicitly authorized a new p01 launch after the prior invalid-run abort; the aborted launch made zero edits or commits, and the corrected run will start from the clean post-abort bookkeeping head.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
