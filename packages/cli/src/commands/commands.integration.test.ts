@@ -1163,7 +1163,7 @@ describe('CLI command integration', () => {
     await mkdir(join(userRoot, '.claude'), { recursive: true });
     const assetsRoot = await resolveAssetsRoot();
     await reconcilePackLifecycle({
-      pack: 'ideas',
+      pack: 'research',
       scope: 'user',
       scopeRoot: userRoot,
       assetsRoot,
@@ -1178,13 +1178,16 @@ describe('CLI command integration', () => {
       expect(sync.exitCode).toBe(0);
 
       await expect(
-        lstat(join(userRoot, '.agents', 'skills', 'oat-idea-new')),
+        lstat(join(userRoot, '.agents', 'skills', 'recon')),
       ).resolves.toBeDefined();
       await expect(
-        lstat(join(userRoot, '.claude', 'skills', 'oat-idea-new')),
+        lstat(join(userRoot, '.claude', 'skills', 'recon')),
       ).resolves.toBeDefined();
       await expect(
-        lstat(join(root, '.agents', 'skills', 'oat-idea-new')),
+        lstat(join(userRoot, '.claude', 'agents', 'recon-worker.md')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(root, '.agents', 'skills', 'recon')),
       ).rejects.toMatchObject({ code: 'ENOENT' });
     } finally {
       if (previousHome === undefined) delete process.env.HOME;

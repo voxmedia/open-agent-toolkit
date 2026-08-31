@@ -2228,24 +2228,34 @@ describe('createSyncCommand', () => {
   });
 
   describe('scoped provider materialization', () => {
-    it('feeds installed user-materializable pack agents only to extension planning', async () => {
-      const adapter = createCodexAdapter();
+    it('feeds in-scope pack agents to ordinary and extension planning while excluding bundle roles from ordinary planning', async () => {
+      const claude = createScopedAdapter();
+      const codex = createCodexAdapter();
       const packAgent = createAgentCanonicalEntry(
         'eligible-pack-agent.md',
         '/tmp/home',
       );
+      const bundledRole = createAgentCanonicalEntry(
+        'oat-phase-implementer.md',
+        '/bundle',
+      );
       const { command, computeSyncPlan, computeCodexProjectExtensionPlan } =
         createHarness({
-          adapters: [adapter],
+          adapters: [claude, codex],
           configAwareResults: [
             {
-              activeAdapters: [adapter],
+              activeAdapters: [claude, codex],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+            {
+              activeAdapters: [claude, codex],
               detectedUnset: [],
               detectedDisabled: [],
             },
           ],
           canonicalEntriesByScope: { user: [] },
-          bundledManagedAgents: [packAgent],
+          bundledManagedAgents: [packAgent, bundledRole],
         });
 
       await runSyncCommand(command, {
@@ -2256,12 +2266,12 @@ describe('createSyncCommand', () => {
       expect(computeSyncPlan).toHaveBeenCalledWith(
         expect.objectContaining({
           scope: 'user',
-          canonical: [],
+          canonical: [packAgent],
         }),
       );
       expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
         '/tmp/home',
-        [packAgent],
+        [packAgent, bundledRole],
         undefined,
         { userConfigDir: '/tmp/home/.oat' },
       );

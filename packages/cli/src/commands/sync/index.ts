@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
@@ -273,6 +273,16 @@ function detectVersionSkew(
   return { scope, producingVersion, invokingVersion };
 }
 
+function isPathWithin(root: string, candidate: string): boolean {
+  const relativePath = relative(resolve(root), resolve(candidate));
+  return (
+    relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${sep}`) &&
+      !isAbsolute(relativePath))
+  );
+}
+
 async function computePlans(
   context: CommandContext,
   dependencies: SyncCommandDependencies,
@@ -289,16 +299,23 @@ async function computePlans(
       dependencies.loadSyncConfig(configPath),
       dependencies.scanCanonical(scopeRoot, scope),
     ]);
-    const materializationCanonical =
+    const managedAgents =
+      scope === 'user'
+        ? await dependencies.scanBundledManagedAgents({ scopeRoot })
+        : [];
+    const ordinaryCanonical =
       scope === 'user'
         ? [
             ...canonical,
-            ...(await dependencies.scanBundledManagedAgents({ scopeRoot })),
+            ...managedAgents.filter(({ canonicalPath }) =>
+              isPathWithin(join(scopeRoot, '.agents', 'agents'), canonicalPath),
+            ),
           ]
         : canonical;
+    const materializationCanonical = [...canonical, ...managedAgents];
     if (canonicalFilter?.mode === 'remove') {
       const existing = new Set(
-        canonical.map(({ canonicalPath }) =>
+        ordinaryCanonical.map(({ canonicalPath }) =>
           relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
         ),
       );
@@ -334,7 +351,7 @@ async function computePlans(
     );
 
     const plan = await dependencies.computeSyncPlan({
-      canonical,
+      canonical: ordinaryCanonical,
       adapters: resolved.activeAdapters,
       manifest,
       scope,
@@ -373,7 +390,7 @@ async function computePlans(
       scopeRoot,
       manifestPath,
       manifest,
-      canonical,
+      canonical: ordinaryCanonical,
       activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,
