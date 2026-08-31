@@ -12,8 +12,8 @@ import {
   validateRealPathWithinScope,
 } from '@fs/paths';
 import {
+  isBuiltInUserScopeManagedAgentFile,
   type ConcreteScope,
-  USER_SCOPE_MANAGED_AGENT_FILES,
 } from '@shared/types';
 
 import { digestDirectory, digestFile } from './content-digest';
@@ -320,11 +320,11 @@ function intentDiagnostic(diagnostic: PackIntentDiagnostic): PackDiagnostic {
 /**
  * User-scope canonical agents are installed into `~/.agents/agents/`, while
  * native provider-role materialization is caller-resolved from the active
- * config-aware adapter set. When that capability is active, only the bundled
- * managed role file set (`USER_SCOPE_MANAGED_AGENT_FILES`) is supplied to the
- * extension. Completeness alone therefore cannot describe native
- * materialization, so the remaining gap is named here instead of staying
- * silent. Canonical instruction-read availability is a separate contract.
+ * config-aware adapter set. When that capability is active, it supplies the
+ * bundled managed role file set plus explicitly user-materializable pack
+ * agents. Completeness alone therefore cannot describe native materialization,
+ * so the remaining gap is named here instead of staying silent. Canonical
+ * instruction-read availability is a separate contract.
  */
 function userAgentMaterializationDiagnostics(
   pack: PackName,
@@ -333,20 +333,22 @@ function userAgentMaterializationDiagnostics(
   managedRoleMaterialization: boolean,
 ): PackDiagnostic[] {
   if (scope !== 'user') return [];
-  const bundledRoleFiles = new Set<string>(USER_SCOPE_MANAGED_AGENT_FILES);
   const unmaterialized = assets.filter(
     ({ definition, status }) =>
       definition.kind === 'agent' &&
       definition.ownership.user === 'managed' &&
       status !== 'missing' &&
       (!managedRoleMaterialization ||
-        !bundledRoleFiles.has(definition.destination.split('/').at(-1) ?? '')),
+        (definition.userMaterializable !== true &&
+          !isBuiltInUserScopeManagedAgentFile(
+            definition.destination.split('/').at(-1) ?? '',
+          ))),
   );
   if (unmaterialized.length === 0) return [];
   return [
     {
       code: 'user-agent-unmaterialized',
-      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only the bundled managed role files (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}). Install this pack at project scope to materialize the affected agents.`,
+      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only the built-in managed roles (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}) and manifest-declared user-materializable agents. Install this pack at project scope to materialize the affected agents.`,
       paths: unmaterialized.map(({ path }) => path),
     },
   ];

@@ -4,7 +4,12 @@ import type {
   PromptContext,
 } from '@commands/shared/shared.prompts';
 import type { SyncConfig } from '@config/index';
-import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
+import type {
+  CanonicalEntry,
+  ScanBundledManagedAgentsOptions,
+  SyncPlan,
+  SyncResult,
+} from '@engine/index';
 import type { Manifest } from '@manifest/index';
 import type {
   ConfigAwareAdaptersResult,
@@ -129,7 +134,9 @@ export interface SyncCommandDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: (
+    options?: ScanBundledManagedAgentsOptions,
+  ) => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],

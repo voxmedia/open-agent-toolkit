@@ -64,6 +64,7 @@ interface HarnessOptions {
   useDiskCodexExtension?: boolean;
   useDiskScanner?: boolean;
   useDiskBundledCodexAgents?: boolean;
+  bundledManagedAgents?: CanonicalEntry[];
   extraMaterializationExtensions?: SyncMaterializationExtension[];
 }
 
@@ -331,6 +332,9 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const manifestQueue = [...(options.loadedManifests ?? [])];
+  const scanBundledManagedAgents = options.useDiskBundledCodexAgents
+    ? vi.fn(scanBundledManagedAgentsFromDisk)
+    : vi.fn(async () => options.bundledManagedAgents ?? []);
 
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -367,9 +371,7 @@ function createHarness(options: HarnessOptions = {}): {
             options.canonicalEntries ?? [createCanonicalEntry()]
           );
         }),
-    scanBundledManagedAgents: options.useDiskBundledCodexAgents
-      ? vi.fn(scanBundledManagedAgentsFromDisk)
-      : vi.fn(async () => []),
+    scanBundledManagedAgents,
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
@@ -421,6 +423,7 @@ function createHarness(options: HarnessOptions = {}): {
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
     saveSyncConfig,
+    scanBundledManagedAgents,
     selectProvidersWithAbort,
   };
 }
@@ -1933,8 +1936,12 @@ describe('createSyncCommand', () => {
       );
       expect(first.computeSyncPlan).toHaveBeenCalledWith(
         expect.objectContaining({
-          canonical: expect.not.arrayContaining([
-            expect.objectContaining({ type: 'agent' }),
+          canonical: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'oat-phase-implementer.md',
+              type: 'agent',
+            }),
+            expect.objectContaining({ name: 'oat-reviewer.md', type: 'agent' }),
           ]),
         }),
       );
@@ -2227,6 +2234,38 @@ describe('createSyncCommand', () => {
   });
 
   describe('scoped provider materialization', () => {
+    it('feeds installed user-materializable pack agents to standard provider planning', async () => {
+      const adapter = createScopedAdapter();
+      const packAgent = createAgentCanonicalEntry(
+        'eligible-pack-agent.md',
+        '/tmp/home',
+      );
+      const { command, computeSyncPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: { user: [] },
+        bundledManagedAgents: [packAgent],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'user',
+          canonical: [packAgent],
+        }),
+      );
+    });
+
     it('plans project and user scopes independently for --scope all', async () => {
       const adapter = createScopedAdapter();
       const { command, computeSyncPlan } = createHarness({
@@ -2431,7 +2470,11 @@ describe('createSyncCommand', () => {
 
     it('forwards the exact filter into user-scope materialization extension planning', async () => {
       const adapter = createCodexAdapter();
-      const { command, computeCodexProjectExtensionPlan } = createHarness({
+      const {
+        command,
+        computeCodexProjectExtensionPlan,
+        scanBundledManagedAgents,
+      } = createHarness({
         adapters: [adapter],
         configAwareResults: [
           {
@@ -2462,6 +2505,9 @@ describe('createSyncCommand', () => {
         ['.agents/agents/oat-reviewer.md'],
         expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
       );
+      expect(scanBundledManagedAgents).toHaveBeenCalledWith({
+        scopeRoot: '/tmp/home',
+      });
     });
   });
 });

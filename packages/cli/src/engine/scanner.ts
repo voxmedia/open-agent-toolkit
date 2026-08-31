@@ -1,6 +1,15 @@
 import { readdir } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 
+import {
+  inventoryScopedPack,
+  type InventoryScopedPackInput,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import {
+  PACK_MANIFEST,
+  type PackDefinition,
+} from '@commands/tools/shared/pack-manifest';
 import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
 import {
@@ -16,6 +25,15 @@ export interface CanonicalEntry {
   type: 'skill' | 'agent' | 'rule';
   canonicalPath: string;
   isFile: boolean;
+}
+
+export interface ScanBundledManagedAgentsOptions {
+  scopeRoot?: string;
+  assetsRoot?: string;
+  manifest?: readonly PackDefinition[];
+  inventoryPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
 }
 
 function canonicalDirectoryName(
@@ -74,8 +92,11 @@ async function readEntries(dirPath: string): Promise<ScannedEntry[]> {
   }
 }
 
-export async function scanBundledManagedAgents(): Promise<CanonicalEntry[]> {
-  const agentsDir = join(await resolveAssetsRoot(), 'agents');
+export async function scanBundledManagedAgents(
+  options: ScanBundledManagedAgentsOptions = {},
+): Promise<CanonicalEntry[]> {
+  const assetsRoot = options.assetsRoot ?? (await resolveAssetsRoot());
+  const agentsDir = join(assetsRoot, 'agents');
   const entries = await readEntries(agentsDir);
   const available = new Set(
     entries.filter((entry) => entry.isFile).map((entry) => entry.name),
@@ -90,12 +111,81 @@ export async function scanBundledManagedAgents(): Promise<CanonicalEntry[]> {
     );
   }
 
-  return USER_SCOPE_MANAGED_AGENT_FILES.map((name) => ({
+  const managed = USER_SCOPE_MANAGED_AGENT_FILES.map((name) => ({
     name,
-    type: 'agent',
+    type: 'agent' as const,
     canonicalPath: join(agentsDir, name),
     isFile: true,
   }));
+
+  if (!options.scopeRoot) return managed;
+
+  const inventoryPack = options.inventoryPack ?? inventoryScopedPack;
+  const materializable = (options.manifest ?? PACK_MANIFEST).flatMap((pack) => {
+    const assets = pack.assets.filter(
+      (asset) =>
+        asset.kind === 'agent' &&
+        asset.userMaterializable === true &&
+        asset.scopes.includes('user') &&
+        asset.ownership.user === 'managed',
+    );
+    return assets.length === 0 ? [] : [{ pack, assets }];
+  });
+  const inventories = await Promise.all(
+    materializable.map(async ({ pack, assets }) => ({
+      assets,
+      inventory: await inventoryPack({
+        pack: pack.name,
+        scope: 'user',
+        scopeRoot: options.scopeRoot!,
+        assetsRoot,
+      }),
+    })),
+  );
+  const selected = new Map<string, CanonicalEntry>(
+    managed.map((entry) => [entry.name, entry]),
+  );
+
+  for (const { assets, inventory } of inventories) {
+    if (!inventory.intent.enabled) continue;
+    for (const definition of assets) {
+      const installed = inventory.assets.find(
+        ({ definition: candidate }) => candidate.id === definition.id,
+      );
+      if (!installed || installed.status === 'missing') continue;
+      if (!definition.source) {
+        throw new CliError(
+          `User-materializable agent ${definition.id} has no bundled source. Reinstall or rebuild OAT before running user sync.`,
+        );
+      }
+      const name = basename(definition.destination);
+      const sourceName = basename(definition.source);
+      if (
+        name !== sourceName ||
+        definition.source !== `agents/${name}` ||
+        !available.has(sourceName)
+      ) {
+        throw new CliError(
+          `Bundled user-materializable agent definition is unavailable or mismatched: ${definition.id} (${definition.source}). Reinstall or rebuild OAT before running user sync.`,
+        );
+      }
+      const existing = selected.get(name);
+      const canonicalPath = installed.path;
+      if (existing && existing.canonicalPath !== canonicalPath) {
+        throw new CliError(
+          `User-scope managed agent collision for ${name}: ${existing.canonicalPath} and ${canonicalPath}.`,
+        );
+      }
+      selected.set(name, {
+        name,
+        type: 'agent',
+        canonicalPath,
+        isFile: true,
+      });
+    }
+  }
+
+  return [...selected.values()];
 }
 
 /** @deprecated Use scanBundledManagedAgents for provider-neutral materialization. */

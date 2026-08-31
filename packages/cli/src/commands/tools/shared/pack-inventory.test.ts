@@ -537,7 +537,9 @@ describe('pack inventory', () => {
     expect(diagnostic!.paths).toEqual([
       join(scopeRoot, '.agents', 'agents', 'skeptical-evaluator.md'),
     ]);
-    expect(diagnostic!.message).toContain('oat-phase-implementer.md');
+    expect(diagnostic!.message).toContain(
+      'manifest-declared user-materializable agents',
+    );
   });
 
   it('reports every present user agent when no native materialization extension is active', async () => {

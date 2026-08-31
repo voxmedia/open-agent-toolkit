@@ -1275,6 +1275,9 @@ describe('createStatusCommand', () => {
 
     expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user');
     expect(scanBundledManagedCodexAgents).toHaveBeenCalledTimes(1);
+    expect(scanBundledManagedCodexAgents).toHaveBeenCalledWith({
+      scopeRoot: '/tmp/home',
+    });
     expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
       '/tmp/home',
       expect.arrayContaining([
@@ -1401,7 +1404,7 @@ describe('createStatusCommand', () => {
     ['project', createCodexAdapter()],
     ['user', createAdapter()],
   ] as const)(
-    'does not compose bundled Codex inputs for %s status without user Codex planning',
+    'resolves only the managed agent inputs needed for %s status',
     async (scope, adapter) => {
       const {
         command,
@@ -1416,8 +1419,8 @@ describe('createStatusCommand', () => {
 
       await runStatusCommand(command, ['--scope', scope]);
 
-      expect(scanBundledManagedCodexAgents).not.toHaveBeenCalled();
       if (scope === 'project') {
+        expect(scanBundledManagedCodexAgents).not.toHaveBeenCalled();
         expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
           '/tmp/workspace',
           [],
@@ -1425,6 +1428,9 @@ describe('createStatusCommand', () => {
           { userConfigDir: '/tmp/home/.oat' },
         );
       } else {
+        expect(scanBundledManagedCodexAgents).toHaveBeenCalledWith({
+          scopeRoot: '/tmp/home',
+        });
         expect(computeCodexProjectExtensionPlan).not.toHaveBeenCalled();
       }
     },

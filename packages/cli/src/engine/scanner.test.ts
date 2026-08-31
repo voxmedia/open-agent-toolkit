@@ -2,6 +2,8 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
+import { USER_SCOPE_MANAGED_AGENT_FILES } from '@shared/types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { scanBundledManagedAgents, scanCanonical } from './scanner';
@@ -74,6 +76,168 @@ describe('scanCanonical', () => {
       'oat-reviewer.md',
     ]);
     expect(entries.every((entry) => entry.type === 'agent')).toBe(true);
+  });
+
+  it('adds only installed manifest-declared user-materializable pack agents', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-scan-user-'));
+    const assetsRoot = await mkdtemp(join(tmpdir(), 'oat-scan-assets-'));
+    tempDirs.push(scopeRoot, assetsRoot);
+    await mkdir(join(assetsRoot, 'agents'), { recursive: true });
+    for (const name of [
+      'oat-phase-implementer.md',
+      'oat-reviewer.md',
+      'eligible-pack-agent.md',
+      'undeclared-agent.md',
+    ]) {
+      await writeFile(join(assetsRoot, 'agents', name), `# ${name}\n`, 'utf8');
+    }
+    const eligible = {
+      id: 'agent:eligible-pack-agent.md',
+      kind: 'agent' as const,
+      source: 'agents/eligible-pack-agent.md',
+      destination: '.agents/agents/eligible-pack-agent.md',
+      scopes: ['project', 'user'] as const,
+      ownership: { project: 'managed' as const, user: 'managed' as const },
+      userMaterializable: true,
+    };
+    const research = {
+      ...getPackDefinition('research'),
+      assets: [...getPackDefinition('research').assets, eligible],
+    };
+
+    const entries = await scanBundledManagedAgents({
+      scopeRoot,
+      assetsRoot,
+      manifest: [research],
+      inventoryPack: async () => ({
+        pack: 'research',
+        scope: 'user',
+        intent: {
+          pack: 'research',
+          scope: 'user',
+          enabled: true,
+          direct: true,
+          requiredBy: [],
+          state: 'direct',
+          source: 'declared',
+          configPath: join(scopeRoot, '.oat', 'config.json'),
+          diagnostics: [],
+        },
+        completeness: 'partial',
+        assets: [
+          {
+            definition: eligible,
+            path: join(scopeRoot, eligible.destination),
+            status: 'current',
+            installedVersion: null,
+            bundledVersion: null,
+          },
+        ],
+        diagnostics: [],
+      }),
+    });
+
+    expect(entries.map(({ name }) => name)).toEqual([
+      'oat-phase-implementer.md',
+      'oat-reviewer.md',
+      'eligible-pack-agent.md',
+    ]);
+    expect(entries.map(({ name }) => name)).not.toContain(
+      'undeclared-agent.md',
+    );
+
+    const absent = await scanBundledManagedAgents({
+      scopeRoot,
+      assetsRoot,
+      manifest: [research],
+      inventoryPack: async () => ({
+        pack: 'research',
+        scope: 'user',
+        intent: {
+          pack: 'research',
+          scope: 'user',
+          enabled: true,
+          direct: true,
+          requiredBy: [],
+          state: 'direct',
+          source: 'declared',
+          configPath: join(scopeRoot, '.oat', 'config.json'),
+          diagnostics: [],
+        },
+        completeness: 'absent',
+        assets: [
+          {
+            definition: eligible,
+            path: join(scopeRoot, eligible.destination),
+            status: 'missing',
+            installedVersion: null,
+            bundledVersion: null,
+          },
+        ],
+        diagnostics: [],
+      }),
+    });
+    expect(absent.map(({ name }) => name)).toEqual([
+      'oat-phase-implementer.md',
+      'oat-reviewer.md',
+    ]);
+  });
+
+  it('rejects an installed user-materializable agent without its bundled source', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-scan-user-'));
+    const assetsRoot = await mkdtemp(join(tmpdir(), 'oat-scan-assets-'));
+    tempDirs.push(scopeRoot, assetsRoot);
+    await mkdir(join(assetsRoot, 'agents'), { recursive: true });
+    for (const name of USER_SCOPE_MANAGED_AGENT_FILES) {
+      await writeFile(join(assetsRoot, 'agents', name), `# ${name}\n`, 'utf8');
+    }
+    const eligible = {
+      id: 'agent:missing-pack-agent.md',
+      kind: 'agent' as const,
+      source: 'agents/missing-pack-agent.md',
+      destination: '.agents/agents/missing-pack-agent.md',
+      scopes: ['project', 'user'] as const,
+      ownership: { project: 'managed' as const, user: 'managed' as const },
+      userMaterializable: true,
+    };
+    const research = {
+      ...getPackDefinition('research'),
+      assets: [...getPackDefinition('research').assets, eligible],
+    };
+
+    await expect(
+      scanBundledManagedAgents({
+        scopeRoot,
+        assetsRoot,
+        manifest: [research],
+        inventoryPack: async () => ({
+          pack: 'research',
+          scope: 'user',
+          intent: {
+            pack: 'research',
+            scope: 'user',
+            enabled: true,
+            direct: true,
+            requiredBy: [],
+            state: 'direct',
+            source: 'declared',
+            configPath: join(scopeRoot, '.oat', 'config.json'),
+            diagnostics: [],
+          },
+          completeness: 'complete',
+          assets: [
+            {
+              definition: eligible,
+              path: join(scopeRoot, eligible.destination),
+              status: 'current',
+              installedVersion: null,
+              bundledVersion: null,
+            },
+          ],
+          diagnostics: [],
+        }),
+      }),
+    ).rejects.toThrow('Bundled user-materializable agent definition');
   });
 
   it('returns empty array when .agents/ does not exist', async () => {
