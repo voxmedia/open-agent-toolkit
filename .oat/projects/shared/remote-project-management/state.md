@@ -1,7 +1,8 @@
 ---
 oat_current_task: p03-t01
 oat_last_commit: eed80d5ab6b297d19da4569ca9963e25fd53b57d
-oat_blockers: []
+oat_blockers:
+  - 'p02 terminal review: punctuation-delimited credential assignments bypass snapshot, preview, and approval-evidence safety boundaries'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -28,7 +29,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T15:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,9 +41,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all nine Phase 2 tasks, one bounded composition recovery, and
-two bounded review-fix rounds are complete. Phase-wide verification passed;
-the final independent re-review is next.
+Implementation — Phase 2 tasks and two bounded review-fix rounds are complete,
+but the third and final normal independent review is blocked by one remaining
+Critical credential-safety finding. Phase 3 has not started.
 
 ## Artifacts
 
@@ -97,11 +98,17 @@ the final independent re-review is next.
 - ✓ Phase 2 review round 1 Critical and Important findings fixed in
   `bbbb3857c`
 - ✓ Phase 2 review round 2 Critical findings fixed in `eed80d5ab`
+- ⚠ Phase 2 final normal review blocked with 1 Critical and 2 Medium findings
 
 ## Blockers
 
-None.
+- Phase 2 exhausted its normal three-review governance cycle. Parenthesized and
+  other punctuation-delimited credential assignments can bypass snapshot,
+  concise-preview, and approval-evidence detection. See
+  `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`.
 
 ## Next Milestone
 
-Run the final independent Phase 2 implementation re-review.
+Obtain operator direction for an additional bounded Phase 2 fix/review cycle.
+Before any Phase 3 dispatch, amend the future-phase artifacts to preserve the
+runtime-discovered MCP/CLI boundary confirmed on 2026-08-31.

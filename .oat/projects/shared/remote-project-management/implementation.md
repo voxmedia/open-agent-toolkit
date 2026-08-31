@@ -27,7 +27,7 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 10    | 10/10     |
-| Phase 2 | completed | 9     | 9/9       |
+| Phase 2 | blocked   | 9     | 9/9       |
 | Phase 3 | pending   | 12    | 0/12      |
 | Phase 4 | pending   | 11    | 0/11      |
 | Phase 5 | pending   | 9     | 0/9       |
@@ -697,6 +697,10 @@ phase_base_head: 062ad12d5abefad2ec52c6db0603f3bb47bdabbd
 phase_head: eed80d5ab6b297d19da4569ca9963e25fd53b57d
 recovery_usage: 1/10
 pending_attempt: null
+review_cycles: 3/3
+review_fix_loops: 2
+phase_outcome: blocked
+terminal_review_artifact: reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
     reason: bounded fixes for Phase 2 round-1 Critical and Important review findings
@@ -711,6 +715,40 @@ continuation_events:
 ```
 
 **Dispatch stamp:** Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Independent review and bounded fixes
+
+| Round | Request                        | Artifact                                                       | Findings                          | Outcome                      |
+| ----- | ------------------------------ | -------------------------------------------------------------- | --------------------------------- | ---------------------------- |
+| 1     | `review-p02-20260831T135618Z`  | `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`       | 1 Critical, 2 Important, 2 Medium | blocked; fix `bbbb3857c`     |
+| 2     | `review-p02-r2-20260831T1450Z` | `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`     | 2 Critical, 0 Important, 2 Medium | blocked; fix `eed80d5ab`     |
+| 3     | `review-p02-r3-20260831T1505Z` | `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md` | 1 Critical, 0 Important, 2 Medium | terminal normal-review BLOCK |
+
+- All five blockers from rounds 1 and 2 are resolved. The remaining Critical
+  finding is a punctuation-delimited credential-assignment bypass shared by
+  snapshot sanitization, concise preview rendering, and approval evidence.
+- Review-fix usage is 2/2 and normal review governance is 3/3. Any further
+  Phase 2 repair/review cycle requires explicit operator direction.
+- Every reviewer reported `**Reconnaissance:** not-attempted`; none of the
+  three review artifacts contains a `## Review Orchestration` section.
+
+#### Approved future-phase boundary correction
+
+- Source: inline operator clarification on 2026-08-31.
+- MCP and connector execution must remain host-agent capability discovery:
+  inspect currently granted tools and their live descriptions/schemas at
+  runtime, perform the requested semantic action, and return sanitized
+  evidence.
+- If no eligible MCP/connector tool exists, the host agent may inspect an
+  available configured CLI and its help/schema before the first write.
+- Future phases must not hard-code provider MCP tool names, native MCP argument
+  schemas, captured provider catalogs, or exhaustive ticket-operation mappings
+  in CLI code, skills, or tests. Retain only provider-neutral semantic
+  envelopes plus tests for authority, redaction, durable state, fail-closed
+  capability handling, and postcondition verification.
+- Existing `design.md` and future `plan.md` tasks p03-p06 must be amended and
+  reviewed under the plan-writing contract before Phase 3 dispatch. This
+  correction does not rewrite completed p01/p02 history.
 
 <!-- orchestration-runs-end -->
 
