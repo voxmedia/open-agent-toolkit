@@ -41,6 +41,39 @@ lexicographically, array order preserved, no insignificant whitespace, and
 SHA-256 with the `sha256:` prefix. The fingerprint covers every selection and
 execution axis in the approval envelope.
 
+## One Validation Boundary
+
+Version 1 compiles persisted packet inputs exactly once into one non-persisted,
+deeply immutable `ValidatedRun`. This value is an internal normalized graph,
+not an artifact kind, schema version, file, cache, or caller-selectable profile.
+Assurance derivation and rendering accept only `ValidatedRun`; they never
+reopen or independently reinterpret raw manifest, ledger, review, receipt, or
+reconciliation artifacts.
+
+Construction is all-or-nothing. A valid graph contains:
+
+- one complete canonical approval envelope with every provider, model, effort,
+  reasoning, service-tier, route, role, authority, deadline, retry,
+  concurrency, wave, lane, and execution-cap axis;
+- one exact approved wave/lane topology, with one terminal stage and matching
+  accepted/completed receipt resolution for every required lane;
+- exactly one terminal reconciliation for standard or thorough runs and one
+  immutable canonical prior-ledger identity used by all review, transition,
+  addition, and removal checks;
+- canonical absolute realpaths for the packet, repository, file, capture,
+  command-output, and publication trust roots, rechecked before use;
+- only secret-safe persisted evidence and diagnostics, including ineligible
+  audit evidence;
+- material gaps derived from stale, invalid, or unavailable canonical sources,
+  with exact affected-claim coverage and legal assurance downgrades; and
+- derived claim assurance, achieved profile, material gaps, and publication
+  status.
+
+Reject partial approval envelopes, omitted receipt axes, unknown selection
+shapes, duplicate or shadow reconciliation results, symlink root aliases,
+retargeted roots, raw secret-bearing stale excerpts, and caller-downgraded gap
+materiality. Equivalent-looking inputs do not excuse a failed invariant.
+
 ## Manifest
 
 `recon.packet-manifest` version 1 contains:
@@ -70,15 +103,19 @@ can contribute to achieved rigor.
 ## Source Descriptors and Locators
 
 All source descriptors carry `kind`, stable `id`, `available`, `authority`,
-`observedAt`, and `validationState`.
+`observedAt`, and `validationState`. Every declared path trust root must be an
+absolute canonical realpath, not a symlink alias, and its filesystem identity is
+rechecked before reads, hashes, or publication.
 
 Validation state is closed to `pinned`, `unpinned`, `stale`, `invalid`, or
 `unavailable`. Only an available `pinned` source is assurance-eligible;
 everything else requires an explicit affected-source/claim gap. A stale,
-invalid, or unavailable source may remain as auditable non-exact evidence when
-one material gap names that source and every affected claim and all affected
-claims are below `supported`; missing coverage or a stronger claim state
-remains invalid.
+invalid, or unavailable source used by the canonical ledger deterministically
+creates a material gap and forces `partial`. It may remain as auditable
+non-exact evidence only when that gap names the source and every affected claim,
+all affected claims are below `supported`, and every persisted excerpt and
+diagnostic is secret-safe. Caller-declared non-materiality, missing coverage,
+or a stronger claim state is invalid.
 
 - `repository`: canonical `root`, revision, dirty state, and per-path content
   hashes. Locator: relative path, matching revision, line start/end.
@@ -143,6 +180,8 @@ Validate a sensitive source span transiently, redact before persistence, and
 store `redaction.applied: true`, categories, and
 `redaction.originalPersisted: false`. `redacted-exact` stores neither the secret
 nor a digest of the sensitive span. Diagnostics must never echo the span.
+Secret scanning precedes every assurance, ineligible-audit, gap, and render
+branch; source ineligibility never bypasses persistence safety.
 
 ## Other Artifacts
 
@@ -180,16 +219,30 @@ Run `scripts/validate-artifact.mjs` on every candidate. Use
 record under `raw/quarantine/`. Never promote invalid output.
 
 Run `scripts/validate-packet.mjs <packet-dir>` before rendering or publication.
-It validates schemas, IDs, references, containment, hashes, source reopening,
-locators, approval fingerprint, legal transitions, assurance, and requested vs
-achieved profile. Structural failure removes any stale `packet.md`. Only a
-valid `complete` or honest `partial` packet is publishable.
+It delegates to the single validation boundary, which validates schemas, IDs,
+references, containment, hashes, source reopening, locators, the complete
+approval and receipt selection, exact topology, the one terminal
+reconciliation, legal transitions, secret-safe persistence, derived gaps,
+assurance, and requested vs achieved profile. Structural failure removes any
+stale `packet.md`. Only a valid `complete` or honest `partial` packet is
+publishable.
 
 `complete` requires the requested profile and no material gap. `partial` is
 valid when either a lower profile was achieved or at least one material gap is
 declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
-consumer view. It writes a temporary sibling and atomically promotes
-`packet.md` only after full validation. Its result is the directory path plus a
-compact status summary and digest, never raw dossier content.
+consumer view. Its public path entry point first obtains `ValidatedRun`; the
+render core accepts only that graph. It writes a temporary sibling and
+atomically promotes `packet.md` only after full validation. Its result is the
+directory path plus a compact status summary and digest, never raw dossier
+content.
+
+## Version 1 Non-Goals
+
+This boundary does not add another schema version, review pass, persisted
+intermediate, generalized plugin artifact kind, saved validation profile,
+provider behavior, or integration surface. It does not change p01 dispatch,
+research-pack distribution, documentation, backlog integrations,
+`quick`/`standard`/`thorough`, selective blindness, categorical claim states,
+honest partial publication, or directory-only handoff.

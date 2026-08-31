@@ -22,10 +22,12 @@ receipts, and recovery remain delegated to the existing
 
 The skill uses an artifact-first context firewall. Reconnaissance workers write
 bounded dossiers into `raw/`; a compiler constructs canonical `claims.json`;
-independent validators and adversarial workers write review results without
-receiving prior reasoning; and a final assembler emits compact `packet.md` from
-the validated ledger. The parent or expensive downstream consumer receives the
-packet path and compact completion summary, not every worker transcript.
+and independent validators and adversarial workers write review results without
+receiving prior reasoning. Before assurance or publication, one deterministic
+boundary compiles all persisted inputs exactly once into a non-persisted,
+deeply immutable `ValidatedRun`. Assurance derivation and rendering accept only
+that normalized graph. The parent or expensive downstream consumer receives
+the packet path and compact completion summary, not every worker transcript.
 
 The initial release is standalone and capability-based. It can use repository,
 git, read-only command, URL, and connected-system evidence when those sources
@@ -114,8 +116,57 @@ inputs it reviewed.
   adversarial challenge, coverage review, and—in thorough mode—redundant
   independent passes and contradiction resolution.
 - A reconciliation lane applies review dispositions to the canonical ledger.
-- Deterministic helpers validate the complete directory and render `packet.md`
-  from the ledger and manifest.
+- One deterministic validator resolves the complete directory into a
+  non-persisted immutable `ValidatedRun`; assurance and rendering never reopen
+  raw manifest artifacts independently.
+
+### ValidatedRun Boundary
+
+`ValidatedRun` is the only trusted in-memory representation of a publishable
+run. It is neither a new artifact kind nor a second packet schema. The validator
+constructs it once from the packet directory, rejects the run on any failed
+invariant, and deep-freezes the result before returning it. No intermediate
+`ValidatedRun` is written to disk.
+
+The boundary closes these v1 invariants together:
+
+1. The approval envelope is complete and canonical. Every required provider,
+   model, effort, reasoning, service-tier, route, role, authority, deadline,
+   retry, concurrency, wave, lane, and execution-cap axis is present. The same
+   normalized selection appears in approval plus every accepted and completed
+   receipt; partial envelopes and extra selection shapes are invalid.
+2. The approved wave/lane topology resolves to exactly one terminal stage and
+   accepted/completed receipt pair per required lane. Each stage has exactly
+   the typed artifact allowed for its mode. Missing, duplicate, shadow, or
+   unreceipted stage artifacts are invalid.
+3. Standard and thorough runs resolve exactly one terminal reconciliation. Its
+   canonical prior-ledger reference is the sole prior identity used for review
+   binding, transition validation, additions, and removals. Extra
+   reconciliation results are invalid, even when their shapes and claim IDs
+   appear compatible.
+4. Every packet, repository, file, capture, command-output, and publication
+   trust root is an absolute canonical realpath. A root that is itself a
+   symlink, a child symlink, or a root whose identity changes before use is
+   invalid.
+5. Persistence safety is independent of assurance eligibility. Every persisted
+   excerpt and safe diagnostic is checked for secret material before any
+   assurance, audit-retention, gap, or render branch. An ineligible source may
+   remain only as redacted non-exact audit evidence; source drift never permits
+   a raw secret to persist or render.
+6. Source ineligibility determines gap materiality. A stale, invalid, or
+   unavailable source used by the canonical ledger requires one material gap,
+   complete affected-claim coverage, a `partial` run, and claim states below
+   `supported`. Callers cannot relabel that gap non-material.
+7. Achieved profile, categorical claim assurance, material gaps, and
+   publication status are derived from this normalized graph. Downstream code
+   receives no raw manifest, ledger, review, receipt, or caller-declared status
+   from which to repeat or weaken validation.
+
+The implementation rejects flexibility at this boundary. It does not choose a
+schema based on caller input, tolerate omitted approval axes, accept symlink
+aliases for equivalent roots, preserve secret-bearing stale excerpts, select a
+convenient reconciliation by search order, or trust caller-declared gap
+materiality.
 
 The manifest records the requested profile, achieved profile, source
 capabilities, dispatch evidence, stage outcomes, and incomplete work. A valid
@@ -255,10 +306,13 @@ Bundled scripts provide three deterministic operations:
 
 - Validate individual dossiers, claims, reviews, and manifests against their
   versioned contracts.
-- Verify artifact references, hashes, allowed state transitions, and the
-  requested-versus-achieved assurance rules.
-- Render `packet.md` from the final canonical ledger and manifest, then publish
-  it atomically only when the packet passes structural validation.
+- Compile the complete run once into immutable `ValidatedRun` data after
+  verifying references, hashes, canonical roots, exact topology and receipts,
+  the terminal reconciliation, allowed transitions, secret-safe persisted
+  evidence, derived gaps, assurance, achieved profile, and status.
+- Render `packet.md` only from `ValidatedRun`, then publish it atomically. The
+  renderer cannot accept a raw manifest or ledger and cannot re-resolve packet
+  artifacts.
 
 ### Completion and Handoff
 
@@ -321,6 +375,10 @@ All JSON artifacts carry `kind` and integer `schemaVersion` fields. Run, wave,
 lane, source, evidence, claim, review, and artifact identifiers are stable
 within a packet. Canonical artifacts record the path and SHA-256 digest of
 their direct inputs.
+
+`ValidatedRun` is intentionally absent from this directory and artifact model.
+It is an internal normalized value assembled from v1 artifacts and discarded
+after assurance derivation and rendering.
 
 ### Packet Manifest
 
@@ -386,8 +444,9 @@ state, plus the minimum reopenable provenance for its source kind:
   version directly.
 
 When a source cannot supply the minimum provenance required to reopen and
-validate an exact locator, the gap is explicit and its evidence cannot advance
-a claim to `supported` or `verified`.
+validate an exact locator, the validator derives a material gap and its
+evidence cannot advance a claim to `supported` or `verified`. A caller cannot
+downgrade that materiality to retain `complete` status.
 
 Evidence is normalized into records in the claim ledger:
 
@@ -619,9 +678,10 @@ worker or controller never declares it directly.
 - `failed`: no valid canonical ledger and manifest can be published. Raw
   diagnostics may remain, but `packet.md` is absent.
 
-Rendering writes to a temporary sibling and promotes `packet.md` only after
-final validation. If rendering or promotion fails, any previous consumer packet
-is removed from publication eligibility rather than treated as current.
+Rendering accepts only an immutable `ValidatedRun`, writes to a temporary
+sibling, and promotes `packet.md` only after final validation. If validation,
+rendering, or promotion fails, any previous consumer packet is removed from
+publication eligibility rather than treated as current.
 
 ### Diagnostics
 
@@ -671,6 +731,15 @@ Unit tests use checked-in fixtures and invoke the bundled scripts directly:
   diagnostics, while `redacted-exact` evidence remains eligible according to
   its transient locator-validation disposition and persists no sensitive-span
   digest.
+- Direct mutations deleting every required approval and receipt-selection axis.
+- Shadow reconciliation mutations proving every removal check uses the one
+  terminal reconciliation and its immutable prior ledger.
+- Secret-bearing stale, invalid, and unavailable audit evidence mutations.
+- Non-material caller-declared gaps for ineligible sources under `complete`.
+- Root-symlink and post-validation retarget mutations across packet,
+  repository, file, capture, command-output, and publication roots.
+- API-boundary tests proving assurance derivation and rendering accept only
+  `ValidatedRun`, not raw or partially validated artifacts.
 
 ### Dispatch Contract Tests
 
@@ -726,3 +795,13 @@ and build gates run before completion.
 
 None. Packet schemas, artifact exchange, agent placement, pack ownership,
 dispatch approval, and first-release integration boundaries are resolved above.
+
+## Revision 1 Non-Goals
+
+This simplification does not add a schema version, a review pass, a persisted
+intermediate, generalized plugin-style artifact kinds, saved validation
+profiles, or caller-selectable validation policy. It does not change p01
+dispatch preparation, the `quick`/`standard`/`thorough` profiles, selective
+blindness, categorical claim states, honest partial publication, or the
+directory-only handoff. It also does not change research-pack distribution,
+provider behavior, documentation, project discovery, or backlog integrations.
