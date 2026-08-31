@@ -37,7 +37,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.49` (scope-adoption diagnostics, implementation complete) makes PJM
+- CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows
   config-aware active Codex/Cursor adapters, shared-owner inventory findings
@@ -49,6 +49,22 @@ copying their content here. -->
   symlinks, restart guidance, `AGENTS.md` behavior, picker truthfulness, catalog
   visibility, and dispatch provenance remain with
   `tool-pack-scope-provider-truthfulness`.
+- CLI `0.2.49` (gate-execution-contract-hardening, implementation complete;
+  pending PR/release) enforces the configured lifecycle gate contract from
+  configuration through headless completion. Recognized direct review commands
+  must use canonical `oat --json gate review` placement before any shared,
+  local, or user config write, while unknown wrappers and provider
+  `baseCommand` values remain outside the conservative classifier. A clean
+  accepted child that produces no artifact now returns the fail-closed
+  `artifact_missing` diagnosis instead of a correlation mismatch; observed
+  wrong-run or otherwise mismatched artifacts retain
+  `targeting_correlation_failed`, and neither path is receive-eligible or
+  remediable in the accepted run. Five lifecycle skills and the runner prompt
+  require synchronous completion, and a configuration-driven subprocess suite
+  proves exact stored-command success, missing-artifact failure, and wrong-run
+  mismatch. Both owned backlog items are closed, public docs are updated, and
+  the complete repository gate sequence plus configured exit-gate review
+  passed.
 - CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
   `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
   pointer correctness to `oat instructions validate`. The repository's 23
@@ -131,7 +147,7 @@ copying their content here. -->
   explicitly. All eleven repository gates and a zero-finding final closeout
   review passed. Closed `BL-260818-make-the-project-management`; the
   lifecycle/config cleanup shipped in `0.2.46` through PR #240, and the bounded
-  scope/adoption diagnostics follow-up is complete in the staged `0.2.49`
+  scope/adoption diagnostics follow-up is complete in the staged `0.2.50`
   release unit.
 - CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt

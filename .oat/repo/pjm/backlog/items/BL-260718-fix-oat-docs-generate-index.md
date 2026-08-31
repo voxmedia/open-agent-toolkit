@@ -10,9 +10,10 @@ labels:
   - dx
 assignee: null
 created: 2026-07-18T18:04:04.413Z
-updated: 2026-08-29T18:20:00.000Z
+updated: 2026-08-30T23:49:30Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-use-configured-docs-index-paths.md
 ---
 
 ## Description

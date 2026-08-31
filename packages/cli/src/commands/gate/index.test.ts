@@ -847,8 +847,10 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('does not warn for durable oat gate command references', async () => {
+  it('persists canonical oat gate review commands exactly', async () => {
     const { root, home } = await setup();
+    const configuredCommand =
+      'oat --json gate review --project "$PROJECT_PATH" --scope p03 Review the phase';
 
     const capture = await runGateCommand(
       root,
@@ -857,16 +859,90 @@ describe('oat gate', () => {
         'set',
         'oat-project-plan',
         '--command',
-        'oat gate review --target codex-default Review the plan',
+        configuredCommand,
         '--on-failure',
         'block',
+        '--layer',
+        'shared',
       ],
       [],
     );
 
     expect(capture.warn).toHaveLength(0);
+    await expect(
+      readJsonFile(join(root, '.oat', 'config.json')),
+    ).resolves.toMatchObject({
+      workflow: {
+        gates: {
+          skills: {
+            'oat-project-plan': {
+              command: configuredCommand,
+            },
+          },
+        },
+      },
+    });
     expect(process.exitCode).toBe(0);
   });
+
+  it.each([
+    { layer: 'shared', relativePath: ['.oat', 'config.json'] },
+    { layer: 'local', relativePath: ['.oat', 'config.local.json'] },
+    { layer: 'user', relativePath: ['.oat', 'config.json'], user: true },
+  ])(
+    'rejects invalid structured gate commands before mutating the $layer layer',
+    async ({ layer, relativePath, user }) => {
+      for (const json of [true, false]) {
+        const { root, home } = await setup();
+        const configPath = join(user ? home : root, ...relativePath);
+        const initialConfig = `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                existing: {
+                  command: 'pnpm test',
+                  onFailure: 'warn',
+                  maxAttempts: 2,
+                },
+              },
+            },
+          },
+        })}\n`;
+        await mkdir(dirname(configPath), { recursive: true });
+        await writeFile(configPath, initialConfig, 'utf8');
+
+        const capture = await runGateCommand(
+          root,
+          home,
+          [
+            'set',
+            'oat-project-plan',
+            '--command',
+            'oat gate review --project "$PROJECT_PATH"',
+            '--on-failure',
+            'block',
+            '--layer',
+            layer,
+          ],
+          json ? ['--json'] : [],
+        );
+
+        const expectedMessage =
+          'Configured oat gate review commands must use the structured-output contract `oat --json gate review ...`.';
+        if (json) {
+          expect(capture.jsonPayloads[0]).toMatchObject({
+            status: 'error',
+            message: expectedMessage,
+          });
+        } else {
+          expect(capture.error).toEqual([expectedMessage]);
+        }
+        expect(process.exitCode).toBe(1);
+        await expect(readFile(configPath, 'utf8')).resolves.toBe(initialConfig);
+      }
+    },
+  );
 
   it('does not warn for unrelated absolute paths inside provider command strings', async () => {
     const { root, home } = await setup();
@@ -4606,6 +4682,35 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('classifies a clean review target without an artifact as artifact missing', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      artifactPath: null,
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message: expect.stringContaining(
+        'completed without producing the required correlated review artifact',
+      ),
+      recovery: expect.stringMatching(
+        /write and finalize the review artifact before the process exits.*new gate run/i,
+      ),
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it.each([
     {
       outcome: 'success',
@@ -4643,9 +4748,9 @@ describe('oat gate', () => {
       expectedCounts: false,
     },
     {
-      outcome: 'targeting-correlation failure',
+      outcome: 'artifact-missing failure',
       childExitCode: 0,
-      expectedStatus: 'targeting_correlation_failed',
+      expectedStatus: 'artifact_missing',
       expectedExitCode: 1,
       expectedArtifact: false,
       expectedCounts: false,
@@ -5093,6 +5198,12 @@ describe('oat gate', () => {
     expect(promptModel).toBe('provider-default');
     expect(execute?.stdoutDestination).toBe('stderr');
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
+    expect(invocationPrompt).toContain(
+      'Complete the review, artifact write, and required bookkeeping inline or through a synchronously awaited child before this headless process exits.',
+    );
+    expect(invocationPrompt).toContain(
+      'Do not start background tasks, monitors, or waiters that outlive this turn.',
+    );
     expect(
       runner.calls
         .filter((call) => call.purpose !== 'execute')
@@ -7801,8 +7912,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);
@@ -7830,8 +7941,8 @@ describe('oat gate', () => {
     });
 
     expect(capture.jsonPayloads[0]).toMatchObject({
-      status: 'targeting_correlation_failed',
-      outcome: 'review_completed_targeting_correlation_failed',
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
       receiveEligible: false,
     });
     expect(process.exitCode).toBe(1);

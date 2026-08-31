@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.5
+version: 1.4.6
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -544,7 +544,13 @@ the last check before the completion boundary:
    export PROJECT_PATH
    ```
 
-   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
+   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` as part of the structured-output contract. Its canonical form is:
+
+   ```bash
+   oat --json gate review --project "$PROJECT_PATH" ...
+   ```
+
+   This requires global `--json` before `gate review`. Reusable declarations must not include `--target <id>`. Reject `oat gate review ...` without the global `--json` placement. Stop and migrate an invalid stored declaration before execution; never inject or append execution-time argv.
 
 3. Resolve the current planning parent's model identity from session context.
    When that identity is non-empty and the resolved configured command invokes

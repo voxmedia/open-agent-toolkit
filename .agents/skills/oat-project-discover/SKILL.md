@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 2.2.1
+version: 2.2.2
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
@@ -445,11 +445,18 @@ gate as the last check before the completion boundary:
    ```
 
    If the resolved command invokes `oat gate review`, the configured review
-   command must already include `--project "$PROJECT_PATH"` and must not include
-   `--target <id>`. A valid reusable shape is
-   `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is
-   missing, stop and migrate the stored gate command; do not inject or append
-   arguments at execution time.
+   command must already include `--project "$PROJECT_PATH"` as part of the
+   structured-output contract. Its canonical form is:
+
+   ```bash
+   oat --json gate review --project "$PROJECT_PATH" ...
+   ```
+
+   This requires global `--json` before `gate review`. Reusable declarations
+   must not include
+   `--target <id>`. Reject `oat gate review ...` without the global `--json`
+   placement. Stop and migrate an invalid stored declaration before execution;
+   never inject or append execution-time argv.
 
 3. Execute the resolved command exactly as configured. Capture stdout, stderr,
    the exit code, and the structured JSON result. A zero exit code means the

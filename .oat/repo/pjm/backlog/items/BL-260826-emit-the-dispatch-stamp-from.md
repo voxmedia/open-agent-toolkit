@@ -11,9 +11,10 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.455Z
-updated: 2026-08-26T22:57:19.455Z
+updated: 2026-08-30T23:55:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-emit-dispatch-stamp-with-resolver-json.md
 ---
 
 ## Description

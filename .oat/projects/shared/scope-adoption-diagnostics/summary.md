@@ -40,7 +40,7 @@ state without taking over the broader provider-by-scope model.
   stable under the full workspace gate without weakening timeout contracts.
 - PR #244's narrow PJM generated-pointer cleanup was integrated first with no
   `pjm/doctor.ts` source conflict. The lockstep public release unit and bundled
-  version map advanced to `0.2.49`, and backlog item
+  version map advanced to `0.2.50` after integrating current `origin/main`, and backlog item
   `BL-260827-correct-scope-and-adoption` was archived.
 
 ## Key Decisions

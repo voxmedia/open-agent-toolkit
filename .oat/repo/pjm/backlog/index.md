@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- External planning now distinguishes plan readiness from execution readiness:
+  well-scoped items remain eligible for dated, current-main-pinned plans while
+  hard dependencies keep execution explicitly blocked. The missing
+  `oat-repo-improve` skill and template enforcement is tracked in
+  `BL-260830-distinguish-external-plan`.
 - `BL-260830-migrate-the-legacy-pjm` completed the repository's administrative
   reference-layout cleanup: all 23 legacy decisions were migrated, 13 residual
   work records and five product-decision records received canonical backlog
@@ -193,9 +198,9 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260830-clarify-quick-mode-resume      | Clarify quick-mode resume routing from oat-project-plan                                               | open   | high     | feature    | S        |
+| BL-260830-distinguish-external-plan      | Distinguish external-plan readiness from execution readiness                                          | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
-| BL-260826-gate-targets-must-not-yield    | Gate targets must not yield on background work in headless mode                                       | open   | high     | task       | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260830-live-dogfood-oat-project-split | Live dogfood oat-project-split entry paths                                                            | open   | high     | task       | S        |
@@ -237,7 +242,6 @@
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests   | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                         | open   | medium   | task       |          |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                         | open   | medium   | task       | S        |
-| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                                            | open   | medium   | task       | M        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                            | open   | medium   | task       | S        |
 | BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                                | open   | medium   | task       | M        |
 | BL-260826-warn-on-silent-oatversion      | Warn on silent oatVersion restamps outside sync                                                       | open   | medium   | task       | S        |

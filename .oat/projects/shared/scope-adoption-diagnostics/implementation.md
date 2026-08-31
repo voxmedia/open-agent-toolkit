@@ -422,7 +422,8 @@ All 10 implementation tasks are complete. The implementation ships
 adoption-aware PJM migration, provider-aware user-agent diagnostics, precise
 shared-owner attribution, fault-tolerant inventory rendering, and targeted
 test-quality ratchets. PR #244's cleanup-first baseline is integrated without
-doctor-source overlap and the release unit is staged at `0.2.49`. A bounded
+doctor-source overlap. After PR #246 advanced `origin/main` to `0.2.49`, the
+release unit was reconciled to `0.2.50`. A bounded
 four-worker CLI Vitest cap stabilizes Git-heavy fixtures without changing
 timeout contracts, and all eight repository gates pass on the final
 implementation head. The p04 review passed, and the initial final review passed
@@ -431,6 +432,21 @@ reviewer verdict was PASS, and Thomas explicitly waived a redundant second
 review on 2026-08-30 after the artifact-only alignment. Configured closeout
 gates, approval, and the post-approval retro are complete; PR #249 remains open
 for human review.
+
+### Post-closeout `origin/main` integration
+
+On 2026-08-30, `origin/main` at `511ffff3822c` (through PR #246) was merged at
+Thomas's request. The only conflicts were generated or curated PJM/reference
+fan-in surfaces: `backlog/completed.md`, `current-state.md`, `roadmap.md`, and
+the decision index. No diagnostics implementation source conflicted. Managed
+backlog and decision indexes were regenerated through their owning CLI
+commands, PJM doctor passed all 12 checks, and the lockstep public-package
+version was advanced from the now-occupied `0.2.49` to `0.2.50`.
+
+The merged tree passed the ordered repository gates: `pnpm check`,
+`pnpm type-check`, `pnpm test`, `pnpm build`, `check:skill-bumps`, the live
+`release:check-versions` check against `origin/main`, `release:validate`, and
+`build:docs` (all exit 0).
 
 ## Explainer Outcome
 

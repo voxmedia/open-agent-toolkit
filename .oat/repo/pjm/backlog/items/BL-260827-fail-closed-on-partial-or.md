@@ -12,9 +12,10 @@ labels:
   - wave-3-follow-up
 assignee: null
 created: 2026-08-27T01:48:17.829Z
-updated: 2026-08-27T01:48:17.829Z
+updated: 2026-08-30T23:49:30Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-validate-assets-bundle-structure.md
 ---
 
 ## Description
