@@ -386,6 +386,12 @@ no findings. The exact Reviews event is marked passed and the artifact is
 archived; the bookkeeping commit will be reconciled before the generation is
 marked allowed.
 
+**Receive receipt:** Project-ref commit
+`4c3f8f50ef22376f33dc2935aa4d97786aebc1b4` corroborates the exact archived
+artifact, bound Reviews event, and review bookkeeping after the persisted
+pre-receive head. Receive is complete and the replacement configured exit-gate
+generation is `allowed/passed`.
+
 ---
 
 ## Orchestration Runs

@@ -45,9 +45,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -68,17 +68,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'sha256:1e541061e1fc4b34b10cd4468dc87fe243a179fcb3d4b038e7ecdb55b71fb77a'
   receive_source_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/final-review-2026-08-31T014107Z.md
   receive_archived_artifact: .oat/projects/synced/gate-execution-contract-hardening/reviews/archived/final-review-2026-08-31T014107Z.md
   receive_event_identity: 'final|code|final-review-2026-08-31T014107Z.md'
   receive_pre_head: 4e3be2eea753fbc0c8c1175a65be00f1364936ce
-  receive_commit: null
+  receive_commit: 4c3f8f50ef22376f33dc2935aa4d97786aebc1b4
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-08-31T01:43:43Z'
+  updated_at: '2026-08-31T01:44:49Z'
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T01:43:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T01:44:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -111,8 +111,8 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all 13 tasks are complete and the fresh final decision review
-passed; the replacement configured exit gate is next.
+Implementation — all 13 tasks, the fresh final decision review, and the
+replacement configured exit gate passed; final approval is pending.
 
 ## Artifacts
 
@@ -151,7 +151,8 @@ passed; the replacement configured exit gate is next.
 - ✓ Reconciliation review fixes p03-t06 through p03-t08 completed and verified
 - ✓ Residual ownership-artifact fix p03-t09 completed and verified
 - ✓ Narrowed final decision re-review passed with zero findings
-- ⧗ Replacement configured implementation exit gate pending
+- ✓ Replacement configured implementation exit gate passed and was received
+- ⧗ Awaiting final HiLL approval
 
 ## Blockers
 
@@ -159,5 +160,5 @@ None
 
 ## Next Milestone
 
-Run a fresh configured implementation exit gate before returning to final
-approval.
+Approve or defer the final p03 HiLL checkpoint. Approval completes the
+implementation lifecycle while leaving PR #246 open and unmerged.
