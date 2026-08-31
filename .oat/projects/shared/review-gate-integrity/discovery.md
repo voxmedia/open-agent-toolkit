@@ -49,7 +49,7 @@ The linked backlog items are:
   companion skill for autonomous closeouts](../../../repo/pjm/backlog/items/BL-260720-add-oat-project-complete-auto.md)
 
 The bounded structured-output and headless no-yield items were delivered by
-the completed combined quick project `gate-execution-contract-hardening`:
+the completed combined project `gate-execution-contract-hardening`:
 [`BL-260726-validate-structured-output` — Validate structured-output contract
 in gate skill commands](../../../repo/pjm/backlog/archived/BL-260726-validate-structured-output.md)
 and [`BL-260826-gate-targets-must-not-yield` — Gate targets must not yield on
@@ -193,22 +193,24 @@ validation primitives.
 **Q:** Should the structured-output and correlation work be treated as landed
 baseline, new work, or a conditional follow-up?
 
-**A:** Conditional follow-up. Dogfood and reconcile the unmerged PR first; do
-not assume its branch is part of current main.
+**A:** The completed combined gate-execution project reconciled PR #190 as
+compatibility input rather than assuming its branch was part of main.
 
-**Decision:** PR #190 is a hard compatibility boundary and the structured-output
-quick project requires a post-merge disposition.
+**Decision:** PR #190 remains a historical compatibility boundary; the
+structured-output slice was delivered by `gate-execution-contract-hardening`
+and requires no separate future disposition.
 
 ### Question 4: Is no-yield a standalone defect?
 
 **Q:** Should the headless gate child’s background/waiter behavior remain a
 quick-start project even though it changes gate surfaces used here?
 
-**A:** Yes, if the defect remains after PR #190. It is independently testable
-and can ship as a narrow diagnostic/contract correction.
+**A:** It was independently testable and shipped as the runtime phase of the
+combined `gate-execution-contract-hardening` project after PR #190
+reconciliation.
 
-**Decision:** Keep it as a linked quick project with a reconciliation gate, not
-as an uncoordinated duplicate.
+**Decision:** Treat the delivered no-yield slice as part of the sole combined
+owner, not as an independently tracked duplicate.
 
 ## Solution Space
 
@@ -273,7 +275,7 @@ exemptions are not acceptable.
 Use a two-layer defense provisionally: a clear headless contract plus runner
 classification, without authorizing replacement after child acceptance.
 Prompt-only enforcement is easy to bypass; runtime-only rejection can be
-opaque. The standalone quick project will validate the smallest safe slice.
+opaque. The completed combined project validated the smallest safe slice.
 
 ## Key Decisions
 
@@ -348,7 +350,8 @@ opaque. The standalone quick project will validate the smallest safe slice.
 - Automatically replacing an accepted worker or route after timeout/failure.
 - Provider-specific tool-pack scope/provider visibility work; that belongs to
   `tool-pack-scope-provider-truthfulness`.
-- Implementing the structured-output quick project before PR #190 disposition.
+- Reopening the delivered structured-output or no-yield slices, or recreating
+  their superseded scaffolds; the completed combined project owns them.
 - Finalizing design or starting implementation from this unvalidated dossier.
 
 ## Deferred Ideas
