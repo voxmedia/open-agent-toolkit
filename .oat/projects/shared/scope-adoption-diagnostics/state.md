@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t03
+oat_current_task: null
 oat_last_commit: 16214137968769833972c039947034fe423144ca
 oat_blockers: []
 associated_issues:
@@ -46,10 +46,12 @@ oat_generated: false
 
 ## Current Phase
 
-Final review passed the product implementation and queued one minor
-artifact-alignment task, `p04-t03`, to correct stale p04-pending summary prose.
-PR #244 remains integrated without PJM doctor source conflicts, and the release
-unit remains staged at `0.2.49`.
+All 10 implementation tasks are complete. The p04 review passed, and the
+initial final review passed product and release behavior with only minor finding
+`m1`, resolved by `p04-t03`. Thomas explicitly waived a redundant second review
+on 2026-08-30 after the artifact-only alignment. Configured closeout gates and
+approval remain. PR #244 stays integrated without PJM doctor source conflicts,
+and the release unit stays staged at `0.2.49`.
 
 ## Artifacts
 
@@ -57,7 +59,7 @@ unit remains staged at `0.2.49`.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (straight-to-plan decision)
 - **Plan:** `plan.md` (corrected after final review; explicit implementation override; 4 phases, 10 tasks)
-- **Implementation:** `implementation.md` (9/10 tasks; final review fix queued)
+- **Implementation:** `implementation.md` (10/10 tasks; closeout gates pending)
 
 ## Progress
 
@@ -93,7 +95,9 @@ unit remains staged at `0.2.49`.
 - ✓ p04 High review passed with zero findings
 - ✓ Final lifecycle review found no product defect and one Minor stale-summary
   finding
-- ⧗ p04-t03 artifact alignment and final re-review remain
+- ✓ p04-t03 aligned current terminal summaries with the authoritative ledger
+- ✓ Thomas waived a redundant second review after the artifact-only alignment
+- ⧗ Configured closeout gates and approval remain
 
 ## Blockers
 
@@ -102,5 +106,4 @@ pending attempt. The cleanup-first merge dependency is resolved.
 
 ## Next Milestone
 
-Execute `p04-t03`, re-review the final fix range, then run the configured
-implementation closeout gates before the final HiLL checkpoint.
+Run the configured implementation closeout gates, then request final approval.

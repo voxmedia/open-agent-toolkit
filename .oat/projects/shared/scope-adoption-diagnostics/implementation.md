@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: p04-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,14 +17,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 3     | 3/3       |
-| Phase 3 | completed   | 2     | 2/2       |
-| Phase 4 | in progress | 3     | 2/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 3     | 3/3       |
+| Phase 3 | completed | 2     | 2/2       |
+| Phase 4 | completed | 3     | 3/3       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -162,12 +162,14 @@ attempt.
 
 ### Task p04-t03: (review) Align terminal review summaries
 
-**Status:** pending
+**Status:** completed
 
-Final review finding `m1` requires current summary prose to reflect the
-authoritative ledger: p04 passed and only the final review-fix cycle plus
-approval-aware closeout remain. Historical orchestration snapshots stay
-unchanged.
+Final review finding `m1` is resolved: current summary prose now reflects the
+authoritative ledger, including the passed p04 review and the initial final
+review's PASS verdict for product/release behavior with only `m1`. Thomas
+explicitly waived a redundant second review on 2026-08-30 after this
+artifact-only alignment. Configured closeout gates and approval remain.
+Historical orchestration snapshots stay unchanged.
 
 ## Orchestration Runs
 
@@ -370,14 +372,18 @@ final fix range.
 
 ## Final Summary (for PR/docs)
 
-Tasks complete; awaiting p04 and final review. The implementation ships adoption-aware PJM migration,
-provider-aware user-agent diagnostics, precise shared-owner attribution,
-fault-tolerant inventory rendering, and targeted test-quality ratchets. PR
-#244's cleanup-first baseline is integrated without doctor-source overlap and
-the release unit is staged at `0.2.49`. A bounded four-worker CLI Vitest cap
-stabilizes Git-heavy fixtures without changing timeout contracts, and all
-eight repository gates pass on the final implementation head. Review and
-approval-aware closeout remain outstanding.
+All 10 implementation tasks are complete. The implementation ships
+adoption-aware PJM migration, provider-aware user-agent diagnostics, precise
+shared-owner attribution, fault-tolerant inventory rendering, and targeted
+test-quality ratchets. PR #244's cleanup-first baseline is integrated without
+doctor-source overlap and the release unit is staged at `0.2.49`. A bounded
+four-worker CLI Vitest cap stabilizes Git-heavy fixtures without changing
+timeout contracts, and all eight repository gates pass on the final
+implementation head. The p04 review passed, and the initial final review passed
+product and release behavior with only `m1`, now resolved by `p04-t03`. Final
+reviewer verdict was PASS, and Thomas explicitly waived a redundant second
+review on 2026-08-30 after the artifact-only alignment. Configured closeout
+gates and approval remain.
 
 ## References
 

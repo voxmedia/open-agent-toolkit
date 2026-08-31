@@ -635,17 +635,30 @@ reviewed head.
 **Step 2: Implement fix**
 
 Align only the current terminal summaries and progress rollups with the
-authoritative Reviews ledger: p04 passed, the final review fix is complete,
-and only re-review plus approval-aware closeout remain. Preserve historical
-orchestration snapshots unchanged.
+authoritative Reviews ledger: p04 passed, the final review fix is complete, and
+only configured closeout gates plus approval remain. Thomas explicitly waived
+a redundant second review on 2026-08-30 after the artifact-only alignment.
+Preserve historical orchestration snapshots unchanged.
 
 **Step 3: Verify**
 
 Run:
-`rg -n "p04 and final reviews pending|awaiting p04 and final review|p04 and final reviews remain" .oat/projects/shared/scope-adoption-diagnostics/{plan.md,implementation.md,state.md}`
 
-Expected: no current-summary match. Historical event prose remains unchanged
-unless it uses one of these exact stale current-summary forms.
+```bash
+if {
+  sed -n '/^## Implementation Task Summary$/,/^## References$/p' \
+    .oat/projects/shared/scope-adoption-diagnostics/plan.md
+  sed -n '/^## Progress Overview$/,/^## Current-Main Plan Revalidation$/p; /^## Phase 4:/,/^## Orchestration Runs$/p; /^## Final Summary (for PR\/docs)$/,$p' \
+    .oat/projects/shared/scope-adoption-diagnostics/implementation.md
+  sed -n '/^## Current Phase$/,$p' \
+    .oat/projects/shared/scope-adoption-diagnostics/state.md
+} | rg -n "p04 and final reviews pending|awaiting p04 and final review|p04 and final reviews remain|final re-review|re-review the final fix range"; then
+  exit 1
+fi
+```
+
+Expected: no terminal-summary match. Historical orchestration snapshots are
+explicitly outside this check and remain unchanged.
 
 Run: `pnpm exec oxfmt --check .oat/projects/shared/scope-adoption-diagnostics/{plan.md,implementation.md,state.md} && git diff --check`
 
@@ -669,7 +682,7 @@ git commit -m "fix(p04-t03): align terminal review summaries"
 | p02    | code     | passed          | 2026-08-30 | `reviews/p02-review-2026-08-30T224248Z.md`            | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
 | p03    | code     | passed          | 2026-08-30 | `reviews/p03-review-2026-08-30T225845Z.md`            | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
 | p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`   | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
-| final  | code     | fixes_added     | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md` | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
+| final  | code     | passed          | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md` | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
 | plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md`  | -                                        | -          | -                             |
@@ -678,6 +691,11 @@ git commit -m "fix(p04-t03): align terminal review summaries"
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
+
+The final reviewer returned PASS for product and release behavior with only
+artifact-alignment finding `m1`. After `p04-t03` aligned the current summaries,
+Thomas explicitly waived a redundant second review on 2026-08-30; the exact
+final event above therefore advances to `passed`.
 
 The 2026-08-30 current-main review used the initial structured review plus two
 rewrite/re-dispatch retries. The last review found one Important atomicity gap:
@@ -688,7 +706,7 @@ remains `fixes_completed`, not `passed`. Thomas explicitly approved proceeding
 with the corrected plan on 2026-08-30; that override does not rewrite the
 review result.
 
-## Implementation Complete
+## Implementation Task Summary
 
 **Summary:**
 
@@ -699,12 +717,14 @@ review result.
 
 **Total: 10 tasks**
 
-Implementation tasks are 9/10 complete. Current-main revalidation retained all
+All 10 implementation tasks are complete. Current-main revalidation retained all
 nine original tasks, adapting five without expanding into umbrella ownership;
 PR #244's cleanup-first dependency is integrated. A bounded p04 recovery capped
 CLI Vitest at four workers and made the exact `pnpm test` gate pass without
-changing timeouts or assertions. One final-review artifact-alignment task is
-queued before re-review and approval-aware closeout.
+changing timeouts or assertions. The initial final review passed product and
+release behavior and produced only `m1`; `p04-t03` resolved it, and Thomas
+explicitly waived a redundant second review on 2026-08-30. Configured closeout
+gates and approval remain.
 
 ## References
 
