@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t10
-oat_last_commit: 831e110beff1aa8065926409f4819fec834cfc3c
+oat_current_task: p03-t01
+oat_last_commit: ed0fe77585c6688726ba9ca316eed09e73bf56cc
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -28,7 +28,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T18:08:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T19:07:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -40,9 +40,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 2 is reopened at 9/10 tasks under the approved
-field-level content-safety correction. The cross-artifact revision passed its
-plan-writing review, and p02-t10 is next. Phase 3 has not started.
+Implementation — Phase 2 is complete at 10/10 tasks under the approved
+field-level content-safety correction. Its fresh independent review passed
+after one bounded fix round. Phase 3 is next and has not started.
 
 ## Artifacts
 
@@ -103,8 +103,11 @@ plan-writing review, and p02-t10 is next. Phase 3 has not started.
 - ⚠ Phase 2 operator review blocked with 2 Critical and 2 Medium findings
 - ✓ Approved field-safety and host-execution boundary revision completed and
   passed a fresh cross-artifact plan-writing review in `a9aa20d52`
-- ⧗ p02-t10 will replace the retired credential parser with bounded
-  whole-field suppression and explicit incompleteness evidence
+- ✓ p02-t10 replaced the retired credential parser with bounded whole-field
+  suppression and explicit incompleteness evidence in `8fa237bdb`
+- ✓ p02-t10 persistence compatibility fix committed as `ed0fe7758`
+- ✓ Fresh Phase 2 review passed with 0 Critical, Important, Medium, or Minor
+  findings
 
 ## Blockers
 
@@ -113,6 +116,5 @@ retired parser design; it is no longer the active requirements blocker.
 
 ## Next Milestone
 
-Implement p02-t10, run its focused and phase verification, then perform a fresh
-Phase 2 code review against the revised requirement before any Phase 3
-dispatch.
+Begin Phase 3 at p03-t01 under the reviewed provider-neutral host-execution
+contract.

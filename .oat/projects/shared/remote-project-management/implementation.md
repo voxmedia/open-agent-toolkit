@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t10
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 10    | 10/10     |
-| Phase 2 | in_progress | 10    | 9/10      |
-| Phase 3 | pending     | 12    | 0/12      |
-| Phase 4 | pending     | 11    | 0/11      |
-| Phase 5 | pending     | 9     | 0/9       |
-| Phase 6 | pending     | 10    | 0/10      |
-| Phase 7 | pending     | 10    | 0/10      |
-| Phase 8 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 10    | 10/10     |
+| Phase 2 | completed | 10    | 10/10     |
+| Phase 3 | pending   | 12    | 0/12      |
+| Phase 4 | pending   | 11    | 0/11      |
+| Phase 5 | pending   | 9     | 0/9       |
+| Phase 6 | pending   | 10    | 0/10      |
+| Phase 7 | pending   | 10    | 0/10      |
+| Phase 8 | pending   | 6     | 0/6       |
 
-**Total:** 19/78 tasks completed
+**Total:** 20/78 tasks completed
 
 ---
 
@@ -261,7 +261,7 @@ and lint passed.
 
 ## Phase 2: Reconciliation and Safety Engine
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-31T12:48:00Z
 
 ### Phase Summary
@@ -280,9 +280,14 @@ cached tasks. Before the first review, root independently reran the then-current
 
 **Approved requirements correction:** The prior parser-based implementation and
 its terminal operator-review failure remain historical evidence. The reviewed
-spec/design/plan revision at `a9aa20d52` supersedes that parser contract with
-bounded whole-field suppression for allowlisted inbound fields. p02-t10 is the
-only remaining Phase 2 task and must pass a fresh Phase 2 review before Phase 3.
+spec/design/plan revision at `a9aa20d52` superseded that parser contract with
+bounded whole-field suppression for allowlisted inbound fields. p02-t10 and its
+bounded compatibility fix are complete, and the fresh Phase 2 review passed.
+
+**Final verification:** The focused safety/schema/store suite passed 77/77 and
+the combined Phase 2 plus store suite passed 142/142 before and after the fix
+commit. Format, CLI type-check, lint, build, and diff checks passed. The passing
+re-review reported zero findings.
 
 ### Task p02-t01: Compose binding-purpose policy by intersection
 
@@ -429,18 +434,35 @@ format/build, type-check, and lint passed.
 
 ### Task p02-t10: Replace credential parsing with field-level content safety
 
-**Status:** pending
+**Status:** completed
+**Commit:** 8fa237bdbd44bde0e533662e55718a5688b85847
+**Review fix:** ed0fe77585c6688726ba9ca316eed09e73bf56cc
 
-**Planned outcome:** Replace assignment/value parsing with one conservative
-field signal. A signaled core or adapter-allowlisted extension field retains
+**Outcome:** Replaced assignment/value parsing with one conservative field
+signal. A signaled core or adapter-allowlisted extension field retains
 only a whole-field marker plus bounded field-specific incompleteness evidence.
 Concise preview and approval evidence reject the same signal, while p03-t03
 remains the universal outbound projection gate.
 
-**Artifact/code divergence before implementation:** Current code still
-implements the retired credential parser and partial redaction behavior. The
-reviewed spec, design, and plan are authoritative for p02-t10; no repository,
-worktree, Git-history, or arbitrary-file scan is authorized.
+Canonical snapshots now use schema v2. Legacy v1 records migrate
+conservatively or require refresh without trusting partially retained parser
+output. Direct schema/store callers cannot bypass the suppression invariant,
+and one shared capacity bound covers four core plus twelve extension fields.
+
+**Verification:** RED captured 34 expected failures. The initial focused suite
+passed 65/65 and Phase 2 passed 130/130. After review fix round 1, the focused
+suite passed 77/77 and Phase 2 plus store passed 142/142; format, type-check,
+lint, build, and diff checks passed.
+
+### p02-t10 Review Fix Round 1
+
+- Review artifact: `reviews/p02-review-2026-08-31T183652Z.md`
+- Findings addressed: 1 Critical and 2 Important.
+- Fix commit: `ed0fe77585c6688726ba9ca316eed09e73bf56cc`
+- Boundary: persistence-schema suppression enforcement, conservative legacy-v1
+  compatibility, and shared allowlist/evidence capacity.
+- Passing re-review: `reviews/p02-review-2026-08-31T190519Z.md` at `ed0fe7758`
+  with 0 Critical, Important, Medium, or Minor findings.
 
 ---
 
@@ -838,8 +860,56 @@ continuation_events:
 - The prior Phase 2 operator-review failure and all four review rows remain
   historical evidence. They are not the active requirements blocker and do not
   authorize retaining or extending the retired parser.
-- Phase 2 is reopened at 9/10 tasks. p02-t10 is the next task, followed by a
-  fresh independent Phase 2 code review before any Phase 3 dispatch.
+- Phase 2 was reopened at 9/10 tasks with p02-t10 next and a fresh independent
+  Phase 2 code review required before any Phase 3 dispatch.
+
+### Run 3 — Phase p02 approved boundary resumption
+
+```yaml
+request_id: implement-p02-resume-20260831T1810Z
+caller: oat-project-implement
+scope: p02
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+provider: codex
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+phase_base_head: 7e2fc1785ee5689a8d3df1719202a4ecb9fd7b8b
+phase_head: ed0fe77585c6688726ba9ca316eed09e73bf56cc
+task_commit: 8fa237bdbd44bde0e533662e55718a5688b85847
+review_fix_commit: ed0fe77585c6688726ba9ca316eed09e73bf56cc
+recovery_usage: 1/10
+pending_attempt: null
+review_cycles: 2/3
+review_fix_loops: 1/3
+phase_outcome: passed
+continuation_events:
+  - id: review-fix-p02-boundary-r1-20260831T1840Z
+    reason: bounded fixes for 1 Critical and 2 Important p02-t10 review findings
+    target: oat-phase-implementer-gpt-5-6-sol-high
+    outcome: done
+    commit: ed0fe77585c6688726ba9ca316eed09e73bf56cc
+```
+
+**Implementation dispatch:** Dispatch: scope=p02 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+**Review outcomes:**
+
+| Round | Request                                       | Artifact                                   | Findings                             | Outcome                  |
+| ----- | --------------------------------------------- | ------------------------------------------ | ------------------------------------ | ------------------------ |
+| 1     | `review-p02-boundary-revision-20260831T1830Z` | `reviews/p02-review-2026-08-31T183652Z.md` | 1 Critical, 2 Important              | blocked; fix `ed0fe7758` |
+| 2     | `review-p02-boundary-r2-20260831T1900Z`       | `reviews/p02-review-2026-08-31T190519Z.md` | 0 Critical, Important, Medium, Minor | passed                   |
+
+- Both reviewers reported `**Reconnaissance:** not-attempted`; neither review
+  artifact contains a `## Review Orchestration` section.
+- Phase 2 completed at 10/10 tasks. p03-t01 is next.
 
 <!-- orchestration-runs-end -->
 
@@ -872,6 +942,7 @@ Chronological log of implementation progress.
 - [x] p02-t07: Bind previews and approvals to load-bearing inputs - 8fcda73d5a0e5ca3747488b3cd94ecdfbdba8351
 - [x] p02-t08: Implement operation and substep state reduction - 2e7496aab1941d017696bdaa513cf16ab5bd7666
 - [x] p02-t09: Verify postconditions and block blind retries - 933ba8f1479d3c0d90a0caec98bf7a821d2dd011
+- [x] p02-t10: Replace credential parsing with field-level content safety - 8fa237bdbd44bde0e533662e55718a5688b85847 (review fix ed0fe77585c6688726ba9ca316eed09e73bf56cc)
 
 **What changed (high level):**
 
@@ -934,7 +1005,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage |
 | ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | -------- |
 | 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed   |
-| 2     | -                                                                                    | -                                      | -      | -        |
+| 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed   |
 
 ## Final Summary (for PR/docs)
 
