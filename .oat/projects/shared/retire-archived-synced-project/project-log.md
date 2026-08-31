@@ -100,6 +100,10 @@ Correction to the immediately preceding HiLL checkpoint phase timing entry: the 
 
 Corrected checkpoint timing: oat_hill_checkpoints [p04] is evaluated after p04 completes, not before it starts. Phase p04 now begins from combined head 067a3683e; the prior pause was workflow interpretation error, and the language-strengthening feedback is recorded in this log.
 
+### 2026-08-31 · structural · oat-project-implement · p04-passed
+
+Phase p04 passed at 7d9e9e77275a9ffb09ec0989662ec2954b257960 after one bounded p02 backstop correction at 09c05e22c; final review artifact reviews/p04-review-2026-08-31T170239Z.md reports zero findings. Evidence includes 157/157 scoped tests, uncached CLI 4714/4714 and control-plane 78/78, plus all repository, release, docs, lint, format, and skill-validation gates.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

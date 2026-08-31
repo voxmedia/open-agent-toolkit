@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 2     | 2/2       |
-| p02   | completed   | 3     | 3/3       |
-| p03   | completed   | 3     | 3/3       |
-| p04   | in progress | 2     | 0/2       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 3     | 3/3       |
+| p04   | completed | 2     | 2/2       |
 
-**Total:** 8/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ---
 
@@ -102,18 +102,21 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ## Phase 4: Integration, Documentation, and Release Validation
 
-**Status:** in progress
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Task p04-t01: Prove the terminal lifecycle end to end
 
-**Status:** in progress
-**Commit:** -
+**Status:** completed
+**Commit:** 978f448931e4a298caf735699ba8b6b75e492e9b
 
 ### Task p04-t02: Document, version, and validate the shipped contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7d9e9e77275a9ffb09ec0989662ec2954b257960
+**Integration correction:** `09c05e22cff29b1de838a1e2d039d260c1aeb0d9`
+updated stale p02 completion-contract backstops discovered by the uncached
+combined test run; no runtime source changed.
 
 ---
 
@@ -255,6 +258,23 @@ _Orchestration runs from `oat-project-implement` are appended here._
   anchors for pull, links, and prune before full validation.
 - The configured Cursor Fable exit gate remains deferred until p04
   implementation, review, and repository gates are complete.
+- p04-t01 committed at `978f448931e4a298caf735699ba8b6b75e492e9b`;
+  p04-t02 committed at `7d9e9e77275a9ffb09ec0989662ec2954b257960`.
+- The uncached combined suite exposed stale p02 contract backstops. The
+  separately bounded test-only correction committed at
+  `09c05e22cff29b1de838a1e2d039d260c1aeb0d9` and passed 223/223 focused tests.
+- Verification passed: p04 157/157; uncached CLI 4714/4714 and control-plane
+  78/78; repository check, type-check, test, build, skill-bump, release,
+  docs-build, lint, format, and skill validation all exited 0. The first full
+  test run had one SIGTERM cleanup timeout; the single no-edit rerun passed all
+  140 smoke tests.
+- Review artifact: `reviews/p04-review-2026-08-31T170239Z.md`.
+- Review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`.
+- Review target: `oat-reviewer-gpt-5-6-sol-high`.
+- Optional nested dispatches: none.
+- Outstanding item: final whole-project review, configured Cursor Fable exit
+  gate, and the post-p04 HiLL checkpoint.
 
 <!-- orchestration-runs-end -->
 
@@ -280,12 +300,12 @@ That generation passed after one fix round and p02 is now merged.
 
 ## Test Results
 
-| Phase | Tests Run         | Passed | Failed | Coverage                                  |
-| ----- | ----------------- | ------ | ------ | ----------------------------------------- |
-| p01   | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery |
-| p02   | 162 focused tests | 162    | 0      | Archive transaction and completion retry  |
-| p03   | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune    |
-| p04   | -                 | -      | -      | -                                         |
+| Phase | Tests Run         | Passed | Failed | Coverage                                   |
+| ----- | ----------------- | ------ | ------ | ------------------------------------------ |
+| p01   | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery  |
+| p02   | 162 focused tests | 162    | 0      | Archive transaction and completion retry   |
+| p03   | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune     |
+| p04   | 157 scoped tests  | 157    | 0      | End-to-end retirement and release contract |
 
 ## Final Summary (for PR/docs)
 
