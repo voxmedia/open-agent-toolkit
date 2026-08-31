@@ -18,7 +18,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
@@ -73,6 +73,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: pending
   approval_source: null
   post_approval: []
@@ -81,29 +82,23 @@ oat_post_implement_sequence:
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: ready
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/249'
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T01:59:17Z'
+oat_project_state_updated: '2026-08-31T02:23:39Z'
 oat_generated: false
 ---
 
 # Project State: Scope and Adoption Diagnostics
 
-**Status:** Implementation in progress
+**Status:** PR open
 **Started:** 2026-08-27
 **Last Updated:** 2026-08-30
 
 ## Current Phase
 
-All 10 implementation tasks are complete. The p04 review passed, and the
-initial final review passed product and release behavior with only minor finding
-`m1`, resolved by `p04-t03`. Thomas explicitly waived a redundant second review
-on 2026-08-30 after the artifact-only alignment. The operator-selected Cursor
-Fable exit gate passed with zero findings and was durably received;
-approval-aware closeout remains. PR #244 stays integrated without PJM doctor
-source conflicts, and the release unit stays staged at `0.2.49`.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -151,6 +146,8 @@ source conflicts, and the release unit stays staged at `0.2.49`.
 - ✓ Thomas waived a redundant second review after the artifact-only alignment
 - ✓ Cursor Fable implementation exit gate passed with zero findings and was
   durably received
+- ✓ PR created
+- ⧗ Awaiting human review
 - ⧗ Approval-aware closeout remains
 
 ## Blockers
@@ -162,4 +159,8 @@ attempt. The cleanup-first merge dependency is resolved.
 
 ## Next Milestone
 
-Run the configured approval-aware closeout sequence and request final approval.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
