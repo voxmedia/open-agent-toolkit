@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -68,27 +68,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:53:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T01:29:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: recon-skill
 
-**Status:** Plan
+**Status:** Plan complete
 **Started:** 2026-08-30
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation planning - Drafting and independent review in progress
+Planning complete - Ready for implementation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
-- **Plan:** `plan.md` (drafting)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete; independent and external reviews passed)
+- **Implementation:** `implementation.md` (initialized; starts at p01-t01)
 
 ## Progress
 
@@ -102,7 +102,11 @@ Implementation planning - Drafting and independent review in progress
 - ✓ Remaining design sections completed
 - ✓ Independent design self-review passed after bounded corrections
 - ✓ Discovery marked complete for quick-start planning
-- ⧗ Drafting the implementation plan
+- ✓ Implementation plan drafted with 4 phases and 11 tasks
+- ✓ Independent plan self-review passed after bounded corrections
+- ✓ External plan gate passed after one corrective review round
+- ✓ Gate artifacts received and archived with residual risk disposition
+- ✓ Implementation tracking initialized at p01-t01
 
 ## Blockers
 
@@ -110,4 +114,4 @@ None
 
 ## Next Milestone
 
-Complete independent plan review and the configured external plan review gate
+Begin implementation with `oat-project-implement` at p01-t01

@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-08-31
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
@@ -850,7 +850,7 @@ git commit -m "chore(p04-t02): prepare recon release"
 | design    | artifact | passed          | 2026-08-31 | `reviews/design-self-review-2026-08-31T005342Z.md`            | -             | -          | -           |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/plan-self-review-2026-08-31T011150Z.md`              | -             | -          | -           |
 | plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md` | -             | -          | -           |
-| plan      | artifact | received        | 2026-08-31 | `reviews/artifact-plan-review-2026-08-31T012704Z.md`          | -             | -          | -           |
+| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md` | -             | -          | -           |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
@@ -860,6 +860,12 @@ unknown trailing cells.
 Status progression is `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. In quick mode the `spec` row remains as the
 required review-table placeholder; there is no spec artifact to review.
+
+Final gate residual disposition: the single Minor accepted-risk note concerns
+the intentional harness rule that leaves process `HOME` unchanged. New
+bundle-tier tests inject temporary user, scope, and asset roots; if an unrelated
+pre-existing bundle-tier test fails locally, maintainer-template resolution is
+the first diagnostic suspect. No plan change or implementation task is needed.
 
 ## Implementation Complete
 
