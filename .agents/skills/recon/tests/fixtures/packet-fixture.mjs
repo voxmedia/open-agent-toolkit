@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import {
   hashCanonicalJson,
@@ -14,12 +14,21 @@ async function writeJson(path, value) {
 export async function createPacketFixture({
   profile = 'standard',
   status = 'complete',
+  requestedProfile = profile,
+  achievedProfile = profile,
+  roots,
 } = {}) {
-  const tempRoot = await mkdtemp(join(tmpdir(), 'recon-render-'));
-  const packetRoot = join(tempRoot, 'packet');
-  const sourcePath = join(tempRoot, 'source.txt');
+  const tempRoot = roots
+    ? resolve(dirname(roots.packetRoot))
+    : await mkdtemp(join(tmpdir(), 'recon-render-'));
+  const packetRoot = roots
+    ? resolve(roots.packetRoot)
+    : join(tempRoot, 'packet');
+  const sourceRoot = roots ? resolve(roots.sourceRoot) : tempRoot;
+  const sourcePath = join(sourceRoot, 'source.txt');
   await mkdir(join(packetRoot, 'raw', 'dossiers'), { recursive: true });
   await mkdir(join(packetRoot, 'reviews', 'briefs'), { recursive: true });
+  await mkdir(sourceRoot, { recursive: true });
   await writeFile(sourcePath, 'alpha evidence\nbeta context\n', 'utf8');
 
   const dossierPath = join(packetRoot, 'raw', 'dossiers', 'gather.json');
@@ -53,7 +62,7 @@ export async function createPacketFixture({
     path: sourcePath,
     contentHash: await hashFile(sourcePath),
   };
-  const claimStatus = profile === 'quick' ? 'supported' : 'verified';
+  const claimStatus = achievedProfile === 'quick' ? 'supported' : 'verified';
   const ledger = {
     kind: 'recon.claim-ledger',
     schemaVersion: 1,
@@ -94,7 +103,7 @@ export async function createPacketFixture({
         evidence: [{ evidenceId: 'evidence-1', relation: 'supports' }],
         qualifications: ['Scoped to source-1.'],
         reviewIds:
-          profile === 'quick'
+          achievedProfile === 'quick'
             ? []
             : ['review-semantic', 'review-adversarial', 'review-coverage'],
         derivedFrom: [dossierRef],
@@ -119,7 +128,7 @@ export async function createPacketFixture({
     transitions: [
       {
         claimId: 'claim-1',
-        from: profile === 'quick' ? 'provisional' : 'supported',
+        from: achievedProfile === 'quick' ? 'provisional' : 'supported',
         to: claimStatus,
       },
       { claimId: 'claim-2', from: 'provisional', to: 'contested' },
@@ -144,9 +153,9 @@ export async function createPacketFixture({
     'contradiction-resolution',
   ];
   const stageModes =
-    profile === 'quick'
+    achievedProfile === 'quick'
       ? quickStages
-      : profile === 'thorough'
+      : achievedProfile === 'thorough'
         ? thoroughStages
         : standardStages;
   const approvalEnvelope = {
@@ -165,8 +174,8 @@ export async function createPacketFixture({
       id: 'run-render',
       topic: 'render fixture',
       status,
-      requestedProfile: profile,
-      achievedProfile: profile,
+      requestedProfile,
+      achievedProfile,
       createdAt: '2026-08-31T00:00:00.000Z',
       updatedAt: '2026-08-31T00:02:00.000Z',
     },
