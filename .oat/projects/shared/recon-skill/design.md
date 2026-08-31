@@ -234,7 +234,232 @@ parent response.
 
 ## Data Models
 
-_Pending collaborative review._
+### Packet Directory Contract
+
+Every structurally publishable run has the same top-level shape:
+
+```text
+<topic>-<run-id>/
+├── packet.md
+├── manifest.json
+├── claims.json
+├── reviews/
+│   ├── locator-validation.json
+│   ├── semantic/
+│   ├── adversarial/
+│   ├── coverage/
+│   └── reconciliation.json
+└── raw/
+    ├── dossiers/
+    ├── drafts/
+    ├── dispatch/
+    └── failure.json          # only when a stage fails
+```
+
+`manifest.json` and `claims.json` are the canonical machine-readable
+interfaces. `packet.md` is a deterministic consumer view of those files.
+`reviews/` contains compact assurance evidence. `raw/` contains worker-facing
+intermediates and is not part of the normal consumption path. A structural
+failure may leave `manifest.json` and `raw/failure.json`, but it must not leave
+a misleading `packet.md`.
+
+All JSON artifacts carry `kind` and integer `schemaVersion` fields. Run, wave,
+lane, source, evidence, claim, review, and artifact identifiers are stable
+within a packet. Canonical artifacts record the path and SHA-256 digest of
+their direct inputs.
+
+### Packet Manifest
+
+The manifest is the run and provenance index:
+
+```ts
+interface PacketManifest {
+  kind: 'recon.packet-manifest';
+  schemaVersion: 1;
+  run: {
+    id: string;
+    topic: string;
+    status:
+      | 'preparing'
+      | 'awaiting-approval'
+      | 'running'
+      | 'complete'
+      | 'partial'
+      | 'failed';
+    requestedProfile: 'quick' | 'standard' | 'thorough';
+    achievedProfile: 'quick' | 'standard' | 'thorough' | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  request: ReconRequest;
+  sources: SourceDescriptor[];
+  execution: ExecutionEnvelope;
+  stages: StageResult[];
+  artifacts: ArtifactReference[];
+  gaps: Gap[];
+}
+```
+
+`ReconRequest` stores the objective, explicit questions, included and excluded
+scope, caller context references, selected profile, and confirmed output path.
+It does not copy large caller content when a stable path or resource identifier
+is available.
+
+`ExecutionEnvelope` references the prepared dispatch records and records the
+exact selected provider, model, effort, reasoning mode, service tier, route,
+role selector, planned lanes, conditional lane caps, concurrency, authority,
+deadlines, and retry policy. Approval stores the SHA-256 fingerprint of the
+canonical envelope and its approval time. Execution is valid only while that
+fingerprint still matches; dispatch receipts are separate immutable artifacts
+referenced by path and digest.
+
+### Sources and Evidence Locators
+
+Each `SourceDescriptor` declares a stable source ID, source kind, availability,
+authority boundary, observation time, and locator semantics. Repository
+descriptors additionally preserve canonical root, revision, dirty state, and
+relevant snapshot or content hashes.
+
+Evidence is normalized into records in the claim ledger:
+
+```ts
+interface EvidenceRecord {
+  id: string;
+  sourceId: string;
+  locator: EvidenceLocator;
+  excerpt: string;
+  observedAt: string;
+  contentHash?: string;
+  provenance: ArtifactReference;
+}
+
+type EvidenceLocator =
+  | {
+      kind: 'repository';
+      path: string;
+      revision: string;
+      lineStart: number;
+      lineEnd: number;
+    }
+  | {
+      kind: 'file';
+      path: string;
+      lineStart?: number;
+      lineEnd?: number;
+    }
+  | {
+      kind: 'url';
+      url: string;
+      retrievedAt: string;
+      fragment?: string;
+    }
+  | {
+      kind: 'command-output';
+      artifactPath: string;
+      lineStart: number;
+      lineEnd: number;
+      commandDigest: string;
+    }
+  | {
+      kind: 'connected-resource';
+      system: string;
+      resourceId: string;
+      fieldOrSection?: string;
+      retrievedAt: string;
+    };
+```
+
+Repository and file locators resolve against their `SourceDescriptor`, allowing
+the manifest to carry the canonical root while claims retain concise exact
+paths and lines. Unsupported source types may be added only through a new
+versioned locator variant, not an untyped string.
+
+### Canonical Claim Ledger
+
+`claims.json` contains both the synthesis and its auditable evidence graph:
+
+```ts
+interface ClaimLedger {
+  kind: 'recon.claim-ledger';
+  schemaVersion: 1;
+  runId: string;
+  revision: number;
+  inputArtifacts: ArtifactReference[];
+  synthesis: {
+    answer: string;
+    keyClaimIds: string[];
+    caveats: string[];
+    unresolvedQuestionIds: string[];
+  };
+  evidence: EvidenceRecord[];
+  claims: Claim[];
+  unresolvedQuestions: UnresolvedQuestion[];
+}
+
+interface Claim {
+  id: string;
+  statement: string;
+  status:
+    | 'provisional'
+    | 'supported'
+    | 'verified'
+    | 'contested'
+    | 'unresolved'
+    | 'unsupported';
+  evidence: Array<{
+    evidenceId: string;
+    relation: 'supports' | 'contradicts' | 'qualifies' | 'context';
+  }>;
+  qualifications: string[];
+  reviewIds: string[];
+  derivedFrom: ArtifactReference[];
+}
+```
+
+Statuses are categorical, never numeric confidence scores:
+
+- `provisional`: compiled but not yet mechanically validated.
+- `supported`: evidence and locators validate, without completed independent
+  semantic verification.
+- `verified`: an independent semantic pass reopened the cited sources and
+  affirmed the claim without unresolved material challenge.
+- `contested`: credible counterevidence or incompatible interpretations remain.
+- `unresolved`: available evidence cannot settle the claim.
+- `unsupported`: the proposed claim lacks valid supporting evidence or failed
+  verification.
+
+Quick packets may reach `supported` but never `verified`. Standard and thorough
+packets may reach `verified` only through recorded independent review. Review
+workers propose dispositions; only reconciliation writes the next canonical
+ledger revision.
+
+### Raw Dossiers and Review Artifacts
+
+A raw dossier records run, wave, lane, mode, assigned objective and scope,
+allowed inputs, findings with evidence records, gaps, contradictions, and lane
+outcome. It contains no global confidence score and cannot directly establish a
+canonical claim state.
+
+Each review artifact records its review kind, reviewer lane, permitted and
+excluded inputs, digests of artifacts actually reviewed, completion status,
+claim-level dispositions, newly discovered evidence, coverage findings, and
+unresolved issues. The permitted/excluded input list is evidence that the
+selective-blind contract was constructed correctly; it does not claim stronger
+filesystem isolation than the provider supplied.
+
+### Consumer Packet
+
+The deterministic renderer produces `packet.md` with:
+
+1. Run status and requested-versus-achieved profile.
+2. The canonical synthesis answer.
+3. Key claims with categorical state and compact exact locators.
+4. Material contradictions and qualifications.
+5. Unresolved questions and coverage gaps.
+6. Failed or omitted passes and provenance instructions.
+
+The packet links to `claims.json`, `manifest.json`, and relevant compact review
+artifacts. It does not inline or require the raw dossiers.
 
 ## Error Handling
 
