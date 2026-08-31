@@ -422,6 +422,13 @@ artifact, bound Reviews event, and review bookkeeping after the persisted
 pre-receive head. Receive is complete and the configured implementation exit
 gate disposition is `allowed/passed`.
 
+### Post-Implementation Sequence Snapshot
+
+The configured closeout sequence is snapshotted immutably as
+`preApproval: [summary, document, pr]` and `postApproval: []`, with p03 as the
+final implementation phase. Approval remains pending until all pre-approval
+steps and the implementation-tail recap gate finish.
+
 ---
 
 ## Implementation Log
