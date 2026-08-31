@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: c8ff68a82f9fd8beef352bd45da7a429ff5c2d11
+oat_last_commit: cb8156ab27a864e86fafcd857f7d98ecbb8266c1
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -92,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T21:57:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T22:17:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,10 +108,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 round 4 is explicitly authorized. The bounded fix
-must reject invalid provider scopes before any write and make core human apply
-output render actual or explicitly unknown outcomes. One fresh independent
-High review follows; Phase 4 remains gated until that review passes.
+Implementation - Phase 3 round-3 fixes are complete at `cb8156ab27`. Invalid
+provider scopes now fail before resolution or writes, and core human apply
+output renders actual or explicitly unknown outcomes. Fresh independent High
+review round 4 is next; Phase 4 remains gated until it passes.
 
 ## Artifacts
 

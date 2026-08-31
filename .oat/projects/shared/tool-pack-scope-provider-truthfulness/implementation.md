@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 4 authorized; bounded fixes pending
+**Status:** review round 4 pending after verified bounded fixes
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -594,6 +594,24 @@ high confidence. The original commit remains the source authority.
   snapshots mechanically required by those changes.
 - A passing round-4 review completes p03 and advances directly to p04. A
   blocking round-4 review is terminal for this authorization.
+
+### Review Round 3 Fix
+
+- Commit: `cb8156ab27a864e86fafcd857f7d98ecbb8266c1`
+- `providers set` now constrains `--scope` to `project|user` at the command
+  boundary; regression coverage proves invalid values fail before root or
+  config resolution and cause zero writes.
+- Core human apply output joins immutable plans to normalized core results and
+  renders stable identity, reason, actual outcome, and redacted failures;
+  aggregate-only evidence stays explicitly unknown and unattributed.
+- The provider-set help snapshot was the only mechanically required adjacent
+  boundary.
+- Verification: focused 3 files / 131 tests; expanded p03 20 files / 504
+  tests; CLI lint, type-check, format, live help and invalid-scope
+  reproduction, `pnpm check`, `git diff --check`, and full `pnpm test` pass.
+  The final full run replayed the immediately prior live CLI 316-file / 4,757-
+  test result and ran smoke 140/140, skills 586/586, and release 39 pass plus
+  one skip live.
 
 ---
 

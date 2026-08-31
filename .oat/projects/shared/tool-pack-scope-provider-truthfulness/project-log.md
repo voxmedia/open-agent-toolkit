@@ -96,6 +96,10 @@ p03 completed five planned tasks, one validated recovery, and two review-fix com
 
 Thomas explicitly authorized exactly one bounded correction for the two Important findings in reviews/p03-review-2026-08-31T202630Z.md and one fresh independent High review round; a blocking round 4 is terminal and p04 remains gated until a passing review.
 
+### 2026-08-31 · structural · oat-project-implement · p03-round4-fix-complete
+
+Operator-authorized fix cb8156ab27a864e86fafcd857f7d98ecbb8266c1 rejects invalid provider scopes before resolution or writes and renders core human apply outcomes truthfully. Focused 131, expanded p03 504, and full repository tests pass; fresh independent High review round 4 is next and p04 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
