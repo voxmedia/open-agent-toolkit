@@ -2,6 +2,11 @@ import { access, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
+  parseAssociatedIssues,
+  serializeAssociatedIssues,
+  type SerializedAssociatedIssue,
+} from '@commands/pjm/remote/association';
+import {
   resolvePjmTemplate,
   type PjmTemplateTier,
 } from '@commands/pjm/template-source';
@@ -33,6 +38,7 @@ export interface CreateBacklogItemOptions {
   labels?: string[];
   description?: string;
   createdAt?: string;
+  associatedIssues?: unknown;
 }
 
 export interface CreateBacklogItemResult {
@@ -94,6 +100,7 @@ function normalizeInputs(options: CreateBacklogItemOptions): {
   scopeEstimate: string | null;
   labels: string[];
   description?: string;
+  associatedIssues: SerializedAssociatedIssue[];
 } {
   const title = options.title.trim();
   if (
@@ -163,6 +170,9 @@ function normalizeInputs(options: CreateBacklogItemOptions): {
     scopeEstimate,
     labels,
     description: options.description,
+    associatedIssues: serializeAssociatedIssues(
+      parseAssociatedIssues(options.associatedIssues ?? []),
+    ),
   };
 }
 
@@ -177,6 +187,7 @@ function renderBacklogItem(
     scopeEstimate: string | null;
     labels: string[];
     description?: string;
+    associatedIssues: SerializedAssociatedIssue[];
   },
 ): string {
   let body = stripTemplateFrontmatter(template).replace(/^\r?\n+/, '');
@@ -195,7 +206,7 @@ function renderBacklogItem(
     assignee: null,
     created: values.timestamp,
     updated: values.timestamp,
-    associated_issues: [],
+    associated_issues: values.associatedIssues,
     external_plans: [],
   }).trimEnd();
 

@@ -123,6 +123,30 @@ describe('createBacklogItem', () => {
     await expect(readFile(indexPath, 'utf8')).resolves.toBe(firstIndex);
   });
 
+  it('writes canonical compatible associated issue links when supplied', async () => {
+    const { backlogRoot } = await createTempRoot();
+    const result = await createBacklogItem({
+      backlogRoot,
+      assetsRoot: BUNDLED_ASSETS_ROOT,
+      templatesRoot: REPO_TEMPLATES_ROOT,
+      title: 'Bound planning record',
+      createdAt: CREATED_AT,
+      associatedIssues: [
+        'https://github.com/a/b/issues/1',
+        { type: 'linear', ref: 'ENG-123', binding: 'bnd_binding_123' },
+      ],
+    });
+
+    expect(
+      parseFrontmatter(await readFile(result.filePath, 'utf8')),
+    ).toMatchObject({
+      associated_issues: [
+        'https://github.com/a/b/issues/1',
+        { type: 'linear', ref: 'ENG-123', binding: 'bnd_binding_123' },
+      ],
+    });
+  });
+
   it('safely indexes title markup while preserving curated bytes and idempotence', async () => {
     const { backlogRoot } = await createTempRoot();
     await initializeBacklog(backlogRoot);
