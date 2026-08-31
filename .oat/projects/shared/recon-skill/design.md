@@ -463,13 +463,153 @@ artifacts. It does not inline or require the raw dossiers.
 
 ## Error Handling
 
-_Pending collaborative review._
+### Preflight and Approval Failures
+
+Malformed requests, unsafe or pre-existing destinations, unresolved source
+authority, and missing required dispatch capabilities fail before worker
+launch. The run may retain an initial manifest and `raw/failure.json` for
+diagnosis, but it does not publish `packet.md`. Missing optional sources are
+recorded as capability gaps and reduce achievable coverage; a missing source
+that makes the objective impossible fails the run.
+
+An unapproved or changed execution envelope stays in `awaiting-approval` and
+launches nothing. A pre-start dispatch rejection may be re-prepared within the
+declared retry bound, but any changed model, effort, provider, route, role, or
+approved execution cap requires a new fingerprint and approval. There is no
+silent substitution.
+
+### Worker and Stage Failures
+
+Launch acceptance and worker outcome remain separate. After a child has
+started, timeout, interruption, invalid output, or task failure does not
+authorize a replacement child or alternate route. The controller may continue
+the same accepted handle when the provider supports it; otherwise it records
+the pass failure and determines whether the remaining successful stages can
+produce an honest lower-assurance packet.
+
+Every stage writes a candidate artifact to its unique path. Schema-invalid,
+hash-mismatched, out-of-scope, or locator-invalid output remains under `raw/`
+and is never promoted. A failed compiler or reconciler cannot overwrite the
+last valid ledger revision. Conflicting writes, missing declared inputs, or an
+artifact path escaping the packet directory are structural failures.
+
+### Evidence Drift and Source Access
+
+Workers never broaden permissions or request credentials to recover missing
+evidence. Permission failures and unavailable connected systems are recorded
+as gaps. If a repository revision, file hash, URL capture, or connected
+resource changes between gathering and verification, affected evidence is
+marked stale and its claims become `contested` or `unresolved`. Recapture is
+allowed only when it fits the approved envelope; otherwise the run publishes a
+partial packet or fails when no valid base remains.
+
+Evidence excerpts are minimal and redact detected credentials, tokens, and
+secret values before persistence. Redaction is recorded without copying the
+secret into an error, review, dispatch record, or packet. Source authority does
+not imply permission to persist sensitive values in a repository-owned
+destination.
+
+### Publication Outcomes
+
+The validator derives the achieved profile from completed required passes; a
+worker or controller never declares it directly.
+
+- `complete`: every required pass for the requested profile completed and the
+  final manifest, ledger, reviews, references, and hashes validate.
+- `partial`: the packet is structurally valid but the achieved profile is lower
+  than requested or material coverage gaps remain. The manifest and packet
+  identify every failed or omitted pass and downgraded claim.
+- `failed`: no valid canonical ledger and manifest can be published. Raw
+  diagnostics may remain, but `packet.md` is absent.
+
+Rendering writes to a temporary sibling and promotes `packet.md` only after
+final validation. If rendering or promotion fails, any previous consumer packet
+is removed from publication eligibility rather than treated as current.
+
+### Diagnostics
+
+Errors identify run, stage, wave or lane, artifact path, categorical failure
+code, and safe remediation. They do not copy full source material, worker
+transcripts, credentials, or model reasoning. The completion summary reports
+the terminal status and exact packet or failure-record path without claiming
+that a failed external source or runtime was verified.
 
 ## Testing Strategy
 
-_Pending collaborative review._
+### Static Skill and Agent Validation
+
+Repository skill validation checks the `recon` frontmatter, required workflow
+sections, progressive-disclosure references, version bump, and provider-neutral
+language. Agent validation checks that `recon-worker` is canonical, contains
+every supported mode, forbids nested dispatch and user interaction, and limits
+inputs and outputs to assignment-declared paths.
+
+Contract tests inspect the skill text for the model-approval boundary, same
+model-and-effort invariant, context firewall, no-silent-substitution rule,
+categorical claim states, profile ceilings, partial-publication semantics, and
+directory-only handoff.
+
+### Deterministic Helper Tests
+
+Unit tests use checked-in fixtures and invoke the bundled scripts directly:
+
+- Valid quick, standard, thorough, and honest-partial packet fixtures.
+- Invalid schema versions, duplicate identifiers, missing artifact references,
+  hash mismatches, path traversal, bad line ranges, and unsupported locator
+  variants.
+- Claim-state transition rules, including quick packets being unable to reach
+  `verified` and contested evidence preventing verification.
+- Canonical execution-envelope serialization, stable approval fingerprints,
+  and tamper detection.
+- Deterministic `packet.md` rendering from identical manifests and ledgers.
+- Structural failures leaving no publishable `packet.md`.
+- Redaction fixtures proving secret values do not reach persisted artifacts or
+  diagnostics.
+
+### Dispatch Contract Tests
+
+`oat-dispatch-subagents` tests cover selection-only preparation without launch,
+approval-bound execution, exact-axis comparison, catalog drift, pre-start
+rejection, post-acceptance non-replacement, and homogeneous recon-wave records.
+Tests assert that a changed provider, model, effort, route, role, service tier,
+or execution cap returns for reapproval.
+
+### Tool-Pack Lifecycle Tests
+
+Research-pack tests verify that install, update, inventory, migration, removal,
+and provider sync manage both `recon` and `recon-worker` at user and project
+scope. Dependency tests ensure research installation resolves the utility-owned
+dispatch pair without duplicating ownership, and that research removal
+preserves independently installed utility assets. CLI help, pack documentation,
+bundle inventory, and generated provider views must remain consistent.
+
+### Workflow Integration Tests
+
+End-to-end tests use fake dispatch records and fixture sources rather than live
+model calls. Scenarios include:
+
+- Quick repository recon producing supported claims with exact file and line
+  locators.
+- Standard recon producing independently verified claims.
+- Thorough recon resolving redundant findings and retaining a genuine
+  contradiction as contested.
+- Missing optional sources, worker failure, and source drift producing an
+  honest partial packet.
+- Unavailable `recon-worker` preparing a visible generic-role fallback before
+  approval.
+- Dispatch-axis drift blocking execution pending reapproval.
+- Invalid compiler or review output remaining quarantined while the last valid
+  ledger survives.
+- Structural failure producing a failure record and no consumer packet.
+- The parent handoff returning only the directory path and compact status, with
+  no raw dossier contents.
+
+A provider smoke test may exercise one real approved run per supported harness,
+but deterministic fixtures remain the CI correctness boundary. The repository's
+documented skill validation, skill tests, lint, formatting, release validation,
+and build gates run before completion.
 
 ## Open Questions
 
-- Confirm the packet schema and artifact exchange interfaces during this
-  lightweight design.
+None. Packet schemas, artifact exchange, agent placement, pack ownership,
+dispatch approval, and first-release integration boundaries are resolved above.

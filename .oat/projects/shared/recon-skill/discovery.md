@@ -425,11 +425,14 @@ only `packet.md`; deeper files exist for automation, audit, or follow-up.
 
 ## Open Questions
 
-- **Design-owned packet schema:** What exact versioned JSON schema represents
-  claims, sources, locators, reviews, and manifest receipts?
-- **Design-owned interfaces:** How should the planner, gatherers, compiler,
-  selectively blind reviewers, and assembler exchange bounded artifacts without
-  leaking raw context into the consumer?
+- **Resolved in lightweight design:** `manifest.json` and `claims.json` are the
+  canonical versioned interfaces, with typed locators, hashed artifact
+  references, categorical claim states, compact review artifacts, and a
+  deterministic `packet.md` consumer view.
+- **Resolved in lightweight design:** Unique worker-owned paths, immutable
+  stage inputs, selective input allowlists, candidate validation, and canonical
+  ledger promotion prevent concurrent mutation and keep raw dossiers outside
+  the normal consumer context.
 
 ## Assumptions
 
