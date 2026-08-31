@@ -253,6 +253,7 @@ function createHarness(options: HarnessOptions = {}): {
   adapters: ProviderAdapter[];
   computeSyncPlan: ReturnType<typeof vi.fn>;
   executeSyncPlan: ReturnType<typeof vi.fn>;
+  scanCanonical: ReturnType<typeof vi.fn>;
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   applyCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
@@ -335,6 +336,14 @@ function createHarness(options: HarnessOptions = {}): {
   );
   const manifestQueue = [...(options.loadedManifests ?? [])];
 
+  const scanCanonical = options.useDiskScanner
+    ? vi.fn(scanCanonicalFromDisk)
+    : vi.fn(async (_scopeRoot: string, scope: 'project' | 'user') => {
+        return (
+          options.canonicalEntriesByScope?.[scope] ??
+          options.canonicalEntries ?? [createCanonicalEntry()]
+        );
+      });
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -362,14 +371,7 @@ function createHarness(options: HarnessOptions = {}): {
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
     ),
     saveSyncConfig,
-    scanCanonical: options.useDiskScanner
-      ? vi.fn(scanCanonicalFromDisk)
-      : vi.fn(async (_scopeRoot: string, scope: 'project' | 'user') => {
-          return (
-            options.canonicalEntriesByScope?.[scope] ??
-            options.canonicalEntries ?? [createCanonicalEntry()]
-          );
-        }),
+    scanCanonical,
     scanBundledManagedAgents: options.useDiskBundledCodexAgents
       ? vi.fn(scanBundledManagedAgentsFromDisk)
       : vi.fn(async () => []),
@@ -430,6 +432,7 @@ function createHarness(options: HarnessOptions = {}): {
     adapters,
     computeSyncPlan,
     executeSyncPlan,
+    scanCanonical,
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
     saveSyncConfig,
@@ -2302,6 +2305,21 @@ describe('createSyncCommand', () => {
   });
 
   describe('scoped provider materialization', () => {
+    it('scans user canonical content from active provider declarations', async () => {
+      const adapter = createScopedAdapter();
+      const { command, scanCanonical } = createHarness({ adapters: [adapter] });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user', [
+        { contentType: 'skill', canonicalDir: '.agents/skills' },
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]);
+    });
+
     it('plans project and user scopes independently for --scope all', async () => {
       const adapter = createScopedAdapter();
       const { command, computeSyncPlan } = createHarness({

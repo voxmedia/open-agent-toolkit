@@ -659,6 +659,41 @@ describe('computeSyncPlan', () => {
     expect(plan.entries[0]?.canonical.type).toBe('skill');
   });
 
+  it('excludes provider-owned extension agents from core user planning', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'oat-reviewer.md'),
+      '# reviewer\n',
+      'utf8',
+    );
+    const adapter = createTestAdapter({
+      userMappings: [
+        {
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.provider/agents',
+          nativeRead: false,
+        },
+      ],
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'agent', 'oat-reviewer.md')],
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+      extensionOwnedCanonicalPathsByProvider: {
+        [adapter.name]: ['.agents/agents/oat-reviewer.md'],
+      },
+    });
+
+    expect(plan.entries).toEqual([]);
+  });
+
   it('uses copy strategy when adapter specifies copy', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);

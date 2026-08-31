@@ -10,6 +10,11 @@ export const ScopeSchema = z.enum(['project', 'user', 'all']);
 export type Scope = z.infer<typeof ScopeSchema>;
 export type ConcreteScope = Exclude<Scope, 'all'>;
 
+export interface CanonicalScanTarget {
+  contentType: ContentType;
+  canonicalDir: string;
+}
+
 const PROJECT_SCOPE_CONTENT_TYPES: ContentType[] = ['skill', 'agent', 'rule'];
 const USER_SCOPE_CONTENT_TYPES: ContentType[] = ['skill'];
 const ALL_SCOPE_CONTENT_TYPES = [

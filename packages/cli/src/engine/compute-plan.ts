@@ -45,6 +45,9 @@ interface ComputeSyncPlanArgs {
   config: SyncConfig;
   scopeRoot?: string;
   allowedCanonicalPaths?: string[];
+  extensionOwnedCanonicalPathsByProvider?: Readonly<
+    Record<string, readonly string[]>
+  >;
 }
 
 function buildUpLevels(depth: number): string[] {
@@ -527,6 +530,7 @@ export async function computeSyncPlan({
   config,
   scopeRoot: explicitScopeRoot,
   allowedCanonicalPaths,
+  extensionOwnedCanonicalPathsByProvider,
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
   const removals: RemovalSyncPlanEntry[] = [];
@@ -565,6 +569,16 @@ export async function computeSyncPlan({
         }
 
         const relativeCanonicalPath = canonicalRelativePath(canonicalEntry);
+        const extensionOwnedPaths =
+          extensionOwnedCanonicalPathsByProvider?.[adapter.name] ?? [];
+        if (
+          extensionOwnedPaths.some(
+            (ownedPath) =>
+              normalize(ownedPath) === normalize(relativeCanonicalPath),
+          )
+        ) {
+          continue;
+        }
         if (!canonicalPathAllowed(relativeCanonicalPath, canonicalFilter)) {
           continue;
         }
@@ -632,10 +646,6 @@ export async function computeSyncPlan({
 
   for (const manifestEntry of manifest.entries) {
     if (!activeProviderNames.has(manifestEntry.provider)) {
-      continue;
-    }
-
-    if (scope === 'user' && manifestEntry.contentType === 'agent') {
       continue;
     }
 

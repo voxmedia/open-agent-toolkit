@@ -37,6 +37,11 @@ import {
   type ProviderScopeContext,
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
+import {
+  USER_SCOPE_MANAGED_AGENT_FILES,
+  type CanonicalScanTarget,
+  type ConcreteScope,
+} from '@shared/types';
 import { formatSyncPlan } from '@ui/output';
 import { Command, Option } from 'commander';
 
@@ -50,7 +55,22 @@ import type {
   SyncVersionSkew,
 } from './sync.types';
 
-type ContextualSyncDependencies = SyncCommandDependencies & {
+type ContextualSyncDependencies = Omit<
+  SyncCommandDependencies,
+  'computeSyncPlan' | 'scanCanonical'
+> & {
+  scanCanonical: (
+    scopeRoot: string,
+    scope: ConcreteScope,
+    targets?: readonly CanonicalScanTarget[],
+  ) => ReturnType<SyncCommandDependencies['scanCanonical']>;
+  computeSyncPlan: (
+    args: Parameters<SyncCommandDependencies['computeSyncPlan']>[0] & {
+      extensionOwnedCanonicalPathsByProvider?: Readonly<
+        Record<string, readonly string[]>
+      >;
+    },
+  ) => ReturnType<SyncCommandDependencies['computeSyncPlan']>;
   resolveProviderScopeContext?: (input: {
     scope: ScopeSyncPlan['scope'];
     scopeRoot: string;
@@ -303,27 +323,10 @@ async function computePlans(
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     const configPath = join(scopeRoot, '.oat', 'sync', 'config.json');
-    const [manifest, config, canonical] = await Promise.all([
+    const [manifest, config] = await Promise.all([
       dependencies.loadManifest(manifestPath),
       dependencies.loadSyncConfig(configPath),
-      dependencies.scanCanonical(scopeRoot, scope),
     ]);
-    if (canonicalFilter?.mode === 'remove') {
-      const existing = new Set(
-        canonical.map(({ canonicalPath }) =>
-          relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
-        ),
-      );
-      const stillPresent = canonicalFilter.paths.filter((path) =>
-        existing.has(path),
-      );
-      if (stillPresent.length > 0) {
-        throw new CliError(
-          `Cannot remove canonical provider views while source exists: ${stillPresent.join(', ')}`,
-          1,
-        );
-      }
-    }
     const providerContext = dependencies.resolveProviderScopeContext
       ? await dependencies.resolveProviderScopeContext({
           scope,
@@ -365,15 +368,44 @@ async function computePlans(
       providerContext,
     );
 
-    const plan = await dependencies.computeSyncPlan({
-      canonical,
-      adapters: resolved.activeAdapters,
-      manifest,
-      scope,
-      config: resolved.config,
+    const scanTargets: CanonicalScanTarget[] = [];
+    const seenScanTargets = new Set<string>();
+    for (const adapter of resolved.activeAdapters) {
+      const mappings =
+        scope === 'project' ? adapter.projectMappings : adapter.userMappings;
+      for (const mapping of mappings) {
+        const key = `${mapping.contentType}::${mapping.canonicalDir}`;
+        if (seenScanTargets.has(key)) {
+          continue;
+        }
+        seenScanTargets.add(key);
+        scanTargets.push({
+          contentType: mapping.contentType,
+          canonicalDir: mapping.canonicalDir,
+        });
+      }
+    }
+    const canonical = await dependencies.scanCanonical(
       scopeRoot,
-      allowedCanonicalPaths: canonicalFilter?.paths,
-    });
+      scope,
+      scanTargets,
+    );
+    if (canonicalFilter?.mode === 'remove') {
+      const existing = new Set(
+        canonical.map(({ canonicalPath }) =>
+          relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
+        ),
+      );
+      const stillPresent = canonicalFilter.paths.filter((path) =>
+        existing.has(path),
+      );
+      if (stillPresent.length > 0) {
+        throw new CliError(
+          `Cannot remove canonical provider views while source exists: ${stillPresent.join(', ')}`,
+          1,
+        );
+      }
+    }
 
     const activeAdapterNames = resolved.activeAdapters.map(
       (adapter) => adapter.name,
@@ -383,6 +415,24 @@ async function computePlans(
         ? providerContext.registrations.flatMap(({ extensions }) => extensions)
         : dependencies.getMaterializationExtensions()
     ).filter((extension) => activeAdapterNames.includes(extension.provider));
+    const extensionOwnedCanonicalPathsByProvider = Object.fromEntries(
+      enabledExtensions.map(({ provider }) => [
+        provider,
+        USER_SCOPE_MANAGED_AGENT_FILES.map((name) => `.agents/agents/${name}`),
+      ]),
+    );
+
+    const plan = await dependencies.computeSyncPlan({
+      canonical,
+      adapters: resolved.activeAdapters,
+      manifest,
+      scope,
+      config: resolved.config,
+      scopeRoot,
+      allowedCanonicalPaths: canonicalFilter?.paths,
+      ...(scope === 'user' ? { extensionOwnedCanonicalPathsByProvider } : {}),
+    });
+
     const extensionCanonical =
       scope === 'user' && enabledExtensions.length > 0
         ? [...canonical, ...(await dependencies.scanBundledManagedAgents())]
@@ -481,7 +531,7 @@ function logVersionSkewWarnings(
 
 async function runSyncCommand(
   context: CommandContext,
-  dependencies: SyncCommandDependencies,
+  dependencies: ContextualSyncDependencies,
   canonicalFilter?: CanonicalSyncFilter,
 ): Promise<void> {
   const scopePlans = await computePlans(context, dependencies, canonicalFilter);
