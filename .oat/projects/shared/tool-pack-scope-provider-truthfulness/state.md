@@ -1,7 +1,9 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8
-oat_blockers: []
+oat_current_task: p03-t01
+oat_last_commit: 9d557564faa2430001483ed823a07d2cc920a3c1
+oat_blockers:
+  - p02 review governance cap reached while interactive init and sync still re-detect providers within one scope observation
+  - p02 review governance cap reached while post-removal intent or final-inventory failures can escape structured lifecycle reporting
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -89,7 +91,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T11:56:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T14:53:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -99,16 +101,16 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation in progress
+**Status:** Implementation blocked
 **Started:** 2026-08-29
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implementation - Phase 1 completed and passed independent review at
-`940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`. The prior invalid-run abort
-remains recorded as resolved history and made no edits or commits. Phase 2 now
-begins with the canonical pack evidence projector.
+Implementation - Phase 2 completed all seven planned tasks and passes 29 files /
+701 tests, but its third governed review cycle still found two Important
+findings. The two configured review-fix rounds are exhausted. Phase 3 must not
+start without explicit human disposition.
 
 ## Artifacts
 
@@ -116,7 +118,7 @@ begins with the canonical pack evidence projector.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01 complete)
+- **Implementation:** `implementation.md` (blocked — p01 passed; p02 tasks complete, review blocked)
 
 ## Progress
 
@@ -140,13 +142,17 @@ begins with the canonical pack evidence projector.
 - ✓ Plan complete
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
-- ⧗ Phase 2 shared evidence and truthful scope
+- ! Phase 2 tasks complete; independent review blocked after three cycles
 
 ## Blockers
 
-None
+- Interactive init and sync can re-detect providers after the initial scope
+  context in cancel/save branches.
+- Post-removal intent-write or final-inventory failures can escape structured
+  lifecycle reporting after canonical deletion.
 
 ## Next Milestone
 
-Implement `p02-t01`, the canonical pack evidence projector, against the
-accepted PR #249 interfaces recorded by p01.
+Obtain explicit human disposition for the two remaining p02 Important review
+findings. Do not start `p03-t01` until the block is resolved or formally
+accepted.

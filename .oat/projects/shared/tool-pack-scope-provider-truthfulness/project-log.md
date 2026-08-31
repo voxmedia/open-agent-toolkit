@@ -60,6 +60,10 @@ Thomas explicitly authorized a new p01 launch after the prior invalid-run abort;
 
 p01 completed at 940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8 and independent High review passed with critical:0, important:0, medium:0, minor:1; the non-blocking lifecycle wording finding was applied in root bookkeeping; review artifact: reviews/p01-review-2026-08-31T115349Z.md.
 
+### 2026-08-31 · structural · oat-project-implement · p02-blocked
+
+p02 completed 7 planned tasks plus two validated recoveries and two review-fix commits, but its third governed High review remained blocked with important:2 at 9d557564faa2430001483ed823a07d2cc920a3c1. Do not start p03 without explicit human disposition. Artifacts: reviews/p02-review-2026-08-31T132646Z.md, reviews/p02-review-2026-08-31T142211Z.md, reviews/p02-review-2026-08-31T144935Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

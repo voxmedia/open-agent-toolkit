@@ -1,9 +1,11 @@
 ---
-oat_status: in_progress
+oat_status: blocked
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02 review governance cap reached while interactive init and sync still re-detect providers within one scope observation
+  - p02 review governance cap reached while post-removal intent or final-inventory failures can escape structured lifecycle reporting
 oat_last_updated: 2026-08-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,14 +29,14 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | pending  | 7     | 0/7       |
+| Phase 2 | blocked  | 7     | 7/7       |
 | Phase 3 | pending  | 5     | 0/5       |
 | Phase 4 | pending  | 5     | 0/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
-**Total:** 1/30 tasks completed
+**Total:** 8/30 tasks completed
 
 ---
 
@@ -134,13 +136,50 @@ oat_generated: false
 
 ## Phase 2: Shared Evidence and Truthful Scope
 
-**Status:** pending
-**Started:** -
+**Status:** blocked after 7/7 tasks and three governed review cycles
+**Started:** 2026-08-31
 
-### Task p02-t01: {Task Name}
+### Phase Summary
 
-**Status:** pending
-**Commit:** -
+- Added canonical unknown-aware pack evidence, a provider capability registry,
+  additive scope selection/lifecycle outcomes, realized-placement install
+  behavior, normalized inspection/diagnostic output, and update/remove
+  lifecycle evidence.
+- Completed seven planned task commits, two bounded recovery commits, two root
+  recovery-settlement commits, and two review-fix commits.
+- Combined p02 verification passes 29 files / 701 tests plus CLI lint,
+  type-check, formatting, and `git diff --check`.
+- The third governed review still found two Important blockers. The automatic
+  review-fix cap is exhausted, so p03 may not start without explicit human
+  disposition.
+
+| Task    | Status   | Commit      | Outcome                                                 |
+| ------- | -------- | ----------- | ------------------------------------------------------- |
+| p02-t01 | complete | `fa6f129fe` | Canonical intent/realization/unknown evidence projector |
+| p02-t02 | complete | `1f81e62de` | Provider capability registry and scope context          |
+| p02-t03 | complete | `90164f3a0` | Registry-routed provider consumers                      |
+| p02-t04 | complete | `572237850` | Additive scope selection and lifecycle outcomes         |
+| p02-t05 | complete | `926ae0624` | Realized-placement aggregate/direct installs            |
+| p02-t06 | complete | `06275a123` | Normalized inspection and diagnostics evidence          |
+| p02-t07 | complete | `23efb17c7` | Update/remove lifecycle compatibility                   |
+
+**Recovery and review-fix commits:**
+
+- `063981f17` / `63aa62d17` - provider-registry lint recovery and root
+  settlement.
+- `fb4c4a4ba` / `f90fc073d` - import-cycle composition recovery and root
+  settlement.
+- `d959cb12c` - round-1 fix for four blocking review findings.
+- `9d557564f` - round-2 fix for provider-context and removal findings.
+
+**Terminal review blockers:**
+
+1. Interactive init and sync still re-detect providers in cancel/save branches
+   after the first `ProviderScopeContext`, so one command scope can observe two
+   contradictory provider snapshots.
+2. Intent-write or final-inventory failure after canonical removal occurs
+   outside the structured lifecycle boundary, so the command can reject after
+   a partial write instead of returning source-qualified recovery evidence.
 
 ---
 
@@ -213,6 +252,44 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: not attempted
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+### Run 3 — 2026-08-31T12:02:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — subagents, continuing the authorized implementation run
+- Dispatch policy: managed High from project state
+- Schedule: p02 implemented sequentially; three governed review cycles
+- Outcome: `BLOCKED`; 7/7 tasks complete, phase review not passed
+- Verification: 29 files / 701 tests plus CLI lint, type-check, formatting,
+  and whitespace checks pass at `9d557564faa2430001483ed823a07d2cc920a3c1`
+- Recovery: 2/10 attempts used and settled; `pending_attempt: null`
+- Review-fix rounds: 2/2 used
+- Outstanding: explicit human disposition of the two Important round-3
+  findings; do not start p03
+
+#### Dispatch record — `dispatch-p02-20260831T120200Z-492af17f6`
+
+- Scope/action/role: `p02` / `implementation` / `implementer`
+- Target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:medium`
+- Phase range: `492af17f6e7c96198883954ceedc85acc18b538d..9d557564faa2430001483ed823a07d2cc920a3c1`
+- Child outcome: 7 tasks complete; two validated recovery events; two bounded
+  review-fix commits; terminal phase status blocked by review cap
+- Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Review records
+
+- Round 1: `reviews/p02-review-2026-08-31T132646Z.md`, reviewed
+  `23efb17c732c2a95fbe38eae2be4c48f78754932`, 2 critical / 2 important,
+  findings fixed by `d959cb12caadf9587a271a3757f7d917a5b674bc`.
+- Round 2: `reviews/p02-review-2026-08-31T142211Z.md`, reviewed
+  `d959cb12caadf9587a271a3757f7d917a5b674bc`, 0 critical / 2 important,
+  findings fixed by `9d557564faa2430001483ed823a07d2cc920a3c1`.
+- Round 3: `reviews/p02-review-2026-08-31T144935Z.md`, reviewed
+  `9d557564faa2430001483ed823a07d2cc920a3c1`, 0 critical / 2 important;
+  terminal blocked verdict after the third governed cycle.
+- All review rounds used `oat-reviewer-gpt-5-6-sol-high`, invocation `manual`,
+  with reconnaissance not attempted.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -284,13 +361,54 @@ Chronological log of implementation progress.
 
 ---
 
+### 2026-08-31
+
+**Session Start:** 12:02 UTC
+
+- [x] p02-t01 through p02-t07 implemented
+- [x] Two phase recovery events validated and settled
+- [x] Two review-fix rounds completed
+- [ ] p02 phase review pass
+
+**What changed (high level):**
+
+- Introduced truthful pack evidence, provider registry/context, additive scope
+  and lifecycle outcomes, realized-placement installs, normalized diagnostics,
+  and lifecycle evidence for update/removal.
+- Preserved legacy JSON siblings, project config subtrees, predecessor
+  inventory/fault-tolerance behavior, and recovery ledger monotonicity.
+
+**Decisions:**
+
+- Authorized `packages/cli/src/commands/tools/update/config-write.test.ts` as a
+  mechanically derived test-only boundary expansion after the round-1 review;
+  no production scope widened.
+- Stopped before p03 when the third p02 review cycle retained two Important
+  findings; passing tests do not override the review governance cap.
+
+**Follow-ups / TODO:**
+
+- Obtain explicit human disposition for the two terminal p02 findings.
+
+**Blockers:**
+
+- Interactive init/sync can create a second provider detection snapshot within
+  one scope observation.
+- Post-removal intent or final-inventory failure can escape structured
+  lifecycle output after canonical deletion.
+
+**Session End:** 14:53 UTC
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                | Source of Truth        | Follow-up |
-| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------- | --------- |
-| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work | PR #249 / current main | none      |
+| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                | Source of Truth        | Follow-up                         |
+| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------- | --------------------------------- |
+| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work | PR #249 / current main | none                              |
+| p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture    | Round-1 review finding | recorded; no production expansion |
 
 ## Test Results
 
@@ -299,7 +417,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                        | Passed | Failed | Coverage      |
 | ----- | ------------------------------------------------ | ------ | ------ | ------------- |
 | 1     | Focused p01 Vitest suite after CLI asset rebuild | 360    | 0      | 11 test files |
-| 2     | -                                                | -      | -      | -             |
+| 2     | Combined p02 suite at terminal reviewed head     | 701    | 0      | 29 test files |
 
 ## Final Summary (for PR/docs)
 
