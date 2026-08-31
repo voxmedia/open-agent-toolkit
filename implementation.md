@@ -357,6 +357,10 @@ at `2026-08-31T01:37:31Z` with its closeout-owned structured result receipt
 selected before process start. No replacement launch is permitted unless
 durable evidence proves this attempt was not accepted.
 
+**Launch accepted:** Gate run `d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a`
+created its unique run marker at `2026-08-31T01:38:05.245Z`. The accepted run is
+now the only launch eligible to satisfy this generation.
+
 ---
 
 ## Orchestration Runs

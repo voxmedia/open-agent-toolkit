@@ -59,12 +59,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:cf6b525b96d6317381a227e9da9f156a1065e944489ea67334530401cc7af15d'
   freshness_head: c56ba6995a90eab7b1d06c2c79b016ca9940e54f
   freshness_fingerprint: 'sha256:effective-delta-v1:cf6b525b96d6317381a227e9da9f156a1065e944489ea67334530401cc7af15d'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 6fe59c01-f819-421b-be80-d471c03542cb
   launch_started_at: '2026-08-31T01:37:31Z'
   launch_result_receipt: .oat/projects/synced/gate-execution-contract-hardening/receipts/implementation-exit-gate-6fe59c01-f819-421b-be80-d471c03542cb.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a.json
+  gate_run_id: d8d76ed5-12e2-453f-81ca-a3f1ec4b6b5a
   envelope_status: null
   artifact: null
   handoff: null
@@ -78,7 +78,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T01:37:31Z'
+  updated_at: '2026-08-31T01:39:19Z'
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
@@ -95,7 +95,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/246' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T01:37:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T01:39:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
