@@ -201,7 +201,9 @@ git commit -m "feat(p02-t01): project truthful pack placement evidence"
 Require one registration per adapter, explicit scope/content capability rows,
 projection modes, extension ownership, collection support, and refresh policy.
 Missing/contradictory rows fail validation. Pin existing activation precedence
-through `resolveProviderScopeContext()`.
+through `resolveProviderScopeContext()`. Require Copilot and Gemini managed-role
+rows to carry focused adapter-test proof before reporting support; unproven rows
+must register as `unknown` or `unsupported`.
 
 **Step 2: Implement (GREEN)**
 
@@ -220,7 +222,9 @@ is an error, not implicit support.
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/shared/registry.test.ts src/providers/shared/adapter-contract.test.ts src/providers/shared/adapter.types.test.ts`
 
-Expected: registry and activation contracts pass.
+Expected: registry and activation contracts pass; Copilot/Gemini managed-role
+support is either proven by focused adapter tests or reported
+`unknown`/`unsupported`.
 
 **Step 5: Commit**
 
@@ -1707,7 +1711,7 @@ gates exit 0 at the final reviewed head.
 | spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -             | -          | -           |
 | plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -             | -          | -           |
-| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T003934Z.md            | -             | -          | -           |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T003934Z.md   | -             | -          | -           |
 
 The design review findings were resolved directly in `design.md`. Thomas
 approved planning without another design re-review, so that event remains
@@ -1716,6 +1720,10 @@ approved planning without another design re-review, so that event remains
 The first plan review's five findings were resolved directly in `plan.md`. A
 managed High structured re-review then found and corrected exact staging
 boundaries; its clean retry advanced the event to `passed`.
+
+The configured Fable gate passed with two minor alignment findings. The design
+predecessor observation and p02-t02 provider-proof assertion were aligned
+directly, so the received gate event is `passed` with no new tasks.
 
 Status progression: `pending` -> `received` -> `fixes_added` ->
 `fixes_completed` -> `passed`.

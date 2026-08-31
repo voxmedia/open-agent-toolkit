@@ -29,11 +29,12 @@ runtime catalog and does not let filesystem presence prove session visibility.
 `scope-adoption-diagnostics` is an active predecessor, not a parallel
 implementation lane. Its finalized plan was explicitly approved after its
 bounded review override and implementation was initialized on the laptop at
-head `25c28dbd1`; at the 2026-08-30 observation it had `0/9` tasks complete and
-staged project bookkeeping. This project may continue design and review, but
-it must not begin shared-source implementation until that predecessor lands.
-It then records the accepted completion SHA, rebases, and adapts to the actual
-narrow provider-materialization input, shared-owner attribution, inventory
+head `30b29ef38d5b2d3def7609443c48c7cc00140515`; at the later 2026-08-30
+observation it had `5/9` tasks complete. This remains progress evidence, not an
+accepted baseline. This project may continue design and review, but it must not
+begin shared-source implementation until that predecessor lands. It then
+records the accepted completion SHA, rebases, and adapts to the actual narrow
+provider-materialization input, shared-owner attribution, inventory
 availability, and doctor/status rendering seams. It never duplicates those
 corrections.
 

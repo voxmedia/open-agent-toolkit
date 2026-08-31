@@ -82,7 +82,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:33:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:46:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -101,7 +101,8 @@ oat_project_explainer:
 Plan - Seven phases and thirty stable tasks drafted from the approved design;
 managed High is persisted and the first plan-review findings are resolved.
 The plan breakdown is confirmed, optional phase-gate review is disabled, and
-the clean plan artifact re-review passed. Awaiting the configured plan gate.
+the clean plan artifact re-review and configured gate passed. The two minor
+gate findings were aligned directly; final plan completion is pending.
 
 ## Artifacts
 
@@ -129,7 +130,8 @@ the clean plan artifact re-review passed. Awaiting the configured plan gate.
 - ✓ Plan breakdown confirmed
 - ✓ Optional phase-gate review disabled by user choice
 - ✓ Clean plan artifact review passed
-- ⧗ Configured plan gate
+- ✓ Configured plan gate passed and review received
+- ⧗ Final plan completion commit
 
 ## Blockers
 
@@ -137,4 +139,4 @@ None
 
 ## Next Milestone
 
-Run the configured plan gate, then mark and commit the plan complete.
+Mark and commit the plan complete.
