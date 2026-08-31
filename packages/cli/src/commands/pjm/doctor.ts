@@ -12,6 +12,7 @@ import type { DoctorCheck } from '@ui/output';
 
 import { resolvePjmAdoption, type PjmAdoption } from './adoption';
 import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
+import { runRemoteDoctorChecks, type RemoteDoctorInput } from './remote/doctor';
 
 const ALLOWED_TOP_LEVEL_DIRECTORIES = new Set([
   'pjm',
@@ -217,6 +218,7 @@ function warnStatus(items: string[]): 'pass' | 'warn' {
 export interface PjmDoctorOptions {
   projectRoot?: string;
   adoption?: PjmAdoption;
+  remote?: RemoteDoctorInput;
 }
 
 export async function runPjmDoctorChecks(
@@ -551,6 +553,17 @@ export async function runPjmDoctorChecks(
         ? undefined
         : 'Run `oat backlog archive <id>` to archive each completed item still under items/.',
   });
+
+  const defaultRemoteRoot = join(repoRoot, 'pjm', 'remote');
+  checks.push(
+    ...(await runRemoteDoctorChecks(
+      options.remote ?? {
+        portableBindingsDir: join(defaultRemoteRoot, 'bindings'),
+        operationalBindingsDir: join(defaultRemoteRoot, 'state', 'bindings'),
+        operationsDir: join(defaultRemoteRoot, 'state', 'operations'),
+      },
+    )),
+  );
 
   return checks;
 }

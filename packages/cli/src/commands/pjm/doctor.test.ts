@@ -62,6 +62,9 @@ describe('runPjmDoctorChecks', () => {
     const checks = await runPjmDoctorChecks(repoRoot);
 
     expect(checks.every((check) => check.status === 'pass')).toBe(true);
+    expect(checks.some((check) => check.name.startsWith('pjm:remote_'))).toBe(
+      false,
+    );
   });
 
   it('reports repository adoption independently of pack availability', async () => {
