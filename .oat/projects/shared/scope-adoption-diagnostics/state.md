@@ -86,8 +86,12 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/249'
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T02:23:39Z'
+oat_project_state_updated: '2026-08-31T02:41:13Z'
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-08-31T02:41:13.107Z'
 ---
 
 # Project State: Scope and Adoption Diagnostics
@@ -147,6 +151,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Cursor Fable implementation exit gate passed with zero findings and was
   durably received
 - ✓ PR created
+- ✓ Optional project recap skipped by explicit interactive decision
 - ⧗ Awaiting human review
 - ⧗ Approval-aware closeout remains
 

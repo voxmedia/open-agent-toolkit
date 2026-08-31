@@ -431,6 +431,12 @@ reviewer verdict was PASS, and Thomas explicitly waived a redundant second
 review on 2026-08-30 after the artifact-only alignment. Configured closeout
 gates and approval remain.
 
+## Explainer Outcome
+
+The optional `project-recap` was skipped by Thomas's explicit interactive
+decision on 2026-08-30. No recap run was attempted, so there is no run path or
+manifest. The terminal recap guard accepted the `skip` intent.
+
 ## References
 
 - Plan: `plan.md`
