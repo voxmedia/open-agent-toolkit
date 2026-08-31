@@ -76,6 +76,7 @@
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
     - [Explainer Provider Integration](workflows/skills/explainer-kit-providers.md) — Provider-neutral planner, author, browser-session, and visual-critic contracts for Explainer Kit integrators.
     - [Explainer Kit](workflows/skills/explainer-kit.md) — Build destination-neutral visual explainers directly or from OAT project lifecycle artifacts.
+    - [Recon Evidence Packets](workflows/skills/recon.md) — Use recon to gather and validate bounded evidence through approved worker waves, then hand off one durable packet directory.
     - [Repo Improve](workflows/skills/repo-improve.md) — Turn repository audits, maintainability reviews, and backlog sources into standalone external implementation plans.
   - [Wave Workflows](workflows/wave-workflows.md) — How OAT coordinates a corpus of external plans into waves while preserving project-lifecycle ownership and human judgment.
 - [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.

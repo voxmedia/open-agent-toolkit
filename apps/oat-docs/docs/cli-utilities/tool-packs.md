@@ -24,7 +24,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 | `ideas`              | Lightweight ideation and promotion flows plus idea templates                                                                                                                                                    | project, user  | user                  |
 | `utility`            | Review and repo-maintenance helpers plus portable subagent-selection guidance and the provider-neutral dispatch engine                                                                                          | project, user  | user                  |
 | `project-management` | File-backed backlog/reference skills plus backlog, roadmap, current-state, file-per-record decision, and AGENTS-guide templates                                                                                 | project, user  | user                  |
-| `research`           | Research, analysis, comparison, and synthesis skills plus the skeptical-evaluator agent                                                                                                                         | project, user  | user                  |
+| `research`           | Recon evidence packets, research, analysis, comparison, and synthesis skills plus the recon-worker and skeptical-evaluator agents                                                                               | project, user  | user                  |
 | `brainstorm`         | Always-on brainstorming entry point with visual companion                                                                                                                                                       | project, user  | user                  |
 
 Every reusable pack is a complete user-scope capability. On a **fresh** install
@@ -116,6 +116,46 @@ present without the utility contracts, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical
 skills can use the utility guidance and dispatch layers directly.
 
+### Research-pack dispatch dependencies
+
+The research pack owns `recon` and `recon-worker`, but the utility pack retains
+exclusive ownership of the two reusable dispatch skills that recon needs:
+
+- `oat-dispatch-subagents`; and
+- `subagent-orchestration`.
+
+Installing research acquires those two utility assets at the same scope. OAT
+records the research request as direct intent (`tools.research: true`) and a
+transitive lease under `tools.requiredBy.utility`, which includes `research`.
+The lease makes the selected utility assets available without pretending that
+research owns them or that the entire utility pack was directly installed.
+
+Direct utility intent and transitive leases are independent. If
+`tools.utility: true` already exists, removing research releases only the
+research lease and keeps the direct utility installation. When several packs
+require utility, each name remains in the sorted, deduplicated `requiredBy`
+list; dependency assets are removed only after no direct intent and no other
+lease retains them.
+
+Dependency lifecycle follows the root pack:
+
+- install and update reconcile the declared dependency assets idempotently at
+  the root pack's scope;
+- migration acquires and verifies destination leases before releasing source
+  leases, then removes the source only after the destination is complete; and
+- removal releases the root pack's lease, removes only dependency assets with
+  no remaining owner, and prunes provider views only for canonical assets that
+  were actually removed.
+
+Use explicit scopes when installing or updating recon's pack:
+
+```bash
+oat tools install research --scope user
+oat tools update --pack research --scope user
+oat tools install research --scope project
+oat tools update --pack research --scope project
+```
+
 ### Cross-pack explainer dependency
 
 The public explainer family also spans two packs:
@@ -151,10 +191,12 @@ the usage and lifecycle contract.
 
 Two independent facts describe a pack:
 
-- **Intent** is what you asked for. It is stored per scope as
-  `tools.<pack>: true` in that scope's config file (`.oat/config.json` for
-  project scope, `~/.oat/config.json` for user scope). Intent is _true-or-absent_:
-  removing a pack deletes the key rather than writing `false`.
+- **Intent** is why a pack is present. Direct intent is stored per scope as
+  `tools.<pack>: true`; transitive dependency intent is stored as a sorted,
+  deduplicated `tools.requiredBy.<pack>` list. Both live in that scope's config
+  file (`.oat/config.json` for project scope, `~/.oat/config.json` for user
+  scope). Direct intent remains _true-or-absent_: removing a direct pack deletes
+  its key rather than writing `false`.
 - **Inventory** is what is actually on disk right now: every managed asset the
   release manifest declares for that pack and scope, its presence, and its
   version or content digest.
@@ -175,44 +217,54 @@ declares for that scope is present, **partial** when only some are, and
 
 ### Where pack assets land
 
-| Asset kind        | Project scope                                                                      | User scope                   | Ownership                                           |
-| ----------------- | ---------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------- |
-| Skill             | `.agents/skills/<name>/`                                                           | `~/.agents/skills/<name>/`   | Managed — updated and removed by OAT                |
-| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed (see the user-scope agent limitation below) |
-| Template          | `.oat/templates/<name>`                                                            | `~/.oat/templates/<name>`    | Seeded once at project scope; managed at user scope |
-| Script            | `.oat/scripts/<name>`                                                              | `~/.oat/scripts/<name>`      | Managed, executable                                 |
-| Bundled docs tree | not applicable                                                                     | `~/.oat/docs/`               | Managed directory (core pack)                       |
-| Seed file         | `.oat/ideas/…`, `.oat/projects-root`, `.oat/config.json`, project `.gitkeep` files | `~/.oat/ideas/…`             | Seeded once, then owned by you                      |
+| Asset kind        | Project scope                                                                      | User scope                   | Ownership                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------ |
+| Skill             | `.agents/skills/<name>/`                                                           | `~/.agents/skills/<name>/`   | Managed — updated and removed by OAT                                           |
+| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed; manifest-declared eligible user agents are materialized for providers |
+| Template          | `.oat/templates/<name>`                                                            | `~/.oat/templates/<name>`    | Seeded once at project scope; managed at user scope                            |
+| Script            | `.oat/scripts/<name>`                                                              | `~/.oat/scripts/<name>`      | Managed, executable                                                            |
+| Bundled docs tree | not applicable                                                                     | `~/.oat/docs/`               | Managed directory (core pack)                                                  |
+| Seed file         | `.oat/ideas/…`, `.oat/projects-root`, `.oat/config.json`, project `.gitkeep` files | `~/.oat/ideas/…`             | Seeded once, then owned by you                                                 |
 
 Seed files default to both scopes, so `oat tools install ideas --scope user`
 creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
 `workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
 and the project `.gitkeep` files — are pinned to project scope.
 
-#### User-scope agents have limited native materialization
+#### User-scope agents have selective native materialization
 
-Canonical **agents** are installed at either scope. At user scope, native
-Codex or Cursor role materialization is active only when that adapter is active
-under the resolved sync config: explicit enablement wins without filesystem
+Canonical **agents** are installed at either scope. At user scope, native Codex
+or Cursor role materialization is active only when that adapter is active under
+the resolved sync config: explicit enablement wins without filesystem
 detection, explicit disablement wins despite detection, and an unset adapter
-follows detection. That native materialization supplies the bundled managed
-role files (`oat-phase-implementer.md` and `oat-reviewer.md`); it does not
-materialize other pack-owned user agents. For example, a user-scope workflows
-install leaves `oat-codebase-mapper` without a native provider role, and a
-user-scope research install does the same for `skeptical-evaluator`. When no
-Codex or Cursor adapter is active, even the bundled managed roles lack native
-materialization.
+follows detection. Active adapters receive the bundled managed role files
+(`oat-phase-implementer.md` and `oat-reviewer.md`) plus installed pack agents
+whose release-manifest definition explicitly marks them user-materializable and
+whose canonical file matches that bundled definition.
+
+The research pack marks `recon-worker` this way, so
+`oat tools install research --scope user` makes recon's preferred worker role
+available to supported active providers. Unmarked agents remain canonical-only
+at user scope; for example, `skeptical-evaluator` does not gain a native
+provider role through that install. When no Codex or Cursor adapter is active,
+even built-in and marked roles lack native materialization.
 
 This diagnostic concerns native provider roles only. Providers may read
 canonical agent instructions through a separate loaded, user, and project
 lookup contract; that read availability does not establish native
 materialization and does not suppress this finding.
 
-`oat status` and `oat doctor` name the affected agents with a
-`user-agent-unmaterialized` finding rather than reporting the pack as complete
-without qualification. Install the pack at **project scope** when you need its
-native provider roles; `oat tools update` cannot repair this, because it is a
-scope limitation rather than drift.
+The manifest marker is explicit, not a scan of arbitrary Markdown files. A
+missing or mismatched bundled definition fails closed, as does a collision at a
+canonical or provider destination. `oat status` and `oat doctor` name affected
+agents with a `user-agent-unmaterialized` finding rather than reporting the pack
+as complete without qualification. Install the pack at **project scope** when
+you need an unmarked agent's native provider role; `oat tools update` cannot
+repair that scope limitation.
+
+Removal withdraws a provider projection only when no installed pack or direct
+managed-role intent retains the canonical agent. This keeps built-in roles and
+shared pack agents stable while allowing the final owner to clean up the view.
 
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
@@ -521,6 +573,8 @@ Key behavior:
 - Compares installed versions and canonical content against bundled assets and
   copies updates; equal version metadata does not hide content drift
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to the **current** release membership in the scopes where it is installed, adding newly bundled skills, agents, templates, and scripts
+- Pack dependencies are reconciled at the same scope without converting a
+  transitive-only dependency into direct pack intent
 - A pack whose managed assets are all missing but whose intent is still declared is repaired from intent rather than skipped
 - Managed template and script companions are refreshed at **user** scope. A project-scope repository template is an owner override and is left alone
 - Non-versioned assets are compared by content digest, so an identical refresh is a no-op instead of a rewrite
@@ -554,6 +608,9 @@ Key behavior:
   intent was eligible to be cleared; `removed: false` is a no-op and preserves
   intent.
 - Removal-triggered sync prunes exactly the canonical provider views for the removed paths in that scope, leaving other scopes and packs untouched
+- Removing a root pack releases its `requiredBy` leases. A dependency asset is
+  retained while its owning pack has direct intent or another pack still
+  requires that asset
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 
@@ -575,6 +632,8 @@ Key behavior:
 - **Destination first, source second.** The destination is installed and
   re-inventoried, and destination intent is written only after the pack is
   verified complete there. Only then is source removal offered
+- Dependency leases follow the same order: acquire and verify destination
+  leases before releasing source leases, so a failed move remains retryable
 - Source removal requires an interactive confirmation. Declining leaves the
   pack installed at **both** scopes with the destination verified — a safe,
   recoverable state, not a failure. Non-interactive runs stop at the same point
@@ -596,7 +655,7 @@ To roll a migration back, run it in the opposite direction. Because the
 destination is always verified before the source is touched, a rollback is the
 same safe two-phase operation.
 
-## Pack intent: `tools.<pack>`
+## Pack intent: `tools.<pack>` and `tools.requiredBy`
 
 Pack intent is recorded per scope, in that scope's own config file:
 
@@ -607,10 +666,14 @@ Pack intent is recorded per scope, in that scope's own config file:
 
 - Intent is **true-or-absent**. Installing writes `true` for the scope you
   installed into; removing deletes the key. OAT never writes `false`.
+- `tools.requiredBy.<pack>` is a sorted list of packs that currently lease
+  selected assets from that pack at the same scope. It is transitive intent,
+  not a substitute for `tools.<pack>: true`.
 - A user-scope install never writes repository config, and a project-scope
   install never writes user config.
 - Intent for one pack is never derived from another pack's key, and no
-  command writes the full eight-pack map.
+  command writes the full eight-pack map. Dependency operations update only
+  the owning pack's `requiredBy` entry.
 - `.oat/config.local.json` is not an intent surface; per-developer state stays
   out of pack intent.
 - A manual `oat config set tools.<pack> true` is an override that the next
@@ -822,7 +885,8 @@ Installing the `project-management` pack does not adopt a repository. Run
 
 ### The `tools` config map is now sparse
 
-Pack intent is written as [true-or-absent](#pack-intent-toolspack). Earlier
+Pack intent is written as
+[true-or-absent](#pack-intent-toolspack-and-toolsrequiredby). Earlier
 releases wrote all eight pack keys as explicit `true`/`false` on reconcile;
 current releases write `true` for installed packs and delete the key otherwise.
 
