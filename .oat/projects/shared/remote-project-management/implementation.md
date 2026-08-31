@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 10    | 10/10     |
-| Phase 2 | pending     | 9     | 0/9       |
-| Phase 3 | pending     | 12    | 0/12      |
-| Phase 4 | pending     | 11    | 0/11      |
-| Phase 5 | pending     | 9     | 0/9       |
-| Phase 6 | pending     | 10    | 0/10      |
-| Phase 7 | pending     | 10    | 0/10      |
-| Phase 8 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 10    | 10/10     |
+| Phase 2 | pending   | 9     | 0/9       |
+| Phase 3 | pending   | 12    | 0/12      |
+| Phase 4 | pending   | 11    | 0/11      |
+| Phase 5 | pending   | 9     | 0/9       |
+| Phase 6 | pending   | 10    | 0/10      |
+| Phase 7 | pending   | 10    | 0/10      |
+| Phase 8 | pending   | 6     | 0/6       |
 
 **Total:** 10/77 tasks completed
 
@@ -41,7 +41,7 @@ oat_generated: false
 
 ## Phase 1: Domain, Configuration, and Persistence
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-03-15
 
 ### Phase Summary
@@ -74,11 +74,11 @@ oat_generated: false
 - Run: each task's focused Vitest command; the combined 10-file Phase 1 suite;
   format; CLI type-check, lint, build; two pre-merge live full CLI runs; and one
   uncached post-merge live full CLI run.
-- Result: all task checks passed; the combined suite passed 417/417; format,
-  type-check, lint, and build passed. After merging origin/main at `4fa5390d1`,
-  PR #249's four-worker Vitest cap eliminated the host-load timeout class: the
-  uncached CLI suite passed 317 files and 4,688 tests in 85.86 seconds with
-  zero cached tasks.
+- Result: all task checks passed; after review fixes the combined suite passed
+  444/444; format, type-check, lint, check, and build passed. After merging
+  origin/main at `4fa5390d1`, PR #249's four-worker Vitest cap eliminated the
+  host-load timeout class; the final uncached CLI suite passed 317 files and
+  4,715 tests with zero cached tasks.
 
 **Notes / Decisions:**
 
@@ -408,11 +408,12 @@ continuation_events:
 
 #### Independent review and bounded fixes
 
-| Round | Request                          | Target                                                | Artifact                                                       | Findings                          | Outcome                                  |
-| ----- | -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
-| 1     | `review-p01-20260831T052706Z`    | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-review-2026-08-31T052706Z.md`       | 2 Critical, 2 Important, 3 Medium | blocked; same-handle fix `7b927ed8a`     |
-| 2     | `review-p01-r2-20260831T060131Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-rereview-2026-08-31T060131Z.md`     | 2 Critical, 1 Important, 3 Medium | blocked; same-handle fix `306bdd9dc`     |
-| 3     | `review-p01-r3-20260831T063219Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md` | 2 Critical, 0 Important, 3 Medium | terminal blocked; governance cap reached |
+| Round | Request                                   | Target                                                | Artifact                                                          | Findings                          | Outcome                                  |
+| ----- | ----------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
+| 1     | `review-p01-20260831T052706Z`             | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-review-2026-08-31T052706Z.md`          | 2 Critical, 2 Important, 3 Medium | blocked; same-handle fix `7b927ed8a`     |
+| 2     | `review-p01-r2-20260831T060131Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-rereview-2026-08-31T060131Z.md`        | 2 Critical, 1 Important, 3 Medium | blocked; same-handle fix `306bdd9dc`     |
+| 3     | `review-p01-r3-20260831T063219Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md`    | 2 Critical, 0 Important, 3 Medium | terminal blocked; governance cap reached |
+| 4     | `review-p01-r4-operator-20260831T122741Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md` | 0 Critical, 0 Important, 4 Medium | passed under operator extension          |
 
 - Every reviewer reported `**Reconnaissance:** not-attempted`; no review
   artifact contains a `## Review Orchestration` section.
@@ -449,7 +450,14 @@ continuation_events:
   lint, and check passed; uncached CLI 4,715/4,715 with 0 cached tasks; root
   independently reran the combined 444-test suite and checked the exact diff.
 - Review-fix retry usage: 3/3; prior usage was preserved.
-- Status: operator-extension fix complete; fresh independent review pending.
+- Review artifact:
+  `reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md`.
+- Review result: PASS with 0 Critical, 0 Important, 4 Medium, and 0 Minor.
+- All prior blocking findings remain resolved. The retained nonblocking Mediums
+  cover duplicate-identity provider context, pre-rename temporary cleanup,
+  effective default-config exposure, and direct substep approval-digest
+  regression coverage.
+- Status: Phase 1 complete; Phase 2 may begin.
 
 <!-- orchestration-runs-end -->
 
@@ -501,12 +509,11 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the authorized fourth independent review; do not begin Phase 2 unless it
-  passes.
+- Begin Phase 2.
 
 **Blockers:**
 
-- None requiring user input. Fresh review of `a13b3b4a8` is pending.
+- None.
 
 **Session End:** 2026-08-31T04:59:16Z
 
@@ -532,10 +539,10 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage                                      |
-| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | --------------------------------------------- |
-| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | verification passed; extension review pending |
-| 2     | -                                                                                    | -                                      | -      | -                                             |
+| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | -------- |
+| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed   |
+| 2     | -                                                                                    | -                                      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
