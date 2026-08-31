@@ -626,7 +626,10 @@ describe('removeTools', () => {
           expect.objectContaining({ code: 'shared-owner-observation' }),
         ]),
       );
-      expect(retainedInventory?.diagnostics).toEqual(
+      const retainedDiagnostics = retainedInventory?.scopes.flatMap(
+        ({ diagnostics }) => diagnostics,
+      );
+      expect(retainedDiagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             code: 'shared-owner-observation',

@@ -1772,6 +1772,7 @@ config_file = "agents/${roleName}.toml"
     expect(capture.info[0]).toContain(
       'installed or intended pack owner(s): workflows',
     );
+    expect(capture.info[0]?.match(/shared-owner-observation/g)).toHaveLength(1);
     expect(capture.info[0]).not.toContain('docs [shared-owner-observation]');
   });
 

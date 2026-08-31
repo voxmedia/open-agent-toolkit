@@ -718,6 +718,7 @@ Run `pnpm check && pnpm type-check` with each exit code captured explicitly.
 - Modify: `packages/cli/src/commands/tools/shared/pack-inventory.test.ts`
 - Modify: `packages/cli/src/commands/status/index.test.ts`
 - Modify: `packages/cli/src/commands/doctor/index.test.ts`
+- Modify: `packages/cli/src/commands/tools/remove/remove-tools.test.ts`
 
 **Step 1: Analyze failure context**
 

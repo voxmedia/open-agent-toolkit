@@ -432,9 +432,6 @@ export function attributeSharedOwnerDiagnostics(
       ({ code }) => code !== 'shared-owner-observation',
     ),
   }));
-  const inventoryByPack = new Map(
-    attributed.map((inventory) => [inventory.pack, inventory]),
-  );
   const groups = new Map<
     string,
     {
@@ -483,7 +480,6 @@ export function attributeSharedOwnerDiagnostics(
     };
     const selected = applicable[0]!;
     selected.scoped.diagnostics.push(diagnostic);
-    inventoryByPack.get(selected.pack)!.diagnostics.push(diagnostic);
   }
 
   return attributed;

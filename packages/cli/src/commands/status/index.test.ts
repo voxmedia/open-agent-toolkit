@@ -1959,6 +1959,7 @@ describe('createStatusCommand', () => {
       expect(output).toContain(
         'installed or intended pack owner(s): workflows',
       );
+      expect(output.match(/shared-owner-observation/g)).toHaveLength(1);
       expect(output).not.toContain('docs: no installed scope');
     });
 

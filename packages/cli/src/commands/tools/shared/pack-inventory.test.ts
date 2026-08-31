@@ -682,7 +682,7 @@ describe('pack inventory', () => {
       order: ['workflows', 'docs'] as const,
     },
   ])(
-    'attributes a shared asset once to both applicable owners in $label',
+    'attributes a shared asset once with both applicable owners in $label',
     async ({ order }) => {
       const assetsRoot = await makeRoot('oat-assets-');
       const userRoot = await makeRoot('oat-user-');
@@ -694,17 +694,16 @@ describe('pack inventory', () => {
           order.map((pack) => inventoryPack({ pack, assetsRoot, userRoot })),
         ),
       );
-      const sharedDiagnostics = attributed.flatMap(
-        ({ diagnostics: inventoryDiagnostics }) =>
-          inventoryDiagnostics.filter(
-            ({ code }) => code === 'shared-owner-observation',
-          ),
+      const sharedDiagnostics = attributed.flatMap(({ scopes }) =>
+        scopes.flatMap(({ diagnostics }) =>
+          diagnostics.filter(({ code }) => code === 'shared-owner-observation'),
+        ),
       );
       expect(sharedDiagnostics).toHaveLength(1);
       expect(sharedDiagnostics[0]?.message).toContain('docs, workflows');
       expect(
         attributed.find(({ pack }) => pack === 'docs')?.diagnostics,
-      ).toContainEqual(sharedDiagnostics[0]);
+      ).not.toContainEqual(sharedDiagnostics[0]);
     },
   );
 
@@ -748,7 +747,10 @@ describe('pack inventory', () => {
           expect.objectContaining({ code: 'shared-owner-observation' }),
         ]),
       );
-      expect(retainedInventory?.diagnostics).toEqual(
+      const retainedDiagnostics = retainedInventory?.scopes.flatMap(
+        ({ diagnostics }) => diagnostics,
+      );
+      expect(retainedDiagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             code: 'shared-owner-observation',
@@ -756,9 +758,7 @@ describe('pack inventory', () => {
           }),
         ]),
       );
-      expect(retainedInventory?.diagnostics[0]?.message).not.toContain(
-        `${removed},`,
-      );
+      expect(retainedDiagnostics?.[0]?.message).not.toContain(`${removed},`);
     },
   );
 
