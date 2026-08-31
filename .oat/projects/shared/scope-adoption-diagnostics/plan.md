@@ -617,21 +617,64 @@ records the final evidence in implementation bookkeeping with:
 **Phase 4 Verification:** The focused suite and all eight repository gates pass
 at the final reviewed head.
 
+### Task p04-t03: (review) Align terminal review summaries
+
+**Files:**
+
+- Modify: `.oat/projects/shared/scope-adoption-diagnostics/plan.md`
+- Modify: `.oat/projects/shared/scope-adoption-diagnostics/implementation.md`
+- Modify: `.oat/projects/shared/scope-adoption-diagnostics/state.md`
+
+**Step 1: Understand the issue**
+
+Final review finding `m1`: current summary prose still reports the completed
+p04 review as pending even though the Reviews ledger records it as passed.
+Locations: `state.md:52`, `plan.md:663`, and `implementation.md:338` at the
+reviewed head.
+
+**Step 2: Implement fix**
+
+Align only the current terminal summaries and progress rollups with the
+authoritative Reviews ledger: p04 passed, the final review fix is complete,
+and only re-review plus approval-aware closeout remain. Preserve historical
+orchestration snapshots unchanged.
+
+**Step 3: Verify**
+
+Run:
+`rg -n "p04 and final reviews pending|awaiting p04 and final review|p04 and final reviews remain" .oat/projects/shared/scope-adoption-diagnostics/{plan.md,implementation.md,state.md}`
+
+Expected: no current-summary match. Historical event prose remains unchanged
+unless it uses one of these exact stale current-summary forms.
+
+Run: `pnpm exec oxfmt --check .oat/projects/shared/scope-adoption-diagnostics/{plan.md,implementation.md,state.md} && git diff --check`
+
+Expected: formatting and whitespace checks pass.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/scope-adoption-diagnostics/plan.md \
+  .oat/projects/shared/scope-adoption-diagnostics/implementation.md \
+  .oat/projects/shared/scope-adoption-diagnostics/state.md
+git commit -m "fix(p04-t03): align terminal review summaries"
+```
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                             | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-08-30 | `reviews/p01-review-2026-08-30T220053Z.md`           | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
-| p01    | code     | passed          | 2026-08-30 | `reviews/p01-review-2026-08-30T220913Z.md`           | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
-| p02    | code     | passed          | 2026-08-30 | `reviews/p02-review-2026-08-30T224248Z.md`           | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
-| p03    | code     | passed          | 2026-08-30 | `reviews/p03-review-2026-08-30T225845Z.md`           | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
-| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`  | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
-| final  | code     | pending         | -          | -                                                    | -                                        | -          | -                             |
-| spec   | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                    | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md` | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md` | -                                        | -          | -                             |
-| plan   | artifact | fixes_completed | 2026-08-30 | -                                                    | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| Scope  | Type     | Status          | Date       | Artifact                                              | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | fixes_completed | 2026-08-30 | `reviews/p01-review-2026-08-30T220053Z.md`            | b30da4105b556f7dc40af57b82f58f7285644b34 | manual     | -                             |
+| p01    | code     | passed          | 2026-08-30 | `reviews/p01-review-2026-08-30T220913Z.md`            | 5f6e5c7019944ae7fa602367b9427c8713935cd5 | manual     | -                             |
+| p02    | code     | passed          | 2026-08-30 | `reviews/p02-review-2026-08-30T224248Z.md`            | 496b3759e24dd9c4229e932d53194322924aaed8 | manual     | -                             |
+| p03    | code     | passed          | 2026-08-30 | `reviews/p03-review-2026-08-30T225845Z.md`            | 2c108e71372ff9e7f08741512cc6818523ae300d | manual     | -                             |
+| p04    | code     | passed          | 2026-08-30 | `reviews/archived/p04-review-2026-08-31T002514Z.md`   | 89a74da25cfb8e870b74645d760feeb6bb03996a | manual     | -                             |
+| final  | code     | fixes_added     | 2026-08-30 | `reviews/archived/final-review-2026-08-31T003300Z.md` | 9f64bd345eba013b260a1983f9cbabce0027a539 | auto       | -                             |
+| spec   | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
+| design | artifact | pending         | -          | -                                                     | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T215450Z.md`  | -                                        | -          | -                             |
+| plan   | artifact | passed          | 2026-08-27 | `reviews/artifact-plan-review-2026-08-27T221042Z.md`  | -                                        | -          | -                             |
+| plan   | artifact | fixes_completed | 2026-08-30 | -                                                     | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 
 Status progression: `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -652,16 +695,16 @@ review result.
 - Phase 1: 2 tasks - PJM migration adoption semantics
 - Phase 2: 3 tasks - provider-aware, attributable, fault-tolerant diagnostics
 - Phase 3: 2 tasks - production-realistic test-quality ratchets
-- Phase 4: 2 tasks - lockstep versions and integrated release verification
+- Phase 4: 3 tasks - release verification and final review alignment
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
-Implementation tasks are 9/9 complete. Current-main revalidation retained all
-nine tasks, adapting five without expanding into umbrella ownership; PR #244's
-cleanup-first dependency is integrated. A bounded p04 recovery capped CLI
-Vitest at four workers and made the exact `pnpm test` gate pass without changing
-timeouts or assertions. Completion still requires p04/final review and
-approval-aware closeout.
+Implementation tasks are 9/10 complete. Current-main revalidation retained all
+nine original tasks, adapting five without expanding into umbrella ownership;
+PR #244's cleanup-first dependency is integrated. A bounded p04 recovery capped
+CLI Vitest at four workers and made the exact `pnpm test` gate pass without
+changing timeouts or assertions. One final-review artifact-alignment task is
+queued before re-review and approval-aware closeout.
 
 ## References
 

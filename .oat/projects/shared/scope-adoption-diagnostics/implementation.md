@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-30
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -17,14 +17,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 3     | 3/3       |
-| Phase 3 | completed | 2     | 2/2       |
-| Phase 4 | completed | 2     | 2/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 3     | 3/3       |
+| Phase 3 | completed   | 2     | 2/2       |
+| Phase 4 | in progress | 3     | 2/3       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ## Current-Main Plan Revalidation
 
@@ -159,6 +159,15 @@ the exact `pnpm test` command to exit 0. The four-worker cap passed that gate
 before and after commit with all 4,599 CLI tests, then the remaining final-head
 gates passed. Recovery accounting is settled at 1/10 used and no pending
 attempt.
+
+### Task p04-t03: (review) Align terminal review summaries
+
+**Status:** pending
+
+Final review finding `m1` requires current summary prose to reflect the
+authoritative ledger: p04 passed and only the final review-fix cycle plus
+approval-aware closeout remain. Historical orchestration snapshots stay
+unchanged.
 
 ## Orchestration Runs
 
@@ -311,6 +320,32 @@ evidence complete at reviewed head
 `89a74da25cfb8e870b74645d760feeb6bb03996a`.
 
 **Next:** Run the final lifecycle review and implementation closeout gates.
+
+### Review Received: final
+
+**Date:** 2026-08-30
+**Review artifact:**
+`reviews/archived/final-review-2026-08-31T003300Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** `p04-t03`
+
+**Finding disposition:**
+
+- `m1` → converted to `p04-t03`. The reviewer found lifecycle-artifact
+  drift, not a product-code defect; the Reviews ledger is authoritative and
+  the three current summaries must align to it.
+
+**Deferred Findings (Medium):** None.
+
+**Next:** Execute `p04-t03` through `oat-project-implement`, then re-review the
+final fix range.
 
 <!-- orchestration-runs-end -->
 
