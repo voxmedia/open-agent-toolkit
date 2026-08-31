@@ -1,6 +1,6 @@
 ---
 oat_current_task: prev1-t01
-oat_last_commit: 259a1e73dc98d39aab73006402f66f957dd1c27d
+oat_last_commit: 841a7164a4f789f244b1e7adac47b44365d09dfb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T16:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T16:26:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev1 - final bounded fix for dual URL capture representation
+Revision p-rev1 - awaiting terminal independent re-review
 
 ## Artifacts
 
@@ -123,15 +123,17 @@ Revision p-rev1 - final bounded fix for dual URL capture representation
 - ✓ Bounded two-file fix covers stale, invalid, and unavailable variants
 - ✓ Final fresh re-review closed every existing representation and prior
   Critical/Important finding
-- ⧗ One Important dual URL declaration ambiguity remains for the final
-  configured correction round
+- ✓ One Important dual URL declaration ambiguity required the final configured
+  correction round
+- ✓ Dual URL capture representations now reject as an exclusive-union violation
+- ⧗ Terminal fresh independent re-review is next
 
 ## Blockers
 
-One Important p-rev1 finding remains assigned to the third and final bounded
-review-fix round; no design expansion or external blocker is present.
+None. The final configured p-rev1 fix is complete and awaits terminal
+independent re-review.
 
 ## Next Milestone
 
-Reject dual URL capture representations and obtain the terminal independent
-p-rev1 re-review
+Obtain the terminal independent p-rev1 re-review with zero Critical/Important
+findings

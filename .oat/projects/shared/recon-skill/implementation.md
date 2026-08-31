@@ -444,6 +444,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   rather than add another retained branch or abstraction
 - Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Dispatch p-rev1 fix round 3
+
+- Original request ID: `recon-skill-prev1-implementation-20260831`
+- Continuation event: `recon-skill-prev1-fix-r3-20260831T1611Z`
+- Role/class: original `oat-phase-implementer` handle / worker
+- Provider/context: Codex / root-native continuation
+- Authority: third and final bounded correction of the one Important round-3
+  finding inside the existing contract/test boundary
+- Task class/floor: `consequential` / satisfied
+- Selection source/reason: policy-resolved / native-catalog
+- Candidate target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted continuation / completed
+- Fix commit: `841a7164a4f789f244b1e7adac47b44365d09dfb`
+- Finding disposition: URL capture representations are an exclusive union;
+  simultaneous direct and validator-state captures reject structurally before
+  validation or publication
+- Verification: RED 12/12; focused 67/67; recon 147/147; CLI 164/164; skill
+  suite 742/742; canonical validation, skill-bump validation, lint, format, CLI
+  type-check, and `pnpm check` pass
+- Optional nested dispatches: none
+- Dispatch: scope=p-rev1-fix-r3 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -665,6 +688,18 @@ context before p02 can advance.
   stale/invalid/unavailable alias/retarget mutations. No new retention branch,
   schema version, or abstraction is authorized.
 
+### 2026-08-31 - p-rev1 review fixes round 3 completed
+
+- The original revision handle added append-only fix commit `841a7164a`,
+  changing only the existing closed contract and render mutation suite.
+- URL source captures are now an exclusive union: direct capture fields and
+  validator-state capture fields cannot coexist. This removes the ambiguous
+  unused path instead of adding precedence or another retention branch.
+- Root validation confirms the 12-case dual-form RED matrix, focused 67/67,
+  complete recon 147/147, bounded two-file commit, and clean worktree.
+- The configured three review-fix rounds are now exhausted. The next fresh
+  re-review is terminal: zero Critical/Important findings are required to pass.
+
 ## Deviations from Plan / Design
 
 None. Add accepted implementation deviations here as they arise, with their
@@ -700,6 +735,9 @@ source artifact and follow-up disposition.
 - After p-rev1 fix round 2, focused audit-identity/render coverage passes 55/55
   and the complete recon suite passes 135/135; CLI validation passes 164/164
   and the complete skill suite passes 730/730.
+- After p-rev1 fix round 3, focused URL/render coverage passes 67/67 and the
+  complete recon suite passes 147/147; CLI validation passes 164/164 and the
+  complete skill suite passes 742/742.
 
 ## Final Summary (for PR/docs)
 

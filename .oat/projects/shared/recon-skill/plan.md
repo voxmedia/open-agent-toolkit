@@ -985,7 +985,7 @@ git commit -m "refactor(prev1-t02): centralize recon packet validation"
 | p02       | code     | fixes_added     | 2026-08-31 | `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`          | cf4e5fbf17743825484460ed32f1f522075eb552 | auto       | -           |
 | p03       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p04       | code     | pending         | -          | -                                                             | -                                        | -          | -           |
-| p-rev1    | code     | fixes_added     | 2026-08-31 | `reviews/p-rev1-code-final-rereview-2026-08-31T160738Z.md`    | 259a1e73dc98d39aab73006402f66f957dd1c27d | auto       | -           |
+| p-rev1    | code     | fixes_completed | 2026-08-31 | `reviews/p-rev1-code-final-rereview-2026-08-31T160738Z.md`    | 259a1e73dc98d39aab73006402f66f957dd1c27d | auto       | -           |
 | final     | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | spec      | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`   | -                                        | -          | -           |
