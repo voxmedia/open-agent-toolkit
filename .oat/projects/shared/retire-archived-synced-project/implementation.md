@@ -2,13 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - task_id: p01-t02
-    reason: >-
-      Git omits an already-equal completed-ref update and its lease from the
-      atomic receive-pack transaction, so active deletion is not a true
-      two-ref compare-and-swap. Two fix iterations and three reviews are
-      exhausted.
-    since: 2026-08-31
+  - 'p01-t02: Git omits an already-equal completed-ref update and its lease from the atomic receive-pack transaction, so active deletion is not a true two-ref compare-and-swap; two fix iterations and three reviews are exhausted.'
 oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t02
 oat_generated: false
