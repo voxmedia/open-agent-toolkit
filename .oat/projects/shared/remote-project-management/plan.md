@@ -1216,6 +1216,7 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | -                                                           | -             | structured-auto-3 | codex:sol-high           |
 | plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md | -             | gate              | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received        | 2026-08-31 | reviews/artifact-plan-review-2026-08-31T025155Z.md          | -             | -                 | -                        |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
