@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-29
+oat_last_updated: 2026-08-31
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: tool-pack-scope-provider-truthfulness
 
-**Started:** 2026-08-29
-**Last Updated:** 2026-08-29
+**Started:** 2026-08-31
+**Last Updated:** 2026-08-31
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,17 +26,22 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 1     | 0/1       |
+| Phase 2 | pending     | 7     | 0/7       |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 5     | 0/5       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 4     | 0/4       |
+| Phase 7 | pending     | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/30 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Accepted Diagnostics Baseline
 
 **Status:** in_progress
-**Started:** 2026-08-29
+**Started:** 2026-08-31
 
 ### Phase Summary (fill when phase is complete)
 
@@ -57,10 +62,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Land, rebase, and record the diagnostics predecessor
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,18 +90,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 2: Shared Evidence and Truthful Scope
 
 **Status:** pending
 **Started:** -
@@ -128,12 +122,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-08-29
+### 2026-08-31
 
-**Session Start:** {time}
+**Session Start:** 05:21 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Land, rebase, and record the diagnostics predecessor - in progress
 
 **What changed (high level):**
 
@@ -155,7 +148,7 @@ Chronological log of implementation progress.
 
 ---
 
-### 2026-08-29
+### 2026-08-31
 
 **Session Start:** {time}
 
