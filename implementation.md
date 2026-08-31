@@ -358,6 +358,21 @@ remains. Mandatory post-fix test, lint, type-check, and build gates each exited
 
 **Next:** Execute the configured implementation exit gate.
 
+### Configured Exit Gate Generation
+
+**Date:** 2026-08-31
+**Status:** `pending` / `not_started`
+**Reviewed head:** `659547363032fd9f41eefadc947bb0496fe7457f`
+**Implementation base:** `origin/main` (unique merge base
+`5d684ba9746cd91006524eb5a82f18078a3196ef`)
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:a99abddfa01d76e3dee6de10581dbc083882046d0d94d68a44463318ff8d7bd4`
+**Configuration fingerprint:**
+`sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+
+The resolved blocking gate command, description, failure policy, and two-attempt
+limit are persisted in `state.md` before launch.
+
 ---
 
 ## Implementation Log

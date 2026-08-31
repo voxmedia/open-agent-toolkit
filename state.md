@@ -44,47 +44,47 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: pending # pending | allowed | blocked | stale
-#   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | no_gate
-#   config_fingerprint: '<stable hash of resolved gate declaration>'
-#   resolved_command: null
-#   resolved_description: null
-#   on_failure: block # block | prompt | warn | null
-#   max_attempts: 2
-#   attempts_completed: 0
-#   reviewed_head: null
-#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
-#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
-#   freshness_head: null # rolling accepted tree checkpoint
-#   freshness_fingerprint: null # full effective delta at freshness_head
-#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
-#   launch_attempt_id: null
-#   launch_started_at: null
-#   launch_result_receipt: null
-#   gate_run_marker: null
-#   gate_run_id: null
-#   envelope_status: null # ok | blocked | review_failed | other terminal status
-#   artifact: null
-#   handoff: null
-#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: null
-#   receive_source_artifact: null
-#   receive_archived_artifact: null
-#   receive_event_identity: null
-#   receive_pre_head: null
-#   receive_commit: null
-#   receive_eligible: false
-#   receive_completed: false
-#   failure: null
-#   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 659547363032fd9f41eefadc947bb0496fe7457f
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:a99abddfa01d76e3dee6de10581dbc083882046d0d94d68a44463318ff8d7bd4'
+  freshness_head: 659547363032fd9f41eefadc947bb0496fe7457f
+  freshness_fingerprint: 'sha256:effective-delta-v1:a99abddfa01d76e3dee6de10581dbc083882046d0d94d68a44463318ff8d7bd4'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-08-31T00:04:16Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T21:57:48.570Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T00:04:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T00:04:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
