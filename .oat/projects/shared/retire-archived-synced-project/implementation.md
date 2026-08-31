@@ -366,6 +366,10 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Launch attempt `c30a37ea-e6c5-43a7-88d4-d00d186dd2c1` preselected its durable
   stdout receipt under `~/.oat/runtime/closeout-receipts/` before process start.
   The gate marker and run ID remain unset until the CLI proves acceptance.
+- The CLI accepted gate run `42a1a4fe-e3a4-4830-8fbc-474ba966613d` at
+  `2026-08-31T23:22:06.654Z`. Its unique marker matches the Claude Fable target,
+  final code scope, and active project; the synchronously awaited child remains
+  in flight.
 
 <!-- orchestration-runs-end -->
 

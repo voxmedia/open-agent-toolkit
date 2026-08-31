@@ -64,12 +64,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:e7105d60d6c8f52e63b2f1b1895b7e8a4739dc00c945241499edec5b6b4dbc02
   freshness_head: 29ba9c2ab09d50db459e064cb6db792897574f84
   freshness_fingerprint: sha256:effective-delta-v1:ad6cd2d8f9973e51cc8643efff6783ffffc490cfcf4799a54ba567a2d4a10d9e
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: c30a37ea-e6c5-43a7-88d4-d00d186dd2c1
   launch_started_at: '2026-08-31T23:20:29Z'
   launch_result_receipt: /Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/c30a37ea-e6c5-43a7-88d4-d00d186dd2c1.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/42a1a4fe-e3a4-4830-8fbc-474ba966613d.json
+  gate_run_id: 42a1a4fe-e3a4-4830-8fbc-474ba966613d
   envelope_status: null
   artifact: null
   handoff: null
@@ -83,13 +83,13 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-08-31T23:21:02Z'
+  updated_at: '2026-08-31T23:22:28Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:21:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T23:22:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -147,7 +147,8 @@ Implement - configured Claude Fable exit gate
 - ✓ Cursor Fable gate remained unlaunched and its blocked generation was preserved as stale
 - ✓ Fresh Claude Fable gate generation resolved against the unchanged reviewed implementation basis
 - ✓ Claude Fable gate launch intent and durable result receipt persisted
-- → Launch the exact configured command, receive its structured result, then evaluate the post-p04 HiLL checkpoint
+- ✓ Gate run `42a1a4fe-e3a4-4830-8fbc-474ba966613d` accepted with a unique correlated run marker
+- → Await the structured result, receive it when eligible, then evaluate the post-p04 HiLL checkpoint
 
 ## Blockers
 
