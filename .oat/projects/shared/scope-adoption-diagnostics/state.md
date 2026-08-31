@@ -40,8 +40,8 @@ oat_implement_exit_gate:
   reviewed_head: c68032b004a29cfedccb63e02728c6446eb6a33c
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:cad384249961650b6be86e39b9601217911fe68af9fd1a3954bce213642a0063'
-  freshness_head: c3d6e1b6c3bf63392a61163add489b306381293f
-  freshness_fingerprint: 'sha256:effective-delta-v1:8d5c8e725ef530b515ae8ae9bde4c9e85b27d9e12156a647bc2bd42b68eb5bbb'
+  freshness_head: 3b4f0a50d70e557fb9843841b2336e12211d9251
+  freshness_fingerprint: 'sha256:effective-delta-v1:5b69c6ac5f5f2859067b22cdcab04cbe0f8180a374bb3646fd392f61e3d8b2a7'
   launch_state: result_persisted
   launch_attempt_id: a1fce449-4b3c-4166-8bed-13952143778c
   launch_started_at: '2026-08-31T01:17:08Z'
@@ -70,7 +70,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  pre_approval_completed: []
+  pre_approval_completed:
+    - summary
   approval: pending
   approval_source: null
   post_approval: []
@@ -83,7 +84,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-08-27T21:31:05.860Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-08-31T01:41:06Z'
+oat_project_state_updated: '2026-08-31T01:44:32Z'
 oat_generated: false
 ---
 
