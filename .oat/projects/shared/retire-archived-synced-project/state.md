@@ -1,7 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: 98b005960b2c5f282fadb8781d990d2ed4a159c9
-oat_blockers: []
+oat_blockers: [cursor_fable_keychain_locked]
 associated_issues:
   - type: backlog
     ref: BL-260831-retire-archived-synced-project
@@ -42,59 +42,68 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: pending # pending | allowed | blocked | stale
-#   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | no_gate
-#   config_fingerprint: '<stable hash of resolved gate declaration>'
-#   resolved_command: null
-#   resolved_description: null
-#   on_failure: block # block | prompt | warn | null
-#   max_attempts: 2
-#   attempts_completed: 0
-#   reviewed_head: null
-#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
-#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
-#   freshness_head: null # rolling accepted tree checkpoint
-#   freshness_fingerprint: null # full effective delta at freshness_head
-#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
-#   launch_attempt_id: null
-#   launch_started_at: null
-#   launch_result_receipt: null
-#   gate_run_marker: null
-#   gate_run_id: null
-#   envelope_status: null # ok | blocked | review_failed | other terminal status
-#   artifact: null
-#   handoff: null
-#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: null
-#   receive_source_artifact: null
-#   receive_archived_artifact: null
-#   receive_event_identity: null
-#   receive_pre_head: null
-#   receive_commit: null
-#   receive_eligible: false
-#   receive_completed: false
-#   failure: null
-#   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: blocked
+  resolution: configured
+  disposition: null
+  config_fingerprint: sha256:0e5a923055d2929f4e095487738186557932cc15414d013cf017125ea4045949
+  resolved_command: >-
+    oat --json gate review --project "$PROJECT_PATH" --review-type code
+    --review-scope final --target cursor-fable-5-high --exit-nonzero-on
+    important "Use the oat-project-review-provide skill to review the current
+    project. Use project state to determine the most appropriate review scope.
+    If the project is complete, provide a final independent code review of the
+    entire project. Return blocking findings clearly, or say no blocking
+    findings."
+  resolved_description: Project-local Cursor Fable final implementation review.
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 98b005960b2c5f282fadb8781d990d2ed4a159c9
+  implementation_base_ref: origin/main
+  implementation_fingerprint: sha256:effective-delta-v1:e7105d60d6c8f52e63b2f1b1895b7e8a4739dc00c945241499edec5b6b4dbc02
+  freshness_head: 3f404499238c37a250305f6ec105f42c7d920081
+  freshness_fingerprint: sha256:effective-delta-v1:4380070d661f0aeee498d6486f0fbeb87b2c71c0475b9186d5aed00f4289bef6
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: >-
+    target_unavailable: cursor-fable-5-high; cursor-agent reports the macOS
+    login keychain is locked
+  updated_at: '2026-08-31T18:07:44Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T18:02:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T18:07:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** final review passed; configured exit gate pending
+**Status:** final review passed; configured exit gate blocked before launch
 **Started:** 2026-08-31
 **Last Updated:** 2026-08-31
 
 ## Current Phase
 
-Implement - configured Cursor Fable exit gate
+Implement - configured Cursor Fable exit gate pre-launch recovery
 
 ## Artifacts
 
@@ -137,13 +146,17 @@ Implement - configured Cursor Fable exit gate
 - ✗ Final whole-project review found 1 Critical, 1 Important, and 1 Medium terminal-path gap
 - ✓ Completed p04-t03 through p04-t05; combined regression passes 156/156
 - ✓ Full final verification and focused re-review passed with zero findings
-- → Run the configured Cursor Fable exit gate, then evaluate the post-p04 HiLL checkpoint
+- ⚠ Cursor Fable target unavailable because the macOS login keychain is locked; gate not launched
+- → Unlock the login keychain locally, re-probe the target, then run the gate and post-p04 HiLL checkpoint
 
 ## Blockers
 
-None.
+The configured `cursor-fable-5-high` target is unavailable before launch.
+`cursor-agent --version` reports that the macOS login keychain is locked. No
+gate process or reviewer child was accepted, so this is safely resumable after
+the keychain is unlocked.
 
 ## Next Milestone
 
-Run the configured Cursor Fable exit gate, then evaluate the post-p04 HiLL
-checkpoint.
+Unlock the macOS login keychain locally, re-probe `cursor-fable-5-high`, then
+run the configured exit gate and evaluate the post-p04 HiLL checkpoint.

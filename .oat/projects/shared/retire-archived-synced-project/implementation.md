@@ -1,7 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers: [cursor_fable_keychain_locked]
 oat_last_updated: 2026-08-31
 oat_current_task_id: null
 oat_generated: false
@@ -351,6 +351,10 @@ _Orchestration runs from `oat-project-implement` are appended here._
   0 Minor; 186/186 affected-path tests passed.
 - Remaining boundary: configured Cursor Fable exit gate, then the post-p04
   HiLL checkpoint.
+- Exit-gate preflight did not launch a gate process. The source CLI target probe
+  reported `cursor-fable-5-high` unavailable, and `cursor-agent --version`
+  reported a locked macOS login keychain. Resume after a local keychain unlock;
+  no implementation, verification, or review work needs to be repeated.
 
 <!-- orchestration-runs-end -->
 
