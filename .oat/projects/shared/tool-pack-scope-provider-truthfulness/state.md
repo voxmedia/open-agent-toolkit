@@ -1,10 +1,7 @@
 ---
 oat_current_task: p04-t01
 oat_last_commit: c8ff68a82f9fd8beef352bd45da7a429ff5c2d11
-oat_blockers:
-  - task_id: p03
-    reason: third governed High review retained two Important findings; a fourth fix/re-review cycle requires explicit operator authorization
-    since: 2026-08-31
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T21:55:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T21:57:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +108,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 is blocked after its third governed High review. All
-round-2 findings are fixed, but round 3 found two Important defects: invalid
-provider scopes can mutate project config, and core human apply output still
-labels plans as applied without actual or unknown outcomes.
+Implementation - Phase 3 round 4 is explicitly authorized. The bounded fix
+must reject invalid provider scopes before any write and make core human apply
+output render actual or explicitly unknown outcomes. One fresh independent
+High review follows; Phase 4 remains gated until that review passes.
 
 ## Artifacts
 
@@ -122,7 +119,7 @@ labels plans as applied without actual or unknown outcomes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 next)
+- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 round 4 authorized)
 
 ## Progress
 

@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** blocked after review round 3; operator disposition required
+**Status:** review round 4 authorized; bounded fixes pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -584,6 +584,16 @@ high confidence. The original commit remains the source authority.
   mutation was reproduced separately.
 - This is the third governed p03 review cycle. No fourth fix or review is
   authorized automatically; explicit operator disposition is required.
+
+### Review Round 4 Authorization
+
+- Thomas explicitly authorized exactly one additional bounded correction for
+  the two Important round-3 findings and one fresh independent High review.
+- The correction is limited to invalid provider-scope rejection before writes
+  and truthful core human apply-result rendering, with the tests and adjacent
+  snapshots mechanically required by those changes.
+- A passing round-4 review completes p03 and advances directly to p04. A
+  blocking round-4 review is terminal for this authorization.
 
 ---
 
