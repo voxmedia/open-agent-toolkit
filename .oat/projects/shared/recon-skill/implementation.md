@@ -422,6 +422,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Dispatch: scope=p-rev1-fix-r2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Dispatch p-rev1 review round 3
+
+- Request ID: `recon-skill-prev1-final-rereview-20260831T1607Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / root-native
+- Authority: final fresh re-review of the complete p02-through-revision range
+  and narrowed round-2 correction; write only the timestamped review artifact
+- Selection source/reason: policy-resolved / gate-target
+- Candidate target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed with one blocking finding
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p-rev1-code-final-rereview-2026-08-31T160738Z.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Closed dispositions: the 36-case ineligible-audit identity matrix and every
+  earlier p02/p-rev1 Critical or Important finding pass direct probes
+- Remaining disposition: URL schema permits simultaneous direct and
+  validator-state capture representations while identity retention selects one
+- Overengineering assessment: passed; v1 should reject the ambiguous dual form
+  rather than add another retained branch or abstraction
+- Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -629,6 +651,19 @@ context before p02 can advance.
   complete 135/135 recon suite, bounded two-file commit, and clean worktree.
 - A final fresh independent p-rev1 re-review is next; this is review-fix round
   2 of the configured maximum 3.
+
+### 2026-08-31 - p-rev1 review round 3 received
+
+- Final re-review confirms all 36 stale/invalid/unavailable identity cases and
+  every earlier Critical/Important finding are closed for their existing
+  representations.
+- One Important ambiguity remains: URL sources may simultaneously declare
+  direct and validator-state capture paths, while the identity collector
+  intentionally selects one alternative.
+- The final configured correction round will simplify the closed v1 contract
+  by rejecting dual URL capture representations and adding targeted
+  stale/invalid/unavailable alias/retarget mutations. No new retention branch,
+  schema version, or abstraction is authorized.
 
 ## Deviations from Plan / Design
 

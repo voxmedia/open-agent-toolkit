@@ -68,7 +68,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T15:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-08-31T16:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision p-rev1 - awaiting final fresh independent re-review
+Revision p-rev1 - final bounded fix for dual URL capture representation
 
 ## Artifacts
 
@@ -121,14 +121,17 @@ Revision p-rev1 - awaiting final fresh independent re-review
 - ✓ One Important residual required ineligible audit source paths to retain
   canonical identities before eligibility branching
 - ✓ Bounded two-file fix covers stale, invalid, and unavailable variants
-- ⧗ Final fresh independent re-review is next
+- ✓ Final fresh re-review closed every existing representation and prior
+  Critical/Important finding
+- ⧗ One Important dual URL declaration ambiguity remains for the final
+  configured correction round
 
 ## Blockers
 
-None. The remaining p-rev1 finding has a bounded fix and awaits independent
-re-review.
+One Important p-rev1 finding remains assigned to the third and final bounded
+review-fix round; no design expansion or external blocker is present.
 
 ## Next Milestone
 
-Obtain the final fresh independent p-rev1 re-review against the complete p02
-safety history
+Reject dual URL capture representations and obtain the terminal independent
+p-rev1 re-review
