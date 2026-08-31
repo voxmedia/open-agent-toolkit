@@ -262,9 +262,11 @@ The Gate Execution step should:
 2. Treat `null` as "no gate configured."
 3. Export the resolved path with `export PROJECT_PATH` before launching the
    command shell.
-4. For `oat gate review`, require the configured command to include
-   `--project "$PROJECT_PATH"`; do not append it at runtime, because the resolved
-   command must execute exactly as configured.
+4. For `oat gate review`, require the configured command to use
+   `oat --json gate review --project "$PROJECT_PATH" ...`, with the global
+   `--json` option before `gate review`. Do not inject, append, or reorder
+   arguments at runtime, because the resolved command must execute exactly as
+   configured.
 5. Run the resolved `command` as the skill's last step and use its exit code as
    the pass/fail signal.
 6. Follow the gate's `onFailure` policy:
@@ -273,7 +275,7 @@ The Gate Execution step should:
    - `warn` - record the failure and continue.
 
 For OAT review gates, prefer putting
-`oat gate review --project "$PROJECT_PATH" "<prompt>"` in the configured gate
+`oat --json gate review --project "$PROJECT_PATH" "<prompt>"` in the configured gate
 command rather than hard-coding a provider CLI directly in the skill. Use
 `oat gate cross-provider-exec "<prompt>"` for generic cross-runtime commands
 that should report only the child process status, not review findings.
