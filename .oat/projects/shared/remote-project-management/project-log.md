@@ -56,6 +56,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
 
+### 2026-08-31 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important exit=1 status=review_failed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
