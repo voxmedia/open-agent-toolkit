@@ -24,8 +24,36 @@ describe('manifest schema', () => {
     expect(ManifestSchema.safeParse(validManifest).success).toBe(true);
   });
 
+  it('accepts a well-formed V2 collection manifest', () => {
+    const candidate = {
+      ...validManifest,
+      version: 2,
+      entries: [
+        {
+          ...validManifest.entries[0],
+          strategy: 'collection',
+          collectionId: 'claude-skills',
+        },
+      ],
+      collections: [
+        {
+          id: 'claude-skills',
+          provider: 'claude',
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          linkTarget: '.agents/skills',
+          ownership: 'adopted-exact',
+          lastVerified: '2026-02-13T00:00:00.000Z',
+        },
+      ],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(true);
+  });
+
   it('rejects manifest with unknown version', () => {
-    const candidate = { ...validManifest, version: 2 };
+    const candidate = { ...validManifest, version: 3 };
 
     expect(ManifestSchema.safeParse(candidate).success).toBe(false);
   });
@@ -96,5 +124,106 @@ describe('manifest schema', () => {
     };
 
     expect(ManifestSchema.safeParse(candidate).success).toBe(true);
+  });
+
+  it.each([
+    '/absolute/path',
+    '~/home/path',
+    '.agents//skills',
+    '.agents/./skills',
+    '.agents/../skills',
+    '.agents\\skills',
+  ])('rejects unsafe collection path %s', (canonicalDir) => {
+    const candidate = {
+      ...validManifest,
+      version: 2,
+      collections: [
+        {
+          id: 'claude-skills',
+          provider: 'claude',
+          contentType: 'skill',
+          canonicalDir,
+          providerDir: '.claude/skills',
+          linkTarget: '.agents/skills',
+          ownership: 'oat-created',
+          lastVerified: '2026-02-13T00:00:00.000Z',
+        },
+      ],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(false);
+  });
+
+  it('requires collection entries to reference one matching collection', () => {
+    const candidate = {
+      ...validManifest,
+      version: 2,
+      entries: [
+        {
+          ...validManifest.entries[0],
+          strategy: 'collection',
+          collectionId: 'missing',
+        },
+      ],
+      collections: [],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(false);
+  });
+
+  it('requires collection provider, content, and ancestry consistency', () => {
+    const candidate = {
+      ...validManifest,
+      version: 2,
+      entries: [
+        {
+          ...validManifest.entries[0],
+          providerPath: '.claude/agents/example',
+          strategy: 'collection',
+          collectionId: 'claude-skills',
+        },
+      ],
+      collections: [
+        {
+          id: 'claude-skills',
+          provider: 'claude',
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          linkTarget: '.agents/skills',
+          ownership: 'adopted-exact',
+          lastVerified: '2026-02-13T00:00:00.000Z',
+        },
+      ],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(false);
+  });
+
+  it('rejects overlapping collection and per-entry ownership', () => {
+    const collectionEntry = {
+      ...validManifest.entries[0],
+      strategy: 'collection',
+      collectionId: 'claude-skills',
+    };
+    const candidate = {
+      ...validManifest,
+      version: 2,
+      entries: [collectionEntry, { ...collectionEntry, strategy: 'symlink' }],
+      collections: [
+        {
+          id: 'claude-skills',
+          provider: 'claude',
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          linkTarget: '.agents/skills',
+          ownership: 'adopted-exact',
+          lastVerified: '2026-02-13T00:00:00.000Z',
+        },
+      ],
+    };
+
+    expect(ManifestSchema.safeParse(candidate).success).toBe(false);
   });
 });
