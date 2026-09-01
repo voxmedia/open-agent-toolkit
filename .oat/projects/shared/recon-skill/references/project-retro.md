@@ -23,7 +23,7 @@ oat_retro_evidence_sources:
   - source: session-transcript
     status: used
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -79,9 +79,9 @@ inferred from successful later runs.
 ## Current State
 
 - **Promotions:** `complete`; RP-01 is applied to `AGENTS.md`.
-- **Filing:** `proposed`; UP-01 and UP-02 have no configured destination and
-  await a filing decision.
-- **Unsettled items:** UP-01 and UP-02.
+- **Filing:** `complete`; UP-01 and UP-02 are filed in the canonical repository
+  backlog with verified local commit receipts.
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -259,12 +259,13 @@ replace that backlog item's cross-phase invariant propagation.
 
 ### UP-01: Add a corrective-revision transition after review exhaustion
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260901-add-corrective-revision.md`
+- **Destination-receipt:** `6a31f37a02fd6e7ac1a8dfa91b8b7844690b7d05`
+- **Remote-visibility:** unpushed
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as canonical backlog item
+  `BL-260901-add-corrective-revision` with confirmed M scope.
 
 Provide a first-class transition from exhausted phase or final review into a
 named corrective revision. It should preserve the exhausted budget and source
@@ -275,12 +276,13 @@ exhausted.
 
 ### UP-02: Make terminal project status agree with completed revision plans
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260901-make-terminal-project-status.md`
+- **Destination-receipt:** `8a614e098627cb391ab7f8c354fcbae1bc824b1c`
+- **Remote-visibility:** unpushed
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as canonical backlog item
+  `BL-260901-make-terminal-project-status` with confirmed S scope.
 
 `oat project status --project-path .oat/projects/shared/recon-skill --json`
 currently reports `phaseStatus: complete` and 17 total tasks while reporting
