@@ -1723,6 +1723,7 @@ gates exit 0 at the final reviewed head.
 | p03    | code     | passed          | 2026-09-01 | reviews/p03-review-2026-09-01T002159Z.md                      | f50e007d7eac0de9c0bf2eec32c1ee9e8443817b | manual     | -           |
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T013028Z.md                      | 09ab8e7a0878e812caec569eed0512e3bd7a2e88 | manual     | -           |
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T020351Z.md                      | d50d2d6c642c347114a1c2de5eb9502496328ffb | manual     | -           |
+| p04    | code     | fixes_added     | 2026-09-01 | reviews/p04-review-2026-09-01T023939Z.md                      | 6da49610627aae9f3eb78879906239ac5a86fa48 | manual     | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
