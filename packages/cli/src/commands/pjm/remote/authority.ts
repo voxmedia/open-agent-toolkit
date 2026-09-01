@@ -154,6 +154,45 @@ export function validateProductionMutationAuthority(input: {
   authority: { effective: OatPjmRemoteMutationAuthority; sourceDigest: string };
   approval: PreviewApproval | null;
 } {
+  const assessment = assessProductionMutationAuthority(input);
+  if (assessment.status === 'needs-review') {
+    throw new Error(
+      `Fresh approval does not match the current preview ${input.preview.digest}.`,
+    );
+  }
+  return assessment;
+}
+
+export function assessProductionMutationAuthority(input: {
+  effective: OatPjmRemoteMutationAuthority;
+  invocation: ProductionMutationInvocation | null;
+  preview: BindingPreview;
+  expected: {
+    operationClass: OatPjmRemoteOperationClass;
+    targetId: string;
+    workflowId: string;
+    workflowRevision: string;
+  };
+  now: string;
+  approvalMaxAgeMs: number;
+}):
+  | {
+      status: 'ready';
+      authority: {
+        effective: OatPjmRemoteMutationAuthority;
+        sourceDigest: string;
+      };
+      approval: PreviewApproval | null;
+    }
+  | {
+      status: 'needs-review';
+      authority: {
+        effective: 'user-approved';
+        sourceDigest: string;
+      };
+      approval: null;
+      previewDigest: string;
+    } {
   if (input.effective === 'read-only') {
     throw new Error('Remote mutation is read-only under current policy.');
   }
@@ -177,6 +216,7 @@ export function validateProductionMutationAuthority(input: {
       );
     }
     return {
+      status: 'ready',
       authority: {
         effective: input.effective,
         sourceDigest: semanticDigest(input.invocation),
@@ -193,8 +233,25 @@ export function validateProductionMutationAuthority(input: {
       input.invocation.kind !== 'interactive' ||
       input.invocation.instruction.operationClass !==
         expectedScope.operationClass ||
-      input.invocation.instruction.targetId !== expectedScope.targetId ||
-      !approval ||
+      input.invocation.instruction.targetId !== expectedScope.targetId
+    ) {
+      throw new Error(
+        'Explicit invocation evidence does not authorize this mutation.',
+      );
+    }
+    const sourceDigest = semanticDigest({
+      ...input.invocation,
+      approval: null,
+    });
+    if (!approval) {
+      return {
+        status: 'needs-review',
+        authority: { effective: 'user-approved', sourceDigest },
+        approval: null,
+        previewDigest: input.preview.digest,
+      };
+    }
+    if (
       !validatePreviewApproval(input.preview, approval, {
         now: input.now,
         maxAgeMs: input.approvalMaxAgeMs,
@@ -205,9 +262,10 @@ export function validateProductionMutationAuthority(input: {
       );
     }
     return {
+      status: 'ready',
       authority: {
         effective: input.effective,
-        sourceDigest: semanticDigest(input.invocation),
+        sourceDigest,
       },
       approval,
     };
@@ -224,6 +282,7 @@ export function validateProductionMutationAuthority(input: {
     );
   }
   return {
+    status: 'ready',
     authority: {
       effective: input.effective,
       sourceDigest: semanticDigest(input.invocation),
@@ -302,7 +361,7 @@ export function resolveEffectiveRemotePolicy(
       hardFloor = 'user-approved';
     }
     if (
-      operation === 'update-fields' &&
+      (operation === 'create' || operation === 'update-fields') &&
       input.completeDescriptionReplacement === true
     ) {
       hardFloors.add('replace-description');

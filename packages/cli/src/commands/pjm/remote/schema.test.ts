@@ -840,10 +840,19 @@ describe('remote record schemas', () => {
       purposes: ['planning'],
       policyRestrictions: { authority: { default: 'user-approved' } },
       provenanceToken: 'oat-create:project-demo:bnd_binding_789',
+      localProjection: {
+        title: 'Project demo',
+        description: 'Explicit publication',
+        priority: 'high',
+        source: 'explicit-project-publication',
+        sourceRevision: 'sha256:project-publication',
+        observedAt: '2026-08-31T00:00:00.000Z',
+      },
       createdAt: '2026-08-31T00:00:00.000Z',
     });
 
     expect(intent).not.toHaveProperty('remoteIdentity');
+    expect(intent.localProjection?.source).toBe('explicit-project-publication');
     expect(() =>
       PlannedBindingCreateSchema.parse({
         ...intent,

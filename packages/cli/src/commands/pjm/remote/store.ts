@@ -107,6 +107,7 @@ export type RemoteOperationState = RemoteOperationRecord['state'];
 export interface RemoteOperationTransition {
   state: RemoteOperationState;
   updatedAt: string;
+  approval?: RemoteOperationRecord['approval'];
   selectedExecution?: RemoteOperationRecord['selectedExecution'];
   outcome?: RemoteOperationOutcome;
   appendStep?: RemoteOperationStep;
@@ -516,6 +517,7 @@ export class RemoteSyncStore {
         ? { selectedExecution: update.selectedExecution }
         : {}),
       ...(update.outcome !== undefined ? { outcome: update.outcome } : {}),
+      ...(update.approval !== undefined ? { approval: update.approval } : {}),
       ...(update.verification !== undefined
         ? { verification: update.verification }
         : {}),

@@ -22,12 +22,14 @@ export interface RemoteCommandRequest {
   projectRoot: string;
   bindingId?: string;
   operationId?: string;
+  previewOperationId?: string;
   providerRef?: string;
   backlogId?: string;
   createTarget?: {
     provider: string;
     localKind: 'backlog' | 'project';
     localId: string;
+    publicationFile?: string;
   };
   observationStdin?: boolean;
   capabilityEvidenceStdin?: boolean;
@@ -215,7 +217,11 @@ function addBindingCommand(
       .option('--binding <id>', 'Existing remote binding ID')
       .option('--provider <provider>', 'Provider for a new remote issue')
       .option('--to-backlog <id>', 'Local backlog item to publish')
-      .option('--to-project <id>', 'Local project to publish');
+      .option('--to-project <id>', 'Local project to publish')
+      .option(
+        '--project-publication-file <path>',
+        'Explicit normalized project publication JSON',
+      );
   } else {
     command.requiredOption('--binding <id>', 'Remote binding ID');
   }
@@ -227,6 +233,10 @@ function addBindingCommand(
     command.option(
       '--authority-evidence-file <path>',
       'Read one bounded caller-owned mutation authority record',
+    );
+    command.option(
+      '--apply-preview <operation-id>',
+      'Apply one exact persisted user-approved preview',
     );
   }
   command.action(
@@ -250,18 +260,30 @@ function addBindingCommand(
             'Provider is only valid for an unbound publish target.',
           );
         }
+        if (options.toProject && !options.projectPublicationFile) {
+          throw new Error(
+            'Publishing a project requires --project-publication-file.',
+          );
+        }
+        if (!options.toProject && options.projectPublicationFile) {
+          throw new Error(
+            '--project-publication-file is only valid with --to-project.',
+          );
+        }
       }
       const request: Omit<RemoteCommandRequest, 'projectRoot'> = {
         operation: name,
         bindingId: options.binding,
         capabilityEvidenceStdin: Boolean(options.capabilityEvidenceStdin),
         authorityEvidenceFile: options.authorityEvidenceFile,
+        previewOperationId: options.applyPreview,
       };
       if (options.toBacklog || options.toProject) {
         request.createTarget = {
           provider: options.provider!,
           localKind: options.toBacklog ? 'backlog' : 'project',
           localId: (options.toBacklog ?? options.toProject)!,
+          publicationFile: options.projectPublicationFile,
         };
       }
       await execute(request, commander, dependencies);

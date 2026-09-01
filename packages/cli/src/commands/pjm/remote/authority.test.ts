@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  assessProductionMutationAuthority,
   resolveEffectiveRemotePolicy,
   validateProductionMutationAuthority,
 } from './authority';
@@ -170,7 +171,7 @@ describe('resolveEffectiveRemotePolicy', () => {
     expect(result.authority.annotate).toBe('autonomous');
   });
 
-  it('caps update-fields only when the action replaces the complete description', () => {
+  it('caps create and update-fields when the action replaces the complete description', () => {
     const ordinary = resolveEffectiveRemotePolicy({
       repository: {
         description: 'replace',
@@ -187,6 +188,7 @@ describe('resolveEffectiveRemotePolicy', () => {
 
     expect(ordinary.authority['update-fields']).toBe('autonomous');
     expect(replacement.authority['update-fields']).toBe('user-approved');
+    expect(replacement.authority.create).toBe('user-approved');
     expect(replacement.hardFloors).toContain('replace-description');
   });
 });
@@ -244,6 +246,21 @@ describe('validateProductionMutationAuthority', () => {
     },
     approval: null,
   };
+
+  it('returns a structured approval-preview disposition without throwing', () => {
+    expect(
+      assessProductionMutationAuthority({
+        ...base,
+        effective: 'user-approved',
+        invocation: interactive,
+      }),
+    ).toMatchObject({
+      status: 'needs-review',
+      previewDigest: preview.digest,
+      authority: { effective: 'user-approved' },
+      approval: null,
+    });
+  });
 
   it('enforces all four configured authority modes', () => {
     expect(() =>

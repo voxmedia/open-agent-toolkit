@@ -462,22 +462,64 @@ describe('pjm remote command family', () => {
       now: () => '2026-08-31T12:01:00.000Z',
       readObservationStdin: async () => updateCapabilityEvidence(),
     });
+    const runApprovedCommand = async (extraArguments: string[]) => {
+      let envelope: Awaited<ReturnType<typeof approvedRunner>> | undefined;
+      const root = new Command().name('oat').option('--json');
+      root.exitOverride();
+      root.addCommand(
+        createPjmRemoteCommand({
+          resolveProjectRoot: async () => approved.repo,
+          checkAdoption: async () => 'complete',
+          run: async (request) => {
+            envelope = await approvedRunner(request);
+            return envelope;
+          },
+        }),
+      );
+      vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      await root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--binding',
+        'bnd_live_001',
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        approvalPath,
+        ...extraArguments,
+      ]);
+      return envelope!;
+    };
     const approvalPath = await writeAuthorityEvidence(
       approved.repo,
       interactiveAuthority('update-fields', 'bnd_live_001'),
     );
-    let previewDigest = '';
-    try {
-      await approvedRunner({
-        operation: 'publish',
-        projectRoot: approved.repo,
-        bindingId: 'bnd_live_001',
-        capabilityEvidenceStdin: true,
-        authorityEvidenceFile: approvalPath,
-      });
-    } catch (error) {
-      previewDigest = String(error).match(/sha256:[a-f0-9]{64}/)?.[0] ?? '';
-    }
+    const preview = await runApprovedCommand([]);
+    expect(preview).toMatchObject({
+      status: 'needs-review',
+      persisted: true,
+      externalAction: null,
+    });
+    const [previewOperation] =
+      await approved.store.listActiveOperations('bnd_live_001');
+    const previewDigest = previewOperation!.preview.digest;
+    expect(preview.recovery).toEqual(
+      expect.arrayContaining([
+        {
+          code: 'preview-operation',
+          instruction: previewOperation!.operationId,
+        },
+        { code: 'preview-digest', instruction: previewDigest },
+        expect.objectContaining({ code: 'preview-approval-required' }),
+      ]),
+    );
+    expect(previewOperation!.approvalPreview).toMatchObject({
+      digest: previewDigest,
+      operationClass: 'update-fields',
+      fieldMask: ['title', 'description', 'priority'],
+    });
     expect(previewDigest).toMatch(/^sha256:/);
     await writeAuthorityEvidence(
       approved.repo,
@@ -489,6 +531,20 @@ describe('pjm remote command family', () => {
         source: 'interactive-preview',
       }),
     );
+    const approvalTarget = join(
+      approved.repo,
+      '.oat',
+      'repo',
+      'pjm',
+      'backlog',
+      'items',
+      'item-1.md',
+    );
+    const approvedContent = await readFile(approvalTarget, 'utf8');
+    await writeFile(
+      approvalTarget,
+      approvedContent.replace('Local description', 'Drifted description'),
+    );
     await expect(
       approvedRunner({
         operation: 'publish',
@@ -496,8 +552,23 @@ describe('pjm remote command family', () => {
         bindingId: 'bnd_live_001',
         capabilityEvidenceStdin: true,
         authorityEvidenceFile: approvalPath,
+        previewOperationId: previewOperation!.operationId,
       }),
+    ).rejects.toThrow(/preview|drift/i);
+    await writeFile(approvalTarget, approvedContent);
+    await expect(
+      runApprovedCommand(['--apply-preview', previewOperation!.operationId]),
     ).resolves.toMatchObject({ status: 'pending' });
+    await expect(
+      approvedRunner({
+        operation: 'publish',
+        projectRoot: approved.repo,
+        bindingId: 'bnd_live_001',
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: approvalPath,
+        previewOperationId: previewOperation!.operationId,
+      }),
+    ).rejects.toThrow(/safely applicable/i);
 
     const autonomous = await adoptedRepository();
     const { localProjection } = await prepareMutableBinding(
@@ -533,11 +604,16 @@ describe('pjm remote command family', () => {
   });
 
   it.each([
-    ['--to-backlog', 'item-1', 'backlog'],
-    ['--to-project', 'project-1', 'project'],
+    ['--to-backlog', 'item-1', 'backlog', []],
+    [
+      '--to-project',
+      'project-1',
+      'project',
+      ['--project-publication-file', '.oat/project-publication.json'],
+    ],
   ] as const)(
     'routes an unbound %s publish through the create-binding lifecycle',
-    async (targetOption, localId, localKind) => {
+    async (targetOption, localId, localKind, extraArguments) => {
       const { root, requests } = harness();
       await root.parseAsync([
         'node',
@@ -548,11 +624,19 @@ describe('pjm remote command family', () => {
         'provider-a',
         targetOption,
         localId,
+        ...extraArguments,
       ]);
       expect(requests[0]).toMatchObject({
         operation: 'publish',
         bindingId: undefined,
-        createTarget: { provider: 'provider-a', localKind, localId },
+        createTarget: {
+          provider: 'provider-a',
+          localKind,
+          localId,
+          ...(localKind === 'project'
+            ? { publicationFile: '.oat/project-publication.json' }
+            : {}),
+        },
       });
     },
   );
@@ -584,6 +668,34 @@ describe('pjm remote command family', () => {
         'project-1',
       ]),
     ).rejects.toThrow(/requires a provider/);
+    const missingPublication = harness();
+    await expect(
+      missingPublication.root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--provider',
+        'provider-a',
+        '--to-project',
+        'project-1',
+      ]),
+    ).rejects.toThrow(/project-publication-file/i);
+    const misplacedPublication = harness();
+    await expect(
+      misplacedPublication.root.parseAsync([
+        'node',
+        'oat',
+        'remote',
+        'publish',
+        '--provider',
+        'provider-a',
+        '--to-backlog',
+        'item-1',
+        '--project-publication-file',
+        '.oat/publication.json',
+      ]),
+    ).rejects.toThrow(/only valid with --to-project/i);
   });
 
   it('fails closed for absent adoption', async () => {
@@ -1078,8 +1190,12 @@ describe('pjm remote command family', () => {
         .fn()
         .mockReturnValueOnce('update-operation')
         .mockReturnValueOnce('preread-step')
-        .mockReturnValueOnce('mutation-step'),
+        .mockReturnValueOnce('mutation-step')
+        .mockReturnValueOnce('verification-step'),
       readObservationStdin,
+      crash: (point) => {
+        if (point === 'after-baseline') throw new Error(`crash:${point}`);
+      },
     });
     const authorityEvidenceFile = await writeAuthorityEvidence(
       repo,
@@ -1182,18 +1298,119 @@ describe('pjm remote command family', () => {
         },
       })}\n`,
     );
+    const mutation = await runner({
+      operation: 'operation-continue',
+      projectRoot: repo,
+      operationId: readAction.operationId,
+      observationStdin: true,
+      authorityEvidenceFile,
+    });
+    expect(mutation).toMatchObject({
+      status: 'pending',
+      externalAction: { semanticOperation: 'update' },
+    });
+    const updateAction = mutation.externalAction!;
+    const updatedFields = updateAction.intent.fields as Record<
+      string,
+      string | null
+    >;
+    readObservationStdin.mockResolvedValue({
+      schemaVersion: 1,
+      operationId: updateAction.operationId,
+      stepId: updateAction.stepId,
+      actionDigest: updateAction.actionDigest,
+      observedAt: '2026-08-31T12:02:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:live-update-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-1', aliases: ['LIVE-1'] },
+        fields: updatedFields,
+        revisionDigest: 'sha256:update-receipt',
+        diagnosticCode: null,
+      },
+    });
+    const verificationPending = await runner({
+      operation: 'operation-continue',
+      projectRoot: repo,
+      operationId: updateAction.operationId,
+      observationStdin: true,
+    });
+    const verificationAction = verificationPending.externalAction!;
+    readObservationStdin.mockResolvedValue({
+      schemaVersion: 1,
+      operationId: verificationAction.operationId,
+      stepId: verificationAction.stepId,
+      actionDigest: verificationAction.actionDigest,
+      observedAt: '2026-08-31T12:03:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:live-update-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-1', aliases: ['LIVE-1'] },
+        fields: { ...updatedFields, status: 'open' },
+        revisionDigest: 'sha256:update-authoritative-read',
+        diagnosticCode: null,
+      },
+    });
     await expect(
       runner({
         operation: 'operation-continue',
         projectRoot: repo,
-        operationId: readAction.operationId,
+        operationId: updateAction.operationId,
         observationStdin: true,
-        authorityEvidenceFile,
       }),
-    ).resolves.toMatchObject({
-      status: 'pending',
-      externalAction: { semanticOperation: 'update' },
+    ).rejects.toThrow(/crash:after-baseline/);
+    let repeatedHostAction = false;
+    const restarted = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:04:00.000Z',
+      readObservationStdin: async () => {
+        repeatedHostAction = true;
+        throw new Error('unexpected repeated host action');
+      },
     });
+    await expect(
+      restarted({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: updateAction.operationId,
+      }),
+    ).resolves.toMatchObject({ status: 'ok' });
+    expect(repeatedHostAction).toBe(false);
+    await expect(store.readBindingState('bnd_live_001')).resolves.toMatchObject(
+      {
+        snapshot: {
+          revision: { contentHash: 'sha256:update-authoritative-read' },
+        },
+        baseline: {
+          acceptedByOperationId: updateAction.operationId,
+          remoteRevision: {
+            contentHash: 'sha256:update-authoritative-read',
+          },
+          localProjectionRevision: localProjection.sourceRevision,
+        },
+      },
+    );
+    await expect(
+      store.readOperation(updateAction.operationId),
+    ).resolves.toMatchObject({
+      state: 'verified',
+      attempts: [{ requestDigest: updateAction.actionDigest }],
+      materializationSteps: expect.arrayContaining([
+        expect.objectContaining({ step: 'baseline' }),
+      ]),
+    });
+    await expect(
+      restarted({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: updateAction.operationId,
+      }),
+    ).rejects.toThrow(/terminal|replay/i);
   });
 
   it('persists and freshly approves a production shared-storage preview', async () => {

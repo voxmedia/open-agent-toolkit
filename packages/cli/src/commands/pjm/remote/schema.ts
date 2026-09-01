@@ -156,6 +156,17 @@ export const PublicationProjectionSchema = z
   })
   .strict();
 
+const LocalIssueProjectionSchema = z
+  .object({
+    title: z.string().max(8_192),
+    description: z.string().nullable(),
+    priority: z.string().max(255).nullable(),
+    source: z.enum(['backlog-description', 'explicit-project-publication']),
+    sourceRevision: z.string().min(1).max(512),
+    observedAt: TimestampSchema,
+  })
+  .strict();
+
 export const PlannedBindingCreateSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -168,6 +179,7 @@ export const PlannedBindingCreateSchema = z
     purposes: z.array(PurposeSchema).min(1).max(4),
     policyRestrictions: BindingPolicyRestrictionSchema,
     provenanceToken: z.string().min(1).max(512),
+    localProjection: LocalIssueProjectionSchema.optional(),
     createdAt: TimestampSchema,
   })
   .strict();
@@ -651,17 +663,6 @@ export const RemoteBaselineRecordSchema = z
   })
   .strict();
 
-const LocalIssueProjectionSchema = z
-  .object({
-    title: z.string().max(8_192),
-    description: z.string().nullable(),
-    priority: z.string().max(255).nullable(),
-    source: z.enum(['backlog-description', 'explicit-project-publication']),
-    sourceRevision: z.string().min(1).max(512),
-    observedAt: TimestampSchema,
-  })
-  .strict();
-
 const CurrentRemoteBindingStateSchema = z
   .object({
     recordType: z.literal('binding-state'),
@@ -864,6 +865,50 @@ const OperationPreviewSchema = z
   })
   .strict();
 
+const ApprovalPreviewSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    digest: z.string().min(1).max(512),
+    bindingId: StableIdSchema,
+    provider: ProviderSchema,
+    operationClass: OperationClassSchema,
+    fieldMask: z
+      .array(z.enum(['title', 'description', 'priority']))
+      .min(1)
+      .max(3),
+    createdAt: TimestampSchema,
+    componentDigests: z
+      .object({
+        target: z.string().min(1).max(512),
+        baseline: z.string().min(1).max(512),
+        revision: z.string().min(1).max(512),
+        capability: z.string().min(1).max(512),
+        policy: z.string().min(1).max(512),
+        projection: z.string().min(1).max(512),
+        outboundSafety: z.string().min(1).max(512),
+      })
+      .strict(),
+    renderedFields: z.record(
+      z.enum(['title', 'description', 'priority']),
+      z.union([
+        z
+          .object({
+            kind: z.literal('value'),
+            value: z.string().nullable(),
+          })
+          .strict(),
+        z
+          .object({
+            kind: z.literal('hash'),
+            digest: z.string().min(1).max(512),
+            bytes: z.number().int().nonnegative().max(1_048_576),
+          })
+          .strict(),
+      ]),
+    ),
+  })
+  .strict();
+
 const CurrentRemoteOperationRecordSchema = z
   .object({
     recordType: z.literal('operation'),
@@ -901,6 +946,7 @@ const CurrentRemoteOperationRecordSchema = z
       'complete',
     ]),
     preview: OperationPreviewSchema,
+    approvalPreview: ApprovalPreviewSchema.optional(),
     authority: AuthorityDecisionSchema.nullable(),
     approval: ApprovalEvidenceSchema.nullable(),
     createdAt: TimestampSchema,
@@ -1059,6 +1105,19 @@ const CurrentRemoteOperationRecordSchema = z
           message: 'Non-composite operations must not contain substeps.',
         });
       }
+    }
+    if (
+      record.approvalPreview &&
+      (record.approvalPreview.digest !== record.preview.digest ||
+        record.approvalPreview.bindingId !== record.bindingId ||
+        record.approvalPreview.provider !== record.provider ||
+        record.approvalPreview.operationClass !== record.operationClass)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['approvalPreview'],
+        message: 'Approval preview must match its persisted operation.',
+      });
     }
     if (
       record.approval &&

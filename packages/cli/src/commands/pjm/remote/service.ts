@@ -13,6 +13,7 @@ import {
   serializeAssociatedIssues,
 } from './association';
 import {
+  assessProductionMutationAuthority,
   parseProductionMutationInvocation,
   resolveEffectiveRemotePolicy,
   validateProductionMutationAuthority,
@@ -31,6 +32,7 @@ import {
 import type { RemoteCommandRequest } from './index';
 import { resolveLocalProjection } from './local-projection';
 import {
+  buildManagedMarkdownBlock,
   insertManagedMarkdown,
   replaceManagedMarkdown,
 } from './managed-markdown';
@@ -39,7 +41,7 @@ import {
   type OutboundProjection,
 } from './outbound-projection-safety';
 import type { RemoteCommandEnvelope, RemoteCommandStatus } from './output';
-import { buildBindingPreview, type BindingPreview } from './preview';
+import type { BindingPreview } from './preview';
 import { semanticDigest } from './provider';
 import { composePurposePolicies } from './purpose-policy';
 import { reconcileBinding } from './reconcile';
@@ -449,16 +451,7 @@ async function prepareCreate(
   if (!selection.selected)
     throw new Error(`No current host capability: ${selection.reason}.`);
 
-  const projectPublication = (
-    requested as typeof requested & {
-      publication?: {
-        title: string;
-        description: string | null;
-        priority: string | null;
-      };
-    }
-  ).publication;
-  if (requested.localKind === 'project' && !projectPublication) {
+  if (requested.localKind === 'project' && !requested.publicationFile) {
     throw new Error(
       'Project publication requires an explicit normalized publication projection.',
     );
@@ -477,8 +470,21 @@ async function prepareCreate(
           id: requested.localId,
           path: `.oat/projects/shared/${requested.localId}`,
         };
+  const existing = request.previewOperationId
+    ? await requireOperation(request.previewOperationId, store)
+    : null;
+  if (
+    existing &&
+    (existing.operationClass !== 'create' ||
+      existing.state !== 'planned' ||
+      existing.attempts.length > 0 ||
+      !existing.createIntent ||
+      (await store.readCurrentAction(existing.operationId)))
+  ) {
+    throw new Error('Persisted create preview is not safely applicable.');
+  }
   const invocation = await readCurrentMutationInvocation(request);
-  const now = invocation?.issuedAt ?? dependencies.now();
+  const now = existing?.createdAt ?? invocation?.issuedAt ?? dependencies.now();
   let local;
   if (target.kind === 'backlog') {
     const targetPath = resolveInsideProject(request.projectRoot, target.path);
@@ -491,44 +497,55 @@ async function prepareCreate(
       observedAt: now,
     });
   } else {
+    const projectPublication = await readProjectPublication(
+      request.projectRoot,
+      requested.publicationFile!,
+    );
     local = resolveLocalProjection({
       target: {
         kind: 'project',
         path: target.path,
-        publication: projectPublication!,
+        publication: projectPublication,
       },
       observedAt: now,
     });
   }
-  const projection = {
-    title: local.title,
-    description: local.description,
-    priority: local.priority,
+  const config = await readOatConfig(request.projectRoot);
+  const repositoryPolicy = config.pjm?.remote?.policy ?? {
+    description: 'none' as const,
+    authority: { default: 'read-only' as const },
   };
+  const descriptionPolicy = resolveEffectiveRemotePolicy({
+    repository: repositoryPolicy,
+    provider: repositoryPolicy.providers?.[provider],
+    binding: {},
+  });
+  const effective = resolveEffectiveRemotePolicy({
+    repository: repositoryPolicy,
+    provider: repositoryPolicy.providers?.[provider],
+    binding: {},
+    completeDescriptionReplacement: descriptionPolicy.description === 'replace',
+  });
+  const authority = effective.authority.create;
+
+  const operationId =
+    existing?.operationId ?? durableId('op', dependencies.randomId());
+  const bindingId =
+    existing?.bindingId ?? durableId('bnd', dependencies.randomId());
+  const provenanceToken = `oat-binding:${bindingId}`;
+  const projection = buildCreateProjection(
+    local,
+    effective.description,
+    bindingId,
+  );
   const safety = assessOutboundProjectionSafety(projection, {
     assessedAt: now,
   });
   if (safety.verdict !== 'safe') {
     throw new Error('Outbound safety evidence blocks unbound publication.');
   }
-
-  const config = await readOatConfig(request.projectRoot);
-  const repositoryPolicy = config.pjm?.remote?.policy ?? {
-    description: 'none' as const,
-    authority: { default: 'read-only' as const },
-  };
-  const effective = resolveEffectiveRemotePolicy({
-    repository: repositoryPolicy,
-    provider: repositoryPolicy.providers?.[provider],
-    binding: {},
-  });
-  const authority = effective.authority.create;
-
-  const operationId = durableId('op', dependencies.randomId());
-  const bindingId = durableId('bnd', dependencies.randomId());
-  const provenanceToken = `oat-binding:${bindingId}`;
   const policyDigest = semanticDigest(effective);
-  const preview = buildBindingPreview({
+  const preview = buildProductionMutationPreview({
     binding: { bindingId, provider, purposes: ['planning'] },
     target: {
       stableId: 'unbound',
@@ -551,10 +568,12 @@ async function prepareCreate(
     projection,
     outboundSafety: safety,
     operationClass: 'create',
-    fieldMask: ['title', 'description', 'priority'],
+    fieldMask: Object.keys(projection) as Array<
+      'title' | 'description' | 'priority'
+    >,
     createdAt: now,
   });
-  const authorityDecision = validateProductionMutationAuthority({
+  const authorityDecision = assessProductionMutationAuthority({
     effective: authority,
     invocation,
     preview,
@@ -574,16 +593,97 @@ async function prepareCreate(
     provider,
     target,
     publicationProjection: {
-      title: 'frontmatter',
-      description: 'description-section',
-      priority: 'frontmatter',
+      title: target.kind === 'project' ? 'plan' : 'frontmatter',
+      description:
+        effective.description === 'none'
+          ? 'none'
+          : target.kind === 'project'
+            ? 'summary'
+            : 'description-section',
+      priority: target.kind === 'project' ? 'plan' : 'frontmatter',
     },
     providerContext: compactContext(capability.context),
     purposes: ['planning'],
     policyRestrictions: {},
     provenanceToken,
+    localProjection: local,
     createdAt: now,
   };
+  if (existing) {
+    assertPreviewApplicationMatches(existing, {
+      operationId,
+      bindingId,
+      provider,
+      providerContext: compactContext(capability.context),
+      capabilityEvidenceDigest: capability.evidenceDigest,
+      revisionDigest: local.sourceRevision,
+      policyDigest,
+      projectionDigest: safety.projectionDigest,
+      safetyResultDigest: safety.resultDigest,
+      previewDigest: preview.digest,
+      approvalPreview: preview,
+      createIntent,
+    });
+    if (
+      authorityDecision.status === 'ready' &&
+      authorityDecision.authority.sourceDigest !==
+        existing.authority?.sourceDigest
+    ) {
+      throw new Error('Create authority evidence drifted from its preview.');
+    }
+  }
+  if (authorityDecision.status === 'needs-review') {
+    if (existing) {
+      throw new Error('Applying a preview requires fresh matching approval.');
+    }
+    const verification = createVerification(projection, true);
+    await store.createOperation({
+      recordType: 'operation',
+      schemaVersion: 2,
+      operationId,
+      correlationId: operationId,
+      bindingId,
+      provider,
+      providerContext: compactContext(capability.context),
+      lifecycleOperation: 'publish',
+      operationClass: 'create',
+      state: 'planned',
+      reason: null,
+      lastSafeStep: 'planned',
+      preview: operationPreview({
+        previewDigest: preview.digest,
+        bindingId,
+        provider,
+        providerContext: compactContext(capability.context),
+        capabilityEvidenceDigest: capability.evidenceDigest,
+        revisionDigest: local.sourceRevision,
+        policyDigest,
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
+      }),
+      approvalPreview: preview,
+      authority: authorityDecision.authority,
+      approval: null,
+      createdAt: now,
+      updatedAt: now,
+      selectedExecution: capabilityReference(selection.evidence),
+      attempts: [],
+      observations: [],
+      verification,
+      retryDisposition: 'safe-before-attempt',
+      steps: [],
+      outcome: {
+        classification: 'pending',
+        message: 'fresh approval required',
+        verifiedAt: null,
+      },
+      createIntent,
+    });
+    return approvalPreviewEnvelope(
+      request,
+      await requireOperation(operationId, store),
+    );
+  }
   const action = buildExternalAction({
     operationId,
     stepId: durableId('step', dependencies.randomId()),
@@ -608,21 +708,8 @@ async function prepareCreate(
     projection,
     outboundSafety: safety,
   });
-  const verification = [
-    ...Object.entries(projection).map(([field, value]) => ({
-      field,
-      expectedHash: semanticDigest(value),
-      observedHash: null,
-      status: 'unavailable' as const,
-    })),
-    {
-      field: 'remoteIdentity',
-      expectedHash: 'pending-authoritative-read-back',
-      observedHash: null,
-      status: 'unavailable' as const,
-    },
-  ];
-  await store.createOperation({
+  const verification = createVerification(projection, true);
+  const record: RemoteOperationRecord = {
     recordType: 'operation',
     schemaVersion: 2,
     operationId,
@@ -635,8 +722,8 @@ async function prepareCreate(
     state: 'attempt-started',
     reason: null,
     lastSafeStep: 'attempt-started',
-    preview: {
-      digest: preview.digest,
+    preview: operationPreview({
+      previewDigest: preview.digest,
       bindingId,
       provider,
       providerContext: compactContext(capability.context),
@@ -645,7 +732,7 @@ async function prepareCreate(
       policyDigest,
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
-    },
+    }),
     authority: authorityDecision.authority,
     approval: authorityDecision.approval,
     createdAt: now,
@@ -673,7 +760,25 @@ async function prepareCreate(
     steps: [],
     outcome: { classification: 'pending', message: null, verifiedAt: null },
     createIntent,
-  });
+  };
+  if (existing) {
+    await store.transitionOperation(operationId, 'planned', {
+      state: 'authorized',
+      updatedAt: dependencies.now(),
+      approval: authorityDecision.approval,
+      lastSafeStep: 'authorized',
+    });
+    await store.transitionOperation(operationId, 'authorized', {
+      state: 'attempt-started',
+      updatedAt: dependencies.now(),
+      appendAttempt: record.attempts[0],
+      lastSafeStep: 'attempt-started',
+      retryDisposition: 'reconcile-required',
+      outcome: record.outcome,
+    });
+  } else {
+    await store.createOperation(record);
+  }
   await store.writeCurrentAction(operationId, action);
   return envelopeFrom(
     request,
@@ -689,6 +794,21 @@ async function prepareMutation(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const { metadata, state } = await requireBinding(request.bindingId, store);
+  const existing = request.previewOperationId
+    ? await requireOperation(request.previewOperationId, store)
+    : null;
+  if (
+    existing &&
+    (existing.operationClass !== 'update-fields' ||
+      existing.bindingId !== metadata.bindingId ||
+      existing.lifecycleOperation !==
+        (request.operation === 'reconcile' ? 'reconcile' : 'publish') ||
+      existing.state !== 'pending' ||
+      existing.attempts.length > 0 ||
+      (await store.readCurrentAction(existing.operationId)))
+  ) {
+    throw new Error('Persisted mutation preview is not safely applicable.');
+  }
   const config = await readOatConfig(request.projectRoot);
   const repositoryPolicy = config.pjm?.remote?.policy ?? {
     description: 'none' as const,
@@ -718,19 +838,41 @@ async function prepareMutation(
   });
   if (!selection.selected)
     throw new Error(`No current host capability: ${selection.reason}.`);
+  const invocation = await readCurrentMutationInvocation(request);
+  const now = existing?.createdAt ?? invocation?.issuedAt ?? dependencies.now();
+  const freshLocal =
+    metadata.target.kind === 'backlog'
+      ? await readBacklogProjection(
+          request.projectRoot,
+          metadata.target.path,
+          now,
+        )
+      : state.localProjection.source === 'explicit-project-publication'
+        ? state.localProjection
+        : (() => {
+            throw new Error(
+              'Project mutation requires an explicit normalized publication projection.',
+            );
+          })();
+  const freshState: RemoteBindingState = {
+    ...state,
+    localProjection: freshLocal,
+  };
+  if (!isDeepStrictEqual(state.localProjection, freshLocal)) {
+    await store.writeBindingState(freshState);
+  }
   const projection = planProductionMutationProjection({
     metadata,
-    state,
+    state: freshState,
     descriptionMode: effective.description,
     operation: request.operation === 'reconcile' ? 'reconcile' : 'publish',
     priorityMapping: true,
   });
-  const invocation = await readCurrentMutationInvocation(request);
-  const now = invocation?.issuedAt ?? dependencies.now();
   const safety = assessOutboundProjectionSafety(projection, {
     assessedAt: now,
   });
-  const operationId = durableId('op', dependencies.randomId());
+  const operationId =
+    existing?.operationId ?? durableId('op', dependencies.randomId());
   const policyDigest = semanticDigest(effective);
   const preview = buildProductionMutationPreview({
     binding: {
@@ -769,7 +911,7 @@ async function prepareMutation(
     >,
     createdAt: now,
   });
-  const authorityDecision = validateProductionMutationAuthority({
+  const authorityDecision = assessProductionMutationAuthority({
     effective: authority,
     invocation,
     preview,
@@ -777,7 +919,7 @@ async function prepareMutation(
       operationClass: 'update-fields',
       targetId: metadata.bindingId,
       workflowId: metadata.target.id,
-      workflowRevision: state.localProjection.sourceRevision,
+      workflowRevision: freshState.localProjection.sourceRevision,
     },
     now: dependencies.now(),
     approvalMaxAgeMs: 300_000,
@@ -806,26 +948,68 @@ async function prepareMutation(
     observedHash: null,
     status: 'unavailable' as const,
   }));
-  await store.createOperation(
-    operationRecord({
+  const plannedRecord = operationRecord({
+    operationId,
+    metadata,
+    state: freshState,
+    lifecycleOperation:
+      request.operation === 'reconcile' ? 'reconcile' : 'publish',
+    operationClass: 'update-fields',
+    authority: authorityDecision.authority,
+    approval: authorityDecision.approval,
+    previewDigest: preview.digest,
+    approvalPreview:
+      authorityDecision.status === 'needs-review' ? preview : undefined,
+    capabilityEvidenceDigest: selection.evidence.evidenceDigest,
+    policyDigest,
+    projectionDigest: safety.projectionDigest,
+    safetyResultDigest: safety.resultDigest,
+    selectedExecution: selection.evidence,
+    now,
+    verification,
+  });
+  if (existing) {
+    assertPreviewApplicationMatches(existing, {
       operationId,
-      metadata,
-      state,
-      lifecycleOperation:
-        request.operation === 'reconcile' ? 'reconcile' : 'publish',
-      operationClass: 'update-fields',
-      authority: authorityDecision.authority,
-      approval: authorityDecision.approval,
-      previewDigest: preview.digest,
+      bindingId: metadata.bindingId,
+      provider: metadata.provider,
+      providerContext: metadata.remoteIdentity.context,
       capabilityEvidenceDigest: selection.evidence.evidenceDigest,
+      revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
       policyDigest,
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
-      selectedExecution: selection.evidence,
-      now,
-      verification,
-    }),
-  );
+      previewDigest: preview.digest,
+      approvalPreview: preview,
+    });
+    if (
+      authorityDecision.status === 'ready' &&
+      authorityDecision.authority.sourceDigest !==
+        existing.authority?.sourceDigest
+    ) {
+      throw new Error('Mutation authority evidence drifted from its preview.');
+    }
+  }
+  if (authorityDecision.status === 'needs-review') {
+    if (existing) {
+      throw new Error('Applying a preview requires fresh matching approval.');
+    }
+    await store.createOperation(plannedRecord);
+    return approvalPreviewEnvelope(
+      request,
+      await requireOperation(operationId, store),
+      metadata,
+    );
+  }
+  if (existing) {
+    await store.transitionOperation(operationId, 'pending', {
+      state: 'pending',
+      updatedAt: dependencies.now(),
+      approval: authorityDecision.approval,
+    });
+  } else {
+    await store.createOperation(plannedRecord);
+  }
   await store.writeCurrentAction(operationId, action);
   return envelopeFrom(
     request,
@@ -1295,7 +1479,8 @@ async function continueOperation(
       updatedAt: now,
     };
     const localProjection =
-      intent.target.kind === 'backlog'
+      intent.localProjection ??
+      (intent.target.kind === 'backlog'
         ? await readBacklogProjection(
             request.projectRoot,
             intent.target.path,
@@ -1318,7 +1503,7 @@ async function continueOperation(
               },
             },
             observedAt: observation.observedAt,
-          });
+          }));
     const snapshot = snapshotFromObservation({
       snapshotId: durableId('snap', operation.operationId),
       bindingId: intent.bindingId,
@@ -1589,7 +1774,7 @@ async function continueMutationPreRead(
       operationClass: 'update-fields',
       targetId: metadata.bindingId,
       workflowId: metadata.target.id,
-      workflowRevision: state.localProjection.sourceRevision,
+      workflowRevision: local.sourceRevision,
     },
     now: dependencies.now(),
     approvalMaxAgeMs: 300_000,
@@ -1671,6 +1856,203 @@ async function readCurrentMutationInvocation(
     throw new Error('Current caller invocation evidence is not valid JSON.');
   }
   return parseProductionMutationInvocation(value);
+}
+
+async function readProjectPublication(
+  projectRoot: string,
+  publicationFile: string,
+): Promise<{
+  title: string;
+  description: string | null;
+  priority: string | null;
+}> {
+  const sourcePath = isAbsolute(publicationFile)
+    ? publicationFile
+    : resolve(projectRoot, publicationFile);
+  const raw = await readFile(sourcePath, 'utf8');
+  if (Buffer.byteLength(raw, 'utf8') > 65_536) {
+    throw new Error('Project publication projection exceeds 64 KiB.');
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error('Project publication projection is not valid JSON.');
+  }
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    Object.keys(value).some(
+      (key) => !['title', 'description', 'priority'].includes(key),
+    )
+  ) {
+    throw new Error('Project publication projection has invalid fields.');
+  }
+  const publication = value as Record<string, unknown>;
+  if (
+    typeof publication.title !== 'string' ||
+    publication.title.length > 8_192 ||
+    !publication.title.trim() ||
+    !(
+      publication.description === null ||
+      typeof publication.description === 'string'
+    ) ||
+    !(
+      publication.priority === null || typeof publication.priority === 'string'
+    ) ||
+    (typeof publication.priority === 'string' &&
+      publication.priority.length > 255)
+  ) {
+    throw new Error('Project publication projection is invalid.');
+  }
+  return {
+    title: publication.title,
+    description: publication.description,
+    priority: publication.priority,
+  };
+}
+
+function buildCreateProjection(
+  local: RemoteBindingState['localProjection'],
+  descriptionMode: 'none' | 'managed-section' | 'replace',
+  bindingId: string,
+): OutboundProjection {
+  const projection: OutboundProjection = {
+    title: local.title,
+    priority: local.priority,
+  };
+  if (descriptionMode === 'replace') {
+    projection.description = local.description;
+  } else if (descriptionMode === 'managed-section') {
+    projection.description = buildManagedMarkdownBlock(
+      bindingId,
+      local.description ?? '',
+    );
+  }
+  return projection;
+}
+
+function createVerification(
+  projection: OutboundProjection,
+  requireIdentity: boolean,
+): RemoteOperationRecord['verification'] {
+  return [
+    ...Object.entries(projection).map(([field, value]) => ({
+      field,
+      expectedHash: semanticDigest(value),
+      observedHash: null,
+      status: 'unavailable' as const,
+    })),
+    ...(requireIdentity
+      ? [
+          {
+            field: 'remoteIdentity',
+            expectedHash: 'pending-authoritative-read-back',
+            observedHash: null,
+            status: 'unavailable' as const,
+          },
+        ]
+      : []),
+  ];
+}
+
+function operationPreview(input: {
+  previewDigest: string;
+  bindingId: string;
+  provider: RemoteBindingMetadata['provider'];
+  providerContext: Record<string, string>;
+  capabilityEvidenceDigest: string;
+  revisionDigest: string;
+  policyDigest: string;
+  projectionDigest: string;
+  safetyResultDigest: string;
+}): RemoteOperationRecord['preview'] {
+  return {
+    digest: input.previewDigest,
+    bindingId: input.bindingId,
+    provider: input.provider,
+    providerContext: input.providerContext,
+    capabilityEvidenceDigest: input.capabilityEvidenceDigest,
+    revisionDigest: input.revisionDigest,
+    policyDigest: input.policyDigest,
+    projectionDigest: input.projectionDigest,
+    safetyResultDigest: input.safetyResultDigest,
+  };
+}
+
+function assertPreviewApplicationMatches(
+  operation: RemoteOperationRecord,
+  expected: {
+    operationId: string;
+    bindingId: string;
+    provider: RemoteBindingMetadata['provider'];
+    providerContext: Record<string, string>;
+    capabilityEvidenceDigest: string;
+    revisionDigest: string;
+    policyDigest: string;
+    projectionDigest: string;
+    safetyResultDigest: string;
+    previewDigest: string;
+    approvalPreview?: BindingPreview;
+    createIntent?: PlannedBindingCreate;
+  },
+): void {
+  const preview = operationPreview(expected);
+  if (
+    operation.operationId !== expected.operationId ||
+    !isDeepStrictEqual(operation.preview, preview) ||
+    !isDeepStrictEqual(operation.approvalPreview, expected.approvalPreview) ||
+    !isDeepStrictEqual(operation.createIntent, expected.createIntent)
+  ) {
+    throw new Error(
+      'Persisted preview drifted from current load-bearing inputs.',
+    );
+  }
+}
+
+function approvalPreviewEnvelope(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  metadata: RemoteBindingMetadata | null = null,
+): RemoteCommandEnvelope {
+  return {
+    schemaVersion: 1,
+    status: 'needs-review',
+    operation: request.operation,
+    projectRoot: request.projectRoot,
+    persisted: true,
+    results: [
+      {
+        bindingId: operation.bindingId,
+        provider: operation.provider,
+        target:
+          metadata?.target.id ??
+          operation.createIntent?.target.id ??
+          operation.bindingId,
+        status: 'needs-review',
+        freshness: operation.updatedAt,
+        authority: operation.authority?.effective ?? 'user-approved',
+        diagnosticCode: 'preview-approval-required',
+      },
+    ],
+    externalAction: null,
+    recovery: [
+      {
+        code: 'preview-operation',
+        instruction: operation.operationId,
+      },
+      {
+        code: 'preview-digest',
+        instruction: operation.preview.digest,
+      },
+      {
+        code: 'preview-approval-required',
+        instruction:
+          'Supply fresh matching approval and apply the exact persisted operation with --apply-preview.',
+      },
+    ],
+  };
 }
 
 export function planProductionMutationProjection(input: {
@@ -1920,7 +2302,15 @@ async function resumeMaterialization(
   }
   state = (await store.readBindingState(operation.bindingId))!;
   if (!completed().has('snapshot')) {
-    if (!state.snapshot) {
+    if (plan.kind === 'update') {
+      state = {
+        ...state,
+        snapshot: plan.finalState.snapshot,
+        contentRedacted: plan.finalState.contentRedacted,
+        updatedAt: plan.finalState.updatedAt,
+      };
+      await store.writeBindingState(state);
+    } else if (!state.snapshot) {
       state = {
         ...state,
         snapshot: plan.finalState.snapshot,
@@ -1935,7 +2325,10 @@ async function resumeMaterialization(
   }
   state = (await store.readBindingState(operation.bindingId))!;
   if (!completed().has('baseline')) {
-    if (!state.baseline) {
+    if (plan.kind === 'update') {
+      state = { ...state, baseline: plan.finalState.baseline };
+      await store.writeBindingState(state);
+    } else if (!state.baseline) {
       state = { ...state, baseline: plan.finalState.baseline };
       await store.writeBindingState(state);
     } else if (!isDeepStrictEqual(state.baseline, plan.finalState.baseline)) {
@@ -2171,7 +2564,7 @@ function buildProductionMutationPreview(input: {
   policy: Record<string, unknown>;
   projection: OutboundProjection;
   outboundSafety: ReturnType<typeof assessOutboundProjectionSafety>;
-  operationClass: 'update-fields';
+  operationClass: 'create' | 'update-fields';
   fieldMask: Array<'title' | 'description' | 'priority'>;
   createdAt: string;
 }): BindingPreview {
@@ -2222,6 +2615,7 @@ function operationRecord(input: {
   authority: RemoteOperationRecord['authority'];
   approval?: RemoteOperationRecord['approval'];
   previewDigest: string;
+  approvalPreview?: BindingPreview;
   capabilityEvidenceDigest: string;
   policyDigest: string;
   projectionDigest?: string;
@@ -2259,6 +2653,9 @@ function operationRecord(input: {
           }
         : {}),
     },
+    ...(input.approvalPreview
+      ? { approvalPreview: input.approvalPreview }
+      : {}),
     authority: input.authority,
     approval: input.approval ?? null,
     createdAt: input.now,
