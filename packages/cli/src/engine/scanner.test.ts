@@ -183,6 +183,76 @@ describe('scanCanonical', () => {
     ]);
   });
 
+  it.each(['outdated', 'newer', 'present'] as const)(
+    'rejects a %s user-materializable agent before native role selection',
+    async (status) => {
+      const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-scan-user-'));
+      const assetsRoot = await mkdtemp(join(tmpdir(), 'oat-scan-assets-'));
+      tempDirs.push(scopeRoot, assetsRoot);
+      await mkdir(join(assetsRoot, 'agents'), { recursive: true });
+      for (const name of [
+        'oat-phase-implementer.md',
+        'oat-reviewer.md',
+        'drifted-pack-agent.md',
+      ]) {
+        await writeFile(
+          join(assetsRoot, 'agents', name),
+          `# ${name}\n`,
+          'utf8',
+        );
+      }
+      const eligible = {
+        id: 'agent:drifted-pack-agent.md',
+        kind: 'agent' as const,
+        source: 'agents/drifted-pack-agent.md',
+        destination: '.agents/agents/drifted-pack-agent.md',
+        scopes: ['project', 'user'] as const,
+        ownership: { project: 'managed' as const, user: 'managed' as const },
+        userMaterializable: true,
+      };
+      const research = {
+        ...getPackDefinition('research'),
+        assets: [...getPackDefinition('research').assets, eligible],
+      };
+
+      await expect(
+        scanBundledManagedAgents({
+          scopeRoot,
+          assetsRoot,
+          manifest: [research],
+          inventoryPack: async () => ({
+            pack: 'research',
+            scope: 'user',
+            intent: {
+              pack: 'research',
+              scope: 'user',
+              enabled: true,
+              direct: true,
+              requiredBy: [],
+              state: 'direct',
+              source: 'declared',
+              configPath: join(scopeRoot, '.oat', 'config.json'),
+              diagnostics: [],
+            },
+            completeness: 'partial',
+            assets: [
+              {
+                definition: eligible,
+                path: join(scopeRoot, eligible.destination),
+                status,
+                installedVersion: null,
+                bundledVersion: null,
+              },
+            ],
+            diagnostics: [],
+          }),
+        }),
+      ).rejects.toThrow(
+        `User-materializable agent ${eligible.id} is ${status}, not current`,
+      );
+    },
+  );
+
   it('rejects an installed user-materializable agent without its bundled source', async () => {
     const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-scan-user-'));
     const assetsRoot = await mkdtemp(join(tmpdir(), 'oat-scan-assets-'));

@@ -153,6 +153,11 @@ export async function scanBundledManagedAgents(
         ({ definition: candidate }) => candidate.id === definition.id,
       );
       if (!installed || installed.status === 'missing') continue;
+      if (installed.status !== 'current') {
+        throw new CliError(
+          `User-materializable agent ${definition.id} is ${installed.status}, not current. Run oat tools update --pack ${inventory.pack} --scope user before running user sync.`,
+        );
+      }
       if (!definition.source) {
         throw new CliError(
           `User-materializable agent ${definition.id} has no bundled source. Reinstall or rebuild OAT before running user sync.`,

@@ -65,6 +65,7 @@ interface HarnessOptions {
   useDiskScanner?: boolean;
   useDiskBundledCodexAgents?: boolean;
   bundledManagedAgents?: CanonicalEntry[];
+  bundledManagedAgentsError?: Error;
   extraMaterializationExtensions?: SyncMaterializationExtension[];
 }
 
@@ -334,7 +335,12 @@ function createHarness(options: HarnessOptions = {}): {
   const manifestQueue = [...(options.loadedManifests ?? [])];
   const scanBundledManagedAgents = options.useDiskBundledCodexAgents
     ? vi.fn(scanBundledManagedAgentsFromDisk)
-    : vi.fn(async () => options.bundledManagedAgents ?? []);
+    : vi.fn(async () => {
+        if (options.bundledManagedAgentsError) {
+          throw options.bundledManagedAgentsError;
+        }
+        return options.bundledManagedAgents ?? [];
+      });
 
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -2276,6 +2282,35 @@ describe('createSyncCommand', () => {
         { userConfigDir: '/tmp/home/.oat' },
       );
     });
+
+    it.each(['outdated', 'newer'])(
+      'fails closed before native role planning when a materializable agent is %s',
+      async (status) => {
+        const codex = createCodexAdapter();
+        const error = new CliError(
+          `User-materializable agent agent:eligible-pack-agent.md is ${status}, not current. Run oat tools update --pack research --scope user before running user sync.`,
+        );
+        const { command, computeCodexProjectExtensionPlan } = createHarness({
+          adapters: [codex],
+          configAwareResults: [
+            {
+              activeAdapters: [codex],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+          ],
+          bundledManagedAgentsError: error,
+        });
+
+        await expect(
+          runSyncCommand(command, {
+            globalArgs: ['--scope', 'user'],
+            commandArgs: ['--dry-run'],
+          }),
+        ).rejects.toBe(error);
+        expect(computeCodexProjectExtensionPlan).not.toHaveBeenCalled();
+      },
+    );
 
     it('plans project and user scopes independently for --scope all', async () => {
       const adapter = createScopedAdapter();
