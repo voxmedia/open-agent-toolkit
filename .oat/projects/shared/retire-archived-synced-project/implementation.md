@@ -556,6 +556,12 @@ and could not be refreshed`.
   gate-owned project-log event at `7cf4bf2ac`.
 - Gate reconnaissance: not attempted; the artifact contains no Review
   Orchestration section.
+- Receive intent is bound to gate run
+  `2e607741-ddac-4b6e-bc38-0d65d66c93aa`, source artifact
+  `reviews/final-review-2026-09-01T231603Z.md`, collision-free destination
+  `reviews/archived/final-review-2026-09-01T231603Z.md`, and the exact
+  final/code/source-filename Reviews event. Pre-receive head:
+  `fc05f6c80d76f92ac395dbf63b6d228eaca5b9bf`.
 
 <!-- orchestration-runs-end -->
 

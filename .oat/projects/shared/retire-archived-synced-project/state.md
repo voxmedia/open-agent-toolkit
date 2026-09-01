@@ -76,23 +76,34 @@ oat_implement_exit_gate:
     Gate passed at the important threshold with one Medium and one Minor
     finding. Run oat-project-review-receive for the correlated final review
     artifact before allowing the gate.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation:
+    gate_run_id: 2e607741-ddac-4b6e-bc38-0d65d66c93aa
+    handoff: >-
+      Gate passed at the important threshold with one Medium and one Minor
+      finding and requires disposition before closeout.
+    source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
+    scope: final
+    type: code
+    source_filename: final-review-2026-09-01T231603Z.md
+  receive_source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
+  receive_archived_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/archived/final-review-2026-09-01T231603Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-09-01T231603Z.md
+  receive_pre_head: fc05f6c80d76f92ac395dbf63b6d228eaca5b9bf
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-01T23:17:51Z'
+  updated_at: '2026-09-01T23:18:43Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:17:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:18:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
