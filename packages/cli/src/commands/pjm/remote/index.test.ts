@@ -572,6 +572,19 @@ describe('pjm remote command family', () => {
         status: 'failed',
         message: 'commander verification handoff interrupted',
       });
+      const durableOperation = await new RemoteSyncStore(
+        locations,
+      ).readOperation(operationId);
+      expect(durableOperation).not.toBeNull();
+      if (verificationCrashPoint === 'after-verification-handoff') {
+        expect(durableOperation!.currentAction).toEqual(
+          durableOperation!.verificationHandoff!.verificationAction,
+        );
+      } else {
+        expect(durableOperation).toMatchObject({ state: 'attempt-started' });
+        expect(durableOperation!.currentAction).toBeUndefined();
+        expect(durableOperation!.verificationHandoff).toBeUndefined();
+      }
 
       const recoveredVerification = await runCommand(
         createProductionRemoteRunner({
@@ -589,10 +602,9 @@ describe('pjm remote command family', () => {
         });
         expect(recoveredVerification?.externalAction).toBeUndefined();
       } else {
-        expect(recoveredVerification?.externalAction).toMatchObject({
-          semanticOperation: 'read',
-          intent: { stableId: 'issue-restart-1' },
-        });
+        expect(recoveredVerification?.externalAction).toEqual(
+          durableOperation!.currentAction,
+        );
       }
       expect(
         (await readdir(locations.operational.operationsDir)).filter((path) =>

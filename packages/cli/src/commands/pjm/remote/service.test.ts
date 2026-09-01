@@ -1467,6 +1467,21 @@ describe('production lifecycle composition', () => {
         observationStdin: true,
       }),
     ).rejects.toThrow('crash:after-verification-handoff');
+    const locations = resolveRemoteStorageLocations({
+      repoRoot: repository,
+      gitCommonDir: join(repository, '.git'),
+      repositoryIdentity: `local-repository:${resolve(repository)}`,
+      stateStorage: 'local',
+      target: { kind: 'backlog', scope: 'shared', path: null },
+    });
+    const store = new RemoteSyncStore(locations);
+    const durableOperation = await store.readOperation(
+      createAction.operationId,
+    );
+    expect(durableOperation).not.toBeNull();
+    expect(durableOperation!.currentAction).toEqual(
+      durableOperation!.verificationHandoff!.verificationAction,
+    );
     const restarted = createProductionRemoteRunner({
       now: () => timestamp,
       randomId: () => 'service-project-restarted',
@@ -1478,10 +1493,7 @@ describe('production lifecycle composition', () => {
       operationId: createAction.operationId,
     });
     const readAction = pendingRead.externalAction!;
-    expect(readAction).toMatchObject({
-      semanticOperation: 'read',
-      intent: { stableId: 'issue-project-1' },
-    });
+    expect(readAction).toEqual(durableOperation!.currentAction);
     currentObservation = {
       schemaVersion: 1,
       operationId: readAction.operationId,
@@ -1508,14 +1520,6 @@ describe('production lifecycle composition', () => {
         observationStdin: true,
       }),
     ).resolves.toMatchObject({ status: 'ok' });
-    const locations = resolveRemoteStorageLocations({
-      repoRoot: repository,
-      gitCommonDir: join(repository, '.git'),
-      repositoryIdentity: `local-repository:${resolve(repository)}`,
-      stateStorage: 'local',
-      target: { kind: 'backlog', scope: 'shared', path: null },
-    });
-    const store = new RemoteSyncStore(locations);
     await expect(
       store.readBindingMetadata('bnd_service-project'),
     ).resolves.toMatchObject({
