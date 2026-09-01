@@ -124,6 +124,10 @@ Thomas authorized one bounded correction for the exact config-only new-session a
 
 Operator-authorized fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 covers exact config-only new-session advice and registry policy precedence/provenance. Focused 326, expanded p03 518, and full repository tests pass; fresh independent High review is next and p04 remains gated.
 
+### 2026-09-01 · structural · oat-project-implement · p03-passed
+
+Final p03 fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 resolved config-only refresh advice and policy-provenance guardrails; fresh independent High review passed with critical:0, important:0, medium:0, minor:0 at reviews/p03-review-2026-09-01T002159Z.md. Phase 3 is complete and p04 may begin.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

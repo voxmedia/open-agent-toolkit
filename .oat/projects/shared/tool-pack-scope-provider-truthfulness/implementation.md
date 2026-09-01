@@ -28,7 +28,7 @@ oat_generated: false
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | blocked  | 5     | 5/5       |
+| Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | pending  | 5     | 0/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** fresh High review pending after verified round 5 correction
+**Status:** completed and independently reviewed
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -717,6 +717,20 @@ high confidence. The original commit remains the source authority.
 - Root independently verified the exact file boundary, clean worktree,
   whitespace, and focused 326/326 suite at committed HEAD.
 
+### Review Round 6 — Passed
+
+- Artifact: `reviews/p03-review-2026-09-01T002159Z.md`
+- Reviewed head: `f50e007d7eac0de9c0bf2eec32c1ee9e8443817b`
+- Verdict: passed; 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: not attempted.
+- Focused 326/326 and expanded p03 518/518 passed. CLI lint, type-check,
+  format, `pnpm check`, markdownlint, and range whitespace checks passed.
+- The reviewer confirmed the config-only advice and policy
+  precedence/provenance findings are fixed, all earlier Phase 3 findings
+  remain resolved, and FR1/FR3/FR4/FR7/FR10 plus NFR2/NFR3/NFR5 align.
+- Phase 3 is complete. The implementation pointer remains `p04-t01` and Phase
+  4 may begin.
+
 ---
 
 ## Orchestration Runs
@@ -1018,6 +1032,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `native-catalog`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p03-review-r5-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review record — round 6
+
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed head: `f50e007d7eac0de9c0bf2eec32c1ee9e8443817b`
+- Verdict: passed; findings critical 0, important 0, medium 0, minor 0
+- Artifact: `reviews/p03-review-2026-09-01T002159Z.md`
+- Reconnaissance: not attempted
+- Selection reason: `native-catalog`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
