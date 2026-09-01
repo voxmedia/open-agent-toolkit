@@ -9,7 +9,6 @@ import {
   rm,
   stat,
   symlink,
-  unlink,
   writeFile,
 } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -237,8 +236,10 @@ export async function removeCollectionSymlinkIfUnchanged(
       return false;
     }
 
-    await unlink(linkPath);
-    return true;
+    // Node's path-based unlink cannot bind the final removal to the identity
+    // proven above. Preserve the alias until a guarded parent-relative
+    // no-follow removal primitive is available.
+    return false;
   } catch {
     return false;
   }

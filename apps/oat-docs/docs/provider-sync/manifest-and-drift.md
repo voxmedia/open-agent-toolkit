@@ -41,19 +41,21 @@ created by OAT (`oat-created`) from exact links OAT adopted without rewriting
 their owning collection record; OAT does not mutate provider child paths under
 that alias.
 
-Collection creation is transactional. OAT proves that the destination is
-absent, creates a symlink directly at the final path without copy fallback,
-rechecks exact identity, and atomically writes the manifest. If manifest
-persistence fails, OAT removes only the unchanged link it just created. A
-destination race, unsafe ancestry, broken link, foreign target, or unverifiable
-identity is preserved and fails closed.
+The current runtime adopts an existing alias only when it exactly resolves to
+the canonical collection and has the same entry set. When the destination is
+absent, `auto` falls back to ordinary per-entry sync: Node does not expose the
+identity-bound parent-relative primitive OAT requires to create a collection
+alias safely. OAT does not use copy fallback for collection aliases.
 
-An existing safe link is adopted only when it exactly resolves to the canonical
-collection and has the same entry set. An existing real provider directory is
-never replaced; `auto` falls back to ordinary per-entry sync. Disabling a
-provider detaches adopted ownership while preserving its link. OAT-created
-links are removed only when they remain exact and unchanged, and canonical
-targets are never removed.
+OAT also does not automatically unlink a collection alias in the current
+runtime because a separate identity check followed by path-based removal has a
+final replacement race. Disabling a provider detaches ownership while
+preserving the alias. To transition an existing collection to explicit
+per-entry sync, verify and remove the alias manually, then rerun `oat sync`;
+the new run independently proves the destination absent before writing child
+paths. Real directories, destination races, broken links, foreign targets, and
+unverifiable identities are preserved and fail closed. Canonical targets are
+never removed.
 
 ## Drift states
 

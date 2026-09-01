@@ -723,10 +723,9 @@ export async function computeSyncPlan({
           canonicalDir,
           providerDir,
         });
-        const safelyClear = collectionCreationIdentityMatches(
-          existingCollection,
-          proof,
-        );
+        const safelyClear =
+          proof.status === 'absent' ||
+          collectionCreationIdentityMatches(existingCollection, proof);
         if (safelyClear) {
           collections.push({
             provider: adapter.name,
@@ -742,9 +741,11 @@ export async function computeSyncPlan({
             transitionToPerEntry: true,
             inheritedEntries: existingInheritedEntries,
             reason:
-              'collection alias is safely clearable; transition to explicit per-entry sync',
+              proof.status === 'absent'
+                ? 'collection alias is absent in this plan; revalidate absence before transitioning to explicit per-entry sync'
+                : 'collection alias requires guarded removal before transitioning to explicit per-entry sync',
           });
-          deferredCollectionTransition = proof.status === 'exact-link';
+          deferredCollectionTransition = true;
         } else {
           collections.push({
             provider: adapter.name,

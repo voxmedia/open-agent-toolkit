@@ -104,10 +104,14 @@ safe, including after interruption.
   - unset: provider falls back to directory detection.
 - `defaultStrategy` is used when no provider-specific `strategy` is set.
 - `auto` prefers a safe exact collection-directory alias when the canonical
-  collection and provider mapping are eligible. It may create an alias only at
-  an absent destination or adopt an existing exact alias. A real provider
-  directory falls back to per-entry sync; broken, foreign, nested, unsafe, or
-  unverifiable collection identity fails closed without replacement.
+  collection and provider mapping are eligible. The current runtime can adopt
+  an existing exact alias; an absent destination falls back to per-entry sync
+  because guarded alias creation is unavailable. OAT does not automatically
+  unlink collection aliases. For an explicit-strategy transition, verify and
+  remove the alias manually, then rerun sync so the new plan can independently
+  prove the destination absent. A real provider directory falls back to
+  per-entry sync; broken, foreign, nested, unsafe, or unverifiable collection
+  identity fails closed without replacement.
 - Explicit `symlink` and `copy` always remain per-entry strategies. Strategy is
   configured here (globally or per provider); `oat sync` intentionally has no
   `--strategy` flag.

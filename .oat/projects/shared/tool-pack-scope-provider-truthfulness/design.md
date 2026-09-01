@@ -508,7 +508,9 @@ concept without weakening per-entry path safety.
 
 - Prove exact canonical target identity for existing absolute or relative
   collection symlinks.
-- Create an alias automatically only when the provider collection is absent.
+- Create an alias automatically only when the provider collection is absent
+  and an identity-bound guarded creation primitive is available. The current
+  Node runtime has no such primitive and falls back per entry.
 - Adopt an existing exact safe alias without rewriting it.
 - Never replace an existing real directory in the first release, even when its
   entries appear fully managed; use per-entry sync instead.
@@ -536,6 +538,13 @@ interface CollectionProjectionPlan {
   providerDir: string;
   action: CollectionSyncAction;
   ownership: 'oat-created' | 'adopted-exact' | 'none';
+  configuredStrategy: 'auto' | 'symlink' | 'copy';
+  createdLink?: {
+    device: string;
+    inode: string;
+    linkText: string;
+  };
+  transitionToPerEntry?: boolean;
   proof: CollectionIdentityProof;
   inheritedEntries: readonly string[];
   reason: string;
@@ -554,8 +563,17 @@ manifest manager, drift detector, and sync executor.
   collection adoption.
 - When a provider is disabled, an `adopted-exact` collection record is removed
   from the manifest while its user-created on-disk alias is left untouched.
-  OAT-created unchanged aliases may be removed as links only; their targets
-  are never removed.
+  The current runtime also preserves an OAT-created alias because Node exposes
+  only path-based unlink. It detaches manifest ownership with a partial/manual
+  recovery outcome; canonical targets are never removed.
+- `configuredStrategy` carries the resolved config authority into apply.
+  `createdLink` carries durable creation-time identity when available, and
+  `transitionToPerEntry` distinguishes an explicit-strategy transition from
+  ordinary disablement. An exact transition defers every child operation until
+  the alias is safely clear. In the current runtime it reports a blocked manual
+  recovery outcome without unlinking. A later, separately planned `absent`
+  proof is revalidated at apply, detaches ownership, and releases deferred
+  per-entry operations.
 - Real-directory conversion is excluded from the first release. Adding it
   later requires a separate destructive-operation design and approval, not a
   hidden extension of `auto`.
@@ -568,10 +586,13 @@ manifest manager, drift detector, and sync executor.
   available, automatic collection creation fails closed with explicit
   per-entry/manual-adoption recovery; it never attempts the path-based create.
   A guarded primitive has no copy fallback and never removes a destination;
+  rollback also requires an identity-bound guarded unlink primitive. The
+  current runtime preserves a newly created alias after manifest failure and
+  reports manual recovery rather than using path-based unlink.
   `EEXIST` is a race abort that preserves the foreign path unchanged. Any later
-  verification or manifest failure unlinks only the unchanged just-created
-  symlink. A failed rollback is a `partial` outcome with exact recovery and
-  never records OAT ownership.
+  verification or manifest failure preserves the just-created symlink unless a
+  guarded unlink primitive is available. The current runtime reports a
+  `partial` outcome with exact manual recovery and never records OAT ownership.
 - Adopting an existing exact alias mutates only the manifest. The atomic
   manifest write is its commit point. Collection operation groups do not use
   the current executor's save-after-partial-operation behavior.
@@ -923,6 +944,10 @@ interface ManifestCollectionEntry {
   persist optional `{ device, inode, linkText }` `createdLink` evidence. An
   unlink or explicit per-entry transition requires the current exact-link
   proof to match all three durable creation fields immediately before removal.
+  Matching identity is necessary but not sufficient: without an identity-bound
+  parent-relative unlink primitive, apply preserves the alias and reports
+  manual recovery. Per-entry work resumes only after a later plan proves the
+  destination absent and apply revalidates that same absent proof.
 - `createdLink` remains optional so V2 manifests written before durable link
   identity was introduced continue to load. Such legacy records may detach
   manifest ownership when disabled, but they never authorize alias unlink.
@@ -942,9 +967,15 @@ interface ManifestCollectionEntry {
 - No collection and per-entry operation may own the same
   `(canonicalPath, provider)` pair.
 - V1 manifests normalize to V2 in memory without mutation. V2 is written only
-  after a successful sync apply. A collection transaction contributes entries
-  only after alias verification; manifest-write failure rolls back a newly
-  created alias before returning.
+  after a successful sync apply. Success means either a no-operation apply, at
+  least one entry outcome of `changed` or `current`, or a collection
+  transaction durably persisted by its atomic manifest write. If every planned
+  entry operation fails and no collection transaction succeeds, the original
+  manifest bytes and version remain unchanged. Partial entry success still
+  persists the successful manifest updates. A collection transaction
+  contributes entries only after alias verification; when manifest persistence
+  fails and guarded unlink is unavailable, a newly created alias is preserved
+  with structured manual-recovery evidence.
 
 **Storage:** `.oat/sync/manifest.json` per scope, atomically written through the
 existing manager.

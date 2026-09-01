@@ -11,8 +11,13 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 
+import { removeCollectionSymlinkIfUnchanged } from '@fs/io';
 import { computeFileHash } from '@manifest/hash';
-import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import {
+  createEmptyManifest,
+  loadManifest,
+  saveManifest,
+} from '@manifest/manager';
 import type { ManifestV2 } from '@manifest/manifest.types';
 import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -26,6 +31,31 @@ import type {
 } from './engine.types';
 import { executeSyncPlan, inferScopeRoot } from './execute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
+
+const finalCollectionRemovalRace = vi.hoisted(() => ({
+  afterIdentityRead: undefined as undefined | (() => Promise<void>),
+}));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return {
+    ...actual,
+    readlink: async (...args: Parameters<typeof actual.readlink>) => {
+      const linkText = await actual.readlink(...args);
+      const [linkPath] = args;
+      if (
+        finalCollectionRemovalRace.afterIdentityRead &&
+        typeof linkPath === 'string' &&
+        linkPath.endsWith('/.claude/skills')
+      ) {
+        const afterIdentityRead = finalCollectionRemovalRace.afterIdentityRead;
+        finalCollectionRemovalRace.afterIdentityRead = undefined;
+        await afterIdentityRead();
+      }
+      return linkText;
+    },
+  };
+});
 
 function createCanonicalEntry(
   root: string,
@@ -242,6 +272,7 @@ describe('executeSyncPlan', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
+    finalCollectionRemovalRace.afterIdentityRead = undefined;
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -366,7 +397,7 @@ describe('executeSyncPlan', () => {
     expect(result.collectionResults[0]).toMatchObject({ status: 'failed' });
   });
 
-  it('rolls back only a newly created unchanged link when manifest persistence fails', async () => {
+  it('preserves a newly created link for manual rollback when guarded unlink is unavailable', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
@@ -386,10 +417,13 @@ describe('executeSyncPlan', () => {
       },
     );
 
-    await expect(lstat(join(root, '.claude', 'skills'))).rejects.toMatchObject({
-      code: 'ENOENT',
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
+    expect(result.collectionResults?.[0]).toMatchObject({
+      status: 'partial',
+      reason: expect.stringMatching(/manual|preserv|guard/i),
     });
-    expect(result.collectionResults?.[0]?.status).toBe('failed');
   });
 
   it('reports partial when rollback cannot prove the created link is unchanged', async () => {
@@ -470,6 +504,7 @@ describe('executeSyncPlan', () => {
       const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
       const { manifest, plan, providerDir } =
         await createOwnedCollectionTransition(root);
+      await saveManifest(manifestPath, manifest);
       const unavailableProof: CollectionIdentityProof = {
         status: 'ineligible',
         reason: 'identity-unavailable',
@@ -541,6 +576,61 @@ describe('executeSyncPlan', () => {
       }
     },
   );
+
+  it('blocks deferred transition children while automatic unlink is unavailable', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const { manifest, plan, providerDir } =
+      await createOwnedCollectionTransition(root);
+    await saveManifest(manifestPath, manifest);
+    const result = await executeSyncPlan(plan, manifest, manifestPath);
+
+    expect(result.collectionResults[0]).toMatchObject({
+      action: 'detach-collection',
+      status: expect.not.stringMatching(/^changed$/),
+      reason: expect.stringMatching(/manual|preserv|guard/i),
+    });
+    expect(result.operations[0]).toMatchObject({ status: 'failed' });
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [{ id: 'collection-transition' }],
+      entries: [{ strategy: 'collection' }],
+    });
+  });
+
+  it('preserves a final-window replacement and blocks every deferred child', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const { manifest, plan, providerDir } =
+      await createOwnedCollectionTransition(root);
+    await saveManifest(manifestPath, manifest);
+
+    const result = await executeSyncPlan(plan, manifest, manifestPath, {
+      removeCollectionSymlinkIfUnchanged: async (linkPath, created) => {
+        finalCollectionRemovalRace.afterIdentityRead = async () => {
+          await rm(linkPath);
+          await writeFile(linkPath, 'user replacement', 'utf8');
+        };
+        return removeCollectionSymlinkIfUnchanged(linkPath, created);
+      },
+    });
+
+    expect(result.collectionResults[0]).toMatchObject({
+      action: 'detach-collection',
+      status: 'partial',
+      reason: expect.stringMatching(/manual|preserv|guard/i),
+    });
+    expect(result.operations[0]).toMatchObject({ status: 'failed' });
+    await expect(readFile(providerDir, 'utf8')).resolves.toBe(
+      'user replacement',
+    );
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [{ id: 'collection-transition' }],
+      entries: [{ strategy: 'collection' }],
+    });
+  });
 
   it('creates symlinks for create_symlink entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
@@ -1052,6 +1142,34 @@ description: React components
     });
   });
 
+  it('preserves original V1 manifest bytes when every planned operation fails', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(dirname(manifestPath), { recursive: true });
+    const legacyBytes = `${JSON.stringify(
+      {
+        version: 1,
+        oatVersion: '0.1.0',
+        entries: [],
+        lastUpdated: '2026-02-13T00:00:00.000Z',
+      },
+      null,
+      4,
+    )}\n`;
+    await writeFile(manifestPath, legacyBytes, 'utf8');
+    const normalized = await loadManifest(manifestPath);
+    const plan = createPlan([
+      createEntry(root, 'missing-one', 'create_copy', 'copy'),
+      createEntry(root, 'missing-two', 'create_copy', 'copy'),
+    ]);
+
+    const result = await executeSyncPlan(plan, normalized, manifestPath);
+
+    expect(result).toMatchObject({ applied: 0, failed: 2 });
+    await expect(readFile(manifestPath, 'utf8')).resolves.toBe(legacyBytes);
+  });
+
   it('continues on error and reports partial failure', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);
@@ -1080,6 +1198,14 @@ description: React components
     expect(stat.isSymbolicLink()).toBe(true);
     expect(result.applied).toBe(1);
     expect(result.failed).toBe(1);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      entries: [
+        expect.objectContaining({
+          canonicalPath: '.agents/skills/good-skill',
+          strategy: 'symlink',
+        }),
+      ],
+    });
     expect(result.operations).toEqual([
       {
         scope: 'project',

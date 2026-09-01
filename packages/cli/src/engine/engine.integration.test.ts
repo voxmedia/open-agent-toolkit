@@ -16,7 +16,11 @@ import {
   type SyncConfig,
 } from '@config/sync-config';
 import { createSymlink } from '@fs/io';
-import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import {
+  createEmptyManifest,
+  loadManifest,
+  saveManifest,
+} from '@manifest/manager';
 import type { ManifestV2 } from '@manifest/manifest.types';
 import { claudeAdapter } from '@providers/claude/adapter';
 import { copilotAdapter } from '@providers/copilot/adapter';
@@ -404,12 +408,13 @@ describe('sync engine integration', () => {
     expect(result.collectionResults).toEqual([
       expect.objectContaining({
         action: 'detach-collection',
-        status: 'changed',
+        status: 'partial',
+        reason: expect.stringMatching(/manual|preserv|guard/i),
       }),
     ]);
-    await expect(lstat(join(root, '.claude', 'skills'))).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
     await expect(
       readFile(
         join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
@@ -423,7 +428,7 @@ describe('sync engine integration', () => {
   });
 
   it.each(['symlink', 'copy'] as const)(
-    'transitions a durably owned auto collection to explicit %s per-entry sync',
+    'blocks explicit %s transition until a later plan revalidates an absent alias',
     async (strategy) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
       tempDirs.push(root);
@@ -493,7 +498,47 @@ describe('sync engine integration', () => {
         collectionManifest,
         manifestPath,
       );
-      expect(result.failed).toBe(0);
+      expect(result.failed).toBe(2);
+      expect(result.collectionResults[0]).toMatchObject({
+        status: 'partial',
+        reason: expect.stringMatching(/manual|preserv|guard/i),
+      });
+      expect(result.operations[0]).toMatchObject({ status: 'failed' });
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [expect.objectContaining({ ownership: 'oat-created' })],
+        entries: [expect.objectContaining({ strategy: 'collection' })],
+      });
+
+      await rm(providerDir);
+      const absentTransitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest: collectionManifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+      expect(absentTransitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+          proof: expect.objectContaining({ status: 'absent' }),
+        }),
+      ]);
+      expect(absentTransitionPlan.entries).toEqual([
+        expect.objectContaining({ deferredUntilCollectionDetached: true }),
+      ]);
+
+      const resumed = await executeSyncPlan(
+        absentTransitionPlan,
+        collectionManifest,
+        manifestPath,
+      );
+      expect(resumed.failed).toBe(0);
       expect((await lstat(providerDir)).isDirectory()).toBe(true);
       expect(
         (await lstat(join(providerDir, 'skill-one'))).isSymbolicLink(),
@@ -506,7 +551,7 @@ describe('sync engine integration', () => {
   );
 
   it.each(['symlink', 'copy'] as const)(
-    'reconciles a zero-child auto collection to explicit %s through apply and reload',
+    'blocks zero-child explicit %s transition until manual removal is replanned',
     async (strategy) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
       tempDirs.push(root);
@@ -514,6 +559,7 @@ describe('sync engine integration', () => {
       const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
       const providerDir = join(root, '.claude', 'skills');
       const manifest = await createHistoricalCollectionManifest(root);
+      await saveManifest(manifestPath, manifest);
       const canonical = await scanCanonical(root, 'project');
 
       const transitionPlan = await computeSyncPlan({
@@ -544,12 +590,35 @@ describe('sync engine integration', () => {
       expect(result.collectionResults).toEqual([
         expect.objectContaining({
           action: 'detach-collection',
-          status: 'changed',
+          status: 'partial',
+          reason: expect.stringMatching(/manual|preserv|guard/i),
         }),
       ]);
-      await expect(lstat(providerDir)).rejects.toMatchObject({
-        code: 'ENOENT',
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'historical-collection' }],
       });
+
+      await rm(providerDir);
+      const absentTransitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+      expect(absentTransitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+          proof: expect.objectContaining({ status: 'absent' }),
+        }),
+      ]);
+      await executeSyncPlan(absentTransitionPlan, manifest, manifestPath);
       await expect(loadManifest(manifestPath)).resolves.toMatchObject({
         collections: [],
         entries: [],

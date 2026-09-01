@@ -428,6 +428,7 @@ async function executeCollectionTransaction(
 
   const createdCollections: CreatedCollection[] = [];
   const removedTransitionPlans = new Set<CollectionProjectionPlan>();
+  const absentTransitionPlans = new Set<CollectionProjectionPlan>();
   const blockedTransitionResults = new Map<
     CollectionProjectionPlan,
     CollectionOperationResult
@@ -503,6 +504,35 @@ async function executeCollectionTransaction(
         });
       };
 
+      if (plan.proof.status === 'absent') {
+        try {
+          const current = await dependencies.proveCollectionIdentity({
+            root: inferScopeRoot(plan.canonicalDir),
+            canonicalDir: plan.canonicalDir,
+            providerDir: plan.providerDir,
+          });
+          if (
+            current.status !== 'absent' ||
+            !collectionProofMatches(plan.proof, current)
+          ) {
+            blockTransition(
+              'rejected',
+              'collection transition blocked; the manually cleared destination changed after planning, so ownership and child operations were preserved',
+            );
+            continue;
+          }
+
+          absentTransitionPlans.add(plan);
+          nextManifest = detachCollectionOwnership(nextManifest, plan);
+        } catch {
+          blockTransition(
+            'rejected',
+            'collection transition blocked; destination absence could not be safely re-proven, so ownership and child operations were preserved',
+          );
+        }
+        continue;
+      }
+
       if (
         plan.ownership !== 'oat-created' ||
         plan.proof.status !== 'exact-link' ||
@@ -542,7 +572,7 @@ async function executeCollectionTransaction(
         if (!removed) {
           blockTransition(
             'partial',
-            'collection transition blocked; exact alias removal could not be completed, so ownership was preserved',
+            'collection transition blocked; this runtime cannot safely unlink the exact alias, so ownership and child operations were preserved; remove the alias manually, then replan and retry',
           );
           continue;
         }
@@ -560,7 +590,8 @@ async function executeCollectionTransaction(
     const hasManifestMutation =
       actionable.length > 0 ||
       detachments.some((plan) => !plan.transitionToPerEntry) ||
-      removedTransitionPlans.size > 0;
+      removedTransitionPlans.size > 0 ||
+      absentTransitionPlans.size > 0;
     if (hasManifestMutation) {
       await dependencies.saveManifest(manifestPath, nextManifest);
     }
@@ -579,8 +610,9 @@ async function executeCollectionTransaction(
           action: plan.action,
           ownership: plan.ownership,
           status: 'changed',
-          reason:
-            'exact durably identified collection alias was removed before ownership detachment; per-entry reconciliation may proceed',
+          reason: absentTransitionPlans.has(plan)
+            ? 'manually cleared collection destination remained absent through apply; ownership detached and per-entry reconciliation may proceed'
+            : 'exact durably identified collection alias was removed before ownership detachment; per-entry reconciliation may proceed',
         });
         continue;
       }
@@ -613,7 +645,7 @@ async function executeCollectionTransaction(
             if (!removed) {
               status = 'partial';
               reason =
-                'collection ownership detached; alias changed during removal and was preserved';
+                'collection ownership detached, but this runtime cannot safely unlink the exact alias; the alias was preserved for manual removal';
             }
           } else {
             reason =
@@ -688,7 +720,7 @@ async function executeCollectionTransaction(
           reason: guardedCreationUnavailable
             ? 'collection creation is disabled because this runtime cannot create a link relative to a securely guarded parent; configure explicit symlink/copy per-entry sync or create the exact collection alias manually and retry for adoption'
             : partial
-              ? 'collection transaction failed and an unchanged-link rollback could not be proven'
+              ? 'collection transaction failed; automatic rollback unlink is unavailable, so any created alias was preserved for manual recovery'
               : 'collection transaction failed; newly created links were rolled back',
         })),
         ...detachments.map((plan) => {
@@ -817,7 +849,12 @@ export async function executeSyncPlan(
     }
   }
 
-  if (operations.length > 0 || !collectionTransaction.attempted) {
+  const entryApplySucceeded = operationResults.some(
+    ({ status }) => status === 'changed' || status === 'current',
+  );
+  const successfulNoOperationApply =
+    operations.length === 0 && !collectionTransaction.attempted;
+  if (entryApplySucceeded || successfulNoOperationApply) {
     await saveManifest(manifestPath, nextManifest);
   }
   const collectionApplied = collectionTransaction.results.filter(

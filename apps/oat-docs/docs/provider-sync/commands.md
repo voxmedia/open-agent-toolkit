@@ -55,9 +55,13 @@ Key behavior:
 
 - Mutates by default; use `--dry-run` to preview
 - Strategy-aware operations (`symlink`, `copy`, `auto`)
-- Configured `auto` may create or adopt an exact collection-directory alias.
-  Explicit `symlink` and `copy` remain per-entry modes; `oat sync` does not add
-  a `--strategy` option.
+- Configured `auto` may adopt an existing exact collection-directory alias.
+  When the destination is absent, the current runtime falls back per entry;
+  OAT does not create or unlink a collection alias without identity-bound
+  guarded primitives. To transition an alias manually, verify and remove it,
+  then rerun sync so a new plan can revalidate the absent destination. Explicit
+  `symlink` and `copy` remain per-entry modes; `oat sync` does not add a
+  `--strategy` option.
 - Provider enable/disable honored via sync config
 - Cursor skills are native-read from canonical `.agents/skills`; sync does not
   create `.cursor/skills` mirrors

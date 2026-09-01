@@ -20,6 +20,10 @@ const collectionCreationRace = vi.hoisted(() => ({
   beforePathBasedCreation: undefined as undefined | (() => Promise<void>),
   pathBasedCreationCalls: 0,
 }));
+const collectionRemovalRace = vi.hoisted(() => ({
+  afterIdentityRead: undefined as undefined | (() => Promise<void>),
+  pathBasedRemovalCalls: 0,
+}));
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs/promises')>();
@@ -37,6 +41,30 @@ vi.mock('node:fs/promises', async (importOriginal) => {
         await collectionCreationRace.beforePathBasedCreation();
       }
       return actual.symlink(...args);
+    },
+    readlink: async (...args: Parameters<typeof actual.readlink>) => {
+      const linkText = await actual.readlink(...args);
+      const [linkPath] = args;
+      if (
+        collectionRemovalRace.afterIdentityRead &&
+        typeof linkPath === 'string' &&
+        linkPath.endsWith('/.claude/skills')
+      ) {
+        const afterIdentityRead = collectionRemovalRace.afterIdentityRead;
+        collectionRemovalRace.afterIdentityRead = undefined;
+        await afterIdentityRead();
+      }
+      return linkText;
+    },
+    unlink: async (...args: Parameters<typeof actual.unlink>) => {
+      const [linkPath] = args;
+      if (
+        typeof linkPath === 'string' &&
+        linkPath.endsWith('/.claude/skills')
+      ) {
+        collectionRemovalRace.pathBasedRemovalCalls += 1;
+      }
+      return actual.unlink(...args);
     },
   };
 });
@@ -58,6 +86,8 @@ describe('fs/io', () => {
   afterEach(async () => {
     collectionCreationRace.beforePathBasedCreation = undefined;
     collectionCreationRace.pathBasedCreationCalls = 0;
+    collectionRemovalRace.afterIdentityRead = undefined;
+    collectionRemovalRace.pathBasedRemovalCalls = 0;
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -182,7 +212,7 @@ describe('fs/io', () => {
     });
   });
 
-  it('rolls back only the unchanged collection link it created', async () => {
+  it('preserves an unchanged collection link when guarded removal is unavailable', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
     tempDirs.push(root);
     const canonical = join(root, '.agents', 'skills');
@@ -199,14 +229,36 @@ describe('fs/io', () => {
 
     await expect(
       removeCollectionSymlinkIfUnchanged(provider, created),
-    ).resolves.toBe(true);
-    await expect(lstat(provider)).rejects.toMatchObject({ code: 'ENOENT' });
+    ).resolves.toBe(false);
+    expect((await lstat(provider)).isSymbolicLink()).toBe(true);
+    expect(collectionRemovalRace.pathBasedRemovalCalls).toBe(0);
+  });
 
+  it('preserves a replacement swapped after the final identity read', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(provider), { recursive: true });
     await symlink(canonical, provider, 'dir');
+    const createdStat = await lstat(provider);
+    const created = {
+      linkText: await readlink(provider),
+      device: String(createdStat.dev),
+      inode: String(createdStat.ino),
+    };
+    collectionRemovalRace.afterIdentityRead = async () => {
+      await rm(provider);
+      await writeFile(provider, 'user replacement', 'utf8');
+    };
+
     await expect(
       removeCollectionSymlinkIfUnchanged(provider, created),
     ).resolves.toBe(false);
-    expect((await lstat(provider)).isSymbolicLink()).toBe(true);
+
+    expect(collectionRemovalRace.pathBasedRemovalCalls).toBe(0);
+    await expect(readFile(provider, 'utf8')).resolves.toBe('user replacement');
   });
 
   it('createSymlink uses relative target when given absolute paths', async () => {
