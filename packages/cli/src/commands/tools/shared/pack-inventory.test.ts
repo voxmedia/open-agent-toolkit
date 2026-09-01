@@ -525,6 +525,7 @@ describe('pack inventory', () => {
       scope: 'user',
       scopeRoot,
       assetsRoot,
+      managedRoleMaterialization: true,
     });
 
     // The pack is complete by asset presence, so the unreachable agent surface

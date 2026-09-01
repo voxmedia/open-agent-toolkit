@@ -348,7 +348,7 @@ function userAgentMaterializationDiagnostics(
   return [
     {
       code: 'user-agent-unmaterialized',
-      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only the built-in managed roles (${USER_SCOPE_MANAGED_AGENT_FILES.join(', ')}) and manifest-declared user-materializable agents. Install this pack at project scope to materialize the affected agents.`,
+      message: `Pack ${pack} installs user-scope canonical agents without native provider-role materialization for the active provider set; canonical instruction reads are unaffected. Active Codex or Cursor materialization supplies only built-in managed roles and manifest-declared user-materializable agents. Install this pack at project scope to materialize the affected agents.`,
       paths: unmaterialized.map(({ path }) => path),
     },
   ];
