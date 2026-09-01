@@ -1,8 +1,7 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 86df6a8f5fc76fe30554d7ce6562067c3a5b58e0
-oat_blockers:
-  - Phase 4 terminal review found that the documented symlink strategy release can follow a race-swapped provider parent outside the managed root; the one-use correction/review authorization is exhausted.
+oat_last_commit: d644a3707a4615dacc9bce6700f5c6e8d1b606de
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -28,7 +27,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one one-use durable repeated-sync p04 correction/re-review cycle on 2026-09-01
+oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one one-use fail-closed deferred-symlink p04 correction/re-review cycle on 2026-09-01
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -96,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T22:04:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:23:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,10 +111,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the authorized durable Phase 4 copy correction is committed,
-but the terminal fresh review found one Critical deferred-symlink ancestry
-race at reviewed head `86df6a8f5`. The one-use authorization is exhausted and
-Phase 5 remains gated.
+Implementation - Thomas authorized one bounded fail-closed correction for the
+Phase 4 deferred-symlink ancestry race and one fresh independent review.
+Phase 5 remains gated until that review passes.
 
 ## Artifacts
 
@@ -123,7 +121,7 @@ Phase 5 remains gated.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 terminal review found one Critical deferred-symlink ancestry race)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; bounded p04 fail-closed correction authorized)
 
 ## Progress
 
@@ -149,17 +147,14 @@ Phase 5 remains gated.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 terminal review blocked on deferred-symlink ancestry safety
+- ⧗ Phase 4 authorized fail-closed deferred-symlink correction and fresh review
 
 ## Blockers
 
-- A deferred symlink transition validates provider ancestry and then creates
-  parents/link by pathname. A race-swapped provider parent can redirect that
-  mutation outside the managed root and still allow ownership to be recorded.
-- The one-use correction/review authorization is exhausted.
+None. Phase 5 remains deliberately gated while the authorized Phase 4
+correction and fresh review run.
 
 ## Next Milestone
 
-Operator governance must authorize a bounded fail-closed deferred-symlink
-correction or revise the Phase 4 delivery boundary. Do not begin Phase 5
-without a passing Phase 4 verdict.
+Complete the authorized fail-closed deferred-symlink correction, run one fresh
+independent Phase 4 review, and begin Phase 5 only if that verdict passes.

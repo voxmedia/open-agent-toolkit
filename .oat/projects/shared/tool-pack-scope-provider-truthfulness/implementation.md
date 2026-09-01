@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 4 terminal review found that the documented symlink strategy release can follow a race-swapped provider parent outside the managed root; the one-use correction/review authorization is exhausted.
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1146,6 +1145,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   explicit bounded fail-closed symlink correction or a revised Phase 4
   delivery boundary.
 
+### Operator Authorization — Fail-Closed Deferred Symlink Transition
+
+- Thomas authorized one bounded Phase 4 correction and one fresh independent
+  review on 2026-09-01.
+- Deferred collection-directory symlink transitions are unavailable on the
+  current runtime unless publication can be bound to a non-following parent
+  identity. The correction must preserve collection and block evidence and
+  fail before collection detachment, link publication, or manifest ownership.
+- Deterministic apply-path regressions must swap both the provider parent and a
+  newly created collection directory after validation and prove zero writes to
+  provider and external trees, zero entry ownership, preserved collection
+  evidence, and actionable human/JSON recovery.
+- Recovery must no longer recommend changing the strategy to `symlink` as a
+  safe automatic release. On the current runtime, explicit external-ownership
+  or manual disposition is the supported release path; an automatic release
+  requires an identity-bound, non-following primitive.
+- Reuse the original Phase 4 implementer at the exact
+  `oat-phase-implementer-gpt-5-6-sol-high` target, then run exactly one fresh
+  `oat-reviewer-gpt-5-6-sol-high` review. A blocking verdict does not authorize
+  another correction, and Phase 5 remains gated until Phase 4 passes.
+
 ---
 
 ## Orchestration Runs
@@ -1671,6 +1691,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `gate-target`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator authorization — fail-closed deferred symlink transition
+
+- Authorization: Thomas authorized one bounded Phase 4 correction and one
+  fresh independent review on 2026-09-01.
+- Correction scope: make deferred collection-directory symlink transitions
+  fail closed on the current runtime before collection detachment or any
+  publication. Preserve collection/block evidence and create no entry
+  ownership.
+- Required race coverage: replace the provider parent and the newly created
+  collection directory after validation; both cases must prove zero
+  provider/external writes and actionable structured recovery.
+- Recovery boundary: do not advertise a strategy change to `symlink` as safe.
+  Explicit external-ownership or manual disposition is the supported release
+  path until an identity-bound, non-following publication primitive exists.
+- Governance: reuse the original p04 implementer at
+  `oat-phase-implementer-gpt-5-6-sol-high`, then run exactly one fresh
+  `oat-reviewer-gpt-5-6-sol-high` review. No further correction is authorized
+  if that review blocks, and Phase 5 remains gated until Phase 4 passes.
 
 <!-- orchestration-runs-end -->
 
