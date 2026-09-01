@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-31
+oat_last_updated: 2026-09-01
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
@@ -855,7 +855,8 @@ git commit -m "fix(p04-t06): accept null recap resume receipts"
 | final          | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
 | final          | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T180107Z.md         | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
 | final          | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T232653Z.md         | eab596991e11bfb864336101b93311668ced6366 | gate       | claude-fable-skip-permissions |
-| github-pr #254 | code     | fixes_added     | 2026-09-01 | reviews/archived/remote-pr-254-review-2026-09-01T221509Z.md | 3f698e213e2bcfc0217750905322cbfb3a0d48ce | -          | -                             |
+| github-pr #254 | code     | fixes_completed | 2026-09-01 | reviews/archived/remote-pr-254-review-2026-09-01T221509Z.md | 3f698e213e2bcfc0217750905322cbfb3a0d48ce | -          | -                             |
+| p04-t06        | code     | passed          | 2026-09-01 | reviews/archived/p04-t06-review-2026-09-01T224206Z.md       | 9c1feafb843b71cb1b995395816001823d6d5d40 | manual     | -                             |
 | spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | design         | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan           | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |

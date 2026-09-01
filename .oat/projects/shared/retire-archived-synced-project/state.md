@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t06
-oat_last_commit: 98b005960b2c5f282fadb8781d990d2ed4a159c9
+oat_current_task: null
+oat_last_commit: 9c1feafb843b71cb1b995395816001823d6d5d40
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -11,7 +11,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [] # Progress: current p04 basis awaits renewed approval
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -43,7 +43,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f
@@ -97,25 +97,17 @@ oat_implement_exit_gate:
   receive_commit: 237597d9463f019aed0829cf69ac1c7b80075204
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-09-01T20:40:09Z'
-oat_post_implement_sequence:
-  status: complete
-  source: configured
-  final_phase: p04
-  pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document, pr]
-  approval: approved
-  approval_source: user
-  post_approval: []
-  post_approval_completed: []
-  failure: null
+  failure: >-
+    Substantive p04-t06 skill and regression changes at
+    9c1feafb843b71cb1b995395816001823d6d5d40 invalidate the prior reviewed
+    implementation fingerprint and gate allowance.
+  updated_at: '2026-09-01T22:42:06Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T22:15:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T22:42:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -125,14 +117,15 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation resumed for PR #254 review fix
+**Status:** Implementation tasks complete; closeout revalidation in progress
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — in progress for remote-review task `p04-t06`. PR #254 remains
-open.
+Implementation — all 14 tasks are complete. The current basis awaits final
+review, a fresh configured exit gate, and renewed post-p04 approval. PR #254
+remains open.
 
 ## Artifacts
 
@@ -140,7 +133,7 @@ open.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress; 13/14 tasks complete)
+- **Implementation:** `implementation.md` (in progress; 14/14 tasks complete)
 
 ## Progress
 
@@ -192,7 +185,11 @@ open.
 - ✓ Operator approved the post-p04 HiLL checkpoint
 - ✓ Configured closeout sequence reached its terminal `complete` state
 - ✓ Implementation marked complete
-- → PR #254 remote review converted one Medium null-recap finding to `p04-t06`
+- ✓ PR #254 remote review converted one Medium null-recap finding to `p04-t06`
+- ✓ `p04-t06` completed at `9c1feafb8`; focused regression passed 15/15
+- ✓ Fresh `p04-t06` review passed with zero findings
+- ⧗ Prior final review, configured gate allowance, and p04 approval are stale
+  on the new substantive basis
 
 ## Blockers
 
@@ -200,5 +197,5 @@ None.
 
 ## Next Milestone
 
-Implement `p04-t06`, verify the focused no-recap regression and repository
-gates, then reconcile the remote review event before returning to closeout.
+Run current-basis final review, then a fresh configured exit gate and the
+approval-aware closeout sequence.

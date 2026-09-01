@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: p04-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 2     | 2/2       |
-| p02   | completed   | 3     | 3/3       |
-| p03   | completed   | 3     | 3/3       |
-| p04   | in_progress | 6     | 5/6       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 2     | 2/2       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 3     | 3/3       |
+| p04   | completed | 6     | 6/6       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
@@ -102,7 +102,7 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ## Phase 4: Integration, Documentation, and Release Validation
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-08-31
 
 ### Task p04-t01: Prove the terminal lifecycle end to end
@@ -135,7 +135,10 @@ combined test run; no runtime source changed.
 
 ### Task p04-t06: (review) Accept explicit null as no recap during archive resume
 
-**Status:** pending
+**Status:** completed
+**Commit:** 9c1feafb843b71cb1b995395816001823d6d5d40
+**Review:** Passed with 0 findings. Artifact:
+`reviews/archived/p04-t06-review-2026-09-01T224206Z.md`.
 
 ### Remote Review Received: PR #254
 
@@ -152,8 +155,11 @@ the executor still needs to accept the archive library and downstream parser's
 explicit-null representation consistently. No finding was deferred or
 dismissed.
 
-**Next:** Execute `p04-t06`, run its targeted regression and repository gates,
-then update the remote review event through the project implementation flow.
+**Fix outcome:** `p04-t06` completed at
+`9c1feafb843b71cb1b995395816001823d6d5d40`. The explicit-null recordless
+resume regression passed 15/15, the repository definition-of-done gates exited
+0, and the fresh task review passed with zero findings. The remote review event
+is now `fixes_completed`; current-basis final review and gate closeout remain.
 
 ### Review Received: final
 
@@ -455,6 +461,32 @@ configured post-approval steps and therefore reached terminal `complete`.
 Implementation is complete: all tasks, reviews, the configured exit gate,
 pre-approval steps, recap guard, and final post-p04 approval are closed.
 
+### Run 7 — PR #254 null-recap review fix
+
+- Phase/task base: `584e500fb1704364d9ab25f87742c438668ea261`.
+- Implementation request: `2b003948-f9cf-4abf-aec2-57fba787ac94`.
+- Implementation target: `oat-phase-implementer-gpt-5-6-sol-medium`.
+- Implementation dispatch: `Dispatch: scope=p04-t06 action=fix role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`.
+- Task commit: `9c1feafb843b71cb1b995395816001823d6d5d40`.
+- Changed files: the synced-archive completion executor and its focused Node
+  regression test only.
+- Verification: test-first red/green established; 15/15 focused tests passed;
+  lint, format, skill validation, check, type-check, test, build, skill-bump,
+  release, and docs-build gates all exited 0. Root independently reran the
+  focused test and diff check successfully.
+- Review request: `333e41c1-690c-4e87-85a3-6ed6dc9daeec`.
+- Review target: `oat-reviewer-gpt-5-6-sol-high`.
+- Review dispatch: `Dispatch: scope=p04-t06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Review artifact:
+  `reviews/archived/p04-t06-review-2026-09-01T224206Z.md`.
+- Review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Review reconnaissance: not attempted.
+- Recovery attempts: 0 of 10; optional nested dispatches: none.
+- Closeout impact: the substantive skill/test commit makes the prior final
+  review and configured exit-gate generation stale. The earlier p04 approval
+  and terminal sequence remain historical evidence; current-basis final
+  review, configured gate, and post-p04 approval must be re-established.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -479,12 +511,13 @@ That generation passed after one fix round and p02 is now merged.
 
 ## Test Results
 
-| Phase | Tests Run         | Passed | Failed | Coverage                                   |
-| ----- | ----------------- | ------ | ------ | ------------------------------------------ |
-| p01   | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery  |
-| p02   | 162 focused tests | 162    | 0      | Archive transaction and completion retry   |
-| p03   | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune     |
-| p04   | 157 scoped tests  | 157    | 0      | End-to-end retirement and release contract |
+| Phase   | Tests Run         | Passed | Failed | Coverage                                   |
+| ------- | ----------------- | ------ | ------ | ------------------------------------------ |
+| p01     | 128 focused tests | 128    | 0      | Ref identity, transition, races, recovery  |
+| p02     | 162 focused tests | 162    | 0      | Archive transaction and completion retry   |
+| p03     | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune     |
+| p04     | 157 scoped tests  | 157    | 0      | End-to-end retirement and release contract |
+| p04-t06 | 15 focused tests  | 15     | 0      | Explicit-null recordless archive resume    |
 
 ## Final Summary (for PR/docs)
 
@@ -498,10 +531,11 @@ That generation passed after one fix round and p02 is now merged.
   `oat-project-complete` skill and helpers, control-plane project row types,
   lifecycle documentation, package versions, and interruption/race regression
   suites.
-- **Verification:** 4721/4721 uncached CLI tests and 78/78 control-plane tests
-  passed; repository check, type-check, build, release validation, docs build,
-  lint, format, and skill validation all passed. Final focused re-review and
-  the configured Claude Fable exit gate both passed.
+- **Verification:** the prior 4721/4721 uncached CLI and 78/78 control-plane
+  suites passed. For the PR review correction, 15/15 focused tests and every
+  repository definition-of-done, lint, format, and skill-validation gate exited 0. The task review passed; current-basis final review and the configured exit
+  gate are pending because the new substantive commit invalidated their older
+  receipts.
 - **Accepted deltas:** completed-ref authority permits a same-SHA active alias
   because Git cannot atomically lease a no-op completed update with active-ref
   deletion; prune's leased alias cleanup therefore lives in the shared
