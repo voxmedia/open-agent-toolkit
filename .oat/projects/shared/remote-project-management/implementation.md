@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: prev2-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -35,9 +35,9 @@ oat_generated: false
 | Phase 7    | pending     | 10    | 0/10      |
 | Phase 8    | pending     | 6     | 0/6       |
 | Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | in_progress | 2     | 0/2       |
+| Revision 2 | in_progress | 2     | 2/2       |
 
-**Total:** 36/84 tasks completed
+**Total:** 38/84 tasks completed
 
 ---
 
@@ -1338,8 +1338,58 @@ fresh `revision-2-review-2` pass reviewed that exact head and returned zero
 findings at every severity. The plan is implementation-ready; no review
 artifact was written.
 
-**Next:** Execute `prev2-t01` and `prev2-t02` through
-`oat-project-implement`.
+**Next:** Run the fresh root-owned `p-rev2` code review. Phase 4 remains
+blocked until that review passes with zero Critical and zero Important
+findings.
+
+### Run 6 — Corrective Revision p-rev2
+
+```yaml
+request_id: remote-project-management-p-rev2-implementation-20260901
+caller: oat-project-implement
+scope: p-rev2
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+provider: codex
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+phase_base_head: 5cf7bd848ca4448007a0ff4a8b0b0f0d2004c127
+phase_head: 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
+task_commits:
+  - 4a02c866e64ac72ba22bdf44ad14c132a377ea2b
+  - 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
+recovery_usage: 0/10
+pending_attempt: null
+phase_outcome: implementation_passed_review_pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p-rev2 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- `prev2-t01` committed as `4a02c866e64ac72ba22bdf44ad14c132a377ea2b`.
+  Its RED regression reproduced the non-durable mutation-to-verification
+  handoff; its exact six-file suite passed 122/122 after the fix.
+- `prev2-t02` committed as `1af99a23b5cb67142cd06f37c3b3b0bc648e941e`.
+  Its RED regressions reproduced incomplete project-create provenance and
+  fallback synthesis; its exact five-file suite passed 84/84 after the fix.
+- Root independently verified the eight-file phase union at 134/134, the two
+  append-only task commits and declared file boundaries, `pnpm check`,
+  `pnpm type-check`, `pnpm build`, and diff integrity. Turbo replayed cached
+  package results for the root-wide commands; the focused union executed live.
+- The phase implementer additionally reported full `pnpm test` and docs build
+  success. `release:check-versions` and `release:validate` remain failing on
+  the branch-level lockstep version requirement: all five public packages are
+  still `0.2.50`, equal to refreshed `origin/main`. Version/lockfile and rebase
+  work is outside p-rev2 authority, so this is preserved as a concern and the
+  full release gate is not described as passing.
+- Worktree was clean. Recovery remained 0/10 with no pending attempt or event.
+- Fresh root-owned p-rev2 code review is pending. Phase 4 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1439,6 +1489,7 @@ Track test execution during implementation.
 | 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
+| rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 134/134; core checks passed            | 0      | code review pending        |
 
 ## Final Summary (for PR/docs)
 

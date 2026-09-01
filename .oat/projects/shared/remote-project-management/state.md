@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: 83ae7a9c160afdf4e6e4d08ff26268469403df0a
+oat_current_task: null
+oat_last_commit: 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T18:49:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T20:27:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -49,10 +49,10 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation revision — Revision 2 is authorized and in progress. It contains
-two tasks for the round-4 verification-handoff Critical and incomplete-intent
-Medium. Revision 1 history remains exhausted and immutable. Phase 4 has not
-started and remains dependent on a passing Revision 2 code review.
+Implementation revision — both Revision 2 tasks are complete and independently
+verified. Its fresh root-owned code review is pending. Revision 1 history
+remains exhausted and immutable. Phase 4 has not started and remains dependent
+on a passing Revision 2 code review.
 
 ## Artifacts
 
@@ -60,7 +60,7 @@ started and remains dependent on a passing Revision 2 code review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 implementation ready)
+- **Implementation:** implementation.md (in progress; Revision 2 code review pending)
 
 ## Progress
 
@@ -138,15 +138,18 @@ started and remains dependent on a passing Revision 2 code review.
 - ⛔ Revision 1 operator extension exhausted at 4/4 reviews and 3/3 fixes
 - ✓ Operator authorized separate corrective Revision 2
 - ✓ Revision 2 structured plan review passed with zero findings
+- ✓ Revision 2 implementation committed and focused union passed 134/134
+- ⧗ Fresh root-owned Revision 2 code review pending
 - ⛔ Phase 4 remains blocked until Revision 2 passes code review
 
 ## Blockers
 
 No active implementation blocker inside Revision 2. Phase 4 remains
-dependency-blocked until both Revision 2 tasks complete and its fresh code
-review passes with zero Critical and zero Important findings.
+dependency-blocked until the fresh Revision 2 code review passes with zero
+Critical and zero Important findings. The branch-level lockstep version gate
+remains a preserved out-of-phase release concern.
 
 ## Next Milestone
 
-Begin `prev2-t01`. Do not begin `p04-t01` until Revision 2 completes and
-passes its fresh code review.
+Run the fresh root-owned `p-rev2` code review. Do not begin `p04-t01` until it
+passes with zero Critical and zero Important findings.
