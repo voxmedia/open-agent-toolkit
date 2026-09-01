@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 4 fail-closed review found that collection detachment is persisted before a blocked directory copy, letting the next unchanged sync reach ordinary copy; the one-use extension is exhausted.
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1574,6 +1573,26 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   and Phase 5 remains gated.
 - Reconnaissance: not attempted; no nested orchestration evidence is required.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator authorization — durable repeated-sync block
+
+- Authorization: Thomas authorized one bounded Phase 4 correction and one
+  fresh independent review on 2026-09-01.
+- Correction scope: preserve collection transition evidence when a deferred
+  directory copy cannot safely publish. The first blocked apply must not
+  commit detachment that causes an unchanged retry to degrade into ordinary
+  path-based directory copy.
+- Required two-run behavior: both the initial apply and an unchanged retry
+  remain blocked before every publication helper; provider and external trees
+  remain untouched; no entry ownership is created; durable collection/block
+  evidence and actionable human/JSON recovery remain available.
+- Release conditions: only a safe strategy change or explicit external
+  ownership disposition may release the blocked transition.
+- Governance: reuse the original p04 implementer at the exact
+  `oat-phase-implementer-gpt-5-6-sol-high` target. After the bounded fix, run
+  exactly one fresh `oat-reviewer-gpt-5-6-sol-high` review. This authorization
+  does not imply another correction cycle if that review blocks, and Phase 5
+  remains gated until Phase 4 passes.
 
 <!-- orchestration-runs-end -->
 

@@ -1,8 +1,7 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: dd1fed438344718d7f98642da93b7f65501b79ee
-oat_blockers:
-  - Phase 4 fail-closed review found that collection detachment is persisted before a blocked directory copy, letting the next unchanged sync reach ordinary copy; the one-use extension is exhausted.
+oat_last_commit: ea94ebb020be5aff1e4f775872e7c3fa4b2d2e40
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -28,7 +27,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one one-use fail-closed p04 correction/re-review cycle on 2026-09-01
+oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one one-use durable repeated-sync p04 correction/re-review cycle on 2026-09-01
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -96,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:01:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T21:46:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,10 +111,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the operator-authorized Phase 4 review found one Critical
-repeated-sync state defect at `dd1fed438`. A blocked directory-copy transition
-persists detachment, so the next unchanged sync can reach ordinary copy. The
-one-use extension is exhausted and Phase 5 remains gated.
+Implementation - Thomas authorized one bounded Phase 4 correction at
+`ea94ebb02` to preserve durable blocked-transition evidence across unchanged
+retries, followed by exactly one fresh independent review. Phase 5 remains
+gated until Phase 4 passes.
 
 ## Artifacts
 
@@ -123,7 +122,7 @@ one-use extension is exhausted and Phase 5 remains gated.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 fail-closed extension exhausted with one Critical repeated-sync finding)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 durable repeated-sync correction authorized)
 
 ## Progress
 
@@ -149,17 +148,16 @@ one-use extension is exhausted and Phase 5 remains gated.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 blocked on durable repeated-sync copy transition safety; operator direction required
+- ⧗ Phase 4 durable repeated-sync correction and one fresh review authorized
 
 ## Blockers
 
-- The first blocked directory-copy apply persists collection detachment before
-  its child fails. An unchanged retry therefore loses transition identity and
-  reaches ordinary path-based directory copy. The one-use correction/review
-  extension is exhausted.
+- None during the authorized bounded correction. Phase 5 remains gated on a
+  passing Phase 4 review.
 
 ## Next Milestone
 
-Operator governance must authorize a durable blocked-transition correction or
-revise the Phase 4 delivery boundary. Do not begin Phase 5 without a passing
-Phase 4 verdict.
+Resume the original exact-High Phase 4 implementer for the durable
+blocked-transition correction, validate two unchanged runs, then dispatch one
+fresh exact-High independent review. Do not begin Phase 5 without a passing
+Phase 4 verdict; a blocking fresh review returns to operator governance.
