@@ -527,6 +527,15 @@ and could not be refreshed`.
 - Resume boundary: authenticate the Claude CLI, then run
   `oat-project-implement`. The persisted failed generation must be reconciled;
   it does not authorize an automatic replacement launch.
+- Authentication recovery: `claude auth status` now reports `loggedIn: true`
+  with Claude subscription authentication. The operator explicitly resumed
+  `oat-project-implement`, authorizing a new generation rather than relaunching
+  accepted run `a7a48998-876f-49b8-8343-a60049d42a43`.
+- New generation reconciliation reproduced the same configured command and
+  configuration fingerprint, the same current final reviewed head
+  `a8238ae1df5fee8b404b2d4ca0aa0f685b61f81d`, and the same qualified
+  implementation fingerprint
+  `sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98`.
 
 <!-- orchestration-runs-end -->
 
