@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'p03-review: Phase 3 exhausted the three-cycle review cap with 6 Critical and 1 Important findings remaining (since 2026-08-31).'
+oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p04-t01
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -25,18 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 10    | 10/10     |
-| Phase 2 | completed | 10    | 10/10     |
-| Phase 3 | blocked   | 12    | 12/12     |
-| Phase 4 | pending   | 11    | 0/11      |
-| Phase 5 | pending   | 9     | 0/9       |
-| Phase 6 | pending   | 10    | 0/10      |
-| Phase 7 | pending   | 10    | 0/10      |
-| Phase 8 | pending   | 6     | 0/6       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | pending     | 11    | 0/11      |
+| Phase 5    | pending     | 9     | 0/9       |
+| Phase 6    | pending     | 10    | 0/10      |
+| Phase 7    | pending     | 10    | 0/10      |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | in_progress | 4     | 0/4       |
 
-**Total:** 32/78 tasks completed
+**Total:** 32/82 tasks completed
 
 ---
 
@@ -645,6 +645,37 @@ final normal code review found 6 Critical and 1 Important issue.
   three artifacts contains a `## Review Orchestration` section.
 - Phase 4 is not authorized while this blocker remains. Any additional Phase 3
   repair/review cycle requires explicit operator authorization.
+
+### Revision Received: Phase 3 Corrective Revision
+
+**Date:** 2026-08-31
+**Source:** inline operator agreement informed by
+`reviews/p03-review-2026-08-31T232956Z.md`
+
+**Changes requested:**
+
+- Replace self-issued mutation authority with caller-owned exact instruction,
+  approval, and active-workflow evidence.
+- Close projection equality for every mutation and reject unsafe durable
+  identity/context evidence.
+- Compose the production lifecycle through purpose, description,
+  reconciliation, snapshot, baseline, intake, and publication contracts.
+- Make create/intake materialization restart-safe and carry typed
+  adapter-extension suppression evidence end to end.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+
+**Review boundary:** The revision has its own fresh planning-artifact review
+and root-owned code-review budget. Phase 4 remains blocked until the revision
+code review passes; the project remains implementation `in_progress` rather
+than returning to `pr_open` because this is a pre-PR corrective revision.
+
+**Planning review:** Passed on 2026-08-31 after one bounded artifact-fix retry.
+The first pass found two Important bookkeeping/topology contradictions; the
+second pass returned zero findings at every severity. No review artifact was
+created because the plan-writing review used structured in-memory output.
+
+**Next:** Execute revision tasks via `oat-project-implement`.
 
 ---
 

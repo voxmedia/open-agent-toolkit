@@ -58,15 +58,20 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
 ## Dependency Topology
 
 1. p01 Domain/config/storage -> p02 Reconciliation/safety ->
-   p03 Execution/lifecycle/skill.
-2. p04 GitHub, p05 Linear, and p06 Jira are peer lanes after p03.
+   p03 Execution/lifecycle/skill -> p-rev1 Phase 3 production-contract closure.
+2. p04 GitHub, p05 Linear, and p06 Jira are peer lanes after p-rev1 passes its
+   fresh code review.
 3. p07 Cross-provider convergence depends on all three provider lanes.
 4. p08 Documentation and release validation depends on p07.
 
-- **Hard dependencies:** p02 depends on p01; p03 depends on p01-p02; p07
-  depends on p04-p06; p08 depends on p07.
-- **Peer lanes:** p04, p05, and p06 may proceed independently after p03. Their
-  numbering does not imply serial execution.
+- **Hard dependencies:** p02 depends on p01; p03 depends on p01-p02; p-rev1
+  depends on p03; p04-p06 depend on a passing p-rev1 code review; p07 depends
+  on p04-p06; p08 depends on p07.
+- **Revision sequencing:** prev1-t01 through prev1-t04 execute sequentially
+  because they share authority, service, schema, action, and create-binding
+  surfaces.
+- **Peer lanes:** p04, p05, and p06 may proceed independently only after
+  p-rev1 passes. Their numbering does not imply serial execution.
 - **Shared-file coordination:** p04-p06 own distinct provider semantic adapters.
   They import the immutable p03 conformance harness and supply provider-local
   intent/observation fixtures; changes to shared interfaces return to p03
@@ -1395,6 +1400,7 @@ in-scope implementation files when a gate exposes a project defect.
 | p06    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | p07    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | p08    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
+| p-rev1 | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | final  | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | spec   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1            | cursor                   |
@@ -1405,9 +1411,144 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md     | -                                        | -                   | -                        |
 | design | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | revision-1-review-2 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
+
+## Phase p-rev1: Revision 1 — Phase 3 Production Contract Closure
+
+Source: operator-approved corrective revision from
+`reviews/p03-review-2026-08-31T232956Z.md` (2026-08-31)
+
+This is a pre-Phase-4 corrective revision. Phase 4 remains blocked until all
+four revision tasks complete and a fresh root-owned `p-rev1` code review
+passes with zero Critical and zero Important findings. The three existing
+Phase 3 review events remain immutable historical evidence and do not consume
+the revision phase's fresh review budget.
+
+### Task prev1-t01: (revision) Require caller-owned mutation authority evidence
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/authority.ts and
+authority.test.ts; modify packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts; modify packages/cli/src/commands/pjm/remote/index.ts and
+index.test.ts; modify packages/cli/src/commands/pjm/remote/schema.ts and
+schema.test.ts when the closed invocation evidence contract requires it.
+
+1. Add failing default-command temporary-repository tests for read-only,
+   user-authorized, user-approved, and autonomous authority. Cover absent,
+   stale, mismatched, and post-pre-read-drifted exact instruction, preview
+   approval, workflow ID, and workflow revision evidence without overriding
+   the production `currentInvocation` seam.
+2. Replace self-issued invocation evidence with one closed caller/host-supplied
+   current-invocation record. Persist only bounded non-secret provenance, bind
+   approval to the exact preview, require authoritative workflow identity and
+   revision for autonomous mode, and re-read the same authority source after
+   the immediate pre-read.
+3. Prove the public command surface can supply each reachable authority mode
+   and fails closed before host execution for every missing or drifted input.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/authority.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/index.test.ts src/commands/pjm/remote/schema.test.ts
+6. Commit: fix(prev1-t01): require caller-owned remote authority
+
+### Task prev1-t02: (revision) Close every mutation and durable-evidence safety boundary
+
+**Files:** Modify
+packages/cli/src/commands/pjm/remote/external-action.ts and
+external-action.test.ts; modify
+packages/cli/src/commands/pjm/remote/credential-safety.ts and
+credential-safety.test.ts; modify
+packages/cli/src/commands/pjm/remote/outbound-projection-safety.ts and
+outbound-projection-safety.test.ts; modify
+packages/cli/src/commands/pjm/remote/create-binding.ts and
+create-binding.test.ts; modify packages/cli/src/commands/pjm/remote/service.ts
+and service.test.ts.
+
+1. Add failing direct reproductions for transition and annotation intents that
+   differ from their gated normalized projection, including sensitive-value
+   mismatches, and for unsafe stable identities or context evidence returned by
+   create, intake, and readback observations.
+2. Define one operation-discriminated mapping from every writable semantic
+   intent to its exact normalized projection. Require canonical equality for
+   create, update, transition, and annotation before computing the action
+   digest or permitting host execution.
+3. Apply the bounded non-ticket evidence safety rule to every stable identity,
+   alias, and context evidence string before observation acceptance. Reject the
+   complete unsafe observation without journaling or persisting the value; do
+   not repurpose allowlisted ticket-field suppression for identity evidence.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/credential-safety.test.ts src/commands/pjm/remote/outbound-projection-safety.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/service.test.ts
+6. Commit: fix(prev1-t02): close remote action safety boundaries
+
+### Task prev1-t03: (revision) Compose production lifecycle policy and agreed state
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts; modify packages/cli/src/commands/pjm/remote/lifecycle.ts and
+lifecycle.test.ts; modify
+packages/cli/src/commands/pjm/remote/purpose-policy.ts and
+purpose-policy.test.ts; modify
+packages/cli/src/commands/pjm/remote/local-projection.ts and
+local-projection.test.ts; modify packages/cli/src/commands/pjm/remote/reconcile.ts
+and reconcile.test.ts; modify
+packages/cli/src/commands/pjm/remote/managed-markdown.ts and
+managed-markdown.test.ts; modify
+packages/cli/src/commands/pjm/remote/create-binding.ts and
+create-binding.test.ts; modify
+packages/cli/src/commands/pjm/remote/association.ts and association.test.ts.
+
+1. Add failing default-run tests for every binding purpose, description mode,
+   unsupported/empty field intersection, same-field conflict, managed-content
+   preservation, verified update baseline advancement, backlog intake
+   create/enrich, compact association, backlog publication, and explicit
+   project publication.
+2. Route publish and reconcile through the provider-neutral lifecycle service
+   and Phase 2 purpose, projection, managed-content, and three-way
+   reconciliation engines. Derive the exact outbound field mask from the
+   effective purpose intersection and description policy, and block conflicts
+   before action construction.
+3. On authoritative verified readback, atomically advance the sanitized
+   snapshot and reconciliation baseline. Establish the complete initial
+   snapshot/baseline and deliberate local target/association state for intake
+   and create, including project targets from their explicit publication
+   projection.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/lifecycle.test.ts src/commands/pjm/remote/purpose-policy.test.ts src/commands/pjm/remote/local-projection.test.ts src/commands/pjm/remote/reconcile.test.ts src/commands/pjm/remote/managed-markdown.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/association.test.ts
+6. Commit: fix(prev1-t03): compose production remote lifecycle
+
+### Task prev1-t04: (revision) Make materialization resumable and suppression evidence typed
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/schema.ts and
+schema.test.ts; modify packages/cli/src/commands/pjm/remote/store.ts and
+store.test.ts; modify
+packages/cli/src/commands/pjm/remote/external-action.ts and
+external-action.test.ts; modify packages/cli/src/commands/pjm/remote/snapshot.ts
+and snapshot.test.ts; modify packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts; modify
+packages/cli/src/commands/pjm/remote/create-binding.ts and
+create-binding.test.ts; modify
+packages/cli/src/commands/pjm/remote/**integration**/lifecycle-harness.ts and
+lifecycle.test.ts.
+
+1. Add filesystem/default-run crash injection after every create and intake
+   journal, metadata, state, snapshot, baseline, association, and terminal
+   transition boundary. Restart with a new store/runner instance and require
+   idempotent completion of only the first incomplete local substep, including
+   diagnosis and repair of one-sided durable state.
+2. Journal materialization as explicit append-only idempotent substeps. Do not
+   mark an operation terminal until all required local writes are durable, and
+   reject replay of completed mutation attempts while permitting safe local
+   continuation after verified remote effects.
+3. Replace flat suppressed-field names with bounded discriminated core or
+   adapter-extension references. Require extension keys to be schema-safe and
+   present in the adapter allowlist, carry the paired marker/evidence through
+   accepted observations, and consume each pair exactly once at snapshot
+   persistence.
+4. Add a generic adapter-extension observation-to-snapshot integration case
+   alongside restart and replay coverage. Retain no raw suppressed value or
+   provider-native payload.
+5. Format: pnpm format:fix
+6. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/**integration**/lifecycle.test.ts
+7. Commit: fix(prev1-t04): make remote materialization resumable
 
 ## Implementation Complete
 
@@ -1422,8 +1563,9 @@ authoritative in `implementation.md`.
 - Phase 6: 10 tasks - Jira semantic intents, observations, ADF, and duplicate search
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
+- Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
 
-**Total: 78 tasks**
+**Total: 82 tasks**
 
 ## References
 

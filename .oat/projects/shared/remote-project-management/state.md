@@ -1,8 +1,7 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: prev1-t01
 oat_last_commit: 9872f13ddd2940b338ababfea297434dad6a4ae5
-oat_blockers:
-  - 'p03-review: Phase 3 exhausted the three-cycle review cap with 6 Critical and 1 Important findings remaining (since 2026-08-31).'
+oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -29,10 +28,13 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 0
       pending_attempt: null
+    p-rev1:
+      used_attempts: 0
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:34:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T00:23:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -44,18 +46,17 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 code is complete at 12/12 tasks, but its third and
-final normal review found 6 Critical and 1 Important issue. Review governance
-is exhausted; Phase 4 has not started and requires explicit operator
-authorization after the Phase 3 blocker is dispositioned.
+Implementation revision — Phase 3 code is complete at 12/12 tasks, and its
+three normal reviews remain historical evidence. The operator authorized a
+four-task corrective Revision 1 to close the production contract before Phase 4. Phase 4 has not started.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** plan.md (complete; ready for implementation)
-- **Implementation:** implementation.md (in progress; resumed at p02-t10)
+- **Plan:** plan.md (complete; corrective revision review passed)
+- **Implementation:** implementation.md (in progress; corrective revision at prev1-t01)
 
 ## Progress
 
@@ -117,18 +118,18 @@ authorization after the Phase 3 blocker is dispositioned.
 - ✓ Phase 3 review-fix round 1 committed as `b8b7892d0`
 - ✓ Phase 3 review-fix round 2 committed as `9872f13dd`
 - ⚠ Phase 3 final normal review blocked with 6 Critical and 1 Important finding
-- ⛔ Phase 3 review governance exhausted at 3/3; Phase 4 not started
+- ✓ Operator authorized corrective Revision 1 without erasing the 3/3 review history
+- ✓ Revision 1 created with `prev1-t01` through `prev1-t04`; planning review passed after one bounded fix retry
+- ⧗ Revision 1 implementation ready at `prev1-t01`
+- ⛔ Phase 4 remains blocked until Revision 1 implementation and code review pass
 
 ## Blockers
 
-Phase 3 is blocked by `reviews/p03-review-2026-08-31T232956Z.md`. The six
-Critical findings cover caller-supplied authority, universal projection
-equality, unsafe stable identity acceptance, production policy/reconciliation,
-initial durable state, and restart-safe materialization. The Important finding
-covers typed adapter-extension suppression evidence. Any additional Phase 3
-repair/review cycle requires explicit operator authorization.
+None. The Phase 3 review findings have been converted into an explicitly
+authorized corrective revision. They remain unresolved implementation work and
+continue to gate Phase 4, but the project has an actionable revision path.
 
 ## Next Milestone
 
-Obtain operator direction for the terminal Phase 3 review block. Do not begin
-Phase 4 while the blocker remains.
+Execute `prev1-t01` through `prev1-t04`. Do not begin Phase 4 until the
+revision's fresh code review passes.
