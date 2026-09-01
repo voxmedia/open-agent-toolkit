@@ -424,6 +424,11 @@ all 17 review artifacts are archived, and no active review artifact remains.
 The configured pre-approval sequence is now complete in its stored
 `summary → document → pr` order.
 
+The implementation-tail project recap resolved to `skip` from the operator's
+interactive choice. The explainer terminal-outcome guard passed with no
+manifest, no recap was attempted or reused, and the recap run path is `none`.
+The closeout sequence is awaiting the configured post-p04 HiLL approval.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
