@@ -52,17 +52,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=0bb25a08-a4e7-4e4b-adef-ca236e685c2a|scope=final|type=code|source=final-review-2026-09-01T040114Z.md'
+  receive_source_artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
+  receive_archived_artifact: .oat/projects/shared/recon-skill/reviews/archived/final-review-2026-09-01T040114Z.md
+  receive_event_identity: 'scope=final|type=code|source=final-review-2026-09-01T040114Z.md'
+  receive_pre_head: a6e4156098871f6076a9c9dda7da4e9eb51445f0
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-01T04:03:47Z'
+  updated_at: '2026-09-01T04:04:43Z'
 oat_post_implement_sequence:
   status: pre_approval
   source: configured
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T04:03:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T04:04:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
