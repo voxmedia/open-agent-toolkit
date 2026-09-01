@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** review fixes added; bounded correction in progress
+**Status:** review fixes complete; fresh High review pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -810,6 +810,26 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
      to per-entry behavior when unsupported.
 - The original exact High p04 implementer remains the fix owner. Phase 5 stays
   gated until a fresh review reports zero Critical and zero Important findings.
+
+### Review Round 1 Fix
+
+- Commit: `85cddb881240eba9fe88cee8f1d18b4ecec07dff`
+- Closed the apply-time ancestry race by re-proving identity immediately before
+  mutation and rejecting changed or symlinked ancestors in the creation
+  primitive.
+- Persisted exact link text plus device/inode creation identity so legacy or
+  mismatched ownership detaches without unlinking user-replaced aliases.
+- Added safe collection-to-explicit symlink/copy transitions, normalized POSIX
+  collection-child validation, and registry-owned collection-alias capability
+  gating with per-entry fallback for unsupported providers.
+- Verification: RED reproduced all five findings with 15 expected failures
+  across 178 tests; GREEN focused coverage passed 195/195. The authoritative
+  Phase 4 union passed 18 files / 388 tests at the committed head. CLI lint,
+  type-check, and format passed live; `pnpm check`, full `pnpm test`, and
+  `git diff --check` passed. Root independently verified the exact 14-file
+  boundary, clean worktree, whitespace, and the 388-test union.
+- A fresh exact-High reviewer will assess the complete Phase 4 range before
+  Phase 5 starts.
 
 ---
 
@@ -1158,6 +1178,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: restricted collection aliases to registry-supported skill mappings;
   focused 66, phase 368, and full repository tests passed
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 1
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r1-fix-20260901T013500Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `85cddb881240eba9fe88cee8f1d18b4ecec07dff`
+- Outcome: all five review findings closed; focused 195/195 and authoritative
+  Phase 4 union 388/388 passed with clean exact-file and whitespace checks.
+- Dispatch: scope=p04-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
