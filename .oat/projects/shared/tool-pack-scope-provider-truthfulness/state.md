@@ -45,6 +45,18 @@ oat_phase_recovery_policy:
     p03:
       used_attempts: 1
       pending_attempt: null
+    p04:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p04-recovery-20260901T010500Z
+        original_request_id: dispatch-p04-20260901T002500Z-36af8aadd
+        original_task_id: p04-t05
+        original_commit: d668237fba3bfb7278ccd128f8804aa0c9d4e5cd
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: d668237fba3bfb7278ccd128f8804aa0c9d4e5cd
+        status: active
 oat_dispatch_policy:
   mode: managed
   policy: high
