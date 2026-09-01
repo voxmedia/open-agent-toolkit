@@ -871,6 +871,42 @@ describe('RemoteSyncStore', () => {
     ).rejects.toThrow(/verified/i);
   });
 
+  it('preserves incomplete project-create provenance across a restart', async () => {
+    const { store } = await createStore();
+    await store.createBindingIntent({
+      schemaVersion: 1,
+      bindingId: 'bnd_incomplete_project',
+      operationId: 'op_incomplete_project',
+      provider: 'linear',
+      target: {
+        kind: 'project',
+        scope: 'shared',
+        id: 'project-incomplete',
+        path: '.oat/projects/shared/project-incomplete',
+      },
+      publicationProjection: {
+        title: 'plan',
+        description: 'summary',
+        priority: 'plan',
+      },
+      providerContext: { workspaceId: 'workspace-1' },
+      purposes: ['planning'],
+      policyRestrictions: {},
+      provenanceToken: 'oat-create:project-incomplete',
+      createdAt: timestamp,
+    });
+
+    const restarted = new RemoteSyncStore(store.locations);
+    await expect(
+      restarted.readOperation('op_incomplete_project'),
+    ).resolves.toMatchObject({
+      createIntent: {
+        target: { kind: 'project' },
+        projectionStatus: 'reconcile-required',
+      },
+    });
+  });
+
   it('requires materialization to match a retained verified create journal', async () => {
     const { store } = await createStore();
     const intent = {

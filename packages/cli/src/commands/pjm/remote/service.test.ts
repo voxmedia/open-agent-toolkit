@@ -13,6 +13,7 @@ import { join, resolve } from 'node:path';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { buildExternalAction } from './external-action';
 import { createPjmRemoteCommand, type RemoteCommandRequest } from './index';
 import { resolveLocalProjection } from './local-projection';
 import type { RemoteBindingMetadata, RemoteBindingState } from './schema';
@@ -1357,15 +1358,14 @@ describe('production lifecycle composition', () => {
         observationStdin: true,
       }),
     ).resolves.toMatchObject({ status: 'ok' });
-    const store = new RemoteSyncStore(
-      resolveRemoteStorageLocations({
-        repoRoot: repository,
-        gitCommonDir: join(repository, '.git'),
-        repositoryIdentity: `local-repository:${resolve(repository)}`,
-        stateStorage: 'local',
-        target: { kind: 'backlog', scope: 'shared', path: null },
-      }),
-    );
+    const locations = resolveRemoteStorageLocations({
+      repoRoot: repository,
+      gitCommonDir: join(repository, '.git'),
+      repositoryIdentity: `local-repository:${resolve(repository)}`,
+      stateStorage: 'local',
+      target: { kind: 'backlog', scope: 'shared', path: null },
+    });
+    const store = new RemoteSyncStore(locations);
     await expect(
       store.readBindingMetadata('bnd_service-project'),
     ).resolves.toMatchObject({
@@ -1399,6 +1399,237 @@ describe('production lifecycle composition', () => {
         },
       },
     });
+  });
+
+  it('fails closed before materializing an incomplete persisted project create', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-incomplete-create-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat'), { recursive: true });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({ pjm: { initialized: true } })}\n`,
+    );
+    const locations = resolveRemoteStorageLocations({
+      repoRoot: repository,
+      gitCommonDir: join(repository, '.git'),
+      repositoryIdentity: `local-repository:${resolve(repository)}`,
+      stateStorage: 'local',
+      target: { kind: 'backlog', scope: 'shared', path: null },
+    });
+    const store = new RemoteSyncStore(locations);
+    await store.createBindingIntent({
+      schemaVersion: 1,
+      bindingId: 'bnd_incomplete_project',
+      operationId: 'op_incomplete_project',
+      provider: 'linear',
+      target: {
+        kind: 'project',
+        scope: 'shared',
+        id: 'project-incomplete',
+        path: '.oat/projects/shared/project-incomplete',
+      },
+      publicationProjection: {
+        title: 'plan',
+        description: 'summary',
+        priority: 'plan',
+      },
+      providerContext: { workspaceId: 'workspace-1' },
+      purposes: ['planning'],
+      policyRestrictions: {},
+      provenanceToken: 'oat-create:project-incomplete',
+      createdAt: timestamp,
+    });
+    await store.transitionOperation('op_incomplete_project', 'planned', {
+      state: 'verification-pending',
+      updatedAt: timestamp,
+      lastSafeStep: 'verification-pending',
+      retryDisposition: 'reconcile-required',
+    });
+    const readAction = buildExternalAction({
+      operationId: 'op_incomplete_project',
+      stepId: 'verify_incomplete_project',
+      provider: 'linear',
+      semanticOperation: 'read',
+      context: { workspaceId: 'workspace-1' },
+      intent: { stableId: 'issue-incomplete-project' },
+      expectedObservation: {
+        fields: ['title', 'description', 'priority', 'status'],
+        requireIdentity: true,
+        stableId: 'issue-incomplete-project',
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {},
+    });
+    await store.writeCurrentAction(readAction.operationId, readAction);
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      readObservationStdin: async () => ({
+        schemaVersion: 1,
+        operationId: readAction.operationId,
+        stepId: readAction.stepId,
+        actionDigest: readAction.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: {
+            stableId: 'issue-incomplete-project',
+            aliases: ['PROJECT-INCOMPLETE'],
+          },
+          fields: {
+            title: 'Remote title must not become local',
+            description: 'Remote description must not become local',
+            priority: 'urgent',
+            status: 'open',
+          },
+          revisionDigest: 'sha256:remote-readback',
+          diagnosticCode: null,
+        },
+      }),
+    });
+
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: readAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow(/local projection|reconcile/i);
+    await expect(
+      store.readBindingMetadata('bnd_incomplete_project'),
+    ).resolves.toBeNull();
+    await expect(
+      store.readBindingState('bnd_incomplete_project'),
+    ).resolves.toBeNull();
+
+    const verificationDigest = 'sha256:legacy-verified-identity';
+    await store.transitionOperation(
+      'op_incomplete_project',
+      'verification-pending',
+      {
+        state: 'verified',
+        updatedAt: timestamp,
+        verification: [
+          {
+            field: 'remoteIdentity',
+            expectedHash: verificationDigest,
+            observedHash: verificationDigest,
+            status: 'verified',
+          },
+        ],
+        outcome: {
+          classification: 'verified',
+          message: 'legacy materialization',
+          verifiedAt: timestamp,
+        },
+        lastSafeStep: 'complete',
+        retryDisposition: 'not-applicable',
+      },
+    );
+    const metadata: RemoteBindingMetadata = {
+      recordType: 'binding-metadata',
+      schemaVersion: 1,
+      bindingId: 'bnd_incomplete_project',
+      provider: 'linear',
+      target: {
+        kind: 'project',
+        scope: 'shared',
+        id: 'project-incomplete',
+        path: '.oat/projects/shared/project-incomplete',
+      },
+      remoteIdentity: {
+        stableId: 'issue-incomplete-project',
+        context: { workspaceId: 'workspace-1' },
+        aliases: [],
+      },
+      identityHistory: [],
+      purposes: ['planning'],
+      policyRestrictions: {},
+      publicationProjection: {
+        title: 'plan',
+        description: 'summary',
+        priority: 'plan',
+      },
+      provenanceToken: 'oat-create:project-incomplete',
+      lifecycle: 'active',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    await expect(
+      store.materializeVerifiedBinding('op_incomplete_project', metadata, {
+        provider: 'linear',
+        stableId: 'issue-incomplete-project',
+        verifiedAt: timestamp,
+        evidenceDigest: verificationDigest,
+      }),
+    ).rejects.toThrow(/localProjection/i);
+    await mkdir(locations.portable.bindingsDir, { recursive: true });
+    await writeFile(
+      join(locations.portable.bindingsDir, `${metadata.bindingId}.json`),
+      `${JSON.stringify(metadata)}\n`,
+    );
+    await store.writeBindingState({
+      recordType: 'binding-state',
+      schemaVersion: 2,
+      bindingId: metadata.bindingId,
+      provider: metadata.provider,
+      metadataUpdatedAt: timestamp,
+      localProjection: {
+        title: 'Remote title must not become local',
+        description: 'Remote description must not become local',
+        priority: 'urgent',
+        source: 'explicit-project-publication',
+        sourceRevision: 'sha256:legacy-synthesized',
+        observedAt: timestamp,
+      },
+      snapshot: null,
+      baseline: {
+        recordType: 'baseline',
+        schemaVersion: 1,
+        baselineId: 'base_incomplete_project',
+        bindingId: metadata.bindingId,
+        agreedAt: timestamp,
+        acceptedByOperationId: 'op_incomplete_project',
+        localProjectionRevision: 'sha256:legacy-synthesized',
+        remoteRevision: {
+          strength: 'hash-only',
+          token: null,
+          updatedAt: timestamp,
+          contentHash: 'sha256:remote-readback',
+        },
+        fields: {
+          title: {
+            value: 'Remote title must not become local',
+            hash: 'sha256:title',
+          },
+          description: {
+            value: 'Remote description must not become local',
+            hash: 'sha256:description',
+          },
+          priority: { value: 'urgent', hash: 'sha256:priority' },
+        },
+      },
+      capability: null,
+      contentRedacted: false,
+      lifecycle: 'active',
+      lifecycleCondition: 'active',
+      activeOperationIds: [],
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    await expect(
+      runner({
+        operation: 'publish',
+        projectRoot: repository,
+        bindingId: metadata.bindingId,
+      }),
+    ).rejects.toThrow(/provenance.*incomplete|reconcile or repair/i);
   });
 
   it.each([

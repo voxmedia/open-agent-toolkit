@@ -950,6 +950,37 @@ describe('remote record schemas', () => {
     ).toThrow();
   });
 
+  it('marks legacy project-create intent without local projection reconcile-required', () => {
+    const intent = PlannedBindingCreateSchema.parse({
+      schemaVersion: 1,
+      bindingId: 'bnd_incomplete_project',
+      operationId: 'op_incomplete_project',
+      provider: 'linear',
+      target: {
+        kind: 'project',
+        scope: 'shared',
+        id: 'project-incomplete',
+        path: '.oat/projects/shared/project-incomplete',
+      },
+      publicationProjection: {
+        title: 'plan',
+        description: 'summary',
+        priority: 'plan',
+      },
+      providerContext: { workspaceId: 'workspace-1' },
+      purposes: ['planning'],
+      policyRestrictions: {},
+      provenanceToken: 'oat-create:project-incomplete',
+      createdAt: timestamp,
+    });
+
+    expect(intent).toMatchObject({
+      target: { kind: 'project' },
+      projectionStatus: 'reconcile-required',
+    });
+    expect(intent).not.toHaveProperty('localProjection');
+  });
+
   it('requires complete matching evidence for a durable verification handoff', () => {
     const observation = {
       observedAt: timestamp,

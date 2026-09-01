@@ -762,6 +762,13 @@ function assertMaterializationMatchesCreateIntent(
   if (intent.provenanceToken !== record.provenanceToken) {
     mismatches.push('provenance');
   }
+  if (
+    intent.target.kind === 'project' &&
+    (intent.projectionStatus !== 'complete' ||
+      intent.localProjection?.source !== 'explicit-project-publication')
+  ) {
+    mismatches.push('localProjection');
+  }
   if (mismatches.length > 0) {
     throw new Error(
       `Binding metadata does not match create intent fields: ${mismatches.join(', ')}.`,

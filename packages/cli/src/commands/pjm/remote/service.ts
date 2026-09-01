@@ -658,6 +658,7 @@ async function prepareCreate(
     policyRestrictions: {},
     provenanceToken,
     localProjection: local,
+    projectionStatus: 'complete',
     createdAt: now,
   };
   if (existing) {
@@ -868,6 +869,7 @@ async function prepareMutation(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const { metadata, state } = await requireBinding(request.bindingId, store);
+  await assertCompleteProjectCreateProvenance(state, store);
   const existing = request.previewOperationId
     ? await requireOperation(request.previewOperationId, store)
     : null;
@@ -1573,6 +1575,15 @@ async function continueOperation(
       throw new Error('Create read-back lacks durable identity evidence.');
     }
     const intent = operation.createIntent;
+    if (
+      intent.target.kind === 'project' &&
+      (intent.projectionStatus !== 'complete' ||
+        intent.localProjection?.source !== 'explicit-project-publication')
+    ) {
+      throw new Error(
+        'Persisted project create lacks a complete explicit local projection and requires reconciliation or repair.',
+      );
+    }
     metadata = {
       recordType: 'binding-metadata',
       schemaVersion: 1,
@@ -1604,24 +1615,11 @@ async function continueOperation(
             intent.target.path,
             observation.observedAt,
           )
-        : resolveLocalProjection({
-            target: {
-              kind: 'project',
-              path: intent.target.path,
-              publication: {
-                title: String(observation.outcome.fields.title ?? ''),
-                description:
-                  observation.outcome.fields.description == null
-                    ? null
-                    : String(observation.outcome.fields.description),
-                priority:
-                  observation.outcome.fields.priority == null
-                    ? null
-                    : String(observation.outcome.fields.priority),
-              },
-            },
-            observedAt: observation.observedAt,
-          }));
+        : (() => {
+            throw new Error(
+              'Persisted project create lacks a complete explicit local projection and requires reconciliation or repair.',
+            );
+          })());
     const snapshot = snapshotFromObservation({
       snapshotId: durableId('snap', operation.operationId),
       bindingId: intent.bindingId,
@@ -3001,6 +2999,25 @@ async function requireBinding(
   if (!metadata || !state)
     throw new Error(`Remote binding '${bindingId}' does not exist.`);
   return { metadata, state };
+}
+
+async function assertCompleteProjectCreateProvenance(
+  state: RemoteBindingState,
+  store: RemoteSyncStore,
+): Promise<void> {
+  const acceptedByOperationId = state.baseline?.acceptedByOperationId;
+  if (!acceptedByOperationId) return;
+  const originatingOperation = await store.readOperation(acceptedByOperationId);
+  const intent = originatingOperation?.createIntent;
+  if (
+    intent?.target.kind === 'project' &&
+    (intent.projectionStatus !== 'complete' ||
+      intent.localProjection?.source !== 'explicit-project-publication')
+  ) {
+    throw new Error(
+      'Persisted project create provenance is incomplete; reconcile or repair it before later mutation.',
+    );
+  }
 }
 
 async function requireOperation(operationId: string, store: RemoteSyncStore) {

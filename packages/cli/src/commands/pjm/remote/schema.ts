@@ -167,7 +167,7 @@ const LocalIssueProjectionSchema = z
   })
   .strict();
 
-export const PlannedBindingCreateSchema = z
+const CurrentPlannedBindingCreateSchema = z
   .object({
     schemaVersion: z.literal(1),
     bindingId: StableIdSchema,
@@ -180,9 +180,36 @@ export const PlannedBindingCreateSchema = z
     policyRestrictions: BindingPolicyRestrictionSchema,
     provenanceToken: z.string().min(1).max(512),
     localProjection: LocalIssueProjectionSchema.optional(),
+    projectionStatus: z.enum(['complete', 'reconcile-required']).optional(),
     createdAt: TimestampSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((intent, context) => {
+    if (intent.target.kind !== 'project') return;
+    if (
+      intent.projectionStatus !== 'complete' ||
+      intent.localProjection?.source !== 'explicit-project-publication'
+    ) {
+      if (
+        intent.projectionStatus !== 'reconcile-required' ||
+        intent.localProjection !== undefined
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['localProjection'],
+          message:
+            'Project create requires a complete explicit local publication projection.',
+        });
+      }
+    }
+  });
+
+export const PlannedBindingCreateSchema: z.ZodType<
+  z.infer<typeof CurrentPlannedBindingCreateSchema>
+> = z.preprocess(
+  markIncompleteProjectCreate,
+  CurrentPlannedBindingCreateSchema,
+) as z.ZodType<z.infer<typeof CurrentPlannedBindingCreateSchema>>;
 
 export const RemoteBindingMetadataSchema = z
   .object({
@@ -1601,6 +1628,22 @@ function migrateLegacyOperationRecord(value: unknown): unknown {
   delete migrated.transport;
   delete migrated.selectedTransport;
   return migrated;
+}
+
+function markIncompleteProjectCreate(value: unknown): unknown {
+  if (!isPlainRecord(value) || value.schemaVersion !== 1) return value;
+  if (value.projectionStatus !== undefined) return value;
+  const target = isPlainRecord(value.target) ? value.target : null;
+  const localProjection = isPlainRecord(value.localProjection)
+    ? value.localProjection
+    : null;
+  return {
+    ...value,
+    projectionStatus:
+      target?.kind === 'project' && localProjection === null
+        ? 'reconcile-required'
+        : 'complete',
+  };
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
