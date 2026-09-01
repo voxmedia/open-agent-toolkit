@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T00:03:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T00:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,11 +87,11 @@ oat_generated: false
 
 **Status:** Implementation in progress / PR open
 **Started:** 2026-08-30
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation - Final review passed; awaiting configured exit gate
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -99,7 +99,7 @@ Implementation - Final review passed; awaiting configured exit gate
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (16/16 tasks complete; terminal review pending)
+- **Implementation:** `implementation.md` (16/16 tasks complete; terminal review passed)
 
 ## Progress
 
@@ -161,7 +161,7 @@ Implementation - Final review passed; awaiting configured exit gate
   prior Critical/Important findings
 - ✓ Phase 4 documentation and lockstep `0.2.51` release preparation completed
 - ✓ Terminal Phase 4 review passed with zero findings and no overengineering
-- ✓ All 13 implementation and revision tasks complete
+- ✓ All 16 implementation and revision tasks complete
 - ⧗ Final lifecycle review found one Critical approval-envelope binding gap
 - ✓ Revision task prev2-t01 binds the complete canonical dispatch projection
 - ✓ Exhaustive deletion and receipt-mutation coverage passes
@@ -171,7 +171,11 @@ Implementation - Final review passed; awaiting configured exit gate
 - ✓ Root load-bearing verification passes 64/64 focused tests
 - ✓ Third and terminal final review passed with zero findings
 - ✓ Phase p-rev2 passed without overengineering
-- ⧗ Awaiting the configured implementation exit gate
+- ✓ Configured implementation exit gate passed with zero findings
+- ✓ Summary and documentation closeout steps completed
+- ✓ PR #248 refreshed with the final implementation body
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -179,5 +183,8 @@ None.
 
 ## Next Milestone
 
-Pass the configured implementation exit gate, then run pre-approved closeout
-steps and request final HiLL approval
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
