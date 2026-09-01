@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** second review fixes added; bounded correction pending
+**Status:** second review fixes complete; fresh High review pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -848,6 +848,30 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   4. Align the design model with durable `linkText` and optional `createdLink`
      identity, including legacy detach-without-unlink behavior.
 - Phase 5 remains gated pending a bounded fix and fresh complete Phase 4 review.
+
+### Review Round 2 Fix
+
+- Commit: `0dc79b64b9733cf387d969fa9721c59d78fc1515`
+- Disabled unsafe path-based collection creation where Node cannot provide a
+  securely guarded parent-relative primitive; automatic collection planning
+  now truthfully falls back to safe per-entry synchronization while exact
+  manually created aliases remain adoptable.
+- Re-proved durable collection identity before every explicit transition and
+  blocked deferred child writes for changed, foreign, missing, unavailable, or
+  failed-removal destinations.
+- Added zero-child `auto` to explicit symlink/copy reconciliation through apply
+  and manifest reload, retaining existing adopted/changed/legacy/unverifiable
+  conflict semantics.
+- Aligned the design with exact `linkText`, optional `createdLink`, validation
+  and migration behavior, and legacy detach-without-unlink authority.
+- Verification: RED reproduced 15 intended failures across 80 tests; focused
+  GREEN passed 82/82. The authoritative Phase 4 union passed live at 18 files /
+  402 tests before and after commit. CLI lint, type-check, and format passed
+  live; `pnpm check`, full `pnpm test`, and `git diff --check` passed. Root
+  independently verified the exact nine-file boundary, clean worktree,
+  whitespace, and the live 402-test union.
+- A fresh exact-High reviewer will assess the complete Phase 4 range before
+  Phase 5 starts.
 
 ---
 
@@ -1217,6 +1241,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: attempted; complete nested dispatch and reconciliation
   evidence is preserved in the review artifact.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 2
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r2-fix-20260901T021000Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `0dc79b64b9733cf387d969fa9721c59d78fc1515`
+- Outcome: all four review findings closed; focused 82/82 and authoritative
+  Phase 4 union 402/402 passed with exact nine-file and whitespace checks.
+- Dispatch: scope=p04-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
