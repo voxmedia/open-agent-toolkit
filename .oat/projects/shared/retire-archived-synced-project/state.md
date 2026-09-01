@@ -104,7 +104,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
@@ -115,7 +115,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:53:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T00:01:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -179,7 +179,8 @@ Implement - post-p04 closeout checkpoint
 - ✓ Operator deferred Minor `m1`; receive commit and archived artifact reconciled
 - ✓ Configured Claude Fable exit gate allowed with disposition `passed`
 - ✓ Configured pre-approval sequence snapshotted as `summary → document → pr`
-- → Run the stored pre-approval sequence, then request the post-p04 HiLL approval
+- ✓ Project summary generated with observation rollup and canonical decision promotion
+- → Run documentation sync and final PR creation, then request the post-p04 HiLL approval
 
 ## Blockers
 

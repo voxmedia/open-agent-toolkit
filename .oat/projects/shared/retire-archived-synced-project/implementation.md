@@ -409,6 +409,10 @@ Reviews event, and bookkeeping commit `237597d94`. Configured exit-gate run
 The immutable configured closeout sequence is `summary → document → pr` before
 the post-p04 HiLL approval, with no post-approval steps.
 
+Pre-approval `summary` completed at `3c553372d`: the 200-line summary rolled up
+25 project-log entries and promoted five deduplicated canonical decision
+records. The child preserved the closeout sequence snapshot unchanged.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
