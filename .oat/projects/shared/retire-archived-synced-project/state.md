@@ -98,12 +98,23 @@ oat_implement_exit_gate:
   receive_completed: true
   failure: null
   updated_at: '2026-09-01T23:22:41Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p04
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:22:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:23:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -113,7 +124,7 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Configured gate allowed; closeout sequence pending
+**Status:** Configured gate allowed; pre-approval closeout in progress
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
@@ -199,6 +210,7 @@ open.
 - ✓ Medium closeout-artifact refresh and Minor cleanup nit dispositioned
 - ✓ Archived artifact, exact Reviews row, and receive commit reconciled
 - ✓ Configured gate allowed with disposition `passed`
+- ⧗ Configured pre-approval sequence: `summary → document → pr`
 
 ## Blockers
 
@@ -206,5 +218,5 @@ None.
 
 ## Next Milestone
 
-Refresh the summary/current-state narrative, update the open PR, then enter the
-post-p04 approval boundary.
+Run `summary → document → pr` in stored order, then enter the post-p04 approval
+boundary.

@@ -599,6 +599,11 @@ Configured exit-gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` is allowed
 with disposition `passed`. The current implementation basis may proceed to the
 approval-aware closeout sequence.
 
+The new immutable configured closeout sequence is `summary → document → pr`
+before renewed post-p04 approval, with no post-approval steps. Its first
+required outcome is the summary/current-state refresh that closes gate Medium
+M1.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
