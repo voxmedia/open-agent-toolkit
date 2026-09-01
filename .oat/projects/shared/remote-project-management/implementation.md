@@ -684,7 +684,58 @@ literal path and test command are now backticked. The final bounded review
 passed with zero findings at every severity and preserves the prior passing
 review as historical evidence.
 
-**Next:** Execute revision tasks via `oat-project-implement`.
+## Revision 1: Phase 3 Production Contract Closure
+
+**Status:** blocked — all four corrective tasks are implemented, but the third
+and final normal code review found one Critical and one Important issue.
+**Started:** 2026-09-01
+**Reviewed head:** 15332edbf1a88e41fa1d909bb767273d527dcc28
+
+### Revision Summary
+
+- Replaced self-issued mutation authority with caller-owned invocation,
+  approval, and workflow evidence.
+- Applied canonical projection equality and bounded identity/context safety to
+  every writable semantic operation.
+- Composed production publication and reconciliation through purpose,
+  description, managed-content, snapshot, baseline, and local-state policy.
+- Added typed suppression evidence and restart-safe materialization substeps,
+  followed by two bounded review-fix commits.
+- Verification passes, but the public create-handoff recovery path and preview
+  freshness label still block Phase 4.
+
+### Task prev1-t01: Require caller-owned mutation authority evidence
+
+**Status:** completed
+**Commit:** 6e9f98292131b605e63e1552643d8a699f297b30
+
+### Task prev1-t02: Close every mutation and durable-evidence safety boundary
+
+**Status:** completed
+**Commit:** fd27636394245eebbdd0eb6450e21c9ed05f5b20
+
+### Task prev1-t03: Compose production lifecycle policy and agreed state
+
+**Status:** completed
+**Commit:** df9f482a6a9faa38bfbe20e41ca98496a5fbfd6a
+
+### Task prev1-t04: Make materialization resumable and suppression evidence typed
+
+**Status:** completed
+**Commit:** 8d546ab70ef0853c1dd31d34a3ad025ff76fed71
+**Review fixes:** 1a11231c8c72ae7aeb32627858c6ca3c0c0a1d7a,
+15332edbf1a88e41fa1d909bb767273d527dcc28
+
+### Revision 1 terminal review disposition
+
+- Review 1: `reviews/p-rev1-review-2026-09-01T020434Z.md` — 4 Critical;
+  fixed by `1a11231c8`.
+- Review 2: `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md` —
+  2 Critical and 1 Important; fixed by `15332edbf`.
+- Review 3: `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md` —
+  1 Critical and 1 Important; terminal normal-governance block.
+- Phase 4 is not authorized while this blocker remains. Any additional
+  Revision 1 repair/review cycle requires explicit operator authorization.
 
 ---
 
