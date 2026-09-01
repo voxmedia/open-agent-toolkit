@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** review fixes complete; fresh High review pending
+**Status:** second review fixes added; bounded correction pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -830,6 +830,24 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   boundary, clean worktree, whitespace, and the 388-test union.
 - A fresh exact-High reviewer will assess the complete Phase 4 range before
   Phase 5 starts.
+
+### Review Round 2
+
+- Artifact: `reviews/p04-review-2026-09-01T020351Z.md`
+- Reviewed head: `d50d2d6c642c347114a1c2de5eb9502496328ffb`
+- Verdict: changes requested; 2 Critical, 2 Important, 0 Medium, 0 Minor.
+- Reconnaissance: attempted through one accepted consequential safety lane. The
+  artifact contains complete orchestration evidence; its project-log entry
+  remains deferred until the terminal Phase 4 outcome.
+- Bounded correction scope:
+  1. Eliminate or safely disable the final path-based ancestry race in
+     collection-link creation.
+  2. Block every explicit transition whose apply-time collection identity no
+     longer exactly matches; never write children into a replacement path.
+  3. Reconcile zero-child `auto` to explicit symlink/copy transitions.
+  4. Align the design model with durable `linkText` and optional `createdLink`
+     identity, including legacy detach-without-unlink behavior.
+- Phase 5 remains gated pending a bounded fix and fresh complete Phase 4 review.
 
 ---
 
@@ -1188,6 +1206,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: all five review findings closed; focused 195/195 and authoritative
   Phase 4 union 388/388 passed with clean exact-file and whitespace checks.
 - Dispatch: scope=p04-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 2
+
+- Reviewed head: `d50d2d6c642c347114a1c2de5eb9502496328ffb`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T020351Z.md`
+- Outcome: changes requested; 2 Critical and 2 Important findings. Phase 5
+  remains gated while the same exact-High implementer owns the bounded fix.
+- Reconnaissance: attempted; complete nested dispatch and reconciliation
+  evidence is preserved in the review artifact.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
