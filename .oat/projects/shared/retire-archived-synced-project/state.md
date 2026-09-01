@@ -11,10 +11,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -115,7 +115,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T20:38:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T20:39:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -125,13 +125,14 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** PR open; post-p04 HiLL approval pending
+**Status:** Implementation complete; PR #254 open
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — complete after final review, configured exit gate, closeout
+sequence, and post-p04 HiLL approval. PR #254 remains open.
 
 ## Artifacts
 
@@ -139,7 +140,7 @@ Implementation — PR open; completion may run before or after merge.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (13/13 tasks complete; final review passed)
+- **Implementation:** `implementation.md` (complete; 13/13 tasks, final review, gate, and closeout passed)
 
 ## Progress
 
@@ -190,6 +191,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Optional project recap explicitly skipped; terminal outcome guard passed
 - ✓ Operator approved the post-p04 HiLL checkpoint
 - ✓ Configured closeout sequence reached its terminal `complete` state
+- ✓ Implementation marked complete
 
 ## Blockers
 

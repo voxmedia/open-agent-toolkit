@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
-oat_blockers: [cursor_fable_keychain_locked]
-oat_last_updated: 2026-08-31
+oat_blockers: []
+oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: retire-archived-synced-project
 
 **Started:** 2026-08-31
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -430,6 +430,8 @@ manifest, no recap was attempted or reused, and the recap run path is `none`.
 The operator explicitly approved the configured post-p04 HiLL checkpoint on
 2026-09-01. The closeout sequence has entered `post_approval`; it has no
 configured post-approval steps and therefore reached terminal `complete`.
+Implementation is complete: all tasks, reviews, the configured exit gate,
+pre-approval steps, recap guard, and final post-p04 approval are closed.
 
 <!-- orchestration-runs-end -->
 

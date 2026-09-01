@@ -152,6 +152,10 @@ Operator explicitly approved the post-p04 HiLL checkpoint after all 13 tasks, ph
 
 The configured `summary → document → pr` pre-approval sequence, explicit post-p04 approval, and empty post-approval sequence all completed in their persisted order. The closeout snapshot is terminal and implementation completion bookkeeping may proceed.
 
+### 2026-09-01 · structural · oat-project-implement · implementation-complete
+
+Implementation completed with 13/13 tasks, all phase and final review rows passed, the Claude Fable exit gate allowed/passed, recap intent terminally skipped, the configured closeout sequence complete, and p04 HiLL approved. PR #254 remains open; project archival may run before or after merge.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
