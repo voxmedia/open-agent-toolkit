@@ -92,6 +92,33 @@ export async function copySingleFile(src: string, dest: string): Promise<void> {
   await writeFile(dest, content);
 }
 
+export async function copySingleFileNoClobber(
+  src: string,
+  dest: string,
+): Promise<void> {
+  await ensureDir(dirname(dest));
+  const content = await readFile(src);
+  await writeFile(dest, content, { flag: 'wx' });
+}
+
+export async function writeFileNoClobber(
+  dest: string,
+  content: string,
+): Promise<void> {
+  await ensureDir(dirname(dest));
+  await writeFile(dest, content, { encoding: 'utf8', flag: 'wx' });
+}
+
+export async function copyDirectoryNoClobber(
+  src: string,
+  dest: string,
+  filter?: CopyDirectoryFilter,
+): Promise<void> {
+  await ensureDir(dirname(dest));
+  await mkdir(dest);
+  await copyDirectory(src, dest, filter);
+}
+
 export async function createSymlink(
   target: string,
   linkPath: string,
@@ -120,6 +147,19 @@ export async function createSymlink(
     }
     return 'copy';
   }
+}
+
+export async function createSymlinkNoClobber(
+  target: string,
+  linkPath: string,
+  isFile?: boolean,
+): Promise<'symlink'> {
+  await ensureDir(dirname(linkPath));
+  const symlinkTarget = isAbsolute(target)
+    ? relative(dirname(linkPath), target)
+    : target;
+  await symlink(symlinkTarget, linkPath, isFile ? 'file' : 'dir');
+  return 'symlink';
 }
 
 export async function createCollectionSymlinkNoClobber(

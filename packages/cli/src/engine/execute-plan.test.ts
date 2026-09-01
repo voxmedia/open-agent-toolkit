@@ -268,6 +268,36 @@ async function createOwnedCollectionTransition(root: string): Promise<{
   return { manifest, plan, providerDir };
 }
 
+async function createAbsentCollectionTransition(
+  root: string,
+  strategy: 'symlink' | 'copy',
+): Promise<{
+  manifest: ManifestV2;
+  plan: SyncPlan;
+  providerDir: string;
+}> {
+  const transition = await createOwnedCollectionTransition(root);
+  await rm(transition.providerDir);
+  const collection = transition.plan.collections?.[0];
+  const entry = transition.plan.entries[0];
+  if (!collection || !entry) {
+    throw new Error('test transition must include a collection and entry');
+  }
+  const proof = await proveCollectionIdentity({
+    root,
+    canonicalDir: collection.canonicalDir,
+    providerDir: collection.providerDir,
+  });
+  if (proof.status !== 'absent') {
+    throw new Error('test collection must prove absent');
+  }
+  collection.proof = proof;
+  collection.configuredStrategy = strategy;
+  entry.operation = strategy === 'symlink' ? 'create_symlink' : 'create_copy';
+  entry.strategy = strategy;
+  return transition;
+}
+
 describe('executeSyncPlan', () => {
   const tempDirs: string[] = [];
 
@@ -631,6 +661,61 @@ describe('executeSyncPlan', () => {
       entries: [{ strategy: 'collection' }],
     });
   });
+
+  it.each([
+    ['file', 'symlink'],
+    ['directory', 'symlink'],
+    ['file', 'copy'],
+    ['directory', 'copy'],
+  ] as const)(
+    'preserves a user %s destination created before deferred %s apply',
+    async (destinationKind, strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      tempDirs.push(root);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const { manifest, plan, providerDir } =
+        await createAbsentCollectionTransition(root, strategy);
+      const destination = join(providerDir, 'skill-one');
+      const userBytes = `user-owned-${strategy}-${destinationKind}`;
+      await saveManifest(manifestPath, manifest);
+      let injected = false;
+
+      const result = await executeSyncPlan(plan, manifest, manifestPath, {
+        saveManifest: async (path, nextManifest) => {
+          await saveManifest(path, nextManifest);
+          if (injected) return;
+          injected = true;
+          await mkdir(providerDir, { recursive: true });
+          if (destinationKind === 'file') {
+            await writeFile(destination, userBytes, 'utf8');
+          } else {
+            await mkdir(destination);
+            await writeFile(join(destination, 'SKILL.md'), userBytes, 'utf8');
+          }
+        },
+      });
+
+      expect(result.collectionResults[0]).toMatchObject({
+        action: 'detach-collection',
+        status: 'changed',
+      });
+      expect(result.operations[0]).toMatchObject({
+        status: 'failed',
+        failure: expect.stringMatching(/appeared.*preserv.*retry/i),
+      });
+      if (destinationKind === 'file') {
+        await expect(readFile(destination, 'utf8')).resolves.toBe(userBytes);
+      } else {
+        await expect(
+          readFile(join(destination, 'SKILL.md'), 'utf8'),
+        ).resolves.toBe(userBytes);
+      }
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [],
+        entries: [],
+      });
+    },
+  );
 
   it('creates symlinks for create_symlink entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));

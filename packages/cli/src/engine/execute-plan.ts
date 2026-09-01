@@ -3,11 +3,15 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 import {
   copyDirectory,
+  copyDirectoryNoClobber,
   copySingleFile,
+  copySingleFileNoClobber,
   createCollectionSymlinkNoClobber,
   createSymlink,
+  createSymlinkNoClobber,
   removeCollectionSymlinkIfUnchanged,
   type CreatedCollectionSymlink,
+  writeFileNoClobber,
 } from '@fs/io';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
 import { saveManifest as persistManifest } from '@manifest/manager';
@@ -82,9 +86,22 @@ function operationEvidence(
   };
 }
 
+type EntryDestinationPolicy = 'ordinary' | 'preserve-existing';
+
 function classifyFailure(
   error: unknown,
+  destinationPolicy: EntryDestinationPolicy,
 ): Pick<SyncOperationResult, 'status' | 'failure'> {
+  if (
+    destinationPolicy === 'preserve-existing' &&
+    hasErrorCode(error, 'EEXIST')
+  ) {
+    return {
+      status: 'failed',
+      failure:
+        'Destination appeared after collection clearance; preserved unmanaged content. Resolve the destination and retry sync.',
+    };
+  }
   if (
     typeof error === 'object' &&
     error !== null &&
@@ -209,10 +226,20 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
 async function applyEntry(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
+  destinationPolicy: EntryDestinationPolicy,
 ): Promise<ManifestV2> {
   switch (planEntry.operation) {
     case 'create_symlink':
     case 'update_symlink': {
+      if (destinationPolicy === 'preserve-existing') {
+        await createSymlinkNoClobber(
+          planEntry.canonical.canonicalPath,
+          planEntry.providerPath,
+          planEntry.canonical.isFile,
+        );
+        const manifestEntry = await toManifestEntry(planEntry, 'symlink');
+        return addManifestEntry(manifest, manifestEntry);
+      }
       if (planEntry.operation === 'update_symlink') {
         await rm(planEntry.providerPath, { recursive: true, force: true });
       }
@@ -227,6 +254,30 @@ async function applyEntry(
     }
     case 'create_copy':
     case 'update_copy': {
+      if (destinationPolicy === 'preserve-existing') {
+        if (
+          planEntry.canonical.isFile &&
+          planEntry.renderedContent !== undefined
+        ) {
+          await writeFileNoClobber(
+            planEntry.providerPath,
+            planEntry.renderedContent,
+          );
+        } else if (planEntry.canonical.isFile) {
+          await copySingleFileNoClobber(
+            planEntry.canonical.canonicalPath,
+            planEntry.providerPath,
+          );
+        } else {
+          await copyDirectoryNoClobber(
+            planEntry.canonical.canonicalPath,
+            planEntry.providerPath,
+          );
+          await applyCopyMarker(planEntry);
+        }
+        const manifestEntry = await toManifestEntry(planEntry, 'copy');
+        return addManifestEntry(manifest, manifestEntry);
+      }
       if (planEntry.operation === 'update_copy') {
         await rm(planEntry.providerPath, { recursive: true, force: true });
       }
@@ -827,17 +878,25 @@ export async function executeSyncPlan(
       continue;
     }
 
+    const destinationPolicy: EntryDestinationPolicy =
+      operation.deferredUntilCollectionDetached
+        ? 'preserve-existing'
+        : 'ordinary';
     try {
       if (mutatesProviderPath(operation)) {
         await beforeMutation();
         await assertSafeEntryProviderPath(operation);
       }
-      nextManifest = await applyEntry(operation, nextManifest);
+      nextManifest = await applyEntry(
+        operation,
+        nextManifest,
+        destinationPolicy,
+      );
       operationResults.push(
         operationEvidence(plan.scope, operation, 'changed'),
       );
     } catch (error) {
-      const failure = classifyFailure(error);
+      const failure = classifyFailure(error, destinationPolicy);
       operationResults.push(
         operationEvidence(
           plan.scope,
