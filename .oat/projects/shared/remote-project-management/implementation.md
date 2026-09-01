@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -29,13 +29,13 @@ oat_generated: false
 | Phase 1    | completed   | 10    | 10/10     |
 | Phase 2    | completed   | 10    | 10/10     |
 | Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | pending     | 11    | 0/11      |
+| Phase 4    | in_progress | 11    | 0/11      |
 | Phase 5    | pending     | 9     | 0/9       |
 | Phase 6    | pending     | 10    | 0/10      |
 | Phase 7    | pending     | 10    | 0/10      |
 | Phase 8    | pending     | 6     | 0/6       |
 | Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | in_progress | 2     | 2/2       |
+| Revision 2 | completed   | 2     | 2/2       |
 
 **Total:** 38/84 tasks completed
 
@@ -1436,8 +1436,18 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   fix commit, exact eight-file union at 138/138, CLI type-check/build, and diff
   integrity. The worktree was clean. Recovery remained 0/10 with no pending
   attempt because this was a review-fix loop.
-- Review-fix loop 2/3 is complete. Fresh root-owned re-review 3 is pending;
-  Phase 4 did not start.
+- Fresh root-owned review 3 is recorded at
+  `reviews/p-rev2-final-rereview-2026-09-01T213136Z.md` against exact code head
+  `5a15f738df8e7d5ab467b94a1e28a77ca5df420c`. It reported
+  `**Reconnaissance:** not-attempted` and passed with zero findings at every
+  severity.
+- Review 3 independently confirmed both prior blocking findings closed,
+  reran the exact eight-file union at 138/138, passed CLI type-check and diff
+  integrity, and verified no remote source/test drift after the reviewed code
+  head.
+- Revision 2 terminal outcome: passed after 3/3 review rounds and 2/3 fix
+  loops. Recovery remained 0/10 with no pending attempt. Phase 4 is unblocked
+  and `p04-t01` is next.
 
 <!-- orchestration-runs-end -->
 

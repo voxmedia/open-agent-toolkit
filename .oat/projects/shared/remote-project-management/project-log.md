@@ -120,6 +120,10 @@ BLOCKED after review round 3 exhausted normal governance with 1 Critical and 1 I
 
 Operator-extension review 4 blocked with 1 Critical and 1 Medium after 3/3 fix loops; reconnaissance attempted and reconciled in reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md; extension exhausted and Phase 4 remains blocked.
 
+### 2026-09-01 · structural · oat-project-implement · p-rev2
+
+Phase p-rev2 passed root review round 3 after two bounded review-fix loops; see reviews/p-rev2-final-rereview-2026-09-01T213136Z.md; Phase 4 is unblocked.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

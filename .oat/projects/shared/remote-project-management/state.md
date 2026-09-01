@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t01
 oat_last_commit: 5a15f738df8e7d5ab467b94a1e28a77ca5df420c
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
@@ -34,10 +34,13 @@ oat_phase_recovery_policy:
     p-rev2:
       used_attempts: 0
       pending_attempt: null
+    p04:
+      used_attempts: 0
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:30:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T21:44:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -49,10 +52,10 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation revision — both Revision 2 tasks are complete and independently
-verified. Review 1's runtime Critical is closed by fix loop 1. Re-review 2's
-test-proof Important is closed by fix loop 2 and awaits fresh re-review 3.
-Revision 1 history remains exhausted and immutable. Phase 4 has not started.
+Phase 4 — GitHub Semantic Adapter. Corrective Revision 2 passed fresh root-owned
+review 3 with zero findings after two bounded fix loops. Its runtime and
+test-proof blockers are closed, Revision 1 history remains exhausted and
+immutable, and `p04-t01` is now the next task.
 
 ## Artifacts
 
@@ -60,7 +63,7 @@ Revision 1 history remains exhausted and immutable. Phase 4 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 re-review 3 pending)
+- **Implementation:** implementation.md (in progress; Phase 4 ready at p04-t01)
 
 ## Progress
 
@@ -143,18 +146,17 @@ Revision 1 history remains exhausted and immutable. Phase 4 has not started.
 - ✓ Revision 2 review-fix loop 1/3 committed as `e79732b6c`
 - ⚠ Revision 2 re-review 2 blocked with 1 Important test-proof finding
 - ✓ Revision 2 review-fix loop 2/3 committed as `5a15f738d`
-- ⧗ Fresh Revision 2 re-review 3 pending
-- ⛔ Phase 4 remains blocked until Revision 2 passes code review
+- ✓ Revision 2 review 3 passed with zero findings
+- ✓ Revision 2 completed after 3 review rounds and 2 fix loops
+- ⧗ Phase 4 ready at `p04-t01`
 
 ## Blockers
 
-Revision 2 remains review-blocked until fresh re-review 3 confirms the runtime
-and exact-action test fixes with zero Critical and zero Important findings.
-Phase 4 is dependency-blocked. The branch-level lockstep version gate is
-preserved as an out-of-phase release concern.
+No active implementation blocker. Revision 2 passed its explicit exit gate and
+Phase 4 is unblocked. The branch-level lockstep version gate remains preserved
+as an out-of-phase release concern for later release work.
 
 ## Next Milestone
 
-Run fresh root-owned p-rev2 re-review 3 over the full phase range through
-`5a15f738d`. Do not begin `p04-t01` until it passes with zero Critical and zero
-Important findings.
+Begin `p04-t01`: normalize GitHub identity and snapshots while preserving the
+provider-neutral host-execution and privacy contracts.
