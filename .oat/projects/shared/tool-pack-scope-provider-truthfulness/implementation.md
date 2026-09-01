@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 4 operator-authorized review found a Critical destination-ancestry symlink-swap escape; the one-use extension is exhausted and new operator direction is required.
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1007,6 +1008,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   operator authorization; a blocking verdict returns to governance without
   another correction. Phase 5 remains gated.
 
+### Review Round 6 — Operator Extension Exhausted
+
+- Artifact: `reviews/p04-review-2026-09-01T193927Z.md`
+- Reviewed head: `82f801ab880ad8b8272426726d3dace9b819fbef`
+- Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: not attempted; the artifact correctly contains no Review
+  Orchestration section.
+- The operator-authorized fix closes same-name nested collisions. The reviewer
+  independently reproduced a deeper path-ancestry race: after OAT creates the
+  destination root or a nested directory, a concurrent replacement with a
+  symlink can redirect subsequent pathname writes outside the managed root.
+  The helper then reports success and can persist false manifest ownership.
+- The safe disposition is to fail closed for deferred directory-copy
+  transitions unless an identity-bound, non-following publication primitive is
+  available. Regression coverage must swap both the just-created root and a
+  nested directory, preserve external trees byte-for-byte, fail actionably,
+  and record no ownership.
+- This blocking review consumed the one-use operator extension. No additional
+  correction or review is authorized. Phase 5 remains gated pending new
+  operator direction or a revised Phase 4 delivery boundary.
+
 ---
 
 ## Orchestration Runs
@@ -1438,6 +1460,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   is exhausted, operator governance is required, and Phase 5 remains gated.
 - Reconnaissance: attempted; complete nested dispatch and primary
   reconciliation evidence is preserved in the review artifact.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator-authorized review-fix continuation — round 5
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r5-authorized-fix-20260901T192200Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `cb52e25d7b2e46f38ce801b59d44666d5c8ee2da`
+- Outcome: same-name nested file and directory collisions are preserved and
+  fail without ownership. Focused 61/61, authoritative Phase 4 union 413/413,
+  full uncached Turbo, smoke, skill, release, and repository checks passed.
+- Dispatch: scope=p04-review-r5-authorized-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 6 — operator extension exhausted
+
+- Reviewed head: `82f801ab880ad8b8272426726d3dace9b819fbef`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T193927Z.md`
+- Outcome: changes requested; 1 Critical destination-ancestry symlink-swap
+  finding. The one-use extension is exhausted, operator governance is required,
+  and Phase 5 remains gated.
+- Reconnaissance: not attempted; no nested orchestration evidence is required.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

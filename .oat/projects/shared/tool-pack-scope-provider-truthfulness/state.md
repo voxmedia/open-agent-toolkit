@@ -1,7 +1,8 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: cb52e25d7b2e46f38ce801b59d44666d5c8ee2da
-oat_blockers: []
+oat_last_commit: 82f801ab880ad8b8272426726d3dace9b819fbef
+oat_blockers:
+  - Phase 4 operator-authorized review found a Critical destination-ancestry symlink-swap escape; the one-use extension is exhausted and new operator direction is required.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T19:34:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T19:41:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +112,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the one-use operator-authorized Phase 4 correction is
-committed at `cb52e25d7`. Complete-tree deferred directory copy now preserves
-nested collisions and fails without manifest ownership. Phase 5 remains gated
-pending the one authorized fresh independent High review.
+Implementation - the operator-authorized Phase 4 review found one Critical
+destination-ancestry symlink-swap escape at `82f801ab8`. The one-use extension
+is exhausted. Phase 5 remains gated pending new operator direction or a revised
+Phase 4 delivery boundary.
 
 ## Artifacts
 
@@ -122,7 +123,7 @@ pending the one authorized fresh independent High review.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; one operator-authorized p04 safety cycle is active)
+- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 operator extension exhausted with one Critical safety finding)
 
 ## Progress
 
@@ -148,14 +149,18 @@ pending the one authorized fresh independent High review.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 operator-authorized nested-copy correction complete; fresh review pending
+- ⧗ Phase 4 blocked on destination-ancestry symlink-swap safety; operator direction required
 
 ## Blockers
 
-- None.
+- Deferred directory-copy publication uses pathname operations after creating
+  the destination root. A concurrent root or nested-directory replacement with
+  a symlink can redirect writes outside the managed tree and produce false
+  manifest ownership. The one-use operator correction/review extension is
+  exhausted.
 
 ## Next Milestone
 
-Run the one authorized fresh independent High review over the complete Phase 4
-range through `cb52e25d7`. Do not begin Phase 5 without a passing Phase 4
-verdict.
+Operator governance must either authorize a new bounded fail-closed correction
+for deferred directory-copy transitions or revise the Phase 4 delivery
+boundary. Do not begin Phase 5 without a passing Phase 4 verdict.
