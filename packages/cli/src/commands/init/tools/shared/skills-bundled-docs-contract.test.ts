@@ -1170,8 +1170,12 @@ describe('skills bundled docs contract', () => {
   it('keeps recon dispatch dependencies installed-scope owned with a visible generic-role fallback', () => {
     const content = readFileSync(join(SKILLS_DIR, 'recon', 'SKILL.md'), 'utf8');
 
-    expect(content).toContain('installed `oat-dispatch-subagents`');
-    expect(content).toMatch(/the installed\s+`subagent-orchestration`/);
+    expect(content).toContain('`oat-dispatch-subagents/SKILL.md`');
+    expect(content).toContain('`subagent-orchestration/SKILL.md`');
+    expect(content).toMatch(
+      /\$\{SKILL_DIR\}\/\.\.[\s\S]+\$\{HOME\}\/\.agents\/skills[\s\S]+<repo-root>\/\.agents\/skills/,
+    );
+    expect(content).toContain('dependency read to that same scope');
     expect(content).toContain('visible generic role fallback');
     expect(content).toContain('scripts/validate-packet.mjs');
     expect(content).toContain('scripts/render-packet.mjs');

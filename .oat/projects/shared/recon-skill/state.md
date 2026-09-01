@@ -27,7 +27,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm test
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: ac8d8273efca9df5d4504cbdd7a0ce28810afb66
-        status: active
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
