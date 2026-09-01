@@ -1410,6 +1410,28 @@ starting a new configured implementation exit-gate generation.
 - Launch state is durably `result_persisted`; policy disposition remains
   pending until the exact gate review is received and reconciled.
 
+### Review Received: post-rebase configured implementation exit gate
+
+**Date:** 2026-09-01
+**Review artifact:**
+`reviews/archived/final-review-2026-09-01T040114Z.md`
+
+**Gate provenance:**
+
+- Launch attempt: `9d5f04f8-a8cc-4507-9a7e-f3074e818419`
+- Run ID: `0bb25a08-a4e7-4e4b-adef-ca236e685c2a`
+- Target: `cursor-fable-5-high`
+- Runtime/model: Cursor / `claude-fable-5-high`
+- Independence: different-family achieved
+- Reviewed head: `c82f11521a12262cc5cea93c66d2d66d85b06bda`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Structured outcome: `ok`, receive eligible, corroborated handoff
+
+**Disposition:** Passing judgment sweep received. The deferred-Medium ledger
+and current Minor ledger are both empty, so no fix, deferral, or rejection is
+created. Gate state remains pending until the archive, exact Reviews event, and
+bounded receive commit are reconciled into the durable receive receipt.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
