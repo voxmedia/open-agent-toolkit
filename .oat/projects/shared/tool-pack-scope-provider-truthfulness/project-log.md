@@ -136,6 +136,10 @@ p04 completed five planned commits plus recovered composition attempt 1/10 at 7b
 
 Phase 4 stopped at the terminal five-round review boundary with one Critical deferred-directory-copy collision; operator governance is required. Review orchestration and attempted reconnaissance evidence are recorded in reviews/p04-review-2026-09-01T013028Z.md, reviews/p04-review-2026-09-01T020351Z.md, reviews/p04-review-2026-09-01T023939Z.md, reviews/p04-review-2026-09-01T031017Z.md, and reviews/p04-review-2026-09-01T033543Z.md.
 
+### 2026-09-01 · structural · oat-project-implement · p04-blocked-round7-repeated-sync
+
+Operator-authorized fail-closed fix 567f9ae0a3d39d9986e517924551e6381058d27e blocks directory copy within one apply, but terminal High review found that persisted collection detachment lets the next unchanged sync reach ordinary copy; critical:1, important:0 in reviews/p04-review-2026-09-01T210000Z.md. Reconnaissance was not attempted; no further correction or Phase 5 launch is authorized.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

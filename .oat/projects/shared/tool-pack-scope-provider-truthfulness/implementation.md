@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 4 fail-closed review found that collection detachment is persisted before a blocked directory copy, letting the next unchanged sync reach ordinary copy; the one-use extension is exhausted.
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1076,6 +1077,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   fail-closed authorization; a blocking verdict returns to governance without
   another correction. Phase 5 remains gated.
 
+### Review Round 7 — Fail-Closed Extension Exhausted
+
+- Artifact: `reviews/p04-review-2026-09-01T210000Z.md`
+- Reviewed head: `dd1fed438344718d7f98642da93b7f65501b79ee`
+- Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: not attempted; the artifact correctly contains no Review
+  Orchestration section.
+- The fail-closed guard works within one apply: neither unsafe publication hook
+  is reachable, no destination/external write occurs, and no entry ownership is
+  recorded. The apply persists collection detachment before the child fails,
+  however. On the next unchanged sync, that missing collection evidence causes
+  the planner to classify the same directory as an ordinary non-deferred copy
+  and reach the path-based copier.
+- The reviewer reproduced this with an actual two-run scan/plan/apply/manifest
+  sequence. A durable block must preserve collection evidence when the deferred
+  directory copy cannot run, or persist an explicit blocked-transition state
+  that unchanged retries honor.
+- This blocking review consumed the one-use fail-closed extension. No further
+  correction or review is authorized. Phase 5 remains gated pending new
+  operator direction or a revised Phase 4 delivery boundary.
+
 ---
 
 ## Orchestration Runs
@@ -1541,6 +1563,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   manual recovery and no ownership. Focused 60/60, authoritative Phase 4 union
   412/412, uncached Turbo, full repository, and whitespace checks passed.
 - Dispatch: scope=p04-review-r6-authorized-fail-closed-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 7 — fail-closed extension exhausted
+
+- Reviewed head: `dd1fed438344718d7f98642da93b7f65501b79ee`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T210000Z.md`
+- Outcome: changes requested; 1 Critical repeated-sync state-transition
+  finding. The one-use extension is exhausted, operator governance is required,
+  and Phase 5 remains gated.
+- Reconnaissance: not attempted; no nested orchestration evidence is required.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
