@@ -1,7 +1,8 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: c3fe98ca61ab76f99314ab7421d5bf37139c422c
-oat_blockers: []
+oat_last_commit: 07977df386562bfd0974bc487d312d109a6e4b4f
+oat_blockers:
+  - Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:37:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:50:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,17 +112,17 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the authorized Phase 4 fail-closed directory-transition fix
-is committed at `c3fe98ca6`. One fresh independent Phase 4 review is pending,
-and Phase 5 remains gated until it passes.
+Implementation - Phase 4 code safety passes, but the terminal fresh review
+found one Important design mismatch at reviewed head `07977df38`. The one-use
+authorization is exhausted and Phase 5 remains gated.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — requirements confirmed)
-- **Design:** `design.md` (complete — review findings resolved and approved)
+- **Design:** `design.md` (approved artifact now has one terminal p04 alignment finding)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 fix committed and fresh review pending)
+- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 code safe but design alignment remains)
 
 ## Progress
 
@@ -148,13 +149,18 @@ and Phase 5 remains gated until it passes.
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
 - ✓ Phase 4 authorized fail-closed deferred-symlink correction committed
-- ⧗ Phase 4 fresh independent review pending
+- ✓ Phase 4 code safety verified at 414/414
+- ⧗ Phase 4 terminal review blocked on one Important design mismatch
 
 ## Blockers
 
-None. Phase 5 remains deliberately gated while the fresh Phase 4 review runs.
+- Two passages in `design.md` still say that a later absent proof releases
+  deferred per-entry directory work. Current safe behavior requires provider
+  disablement, sync detachment, and verified manual/external disposition.
+- The one-use correction/review authorization is exhausted.
 
 ## Next Milestone
 
-Run the one authorized fresh independent Phase 4 review and begin Phase 5 only
-if that verdict passes.
+Operator governance must authorize a bounded `design.md` alignment correction
+and any required fresh review. Do not begin Phase 5 without a passing Phase 4
+verdict.

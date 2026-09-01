@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1190,6 +1191,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   range, and a live 77/77 focused rerun. Exactly one fresh independent High
   review is now pending; Phase 5 remains gated.
 
+### Review Round 9 — Terminal Design-Alignment Boundary
+
+- Artifact: `reviews/p04-review-2026-09-01T234753Z.md`
+- Reviewed head: `07977df386562bfd0974bc487d312d109a6e4b4f`
+- Verdict: changes requested; 0 Critical, 1 Important, 0 Medium, 0 Minor.
+- The full Phase 4 code safety surface passes. Deferred directory copy and
+  symlink transitions fail before detachment/publication, preserve evidence
+  across unchanged and copy-to-symlink retries, never reach adversarial race
+  helpers, and leave ordinary non-transition symlinks compatible. The
+  authoritative union passed 414/414 with all scoped static checks green.
+- The remaining Important finding is artifact-only but load-bearing:
+  `design.md` still says a later absent proof releases deferred per-entry work.
+  That contradicts the operator-authorized/current fail-closed directory
+  policy and could lead a future maintainer to restore the unsafe path.
+- Reconnaissance was attempted through one consequential read-only safety lane
+  and fully reconciled by the primary reviewer. It found no production defect
+  and independently passed the focused 77/77 safety set.
+- This review consumes the one authorized fresh review. No design correction
+  or further review is authorized by the verdict, and Phase 5 remains gated
+  pending explicit operator direction.
+
 ---
 
 ## Orchestration Runs
@@ -1752,6 +1774,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `candidate-requested`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p04-review-r8-authorized-fail-closed-symlink-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 9 — terminal design-alignment boundary
+
+- Reviewed head: `07977df386562bfd0974bc487d312d109a6e4b4f`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T234753Z.md`
+- Outcome: changes requested; 0 Critical and 1 Important design-alignment
+  finding. Code safety passes, but two approved design passages retain the
+  removed automatic directory-transition release. The one-use authorization
+  is exhausted, operator governance is required, and Phase 5 remains gated.
+- Reconnaissance: attempted; one consequential read-only safety lane completed
+  77/77 focused tests and was fully reconciled by the primary reviewer.
+- Selection reason: `review-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

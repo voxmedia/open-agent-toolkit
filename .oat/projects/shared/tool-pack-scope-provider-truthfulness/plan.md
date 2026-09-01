@@ -1729,6 +1729,7 @@ gates exit 0 at the final reviewed head.
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T193927Z.md                      | 82f801ab880ad8b8272426726d3dace9b819fbef | manual     | -           |
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T210000Z.md                      | dd1fed438344718d7f98642da93b7f65501b79ee | manual     | -           |
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T220158Z.md                      | 86df6a8f5fc76fe30554d7ce6562067c3a5b58e0 | manual     | -           |
+| p04    | code     | fixes_added     | 2026-09-01 | reviews/p04-review-2026-09-01T234753Z.md                      | 07977df386562bfd0974bc487d312d109a6e4b4f | manual     | -           |
 | p05    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
 | p07    | code     | pending         | -          | -                                                             | -                                        | -          | -           |
