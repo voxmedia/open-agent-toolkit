@@ -221,6 +221,7 @@
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
+| BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                            | open   | medium   | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                     | open   | medium   | feature    | L        |
