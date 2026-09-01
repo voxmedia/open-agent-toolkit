@@ -164,6 +164,10 @@ retro artifact=.oat/projects/shared/retire-archived-synced-project/references/pr
 
 retro artifact=.oat/projects/shared/retire-archived-synced-project/references/project-retro.md evidence_used=archived-review-markdown,decision-records,gate-receipts,git-history,lifecycle-artifacts,pr-metadata,project-log,session-transcript evidence_unavailable=gate-run-marker,oat-execution-learnings promotions=1 upstream=0 apply=skipped filing=performed
 
+### 2026-09-01 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
