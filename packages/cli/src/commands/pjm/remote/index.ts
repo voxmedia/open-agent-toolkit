@@ -7,7 +7,6 @@ import { Command } from 'commander';
 
 import { resolvePjmAdoption } from '../adoption';
 import { renderRemoteCommand, type RemoteCommandEnvelope } from './output';
-import type { PreviewApproval } from './preview';
 import { createProductionRemoteRunner } from './service';
 
 export type RemoteLifecycleOperation =
@@ -32,7 +31,7 @@ export interface RemoteCommandRequest {
   };
   observationStdin?: boolean;
   capabilityEvidenceStdin?: boolean;
-  mutationApproval?: PreviewApproval;
+  authorityEvidenceFile?: string;
   storage?: {
     repositoryFingerprint: string;
     configTarget: string;
@@ -175,9 +174,17 @@ export function createPjmRemoteCommand(
       '--observation-stdin',
       'Read one sanitized observation from stdin',
     )
+    .option(
+      '--authority-evidence-file <path>',
+      'Re-read one bounded caller-owned mutation authority record',
+    )
     .action(
       async (
-        options: { operation: string; observationStdin: boolean },
+        options: {
+          operation: string;
+          observationStdin: boolean;
+          authorityEvidenceFile?: string;
+        },
         command: Command,
       ) => {
         await execute(
@@ -185,6 +192,7 @@ export function createPjmRemoteCommand(
             operation: 'operation-continue',
             operationId: options.operation,
             observationStdin: options.observationStdin,
+            authorityEvidenceFile: options.authorityEvidenceFile,
           },
           command,
           dependencies,
@@ -215,6 +223,12 @@ function addBindingCommand(
     '--capability-evidence-stdin',
     'Read one sanitized live capability evidence object from stdin',
   );
+  if (name !== 'refresh') {
+    command.option(
+      '--authority-evidence-file <path>',
+      'Read one bounded caller-owned mutation authority record',
+    );
+  }
   command.action(
     async (options: Record<string, string>, commander: Command) => {
       const createTargets = [options.toBacklog, options.toProject].filter(
@@ -241,6 +255,7 @@ function addBindingCommand(
         operation: name,
         bindingId: options.binding,
         capabilityEvidenceStdin: Boolean(options.capabilityEvidenceStdin),
+        authorityEvidenceFile: options.authorityEvidenceFile,
       };
       if (options.toBacklog || options.toProject) {
         request.createTarget = {

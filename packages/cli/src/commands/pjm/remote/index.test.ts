@@ -45,6 +45,36 @@ async function adoptedRepository() {
   return { repo, store: new RemoteSyncStore(locations) };
 }
 
+async function writeAuthorityEvidence(
+  repo: string,
+  evidence: Record<string, unknown>,
+): Promise<string> {
+  const path = join(repo, '.oat', 'current-remote-invocation.json');
+  await writeFile(path, `${JSON.stringify(evidence)}\n`);
+  return path;
+}
+
+function interactiveAuthority(
+  operationClass: 'create' | 'update-fields',
+  targetId: string,
+  approval: Record<string, unknown> | null = null,
+) {
+  return {
+    schemaVersion: 1,
+    kind: 'interactive',
+    sourceId: 'host-session-1',
+    invocationId: 'invocation-1',
+    issuedAt: '2026-08-31T11:59:00.000Z',
+    expiresAt: '2026-08-31T12:05:00.000Z',
+    instruction: {
+      operationClass,
+      targetId,
+      evidenceDigest: 'sha256:exact-user-instruction',
+    },
+    approval,
+  };
+}
+
 async function materializeFixtureBinding(store: RemoteSyncStore) {
   const timestamp = '2026-08-31T12:00:00.000Z';
   const metadata: RemoteBindingMetadata = {
@@ -138,6 +168,104 @@ async function materializeFixtureBinding(store: RemoteSyncStore) {
     updatedAt: timestamp,
   };
   await store.writeBindingState(state);
+}
+
+async function prepareMutableBinding(
+  repo: string,
+  store: RemoteSyncStore,
+  authority: 'read-only' | 'user-approved' | 'user-authorized' | 'autonomous',
+) {
+  await materializeFixtureBinding(store);
+  const targetPath = join(
+    repo,
+    '.oat',
+    'repo',
+    'pjm',
+    'backlog',
+    'items',
+    'item-1.md',
+  );
+  await mkdir(join(targetPath, '..'), { recursive: true });
+  const content =
+    '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n';
+  await writeFile(targetPath, content);
+  const state = (await store.readBindingState('bnd_live_001'))!;
+  const localProjection = resolveLocalProjection({
+    target: {
+      kind: 'backlog',
+      path: '.oat/repo/pjm/backlog/items/item-1.md',
+      content,
+    },
+    observedAt: '2026-08-31T12:00:00.000Z',
+  });
+  await store.writeBindingState({
+    ...state,
+    localProjection,
+    snapshot: sanitizeRemoteSnapshot({
+      snapshotId: 'snap_live_001',
+      bindingId: 'bnd_live_001',
+      provider: 'linear',
+      observedAt: '2026-08-31T12:00:00.000Z',
+      observedBy: {
+        provider: 'linear',
+        surfaceKind: 'connector',
+        context: { workspaceId: 'workspace-1' },
+        evidenceDigest: 'sha256:prior-read',
+        semanticCapabilities: ['read'],
+      },
+      identity: {
+        stableId: 'issue-1',
+        context: { workspaceId: 'workspace-1' },
+        aliases: [],
+      },
+      revision: {
+        strength: 'hash-only',
+        token: null,
+        updatedAt: '2026-08-31T12:00:00.000Z',
+        contentHash: 'sha256:remote-current',
+      },
+      issue: {
+        title: 'Remote title',
+        description: 'Remote description',
+        priority: null,
+        status: 'open',
+      },
+      lifecycle: 'active',
+    }),
+  });
+  await writeFile(
+    join(repo, '.oat', 'config.json'),
+    `${JSON.stringify({
+      version: 1,
+      pjm: {
+        initialized: true,
+        schemaVersion: 1,
+        remote: {
+          schemaVersion: 1,
+          policy: {
+            description: 'managed-section',
+            authority: {
+              default: 'read-only',
+              operations: { 'update-fields': authority },
+            },
+          },
+        },
+      },
+    })}\n`,
+  );
+  return { localProjection };
+}
+
+function updateCapabilityEvidence() {
+  return {
+    provider: 'linear',
+    context: { workspaceId: 'workspace-1' },
+    surfaceKind: 'connector',
+    availability: 'available',
+    semanticCapabilities: ['read', 'update'],
+    evidenceDigest: 'sha256:live-update-capability',
+    observedAt: '2026-08-31T12:00:00.000Z',
+  };
 }
 
 function harness(adoption: 'complete' | 'partial' | 'absent' = 'complete') {
@@ -243,6 +371,165 @@ describe('pjm remote command family', () => {
       ]),
     ).rejects.toThrow(/unknown option|process\.exit/);
     expect(requests).toEqual([]);
+  });
+
+  it('wires only the closed caller authority source through mutation commands', async () => {
+    const publish = harness();
+    await publish.root.parseAsync([
+      'node',
+      'oat',
+      'remote',
+      'publish',
+      '--binding',
+      'bnd-1',
+      '--authority-evidence-file',
+      '/tmp/current-invocation.json',
+    ]);
+    expect(publish.requests[0]).toMatchObject({
+      authorityEvidenceFile: '/tmp/current-invocation.json',
+    });
+    const continuation = harness();
+    await continuation.root.parseAsync([
+      'node',
+      'oat',
+      'remote',
+      'operation',
+      'continue',
+      '--operation',
+      'op-1',
+      '--observation-stdin',
+      '--authority-evidence-file',
+      '/tmp/current-invocation.json',
+    ]);
+    expect(continuation.requests[0]).toMatchObject({
+      authorityEvidenceFile: '/tmp/current-invocation.json',
+    });
+  });
+
+  it('fails closed under read-only authority without caller evidence', async () => {
+    const { repo, store } = await adoptedRepository();
+    await prepareMutableBinding(repo, store, 'read-only');
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => updateCapabilityEvidence(),
+    });
+    await expect(
+      runner({
+        operation: 'publish',
+        projectRoot: repo,
+        bindingId: 'bnd_live_001',
+        capabilityEvidenceStdin: true,
+      }),
+    ).rejects.toThrow(/read-only/i);
+  });
+
+  it('rejects absent, stale, and mismatched production caller evidence', async () => {
+    const { repo, store } = await adoptedRepository();
+    await prepareMutableBinding(repo, store, 'user-authorized');
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => updateCapabilityEvidence(),
+    });
+    const request = {
+      operation: 'publish' as const,
+      projectRoot: repo,
+      bindingId: 'bnd_live_001',
+      capabilityEvidenceStdin: true,
+    };
+    await expect(runner(request)).rejects.toThrow(/invocation evidence/i);
+    for (const evidence of [
+      {
+        ...interactiveAuthority('update-fields', 'bnd_live_001'),
+        expiresAt: '2026-08-31T12:00:30.000Z',
+      },
+      interactiveAuthority('update-fields', 'bnd_other_001'),
+      interactiveAuthority('create', 'bnd_live_001'),
+    ]) {
+      const authorityEvidenceFile = await writeAuthorityEvidence(
+        repo,
+        evidence,
+      );
+      await expect(
+        runner({ ...request, authorityEvidenceFile }),
+      ).rejects.toThrow(/expired|authorize/i);
+    }
+  });
+
+  it('accepts preview-bound approval and autonomous workflow evidence', async () => {
+    const approved = await adoptedRepository();
+    await prepareMutableBinding(approved.repo, approved.store, 'user-approved');
+    const approvedRunner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => updateCapabilityEvidence(),
+    });
+    const approvalPath = await writeAuthorityEvidence(
+      approved.repo,
+      interactiveAuthority('update-fields', 'bnd_live_001'),
+    );
+    let previewDigest = '';
+    try {
+      await approvedRunner({
+        operation: 'publish',
+        projectRoot: approved.repo,
+        bindingId: 'bnd_live_001',
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: approvalPath,
+      });
+    } catch (error) {
+      previewDigest = String(error).match(/sha256:[a-f0-9]{64}/)?.[0] ?? '';
+    }
+    expect(previewDigest).toMatch(/^sha256:/);
+    await writeAuthorityEvidence(
+      approved.repo,
+      interactiveAuthority('update-fields', 'bnd_live_001', {
+        previewDigest,
+        operationClass: 'update-fields',
+        approvedAt: '2026-08-31T12:01:00.000Z',
+        actor: 'operator-1',
+        source: 'interactive-preview',
+      }),
+    );
+    await expect(
+      approvedRunner({
+        operation: 'publish',
+        projectRoot: approved.repo,
+        bindingId: 'bnd_live_001',
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: approvalPath,
+      }),
+    ).resolves.toMatchObject({ status: 'pending' });
+
+    const autonomous = await adoptedRepository();
+    const { localProjection } = await prepareMutableBinding(
+      autonomous.repo,
+      autonomous.store,
+      'autonomous',
+    );
+    const workflowPath = await writeAuthorityEvidence(autonomous.repo, {
+      schemaVersion: 1,
+      kind: 'workflow',
+      sourceId: 'workflow-engine-1',
+      invocationId: 'workflow-invocation-1',
+      issuedAt: '2026-08-31T11:59:00.000Z',
+      expiresAt: '2026-08-31T12:05:00.000Z',
+      operationClass: 'update-fields',
+      targetId: 'bnd_live_001',
+      workflowId: 'item-1',
+      revision: localProjection.sourceRevision,
+    });
+    const autonomousRunner = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => updateCapabilityEvidence(),
+    });
+    await expect(
+      autonomousRunner({
+        operation: 'publish',
+        projectRoot: autonomous.repo,
+        bindingId: 'bnd_live_001',
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: workflowPath,
+      }),
+    ).resolves.toMatchObject({ status: 'pending' });
   });
 
   it.each([
@@ -591,6 +878,10 @@ describe('pjm remote command family', () => {
       .mockReturnValueOnce('create-step')
       .mockReturnValueOnce('verify-step')
       .mockReturnValueOnce('association-write');
+    const authorityEvidenceFile = await writeAuthorityEvidence(
+      repo,
+      interactiveAuthority('create', 'backlog:item-live'),
+    );
     const runner = createProductionRemoteRunner({
       now: () => '2026-08-31T12:00:00.000Z',
       randomId,
@@ -605,6 +896,7 @@ describe('pjm remote command family', () => {
         localId: 'item-live',
       },
       capabilityEvidenceStdin: true,
+      authorityEvidenceFile,
     });
     expect(created).toMatchObject({
       status: 'pending',
@@ -789,11 +1081,16 @@ describe('pjm remote command family', () => {
         .mockReturnValueOnce('mutation-step'),
       readObservationStdin,
     });
+    const authorityEvidenceFile = await writeAuthorityEvidence(
+      repo,
+      interactiveAuthority('update-fields', 'bnd_live_001'),
+    );
     const prepared = await runner({
       operation: 'publish',
       projectRoot: repo,
       bindingId: 'bnd_live_001',
       capabilityEvidenceStdin: true,
+      authorityEvidenceFile,
     });
     expect(prepared.externalAction).toMatchObject({
       semanticOperation: 'read',
@@ -822,6 +1119,23 @@ describe('pjm remote command family', () => {
         diagnosticCode: null,
       },
     });
+    await writeAuthorityEvidence(repo, {
+      ...interactiveAuthority('update-fields', 'bnd_live_001'),
+      sourceId: 'drifted-host-session',
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repo,
+        operationId: readAction.operationId,
+        observationStdin: true,
+        authorityEvidenceFile,
+      }),
+    ).rejects.toThrow(/authority evidence drifted/i);
+    await writeAuthorityEvidence(
+      repo,
+      interactiveAuthority('update-fields', 'bnd_live_001'),
+    );
     await writeFile(
       join(repo, '.oat', 'config.json'),
       `${JSON.stringify({
@@ -845,6 +1159,7 @@ describe('pjm remote command family', () => {
         projectRoot: repo,
         operationId: readAction.operationId,
         observationStdin: true,
+        authorityEvidenceFile,
       }),
     ).rejects.toThrow(/policy or authority drifted/i);
     await writeFile(
@@ -873,6 +1188,7 @@ describe('pjm remote command family', () => {
         projectRoot: repo,
         operationId: readAction.operationId,
         observationStdin: true,
+        authorityEvidenceFile,
       }),
     ).resolves.toMatchObject({
       status: 'pending',

@@ -3,6 +3,7 @@ import type {
   OatPjmRemoteMutationAuthority,
   OatPjmRemoteOperationClass,
 } from '@config/oat-config';
+import { z } from 'zod';
 
 import {
   validatePreviewApproval,
@@ -61,22 +62,92 @@ export interface EffectiveRemotePolicy {
   findings: string[];
 }
 
-export type ProductionMutationInvocation =
-  | { kind: 'interactive'; invocationId: string; evidenceDigest: string }
-  | {
-      kind: 'workflow';
-      invocationId: string;
-      workflowId: string;
-      revision: string;
-    };
+const TimestampSchema = z.string().datetime({ offset: true });
+const InvocationScopeSchema = z
+  .object({
+    operationClass: z.enum([
+      'create',
+      'update-fields',
+      'transition',
+      'annotate',
+      'delete',
+      'relink',
+      'detach',
+      'recreate',
+    ]),
+    targetId: z.string().min(1).max(255),
+  })
+  .strict();
+
+export const ProductionMutationInvocationSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      schemaVersion: z.literal(1),
+      kind: z.literal('interactive'),
+      sourceId: z.string().min(1).max(255),
+      invocationId: z.string().min(1).max(255),
+      issuedAt: TimestampSchema,
+      expiresAt: TimestampSchema,
+      instruction: InvocationScopeSchema.extend({
+        evidenceDigest: z.string().min(1).max(512),
+      }).strict(),
+      approval: z
+        .object({
+          previewDigest: z.string().min(1).max(512),
+          operationClass: z.enum([
+            'create',
+            'update-fields',
+            'transition',
+            'annotate',
+            'delete',
+            'relink',
+            'detach',
+            'recreate',
+          ]),
+          approvedAt: TimestampSchema,
+          actor: z.string().min(1).max(255),
+          source: z.string().min(1).max(255),
+        })
+        .strict()
+        .nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      schemaVersion: z.literal(1),
+      kind: z.literal('workflow'),
+      sourceId: z.string().min(1).max(255),
+      invocationId: z.string().min(1).max(255),
+      issuedAt: TimestampSchema,
+      expiresAt: TimestampSchema,
+      operationClass: InvocationScopeSchema.shape.operationClass,
+      targetId: InvocationScopeSchema.shape.targetId,
+      workflowId: z.string().min(1).max(255),
+      revision: z.string().min(1).max(512),
+    })
+    .strict(),
+]);
+
+export type ProductionMutationInvocation = z.infer<
+  typeof ProductionMutationInvocationSchema
+>;
+
+export function parseProductionMutationInvocation(
+  value: unknown,
+): ProductionMutationInvocation {
+  return ProductionMutationInvocationSchema.parse(value);
+}
 
 export function validateProductionMutationAuthority(input: {
   effective: OatPjmRemoteMutationAuthority;
-  invocation: ProductionMutationInvocation;
-  expectedInvocationDigest: string;
+  invocation: ProductionMutationInvocation | null;
   preview: BindingPreview;
-  approval: PreviewApproval | null;
-  expectedWorkflow: { workflowId: string; revision: string };
+  expected: {
+    operationClass: OatPjmRemoteOperationClass;
+    targetId: string;
+    workflowId: string;
+    workflowRevision: string;
+  };
   now: string;
   approvalMaxAgeMs: number;
 }): {
@@ -86,10 +157,20 @@ export function validateProductionMutationAuthority(input: {
   if (input.effective === 'read-only') {
     throw new Error('Remote mutation is read-only under current policy.');
   }
+  if (!input.invocation) {
+    throw new Error('Current caller invocation evidence is required.');
+  }
+  assertCurrentInvocation(input.invocation, input.now);
+  const expectedScope = {
+    operationClass: input.expected.operationClass,
+    targetId: input.expected.targetId,
+  };
   if (input.effective === 'user-authorized') {
     if (
       input.invocation.kind !== 'interactive' ||
-      input.invocation.evidenceDigest !== input.expectedInvocationDigest
+      input.invocation.instruction.operationClass !==
+        expectedScope.operationClass ||
+      input.invocation.instruction.targetId !== expectedScope.targetId
     ) {
       throw new Error(
         'Explicit invocation evidence does not authorize this mutation.',
@@ -98,33 +179,45 @@ export function validateProductionMutationAuthority(input: {
     return {
       authority: {
         effective: input.effective,
-        sourceDigest: input.expectedInvocationDigest,
+        sourceDigest: semanticDigest(input.invocation),
       },
       approval: null,
     };
   }
   if (input.effective === 'user-approved') {
+    const approval =
+      input.invocation.kind === 'interactive'
+        ? input.invocation.approval
+        : null;
     if (
-      !input.approval ||
-      !validatePreviewApproval(input.preview, input.approval, {
+      input.invocation.kind !== 'interactive' ||
+      input.invocation.instruction.operationClass !==
+        expectedScope.operationClass ||
+      input.invocation.instruction.targetId !== expectedScope.targetId ||
+      !approval ||
+      !validatePreviewApproval(input.preview, approval, {
         now: input.now,
         maxAgeMs: input.approvalMaxAgeMs,
       }).valid
     ) {
-      throw new Error('Fresh approval does not match the current preview.');
+      throw new Error(
+        `Fresh approval does not match the current preview ${input.preview.digest}.`,
+      );
     }
     return {
       authority: {
         effective: input.effective,
-        sourceDigest: semanticDigest(input.approval),
+        sourceDigest: semanticDigest(input.invocation),
       },
-      approval: input.approval,
+      approval,
     };
   }
   if (
     input.invocation.kind !== 'workflow' ||
-    input.invocation.workflowId !== input.expectedWorkflow.workflowId ||
-    input.invocation.revision !== input.expectedWorkflow.revision
+    input.invocation.operationClass !== expectedScope.operationClass ||
+    input.invocation.targetId !== expectedScope.targetId ||
+    input.invocation.workflowId !== input.expected.workflowId ||
+    input.invocation.revision !== input.expected.workflowRevision
   ) {
     throw new Error(
       'Autonomous mutation requires current active-workflow authority.',
@@ -133,10 +226,27 @@ export function validateProductionMutationAuthority(input: {
   return {
     authority: {
       effective: input.effective,
-      sourceDigest: semanticDigest(input.expectedWorkflow),
+      sourceDigest: semanticDigest(input.invocation),
     },
     approval: null,
   };
+}
+
+function assertCurrentInvocation(
+  invocation: ProductionMutationInvocation,
+  now: string,
+): void {
+  const nowMs = Date.parse(now);
+  const issuedAtMs = Date.parse(invocation.issuedAt);
+  const expiresAtMs = Date.parse(invocation.expiresAt);
+  if (
+    !Number.isFinite(nowMs) ||
+    issuedAtMs > nowMs ||
+    expiresAtMs < nowMs ||
+    expiresAtMs < issuedAtMs
+  ) {
+    throw new Error('Current caller invocation evidence is expired or stale.');
+  }
 }
 
 const OPERATIONS: readonly OatPjmRemoteOperationClass[] = [

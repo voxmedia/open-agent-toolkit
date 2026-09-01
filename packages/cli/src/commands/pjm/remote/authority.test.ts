@@ -220,12 +220,29 @@ describe('validateProductionMutationAuthority', () => {
     createdAt: '2026-08-31T12:00:00.000Z',
   });
   const base = {
-    expectedInvocationDigest: 'sha256:invocation',
     preview,
-    approval: null,
-    expectedWorkflow: { workflowId: 'workflow-1', revision: 'rev-1' },
+    expected: {
+      operationClass: 'update-fields' as const,
+      targetId: 'bnd-1',
+      workflowId: 'workflow-1',
+      workflowRevision: 'rev-1',
+    },
     now: '2026-08-31T12:01:00.000Z',
     approvalMaxAgeMs: 300_000,
+  };
+  const interactive = {
+    schemaVersion: 1 as const,
+    kind: 'interactive' as const,
+    sourceId: 'host-session-1',
+    invocationId: 'inv-1',
+    issuedAt: '2026-08-31T12:00:00.000Z',
+    expiresAt: '2026-08-31T12:05:00.000Z',
+    instruction: {
+      operationClass: 'update-fields' as const,
+      targetId: 'bnd-1',
+      evidenceDigest: 'sha256:exact-user-instruction',
+    },
+    approval: null,
   };
 
   it('enforces all four configured authority modes', () => {
@@ -233,50 +250,36 @@ describe('validateProductionMutationAuthority', () => {
       validateProductionMutationAuthority({
         ...base,
         effective: 'read-only',
-        invocation: {
-          kind: 'interactive',
-          invocationId: 'inv-1',
-          evidenceDigest: base.expectedInvocationDigest,
-        },
+        invocation: null,
       }),
     ).toThrow(/read-only/);
     expect(
       validateProductionMutationAuthority({
         ...base,
         effective: 'user-authorized',
-        invocation: {
-          kind: 'interactive',
-          invocationId: 'inv-1',
-          evidenceDigest: base.expectedInvocationDigest,
-        },
+        invocation: interactive,
       }).authority.sourceDigest,
-    ).toBe(base.expectedInvocationDigest);
+    ).toMatch(/^sha256:/);
     expect(() =>
       validateProductionMutationAuthority({
         ...base,
         effective: 'user-approved',
-        invocation: {
-          kind: 'interactive',
-          invocationId: 'inv-1',
-          evidenceDigest: base.expectedInvocationDigest,
-        },
+        invocation: interactive,
       }),
     ).toThrow(/fresh approval/i);
     expect(
       validateProductionMutationAuthority({
         ...base,
         effective: 'user-approved',
-        approval: {
-          previewDigest: preview.digest,
-          operationClass: 'update-fields',
-          approvedAt: base.now,
-          actor: 'operator-1',
-          source: 'interactive-preview',
-        },
         invocation: {
-          kind: 'interactive',
-          invocationId: 'inv-1',
-          evidenceDigest: base.expectedInvocationDigest,
+          ...interactive,
+          approval: {
+            previewDigest: preview.digest,
+            operationClass: 'update-fields' as const,
+            approvedAt: base.now,
+            actor: 'operator-1',
+            source: 'interactive-preview',
+          },
         },
       }).approval?.actor,
     ).toBe('operator-1');
@@ -285,8 +288,14 @@ describe('validateProductionMutationAuthority', () => {
         ...base,
         effective: 'autonomous',
         invocation: {
+          schemaVersion: 1,
           kind: 'workflow',
+          sourceId: 'workflow-engine-1',
           invocationId: 'inv-1',
+          issuedAt: '2026-08-31T12:00:00.000Z',
+          expiresAt: '2026-08-31T12:05:00.000Z',
+          operationClass: 'update-fields',
+          targetId: 'bnd-1',
           workflowId: 'workflow-1',
           revision: 'rev-1',
         },
@@ -297,12 +306,63 @@ describe('validateProductionMutationAuthority', () => {
         ...base,
         effective: 'autonomous',
         invocation: {
+          schemaVersion: 1,
           kind: 'workflow',
+          sourceId: 'workflow-engine-1',
           invocationId: 'inv-1',
+          issuedAt: '2026-08-31T12:00:00.000Z',
+          expiresAt: '2026-08-31T12:05:00.000Z',
+          operationClass: 'update-fields',
+          targetId: 'bnd-1',
           workflowId: 'workflow-1',
           revision: 'drifted',
         },
       }),
     ).toThrow(/active-workflow/);
+  });
+
+  it('fails closed for absent, stale, or mismatched caller evidence', () => {
+    for (const invocation of [
+      null,
+      { ...interactive, expiresAt: '2026-08-31T12:00:30.000Z' },
+      {
+        ...interactive,
+        instruction: { ...interactive.instruction, targetId: 'bnd-other' },
+      },
+      {
+        ...interactive,
+        instruction: {
+          ...interactive.instruction,
+          operationClass: 'create' as const,
+        },
+      },
+    ]) {
+      expect(() =>
+        validateProductionMutationAuthority({
+          ...base,
+          effective: 'user-authorized',
+          invocation,
+        }),
+      ).toThrow(/invocation evidence|expired|authorize/i);
+    }
+  });
+
+  it('rejects approval evidence for another preview', () => {
+    expect(() =>
+      validateProductionMutationAuthority({
+        ...base,
+        effective: 'user-approved',
+        invocation: {
+          ...interactive,
+          approval: {
+            previewDigest: 'sha256:other-preview',
+            operationClass: 'update-fields',
+            approvedAt: base.now,
+            actor: 'operator-1',
+            source: 'interactive-preview',
+          },
+        },
+      }),
+    ).toThrow(/fresh approval/i);
   });
 });

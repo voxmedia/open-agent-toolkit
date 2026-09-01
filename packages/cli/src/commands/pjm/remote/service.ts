@@ -13,6 +13,7 @@ import {
   serializeAssociatedIssues,
 } from './association';
 import {
+  parseProductionMutationInvocation,
   resolveEffectiveRemotePolicy,
   validateProductionMutationAuthority,
   type ProductionMutationInvocation,
@@ -54,21 +55,12 @@ export interface ProductionRemoteRunnerDependencies {
   now(): string;
   randomId(): string;
   readObservationStdin(): Promise<unknown>;
-  currentInvocation(input: {
-    invocationId: string;
-    expectedEvidenceDigest: string;
-  }): ProductionMutationInvocation;
 }
 
 const DEFAULT_DEPENDENCIES: ProductionRemoteRunnerDependencies = {
   now: () => new Date().toISOString(),
   randomId: randomUUID,
   readObservationStdin: readJsonStdin,
-  currentInvocation: ({ invocationId, expectedEvidenceDigest }) => ({
-    kind: 'interactive',
-    invocationId,
-    evidenceDigest: expectedEvidenceDigest,
-  }),
 };
 
 export function createProductionRemoteRunner(
@@ -453,7 +445,8 @@ async function prepareCreate(
   if (Buffer.byteLength(content, 'utf8') > 1_048_576) {
     throw new Error('Unbound publication source exceeds the size limit.');
   }
-  const now = dependencies.now();
+  const invocation = await readCurrentMutationInvocation(request);
+  const now = invocation?.issuedAt ?? dependencies.now();
   const local = resolveLocalProjection({
     target: { kind: 'backlog', path: target.path, content },
     observedAt: now,
@@ -512,22 +505,17 @@ async function prepareCreate(
     fieldMask: ['title', 'description', 'priority'],
     createdAt: now,
   });
-  const expectedInvocationDigest = semanticDigest({
-    operation: 'create',
-    bindingId,
-    previewDigest: preview.digest,
-  });
   const authorityDecision = validateProductionMutationAuthority({
     effective: authority,
-    invocation: dependencies.currentInvocation({
-      invocationId: operationId,
-      expectedEvidenceDigest: expectedInvocationDigest,
-    }),
-    expectedInvocationDigest,
+    invocation,
     preview,
-    approval: request.mutationApproval ?? null,
-    expectedWorkflow: { workflowId: bindingId, revision: local.sourceRevision },
-    now,
+    expected: {
+      operationClass: 'create',
+      targetId: `${target.kind}:${target.id}`,
+      workflowId: target.id,
+      workflowRevision: local.sourceRevision,
+    },
+    now: dependencies.now(),
     approvalMaxAgeMs: 300_000,
   });
   const createIntent: PlannedBindingCreate = {
@@ -686,7 +674,8 @@ async function prepareMutation(
     description: state.localProjection.description,
     priority: state.localProjection.priority,
   };
-  const now = dependencies.now();
+  const invocation = await readCurrentMutationInvocation(request);
+  const now = invocation?.issuedAt ?? dependencies.now();
   const safety = assessOutboundProjectionSafety(projection, {
     assessedAt: now,
   });
@@ -727,25 +716,17 @@ async function prepareMutation(
     fieldMask: ['title', 'description', 'priority'],
     createdAt: now,
   });
-  const expectedInvocationDigest = semanticDigest({
-    operation: 'update-fields',
-    bindingId: metadata.bindingId,
-    previewDigest: preview.digest,
-  });
   const authorityDecision = validateProductionMutationAuthority({
     effective: authority,
-    invocation: dependencies.currentInvocation({
-      invocationId: operationId,
-      expectedEvidenceDigest: expectedInvocationDigest,
-    }),
-    expectedInvocationDigest,
+    invocation,
     preview,
-    approval: request.mutationApproval ?? null,
-    expectedWorkflow: {
-      workflowId: metadata.bindingId,
-      revision: state.localProjection.sourceRevision,
+    expected: {
+      operationClass: 'update-fields',
+      targetId: metadata.bindingId,
+      workflowId: metadata.target.id,
+      workflowRevision: state.localProjection.sourceRevision,
     },
-    now,
+    now: dependencies.now(),
     approvalMaxAgeMs: 300_000,
   });
   const action = buildExternalAction({
@@ -1386,32 +1367,16 @@ async function continueMutationPreRead(
   if (preview.digest !== operation.preview.digest) {
     throw new Error('Mutation preview drifted after authoritative pre-read.');
   }
-  const expectedInvocationDigest = semanticDigest({
-    operation: 'update-fields',
-    bindingId: metadata.bindingId,
-    previewDigest: preview.digest,
-  });
+  const invocation = await readCurrentMutationInvocation(request);
   const authorityDecision = validateProductionMutationAuthority({
     effective: effective.authority['update-fields'],
-    invocation: dependencies.currentInvocation({
-      invocationId: operation.operationId,
-      expectedEvidenceDigest: expectedInvocationDigest,
-    }),
-    expectedInvocationDigest,
+    invocation,
     preview,
-    approval:
-      operation.approval?.operationClass === 'update-fields'
-        ? {
-            previewDigest: operation.approval.previewDigest,
-            operationClass: operation.approval.operationClass,
-            approvedAt: operation.approval.approvedAt,
-            actor: operation.approval.actor ?? 'unknown',
-            source: operation.approval.source,
-          }
-        : null,
-    expectedWorkflow: {
-      workflowId: metadata.bindingId,
-      revision: state.localProjection.sourceRevision,
+    expected: {
+      operationClass: 'update-fields',
+      targetId: metadata.bindingId,
+      workflowId: metadata.target.id,
+      workflowRevision: state.localProjection.sourceRevision,
     },
     now: dependencies.now(),
     approvalMaxAgeMs: 300_000,
@@ -1473,6 +1438,26 @@ async function continueMutationPreRead(
     },
   );
   return envelopeFrom(request, attempted, metadata, action);
+}
+
+async function readCurrentMutationInvocation(
+  request: RemoteCommandRequest,
+): Promise<ProductionMutationInvocation | null> {
+  if (!request.authorityEvidenceFile) return null;
+  const sourcePath = isAbsolute(request.authorityEvidenceFile)
+    ? request.authorityEvidenceFile
+    : resolve(request.projectRoot, request.authorityEvidenceFile);
+  const raw = await readFile(sourcePath, 'utf8');
+  if (Buffer.byteLength(raw, 'utf8') > 65_536) {
+    throw new Error('Current caller invocation evidence exceeds 64 KiB.');
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error('Current caller invocation evidence is not valid JSON.');
+  }
+  return parseProductionMutationInvocation(value);
 }
 
 function operationRecord(input: {
