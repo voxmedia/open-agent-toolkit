@@ -1190,9 +1190,9 @@ review_fix_commits:
   - 15332edbf1a88e41fa1d909bb767273d527dcc28
 recovery_usage: 0/10
 pending_attempt: null
-review_cycles: 3/3
+review_cycles: 3/4
 review_fix_loops: 2/3
-phase_outcome: blocked
+phase_outcome: operator_extension_authorized
 continuation_events:
   - id: remote-project-management-p-rev1-review-fix-1-20260901T0205Z
     outcome: done
@@ -1243,6 +1243,25 @@ target=oat-reviewer-gpt-5-6-sol-high
 - Normal review governance is exhausted at 3/3. Phase 4 did not start and
   requires an explicit operator extension before another bounded fix/review
   cycle.
+
+#### Operator-authorized review extension
+
+- Authorization: the user explicitly authorized continuation after the normal
+  three-review Revision 1 governance stop on 2026-09-01.
+- Scope: exactly one additional bounded fix/review cycle for the one Critical
+  and one Important finding in
+  `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`.
+- Repair boundary: public create-handoff restart recovery and deterministic
+  active-intent handling, plus truthful digest-bound revision freshness in the
+  structured approval preview and their mechanically required regressions.
+- Governance exception: review-fix capacity remains 3 total with 2 used, and
+  review capacity is extended from 3 to 4 for Revision 1 only. Prior usage is
+  preserved.
+- Exact implementation and reviewer targets remain
+  `oat-phase-implementer-gpt-5-6-sol-high` and
+  `oat-reviewer-gpt-5-6-sol-high`.
+- No further fix/review cycle, target change, or Phase 4 dispatch is authorized
+  if the fourth review remains blocked.
 
 <!-- orchestration-runs-end -->
 

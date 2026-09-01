@@ -3,7 +3,7 @@ oat_current_task: p04-t01
 oat_last_commit: 15332edbf1a88e41fa1d909bb767273d527dcc28
 oat_blockers:
   - task_id: p-rev1
-    reason: 'Round-3 review exhausted normal governance with one Critical create-handoff recovery finding and one Important preview-freshness finding.'
+    reason: 'Round-3 review exhausted normal governance with one Critical create-handoff recovery finding and one Important preview-freshness finding; one bounded operator-extension fix/review cycle is authorized and pending.'
     since: '2026-09-01'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T16:24:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T17:33:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -52,7 +52,8 @@ oat_generated: false
 Implementation revision — all four Revision 1 tasks and two bounded review-fix
 commits are complete. The third and final normal Revision 1 review remains
 blocked by one Critical create-handoff recovery finding and one Important
-preview-freshness finding. Phase 4 has not started.
+preview-freshness finding. The operator authorized one additional same-target
+fix/review cycle limited to those two findings. Phase 4 has not started.
 
 ## Artifacts
 
@@ -131,6 +132,7 @@ preview-freshness finding. Phase 4 has not started.
 - ✓ Revision 1 final corrective suite passed 234/234 with CLI types/build/check
 - ⚠ Revision 1 round-3 review blocked with 1 Critical and 1 Important finding
 - ⛔ Normal Revision 1 review governance is exhausted at 3/3
+- ⧗ One bounded Revision 1 operator-extension fix/review cycle authorized
 - ⛔ Phase 4 remains blocked until an operator-authorized fix/review extension passes
 
 ## Blockers
@@ -138,11 +140,11 @@ preview-freshness finding. Phase 4 has not started.
 Revision 1 exhausted its three normal review rounds. Public create-handoff
 recovery is unreachable and a no-handle direct-authorized retry can create a
 second action; the structured preview also labels preview creation time as the
-remote revision observation time. Another bounded fix/review cycle requires an
-explicit operator extension.
+remote revision observation time. One bounded same-target fix/review extension
+is authorized for exactly these findings. No further cycle is authorized.
 
 ## Next Milestone
 
-Obtain operator direction for one bounded Revision 1 fix/review extension.
+Execute the authorized bounded Revision 1 fix and fourth independent review.
 Do not begin `p04-t01` until that review passes with zero Critical and zero
-Important findings.
+Important findings; stop for direction if the fourth review remains blocked.
