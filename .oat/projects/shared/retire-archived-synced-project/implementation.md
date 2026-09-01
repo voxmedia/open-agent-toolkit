@@ -450,7 +450,25 @@ That generation passed after one fix round and p02 is now merged.
 
 ## Final Summary (for PR/docs)
 
-To be completed after implementation.
+- **Shipped:** synced completion now retires the active discovery record only
+  after local and configured-S3 durability, records authoritative terminal
+  identity under `refs/oat/completed/<slug>`, supports recordless recovery, and
+  prevents terminal projects from reappearing through list, pull, open, links,
+  coordination, or dashboard paths. Explicit prune remains the only operation
+  that removes completed refs.
+- **Key surfaces:** the CLI sync/archive/pull/list/prune/link flows,
+  `oat-project-complete` skill and helpers, control-plane project row types,
+  lifecycle documentation, package versions, and interruption/race regression
+  suites.
+- **Verification:** 4721/4721 uncached CLI tests and 78/78 control-plane tests
+  passed; repository check, type-check, build, release validation, docs build,
+  lint, format, and skill validation all passed. Final focused re-review and
+  the configured Claude Fable exit gate both passed.
+- **Accepted deltas:** completed-ref authority permits a same-SHA active alias
+  because Git cannot atomically lease a no-op completed update with active-ref
+  deletion; prune's leased alias cleanup therefore lives in the shared
+  ref-sync boundary. The gate's shared-parser maintainability finding is
+  explicitly deferred until one parser next changes.
 
 ## References
 
