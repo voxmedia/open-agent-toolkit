@@ -140,6 +140,10 @@ Phase 4 stopped at the terminal five-round review boundary with one Critical def
 
 Operator-authorized fail-closed fix 567f9ae0a3d39d9986e517924551e6381058d27e blocks directory copy within one apply, but terminal High review found that persisted collection detachment lets the next unchanged sync reach ordinary copy; critical:1, important:0 in reviews/p04-review-2026-09-01T210000Z.md. Reconnaissance was not attempted; no further correction or Phase 5 launch is authorized.
 
+### 2026-09-01 · structural · oat-project-implement · p04-review-r8-terminal
+
+Phase 4 terminal review verdict=blocked with 1 Critical after 7 review-fix continuations; see reviews/p04-review-2026-09-01T220158Z.md. The one-use authorization is exhausted and p05 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

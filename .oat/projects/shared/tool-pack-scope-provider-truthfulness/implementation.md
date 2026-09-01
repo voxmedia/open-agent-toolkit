@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 4 terminal review found that the documented symlink strategy release can follow a race-swapped provider parent outside the managed root; the one-use correction/review authorization is exhausted.
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1123,6 +1124,28 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   operator authorization; a blocking verdict returns to governance without
   another correction. Phase 5 remains gated.
 
+### Review Round 8 — Terminal Governance Boundary
+
+- Artifact: `reviews/p04-review-2026-09-01T220158Z.md`
+- Reviewed head: `86df6a8f5fc76fe30554d7ce6562067c3a5b58e0`
+- Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: not attempted; the artifact correctly contains no Review
+  Orchestration section.
+- The round-7 repeated-copy defect is resolved. Both unchanged copy-transition
+  attempts preserve collection evidence, remain deferred, and stop before the
+  ordinary copier with no provider/external writes or entry ownership.
+- The advertised strategy-change release is unsafe. After provider ancestry
+  validation, `createSymlinkNoClobber` creates missing parents and the link by
+  pathname. A race-swapped provider parent can therefore redirect the deferred
+  symlink outside the managed root and still permit manifest ownership.
+- The reviewer reproduced the production primitive escape after a successful
+  ancestry check and reran the authoritative 18-file Phase 4 union at 412/412.
+  Root confirmed the check/use gap directly in `execute-plan.ts` and `fs/io.ts`.
+- This review consumes the single operator-authorized fresh review. No further
+  automatic correction is authorized, and Phase 5 remains gated pending an
+  explicit bounded fail-closed symlink correction or a revised Phase 4
+  delivery boundary.
+
 ---
 
 ## Orchestration Runs
@@ -1634,6 +1657,20 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `native-catalog`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p04-review-r7-authorized-durable-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 8 — terminal governance boundary
+
+- Reviewed head: `86df6a8f5fc76fe30554d7ce6562067c3a5b58e0`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T220158Z.md`
+- Outcome: changes requested; 1 Critical deferred-symlink ancestry race. The
+  one-use correction/review authorization is exhausted, operator governance is
+  required, and Phase 5 remains gated.
+- Reconnaissance: not attempted; the artifact contains no Review Orchestration
+  section.
+- Selection reason: `gate-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

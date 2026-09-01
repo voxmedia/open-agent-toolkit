@@ -1,7 +1,8 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 91d3ca4fe5e721a435c845bd36f556478b8d3259
-oat_blockers: []
+oat_last_commit: 86df6a8f5fc76fe30554d7ce6562067c3a5b58e0
+oat_blockers:
+  - Phase 4 terminal review found that the documented symlink strategy release can follow a race-swapped provider parent outside the managed root; the one-use correction/review authorization is exhausted.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:55:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T22:04:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +112,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the authorized durable Phase 4 correction is committed at
-`91d3ca4fe`. Two unchanged runs retain collection evidence and block before
-directory copy. Exactly one fresh independent High review is pending; Phase 5
-remains gated until Phase 4 passes.
+Implementation - the authorized durable Phase 4 copy correction is committed,
+but the terminal fresh review found one Critical deferred-symlink ancestry
+race at reviewed head `86df6a8f5`. The one-use authorization is exhausted and
+Phase 5 remains gated.
 
 ## Artifacts
 
@@ -122,7 +123,7 @@ remains gated until Phase 4 passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 durable repeated-sync correction complete and awaiting review)
+- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 terminal review found one Critical deferred-symlink ancestry race)
 
 ## Progress
 
@@ -148,15 +149,17 @@ remains gated until Phase 4 passes.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 durable repeated-sync correction complete; fresh review pending
+- ⧗ Phase 4 terminal review blocked on deferred-symlink ancestry safety
 
 ## Blockers
 
-- None before the authorized fresh review. Phase 5 remains gated on a passing
-  Phase 4 verdict.
+- A deferred symlink transition validates provider ancestry and then creates
+  parents/link by pathname. A race-swapped provider parent can redirect that
+  mutation outside the managed root and still allow ownership to be recorded.
+- The one-use correction/review authorization is exhausted.
 
 ## Next Milestone
 
-Dispatch the one authorized fresh exact-High Phase 4 review over the complete
-Phase 4 range through `91d3ca4fe`. Do not begin Phase 5 without a passing
-verdict; a blocking review returns to operator governance.
+Operator governance must authorize a bounded fail-closed deferred-symlink
+correction or revise the Phase 4 delivery boundary. Do not begin Phase 5
+without a passing Phase 4 verdict.
