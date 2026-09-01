@@ -29,7 +29,9 @@ Completed projects are not adoption candidates. Their authoritative ref is
 `refs/oat/completed/<project>`; both `pull` and `open` return a terminal
 diagnosis instead of recreating an archived checkout or record. A same-SHA
 active ref may remain as an inert alias and is ignored. Differing active and
-completed SHAs require repair before lifecycle work continues.
+completed SHAs require repair before lifecycle work continues. The same guard
+applies to coordination children: a terminal child discovered while pulling
+its parent is reported and skipped rather than adopted.
 
 After adoption, set or open the project through the normal lifecycle command
 you are using. Arrival-aware project skills pull before reading its artifacts.
@@ -78,6 +80,10 @@ snapshot first when configured, makes the completed ref authoritative, removes
 the checkout, and deletes the tracked JSON record. The local archive metadata
 retains the source-ref identity needed for recordless retries and later S3
 restore without recreating active state.
+
+If closeout is interrupted after terminal archive identity exists, rerun
+completion so it can resume from the completed ref and archive metadata. Do not
+use `pull` or `open` to recreate an active record or checkout.
 
 ## Related
 

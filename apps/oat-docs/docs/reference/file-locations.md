@@ -111,7 +111,7 @@ Archive sync surfaces:
 - Archive sync command: `oat repo archive sync` or `oat repo archive sync <project-name>`
 - Remote archive snapshot shape: `<archive.s3Uri>/<repo-slug>/projects/YYYYMMDD-<project-name>/`
 - Terminal archive metadata:
-  `.oat/projects/archived/<project>/.oat-archive-snapshot.json` binds the
+  `.oat/projects/archived/<project>/.oat-archive-source.json` binds the
   snapshot to its synced source-ref SHA so a recordless interrupted closeout
   can retry without recreating the active record or checkout.
 - Summary export target:
