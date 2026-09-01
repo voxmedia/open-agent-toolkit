@@ -1432,6 +1432,16 @@ and current Minor ledger are both empty, so no fix, deferral, or rejection is
 created. Gate state remains pending until the archive, exact Reviews event, and
 bounded receive commit are reconciled into the durable receive receipt.
 
+### 2026-09-01 - final implementation approval received
+
+- The user explicitly approved the final implementation closeout after the
+  rebased PR reached a clean merge state with CI and release dry-run passing.
+- Approval source: `user`.
+- The immutable closeout snapshot contains no post-approval steps, so the
+  sequence may advance directly from `post_approval` to `complete`.
+- This approval records the HiLL checkpoint only; PR #248 remains open and was
+  not merged.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal

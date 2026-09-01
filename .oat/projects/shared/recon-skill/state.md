@@ -64,13 +64,13 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-01T04:16:01Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: user
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T04:16:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T14:48:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -89,14 +89,14 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Awaiting final implementation approval / PR open
+**Status:** Final implementation approved / PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — all tasks, final review, configured gate, and pre-approval
-closeout steps complete; awaiting final HiLL approval.
+Implementation — explicit final HiLL approval received; no post-approval child
+steps are configured.
 
 ## Artifacts
 
@@ -192,7 +192,7 @@ closeout steps complete; awaiting final HiLL approval.
 - ✓ PR #248 lease-protected rebase push and description refresh completed
 - ✓ Project recap skip intent revalidated by the terminal guard
 - ⧗ GitHub CI, release dry-run, and Bugbot checks running on refreshed PR head
-- ⧗ Awaiting final implementation approval
+- ✓ Final implementation approval received from the user
 - ⧗ Awaiting human review
 
 ## Blockers
