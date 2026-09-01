@@ -1400,7 +1400,7 @@ in-scope implementation files when a gate exposes a project defect.
 | p06    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | p07    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | p08    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p-rev1 | code     | received        | 2026-09-01 | reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md          | 15332edbf1a88e41fa1d909bb767273d527dcc28 | manual              | -                        |
+| p-rev1 | code     | fixes_completed | 2026-09-01 | reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md          | 15332edbf1a88e41fa1d909bb767273d527dcc28 | manual              | -                        |
 | final  | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
 | spec   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1            | cursor                   |
