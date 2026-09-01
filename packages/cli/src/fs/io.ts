@@ -1,12 +1,15 @@
 import {
   chmod,
+  lstat,
   mkdir,
   readdir,
   readFile,
+  readlink,
   rename,
   rm,
   stat,
   symlink,
+  unlink,
   writeFile,
 } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative } from 'node:path';
@@ -30,6 +33,11 @@ export async function dirExists(path: string): Promise<boolean> {
 }
 
 export type LinkStrategy = 'symlink' | 'copy';
+export interface CreatedCollectionSymlink {
+  linkText: string;
+  device: string;
+  inode: string;
+}
 export type CopyDirectoryFilter = (
   sourcePath: string,
   relativePath: string,
@@ -103,6 +111,52 @@ export async function createSymlink(
       await copyDirectory(target, linkPath);
     }
     return 'copy';
+  }
+}
+
+export async function createCollectionSymlinkNoClobber(
+  target: string,
+  linkPath: string,
+): Promise<CreatedCollectionSymlink> {
+  await ensureDir(dirname(linkPath));
+  const linkText = isAbsolute(target)
+    ? relative(dirname(linkPath), target)
+    : target;
+
+  await symlink(linkText, linkPath, 'dir');
+  const created = await lstat(linkPath);
+  if (!created.isSymbolicLink()) {
+    throw new Error('Collection destination was not created as a symlink.');
+  }
+  return {
+    linkText,
+    device: String(created.dev),
+    inode: String(created.ino),
+  };
+}
+
+export async function removeCollectionSymlinkIfUnchanged(
+  linkPath: string,
+  created: CreatedCollectionSymlink,
+): Promise<boolean> {
+  try {
+    const current = await lstat(linkPath);
+    if (
+      !current.isSymbolicLink() ||
+      String(current.dev) !== created.device ||
+      String(current.ino) !== created.inode
+    ) {
+      return false;
+    }
+
+    if ((await readlink(linkPath)) !== created.linkText) {
+      return false;
+    }
+
+    await unlink(linkPath);
+    return true;
+  } catch {
+    return false;
   }
 }
 

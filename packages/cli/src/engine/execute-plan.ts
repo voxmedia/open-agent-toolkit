@@ -1,17 +1,29 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { copyDirectory, copySingleFile, createSymlink } from '@fs/io';
-import { computeContentHash, computeStringHash } from '@manifest/hash';
 import {
-  addEntry,
-  findEntry,
-  removeEntry,
-  saveManifest,
-} from '@manifest/manager';
-import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
-
+  copyDirectory,
+  copySingleFile,
+  createCollectionSymlinkNoClobber,
+  createSymlink,
+  removeCollectionSymlinkIfUnchanged,
+  type CreatedCollectionSymlink,
+} from '@fs/io';
+import { computeContentHash, computeStringHash } from '@manifest/hash';
+import { saveManifest as persistManifest } from '@manifest/manager';
 import type {
+  Manifest,
+  ManifestEntry,
+  ManifestV2,
+} from '@manifest/manifest.types';
+
+import {
+  collectionProofMatches,
+  projectCollectionOwnership,
+  proveCollectionIdentity,
+} from './collection-sync';
+import type {
+  CollectionProjectionPlan,
   SyncOperationResult,
   SyncPlan,
   SyncPlanEntry,
@@ -22,9 +34,32 @@ import { assertSafeProviderMutationPath } from './provider-path-safety';
 
 interface ExecuteSyncPlanDependencies {
   beforeFirstMutation?: () => Promise<void>;
+  saveManifest?: typeof persistManifest;
+  createCollectionSymlinkNoClobber?: typeof createCollectionSymlinkNoClobber;
+  removeCollectionSymlinkIfUnchanged?: typeof removeCollectionSymlinkIfUnchanged;
+  proveCollectionIdentity?: typeof proveCollectionIdentity;
 }
 
 const DEFAULT_EXECUTE_SYNC_PLAN_DEPENDENCIES: ExecuteSyncPlanDependencies = {};
+
+export interface CollectionOperationResult {
+  provider: string;
+  contentType: CollectionProjectionPlan['contentType'];
+  action: CollectionProjectionPlan['action'];
+  ownership: CollectionProjectionPlan['ownership'];
+  status:
+    | 'changed'
+    | 'current'
+    | 'fallback'
+    | 'rejected'
+    | 'failed'
+    | 'partial';
+  reason: string;
+}
+
+export type CollectionSyncResult = SyncResult & {
+  collectionResults: CollectionOperationResult[];
+};
 
 function mutatesProviderPath(entry: SyncPlanEntry): boolean {
   return entry.operation !== 'skip' && entry.operation !== 'detach';
@@ -164,8 +199,8 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
 
 async function applyEntry(
   planEntry: SyncPlanEntry,
-  manifest: Manifest,
-): Promise<Manifest> {
+  manifest: ManifestV2,
+): Promise<ManifestV2> {
   switch (planEntry.operation) {
     case 'create_symlink':
     case 'update_symlink': {
@@ -179,7 +214,7 @@ async function applyEntry(
         planEntry.canonical.isFile,
       );
       const manifestEntry = await toManifestEntry(planEntry, strategyUsed);
-      return addEntry(manifest, manifestEntry);
+      return addManifestEntry(manifest, manifestEntry);
     }
     case 'create_copy':
     case 'update_copy': {
@@ -209,16 +244,16 @@ async function applyEntry(
         await applyCopyMarker(planEntry);
       }
       const manifestEntry = await toManifestEntry(planEntry, 'copy');
-      return addEntry(manifest, manifestEntry);
+      return addManifestEntry(manifest, manifestEntry);
     }
     case 'remove': {
       await rm(planEntry.providerPath, { recursive: true, force: true });
       const { canonicalPath } = resolveManifestPaths(planEntry);
-      return removeEntry(manifest, canonicalPath, planEntry.provider);
+      return removeManifestEntry(manifest, canonicalPath, planEntry.provider);
     }
     case 'detach': {
       const { canonicalPath } = resolveManifestPaths(planEntry);
-      return removeEntry(manifest, canonicalPath, planEntry.provider);
+      return removeManifestEntry(manifest, canonicalPath, planEntry.provider);
     }
     case 'skip': {
       return manifest;
@@ -228,18 +263,229 @@ async function applyEntry(
   }
 }
 
+function addManifestEntry(
+  manifest: ManifestV2,
+  entry: ManifestEntry,
+): ManifestV2 {
+  return {
+    ...manifest,
+    entries: [
+      ...manifest.entries.filter(
+        (candidate) =>
+          !(
+            candidate.canonicalPath === entry.canonicalPath &&
+            candidate.provider === entry.provider
+          ),
+      ),
+      entry,
+    ],
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
+function removeManifestEntry(
+  manifest: ManifestV2,
+  canonicalPath: string,
+  provider: string,
+): ManifestV2 {
+  const entries = manifest.entries.filter(
+    (entry) =>
+      !(entry.canonicalPath === canonicalPath && entry.provider === provider),
+  );
+  return entries.length === manifest.entries.length
+    ? manifest
+    : { ...manifest, entries, lastUpdated: new Date().toISOString() };
+}
+
 async function ensureSkipEntryManaged(
   planEntry: SyncPlanEntry,
-  manifest: Manifest,
-): Promise<Manifest> {
+  manifest: ManifestV2,
+): Promise<ManifestV2> {
   const { canonicalPath } = resolveManifestPaths(planEntry);
-  const existing = findEntry(manifest, canonicalPath, planEntry.provider);
+  const existing = manifest.entries.find(
+    (entry) =>
+      entry.canonicalPath === canonicalPath &&
+      entry.provider === planEntry.provider,
+  );
   if (existing) {
     return manifest;
   }
 
   const manifestEntry = await toManifestEntry(planEntry, planEntry.strategy);
-  return addEntry(manifest, manifestEntry);
+  return addManifestEntry(manifest, manifestEntry);
+}
+
+interface CreatedCollection {
+  plan: CollectionProjectionPlan;
+  created: CreatedCollectionSymlink;
+}
+
+async function executeCollectionTransaction(
+  plans: readonly CollectionProjectionPlan[],
+  manifest: ManifestV2,
+  dependencies: Required<
+    Pick<
+      ExecuteSyncPlanDependencies,
+      | 'saveManifest'
+      | 'createCollectionSymlinkNoClobber'
+      | 'removeCollectionSymlinkIfUnchanged'
+      | 'proveCollectionIdentity'
+    >
+  >,
+  manifestPath: string,
+  beforeMutation: () => Promise<void>,
+): Promise<{
+  manifest: ManifestV2;
+  results: CollectionOperationResult[];
+  attempted: boolean;
+  persisted: boolean;
+}> {
+  const passiveResults: CollectionOperationResult[] = plans
+    .filter(
+      ({ action }) =>
+        action === 'fallback-per-entry' || action === 'reject-collection',
+    )
+    .map((plan) => ({
+      provider: plan.provider,
+      contentType: plan.contentType,
+      action: plan.action,
+      ownership: plan.ownership,
+      status: plan.action === 'fallback-per-entry' ? 'fallback' : 'rejected',
+      reason: plan.reason,
+    }));
+  const actionable = plans.filter(
+    ({ action }) =>
+      action === 'create-collection-link' ||
+      action === 'adopt-collection-link' ||
+      action === 'inherit-collection',
+  );
+  if (actionable.length === 0) {
+    return {
+      manifest,
+      results: passiveResults,
+      attempted: false,
+      persisted: false,
+    };
+  }
+
+  const verified = new Map<
+    CollectionProjectionPlan,
+    Awaited<ReturnType<typeof proveCollectionIdentity>>
+  >();
+  for (const plan of actionable) {
+    const current = await dependencies.proveCollectionIdentity({
+      root: inferScopeRoot(plan.canonicalDir),
+      canonicalDir: plan.canonicalDir,
+      providerDir: plan.providerDir,
+    });
+    if (!collectionProofMatches(plan.proof, current)) {
+      return {
+        manifest,
+        results: [
+          ...passiveResults,
+          ...actionable.map((candidate) => ({
+            provider: candidate.provider,
+            contentType: candidate.contentType,
+            action: candidate.action,
+            ownership: candidate.ownership,
+            status: 'failed' as const,
+            reason:
+              candidate === plan
+                ? 'collection identity changed after planning; preserved destination'
+                : 'collection transaction aborted before mutation',
+          })),
+        ],
+        attempted: true,
+        persisted: false,
+      };
+    }
+    verified.set(plan, current);
+  }
+
+  const createdCollections: CreatedCollection[] = [];
+  let nextManifest = manifest;
+  try {
+    await beforeMutation();
+    for (const plan of actionable) {
+      if (plan.action === 'create-collection-link') {
+        const created = await dependencies.createCollectionSymlinkNoClobber(
+          plan.canonicalDir,
+          plan.providerDir,
+        );
+        createdCollections.push({ plan, created });
+        const rescanned = await dependencies.proveCollectionIdentity({
+          root: inferScopeRoot(plan.canonicalDir),
+          canonicalDir: plan.canonicalDir,
+          providerDir: plan.providerDir,
+        });
+        if (rescanned.status !== 'exact-link') {
+          throw new Error('created collection alias did not verify as exact');
+        }
+        verified.set(plan, rescanned);
+      }
+
+      const proof = verified.get(plan);
+      if (proof?.status !== 'exact-link') {
+        throw new Error('collection alias exact identity is unavailable');
+      }
+      nextManifest = await projectCollectionOwnership(
+        nextManifest,
+        plan,
+        proof,
+      );
+    }
+
+    await dependencies.saveManifest(manifestPath, nextManifest);
+    return {
+      manifest: nextManifest,
+      results: [
+        ...passiveResults,
+        ...actionable.map((plan) => ({
+          provider: plan.provider,
+          contentType: plan.contentType,
+          action: plan.action,
+          ownership: plan.ownership,
+          status:
+            plan.action === 'inherit-collection'
+              ? ('current' as const)
+              : ('changed' as const),
+          reason: plan.reason,
+        })),
+      ],
+      attempted: true,
+      persisted: true,
+    };
+  } catch {
+    const rollback = await Promise.all(
+      [...createdCollections]
+        .reverse()
+        .map(({ plan, created }) =>
+          dependencies.removeCollectionSymlinkIfUnchanged(
+            plan.providerDir,
+            created,
+          ),
+        ),
+    );
+    const partial = rollback.some((removed) => !removed);
+    return {
+      manifest,
+      results: [
+        ...passiveResults,
+        ...actionable.map((plan) => ({
+          provider: plan.provider,
+          contentType: plan.contentType,
+          action: plan.action,
+          ownership: plan.ownership,
+          status: partial ? ('partial' as const) : ('failed' as const),
+          reason: partial
+            ? 'collection transaction failed and an unchanged-link rollback could not be proven'
+            : 'collection transaction failed; newly created links were rolled back',
+        })),
+      ],
+      attempted: true,
+      persisted: false,
+    };
+  }
 }
 
 export async function executeSyncPlan(
@@ -247,17 +493,45 @@ export async function executeSyncPlan(
   manifest: Manifest,
   manifestPath: string,
   dependencies: ExecuteSyncPlanDependencies = DEFAULT_EXECUTE_SYNC_PLAN_DEPENDENCIES,
-): Promise<SyncResult> {
-  let nextManifest = manifest;
+): Promise<CollectionSyncResult> {
+  const saveManifest = dependencies.saveManifest ?? persistManifest;
+  const collectionDependencies = {
+    saveManifest,
+    createCollectionSymlinkNoClobber:
+      dependencies.createCollectionSymlinkNoClobber ??
+      createCollectionSymlinkNoClobber,
+    removeCollectionSymlinkIfUnchanged:
+      dependencies.removeCollectionSymlinkIfUnchanged ??
+      removeCollectionSymlinkIfUnchanged,
+    proveCollectionIdentity:
+      dependencies.proveCollectionIdentity ?? proveCollectionIdentity,
+  };
+  let nextManifest: ManifestV2 = manifest;
   let beforeFirstMutationCalled = false;
   const operationResults: SyncOperationResult[] = [];
   const operations = [...plan.entries, ...plan.removals];
+
+  const beforeMutation = async (): Promise<void> => {
+    if (!beforeFirstMutationCalled) {
+      beforeFirstMutationCalled = true;
+      await dependencies.beforeFirstMutation?.();
+    }
+  };
 
   for (const operation of operations) {
     if (mutatesProviderPath(operation)) {
       await assertSafeEntryProviderPath(operation);
     }
   }
+
+  const collectionTransaction = await executeCollectionTransaction(
+    plan.collections ?? [],
+    nextManifest,
+    collectionDependencies,
+    manifestPath,
+    beforeMutation,
+  );
+  nextManifest = collectionTransaction.manifest;
 
   for (const operation of operations) {
     if (operation.operation === 'skip') {
@@ -270,10 +544,7 @@ export async function executeSyncPlan(
 
     try {
       if (mutatesProviderPath(operation)) {
-        if (!beforeFirstMutationCalled) {
-          beforeFirstMutationCalled = true;
-          await dependencies.beforeFirstMutation?.();
-        }
+        await beforeMutation();
         await assertSafeEntryProviderPath(operation);
       }
       nextManifest = await applyEntry(operation, nextManifest);
@@ -293,15 +564,31 @@ export async function executeSyncPlan(
     }
   }
 
-  await saveManifest(manifestPath, nextManifest);
+  if (operations.length > 0 || !collectionTransaction.attempted) {
+    await saveManifest(manifestPath, nextManifest);
+  }
+  const collectionApplied = collectionTransaction.results.filter(
+    ({ status }) => status === 'changed',
+  ).length;
+  const collectionFailed = collectionTransaction.results.filter(
+    ({ status }) =>
+      status === 'failed' || status === 'partial' || status === 'rejected',
+  ).length;
+  const collectionSkipped = collectionTransaction.results.filter(
+    ({ status }) => status === 'current' || status === 'fallback',
+  ).length;
   return {
-    applied: operationResults.filter(({ status }) => status === 'changed')
-      .length,
-    failed: operationResults.filter(
-      ({ status }) => status === 'failed' || status === 'missing',
-    ).length,
-    skipped: operationResults.filter(({ status }) => status === 'current')
-      .length,
+    applied:
+      operationResults.filter(({ status }) => status === 'changed').length +
+      collectionApplied,
+    failed:
+      operationResults.filter(
+        ({ status }) => status === 'failed' || status === 'missing',
+      ).length + collectionFailed,
+    skipped:
+      operationResults.filter(({ status }) => status === 'current').length +
+      collectionSkipped,
     operations: operationResults,
+    collectionResults: collectionTransaction.results,
   };
 }

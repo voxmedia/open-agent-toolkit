@@ -8,20 +8,23 @@ import {
   readlink,
   rm,
   stat,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   atomicWriteJson,
   copyDirectory,
+  createCollectionSymlinkNoClobber,
   createSymlink,
   dirExists,
   ensureDir,
   fileExists,
+  removeCollectionSymlinkIfUnchanged,
 } from './io';
 
 describe('fs/io', () => {
@@ -48,6 +51,54 @@ describe('fs/io', () => {
     const linkStat = await lstat(linkDir);
     expect(linkStat.isSymbolicLink()).toBe(true);
     expect(strategy).toBe('symlink');
+  });
+
+  it('creates collection links at the final path without copy fallback', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+
+    const created = await createCollectionSymlinkNoClobber(canonical, provider);
+
+    expect((await lstat(provider)).isSymbolicLink()).toBe(true);
+    expect(created.linkText).toBe(await readlink(provider));
+  });
+
+  it('preserves an EEXIST collection destination without fallback or removal', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(provider), { recursive: true });
+    await writeFile(provider, 'foreign', 'utf8');
+
+    await expect(
+      createCollectionSymlinkNoClobber(canonical, provider),
+    ).rejects.toMatchObject({ code: 'EEXIST' });
+    await expect(readFile(provider, 'utf8')).resolves.toBe('foreign');
+  });
+
+  it('rolls back only the unchanged collection link it created', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    const created = await createCollectionSymlinkNoClobber(canonical, provider);
+
+    await expect(
+      removeCollectionSymlinkIfUnchanged(provider, created),
+    ).resolves.toBe(true);
+    await expect(lstat(provider)).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await symlink(canonical, provider, 'dir');
+    await expect(
+      removeCollectionSymlinkIfUnchanged(provider, created),
+    ).resolves.toBe(false);
+    expect((await lstat(provider)).isSymbolicLink()).toBe(true);
   });
 
   it('createSymlink uses relative target when given absolute paths', async () => {

@@ -2,9 +2,12 @@ import { createHash } from 'node:crypto';
 import { lstat, readdir, readlink, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
+import type { ManifestEntryV2, ManifestV2 } from '@manifest/manifest.types';
+
 import type {
   CollectionIdentityProof,
   CollectionPathIdentity,
+  CollectionProjectionPlan,
 } from './engine.types';
 import { assertSafeProviderCollectionPath } from './provider-path-safety';
 
@@ -219,4 +222,126 @@ export async function proveCollectionIdentity({
       checkedAt,
     };
   }
+}
+
+function identitiesMatch(
+  left: CollectionPathIdentity,
+  right: CollectionPathIdentity,
+): boolean {
+  return (
+    left.device === right.device &&
+    left.inode === right.inode &&
+    left.type === right.type &&
+    left.modifiedAtNanoseconds === right.modifiedAtNanoseconds
+  );
+}
+
+export function collectionProofMatches(
+  planned: CollectionIdentityProof,
+  current: CollectionIdentityProof,
+): boolean {
+  if (planned.status !== current.status) {
+    return false;
+  }
+  if (planned.status === 'absent' && current.status === 'absent') {
+    return (
+      identitiesMatch(planned.canonicalDirectory, current.canonicalDirectory) &&
+      identitiesMatch(planned.providerParent, current.providerParent)
+    );
+  }
+  if (planned.status === 'exact-link' && current.status === 'exact-link') {
+    return (
+      identitiesMatch(planned.providerLink, current.providerLink) &&
+      identitiesMatch(planned.canonicalDirectory, current.canonicalDirectory) &&
+      planned.resolvedTarget === current.resolvedTarget &&
+      planned.entrySetDigest === current.entrySetDigest
+    );
+  }
+  return false;
+}
+
+function inferScopeRoot(canonicalDir: string): string {
+  const normalized = canonicalDir.replaceAll('\\', '/');
+  const marker = '/.agents/';
+  const markerIndex = normalized.indexOf(marker);
+  if (markerIndex === -1) {
+    throw new Error(
+      `Cannot infer collection scope root from canonical path: ${canonicalDir}`,
+    );
+  }
+  return resolve(normalized.slice(0, markerIndex));
+}
+
+function manifestRelativePath(scopeRoot: string, path: string): string {
+  return relative(scopeRoot, path).replaceAll('\\', '/');
+}
+
+export async function projectCollectionOwnership(
+  manifest: ManifestV2,
+  plan: CollectionProjectionPlan,
+  verifiedProof: Extract<CollectionIdentityProof, { status: 'exact-link' }>,
+): Promise<ManifestV2> {
+  const scopeRoot = inferScopeRoot(plan.canonicalDir);
+  const canonicalDir = manifestRelativePath(scopeRoot, plan.canonicalDir);
+  const providerDir = manifestRelativePath(scopeRoot, plan.providerDir);
+  const collectionId = createHash('sha256')
+    .update(
+      `${plan.provider}\0${plan.contentType}\0${canonicalDir}\0${providerDir}`,
+    )
+    .digest('hex')
+    .slice(0, 24);
+  const lastVerified = verifiedProof.checkedAt;
+  const inheritedKeys = new Set(
+    plan.inheritedEntries.map(
+      (canonicalPath) => `${canonicalPath}::${plan.provider}`,
+    ),
+  );
+  const retainedEntries = manifest.entries.filter(
+    (entry) => !inheritedKeys.has(`${entry.canonicalPath}::${entry.provider}`),
+  );
+  const inheritedEntries: ManifestEntryV2[] = await Promise.all(
+    plan.inheritedEntries.map(async (canonicalPath) => {
+      const suffix = canonicalPath.slice(canonicalDir.length + 1);
+      const canonicalStat = await lstat(resolve(scopeRoot, canonicalPath));
+      return {
+        canonicalPath,
+        providerPath: `${providerDir}/${suffix}`,
+        provider: plan.provider,
+        contentType: plan.contentType,
+        strategy: 'collection' as const,
+        collectionId,
+        contentHash: null,
+        isFile: canonicalStat.isFile(),
+        lastSynced: lastVerified,
+      };
+    }),
+  );
+  const collections = manifest.collections.filter(
+    (collection) =>
+      !(
+        collection.provider === plan.provider &&
+        collection.contentType === plan.contentType &&
+        collection.canonicalDir === canonicalDir &&
+        collection.providerDir === providerDir
+      ),
+  );
+
+  return {
+    ...manifest,
+    entries: [...retainedEntries, ...inheritedEntries],
+    collections: [
+      ...collections,
+      {
+        id: collectionId,
+        provider: plan.provider,
+        contentType: plan.contentType,
+        canonicalDir,
+        providerDir,
+        linkTarget: canonicalDir,
+        ownership: plan.ownership === 'none' ? 'adopted-exact' : plan.ownership,
+        lastVerified,
+      },
+    ],
+    lastUpdated: lastVerified,
+  };
 }

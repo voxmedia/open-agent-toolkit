@@ -14,8 +14,9 @@ import { dirname, join, resolve } from 'node:path';
 import { computeFileHash } from '@manifest/hash';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
 import { OAT_VERSION } from '@shared/oat-version';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { proveCollectionIdentity } from './collection-sync';
 import type {
   RemovalSyncPlanEntry,
   SyncPlan,
@@ -101,6 +102,40 @@ async function seedCanonical(
   await writeFile(canonicalFile, content, 'utf8');
 }
 
+async function createCollectionPlan(
+  root: string,
+  action: 'create-collection-link' | 'adopt-collection-link',
+): Promise<SyncPlan> {
+  const canonicalDir = join(root, '.agents', 'skills');
+  const providerDir = join(root, '.claude', 'skills');
+  const proof = await proveCollectionIdentity({
+    root,
+    canonicalDir,
+    providerDir,
+  });
+  return {
+    scope: 'project',
+    entries: [],
+    removals: [],
+    collections: [
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentType: 'skill',
+        canonicalDir,
+        providerDir,
+        action,
+        ownership:
+          action === 'create-collection-link' ? 'oat-created' : 'adopted-exact',
+        configuredStrategy: 'auto',
+        proof,
+        inheritedEntries: ['.agents/skills/skill-one'],
+        reason: action,
+      },
+    ],
+  };
+}
+
 describe('executeSyncPlan', () => {
   const tempDirs: string[] = [];
 
@@ -111,6 +146,143 @@ describe('executeSyncPlan', () => {
       }),
     );
     tempDirs.length = 0;
+  });
+
+  it('creates, rescans, and atomically commits collection ownership', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+    );
+
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [{ ownership: 'oat-created' }],
+      entries: [{ strategy: 'collection', collectionId: expect.any(String) }],
+    });
+    expect(result.collectionResults).toEqual([
+      expect.objectContaining({
+        status: 'changed',
+        action: 'create-collection-link',
+      }),
+    ]);
+  });
+
+  it('aborts on apply-time identity change and preserves the new destination', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+    await writeFile(join(root, '.claude', 'skills'), 'foreign', 'utf8');
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+    );
+
+    await expect(
+      readFile(join(root, '.claude', 'skills'), 'utf8'),
+    ).resolves.toBe('foreign');
+    expect(result.collectionResults?.[0]?.status).toBe('failed');
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+    });
+  });
+
+  it('rolls back only a newly created unchanged link when manifest persistence fails', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+      {
+        saveManifest: vi.fn(async () => {
+          throw new Error('manifest write failed');
+        }),
+      },
+    );
+
+    await expect(lstat(join(root, '.claude', 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(result.collectionResults?.[0]?.status).toBe('failed');
+  });
+
+  it('reports partial when rollback cannot prove the created link is unchanged', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+      {
+        saveManifest: vi.fn(async () => {
+          throw new Error('manifest write failed');
+        }),
+        removeCollectionSymlinkIfUnchanged: vi.fn(async () => false),
+      },
+    );
+
+    expect(result.collectionResults?.[0]?.status).toBe('partial');
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
+  });
+
+  it('adopts an exact alias through manifest-only mutation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const plan = await createCollectionPlan(root, 'adopt-collection-link');
+    const createLink = vi.fn();
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+      {
+        createCollectionSymlinkNoClobber: createLink,
+      },
+    );
+
+    expect(createLink).not.toHaveBeenCalled();
+    expect(result.collectionResults?.[0]).toMatchObject({
+      status: 'changed',
+      ownership: 'adopted-exact',
+    });
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
   });
 
   it('creates symlinks for create_symlink entries', async () => {
