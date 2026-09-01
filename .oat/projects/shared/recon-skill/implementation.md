@@ -1379,6 +1379,22 @@ starting a new configured implementation exit-gate generation.
   new materialization abstraction. A new configured exit-gate generation is
   next because the pre-rebase generation remains stale.
 
+### 2026-09-01 - new configured exit-gate generation started
+
+- The stale pre-rebase generation is preserved in the prior gate receive log:
+  launch attempt `81836b97-36ab-4d9f-bf0b-9260e755024d`, gate run
+  `4b28a27f-1756-4211-b5a2-6e464a94d641`, reviewed head
+  `3cc1cd2e37e776da21f12d7243a96a212762d77f`, and archived artifact
+  `reviews/archived/final-code-review-2026-08-31T234514Z.md`.
+- Fresh gate resolution reproduces configuration fingerprint
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`.
+- The new immutable reviewed basis is final-review head
+  `547705fae790c32d1bd9dada11f5877253e11530` against `origin/main`, with
+  implementation fingerprint
+  `sha256:effective-delta-v1:688f2ff2a96e11a47f1a240bfa54a114b25b243c663874aa4ec5212e98f6dbef`.
+- The generation is durably `pending/not_started`; no gate command has launched
+  and all launch, result, artifact, and receive provenance is empty.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
