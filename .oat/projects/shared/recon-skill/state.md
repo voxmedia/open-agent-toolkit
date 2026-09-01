@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T14:51:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T14:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -89,13 +89,14 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Final implementation approved / PR open
+**Status:** Implementation complete / PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — final HiLL closeout sequence complete.
+Implementation complete — all 17 tasks, reviews, configured gate, verification,
+and approval-aware closeout steps passed. PR #248 remains open.
 
 ## Artifacts
 
@@ -194,6 +195,7 @@ Implementation — final HiLL closeout sequence complete.
 - ✓ Final implementation approval received from the user
 - ✓ Final p04 HiLL checkpoint completed
 - ✓ Approval-aware closeout sequence completed
+- ✓ Implementation lifecycle marked complete
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -202,4 +204,5 @@ None.
 
 ## Next Milestone
 
-Mark implementation complete while leaving PR #248 open for merge review.
+PR #248 is ready for human review and merge. Project completion/archival remains
+a separate explicit lifecycle step and does not merge the PR.
