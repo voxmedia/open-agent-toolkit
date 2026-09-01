@@ -80,6 +80,10 @@ Terminal final review passed at 3cc1cd2e3 with 0 findings after 2 bounded review
 
 target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-code-review-2026-08-31T234514Z.md
 
+### 2026-09-01 · structural · oat gate review · final
+
+target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
