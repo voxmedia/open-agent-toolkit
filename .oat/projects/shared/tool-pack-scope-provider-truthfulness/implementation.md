@@ -1049,6 +1049,33 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - Boundary: Phase 5 remains gated until the correction passes a fresh
   independent High review.
 
+### Review Round 6 Operator-Authorized Fail-Closed Fix
+
+- Commit: `567f9ae0a3d39d9986e517924551e6381058d27e`
+- Continuation: `p04-review-r6-authorized-fail-closed-fix-20260901T204000Z`,
+  linked to original request `dispatch-p04-20260901T002500Z-36af8aadd` and
+  executed by the same exact High target
+  `oat-phase-implementer-gpt-5-6-sol-high`.
+- Deferred directory-copy transitions now fail before publication with
+  actionable manual recovery. No destination or external canonical write is
+  attempted and no manifest ownership is claimed. Deferred file copies,
+  symlinks, and ordinary non-transition copies remain unchanged.
+- Removed the unsafe path-based no-clobber directory helper and aligned the
+  affected provider-sync docs. One mechanically required Phase 4 integration
+  test was added to the boundary because it pinned the superseded automatic
+  directory-copy success contract.
+- Verification: RED deterministically reached both unsafe root and nested
+  publication hooks (2/62 failures). Focused GREEN passed 60/60 and the
+  authoritative Phase 4 union passed 18 files / 412 tests before and after
+  commit. CLI lint, type-check, format, `pnpm check`, and full `pnpm test`
+  passed. The evidence-grade isolated-HOME Turbo run executed 10/10 tasks with
+  zero cache hits and 4,867 CLI tests. Root independently verified the exact
+  one-commit/eight-file boundary, clean worktree, whitespace, behavior diff,
+  and live 412-test union.
+- One fresh independent High review is required. This consumes the one-use
+  fail-closed authorization; a blocking verdict returns to governance without
+  another correction. Phase 5 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1503,6 +1530,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   and Phase 5 remains gated.
 - Reconnaissance: not attempted; no nested orchestration evidence is required.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator-authorized fail-closed continuation — round 6
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r6-authorized-fail-closed-fix-20260901T204000Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `567f9ae0a3d39d9986e517924551e6381058d27e`
+- Outcome: deferred directory-copy transitions fail before publication with
+  manual recovery and no ownership. Focused 60/60, authoritative Phase 4 union
+  412/412, uncached Turbo, full repository, and whitespace checks passed.
+- Dispatch: scope=p04-review-r6-authorized-fail-closed-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

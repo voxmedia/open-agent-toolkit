@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 315fb6d82cb755fb881d0814e972d93628c55734
+oat_last_commit: 567f9ae0a3d39d9986e517924551e6381058d27e
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T20:37:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T20:53:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +111,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized one bounded fail-closed correction and one
-fresh review for the Phase 4 destination-ancestry symlink-swap escape. Deferred
-directory-copy transitions will be blocked on the current runtime with manual
-recovery guidance. Phase 5 remains gated pending correction and review.
+Implementation - the operator-authorized fail-closed Phase 4 correction is
+committed at `567f9ae0a`. Deferred directory-copy transitions now fail before
+publication with manual recovery and no ownership. Phase 5 remains gated
+pending the one authorized fresh independent High review.
 
 ## Artifacts
 
@@ -148,7 +148,7 @@ recovery guidance. Phase 5 remains gated pending correction and review.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 fail-closed directory-copy correction and fresh review in progress
+- ⧗ Phase 4 fail-closed directory-copy correction complete; fresh review pending
 
 ## Blockers
 
@@ -156,7 +156,6 @@ recovery guidance. Phase 5 remains gated pending correction and review.
 
 ## Next Milestone
 
-Block deferred directory-copy transitions with actionable manual recovery,
-prove both root and nested symlink-swap cases preserve all external content,
-then run the one authorized fresh independent High review. Do not begin Phase 5
-without a passing Phase 4 verdict.
+Run the one authorized fresh independent High review over the complete Phase 4
+range through `567f9ae0a`. Do not begin Phase 5 without a passing Phase 4
+verdict.
