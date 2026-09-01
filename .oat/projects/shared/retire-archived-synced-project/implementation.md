@@ -413,6 +413,10 @@ Pre-approval `summary` completed at `3c553372d`: the 200-line summary rolled up
 25 project-log entries and promoted five deduplicated canonical decision
 records. The child preserved the closeout sequence snapshot unchanged.
 
+Pre-approval `document` completed at `ffe97e1f8`: the control-plane README now
+documents terminal list-row variants, the CLI reference records fail-closed
+lookup semantics, and the 69-file docs check passed with zero errors.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
