@@ -3,7 +3,6 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 import {
   copyDirectory,
-  copyDirectoryNoClobber,
   copySingleFile,
   copySingleFileNoClobber,
   createCollectionSymlinkNoClobber,
@@ -39,7 +38,7 @@ import { assertSafeProviderMutationPath } from './provider-path-safety';
 interface ExecuteSyncPlanDependencies {
   beforeFirstMutation?: () => Promise<void>;
   saveManifest?: typeof persistManifest;
-  copyDirectoryNoClobber?: typeof copyDirectoryNoClobber;
+  copyDirectory?: typeof copyDirectory;
   createCollectionSymlinkNoClobber?: typeof createCollectionSymlinkNoClobber;
   removeCollectionSymlinkIfUnchanged?: typeof removeCollectionSymlinkIfUnchanged;
   proveCollectionIdentity?: typeof proveCollectionIdentity;
@@ -93,6 +92,13 @@ function classifyFailure(
   error: unknown,
   destinationPolicy: EntryDestinationPolicy,
 ): Pick<SyncOperationResult, 'status' | 'failure'> {
+  if (hasErrorCode(error, 'E_DEFERRED_DIRECTORY_COPY_UNSAFE')) {
+    return {
+      status: 'failed',
+      failure:
+        'Manual recovery required: deferred directory-copy transitions are unavailable on this runtime. Change the provider strategy to symlink and retry sync, or copy the directory yourself and manage it outside OAT.',
+    };
+  }
   if (
     destinationPolicy === 'preserve-existing' &&
     hasErrorCode(error, 'EEXIST')
@@ -228,7 +234,7 @@ async function applyEntry(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
   destinationPolicy: EntryDestinationPolicy,
-  copyDirectoryNoClobberImpl: typeof copyDirectoryNoClobber,
+  copyDirectoryImpl: typeof copyDirectory,
 ): Promise<ManifestV2> {
   switch (planEntry.operation) {
     case 'create_symlink':
@@ -271,11 +277,12 @@ async function applyEntry(
             planEntry.providerPath,
           );
         } else {
-          await copyDirectoryNoClobberImpl(
-            planEntry.canonical.canonicalPath,
-            planEntry.providerPath,
+          throw Object.assign(
+            new Error(
+              'Deferred directory copy publication is unavailable on this runtime.',
+            ),
+            { code: 'E_DEFERRED_DIRECTORY_COPY_UNSAFE' },
           );
-          await applyCopyMarker(planEntry);
         }
         const manifestEntry = await toManifestEntry(planEntry, 'copy');
         return addManifestEntry(manifest, manifestEntry);
@@ -299,7 +306,7 @@ async function applyEntry(
           planEntry.providerPath,
         );
       } else {
-        await copyDirectory(
+        await copyDirectoryImpl(
           planEntry.canonical.canonicalPath,
           planEntry.providerPath,
         );
@@ -893,7 +900,7 @@ export async function executeSyncPlan(
         operation,
         nextManifest,
         destinationPolicy,
-        dependencies.copyDirectoryNoClobber ?? copyDirectoryNoClobber,
+        dependencies.copyDirectory ?? copyDirectory,
       );
       operationResults.push(
         operationEvidence(plan.scope, operation, 'changed'),

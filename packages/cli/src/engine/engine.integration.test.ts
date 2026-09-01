@@ -538,15 +538,30 @@ describe('sync engine integration', () => {
         collectionManifest,
         manifestPath,
       );
-      expect(resumed.failed).toBe(0);
-      expect((await lstat(providerDir)).isDirectory()).toBe(true);
-      expect(
-        (await lstat(join(providerDir, 'skill-one'))).isSymbolicLink(),
-      ).toBe(strategy === 'symlink');
-      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-        collections: [],
-        entries: [expect.objectContaining({ strategy })],
-      });
+      if (strategy === 'copy') {
+        expect(resumed.failed).toBe(1);
+        expect(resumed.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        });
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+          collections: [],
+          entries: [],
+        });
+      } else {
+        expect(resumed.failed).toBe(0);
+        expect((await lstat(providerDir)).isDirectory()).toBe(true);
+        expect(
+          (await lstat(join(providerDir, 'skill-one'))).isSymbolicLink(),
+        ).toBe(true);
+        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+          collections: [],
+          entries: [expect.objectContaining({ strategy })],
+        });
+      }
     },
   );
 

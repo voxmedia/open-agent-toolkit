@@ -109,9 +109,12 @@ safe, including after interruption.
   because guarded alias creation is unavailable. OAT does not automatically
   unlink collection aliases. For an explicit-strategy transition, verify and
   remove the alias manually, then rerun sync so the new plan can independently
-  prove the destination absent. A real provider directory falls back to
-  per-entry sync; broken, foreign, nested, unsafe, or unverifiable collection
-  identity fails closed without replacement.
+  prove the destination absent. Deferred directory copies fail closed with
+  manual recovery guidance on the current runtime: change that provider to
+  `symlink` and rerun sync, or create and manage the provider copy outside OAT.
+  Deferred file copies and symlinks retain no-clobber creation. A real provider
+  directory falls back to per-entry sync; broken, foreign, nested, unsafe, or
+  unverifiable collection identity fails closed without replacement.
 - Explicit `symlink` and `copy` always remain per-entry strategies. Strategy is
   configured here (globally or per provider); `oat sync` intentionally has no
   `--strategy` flag.

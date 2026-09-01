@@ -59,7 +59,11 @@ Key behavior:
   When the destination is absent, the current runtime falls back per entry;
   OAT does not create or unlink a collection alias without identity-bound
   guarded primitives. To transition an alias manually, verify and remove it,
-  then rerun sync so a new plan can revalidate the absent destination. Explicit
+  then rerun sync so a new plan can revalidate the absent destination. The
+  current runtime fails closed for deferred directory copies because it cannot
+  keep every destination ancestor identity-bound. Change that provider to
+  `symlink` and rerun sync, or create and manage the provider copy outside OAT.
+  Deferred file copies and symlinks retain their no-clobber behavior. Explicit
   `symlink` and `copy` remain per-entry modes; `oat sync` does not add a
   `--strategy` option.
 - Provider enable/disable honored via sync config

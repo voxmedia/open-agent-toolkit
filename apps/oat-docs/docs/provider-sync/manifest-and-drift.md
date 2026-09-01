@@ -52,10 +52,14 @@ runtime because a separate identity check followed by path-based removal has a
 final replacement race. Disabling a provider detaches ownership while
 preserving the alias. To transition an existing collection to explicit
 per-entry sync, verify and remove the alias manually, then rerun `oat sync`;
-the new run independently proves the destination absent before writing child
-paths. Real directories, destination races, broken links, foreign targets, and
-unverifiable identities are preserved and fail closed. Canonical targets are
-never removed.
+the new run independently proves the destination absent. Deferred directory
+copies then fail closed with manual recovery guidance because the current
+runtime cannot publish the complete tree without following race-replaced
+ancestors. Change that provider to `symlink` and rerun sync, or create and
+manage the provider copy outside OAT. Deferred file copies and symlinks retain
+no-clobber creation. Real directories, destination races, broken links,
+foreign targets, and unverifiable identities are preserved and fail closed.
+Canonical targets are never removed.
 
 ## Drift states
 
