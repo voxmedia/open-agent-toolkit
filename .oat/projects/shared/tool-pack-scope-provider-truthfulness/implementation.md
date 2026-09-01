@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 4 operator-authorized review found a Critical destination-ancestry symlink-swap escape; the one-use extension is exhausted and new operator direction is required.
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -1028,6 +1027,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - This blocking review consumed the one-use operator extension. No additional
   correction or review is authorized. Phase 5 remains gated pending new
   operator direction or a revised Phase 4 delivery boundary.
+
+### Operator Authorization — Fail-Closed Directory-Copy Transition
+
+- Authorization: Thomas explicitly authorized the recommended bounded
+  fail-closed correction and one fresh Phase 4 re-review on 2026-09-01.
+- Scope: disable deferred directory-copy transitions on the current runtime
+  rather than attempting path-based recursive publication. Return actionable
+  manual-recovery guidance, preserve provider and external trees byte-for-byte,
+  and record no per-entry ownership.
+- Tests: deterministically replace both the just-created destination root and a
+  just-created nested directory with external symlinks through the complete
+  `executeSyncPlan` path. The transition must fail before any provider or
+  external canonical write, preserve external bytes/tree, and persist no entry
+  manifest claim.
+- Compatibility: ordinary non-transition copy behavior and the already-safe
+  deferred symlink path remain unchanged.
+- Governance: this is one additional one-use operator exception. It does not
+  raise or reset `oat_orchestration_retry_limit` and does not authorize a
+  further correction if the fresh review blocks.
+- Boundary: Phase 5 remains gated until the correction passes a fresh
+  independent High review.
 
 ---
 
