@@ -64,6 +64,11 @@ import { RemoteSyncStore } from './store';
 
 const execFileAsync = promisify(execFile);
 const MAX_STDIN_BYTES = 65_536;
+type PersistedApprovalPreview = BindingPreview & {
+  revisionEvidence: NonNullable<
+    NonNullable<RemoteOperationRecord['approvalPreview']>['revisionEvidence']
+  >;
+};
 
 export interface ProductionRemoteRunnerDependencies {
   now(): string;
@@ -476,20 +481,11 @@ async function prepareCreate(
           id: requested.localId,
           path: `.oat/projects/shared/${requested.localId}`,
         };
-  const existing = request.previewOperationId
+  const explicitExisting = request.previewOperationId
     ? await requireOperation(request.previewOperationId, store)
     : null;
-  if (
-    existing &&
-    (existing.operationClass !== 'create' ||
-      !['planned', 'authorized'].includes(existing.state) ||
-      existing.attempts.length > 0 ||
-      !existing.createIntent)
-  ) {
-    throw new Error('Persisted create preview is not safely applicable.');
-  }
   const invocation = await readCurrentMutationInvocation(request);
-  const now = existing?.createdAt ?? invocation?.issuedAt ?? dependencies.now();
+  let now = explicitExisting?.createdAt ?? dependencies.now();
   let local;
   if (target.kind === 'backlog') {
     const targetPath = resolveInsideProject(request.projectRoot, target.path);
@@ -532,9 +528,58 @@ async function prepareCreate(
     completeDescriptionReplacement: descriptionPolicy.description === 'replace',
   });
   const authority = effective.authority.create;
-
+  const publicationProjection: PlannedBindingCreate['publicationProjection'] = {
+    title: target.kind === 'project' ? 'plan' : 'frontmatter',
+    description:
+      effective.description === 'none'
+        ? 'none'
+        : target.kind === 'project'
+          ? 'summary'
+          : 'description-section',
+    priority: target.kind === 'project' ? 'plan' : 'frontmatter',
+  };
+  const usesDeterministicActiveIntent =
+    authority === 'user-authorized' || authority === 'autonomous';
+  const activeIntentDigest = semanticDigest({
+    schemaVersion: 1,
+    provider,
+    providerContext: compactContext(capability.context),
+    target,
+    publicationProjection,
+  });
+  const deterministicOperationId = durableId('op', activeIntentDigest);
+  const resolvedExisting =
+    explicitExisting ??
+    (usesDeterministicActiveIntent
+      ? await store.readOperation(deterministicOperationId)
+      : null);
+  const resumedByActiveIntent = !explicitExisting && Boolean(resolvedExisting);
+  if (
+    resolvedExisting &&
+    (resolvedExisting.operationClass !== 'create' ||
+      !resolvedExisting.createIntent ||
+      (resumedByActiveIntent
+        ? !['planned', 'authorized', 'attempt-started'].includes(
+            resolvedExisting.state,
+          )
+        : !['planned', 'authorized'].includes(resolvedExisting.state) ||
+          resolvedExisting.attempts.length > 0))
+  ) {
+    throw new Error('Persisted create preview is not safely applicable.');
+  }
+  const existing = resolvedExisting;
+  if (existing) {
+    now = existing.createdAt;
+    local = { ...local, observedAt: now };
+  }
+  const allocatedOperationId = existing
+    ? null
+    : durableId('op', dependencies.randomId());
   const operationId =
-    existing?.operationId ?? durableId('op', dependencies.randomId());
+    existing?.operationId ??
+    (usesDeterministicActiveIntent
+      ? deterministicOperationId
+      : allocatedOperationId!);
   const bindingId =
     existing?.bindingId ?? durableId('bnd', dependencies.randomId());
   const provenanceToken = `oat-binding:${bindingId}`;
@@ -560,8 +605,14 @@ async function prepareCreate(
     revision: {
       strength: 'hash-only',
       token: null,
-      updatedAt: now,
+      updatedAt: null,
       contentHash: local.sourceRevision,
+    },
+    revisionEvidence: {
+      source: 'local-source-unbound',
+      strength: 'hash-only',
+      updatedAt: null,
+      observedAt: local.observedAt,
     },
     capability: {
       surfaceKind: selection.evidence.surfaceKind,
@@ -597,16 +648,7 @@ async function prepareCreate(
     operationId,
     provider,
     target,
-    publicationProjection: {
-      title: target.kind === 'project' ? 'plan' : 'frontmatter',
-      description:
-        effective.description === 'none'
-          ? 'none'
-          : target.kind === 'project'
-            ? 'summary'
-            : 'description-section',
-      priority: target.kind === 'project' ? 'plan' : 'frontmatter',
-    },
+    publicationProjection,
     providerContext: compactContext(capability.context),
     purposes: ['planning'],
     policyRestrictions: {},
@@ -622,6 +664,7 @@ async function prepareCreate(
       providerContext: compactContext(capability.context),
       capabilityEvidenceDigest: capability.evidenceDigest,
       revisionDigest: local.sourceRevision,
+      revisionEvidence: preview.revisionEvidence,
       policyDigest,
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
@@ -636,6 +679,13 @@ async function prepareCreate(
         existing.authority?.sourceDigest
     ) {
       throw new Error('Create authority evidence drifted from its preview.');
+    }
+    if (
+      resumedByActiveIntent &&
+      (existing.state !== 'planned' ||
+        (await store.readCurrentAction(existing.operationId)))
+    ) {
+      return resumeCreateActionHandoff(request, existing, store, dependencies);
     }
   }
   if (authorityDecision.status === 'needs-review') {
@@ -663,6 +713,7 @@ async function prepareCreate(
         providerContext: compactContext(capability.context),
         capabilityEvidenceDigest: capability.evidenceDigest,
         revisionDigest: local.sourceRevision,
+        revisionEvidence: preview.revisionEvidence,
         policyDigest,
         projectionDigest: safety.projectionDigest,
         safetyResultDigest: safety.resultDigest,
@@ -737,6 +788,7 @@ async function prepareCreate(
       providerContext: compactContext(capability.context),
       capabilityEvidenceDigest: capability.evidenceDigest,
       revisionDigest: local.sourceRevision,
+      revisionEvidence: preview.revisionEvidence,
       policyDigest,
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
@@ -857,7 +909,7 @@ async function prepareMutation(
   if (!selection.selected)
     throw new Error(`No current host capability: ${selection.reason}.`);
   const invocation = await readCurrentMutationInvocation(request);
-  const now = existing?.createdAt ?? invocation?.issuedAt ?? dependencies.now();
+  const now = existing?.createdAt ?? dependencies.now();
   const freshLocal =
     metadata.target.kind === 'backlog'
       ? await readBacklogProjection(
@@ -914,6 +966,19 @@ async function prepareMutation(
       updatedAt: null,
       contentHash: 'unobserved',
     },
+    revisionEvidence: state.snapshot
+      ? {
+          source: 'remote',
+          strength: state.snapshot.revision.strength,
+          updatedAt: state.snapshot.revision.updatedAt,
+          observedAt: state.snapshot.observedAt,
+        }
+      : {
+          source: 'remote-unobserved',
+          strength: 'unknown',
+          updatedAt: null,
+          observedAt: null,
+        },
     capability: {
       surfaceKind: selection.evidence.surfaceKind,
       evidenceDigest: selection.evidence.evidenceDigest,
@@ -978,6 +1043,7 @@ async function prepareMutation(
     previewDigest: preview.digest,
     approvalPreview:
       authorityDecision.status === 'needs-review' ? preview : undefined,
+    revisionEvidence: preview.revisionEvidence,
     descriptionMode: effective.description,
     capabilityEvidenceDigest: selection.evidence.evidenceDigest,
     policyDigest,
@@ -995,6 +1061,7 @@ async function prepareMutation(
       providerContext: metadata.remoteIdentity.context,
       capabilityEvidenceDigest: selection.evidence.evidenceDigest,
       revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
+      revisionEvidence: preview.revisionEvidence,
       policyDigest,
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
@@ -1837,6 +1904,7 @@ async function continueMutationPreRead(
         }
       : null,
     revision: preReadState.snapshot!.revision,
+    revisionEvidence: operation.preview.revisionEvidence!,
     capability: {
       surfaceKind: selected.surfaceKind as 'connector' | 'configured-cli',
       evidenceDigest: selected.evidenceDigest,
@@ -2054,6 +2122,7 @@ function operationPreview(input: {
   providerContext: Record<string, string>;
   capabilityEvidenceDigest: string;
   revisionDigest: string;
+  revisionEvidence: PersistedApprovalPreview['revisionEvidence'];
   policyDigest: string;
   projectionDigest: string;
   safetyResultDigest: string;
@@ -2065,6 +2134,9 @@ function operationPreview(input: {
     providerContext: input.providerContext,
     capabilityEvidenceDigest: input.capabilityEvidenceDigest,
     revisionDigest: input.revisionDigest,
+    ...(input.revisionEvidence
+      ? { revisionEvidence: input.revisionEvidence }
+      : {}),
     policyDigest: input.policyDigest,
     projectionDigest: input.projectionDigest,
     safetyResultDigest: input.safetyResultDigest,
@@ -2080,11 +2152,12 @@ function assertPreviewApplicationMatches(
     providerContext: Record<string, string>;
     capabilityEvidenceDigest: string;
     revisionDigest: string;
+    revisionEvidence: PersistedApprovalPreview['revisionEvidence'];
     policyDigest: string;
     projectionDigest: string;
     safetyResultDigest: string;
     previewDigest: string;
-    approvalPreview?: BindingPreview;
+    approvalPreview?: PersistedApprovalPreview;
     descriptionMode?: 'none' | 'managed-section' | 'replace';
     createIntent?: PlannedBindingCreate;
   },
@@ -2109,6 +2182,12 @@ function approvalPreviewEnvelope(
   operation: RemoteOperationRecord,
   metadata: RemoteBindingMetadata | null = null,
 ): RemoteCommandEnvelope {
+  const revisionEvidence = operation.preview.revisionEvidence;
+  if (!revisionEvidence) {
+    throw new Error(
+      'Persisted approval preview lacks digest-bound revision freshness evidence.',
+    );
+  }
   return {
     schemaVersion: 1,
     status: 'needs-review',
@@ -2140,7 +2219,7 @@ function approvalPreviewEnvelope(
       revision: {
         digest: operation.preview.revisionDigest,
         evidenceDigest: operation.approvalPreview!.componentDigests.revision,
-        observedAt: operation.approvalPreview!.createdAt,
+        ...revisionEvidence,
       },
     },
     recovery: [
@@ -2719,6 +2798,7 @@ function buildProductionMutationPreview(input: {
   target: { stableId: string; context: Record<string, string> };
   baseline: { baselineId: string; digest: string } | null;
   revision: RemoteSnapshotRecord['revision'];
+  revisionEvidence: PersistedApprovalPreview['revisionEvidence'];
   capability: {
     surfaceKind: 'connector' | 'configured-cli';
     evidenceDigest: string;
@@ -2731,11 +2811,14 @@ function buildProductionMutationPreview(input: {
   operationClass: 'create' | 'update-fields';
   fieldMask: Array<'title' | 'description' | 'priority'>;
   createdAt: string;
-}): BindingPreview {
+}): PersistedApprovalPreview {
   const componentDigests = {
     target: semanticDigest(input.target),
     baseline: semanticDigest(input.baseline),
-    revision: semanticDigest(input.revision),
+    revision: semanticDigest({
+      revision: input.revision,
+      evidence: input.revisionEvidence,
+    }),
     capability: semanticDigest(input.capability),
     policy: semanticDigest(input.policy),
     projection: input.outboundSafety.projectionDigest,
@@ -2748,6 +2831,7 @@ function buildProductionMutationPreview(input: {
     fieldMask: input.fieldMask,
     createdAt: input.createdAt,
     componentDigests,
+    revisionEvidence: input.revisionEvidence,
   });
   return {
     schemaVersion: 1,
@@ -2758,6 +2842,7 @@ function buildProductionMutationPreview(input: {
     fieldMask: input.fieldMask,
     createdAt: input.createdAt,
     componentDigests,
+    revisionEvidence: input.revisionEvidence,
     renderedFields: {
       title: { kind: 'value', value: input.projection.title ?? null },
       description: {
@@ -2779,7 +2864,8 @@ function operationRecord(input: {
   authority: RemoteOperationRecord['authority'];
   approval?: RemoteOperationRecord['approval'];
   previewDigest: string;
-  approvalPreview?: BindingPreview;
+  approvalPreview?: PersistedApprovalPreview;
+  revisionEvidence?: PersistedApprovalPreview['revisionEvidence'];
   descriptionMode?: 'none' | 'managed-section' | 'replace';
   capabilityEvidenceDigest: string;
   policyDigest: string;
@@ -2810,6 +2896,9 @@ function operationRecord(input: {
       capabilityEvidenceDigest: input.capabilityEvidenceDigest,
       revisionDigest:
         input.state.snapshot?.revision.contentHash ?? 'unobserved',
+      ...(input.revisionEvidence
+        ? { revisionEvidence: input.revisionEvidence }
+        : {}),
       policyDigest: input.policyDigest,
       ...(input.projectionDigest
         ? {

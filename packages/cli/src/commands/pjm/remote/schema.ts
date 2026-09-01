@@ -851,6 +851,15 @@ const MaterializationPlanSchema = z
   })
   .strict();
 
+const ApprovalRevisionEvidenceSchema = z
+  .object({
+    source: z.enum(['remote', 'remote-unobserved', 'local-source-unbound']),
+    strength: z.enum(['token', 'updated-at-and-hash', 'hash-only', 'unknown']),
+    updatedAt: TimestampSchema.nullable(),
+    observedAt: TimestampSchema.nullable(),
+  })
+  .strict();
+
 const OperationPreviewSchema = z
   .object({
     digest: z.string().min(1).max(512),
@@ -859,6 +868,7 @@ const OperationPreviewSchema = z
     providerContext: RemoteAccountContextSchema,
     capabilityEvidenceDigest: z.string().min(1).max(512),
     revisionDigest: z.string().min(1).max(512),
+    revisionEvidence: ApprovalRevisionEvidenceSchema.optional(),
     policyDigest: z.string().min(1).max(512),
     projectionDigest: z.string().min(1).max(512).nullable().optional(),
     safetyResultDigest: z.string().min(1).max(512).nullable().optional(),
@@ -888,6 +898,7 @@ const ApprovalPreviewSchema = z
         outboundSafety: z.string().min(1).max(512),
       })
       .strict(),
+    revisionEvidence: ApprovalRevisionEvidenceSchema.optional(),
     renderedFields: z.record(
       z.enum(['title', 'description', 'priority']),
       z.union([
@@ -1118,6 +1129,21 @@ const CurrentRemoteOperationRecordSchema = z
         code: z.ZodIssueCode.custom,
         path: ['approvalPreview'],
         message: 'Approval preview must match its persisted operation.',
+      });
+    }
+    if (
+      record.approvalPreview &&
+      ((record.approvalPreview.revisionEvidence === undefined) !==
+        (record.preview.revisionEvidence === undefined) ||
+        (record.approvalPreview.revisionEvidence !== undefined &&
+          JSON.stringify(record.approvalPreview.revisionEvidence) !==
+            JSON.stringify(record.preview.revisionEvidence)))
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['approvalPreview', 'revisionEvidence'],
+        message:
+          'Approval revision freshness evidence must match its digest-bound operation preview.',
       });
     }
     if (

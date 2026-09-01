@@ -106,6 +106,9 @@ describe('remote command output', () => {
       revision: {
         digest: 'sha256:revision',
         evidenceDigest: 'sha256:revision-evidence',
+        source: 'remote',
+        strength: 'token',
+        updatedAt: '2026-08-31T11:59:00.000Z',
         observedAt: '2026-08-31T12:00:00.000Z',
       },
     };
@@ -121,6 +124,9 @@ describe('remote command output', () => {
     );
     expect(human).toContain(
       'revision=sha256:revision; revision-evidence=sha256:revision-evidence',
+    );
+    expect(human).toContain(
+      'revision-source=remote; strength=token; updated=2026-08-31T11:59:00.000Z; observed=2026-08-31T12:00:00.000Z',
     );
     expect(human).toContain('preview field title: value="Safe title"');
     expect(human).toContain(

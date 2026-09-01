@@ -819,6 +819,89 @@ describe('remote record schemas', () => {
     ).toThrow(/filename/i);
   });
 
+  it('persists digest-bound remote and unbound local revision freshness evidence', () => {
+    const operation = RemoteOperationRecordSchema.parse({
+      recordType: 'operation',
+      schemaVersion: 2,
+      operationId: 'op_revision_evidence',
+      correlationId: 'op_revision_evidence',
+      bindingId: 'bnd_revision_evidence',
+      provider: 'linear',
+      providerContext: { workspaceId: 'workspace-1' },
+      lifecycleOperation: 'publish',
+      operationClass: 'create',
+      state: 'planned',
+      reason: null,
+      lastSafeStep: 'planned',
+      preview: {
+        digest: 'sha256:preview',
+        bindingId: 'bnd_revision_evidence',
+        provider: 'linear',
+        providerContext: { workspaceId: 'workspace-1' },
+        capabilityEvidenceDigest: 'sha256:capability',
+        revisionDigest: 'sha256:source',
+        revisionEvidence: {
+          source: 'local-source-unbound',
+          strength: 'hash-only',
+          updatedAt: null,
+          observedAt: '2026-08-31T11:58:00.000Z',
+        },
+        policyDigest: 'sha256:policy',
+        projectionDigest: 'sha256:projection',
+        safetyResultDigest: 'sha256:safety',
+      },
+      approvalPreview: {
+        schemaVersion: 1,
+        digest: 'sha256:preview',
+        bindingId: 'bnd_revision_evidence',
+        provider: 'linear',
+        operationClass: 'create',
+        fieldMask: ['title'],
+        createdAt: timestamp,
+        componentDigests: {
+          target: 'sha256:target',
+          baseline: 'sha256:baseline',
+          revision: 'sha256:revision',
+          capability: 'sha256:capability',
+          policy: 'sha256:policy',
+          projection: 'sha256:projection',
+          outboundSafety: 'sha256:safety',
+        },
+        revisionEvidence: {
+          source: 'local-source-unbound',
+          strength: 'hash-only',
+          updatedAt: null,
+          observedAt: '2026-08-31T11:58:00.000Z',
+        },
+        renderedFields: {
+          title: { kind: 'value', value: 'Local title' },
+        },
+      },
+      descriptionMode: 'managed-section',
+      authority: {
+        effective: 'user-approved',
+        sourceDigest: 'sha256:authority',
+      },
+      approval: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      selectedExecution: null,
+      attempts: [],
+      observations: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt',
+      steps: [],
+      outcome: { classification: 'pending', message: null, verifiedAt: null },
+    });
+
+    expect(operation.approvalPreview?.revisionEvidence).toEqual({
+      source: 'local-source-unbound',
+      strength: 'hash-only',
+      updatedAt: null,
+      observedAt: '2026-08-31T11:58:00.000Z',
+    });
+  });
+
   it('defines pre-create intent without a remote identity and explicit publication projection', () => {
     const intent = PlannedBindingCreateSchema.parse({
       schemaVersion: 1,

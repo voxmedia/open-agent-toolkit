@@ -172,9 +172,9 @@ export function createPjmRemoteCommand(
     .description('Continue a durable remote operation')
     .command('continue')
     .requiredOption('--operation <id>', 'Operation ID')
-    .requiredOption(
+    .option(
       '--observation-stdin',
-      'Read one sanitized observation from stdin',
+      'Read one sanitized observation from stdin; omit only to resume a durable create-action handoff',
     )
     .option(
       '--authority-evidence-file <path>',
@@ -193,7 +193,7 @@ export function createPjmRemoteCommand(
           {
             operation: 'operation-continue',
             operationId: options.operation,
-            observationStdin: options.observationStdin,
+            observationStdin: Boolean(options.observationStdin),
             authorityEvidenceFile: options.authorityEvidenceFile,
           },
           command,

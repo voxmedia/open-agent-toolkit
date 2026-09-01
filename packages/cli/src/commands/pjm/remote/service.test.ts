@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -613,7 +620,15 @@ describe('production lifecycle composition', () => {
           if (point === crashPoint) throw new Error(`crash:${point}`);
         },
       });
-      const operationId = 'op_handoff-operation';
+      const locations = resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${resolve(repository)}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      });
+      const store = new RemoteSyncStore(locations);
+      let operationId = 'op_handoff-operation';
       let applyRequest = request;
 
       if (authorityMode === 'user-approved') {
@@ -641,6 +656,12 @@ describe('production lifecycle composition', () => {
             'priority',
           ]),
           authority: 'user-approved',
+          revision: {
+            source: 'local-source-unbound',
+            strength: 'hash-only',
+            updatedAt: null,
+            observedAt: timestamp,
+          },
         });
         expect(emitted.fieldMask).toHaveLength(3);
         await writeFile(
@@ -669,6 +690,9 @@ describe('production lifecycle composition', () => {
         }
       } else {
         await expect(runner(request)).rejects.toThrow(`crash:${crashPoint}`);
+        operationId = (await readdir(locations.operational.operationsDir))
+          .find((path) => path.endsWith('.json'))!
+          .slice(0, -'.json'.length);
       }
 
       let resumed;
@@ -679,7 +703,7 @@ describe('production lifecycle composition', () => {
         resumed = await createProductionRemoteRunner({
           now: () => timestamp,
           readObservationStdin: async () => capability,
-        })({ ...request, previewOperationId: operationId });
+        })(request);
       } else if (
         !(
           authorityMode === 'user-approved' &&
@@ -693,15 +717,6 @@ describe('production lifecycle composition', () => {
         });
       }
 
-      const store = new RemoteSyncStore(
-        resolveRemoteStorageLocations({
-          repoRoot: repository,
-          gitCommonDir: join(repository, '.git'),
-          repositoryIdentity: `local-repository:${resolve(repository)}`,
-          stateStorage: 'local',
-          target: { kind: 'backlog', scope: 'shared', path: null },
-        }),
-      );
       const operation = await store.readOperation(operationId);
       const durableAction = await store.readCurrentAction(operationId);
       expect(operation).toMatchObject({
@@ -1349,7 +1364,7 @@ describe('production lifecycle composition', () => {
         revision: { contentHash: 'sha256:project-readback' },
       },
       baseline: {
-        acceptedByOperationId: 'op_service-project',
+        acceptedByOperationId: createAction.operationId,
         remoteRevision: { contentHash: 'sha256:project-readback' },
         fields: {
           title: { value: 'Published project' },

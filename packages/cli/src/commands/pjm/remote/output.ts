@@ -37,7 +37,10 @@ export interface RemoteCommandEnvelope {
     revision: {
       digest: string;
       evidenceDigest: string;
-      observedAt: string;
+      source: 'remote' | 'remote-unobserved' | 'local-source-unbound';
+      strength: 'token' | 'updated-at-and-hash' | 'hash-only' | 'unknown';
+      updatedAt: string | null;
+      observedAt: string | null;
     };
   };
   recovery: Array<{ code: string; instruction: string }>;
@@ -75,7 +78,7 @@ export function renderRemoteCommand(
   if (envelope.approvalPreview) {
     const preview = envelope.approvalPreview;
     lines.push(
-      `preview ${preview.operationId}: ${preview.operationClass}; fields=${preview.fieldMask.join(',')}; authority=${preview.authority}; revision=${preview.revision.digest}; revision-evidence=${preview.revision.evidenceDigest}; observed=${preview.revision.observedAt}`,
+      `preview ${preview.operationId}: ${preview.operationClass}; fields=${preview.fieldMask.join(',')}; authority=${preview.authority}; revision=${preview.revision.digest}; revision-evidence=${preview.revision.evidenceDigest}; revision-source=${preview.revision.source}; strength=${preview.revision.strength}; updated=${preview.revision.updatedAt ?? 'unobserved'}; observed=${preview.revision.observedAt ?? 'unobserved'}`,
     );
     for (const field of preview.fieldMask) {
       const rendered = preview.renderedFields[field];

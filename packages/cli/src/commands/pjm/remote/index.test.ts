@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -42,7 +49,7 @@ async function adoptedRepository() {
     stateStorage: 'local',
     target: { kind: 'backlog', scope: 'shared', path: null },
   });
-  return { repo, store: new RemoteSyncStore(locations) };
+  return { repo, store: new RemoteSyncStore(locations), locations };
 }
 
 async function writeAuthorityEvidence(
@@ -64,7 +71,7 @@ function interactiveAuthority(
     kind: 'interactive',
     sourceId: 'host-session-1',
     invocationId: 'invocation-1',
-    issuedAt: '2026-08-31T11:59:00.000Z',
+    issuedAt: '2026-08-31T11:58:00.000Z',
     expiresAt: '2026-08-31T12:05:00.000Z',
     instruction: {
       operationClass,
@@ -221,7 +228,7 @@ async function prepareMutableBinding(
       revision: {
         strength: 'hash-only',
         token: null,
-        updatedAt: '2026-08-31T12:00:00.000Z',
+        updatedAt: '2026-08-31T11:57:00.000Z',
         contentHash: 'sha256:remote-current',
       },
       issue: {
@@ -264,7 +271,7 @@ function updateCapabilityEvidence() {
     availability: 'available',
     semanticCapabilities: ['read', 'update'],
     evidenceDigest: 'sha256:live-update-capability',
-    observedAt: '2026-08-31T12:00:00.000Z',
+    observedAt: '2026-08-31T11:59:00.000Z',
   };
 }
 
@@ -347,12 +354,169 @@ describe('pjm remote command family', () => {
       'continue',
       '--operation',
       'op-1',
-      '--observation-stdin',
     ]);
     expect(continuation.requests[0]).toMatchObject({
       operation: 'operation-continue',
       operationId: 'op-1',
-      observationStdin: true,
+      observationStdin: false,
+    });
+  });
+
+  it('resumes a no-handle direct create through Commander without a second operation or action', async () => {
+    const { repo, store, locations } = await adoptedRepository();
+    const targetPath = join(
+      repo,
+      '.oat',
+      'repo',
+      'pjm',
+      'backlog',
+      'items',
+      'item-1.md',
+    );
+    await mkdir(join(targetPath, '..'), { recursive: true });
+    await writeFile(
+      targetPath,
+      '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+    );
+    await writeFile(
+      join(repo, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        pjm: {
+          initialized: true,
+          schemaVersion: 1,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
+    const authorityEvidenceFile = await writeAuthorityEvidence(
+      repo,
+      interactiveAuthority('create', 'backlog:item-1'),
+    );
+    const capability = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['create'],
+      evidenceDigest: 'sha256:create-capability',
+      observedAt: '2026-08-31T11:59:00.000Z',
+    };
+    const commandArguments = [
+      'remote',
+      'publish',
+      '--provider',
+      'linear',
+      '--to-backlog',
+      'item-1',
+      '--capability-evidence-stdin',
+      '--authority-evidence-file',
+      authorityEvidenceFile,
+    ];
+    const runCommand = async (
+      runner: ReturnType<typeof createProductionRemoteRunner>,
+      arguments_: string[],
+    ) => {
+      const stdout: string[] = [];
+      const root = new Command().name('oat').option('--json');
+      root.exitOverride();
+      root.addCommand(
+        createPjmRemoteCommand({
+          resolveProjectRoot: async () => repo,
+          checkAdoption: async () => 'complete',
+          run: runner,
+        }),
+      );
+      const stdoutSpy = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation((chunk) => {
+          stdout.push(String(chunk));
+          return true;
+        });
+      const stderrSpy = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true);
+      await root.parseAsync(['node', 'oat', '--json', ...arguments_]);
+      stdoutSpy.mockRestore();
+      stderrSpy.mockRestore();
+      process.exitCode = undefined;
+      return stdout.length === 0
+        ? null
+        : (JSON.parse(stdout.join()) as Awaited<ReturnType<typeof runner>>);
+    };
+    const interrupted = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => capability,
+      crash: (point) => {
+        if (point === 'before-create-envelope') throw new Error('interrupted');
+      },
+    });
+    expect(await runCommand(interrupted, commandArguments)).toMatchObject({
+      status: 'failed',
+      message: 'interrupted',
+    });
+
+    const operationFiles = (
+      await readdir(locations.operational.operationsDir)
+    ).filter((path) => path.endsWith('.json'));
+    expect(operationFiles).toHaveLength(1);
+    const operationId = operationFiles[0]!.slice(0, -'.json'.length);
+    const firstAction = await store.readCurrentAction(operationId);
+    const firstActionFiles = (
+      await readdir(locations.operational.operationsDir)
+    ).filter((path) => path.endsWith('.action'));
+
+    const restarted = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:01:00.000Z',
+      readObservationStdin: async () => capability,
+    });
+    const retried = await runCommand(restarted, commandArguments);
+    const continued = await runCommand(restarted, [
+      'remote',
+      'operation',
+      'continue',
+      '--operation',
+      operationId,
+    ]);
+    await writeFile(
+      targetPath,
+      '---\ntitle: Drifted title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+    );
+    const driftedRetry = await runCommand(restarted, commandArguments);
+
+    expect(retried?.externalAction).toEqual(firstAction);
+    expect(continued?.externalAction).toEqual(firstAction);
+    expect(driftedRetry).toMatchObject({
+      status: 'failed',
+      message: expect.stringMatching(/preview.*drift/i),
+    });
+    expect(
+      (await readdir(locations.operational.operationsDir)).filter((path) =>
+        path.endsWith('.json'),
+      ),
+    ).toEqual(operationFiles);
+    expect(
+      (await readdir(locations.operational.operationsDir)).filter((path) =>
+        path.endsWith('.action'),
+      ),
+    ).toEqual(firstActionFiles);
+    expect(await store.readOperation(operationId)).toMatchObject({
+      state: 'attempt-started',
+      attempts: [
+        {
+          attemptId: firstAction!.stepId,
+          requestDigest: firstAction!.actionDigest,
+        },
+      ],
     });
   });
 
@@ -532,7 +696,10 @@ describe('pjm remote command family', () => {
         revision: {
           digest: expect.stringMatching(/^sha256:/),
           evidenceDigest: expect.stringMatching(/^sha256:/),
-          observedAt: '2026-08-31T11:59:00.000Z',
+          source: 'remote',
+          strength: 'hash-only',
+          updatedAt: '2026-08-31T11:57:00.000Z',
+          observedAt: '2026-08-31T12:00:00.000Z',
         },
       },
     });
