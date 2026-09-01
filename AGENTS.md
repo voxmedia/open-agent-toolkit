@@ -75,6 +75,13 @@ the bundle tier without injecting `home` will resolve against the maintainer's
 real templates and fail locally while passing in CI. PR #229 fixed the three
 known instances; the class recurs whenever a new test exercises that tier.
 
+For security, provenance, approval, receipt, publication, or other
+assurance-bearing contracts, positive-suite success is not sufficient evidence.
+Record a reproduction-grade negative control: the pre-fix bad state is
+accepted, the post-fix implementation rejects that same state, and a valid
+accepted control still passes. Preserve the exact probe or fixture and its
+expected categorical outcome so independent review can repeat it.
+
 CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 
