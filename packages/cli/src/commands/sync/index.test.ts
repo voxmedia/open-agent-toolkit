@@ -668,6 +668,199 @@ describe('createSyncCommand', () => {
     );
   });
 
+  it('reports exact config-only extension changes as JSON new-session advice', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: [],
+          aggregateConfigHash: 'hash-config-only',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<Record<string, unknown>>;
+    };
+    expect(payload.providerRefreshAdvice).toHaveLength(1);
+    expect(payload.providerRefreshAdvice[0]).toMatchObject({
+      scope: 'project',
+      provider: 'codex',
+      contentKind: 'agent',
+      materialization: 'changed',
+      visibility: {
+        state: 'restart-required',
+        recovery: [{ code: 'start-new-provider-session' }],
+      },
+    });
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('asset');
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('path');
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('entryName');
+  });
+
+  it('renders exact config-only extension changes as human new-session advice', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: [],
+          aggregateConfigHash: 'hash-config-only',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'Provider visibility [project] codex/agent: restart-required — Start a new provider session so it has an opportunity to load the changed asset',
+    );
+  });
+
+  it('deduplicates exact changed role and config results for one capability', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              reason: 'managed role missing',
+              roleName: 'reviewer',
+              content: 'developer_instructions = "review"\n',
+            },
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-role-config',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 2,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              entryName: 'reviewer',
+              status: 'changed',
+            },
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(
+      (capture.jsonPayloads[0] as { providerRefreshAdvice: unknown[] })
+        .providerRefreshAdvice,
+    ).toHaveLength(1);
+  });
+
   it('keeps aggregate-only mixed counts unattributed to named assets', async () => {
     const first = createAgentCanonicalEntry('first.md');
     const second = createAgentCanonicalEntry('second.md');
@@ -2311,6 +2504,7 @@ describe('createSyncCommand', () => {
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(applyCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
     expect(capture.success).toContain('\nSync applied successfully.');
+    expect(capture.info.join('\n')).not.toContain('Provider visibility');
   });
 
   it('materializes user-owned Codex roles through the real user scanner and preserves every owner idempotently', async () => {

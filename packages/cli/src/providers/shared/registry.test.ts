@@ -4,9 +4,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   getProviderRegistrations,
+  resolveCatalogRefreshPolicy,
   resolveProviderScopeContext,
   userAgentMaterializationCoverage,
   validateProviderRegistrations,
+  type ProviderCatalogRefreshPolicy,
   type ProviderRegistration,
 } from './registry';
 
@@ -46,6 +48,16 @@ const config = (providers: SyncConfig['providers']): SyncConfig => ({
   knownStrays: [],
   providers,
 });
+
+const officialRefreshPolicy: ProviderCatalogRefreshPolicy = {
+  state: 'manual-refresh',
+  provenance: {
+    kind: 'official-contract',
+    reference: 'https://provider.example/refresh-contract',
+    verifiedAt: '2026-08-31',
+    providerVersion: '1.2.3',
+  },
+};
 
 describe('provider registry', () => {
   it('registers every adapter once in canonical provider order', () => {
@@ -132,6 +144,19 @@ describe('provider registry', () => {
     }
   });
 
+  it('gives a valid provider-specific policy precedence over the repository fallback', () => {
+    expect(resolveCatalogRefreshPolicy(true, officialRefreshPolicy)).toBe(
+      officialRefreshPolicy,
+    );
+    expect(resolveCatalogRefreshPolicy(true)).toMatchObject({
+      state: 'restart-required',
+      provenance: { kind: 'repository-decision' },
+    });
+    expect(
+      resolveCatalogRefreshPolicy(false, officialRefreshPolicy),
+    ).toMatchObject({ state: 'unknown' });
+  });
+
   it('derives user-agent coverage from active provider capability evidence', () => {
     const registrations = getProviderRegistrations();
     expect(
@@ -196,6 +221,82 @@ describe('provider registry', () => {
         },
       ]),
     ).toThrow(/contradictory/);
+  });
+
+  it('rejects unsupported capabilities with a sourced refresh policy', () => {
+    const complete = registration('test');
+    expect(() =>
+      validateProviderRegistrations([
+        {
+          ...complete,
+          capabilities: complete.capabilities.map((row, index) =>
+            index === 0
+              ? { ...row, catalogRefresh: officialRefreshPolicy }
+              : row,
+          ),
+        },
+      ]),
+    ).toThrow(/unsupported project skill.*non-unknown refresh policy/);
+  });
+
+  it.each([
+    {
+      label: 'missing provenance',
+      policy: { state: 'live' },
+    },
+    {
+      label: 'unknown provenance kind',
+      policy: {
+        state: 'live',
+        provenance: {
+          kind: 'provider-claim',
+          reference: 'https://provider.example/refresh-contract',
+          verifiedAt: '2026-08-31',
+        },
+      },
+    },
+    {
+      label: 'empty reference',
+      policy: {
+        state: 'live',
+        provenance: {
+          kind: 'official-contract',
+          reference: ' ',
+          verifiedAt: '2026-08-31',
+        },
+      },
+    },
+    {
+      label: 'invalid verification date',
+      policy: {
+        state: 'live',
+        provenance: {
+          kind: 'official-contract',
+          reference: 'https://provider.example/refresh-contract',
+          verifiedAt: '2026-02-31',
+        },
+      },
+    },
+  ])('rejects $label on a non-unknown refresh policy', ({ policy }) => {
+    const complete = registration('test');
+    expect(() =>
+      validateProviderRegistrations([
+        {
+          ...complete,
+          capabilities: complete.capabilities.map((row, index) =>
+            index === 0
+              ? {
+                  ...row,
+                  support: 'supported' as const,
+                  projectionModes: ['entry-sync'] as const,
+                  catalogRefresh: policy as ProviderCatalogRefreshPolicy,
+                  unsupportedReason: undefined,
+                }
+              : row,
+          ),
+        },
+      ]),
+    ).toThrow(/invalid project skill refresh policy provenance/);
   });
 
   it.each([

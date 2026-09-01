@@ -99,6 +99,58 @@ const CONSERVATIVE_NEW_SESSION_REFRESH: ProviderCatalogRefreshPolicy = {
     verifiedAt: '2026-08-31',
   },
 };
+const REFRESH_PROVENANCE_KINDS = new Set([
+  'official-contract',
+  'validated-local-behavior',
+  'repository-decision',
+]);
+
+export function resolveCatalogRefreshPolicy(
+  supported: boolean,
+  providerPolicy?: ProviderCatalogRefreshPolicy,
+): ProviderCatalogRefreshPolicy {
+  if (!supported) return UNKNOWN_REFRESH;
+  return providerPolicy ?? CONSERVATIVE_NEW_SESSION_REFRESH;
+}
+
+function hasValidRefreshProvenance(
+  policy: ProviderCatalogRefreshPolicy,
+): boolean {
+  if (policy.state === 'unknown') return true;
+  const provenance = policy.provenance as
+    | Extract<
+        ProviderCatalogRefreshPolicy,
+        { state: Exclude<ProviderCatalogRefreshPolicy['state'], 'unknown'> }
+      >['provenance']
+    | undefined;
+  if (!provenance || !REFRESH_PROVENANCE_KINDS.has(provenance.kind)) {
+    return false;
+  }
+  if (
+    typeof provenance.reference !== 'string' ||
+    provenance.reference.trim().length === 0
+  ) {
+    return false;
+  }
+  if (
+    provenance.providerVersion !== undefined &&
+    (typeof provenance.providerVersion !== 'string' ||
+      provenance.providerVersion.trim().length === 0)
+  ) {
+    return false;
+  }
+  if (
+    typeof provenance.verifiedAt !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(provenance.verifiedAt)
+  ) {
+    return false;
+  }
+  const date = new Date(`${provenance.verifiedAt}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === provenance.verifiedAt
+  );
+}
 
 export type UserAgentMaterializationCoverage = 'none' | 'bundled' | 'all';
 
@@ -156,11 +208,12 @@ function capabilitiesFor(
           contentKind === 'skill' && mapping !== undefined
             ? 'supported'
             : 'unsupported',
-        catalogRefresh: supported
-          ? // A sourced provider/content policy takes precedence over the
-            // repository-wide conservative new-session decision.
-            (refreshPolicies[contentKind] ?? CONSERVATIVE_NEW_SESSION_REFRESH)
-          : UNKNOWN_REFRESH,
+        // A sourced provider/content policy takes precedence over the
+        // repository-wide conservative new-session decision.
+        catalogRefresh: resolveCatalogRefreshPolicy(
+          supported,
+          refreshPolicies[contentKind],
+        ),
         ...(supported
           ? {}
           : {
@@ -239,6 +292,19 @@ export function validateProviderRegistrations(
         ) {
           throw new Error(
             `Provider ${name} has contradictory ${scope} ${contentKind} support`,
+          );
+        }
+        if (
+          row!.support === 'unsupported' &&
+          row!.catalogRefresh.state !== 'unknown'
+        ) {
+          throw new Error(
+            `Provider ${name} has unsupported ${scope} ${contentKind} with non-unknown refresh policy`,
+          );
+        }
+        if (!hasValidRefreshProvenance(row!.catalogRefresh)) {
+          throw new Error(
+            `Provider ${name} has invalid ${scope} ${contentKind} refresh policy provenance`,
           );
         }
       }

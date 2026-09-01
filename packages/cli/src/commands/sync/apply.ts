@@ -5,6 +5,7 @@ import type { MaterializationOperationResult } from '@providers/shared/materiali
 import {
   getProviderRegistrations,
   type ManagedContentKind,
+  type ProviderRegistration,
 } from '@providers/shared/registry';
 import {
   adviseProviderRefresh,
@@ -35,12 +36,32 @@ interface CoreApplyEvidence {
   aggregate: Pick<SyncResult, 'applied' | 'failed' | 'skipped'>;
 }
 
+function extensionResultContentKind(
+  registrations: readonly ProviderRegistration[],
+  result: MaterializationOperationResult & { scope: ConcreteScope },
+): ManagedContentKind | undefined {
+  const registration = registrations.find(
+    ({ adapter }) => adapter.name === result.provider,
+  );
+  const candidates = registration?.capabilities.filter(
+    ({ scope, support, projectionModes }) =>
+      scope === result.scope &&
+      support === 'supported' &&
+      projectionModes.includes('materialization-extension'),
+  );
+  // Extension operation identities do not carry a canonical asset kind.
+  // Attribute only when provider capability evidence gives one unambiguous
+  // content kind; otherwise leave the exact result unattributed.
+  return candidates?.length === 1 ? candidates[0]!.contentKind : undefined;
+}
+
 function buildProviderRefreshAdvice(input: {
   operationResults: readonly SyncOperationResult[];
   extensionResults: readonly (MaterializationOperationResult & {
     scope: ConcreteScope;
   })[];
 }): ProviderRefreshAdvice[] {
+  const registrations = getProviderRegistrations();
   const changed = [
     ...input.operationResults
       .filter(({ status }) => status === 'changed')
@@ -50,15 +71,15 @@ function buildProviderRefreshAdvice(input: {
         contentKind,
       })),
     ...input.extensionResults
-      .filter(({ status, target }) => status === 'changed' && target === 'role')
-      .map(({ scope, provider }) => ({
-        scope,
-        provider,
-        contentKind: 'agent' as const,
-      })),
+      .filter(({ status }) => status === 'changed')
+      .flatMap((result) => {
+        const contentKind = extensionResultContentKind(registrations, result);
+        return contentKind === undefined
+          ? []
+          : [{ scope: result.scope, provider: result.provider, contentKind }];
+      }),
   ];
   const seen = new Set<string>();
-  const registrations = getProviderRegistrations();
 
   return changed.flatMap(({ scope, provider, contentKind }) => {
     const key = `${scope}:${provider}:${contentKind}`;
