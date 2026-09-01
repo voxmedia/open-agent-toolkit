@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -41,8 +41,8 @@ oat_implement_exit_gate:
   reviewed_head: 547705fae790c32d1bd9dada11f5877253e11530
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:688f2ff2a96e11a47f1a240bfa54a114b25b243c663874aa4ec5212e98f6dbef'
-  freshness_head: a6655a548963350e5d01aac5c1a1ac810d846361
-  freshness_fingerprint: 'sha256:effective-delta-v1:e0106bdd008d25180d7e321a67149d4ef78a30f1558574abce228c4ec7432771'
+  freshness_head: 44ef080a1a5c04156bf35beca9008dd32c53f11e
+  freshness_fingerprint: 'sha256:effective-delta-v1:8adee25fc07e5198d3d54e16d6cdc127f9b8515f92001f705d909dd53139d0a9'
   launch_state: result_persisted
   launch_attempt_id: 9d5f04f8-a8cc-4507-9a7e-f3074e818419
   launch_started_at: '2026-09-01T03:53:30Z'
@@ -62,9 +62,9 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-01T04:08:01Z'
+  updated_at: '2026-09-01T04:16:01Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T04:08:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T04:16:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -89,13 +89,14 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation final review passed / PR open
+**Status:** Awaiting final implementation approval / PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — final lifecycle review passed; configured exit gate pending.
+Implementation — all tasks, final review, configured gate, and pre-approval
+closeout steps complete; awaiting final HiLL approval.
 
 ## Artifacts
 
@@ -185,7 +186,13 @@ Implementation — final lifecycle review passed; configured exit gate pending.
 - ✓ Non-current materializable agents fail closed with an actionable pack update
 - ✓ Fresh post-rebase final lifecycle review passed with zero findings
 - ✓ Phase p-rev3 passed without overengineering
-- ⧗ New configured exit-gate generation required after substantive fix
+- ✓ Fresh configured cross-family exit gate passed with zero findings
+- ✓ Final CI-equivalent repository gate sequence passed after p-rev3
+- ✓ Summary and documentation closeout refreshed for the rebased result
+- ✓ PR #248 lease-protected rebase push and description refresh completed
+- ✓ Project recap skip intent revalidated by the terminal guard
+- ⧗ GitHub CI, release dry-run, and Bugbot checks running on refreshed PR head
+- ⧗ Awaiting final implementation approval
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -194,5 +201,5 @@ None.
 
 ## Next Milestone
 
-Execute a new configured implementation exit-gate generation before final HiLL
-approval.
+Approve or reject final implementation closeout after reviewing the rebased PR
+and verification summary. Approval does not merge PR #248.
