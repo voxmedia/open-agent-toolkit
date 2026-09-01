@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-31
+oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: tool-pack-scope-provider-truthfulness
 
 **Started:** 2026-08-31
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -961,6 +961,25 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   correction is authorized. Operator governance must either authorize one new
   bounded correction for complete-tree no-replace publication or revise the
   Phase 4 delivery boundary. Phase 5 remains gated.
+
+### Operator Authorization — One Additional Phase 4 Safety Cycle
+
+- Authorization: Thomas explicitly authorized one additional bounded Phase 4
+  correction and re-review cycle on 2026-09-01.
+- Scope: only the round-5 nested deferred-directory-copy collision. The fix
+  must provide complete-tree no-clobber behavior, preserve any colliding
+  unmanaged nested bytes/tree, return an actionable failed child, and record no
+  manifest ownership for the failed projection. If that guarantee is not
+  feasible, deferred directory-copy transitions must fail safely with manual
+  recovery guidance.
+- Governance: this is a one-use operator exception beyond the generic
+  `oat_orchestration_retry_limit` schema maximum of five; it does not raise or
+  reset that field and does not authorize another automatic cycle.
+- Verification: the bounded fix must pass focused RED/GREEN coverage, the
+  authoritative Phase 4 union, CLI checks, full repository tests, and exact
+  diff/clean-worktree checks before one fresh independent High review.
+- Boundary: Phase 5 remains gated. A passing review advances implementation; a
+  blocking result returns to operator governance without another fix launch.
 
 ---
 

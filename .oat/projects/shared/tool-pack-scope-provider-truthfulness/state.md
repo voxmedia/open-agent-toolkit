@@ -1,8 +1,7 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 740e2a7ca90d16efd38f226db9840598ef634daf
-oat_blockers:
-  - Phase 4 exhausted its five-round review budget with one Critical deferred-directory-copy collision; operator governance must authorize another bounded correction or revise the delivery boundary.
+oat_last_commit: 7c33b291cd3ff2b7df6b03d846c86ab4ea675098
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -28,7 +27,7 @@ oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints h
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 5 # Thomas authorized the final available bounded p02 fix/re-review cycle on 2026-08-31
+oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one additional one-use p04 correction/re-review cycle on 2026-09-01
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -96,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T01:30:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T19:21:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,15 +107,14 @@ oat_project_explainer:
 
 **Status:** Implementation in progress
 **Started:** 2026-08-29
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation - Phase 4 review found two Critical safety defects, one
-Important strategy-transition defect, and two Medium validation/capability
-gaps at `09ab8e7a0`. All five are routed as one bounded correction to the
-original exact High implementer. Phase 5 remains gated pending fix and fresh
-review.
+Implementation - Thomas authorized one additional one-use Phase 4 correction
+and re-review cycle on 2026-09-01. It is limited to the nested deferred
+directory-copy collision in the round-5 review. Phase 5 remains gated pending
+the correction and a fresh independent High review.
 
 ## Artifacts
 
@@ -124,7 +122,7 @@ review.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 terminal review requires operator governance)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; one operator-authorized p04 safety cycle is active)
 
 ## Progress
 
@@ -150,7 +148,7 @@ review.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 review fixes added; fresh review required
+- ⧗ Phase 4 operator-authorized nested-copy correction and fresh review in progress
 
 ## Blockers
 
@@ -158,6 +156,6 @@ review.
 
 ## Next Milestone
 
-Correct the Phase 4 ancestry race, stale unlink authority, explicit-strategy
-transition, path normalization, and registry-capability gate; then run a fresh
-independent High review.
+Correct only the Phase 4 nested deferred-directory-copy collision, then run the
+one authorized fresh independent High review. Do not begin Phase 5 without a
+passing Phase 4 verdict.
