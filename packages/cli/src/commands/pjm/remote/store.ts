@@ -130,6 +130,7 @@ export interface RemoteOperationTransition {
   verificationHandoff?: NonNullable<
     RemoteOperationRecord['verificationHandoff']
   >;
+  currentAction?: NonNullable<RemoteOperationRecord['currentAction']>;
 }
 
 export interface ConcurrentOperationIntentInspection {
@@ -240,6 +241,10 @@ export class RemoteSyncStore {
   async readCurrentAction(
     operationId: string,
   ): Promise<ExternalActionEnvelope | null> {
+    const operation = await this.readOperation(operationId);
+    if (operation?.currentAction) {
+      return parseExternalAction(operation.currentAction);
+    }
     try {
       return parseExternalAction(
         JSON.parse(
@@ -262,6 +267,17 @@ export class RemoteSyncStore {
     operationId: string,
     action: ExternalActionEnvelope,
   ): Promise<void> {
+    const parsed = await this.writeActionEvidence(operationId, action);
+    await this.#atomicWrite(
+      join(this.locations.operational.operationsDir, `${operationId}.action`),
+      parsed,
+    );
+  }
+
+  async writeActionEvidence(
+    operationId: string,
+    action: ExternalActionEnvelope,
+  ): Promise<ExternalActionEnvelope> {
     const parsed = parseExternalAction(action);
     if (parsed.operationId !== operationId) {
       throw new Error(
@@ -278,9 +294,47 @@ export class RemoteSyncStore {
       const existing = await this.readAction(operationId, parsed.stepId);
       if (!existing || !isDeepStrictEqual(existing, parsed)) throw error;
     }
-    await this.#atomicWrite(
-      join(this.locations.operational.operationsDir, `${operationId}.action`),
-      parsed,
+    return parsed;
+  }
+
+  async retireCurrentAction(
+    operationId: string,
+    expectedAction: ExternalActionEnvelope,
+  ): Promise<void> {
+    const parsed = parseExternalAction(expectedAction);
+    if (parsed.operationId !== operationId) {
+      throw new Error(
+        'External action operationId does not match its durable path.',
+      );
+    }
+    const pointerPath = join(
+      this.locations.operational.operationsDir,
+      `${operationId}.action`,
+    );
+    let current: ExternalActionEnvelope;
+    try {
+      current = parseExternalAction(
+        JSON.parse(
+          await this.#dependencies.filesystem.readFile(pointerPath, 'utf8'),
+        ),
+      );
+    } catch (error) {
+      if (isFilesystemError(error, 'ENOENT')) {
+        throw new Error(
+          'Durable current action pointer is missing before verification handoff.',
+          { cause: error },
+        );
+      }
+      throw error;
+    }
+    if (!isDeepStrictEqual(current, parsed)) {
+      throw new Error(
+        'Durable current action pointer contradicts the accepted mutation.',
+      );
+    }
+    await this.#dependencies.filesystem.unlink(pointerPath);
+    await this.#dependencies.filesystem.syncDirectory(
+      this.locations.operational.operationsDir,
     );
   }
 
@@ -502,6 +556,15 @@ export class RemoteSyncStore {
     ) {
       throw new Error('Remote operation verification handoff is immutable.');
     }
+    if (
+      update.currentAction &&
+      current.currentAction &&
+      !isDeepStrictEqual(update.currentAction, current.currentAction)
+    ) {
+      throw new Error(
+        'Remote operation canonical current action is immutable.',
+      );
+    }
     let attempts = update.appendAttempt
       ? [...current.attempts, update.appendAttempt]
       : current.attempts;
@@ -558,6 +621,9 @@ export class RemoteSyncStore {
         : {}),
       ...(update.verificationHandoff !== undefined
         ? { verificationHandoff: update.verificationHandoff }
+        : {}),
+      ...(update.currentAction !== undefined
+        ? { currentAction: update.currentAction }
         : {}),
     });
     await this.#atomicWrite(

@@ -84,6 +84,8 @@ export type MaterializationCrashPoint =
   | 'after-create-authorization'
   | 'after-create-attempt'
   | 'before-create-envelope'
+  | 'after-observation-acceptance'
+  | 'after-verification-action-retired'
   | 'after-verification-handoff'
   | 'after-verification-action'
   | 'before-verification-envelope'
@@ -1120,9 +1122,18 @@ async function continueOperation(
   if (
     operation.createIntent &&
     !request.observationStdin &&
-    ['planned', 'authorized', 'attempt-started'].includes(operation.state)
+    ['planned', 'authorized'].includes(operation.state)
   ) {
     return resumeCreateActionHandoff(request, operation, store, dependencies);
+  }
+  if (
+    operation.createIntent &&
+    !request.observationStdin &&
+    operation.state === 'attempt-started'
+  ) {
+    throw new Error(
+      'Create attempt may already have executed; authoritative reconciliation is required before any retry.',
+    );
   }
   if (operation.materializationPlan && operation.state !== 'verified') {
     return resumeMaterialization(request, operation, store, dependencies);
@@ -1137,7 +1148,7 @@ async function continueOperation(
     );
   }
   if (operation.verificationHandoff && !request.observationStdin) {
-    const action = await restoreDurableVerificationAction(operation, store);
+    const action = restoreDurableVerificationAction(operation);
     return envelopeFrom(request, operation, null, action);
   }
   if (!request.observationStdin) {
@@ -1153,7 +1164,7 @@ async function continueOperation(
   )
     throw new Error(`Remote binding '${operation.bindingId}' does not exist.`);
   const action = operation.verificationHandoff
-    ? await restoreDurableVerificationAction(operation, store)
+    ? restoreDurableVerificationAction(operation)
     : await store.readCurrentAction(operation.operationId);
   if (!action)
     throw new Error(
@@ -1177,6 +1188,9 @@ async function continueOperation(
       ),
     ),
   });
+  if (action.semanticOperation !== 'read') {
+    dependencies.crash?.('after-observation-acceptance');
+  }
   const now = dependencies.now();
   const observationEvidence = {
     observedAt: observation.observedAt,
@@ -1270,6 +1284,9 @@ async function continueOperation(
           : {}),
       },
     });
+    await store.writeActionEvidence(operation.operationId, readAction);
+    await store.retireCurrentAction(operation.operationId, action);
+    dependencies.crash?.('after-verification-action-retired');
     const updated = await store.transitionOperation(
       operation.operationId,
       operation.state,
@@ -1289,6 +1306,9 @@ async function continueOperation(
         },
         lastSafeStep: 'verification-pending',
         retryDisposition: 'reconcile-required',
+        currentAction: readAction as NonNullable<
+          RemoteOperationRecord['currentAction']
+        >,
         verificationHandoff: {
           acceptedMutation: {
             actionDigest: action.actionDigest,
@@ -1303,7 +1323,6 @@ async function continueOperation(
       },
     );
     dependencies.crash?.('after-verification-handoff');
-    await store.writeCurrentAction(operation.operationId, readAction);
     dependencies.crash?.('after-verification-action');
     dependencies.crash?.('before-verification-envelope');
     return envelopeFrom(request, updated, metadata, readAction);
@@ -1746,6 +1765,11 @@ async function resumeCreateActionHandoff(
   store: RemoteSyncStore,
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
+  if (operation.state === 'attempt-started') {
+    throw new Error(
+      'Create attempt may already have executed; authoritative reconciliation is required before any retry.',
+    );
+  }
   const action = await store.readCurrentAction(operation.operationId);
   if (!action) {
     throw new Error(
@@ -1801,10 +1825,9 @@ async function resumeCreateActionHandoff(
   return envelopeFrom(request, current, null, action);
 }
 
-async function restoreDurableVerificationAction(
+function restoreDurableVerificationAction(
   operation: RemoteOperationRecord,
-  store: RemoteSyncStore,
-): Promise<ExternalActionEnvelope> {
+): ExternalActionEnvelope {
   const handoff = operation.verificationHandoff;
   if (!handoff || operation.state !== 'verification-pending') {
     throw new Error(
@@ -1812,21 +1835,13 @@ async function restoreDurableVerificationAction(
     );
   }
   const durableAction = parseExternalAction(handoff.verificationAction);
-  const currentAction = await store.readCurrentAction(operation.operationId);
-  if (
-    currentAction &&
-    !isDeepStrictEqual(currentAction, durableAction) &&
-    !(
-      currentAction.actionDigest === handoff.acceptedMutation.actionDigest &&
-      currentAction.semanticOperation !== 'read'
-    )
-  ) {
+  const currentAction = operation.currentAction
+    ? parseExternalAction(operation.currentAction)
+    : null;
+  if (!currentAction || !isDeepStrictEqual(currentAction, durableAction)) {
     throw new Error(
-      'Durable verification handoff contradicts the current action pointer.',
+      'Durable verification handoff contradicts the canonical current action.',
     );
-  }
-  if (!isDeepStrictEqual(currentAction, durableAction)) {
-    await store.writeCurrentAction(operation.operationId, durableAction);
   }
   return durableAction;
 }

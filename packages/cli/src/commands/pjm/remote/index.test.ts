@@ -362,224 +362,245 @@ describe('pjm remote command family', () => {
     });
   });
 
-  it('resumes a no-handle direct create through Commander without a second operation or action', async () => {
-    const { repo, store, locations } = await adoptedRepository();
-    const targetPath = join(
-      repo,
-      '.oat',
-      'repo',
-      'pjm',
-      'backlog',
-      'items',
-      'item-1.md',
-    );
-    await mkdir(join(targetPath, '..'), { recursive: true });
-    await writeFile(
-      targetPath,
-      '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
-    );
-    await writeFile(
-      join(repo, '.oat', 'config.json'),
-      `${JSON.stringify({
-        version: 1,
-        pjm: {
-          initialized: true,
-          schemaVersion: 1,
-          remote: {
+  it.each([
+    'after-observation-acceptance',
+    'after-verification-action-retired',
+    'after-verification-handoff',
+  ] as const)(
+    'fails closed or resumes the exact read through Commander after %s',
+    async (verificationCrashPoint) => {
+      const { repo, store, locations } = await adoptedRepository();
+      const targetPath = join(
+        repo,
+        '.oat',
+        'repo',
+        'pjm',
+        'backlog',
+        'items',
+        'item-1.md',
+      );
+      await mkdir(join(targetPath, '..'), { recursive: true });
+      await writeFile(
+        targetPath,
+        '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+      );
+      await writeFile(
+        join(repo, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          pjm: {
+            initialized: true,
             schemaVersion: 1,
-            policy: {
-              description: 'managed-section',
-              authority: {
-                default: 'read-only',
-                operations: { create: 'user-authorized' },
+            remote: {
+              schemaVersion: 1,
+              policy: {
+                description: 'managed-section',
+                authority: {
+                  default: 'read-only',
+                  operations: { create: 'user-authorized' },
+                },
               },
             },
           },
-        },
-      })}\n`,
-    );
-    const authorityEvidenceFile = await writeAuthorityEvidence(
-      repo,
-      interactiveAuthority('create', 'backlog:item-1'),
-    );
-    const capability = {
-      provider: 'linear',
-      context: { workspaceId: 'workspace-1' },
-      surfaceKind: 'connector',
-      availability: 'available',
-      semanticCapabilities: ['create'],
-      evidenceDigest: 'sha256:create-capability',
-      observedAt: '2026-08-31T11:59:00.000Z',
-    };
-    const commandArguments = [
-      'remote',
-      'publish',
-      '--provider',
-      'linear',
-      '--to-backlog',
-      'item-1',
-      '--capability-evidence-stdin',
-      '--authority-evidence-file',
-      authorityEvidenceFile,
-    ];
-    const runCommand = async (
-      runner: ReturnType<typeof createProductionRemoteRunner>,
-      arguments_: string[],
-    ) => {
-      const stdout: string[] = [];
-      const root = new Command().name('oat').option('--json');
-      root.exitOverride();
-      root.addCommand(
-        createPjmRemoteCommand({
-          resolveProjectRoot: async () => repo,
-          checkAdoption: async () => 'complete',
-          run: runner,
-        }),
+        })}\n`,
       );
-      const stdoutSpy = vi
-        .spyOn(process.stdout, 'write')
-        .mockImplementation((chunk) => {
-          stdout.push(String(chunk));
-          return true;
-        });
-      const stderrSpy = vi
-        .spyOn(process.stderr, 'write')
-        .mockImplementation(() => true);
-      await root.parseAsync(['node', 'oat', '--json', ...arguments_]);
-      stdoutSpy.mockRestore();
-      stderrSpy.mockRestore();
-      process.exitCode = undefined;
-      return stdout.length === 0
-        ? null
-        : (JSON.parse(stdout.join()) as Awaited<ReturnType<typeof runner>>);
-    };
-    const interrupted = createProductionRemoteRunner({
-      now: () => '2026-08-31T12:01:00.000Z',
-      readObservationStdin: async () => capability,
-      crash: (point) => {
-        if (point === 'before-create-envelope') throw new Error('interrupted');
-      },
-    });
-    expect(await runCommand(interrupted, commandArguments)).toMatchObject({
-      status: 'failed',
-      message: 'interrupted',
-    });
-
-    const operationFiles = (
-      await readdir(locations.operational.operationsDir)
-    ).filter((path) => path.endsWith('.json'));
-    expect(operationFiles).toHaveLength(1);
-    const operationId = operationFiles[0]!.slice(0, -'.json'.length);
-    const firstAction = await store.readCurrentAction(operationId);
-    const firstActionFiles = (
-      await readdir(locations.operational.operationsDir)
-    ).filter((path) => path.endsWith('.action'));
-
-    const restarted = createProductionRemoteRunner({
-      now: () => '2026-08-31T12:01:00.000Z',
-      readObservationStdin: async () => capability,
-    });
-    const retried = await runCommand(restarted, commandArguments);
-    const continued = await runCommand(restarted, [
-      'remote',
-      'operation',
-      'continue',
-      '--operation',
-      operationId,
-    ]);
-    await writeFile(
-      targetPath,
-      '---\ntitle: Drifted title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
-    );
-    const driftedRetry = await runCommand(restarted, commandArguments);
-
-    expect(retried?.externalAction).toEqual(firstAction);
-    expect(continued?.externalAction).toEqual(firstAction);
-    expect(driftedRetry).toMatchObject({
-      status: 'failed',
-      message: expect.stringMatching(/preview.*drift/i),
-    });
-    expect(
-      (await readdir(locations.operational.operationsDir)).filter((path) =>
-        path.endsWith('.json'),
-      ),
-    ).toEqual(operationFiles);
-    expect(
-      (await readdir(locations.operational.operationsDir)).filter((path) =>
-        path.endsWith('.action'),
-      ),
-    ).toEqual(firstActionFiles);
-    expect(await store.readOperation(operationId)).toMatchObject({
-      state: 'attempt-started',
-      attempts: [
-        {
-          attemptId: firstAction!.stepId,
-          requestDigest: firstAction!.actionDigest,
+      const authorityEvidenceFile = await writeAuthorityEvidence(
+        repo,
+        interactiveAuthority('create', 'backlog:item-1'),
+      );
+      const capability = {
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: '2026-08-31T11:59:00.000Z',
+      };
+      const commandArguments = [
+        'remote',
+        'publish',
+        '--provider',
+        'linear',
+        '--to-backlog',
+        'item-1',
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        authorityEvidenceFile,
+      ];
+      const runCommand = async (
+        runner: ReturnType<typeof createProductionRemoteRunner>,
+        arguments_: string[],
+      ) => {
+        const stdout: string[] = [];
+        const root = new Command().name('oat').option('--json');
+        root.exitOverride();
+        root.addCommand(
+          createPjmRemoteCommand({
+            resolveProjectRoot: async () => repo,
+            checkAdoption: async () => 'complete',
+            run: runner,
+          }),
+        );
+        const stdoutSpy = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation((chunk) => {
+            stdout.push(String(chunk));
+            return true;
+          });
+        const stderrSpy = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation(() => true);
+        await root.parseAsync(['node', 'oat', '--json', ...arguments_]);
+        stdoutSpy.mockRestore();
+        stderrSpy.mockRestore();
+        process.exitCode = undefined;
+        return stdout.length === 0
+          ? null
+          : (JSON.parse(stdout.join()) as Awaited<ReturnType<typeof runner>>);
+      };
+      const interrupted = createProductionRemoteRunner({
+        now: () => '2026-08-31T12:01:00.000Z',
+        readObservationStdin: async () => capability,
+        crash: (point) => {
+          if (point === 'after-create-authorization') {
+            throw new Error('interrupted');
+          }
         },
-      ],
-    });
+      });
+      expect(await runCommand(interrupted, commandArguments)).toMatchObject({
+        status: 'failed',
+        message: 'interrupted',
+      });
 
-    const createObservation = {
-      schemaVersion: 1,
-      operationId,
-      stepId: firstAction!.stepId,
-      actionDigest: firstAction!.actionDigest,
-      observedAt: '2026-08-31T12:02:00.000Z',
-      surfaceKind: 'connector' as const,
-      capabilityEvidenceDigest: 'sha256:create-capability',
-      provider: 'linear' as const,
-      context: { workspaceId: 'workspace-1' },
-      outcome: {
-        classification: 'observed' as const,
-        identity: { stableId: 'issue-restart-1', aliases: ['RESTART-1'] },
-        fields: firstAction!.intent.fields,
-        revisionDigest: 'sha256:create-observation',
-        diagnosticCode: null,
-      },
-    };
-    const interruptedVerification = createProductionRemoteRunner({
-      now: () => '2026-08-31T12:02:00.000Z',
-      randomId: () => 'commander-verification',
-      readObservationStdin: async () => createObservation,
-      crash: (point) => {
-        if (point === 'before-verification-envelope') {
-          throw new Error('commander verification handoff interrupted');
-        }
-      },
-    });
-    await expect(
-      runCommand(interruptedVerification, [
+      const operationFiles = (
+        await readdir(locations.operational.operationsDir)
+      ).filter((path) => path.endsWith('.json'));
+      expect(operationFiles).toHaveLength(1);
+      const operationId = operationFiles[0]!.slice(0, -'.json'.length);
+      const firstAction = await store.readCurrentAction(operationId);
+      const firstActionFiles = (
+        await readdir(locations.operational.operationsDir)
+      ).filter((path) => path.endsWith('.action'));
+
+      const restarted = createProductionRemoteRunner({
+        now: () => '2026-08-31T12:01:00.000Z',
+        readObservationStdin: async () => capability,
+      });
+      const retried = await runCommand(restarted, commandArguments);
+      const continued = await runCommand(restarted, [
         'remote',
         'operation',
         'continue',
         '--operation',
         operationId,
-        '--observation-stdin',
-      ]),
-    ).resolves.toMatchObject({
-      status: 'failed',
-      message: 'commander verification handoff interrupted',
-    });
+      ]);
+      await writeFile(
+        targetPath,
+        '---\ntitle: Drifted title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+      );
+      const driftedRetry = await runCommand(restarted, commandArguments);
 
-    const recoveredVerification = await runCommand(
-      createProductionRemoteRunner({
-        now: () => '2026-08-31T12:03:00.000Z',
-        readObservationStdin: async () => {
-          throw new Error('restart must not repeat the create action');
+      expect(retried?.externalAction).toEqual(firstAction);
+      expect(continued).toMatchObject({
+        status: 'failed',
+        message: expect.stringMatching(/reconcil/i),
+      });
+      expect(continued?.externalAction).toBeUndefined();
+      expect(driftedRetry).toMatchObject({
+        status: 'failed',
+        message: expect.stringMatching(/preview.*drift/i),
+      });
+      expect(
+        (await readdir(locations.operational.operationsDir)).filter((path) =>
+          path.endsWith('.json'),
+        ),
+      ).toEqual(operationFiles);
+      expect(
+        (await readdir(locations.operational.operationsDir)).filter((path) =>
+          path.endsWith('.action'),
+        ),
+      ).toEqual(firstActionFiles);
+      expect(await store.readOperation(operationId)).toMatchObject({
+        state: 'attempt-started',
+        attempts: [
+          {
+            attemptId: firstAction!.stepId,
+            requestDigest: firstAction!.actionDigest,
+          },
+        ],
+      });
+
+      const createObservation = {
+        schemaVersion: 1,
+        operationId,
+        stepId: firstAction!.stepId,
+        actionDigest: firstAction!.actionDigest,
+        observedAt: '2026-08-31T12:02:00.000Z',
+        surfaceKind: 'connector' as const,
+        capabilityEvidenceDigest: 'sha256:create-capability',
+        provider: 'linear' as const,
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed' as const,
+          identity: { stableId: 'issue-restart-1', aliases: ['RESTART-1'] },
+          fields: firstAction!.intent.fields,
+          revisionDigest: 'sha256:create-observation',
+          diagnosticCode: null,
         },
-      }),
-      ['remote', 'operation', 'continue', '--operation', operationId],
-    );
-    expect(recoveredVerification?.externalAction).toMatchObject({
-      semanticOperation: 'read',
-      intent: { stableId: 'issue-restart-1' },
-    });
-    expect(
-      (await readdir(locations.operational.operationsDir)).filter((path) =>
-        path.endsWith('.json'),
-      ),
-    ).toEqual(operationFiles);
-  });
+      };
+      const interruptedVerification = createProductionRemoteRunner({
+        now: () => '2026-08-31T12:02:00.000Z',
+        randomId: () => 'commander-verification',
+        readObservationStdin: async () => createObservation,
+        crash: (point) => {
+          if (point === verificationCrashPoint) {
+            throw new Error('commander verification handoff interrupted');
+          }
+        },
+      });
+      await expect(
+        runCommand(interruptedVerification, [
+          'remote',
+          'operation',
+          'continue',
+          '--operation',
+          operationId,
+          '--observation-stdin',
+        ]),
+      ).resolves.toMatchObject({
+        status: 'failed',
+        message: 'commander verification handoff interrupted',
+      });
+
+      const recoveredVerification = await runCommand(
+        createProductionRemoteRunner({
+          now: () => '2026-08-31T12:03:00.000Z',
+          readObservationStdin: async () => {
+            throw new Error('restart must not repeat the create action');
+          },
+        }),
+        ['remote', 'operation', 'continue', '--operation', operationId],
+      );
+      if (verificationCrashPoint !== 'after-verification-handoff') {
+        expect(recoveredVerification).toMatchObject({
+          status: 'failed',
+          message: expect.stringMatching(/reconcil/i),
+        });
+        expect(recoveredVerification?.externalAction).toBeUndefined();
+      } else {
+        expect(recoveredVerification?.externalAction).toMatchObject({
+          semanticOperation: 'read',
+          intent: { stableId: 'issue-restart-1' },
+        });
+      }
+      expect(
+        (await readdir(locations.operational.operationsDir)).filter((path) =>
+          path.endsWith('.json'),
+        ),
+      ).toEqual(operationFiles);
+    },
+  );
 
   it('does not accept caller-self-attested mutation authority fields', async () => {
     const { root, requests } = harness();

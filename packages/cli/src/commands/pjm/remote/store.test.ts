@@ -662,6 +662,35 @@ describe('RemoteSyncStore', () => {
       evidenceDigest: 'sha256:accepted-observation',
       actionDigest: createAction.actionDigest,
     };
+    const verificationHandoff = {
+      acceptedMutation: {
+        actionDigest: createAction.actionDigest,
+        observedAt: observation.observedAt,
+        evidenceDigest: observation.evidenceDigest,
+        stableId: 'issue-node-123',
+      },
+      verificationAction,
+    };
+    await expect(
+      store.transitionOperation(createAction.operationId, 'attempt-started', {
+        state: 'verification-pending',
+        updatedAt: observation.observedAt,
+        appendObservation: observation,
+        completeAttempt: {
+          attemptId: createAction.stepId,
+          completedAt: observation.observedAt,
+          receiptDigest: observation.evidenceDigest,
+        },
+        lastSafeStep: 'verification-pending',
+        retryDisposition: 'reconcile-required',
+        currentAction: {
+          ...verificationAction,
+          stepId: 'verify_conflicting_123',
+          actionDigest: 'sha256:conflicting-verification-action',
+        },
+        verificationHandoff,
+      }),
+    ).rejects.toThrow(/canonical current action/i);
     await store.transitionOperation(
       createAction.operationId,
       'attempt-started',
@@ -676,15 +705,8 @@ describe('RemoteSyncStore', () => {
         },
         lastSafeStep: 'verification-pending',
         retryDisposition: 'reconcile-required',
-        verificationHandoff: {
-          acceptedMutation: {
-            actionDigest: createAction.actionDigest,
-            observedAt: observation.observedAt,
-            evidenceDigest: observation.evidenceDigest,
-            stableId: 'issue-node-123',
-          },
-          verificationAction,
-        },
+        currentAction: verificationAction,
+        verificationHandoff,
       },
     );
 
@@ -693,6 +715,7 @@ describe('RemoteSyncStore', () => {
       restarted.readOperation(createAction.operationId),
     ).resolves.toMatchObject({
       state: 'verification-pending',
+      currentAction: verificationAction,
       verificationHandoff: {
         acceptedMutation: { stableId: 'issue-node-123' },
         verificationAction,
@@ -702,7 +725,7 @@ describe('RemoteSyncStore', () => {
     });
     await expect(
       restarted.readCurrentAction(createAction.operationId),
-    ).resolves.toEqual(createAction);
+    ).resolves.toEqual(verificationAction);
   });
 
   it('requires expected state transitions and rejects duplicate steps', async () => {

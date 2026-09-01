@@ -1070,15 +1070,22 @@ describe('remote record schemas', () => {
       },
     };
 
+    const canonical = {
+      ...record,
+      currentAction: record.verificationHandoff.verificationAction,
+    };
     expect(
-      RemoteOperationRecordSchema.parse(record).verificationHandoff,
+      RemoteOperationRecordSchema.parse(canonical).verificationHandoff,
     ).toBeDefined();
+    expect(() => RemoteOperationRecordSchema.parse(record)).toThrow(
+      /canonical current action/i,
+    );
     expect(() =>
-      RemoteOperationRecordSchema.parse({ ...record, observations: [] }),
+      RemoteOperationRecordSchema.parse({ ...canonical, observations: [] }),
     ).toThrow(/committed mutation evidence/i);
     expect(() =>
       RemoteOperationRecordSchema.parse({
-        ...record,
+        ...canonical,
         verificationHandoff: {
           ...record.verificationHandoff,
           verificationAction: {
@@ -1088,6 +1095,16 @@ describe('remote record schemas', () => {
         },
       }),
     ).toThrow(/identity must match/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...canonical,
+        currentAction: {
+          ...canonical.currentAction,
+          stepId: 'verify_other_123',
+          actionDigest: 'sha256:other-verification-action',
+        },
+      }),
+    ).toThrow(/canonical current action/i);
   });
 
   it('requires explicit durable-identity verification evidence for materialization', () => {

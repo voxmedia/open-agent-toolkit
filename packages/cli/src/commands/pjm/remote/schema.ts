@@ -1071,6 +1071,7 @@ const CurrentRemoteOperationRecordSchema = z
     steps: z.array(RemoteOperationStepSchema).max(64),
     materializationSteps: z.array(MaterializationStepSchema).max(7).optional(),
     materializationPlan: MaterializationPlanSchema.optional(),
+    currentAction: DurableVerificationReadActionSchema.optional(),
     verificationHandoff: DurableVerificationHandoffSchema.optional(),
     outcome: RemoteOperationOutcomeSchema,
     createIntent: PlannedBindingCreateSchema.optional(),
@@ -1420,6 +1421,18 @@ const CurrentRemoteOperationRecordSchema = z
     if (record.verificationHandoff) {
       const handoff = record.verificationHandoff;
       if (
+        !record.currentAction ||
+        JSON.stringify(record.currentAction) !==
+          JSON.stringify(handoff.verificationAction)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['currentAction'],
+          message:
+            'Verification-pending evidence requires the exact canonical current action.',
+        });
+      }
+      if (
         handoff.verificationAction.operationId !== record.operationId ||
         handoff.verificationAction.provider !== record.provider ||
         JSON.stringify(handoff.verificationAction.context) !==
@@ -1475,6 +1488,14 @@ const CurrentRemoteOperationRecordSchema = z
             'Verification handoff is valid only after the mutation attempt.',
         });
       }
+    }
+    if (record.currentAction && !record.verificationHandoff) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['currentAction'],
+        message:
+          'Canonical current action requires its matching verification handoff.',
+      });
     }
   });
 

@@ -535,7 +535,7 @@ describe('production lifecycle composition', () => {
     ['user-approved', 'after-create-attempt'],
     ['user-approved', 'before-create-envelope'],
   ] as const)(
-    'resumes %s create handoff after %s with one exact durable action',
+    'resumes or reconciles %s create handoff after %s without replay',
     async (authorityMode, crashPoint) => {
       const repository = await mkdtemp(join(tmpdir(), 'oat-create-handoff-'));
       temporaryDirectories.push(repository);
@@ -696,6 +696,9 @@ describe('production lifecycle composition', () => {
           .slice(0, -'.json'.length);
       }
 
+      const exposureUncertain =
+        crashPoint === 'after-create-attempt' ||
+        crashPoint === 'before-create-envelope';
       let resumed;
       if (
         authorityMode === 'user-authorized' &&
@@ -711,11 +714,18 @@ describe('production lifecycle composition', () => {
           crashPoint === 'after-create-operation'
         )
       ) {
-        resumed = await createProductionRemoteRunner({ now: () => timestamp })({
+        const continuation = createProductionRemoteRunner({
+          now: () => timestamp,
+        })({
           operation: 'operation-continue',
           projectRoot: repository,
           operationId,
         });
+        if (exposureUncertain) {
+          await expect(continuation).rejects.toThrow(/reconcil/i);
+        } else {
+          resumed = await continuation;
+        }
       }
 
       const operation = await store.readOperation(operationId);
@@ -1162,6 +1172,146 @@ describe('production lifecycle composition', () => {
         state: 'verified',
         attempts: [{ requestDigest: mutation.actionDigest }],
       });
+    },
+  );
+
+  it.each([
+    'after-observation-acceptance',
+    'after-verification-action-retired',
+  ] as const)(
+    'fails closed after %s before the verification journal is durable',
+    async (handoffCrashPoint) => {
+      const repository = await mkdtemp(join(tmpdir(), 'oat-create-observed-'));
+      temporaryDirectories.push(repository);
+      execFileSync('git', ['init', '--quiet'], { cwd: repository });
+      const targetPath = join(
+        repository,
+        '.oat',
+        'repo',
+        'pjm',
+        'backlog',
+        'items',
+        'item-1.md',
+      );
+      await mkdir(join(targetPath, '..'), { recursive: true });
+      await writeFile(
+        targetPath,
+        '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+      );
+      await writeFile(
+        join(repository, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          pjm: {
+            initialized: true,
+            schemaVersion: 1,
+            remote: {
+              schemaVersion: 1,
+              policy: {
+                description: 'managed-section',
+                authority: {
+                  default: 'read-only',
+                  operations: { create: 'user-authorized' },
+                },
+              },
+            },
+          },
+        })}\n`,
+      );
+      const authorityPath = join(repository, '.oat', 'invocation.json');
+      await writeFile(
+        authorityPath,
+        `${JSON.stringify({
+          schemaVersion: 1,
+          kind: 'interactive',
+          sourceId: 'host-session-1',
+          invocationId: 'invocation-1',
+          issuedAt: '2026-08-31T11:59:00.000Z',
+          expiresAt: '2026-08-31T12:05:00.000Z',
+          instruction: {
+            operationClass: 'create',
+            targetId: 'backlog:item-1',
+            evidenceDigest: 'sha256:instruction',
+          },
+          approval: null,
+        })}\n`,
+      );
+      let currentObservation: unknown = {
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: timestamp,
+      };
+      const ids = ['observed-operation', 'observed-binding', 'observed-create'];
+      const prepared = await createProductionRemoteRunner({
+        now: () => timestamp,
+        randomId: () => ids.shift() ?? 'unused',
+        readObservationStdin: async () => currentObservation,
+      })({
+        operation: 'publish',
+        projectRoot: repository,
+        createTarget: {
+          provider: 'linear',
+          localKind: 'backlog',
+          localId: 'item-1',
+        },
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      });
+      const createAction = prepared.externalAction!;
+      currentObservation = {
+        schemaVersion: 1,
+        operationId: createAction.operationId,
+        stepId: createAction.stepId,
+        actionDigest: createAction.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:create-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: { stableId: 'issue-observed-1', aliases: ['OBSERVED-1'] },
+          fields: createAction.intent.fields,
+          revisionDigest: 'sha256:create-observation',
+          diagnosticCode: null,
+        },
+      };
+      const interrupted = createProductionRemoteRunner({
+        now: () => timestamp,
+        randomId: () => 'observed-verification',
+        readObservationStdin: async () => currentObservation,
+        crash: (point) => {
+          if (point === handoffCrashPoint) {
+            throw new Error(`crash:${point}`);
+          }
+        },
+      });
+      await expect(
+        interrupted({
+          operation: 'operation-continue',
+          projectRoot: repository,
+          operationId: createAction.operationId,
+          observationStdin: true,
+        }),
+      ).rejects.toThrow(`crash:${handoffCrashPoint}`);
+
+      const restarted = createProductionRemoteRunner({
+        now: () => timestamp,
+        readObservationStdin: async () => {
+          throw new Error('restart must not emit the create action');
+        },
+      });
+      await expect(
+        restarted({
+          operation: 'operation-continue',
+          projectRoot: repository,
+          operationId: createAction.operationId,
+        }),
+      ).rejects.toThrow(/reconcil/i);
     },
   );
 
