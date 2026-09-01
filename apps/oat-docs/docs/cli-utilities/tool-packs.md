@@ -249,6 +249,16 @@ at user scope; for example, `skeptical-evaluator` does not gain a native
 provider role through that install. When no Codex or Cursor adapter is active,
 even built-in and marked roles lack native materialization.
 
+Before native role planning, user sync requires every installed
+user-materializable agent to have `current` inventory that matches its bundled
+definition. An `outdated`, `newer`, or otherwise present-but-non-current agent
+fails closed instead of projecting drifted instructions. Update the owning pack
+at user scope before retrying sync; for example:
+
+```bash
+oat tools update --pack research --scope user
+```
+
 This diagnostic concerns native provider roles only. Providers may read
 canonical agent instructions through a separate loaded, user, and project
 lookup contract; that read availability does not establish native
