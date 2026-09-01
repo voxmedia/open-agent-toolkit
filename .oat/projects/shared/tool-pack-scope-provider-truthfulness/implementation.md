@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** fourth review fix added; final bounded correction pending
+**Status:** final bounded fix complete; terminal High review pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -927,6 +927,23 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - This consumes the final bounded p04 review-fix cycle under the configured
   retry limit. A fresh round-5 review must pass or return to operator governance;
   Phase 5 remains gated.
+
+### Review Round 4 Fix
+
+- Commit: `04a30164a1b9f0743b5ea83526a1a734f5afbbd0`
+- Added explicit no-clobber IO for deferred collection-to-per-entry symlink and
+  copy creates. User files or directories appearing after absence revalidation
+  survive unchanged; the child reports actionable failure and manifest evidence
+  cannot claim success. Ordinary non-transition behavior remains unchanged.
+- Verification: RED reproduced all four symlink/copy by file/directory races;
+  focused GREEN passed 58/58. The authoritative Phase 4 union passed live at 18
+  files / 410 tests before and after commit. CLI lint, type-check, format,
+  `pnpm check`, full `pnpm test`, and `git diff --check` passed. Root
+  independently verified the exact three-file boundary, clean worktree,
+  whitespace, and the live 410-test union.
+- A terminal exact-High round-5 reviewer will assess the complete Phase 4
+  range. Any blocking result returns to operator governance; Phase 5 remains
+  gated until a pass.
 
 ---
 
@@ -1339,6 +1356,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: attempted; complete nested dispatch and reconciliation
   evidence is preserved in the review artifact.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 4
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r4-fix-20260901T031500Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `04a30164a1b9f0743b5ea83526a1a734f5afbbd0`
+- Outcome: the final Critical finding is closed; focused 58/58 and authoritative
+  Phase 4 union 410/410 passed with exact three-file and whitespace checks.
+- Dispatch: scope=p04-review-r4-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
