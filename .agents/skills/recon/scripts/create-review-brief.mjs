@@ -170,6 +170,14 @@ export function createReviewBrief(input) {
 }
 
 function inspectForbidden(value, path, errors) {
+  if (typeof value === 'string') {
+    if (/raw[\\/]dossiers/i.test(value)) {
+      errors.push(
+        issue('BLINDNESS_VIOLATION', 'Raw dossier paths are forbidden', path),
+      );
+    }
+    return;
+  }
   if (Array.isArray(value)) {
     value.forEach((item, index) =>
       inspectForbidden(item, `${path}[${index}]`, errors),
@@ -183,15 +191,6 @@ function inspectForbidden(value, path, errors) {
         issue(
           'BLINDNESS_VIOLATION',
           `Forbidden field ${key}`,
-          `${path}.${key}`,
-        ),
-      );
-    }
-    if (typeof item === 'string' && /raw[\\/]dossiers/i.test(item)) {
-      errors.push(
-        issue(
-          'BLINDNESS_VIOLATION',
-          'Raw dossier paths are forbidden',
           `${path}.${key}`,
         ),
       );

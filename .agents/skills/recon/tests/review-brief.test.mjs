@@ -161,6 +161,53 @@ test('brief validation rejects selective-blind contract violations', async () =>
   );
 });
 
+test('brief validation scans direct array strings with path-specific diagnostics', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const valid = createReviewBrief({
+    mode: 'adversary',
+    id: 'brief-array-strings',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+  });
+
+  const cases = [
+    ['$.questions[0]', (brief) => (brief.questions = ['raw/dossiers/q.json'])],
+    [
+      '$.scope.included[0]',
+      (brief) => (brief.scope.included = ['raw/dossiers/included.json']),
+    ],
+    [
+      '$.scope.excluded[0]',
+      (brief) => (brief.scope.excluded = ['raw\\dossiers\\excluded.json']),
+    ],
+    [
+      '$.questions[0].detail',
+      (brief) => (brief.questions = [{ detail: 'raw/dossiers/nested.json' }]),
+    ],
+  ];
+  for (const [expectedPath, mutate] of cases) {
+    const candidate = structuredClone(valid);
+    mutate(candidate);
+    const result = validateReviewBrief(candidate);
+    assert.equal(result.valid, false, expectedPath);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.code === 'BLINDNESS_VIOLATION' && error.path === expectedPath,
+      ),
+      JSON.stringify(result, null, 2),
+    );
+  }
+
+  const allowed = structuredClone(valid);
+  allowed.questions = ['Compare raw dossier summaries without opening paths.'];
+  allowed.scope.included = ['references/evidence'];
+  assert.equal(validateReviewBrief(allowed).valid, true);
+  assert.equal(validateReviewBrief(valid).valid, true);
+});
+
 test('brief output rejects symlinked ancestors before creating a new file', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
