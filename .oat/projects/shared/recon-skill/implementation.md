@@ -1477,6 +1477,23 @@ bounded receive commit are reconciled into the durable receive receipt.
 - Sequence status advanced to `complete`; implementation completion bookkeeping
   is the remaining lifecycle mutation.
 
+### Recovery Event recon-skill-p05-recovery-001
+
+- Phase/task: p05 / p05-t04
+- Original request: recon-skill-p05-implementation-20260901T232205Z
+- Original commit: e47466edd974a25056fa913a1230818f5dc8b554
+- Defect class: test
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 79f344ce97b15037b0a09d5a066bc928b7393ec8
+- Verification: focused 80/80 pass; phase 158/158 pass; `pnpm test` pass
+- Reason: Phase-wide testing found one stale bundled-skill wording assertion;
+  a bounded test-only correction aligned it with p05-t04's portable same-scope
+  dependency contract without changing public behavior.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
