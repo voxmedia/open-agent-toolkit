@@ -15,6 +15,7 @@ import { createProvidersInspectCommand } from './inspect';
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
   driftStateByProviderPath?: Record<string, 'in_sync' | 'drifted' | 'missing'>;
+  manifest?: Manifest;
 }
 
 interface RunInspectArgs {
@@ -73,6 +74,39 @@ function createEntry(provider: string, name: string): ManifestEntry {
   };
 }
 
+function createCollectionManifest(): Manifest {
+  return {
+    version: 2,
+    oatVersion: OAT_VERSION,
+    entries: [
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.claude/skills/skill-one',
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'collection',
+        collectionId: 'claude-skills',
+        contentHash: null,
+        isFile: false,
+        lastSynced: '2026-02-14T00:00:00.000Z',
+      },
+    ] as unknown as ManifestEntry[],
+    collections: [
+      {
+        id: 'claude-skills',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: 'oat-created',
+        lastVerified: '2026-02-14T00:00:00.000Z',
+      },
+    ],
+    lastUpdated: '2026-02-14T00:00:00.000Z',
+  };
+}
+
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -111,6 +145,9 @@ function createHarness(options: HarnessOptions = {}): {
     loadManifest: vi.fn(async (manifestPath: string) => {
       if (manifestPath.startsWith('/tmp/home')) {
         return createManifest([]);
+      }
+      if (options.manifest) {
+        return options.manifest;
       }
       return createManifest([
         createEntry('claude', 'skill-one'),
@@ -274,6 +311,36 @@ describe('oat providers inspect', () => {
     expect(capture.info[0]).toContain('managed=2');
     expect(capture.info[0]).toContain('drifted=1');
     expect(capture.info[0]).toContain('missing=1');
+  });
+
+  it('shows collection alias ownership and redacted scope-relative paths', async () => {
+    const humanHarness = createHarness({
+      manifest: createCollectionManifest(),
+    });
+    await runInspectCommand(humanHarness.command, { provider: 'claude' });
+    expect(humanHarness.capture.info[0]).toContain('Collection aliases:');
+    expect(humanHarness.capture.info[0]).toContain(
+      '[project] skill oat-created .agents/skills -> .claude/skills',
+    );
+    expect(humanHarness.capture.info[0]).not.toContain('/tmp/workspace');
+
+    const jsonHarness = createHarness({ manifest: createCollectionManifest() });
+    await runInspectCommand(jsonHarness.command, {
+      provider: 'claude',
+      globalArgs: ['--json'],
+    });
+    expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      collectionAliases: [
+        {
+          scope: 'project',
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          ownership: 'oat-created',
+          lastVerified: '2026-02-14T00:00:00.000Z',
+        },
+      ],
+    });
   });
 
   it('shows CLI version when available', async () => {

@@ -32,6 +32,29 @@ Autonomous worktree bootstrap also treats sync output as setup state. `oat-workt
 
 For transformed mappings such as project-scoped rules, the manifest stores hashes for the rendered provider output that was actually written, not the canonical source markdown. This keeps drift detection aligned with the on-disk managed file.
 
+### Collection alias ownership
+
+Manifest version 2 can record an exact collection-directory alias plus the
+canonical entries inherited through it. Collection records distinguish links
+created by OAT (`oat-created`) from exact links OAT adopted without rewriting
+(`adopted-exact`). Inherited entries use the `collection` strategy and refer to
+their owning collection record; OAT does not mutate provider child paths under
+that alias.
+
+Collection creation is transactional. OAT proves that the destination is
+absent, creates a symlink directly at the final path without copy fallback,
+rechecks exact identity, and atomically writes the manifest. If manifest
+persistence fails, OAT removes only the unchanged link it just created. A
+destination race, unsafe ancestry, broken link, foreign target, or unverifiable
+identity is preserved and fails closed.
+
+An existing safe link is adopted only when it exactly resolves to the canonical
+collection and has the same entry set. An existing real provider directory is
+never replaced; `auto` falls back to ordinary per-entry sync. Disabling a
+provider detaches adopted ownership while preserving its link. OAT-created
+links are removed only when they remain exact and unchanged, and canonical
+targets are never removed.
+
 ## Drift states
 
 - `in_sync`
@@ -46,6 +69,11 @@ For transformed mappings such as project-scoped rules, the manifest stores hashe
 - `replaced`
 
 Rendered rule files participate in the same drift states as other managed copies. If a provider rule file is edited directly, drift is computed against the expected rendered output for that provider.
+
+Collection-backed entries are checked through the owning collection identity.
+An exact alias is `in_sync`; an absent alias is `missing`; and a broken,
+replaced, foreign, or otherwise unverifiable alias is `drifted`. Provider list
+and inspect output summarize collection ownership separately from copy mode.
 
 ## Stray adoption
 

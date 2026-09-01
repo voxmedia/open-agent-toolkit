@@ -36,6 +36,19 @@ type ContextualInspectDependencies = ProvidersInspectDependencies & {
   resolveProviderScopeContext?: typeof resolveProviderScopeContext;
 };
 
+interface ProviderCollectionAliasInspection {
+  scope: ProviderScopeInspection['scope'];
+  contentType: string;
+  canonicalDir: string;
+  providerDir: string;
+  ownership: 'oat-created' | 'adopted-exact';
+  lastVerified: string;
+}
+
+type ProviderInspectResultWithCollections = ProviderInspectResult & {
+  collectionAliases: ProviderCollectionAliasInspection[];
+};
+
 function contentInspection(
   capability: ProviderContentCapability,
   mappingState?: ProviderInspectMappingState,
@@ -121,7 +134,7 @@ async function collectInspectResult(
   providerName: string,
   context: CommandContext,
   dependencies: ContextualInspectDependencies,
-): Promise<ProviderInspectResult | null> {
+): Promise<ProviderInspectResultWithCollections | null> {
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
     scopes.map(async (scope) => {
@@ -153,6 +166,7 @@ async function collectInspectResult(
   );
   if (!adapter) return null;
   const mappings: ProviderInspectMappingState[] = [];
+  const collectionAliases: ProviderCollectionAliasInspection[] = [];
   let detected = false;
 
   for (const scopeRoot of scopeRoots) {
@@ -166,6 +180,18 @@ async function collectInspectResult(
 
     const manifestPath = join(scopeRoot.root, '.oat', 'sync', 'manifest.json');
     const manifest = await dependencies.loadManifest(manifestPath);
+    collectionAliases.push(
+      ...(manifest.collections ?? [])
+        .filter((collection) => collection.provider === adapter.name)
+        .map((collection) => ({
+          scope: scopeRoot.scope,
+          contentType: collection.contentType,
+          canonicalDir: collection.canonicalDir,
+          providerDir: collection.providerDir,
+          ownership: collection.ownership,
+          lastVerified: collection.lastVerified,
+        })),
+    );
 
     const scopeMappings =
       scopeRoot.scope === 'project'
@@ -283,10 +309,11 @@ async function collectInspectResult(
     version,
     mappings,
     scopes: providerScopes,
+    collectionAliases,
   };
 }
 
-function formatInspect(result: ProviderInspectResult): string {
+function formatInspect(result: ProviderInspectResultWithCollections): string {
   const lines = [
     formatProviderDetails(
       {
@@ -307,6 +334,15 @@ function formatInspect(result: ProviderInspectResult): string {
     for (const mapping of result.mappings) {
       lines.push(
         `- [${mapping.scope}] ${mapping.contentType} ${mapping.providerDir} projection=${mapping.projectionModes.join('|')} materialization=${mapping.materialization} visibility=${mapping.visibility} managed=${mapping.managed} in_sync=${mapping.inSync} drifted=${mapping.drifted} missing=${mapping.missing}`,
+      );
+    }
+  }
+
+  if (result.collectionAliases.length > 0) {
+    lines.push('Collection aliases:');
+    for (const collection of result.collectionAliases) {
+      lines.push(
+        `- [${collection.scope}] ${collection.contentType} ${collection.ownership} ${collection.canonicalDir} -> ${collection.providerDir} last_verified=${collection.lastVerified}`,
       );
     }
   }

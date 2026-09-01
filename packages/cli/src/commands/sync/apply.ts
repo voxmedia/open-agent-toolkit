@@ -1,5 +1,6 @@
 import type { CommandContext } from '@app/command-context';
 import type { SyncOperationResult } from '@engine/engine.types';
+import type { CollectionOperationResult } from '@engine/execute-plan';
 import type { SyncPlan, SyncResult } from '@engine/index';
 import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import {
@@ -19,7 +20,12 @@ import type {
   SyncCommandDependencies,
   SyncSummary,
 } from './sync.types';
-import { countPlannedOperations } from './sync.utils';
+import {
+  buildCollectionLifecycle,
+  countPlannedOperations,
+  formatCollectionLifecycle,
+  toSyncOutputPlan,
+} from './sync.utils';
 
 interface ProviderRefreshAdvice {
   scope: ConcreteScope;
@@ -34,6 +40,7 @@ interface CoreApplyEvidence {
   operationResults: readonly SyncOperationResult[];
   aggregateOnly: boolean;
   aggregate: Pick<SyncResult, 'applied' | 'failed' | 'skipped'>;
+  collectionResults: readonly CollectionOperationResult[];
 }
 
 function extensionResultContentKind(
@@ -224,6 +231,9 @@ function formatCoreResults(
 ): string {
   const operations = [...plan.entries, ...plan.removals];
   if (operations.length === 0) {
+    if ((plan.collections?.length ?? 0) > 0) {
+      return 'Core results\nNo per-entry operations.';
+    }
     return dependencies.formatSyncPlan(plan, true);
   }
 
@@ -277,8 +287,17 @@ function formatAppliedOutput(
         coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan),
         dependencies,
       );
+      const collectionOutput = formatCollectionLifecycle(
+        buildCollectionLifecycle(
+          scopePlan,
+          coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan)
+            ?.collectionResults,
+        ),
+      );
       if (scopePlan.materializationExtensions.length === 0) {
-        return `Scope: ${scopePlan.scope}\n${syncOutput}`;
+        return [`Scope: ${scopePlan.scope}\n${syncOutput}`, collectionOutput]
+          .filter(Boolean)
+          .join('\n\n');
       }
 
       const extensionSections = scopePlan.materializationExtensions.map(
@@ -304,7 +323,13 @@ function formatAppliedOutput(
         },
       );
 
-      return `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${extensionSections.join('\n\n')}`;
+      return [
+        `Scope: ${scopePlan.scope}\n${syncOutput}`,
+        collectionOutput,
+        extensionSections.join('\n\n'),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
     })
     .join('\n\n');
 }
@@ -327,7 +352,9 @@ export async function runSyncApply(
 
   for (const scopePlan of scopePlans) {
     const hasSyncEntries =
-      scopePlan.plan.entries.length > 0 || scopePlan.plan.removals.length > 0;
+      scopePlan.plan.entries.length > 0 ||
+      scopePlan.plan.removals.length > 0 ||
+      (scopePlan.plan.collections?.length ?? 0) > 0;
     const hasExtensionPlannedOperations =
       scopePlan.materializationExtensionPlans.some((plan) =>
         plan.operations.some((operation) => operation.action !== 'skip'),
@@ -365,6 +392,7 @@ export async function runSyncApply(
         operationResults: normalizedResults,
         aggregateOnly: result.operations === undefined,
         aggregate: result,
+        collectionResults: result.collectionResults ?? [],
       });
     }
 
@@ -442,11 +470,19 @@ export async function runSyncApply(
     operationResults,
     extensionResults: extensionOperationResults,
   });
+  const collectionOperations = scopePlans.flatMap((scopePlan) =>
+    buildCollectionLifecycle(
+      scopePlan,
+      coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan)
+        ?.collectionResults,
+    ),
+  );
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       dryRun: false,
-      plans: scopePlans.map((scopePlan) => scopePlan.plan),
+      plans: scopePlans.map(toSyncOutputPlan),
+      collectionOperations,
       summary,
       providerMismatches,
       versionSkew,

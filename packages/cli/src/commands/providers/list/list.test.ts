@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
   driftStateByProvider?: Record<string, 'in_sync' | 'drifted' | 'missing'>;
+  manifest?: Manifest;
 }
 
 interface RunProvidersArgs {
@@ -71,6 +72,39 @@ function createEntry(provider: string, name: string): ManifestEntry {
   };
 }
 
+function createCollectionManifest(): Manifest {
+  return {
+    version: 2,
+    oatVersion: OAT_VERSION,
+    entries: [
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.claude/skills/skill-one',
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'collection',
+        collectionId: 'claude-skills',
+        contentHash: null,
+        isFile: false,
+        lastSynced: '2026-02-14T00:00:00.000Z',
+      },
+    ] as unknown as ManifestEntry[],
+    collections: [
+      {
+        id: 'claude-skills',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: 'adopted-exact',
+        lastVerified: '2026-02-14T00:00:00.000Z',
+      },
+    ],
+    lastUpdated: '2026-02-14T00:00:00.000Z',
+  };
+}
+
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -107,6 +141,9 @@ function createHarness(options: HarnessOptions = {}): {
     loadManifest: vi.fn(async (manifestPath: string) => {
       if (manifestPath.startsWith('/tmp/home')) {
         return createManifest([]);
+      }
+      if (options.manifest) {
+        return options.manifest;
       }
       return createManifest([
         createEntry('claude', 'skill-one'),
@@ -287,6 +324,37 @@ describe('oat providers list', () => {
 
     expect(capture.info[0]).toContain('strategy=symlink');
     expect(capture.info[0]).toContain('content_types=skill');
+  });
+
+  it('summarizes collection ownership consistently in human and JSON output', async () => {
+    const humanHarness = createHarness({
+      manifest: createCollectionManifest(),
+    });
+    await runProvidersList(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(humanHarness.capture.info[0]).toContain('collections=1');
+    expect(humanHarness.capture.info[0]).toContain(
+      'collection_ownership=oat-created:0|adopted-exact:1',
+    );
+
+    const jsonHarness = createHarness({ manifest: createCollectionManifest() });
+    await runProvidersList(jsonHarness.command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+    expect(jsonHarness.capture.jsonPayloads[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'claude',
+          collectionAliases: {
+            managed: 1,
+            oatCreated: 0,
+            adoptedExact: 1,
+          },
+        }),
+      ]),
+    );
   });
 
   it('outputs JSON array when --json flag set', async () => {

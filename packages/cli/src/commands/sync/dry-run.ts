@@ -6,7 +6,12 @@ import type {
   SyncCommandDependencies,
   SyncSummary,
 } from './sync.types';
-import { countPlannedOperations } from './sync.utils';
+import {
+  buildCollectionLifecycle,
+  countPlannedOperations,
+  formatCollectionLifecycle,
+  toSyncOutputPlan,
+} from './sync.utils';
 
 function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
   return {
@@ -26,6 +31,9 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
         total +
         scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
           .length +
+        (scopePlan.plan.collections ?? []).filter(
+          ({ action }) => action === 'fallback-per-entry',
+        ).length +
         extensionSkipped
       );
     }, 0),
@@ -78,11 +86,23 @@ function formatDryRunOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, false);
+      const collectionOutput = formatCollectionLifecycle(
+        buildCollectionLifecycle(scopePlan),
+      );
+      const syncOutput =
+        collectionOutput &&
+        scopePlan.plan.entries.length === 0 &&
+        scopePlan.plan.removals.length === 0
+          ? 'Per-entry sync plan\nNo per-entry operations.'
+          : dependencies.formatSyncPlan(scopePlan.plan, false);
       const extensionOutput = formatMaterializationExtensions(scopePlan);
-      return extensionOutput
-        ? `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${extensionOutput}`
-        : `Scope: ${scopePlan.scope}\n${syncOutput}`;
+      return [
+        `Scope: ${scopePlan.scope}\n${syncOutput}`,
+        collectionOutput,
+        extensionOutput,
+      ]
+        .filter(Boolean)
+        .join('\n\n');
     })
     .join('\n\n');
 }
@@ -103,6 +123,9 @@ export function runSyncDryRun(
     (scopePlan) => scopePlan.materializationExtensions,
   );
   const operationResults = buildOperationResults(scopePlans);
+  const collectionOperations = scopePlans.flatMap((scopePlan) =>
+    buildCollectionLifecycle(scopePlan),
+  );
   const codexExtensions = materializationExtensions
     .filter((extension) => extension.provider === 'codex')
     .map((extension) => ({
@@ -121,7 +144,8 @@ export function runSyncDryRun(
     context.logger.json({
       scope: context.scope,
       dryRun: true,
-      plans: scopePlans.map((scopePlan) => scopePlan.plan),
+      plans: scopePlans.map(toSyncOutputPlan),
+      collectionOperations,
       summary,
       providerMismatches,
       versionSkew,

@@ -37,7 +37,17 @@ type ContextualListDependencies = ProvidersListDependencies & {
   resolveProviderScopeContext?: typeof resolveProviderScopeContext;
 };
 
-function formatSummary(item: ProviderListItem): string {
+interface CollectionAliasSummary {
+  managed: number;
+  oatCreated: number;
+  adoptedExact: number;
+}
+
+type ProviderListItemWithCollections = ProviderListItem & {
+  collectionAliases: CollectionAliasSummary;
+};
+
+function formatSummary(item: ProviderListItemWithCollections): string {
   const contentTypes =
     item.contentTypes.length > 0 ? item.contentTypes.join('|') : 'none';
   const scopeEvidence = item.scopes
@@ -59,11 +69,13 @@ function formatSummary(item: ProviderListItem): string {
     `in_sync=${item.summary.inSync}`,
     `drifted=${item.summary.drifted}`,
     `missing=${item.summary.missing}`,
+    `collections=${item.collectionAliases.managed}`,
+    `collection_ownership=oat-created:${item.collectionAliases.oatCreated}|adopted-exact:${item.collectionAliases.adoptedExact}`,
     `evidence=${scopeEvidence || 'not-resolved'}`,
   ].join(', ');
 }
 
-function formatList(items: ProviderListItem[]): string {
+function formatList(items: ProviderListItemWithCollections[]): string {
   if (items.length === 0) {
     return 'No provider adapters registered.';
   }
@@ -186,7 +198,7 @@ function fallbackCapabilities(
 async function collectProviderList(
   context: CommandContext,
   dependencies: ContextualListDependencies,
-): Promise<ProviderListItem[]> {
+): Promise<ProviderListItemWithCollections[]> {
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = await Promise.all(
     scopes.map(async (scope) => {
@@ -220,7 +232,7 @@ async function collectProviderList(
     );
   }
 
-  const items: ProviderListItem[] = [];
+  const items: ProviderListItemWithCollections[] = [];
   const providerContexts = scopeRoots
     .map(({ providerContext }) => providerContext)
     .filter((value): value is ProviderScopeContext => value !== undefined);
@@ -229,6 +241,11 @@ async function collectProviderList(
     : dependencies.getAdapters();
   for (const adapter of adapters) {
     const summary = createEmptySummary();
+    const collectionAliases: CollectionAliasSummary = {
+      managed: 0,
+      oatCreated: 0,
+      adoptedExact: 0,
+    };
     const contentTypes = new Set<ContentType>();
     const contentSummaryByScope = new Map<string, ProviderListSummary>();
     for (const scope of scopes) {
@@ -252,6 +269,18 @@ async function collectProviderList(
       const manifest = manifestsByRoot.get(scopeRoot.root);
       if (!manifest) {
         continue;
+      }
+
+      for (const collection of manifest.collections ?? []) {
+        if (collection.provider !== adapter.name) {
+          continue;
+        }
+        collectionAliases.managed += 1;
+        if (collection.ownership === 'oat-created') {
+          collectionAliases.oatCreated += 1;
+        } else {
+          collectionAliases.adoptedExact += 1;
+        }
       }
 
       for (const entry of manifest.entries) {
@@ -352,6 +381,7 @@ async function collectProviderList(
       defaultStrategy: adapter.defaultStrategy,
       contentTypes: [...contentTypes].sort(),
       summary,
+      collectionAliases,
       scopes: providerScopes,
     });
   }

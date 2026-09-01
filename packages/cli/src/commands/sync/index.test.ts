@@ -225,6 +225,58 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
   };
 }
 
+function createCollectionPlan(
+  action:
+    | 'create-collection-link'
+    | 'fallback-per-entry' = 'create-collection-link',
+): SyncPlan {
+  return {
+    scope: 'project',
+    entries: [],
+    removals: [],
+    collections: [
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentType: 'skill',
+        canonicalDir: '/tmp/workspace/.agents/skills',
+        providerDir: '/tmp/workspace/.claude/skills',
+        action,
+        ownership: action === 'create-collection-link' ? 'oat-created' : 'none',
+        configuredStrategy: 'auto',
+        proof:
+          action === 'fallback-per-entry'
+            ? {
+                status: 'ineligible',
+                reason: 'real-directory',
+                checkedAt: '2026-02-14T00:00:00.000Z',
+              }
+            : {
+                status: 'absent',
+                canonicalDirectory: {
+                  device: 'secret-device',
+                  inode: 'secret-inode',
+                  type: 'directory',
+                  modifiedAtNanoseconds: '1',
+                },
+                providerParent: {
+                  device: 'secret-parent-device',
+                  inode: 'secret-parent-inode',
+                  type: 'directory',
+                  modifiedAtNanoseconds: '1',
+                },
+                checkedAt: '2026-02-14T00:00:00.000Z',
+              },
+        inheritedEntries: ['.agents/skills/skill-one'],
+        reason:
+          action === 'fallback-per-entry'
+            ? 'provider collection is a real directory; use per-entry sync'
+            : 'provider collection is absent',
+      },
+    ],
+  };
+}
+
 function createRulePlan(
   operation: SyncPlan['entries'][number]['operation'] = 'create_copy',
   scope: SyncPlan['scope'] = 'project',
@@ -522,6 +574,142 @@ describe('createSyncCommand', () => {
       '\nDry-run only: no filesystem changes were made.',
     );
     expect(capture.info).toContain('No changes to apply.');
+  });
+
+  it('renders redacted collection plans with structured fallback evidence in dry-run JSON and human output', async () => {
+    const plan = createCollectionPlan('fallback-per-entry');
+    const jsonHarness = createHarness({ plans: [plan] });
+    await runSyncCommand(jsonHarness.command, {
+      globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      collectionOperations: [
+        {
+          scope: 'project',
+          provider: 'claude',
+          contentType: 'skill',
+          action: 'fallback-per-entry',
+          ownership: 'none',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          reason: 'provider collection is a real directory; use per-entry sync',
+          result: {
+            status: 'planned',
+            reason:
+              'provider collection is a real directory; use per-entry sync',
+          },
+        },
+      ],
+      plans: [
+        {
+          collections: [
+            {
+              proof: { status: 'ineligible', reason: 'real-directory' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(JSON.stringify(jsonHarness.capture.jsonPayloads[0])).not.toContain(
+      '/tmp/workspace',
+    );
+
+    const humanHarness = createHarness({ plans: [plan] });
+    await runSyncCommand(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--dry-run'],
+    });
+    expect(humanHarness.capture.info[0]).toContain(
+      'fallback-per-entry ownership=none .agents/skills -> .claude/skills',
+    );
+    expect(humanHarness.capture.info[0]).toContain(
+      'result: planned — provider collection is a real directory; use per-entry sync',
+    );
+    expect(humanHarness.capture.info[0]).not.toContain('/tmp/workspace');
+  });
+
+  it('renders applied collection results with dry-run-parity fields', async () => {
+    const plan = createCollectionPlan();
+    const { capture, command, executeSyncPlan } = createHarness({
+      plans: [plan],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          collectionResults: [
+            {
+              provider: 'claude',
+              contentType: 'skill',
+              action: 'create-collection-link',
+              ownership: 'oat-created',
+              status: 'changed',
+              reason: 'provider collection is absent',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      collectionOperations: [
+        {
+          scope: 'project',
+          provider: 'claude',
+          contentType: 'skill',
+          action: 'create-collection-link',
+          ownership: 'oat-created',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          reason: 'provider collection is absent',
+          result: {
+            status: 'changed',
+            reason: 'provider collection is absent',
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain(
+      'secret-device',
+    );
+
+    const humanHarness = createHarness({
+      plans: [plan],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          collectionResults: [
+            {
+              provider: 'claude',
+              contentType: 'skill',
+              action: 'create-collection-link',
+              ownership: 'oat-created',
+              status: 'changed',
+              reason: 'provider collection is absent',
+            },
+          ],
+        },
+      ],
+    });
+    await runSyncCommand(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+    });
+    expect(humanHarness.capture.info[0]).toContain(
+      'create-collection-link ownership=oat-created .agents/skills -> .claude/skills',
+    );
+    expect(humanHarness.capture.info[0]).toContain(
+      'result: changed — provider collection is absent',
+    );
+    expect(humanHarness.capture.info[0]).not.toContain('/tmp/workspace');
   });
 
   it('apply (default): executes sync plan', async () => {
