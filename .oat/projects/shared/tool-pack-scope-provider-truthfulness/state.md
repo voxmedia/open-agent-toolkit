@@ -2,7 +2,7 @@
 oat_current_task: p05-t01
 oat_last_commit: 07977df386562bfd0974bc487d312d109a6e4b4f
 oat_blockers:
-  - Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.
+  - 'Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.'
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection

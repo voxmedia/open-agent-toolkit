@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.
+  - 'Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.'
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
