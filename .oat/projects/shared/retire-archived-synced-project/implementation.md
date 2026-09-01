@@ -486,6 +486,20 @@ pre-approval steps, recap guard, and final post-p04 approval are closed.
   review and configured exit-gate generation stale. The earlier p04 approval
   and terminal sequence remain historical evidence; current-basis final
   review, configured gate, and post-p04 approval must be re-established.
+- Current-basis final review request:
+  `80757da2-b5d9-45ef-8233-01a8f0f9aba4`.
+- Current-basis final review target: `oat-reviewer-gpt-5-6-sol-high`.
+- Current-basis review dispatch: `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Current-basis final review artifact:
+  `reviews/archived/final-review-2026-09-01T225407Z.md`.
+- Current-basis final review result: passed — 0 Critical, 0 Important, 1
+  Medium artifact-alignment finding, 0 Minor.
+- Current-basis review reconnaissance: not attempted.
+- Medium M1 disposition: non-blocking and required in the closeout
+  summary/document sequence. Refresh `summary.md` and the owned
+  `.oat/repo/pjm/current-state.md` entry after the fresh gate basis exists so
+  they cite p04-t06 and the current reviewed/gated state rather than the
+  superseded receipt.
 
 <!-- orchestration-runs-end -->
 

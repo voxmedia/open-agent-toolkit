@@ -107,7 +107,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T22:42:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T22:54:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -117,15 +117,15 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation tasks complete; closeout revalidation in progress
+**Status:** Final review passed; configured gate revalidation pending
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — all 14 tasks are complete. The current basis awaits final
-review, a fresh configured exit gate, and renewed post-p04 approval. PR #254
-remains open.
+Implementation — all 14 tasks and the current-basis final review are complete.
+A fresh configured exit gate, closeout artifact refresh, and renewed post-p04
+approval remain. PR #254 remains open.
 
 ## Artifacts
 
@@ -188,8 +188,9 @@ remains open.
 - ✓ PR #254 remote review converted one Medium null-recap finding to `p04-t06`
 - ✓ `p04-t06` completed at `9c1feafb8`; focused regression passed 15/15
 - ✓ Fresh `p04-t06` review passed with zero findings
-- ⧗ Prior final review, configured gate allowance, and p04 approval are stale
-  on the new substantive basis
+- ✓ Current-basis final review passed with one non-blocking artifact finding
+- ⧗ Prior configured gate allowance and p04 approval are stale on the new
+  substantive basis
 
 ## Blockers
 
@@ -197,5 +198,5 @@ None.
 
 ## Next Milestone
 
-Run current-basis final review, then a fresh configured exit gate and the
-approval-aware closeout sequence.
+Run a fresh configured exit gate, then refresh the summary/current-state
+narrative and complete the approval-aware closeout sequence.
