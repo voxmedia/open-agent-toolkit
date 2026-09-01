@@ -58,14 +58,18 @@ Key behavior:
 - Configured `auto` may adopt an existing exact collection-directory alias.
   When the destination is absent, the current runtime falls back per entry;
   OAT does not create or unlink a collection alias without identity-bound
-  guarded primitives. To transition an alias manually, verify and remove it,
-  then rerun sync so a new plan can revalidate the absent destination. The
-  current runtime fails closed for deferred directory copies because it cannot
-  keep every destination ancestor identity-bound. Change that provider to
-  `symlink` and rerun sync, or create and manage the provider copy outside OAT.
-  Deferred file copies and symlinks retain their no-clobber behavior. Explicit
-  `symlink` and `copy` remain per-entry modes; `oat sync` does not add a
-  `--strategy` option.
+  guarded primitives. Configuring an explicit per-entry strategy does not
+  release an owned collection: the current runtime fails closed for deferred
+  collection-directory copies and symlinks because it cannot keep every
+  destination ancestor identity-bound.
+  To leave the provider directory externally owned, run
+  `oat providers set --scope <scope> --disabled <provider>` and then
+  `oat sync --scope <scope>` to detach OAT ownership. Then verify and remove
+  the preserved alias before managing that directory manually.
+  Automatic transition requires an identity-bound, non-following publication
+  primitive. Deferred file operations and ordinary non-transition per-entry
+  symlinks retain their existing behavior. Explicit `symlink` and `copy` remain
+  per-entry modes; `oat sync` does not add a `--strategy` option.
 - Provider enable/disable honored via sync config
 - Cursor skills are native-read from canonical `.agents/skills`; sync does not
   create `.cursor/skills` mirrors

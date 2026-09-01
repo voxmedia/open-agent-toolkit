@@ -39,6 +39,7 @@ interface ExecuteSyncPlanDependencies {
   beforeFirstMutation?: () => Promise<void>;
   saveManifest?: typeof persistManifest;
   copyDirectory?: typeof copyDirectory;
+  createSymlinkNoClobber?: typeof createSymlinkNoClobber;
   createCollectionSymlinkNoClobber?: typeof createCollectionSymlinkNoClobber;
   removeCollectionSymlinkIfUnchanged?: typeof removeCollectionSymlinkIfUnchanged;
   proveCollectionIdentity?: typeof proveCollectionIdentity;
@@ -92,11 +93,11 @@ function classifyFailure(
   error: unknown,
   destinationPolicy: EntryDestinationPolicy,
 ): Pick<SyncOperationResult, 'status' | 'failure'> {
-  if (hasErrorCode(error, 'E_DEFERRED_DIRECTORY_COPY_UNSAFE')) {
+  if (hasErrorCode(error, 'E_DEFERRED_DIRECTORY_TRANSITION_UNSAFE')) {
     return {
       status: 'failed',
       failure:
-        'Manual recovery required: deferred directory-copy transitions are unavailable on this runtime. Change the provider strategy to symlink and retry sync, or copy the directory yourself and manage it outside OAT.',
+        'Manual recovery required: deferred collection-directory transitions are unavailable on this runtime. Disable the provider and run sync to detach OAT ownership, then verify and remove the preserved alias before managing the provider directory externally. Automatic publication requires an identity-bound, non-following primitive.',
     };
   }
   if (
@@ -235,12 +236,21 @@ async function applyEntry(
   manifest: ManifestV2,
   destinationPolicy: EntryDestinationPolicy,
   copyDirectoryImpl: typeof copyDirectory,
+  createSymlinkNoClobberImpl: typeof createSymlinkNoClobber,
 ): Promise<ManifestV2> {
   switch (planEntry.operation) {
     case 'create_symlink':
     case 'update_symlink': {
       if (destinationPolicy === 'preserve-existing') {
-        await createSymlinkNoClobber(
+        if (!planEntry.canonical.isFile) {
+          throw Object.assign(
+            new Error(
+              'Deferred collection-directory publication is unavailable on this runtime.',
+            ),
+            { code: 'E_DEFERRED_DIRECTORY_TRANSITION_UNSAFE' },
+          );
+        }
+        await createSymlinkNoClobberImpl(
           planEntry.canonical.canonicalPath,
           planEntry.providerPath,
           planEntry.canonical.isFile,
@@ -279,9 +289,9 @@ async function applyEntry(
         } else {
           throw Object.assign(
             new Error(
-              'Deferred directory copy publication is unavailable on this runtime.',
+              'Deferred collection-directory publication is unavailable on this runtime.',
             ),
-            { code: 'E_DEFERRED_DIRECTORY_COPY_UNSAFE' },
+            { code: 'E_DEFERRED_DIRECTORY_TRANSITION_UNSAFE' },
           );
         }
         const manifestEntry = await toManifestEntry(planEntry, 'copy');
@@ -433,7 +443,7 @@ function detachCollectionOwnership(
 async function executeCollectionTransaction(
   plans: readonly CollectionProjectionPlan[],
   manifest: ManifestV2,
-  blockedDeferredDirectoryCopies: ReadonlySet<string>,
+  blockedDeferredDirectoryTransitions: ReadonlySet<string>,
   dependencies: Required<
     Pick<
       ExecuteSyncPlanDependencies,
@@ -566,13 +576,13 @@ async function executeCollectionTransaction(
       };
 
       if (
-        blockedDeferredDirectoryCopies.has(
+        blockedDeferredDirectoryTransitions.has(
           `${plan.provider}::${plan.contentType}`,
         )
       ) {
         blockTransition(
           'rejected',
-          'Manual recovery required: deferred directory-copy transitions are unavailable on this runtime, so collection ownership was preserved. Change the provider strategy to symlink and retry sync, or copy the directory yourself and manage it outside OAT.',
+          `Manual recovery required: deferred collection-directory transitions are unavailable on this runtime, so collection ownership was preserved. Run "oat providers set --scope ${plan.scope} --disabled ${plan.provider}" and then "oat sync --scope ${plan.scope}" to detach OAT ownership. Then verify and remove the preserved alias before managing the provider directory externally. Automatic publication requires an identity-bound, non-following primitive.`,
         );
         continue;
       }
@@ -858,11 +868,12 @@ export async function executeSyncPlan(
     }
   }
 
-  const blockedDeferredDirectoryCopies = new Set(
+  const blockedDeferredDirectoryTransitions = new Set(
     operations
       .filter(
         (operation) =>
-          operation.operation === 'create_copy' &&
+          (operation.operation === 'create_copy' ||
+            operation.operation === 'create_symlink') &&
           operation.deferredUntilCollectionDetached &&
           !operation.canonical.isFile,
       )
@@ -872,7 +883,7 @@ export async function executeSyncPlan(
   const collectionTransaction = await executeCollectionTransaction(
     plan.collections ?? [],
     nextManifest,
-    blockedDeferredDirectoryCopies,
+    blockedDeferredDirectoryTransitions,
     collectionDependencies,
     manifestPath,
     beforeMutation,
@@ -932,6 +943,7 @@ export async function executeSyncPlan(
         nextManifest,
         destinationPolicy,
         dependencies.copyDirectory ?? copyDirectory,
+        dependencies.createSymlinkNoClobber ?? createSymlinkNoClobber,
       );
       operationResults.push(
         operationEvidence(plan.scope, operation, 'changed'),

@@ -16,7 +16,7 @@ import {
   DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
   type SyncConfig,
 } from '@config/sync-config';
-import { createSymlink } from '@fs/io';
+import { createSymlink, createSymlinkNoClobber } from '@fs/io';
 import {
   createEmptyManifest,
   loadManifest,
@@ -503,7 +503,7 @@ describe('sync engine integration', () => {
       );
       expect(result.failed).toBe(2);
       expect(result.collectionResults[0]).toMatchObject({
-        status: strategy === 'copy' ? 'rejected' : 'partial',
+        status: 'rejected',
         reason: expect.stringMatching(/manual|preserv|guard/i),
       });
       expect(result.operations[0]).toMatchObject({ status: 'failed' });
@@ -546,22 +546,37 @@ describe('sync engine integration', () => {
         await symlink(outside, destination, 'dir');
         await writeFile(join(destination, 'unsafe.md'), 'unsafe-write', 'utf8');
       };
+      let unsafeSymlinkCalls = 0;
+      const unsafeDeferredSymlink = async (
+        source: string,
+        destination: string,
+        isFile?: boolean,
+      ): Promise<void> => {
+        unsafeSymlinkCalls += 1;
+        await mkdir(providerDir);
+        await rm(providerDir, { recursive: true });
+        await symlink(outside, providerDir, 'dir');
+        await createSymlinkNoClobber(source, destination, isFile);
+      };
       const resumed = await executeSyncPlan(
         absentTransitionPlan,
         collectionManifest,
         manifestPath,
-        { copyDirectory: unsafeOrdinaryCopy },
+        {
+          copyDirectory: unsafeOrdinaryCopy,
+          createSymlinkNoClobber: unsafeDeferredSymlink,
+        },
       );
       if (strategy === 'copy') {
         expect(resumed.failed).toBe(2);
         expect(resumed.collectionResults[0]).toMatchObject({
           action: 'detach-collection',
           status: expect.stringMatching(/rejected|failed|partial/),
-          reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
         });
         expect(resumed.operations[0]).toMatchObject({
           status: 'failed',
-          failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
         });
         expect(ordinaryCopyCalls).toBe(0);
         await expect(lstat(providerDir)).rejects.toMatchObject({
@@ -614,11 +629,11 @@ describe('sync engine integration', () => {
         expect(retried.collectionResults[0]).toMatchObject({
           action: 'detach-collection',
           status: expect.stringMatching(/rejected|failed|partial/),
-          reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
         });
         expect(retried.operations[0]).toMatchObject({
           status: 'failed',
-          failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
         });
         expect(ordinaryCopyCalls).toBe(0);
         await expect(lstat(providerDir)).rejects.toMatchObject({
@@ -628,16 +643,100 @@ describe('sync engine integration', () => {
         await expect(loadManifest(manifestPath)).resolves.toEqual(
           blockedManifest,
         );
-      } else {
-        expect(resumed.failed).toBe(0);
-        expect((await lstat(providerDir)).isDirectory()).toBe(true);
-        expect(
-          (await lstat(join(providerDir, 'skill-one'))).isSymbolicLink(),
-        ).toBe(true);
-        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-          collections: [],
-          entries: [expect.objectContaining({ strategy })],
+
+        const changedStrategyPlan = await computeSyncPlan({
+          canonical: retryCanonical,
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'symlink' } },
+          },
+          scopeRoot: root,
         });
+        expect(changedStrategyPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_symlink',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+        const changedStrategy = await executeSyncPlan(
+          changedStrategyPlan,
+          blockedManifest,
+          manifestPath,
+          { createSymlinkNoClobber: unsafeDeferredSymlink },
+        );
+        expect(changedStrategy.failed).toBe(2);
+        expect(changedStrategy.collectionResults[0]).toMatchObject({
+          status: 'rejected',
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(changedStrategy.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
+      } else {
+        expect(resumed.failed).toBe(2);
+        expect(resumed.collectionResults[0]).toMatchObject({
+          status: 'rejected',
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(resumed.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+
+        const blockedManifest = await loadManifest(manifestPath);
+        expect(blockedManifest).toMatchObject({
+          collections: [expect.objectContaining({ ownership: 'oat-created' })],
+          entries: [expect.objectContaining({ strategy: 'collection' })],
+        });
+        const retryPlan = await computeSyncPlan({
+          canonical: await scanCanonical(root, 'project'),
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'symlink' } },
+          },
+          scopeRoot: root,
+        });
+        expect(retryPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_symlink',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+        const retried = await executeSyncPlan(
+          retryPlan,
+          blockedManifest,
+          manifestPath,
+          { createSymlinkNoClobber: unsafeDeferredSymlink },
+        );
+        expect(retried.failed).toBe(2);
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
       }
     },
   );

@@ -12,7 +12,11 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { copyDirectory, removeCollectionSymlinkIfUnchanged } from '@fs/io';
+import {
+  copyDirectory,
+  createSymlinkNoClobber,
+  removeCollectionSymlinkIfUnchanged,
+} from '@fs/io';
 import { computeFileHash } from '@manifest/hash';
 import {
   createEmptyManifest,
@@ -651,12 +655,71 @@ describe('executeSyncPlan', () => {
       expect(result.collectionResults[0]).toMatchObject({
         action: 'detach-collection',
         status: 'rejected',
-        reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        reason: expect.stringContaining(
+          'oat providers set --scope project --disabled claude',
+        ),
       });
       expect(result.operations[0]).toMatchObject({
         status: 'failed',
-        failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        failure: expect.stringContaining('oat sync --scope project'),
       });
+      await expect(lstat(destination)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+      await expect(
+        readFile(join(outside, 'user-owned.md'), 'utf8'),
+      ).resolves.toBe('outside-before');
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'collection-transition' }],
+        entries: [{ strategy: 'collection' }],
+      });
+    },
+  );
+
+  it.each(['provider-parent', 'collection-directory'] as const)(
+    'blocks deferred directory symlink before an unsafe %s swap hook',
+    async (swapKind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      const outside = await mkdtemp(join(tmpdir(), 'oat-execute-outside-'));
+      tempDirs.push(root, outside);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const { manifest, plan, providerDir } =
+        await createAbsentCollectionTransition(root, 'symlink');
+      await writeFile(join(outside, 'user-owned.md'), 'outside-before', 'utf8');
+      await saveManifest(manifestPath, manifest);
+      const providerParent = dirname(providerDir);
+      const destination = join(providerDir, 'skill-one');
+      let unsafePublicationCalls = 0;
+
+      const result = await executeSyncPlan(plan, manifest, manifestPath, {
+        createSymlinkNoClobber: async (source, dest, isFile) => {
+          unsafePublicationCalls += 1;
+          if (swapKind === 'provider-parent') {
+            await rm(providerParent, { recursive: true });
+            await symlink(outside, providerParent, 'dir');
+          } else {
+            await mkdir(providerDir);
+            await rm(providerDir, { recursive: true });
+            await symlink(outside, providerDir, 'dir');
+          }
+          await createSymlinkNoClobber(source, dest, isFile);
+        },
+      });
+
+      expect(unsafePublicationCalls).toBe(0);
+      expect(result.collectionResults[0]).toMatchObject({
+        action: 'detach-collection',
+        status: 'rejected',
+        reason: expect.stringContaining(
+          'oat providers set --scope project --disabled claude',
+        ),
+      });
+      expect(result.operations[0]).toMatchObject({
+        status: 'failed',
+        failure: expect.stringContaining('oat sync --scope project'),
+      });
+      expect((await lstat(providerParent)).isDirectory()).toBe(true);
       await expect(lstat(destination)).rejects.toMatchObject({
         code: 'ENOENT',
       });
@@ -693,7 +756,7 @@ describe('executeSyncPlan', () => {
     });
   });
 
-  it('preserves a final-window replacement and blocks every deferred child', async () => {
+  it('blocks before a final-window removal hook can replace the collection', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
@@ -701,8 +764,10 @@ describe('executeSyncPlan', () => {
       await createOwnedCollectionTransition(root);
     await saveManifest(manifestPath, manifest);
 
+    let removalCalls = 0;
     const result = await executeSyncPlan(plan, manifest, manifestPath, {
       removeCollectionSymlinkIfUnchanged: async (linkPath, created) => {
+        removalCalls += 1;
         finalCollectionRemovalRace.afterIdentityRead = async () => {
           await rm(linkPath);
           await writeFile(linkPath, 'user replacement', 'utf8');
@@ -713,13 +778,12 @@ describe('executeSyncPlan', () => {
 
     expect(result.collectionResults[0]).toMatchObject({
       action: 'detach-collection',
-      status: 'partial',
-      reason: expect.stringMatching(/manual|preserv|guard/i),
+      status: 'rejected',
+      reason: expect.stringMatching(/external.*ownership|identity.bound/i),
     });
     expect(result.operations[0]).toMatchObject({ status: 'failed' });
-    await expect(readFile(providerDir, 'utf8')).resolves.toBe(
-      'user replacement',
-    );
+    expect(removalCalls).toBe(0);
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
     await expect(loadManifest(manifestPath)).resolves.toMatchObject({
       collections: [{ id: 'collection-transition' }],
       entries: [{ strategy: 'collection' }],
@@ -732,7 +796,7 @@ describe('executeSyncPlan', () => {
     ['file', 'copy'],
     ['directory', 'copy'],
   ] as const)(
-    'preserves a user %s destination created before deferred %s apply',
+    'blocks a user %s destination hook before deferred directory %s apply',
     async (destinationKind, strategy) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
       tempDirs.push(root);
@@ -761,38 +825,20 @@ describe('executeSyncPlan', () => {
 
       expect(result.collectionResults[0]).toMatchObject({
         action: 'detach-collection',
-        status: strategy === 'copy' ? 'rejected' : 'changed',
+        status: 'rejected',
       });
       expect(result.operations[0]).toMatchObject({
         status: 'failed',
-        failure: expect.stringMatching(
-          strategy === 'copy'
-            ? /manual.*director.*copy.*retry/i
-            : /appeared.*preserv.*retry/i,
-        ),
+        failure: expect.stringMatching(/external.*ownership|identity.bound/i),
       });
-      if (strategy === 'copy') {
-        expect(injected).toBe(false);
-        await expect(lstat(providerDir)).rejects.toMatchObject({
-          code: 'ENOENT',
-        });
-        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-          collections: [{ id: 'collection-transition' }],
-          entries: [{ strategy: 'collection' }],
-        });
-      } else {
-        if (destinationKind === 'file') {
-          await expect(readFile(destination, 'utf8')).resolves.toBe(userBytes);
-        } else {
-          await expect(
-            readFile(join(destination, 'SKILL.md'), 'utf8'),
-          ).resolves.toBe(userBytes);
-        }
-        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-          collections: [],
-          entries: [],
-        });
-      }
+      expect(injected).toBe(false);
+      await expect(lstat(providerDir)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'collection-transition' }],
+        entries: [{ strategy: 'collection' }],
+      });
     },
   );
 
