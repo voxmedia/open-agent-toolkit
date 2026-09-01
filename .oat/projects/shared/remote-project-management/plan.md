@@ -1412,6 +1412,7 @@ in-scope implementation files when a gate exposes a project defect.
 | design | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | revision-1-review-2 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | revision-1-review-3 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
@@ -1526,7 +1527,7 @@ and snapshot.test.ts; modify packages/cli/src/commands/pjm/remote/service.ts and
 service.test.ts; modify
 packages/cli/src/commands/pjm/remote/create-binding.ts and
 create-binding.test.ts; modify
-packages/cli/src/commands/pjm/remote/**integration**/lifecycle-harness.ts and
+`packages/cli/src/commands/pjm/remote/__integration__/lifecycle-harness.ts` and
 lifecycle.test.ts.
 
 1. Add filesystem/default-run crash injection after every create and intake
@@ -1547,7 +1548,7 @@ lifecycle.test.ts.
    alongside restart and replay coverage. Retain no raw suppressed value or
    provider-native payload.
 5. Format: pnpm format:fix
-6. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/**integration**/lifecycle.test.ts
+6. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/__integration__/lifecycle.test.ts`
 7. Commit: fix(prev1-t04): make remote materialization resumable
 
 ## Implementation Complete

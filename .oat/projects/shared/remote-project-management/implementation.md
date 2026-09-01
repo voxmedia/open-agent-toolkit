@@ -675,6 +675,12 @@ The first pass found two Important bookkeeping/topology contradictions; the
 second pass returned zero findings at every severity. No review artifact was
 created because the plan-writing review used structured in-memory output.
 
+**Planning review reopened:** The mandatory full-plan read found that formatting
+had interpreted an unquoted `__integration__` path as Markdown emphasis. The
+literal path and test command are now backticked. The final bounded review
+passed with zero findings at every severity and preserves the prior passing
+review as historical evidence.
+
 **Next:** Execute revision tasks via `oat-project-implement`.
 
 ---

@@ -34,7 +34,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T00:23:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T00:31:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,7 +55,7 @@ four-task corrective Revision 1 to close the production contract before Phase 4.
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** plan.md (complete; corrective revision review passed)
+- **Plan:** plan.md (complete; formatter-path correction review passed)
 - **Implementation:** implementation.md (in progress; corrective revision at prev1-t01)
 
 ## Progress
@@ -119,7 +119,9 @@ four-task corrective Revision 1 to close the production contract before Phase 4.
 - ✓ Phase 3 review-fix round 2 committed as `9872f13dd`
 - ⚠ Phase 3 final normal review blocked with 6 Critical and 1 Important finding
 - ✓ Operator authorized corrective Revision 1 without erasing the 3/3 review history
-- ✓ Revision 1 created with `prev1-t01` through `prev1-t04`; planning review passed after one bounded fix retry
+- ✓ Revision 1 created with `prev1-t01` through `prev1-t04`; the initial
+  planning review passed after one bounded fix retry
+- ✓ Formatter-safe path correction passed the final bounded planning review
 - ⧗ Revision 1 implementation ready at `prev1-t01`
 - ⛔ Phase 4 remains blocked until Revision 1 implementation and code review pass
 
