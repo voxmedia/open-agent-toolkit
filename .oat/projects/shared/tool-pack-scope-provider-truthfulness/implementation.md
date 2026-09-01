@@ -1166,6 +1166,30 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   `oat-reviewer-gpt-5-6-sol-high` review. A blocking verdict does not authorize
   another correction, and Phase 5 remains gated until Phase 4 passes.
 
+### Review Round 8 Authorized Fix — Fail-Closed Directory Transitions
+
+- Commit: `c3fe98ca61ab76f99314ab7421d5bf37139c422c`
+- Continuation:
+  `p04-review-r8-authorized-fail-closed-symlink-fix-20260901T232400Z`,
+  linked to original request `dispatch-p04-20260901T002500Z-36af8aadd` and
+  executed by `oat-phase-implementer-gpt-5-6-sol-high`.
+- Deferred collection-directory copy and symlink transitions now reject
+  collection detachment before any publication helper. Collection and entry
+  evidence remain durable, no per-entry ownership is created, and changing
+  `copy` to `symlink` does not release the block.
+- Recovery now gives the exact provider-disable and sync workflow for explicit
+  ownership detachment, followed by alias verification/removal and external
+  management. The three existing provider-sync pages no longer advertise a
+  strategy switch as safe.
+- RED proved both ancestry race hooks were reachable and a copy-to-symlink
+  strategy change completed unsafely. GREEN passed 77/77 focused tests and the
+  authoritative Phase 4 union at 414/414. CLI lint, type-check, format,
+  `pnpm check`, exact-range whitespace, and an isolated-HOME uncached Turbo run
+  passed; the latter executed 10/10 tasks and 4,869 CLI tests.
+- Root verified the exact one-commit/six-file boundary, clean worktree, exact
+  range, and a live 77/77 focused rerun. Exactly one fresh independent High
+  review is now pending; Phase 5 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1710,6 +1734,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `oat-phase-implementer-gpt-5-6-sol-high`, then run exactly one fresh
   `oat-reviewer-gpt-5-6-sol-high` review. No further correction is authorized
   if that review blocks, and Phase 5 remains gated until Phase 4 passes.
+
+#### Review-fix continuation — round 8 authorized fail-closed transition
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation:
+  `p04-review-r8-authorized-fail-closed-symlink-fix-20260901T232400Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `f9c88604347d6c9519fe65e0b7fd9a985244bb78`
+- Commit: `c3fe98ca61ab76f99314ab7421d5bf37139c422c`
+- Outcome: deferred collection-directory copy and symlink transitions fail
+  before detachment/publication, preserve collection evidence, create no entry
+  ownership, and require explicit external-ownership/manual disposition.
+  Focused 77/77, Phase 4 union 414/414, CLI lint/type/format, `pnpm check`,
+  exact-range whitespace, and uncached Turbo 10/10 tasks with 4,869 CLI tests
+  passed.
+- Selection reason: `candidate-requested`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p04-review-r8-authorized-fail-closed-symlink-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

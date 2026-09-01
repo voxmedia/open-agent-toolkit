@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: d644a3707a4615dacc9bce6700f5c6e8d1b606de
+oat_last_commit: c3fe98ca61ab76f99314ab7421d5bf37139c422c
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:23:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:37:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,9 +111,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized one bounded fail-closed correction for the
-Phase 4 deferred-symlink ancestry race and one fresh independent review.
-Phase 5 remains gated until that review passes.
+Implementation - the authorized Phase 4 fail-closed directory-transition fix
+is committed at `c3fe98ca6`. One fresh independent Phase 4 review is pending,
+and Phase 5 remains gated until it passes.
 
 ## Artifacts
 
@@ -121,7 +121,7 @@ Phase 5 remains gated until that review passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; bounded p04 fail-closed correction authorized)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 fix committed and fresh review pending)
 
 ## Progress
 
@@ -147,14 +147,14 @@ Phase 5 remains gated until that review passes.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 authorized fail-closed deferred-symlink correction and fresh review
+- ✓ Phase 4 authorized fail-closed deferred-symlink correction committed
+- ⧗ Phase 4 fresh independent review pending
 
 ## Blockers
 
-None. Phase 5 remains deliberately gated while the authorized Phase 4
-correction and fresh review run.
+None. Phase 5 remains deliberately gated while the fresh Phase 4 review runs.
 
 ## Next Milestone
 
-Complete the authorized fail-closed deferred-symlink correction, run one fresh
-independent Phase 4 review, and begin Phase 5 only if that verdict passes.
+Run the one authorized fresh independent Phase 4 review and begin Phase 5 only
+if that verdict passes.
