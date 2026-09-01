@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-08-31
+oat_last_updated: 2026-09-01
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_source: spec-driven
@@ -58,20 +58,22 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
 ## Dependency Topology
 
 1. p01 Domain/config/storage -> p02 Reconciliation/safety ->
-   p03 Execution/lifecycle/skill -> p-rev1 Phase 3 production-contract closure.
-2. p04 GitHub, p05 Linear, and p06 Jira are peer lanes after p-rev1 passes its
+   p03 Execution/lifecycle/skill -> p-rev1 Phase 3 production-contract closure
+   -> p-rev2 verification-handoff and incomplete-intent closure.
+2. p04 GitHub, p05 Linear, and p06 Jira are peer lanes after p-rev2 passes its
    fresh code review.
 3. p07 Cross-provider convergence depends on all three provider lanes.
 4. p08 Documentation and release validation depends on p07.
 
 - **Hard dependencies:** p02 depends on p01; p03 depends on p01-p02; p-rev1
-  depends on p03; p04-p06 depend on a passing p-rev1 code review; p07 depends
-  on p04-p06; p08 depends on p07.
-- **Revision sequencing:** prev1-t01 through prev1-t04 execute sequentially
-  because they share authority, service, schema, action, and create-binding
-  surfaces.
+  depends on p03; p-rev2 depends on the completed p-rev1 implementation and
+  its received round-4 review; p04-p06 depend on a passing p-rev2 code review;
+  p07 depends on p04-p06; p08 depends on p07.
+- **Revision sequencing:** prev1-t01 through prev1-t04 and then prev2-t01
+  through prev2-t02 execute sequentially because they share operation,
+  service, schema, action, persistence, and command surfaces.
 - **Peer lanes:** p04, p05, and p06 may proceed independently only after
-  p-rev1 passes. Their numbering does not imply serial execution.
+  p-rev2 passes. Their numbering does not imply serial execution.
 - **Shared-file coordination:** p04-p06 own distinct provider semantic adapters.
   They import the immutable p03 conformance harness and supply provider-local
   intent/observation fixtures; changes to shared interfaces return to p03
@@ -1383,36 +1385,37 @@ in-scope implementation files when a gate exposes a project defect.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                        | Reviewed Head                            | Invocation          | Gate Target              |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------- | ---------------------------------------- | ------------------- | ------------------------ |
-| p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension  | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md          | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1            | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md        | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2            | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md    | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3            | codex:sol-high           |
-| p02    | code     | received        | 2026-08-31 | reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension  | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T183652Z.md                        | 8fa237bdbd44bde0e533662e55718a5688b85847 | manual              | codex:sol-high           |
-| p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T190519Z.md                        | ed0fe77585c6688726ba9ca316eed09e73bf56cc | manual              | codex:sol-high           |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T202119Z.md                        | 5e6915158f969acacca9f0ef3171340995258fe2 | manual              | -                        |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T213820Z.md                        | b8b7892d05d4cabdc179adbeff768078eecf0a15 | manual              | -                        |
-| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T232956Z.md                        | 9872f13ddd2940b338ababfea297434dad6a4ae5 | manual              | -                        |
-| p04    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p05    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p06    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p07    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p08    | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| p-rev1 | code     | received        | 2026-09-01 | reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md    | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
-| final  | code     | pending         | -          | -                                                               | -                                        | -                   | -                        |
-| spec   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1            | cursor                   |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md            | -                                        | manual-2            | cursor                   |
-| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | structured-auto-3   | codex:sol-high           |
-| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md     | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md     | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md     | -                                        | -                   | -                        |
-| design | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | boundary-revision-3 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | revision-1-review-2 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                               | -                                        | revision-1-review-3 | codex:sol-high           |
+| Scope  | Type     | Status          | Date       | Artifact                                                              | Reviewed Head                            | Invocation          | Gate Target              |
+| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------- | ---------------------------------------- | ------------------- | ------------------------ |
+| p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md       | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension  | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md                | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md              | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md          | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3            | codex:sol-high           |
+| p02    | code     | received        | 2026-08-31 | reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md       | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension  | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T183652Z.md                              | 8fa237bdbd44bde0e533662e55718a5688b85847 | manual              | codex:sol-high           |
+| p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T190519Z.md                              | ed0fe77585c6688726ba9ca316eed09e73bf56cc | manual              | codex:sol-high           |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T202119Z.md                              | 5e6915158f969acacca9f0ef3171340995258fe2 | manual              | -                        |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T213820Z.md                              | b8b7892d05d4cabdc179adbeff768078eecf0a15 | manual              | -                        |
+| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T232956Z.md                              | 9872f13ddd2940b338ababfea297434dad6a4ae5 | manual              | -                        |
+| p04    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| p05    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| p06    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| p07    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| p08    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
+| p-rev2 | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| final  | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
+| spec   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md                  | -                                        | manual-1            | cursor                   |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md                  | -                                        | manual-2            | cursor                   |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | structured-auto-3   | codex:sol-high           |
+| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md           | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md           | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md           | -                                        | -                   | -                        |
+| design | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-2 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
@@ -1551,6 +1554,74 @@ lifecycle.test.ts.
 6. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/snapshot.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/create-binding.test.ts src/commands/pjm/remote/__integration__/lifecycle.test.ts`
 7. Commit: fix(prev1-t04): make remote materialization resumable
 
+## Phase p-rev2: Revision 2 — Verification Handoff and Incomplete Intent Closure
+
+Source: operator-approved corrective revision from
+`reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`
+(2026-09-01)
+
+This is a separate pre-Phase-4 corrective revision created after Revision 1
+exhausted its normal and operator-extension review governance. It preserves all
+four Revision 1 review events and all three Revision 1 fix loops. Phase 4
+remains blocked until both Revision 2 tasks complete and a fresh root-owned
+`p-rev2` code review passes with zero Critical and zero Important findings.
+
+### Task prev2-t01: (review) Make the mutation-to-verification handoff restart-safe
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts; modify packages/cli/src/commands/pjm/remote/schema.ts and
+schema.test.ts, packages/cli/src/commands/pjm/remote/store.ts and store.test.ts,
+packages/cli/src/commands/pjm/remote/external-action.ts and
+external-action.test.ts, packages/cli/src/commands/pjm/remote/index.ts and
+index.test.ts, and
+packages/cli/src/commands/pjm/remote/**integration**/lifecycle-harness.ts and
+lifecycle.test.ts only when mechanically required by the durable handoff.
+
+1. Add failing filesystem and real Commander crash-injection cases at every
+   boundary between accepting a mutation observation, persisting its bounded
+   identity evidence, persisting the authoritative verification-read action,
+   transitioning to `verification-pending`, and returning the next envelope.
+   Restart with a new store/runner and prove one remote create attempt, no stale
+   create replay, and exact verification-read recovery.
+2. Make the exact verification-read action and accepted-create identity
+   evidence durable before, or atomically with, exposing
+   `verification-pending`. Preserve append-only attempt and observation
+   evidence while ensuring the journal state and current action cannot describe
+   different lifecycle steps.
+3. On restart, reconcile every mechanically possible interrupted handoff state
+   and re-emit only the exact durable verification-read action. Fail closed on
+   contradictory or incomplete evidence; never repeat the create/update action
+   or reconstruct identity from provider-native payloads.
+4. Retain the approved provider-neutral host-execution, normalized projection,
+   universal pre-write gate, whole-field inbound suppression, and bounded
+   durable-evidence contracts.
+5. Format: pnpm format:fix
+6. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/index.test.ts src/commands/pjm/remote/**integration**/lifecycle.test.ts
+7. Commit: fix(prev2-t01): persist the verification handoff atomically
+
+### Task prev2-t02: (review) Fail closed on incomplete project-create provenance
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/schema.ts and
+schema.test.ts, packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts, and packages/cli/src/commands/pjm/remote/store.ts and
+store.test.ts only when compatibility parsing or persistence requires it.
+
+1. Add failing compatibility fixtures for a persisted project-create intent
+   without `localProjection`, including verified read-back and later mutation
+   preparation. Prove remote title, description, or priority never becomes
+   `explicit-project-publication` local provenance.
+2. Require a validated explicit local projection for generated project-create
+   intents. Parse older or externally supplied incomplete records into an
+   explicit incomplete/reconcile-required state that fails closed before
+   materialization or later mutation rather than synthesizing local content
+   from a remote observation.
+3. Preserve valid generated project and backlog create recovery, bounded
+   schema compatibility, whole-field suppression, and normalized outbound
+   projection behavior. Retain no raw provider payload or suppressed value.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/local-projection.test.ts src/commands/pjm/remote/outbound-projection-safety.test.ts
+6. Commit: fix(prev2-t02): reject incomplete project-create provenance
+
 ## Implementation Complete
 
 This is the planned execution rollup; live completion state remains
@@ -1565,8 +1636,9 @@ authoritative in `implementation.md`.
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
 - Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
+- Revision 2: 2 tasks - verification-handoff restart safety and incomplete-intent provenance
 
-**Total: 82 tasks**
+**Total: 84 tasks**
 
 ## References
 

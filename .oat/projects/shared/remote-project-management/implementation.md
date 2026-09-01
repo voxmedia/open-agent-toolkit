@@ -1,12 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p-rev1
-    reason: 'Round-3 review exhausted normal governance with one Critical create-handoff recovery finding and one Important preview-freshness finding.'
-    since: '2026-09-01'
+oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: p04-t01
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -27,19 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | blocked   | 12    | 12/12     |
-| Phase 4    | pending   | 11    | 0/11      |
-| Phase 5    | pending   | 9     | 0/9       |
-| Phase 6    | pending   | 10    | 0/10      |
-| Phase 7    | pending   | 10    | 0/10      |
-| Phase 8    | pending   | 6     | 0/6       |
-| Revision 1 | blocked   | 4     | 4/4       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | pending     | 11    | 0/11      |
+| Phase 5    | pending     | 9     | 0/9       |
+| Phase 6    | pending     | 10    | 0/10      |
+| Phase 7    | pending     | 10    | 0/10      |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | blocked     | 4     | 4/4       |
+| Revision 2 | in_progress | 2     | 0/2       |
 
-**Total:** 36/82 tasks completed
+**Total:** 36/84 tasks completed
 
 ---
 
@@ -1231,12 +1229,12 @@ target=oat-reviewer-gpt-5-6-sol-high
 
 **Review outcomes:**
 
-| Round | Artifact                                                       | Findings                | Outcome                  |
-| ----- | -------------------------------------------------------------- | ----------------------- | ------------------------ |
-| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`                  | 4 Critical              | fix `1a11231c8`          |
-| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md`       | 2 Critical, 1 Important | fix `15332edbf`          |
-| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`       | 1 Critical, 1 Important | terminal normal block    |
-| 4     | `reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md` | 1 Critical, 1 Medium    | terminal extension block |
+| Round | Artifact                                                                | Findings                | Outcome                  |
+| ----- | ----------------------------------------------------------------------- | ----------------------- | ------------------------ |
+| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`                           | 4 Critical              | fix `1a11231c8`          |
+| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md`                | 2 Critical, 1 Important | fix `15332edbf`          |
+| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`                | 1 Critical, 1 Important | terminal normal block    |
+| 4     | `reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md` | 1 Critical, 1 Medium    | terminal extension block |
 
 - All four revision tasks completed. Root independently verified the final
   17-file corrective suite at 234/234, CLI type-check/build, `pnpm check`,
@@ -1296,7 +1294,7 @@ target=oat-reviewer-gpt-5-6-sol-high
   accepted natively on exact target `oat-reviewer-gpt-5-6-sol-high`, reviewing
   `3a304e20c995f6d10f7de5d76430ef7d7c3f93fe..83ae7a9c160afdf4e6e4d08ff26268469403df0a`.
 - Fourth review artifact:
-  `reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`.
+  `reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`.
   Verdict: BLOCK with 1 Critical, 0 Important, 1 Medium, and 0 Minor.
 - The Round-3 findings are closed. The new Critical shows a later restart gap:
   after an accepted create observation transitions the journal to
@@ -1307,6 +1305,35 @@ target=oat-reviewer-gpt-5-6-sol-high
   from remote fields.
 - Operator extension outcome: exhausted at 4/4 review cycles and 3/3 fix loops.
   Phase 4 did not start. No further fix/review cycle is authorized.
+
+### Revision Received: p-rev1 Round 4 Operator Review
+
+**Date:** 2026-09-01
+**Source:**
+`reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Disposition:**
+
+- `C1` → `prev2-t01`: make the accepted mutation-to-verification-read
+  handoff durable and restart-safe before exposing `verification-pending`.
+- `M1` → `prev2-t02`: fail closed on incomplete persisted project-create
+  intents instead of synthesizing explicit local publication provenance from
+  remote fields.
+
+**Governance:** The user explicitly authorized a new corrective revision after
+Revision 1 exhausted its fourth review and third fix loop. Revision 2 is a new
+two-task phase with a fresh review budget; it does not rewrite or extend the
+Revision 1 counters. Phase 4 remains blocked until Revision 2 passes review.
+
+**Next:** Complete the mandatory structured plan review, then execute
+`prev2-t01` and `prev2-t02` through `oat-project-implement`.
 
 <!-- orchestration-runs-end -->
 
