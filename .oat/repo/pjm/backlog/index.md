@@ -8,6 +8,11 @@
   `0.2.51` release unit: successful synced archival retires active record and
   discovery identity while preserving completed-ref reachability, configured
   durability, legacy migration, and idempotent recovery.
+- The `recon-skill` retrospective identified two lifecycle follow-ups:
+  `BL-260901-add-corrective-revision` owns a first-class, authorization-bound
+  recovery path after review exhaustion, while
+  `BL-260901-make-terminal-project-status` owns terminal status accounting for
+  plans containing completed `p-revN` phases.
 - Recon integration is intentionally staged behind the standalone
   `recon-skill` packet contract. `BL-260830-integrate-recon-with-oat` owns
   first-class discovery and quick-start orchestration at M scope;
@@ -216,6 +221,7 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260830-live-dogfood-oat-project-split | Live dogfood oat-project-split entry paths                                                            | open   | high     | task       | S        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task       | M        |
+| BL-260901-make-terminal-project-status   | Make terminal project status agree with completed revision plans                                      | open   | high     | task       | S        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task       | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature    | M        |
