@@ -1419,6 +1419,7 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-2 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-09-01 | -                                                                     | -                                        | revision-2-review-2 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.

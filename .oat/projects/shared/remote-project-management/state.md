@@ -59,8 +59,8 @@ started and remains dependent on a passing Revision 2 code review.
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** plan.md (complete; formatter-path correction review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 plan review pending)
+- **Plan:** plan.md (complete; Revision 2 structured review passed)
+- **Implementation:** implementation.md (in progress; Revision 2 implementation ready)
 
 ## Progress
 
@@ -137,7 +137,7 @@ started and remains dependent on a passing Revision 2 code review.
 - ⚠ Fourth operator-extension review blocked with 1 Critical and 1 Medium
 - ⛔ Revision 1 operator extension exhausted at 4/4 reviews and 3/3 fixes
 - ✓ Operator authorized separate corrective Revision 2
-- ⧗ Revision 2 plan mutation awaiting structured artifact review
+- ✓ Revision 2 structured plan review passed with zero findings
 - ⛔ Phase 4 remains blocked until Revision 2 passes code review
 
 ## Blockers
@@ -148,6 +148,5 @@ review passes with zero Critical and zero Important findings.
 
 ## Next Milestone
 
-Run the structured plan review for the two-task Revision 2 mutation, then begin
-`prev2-t01`. Do not begin `p04-t01` until Revision 2 completes and passes its
-fresh code review.
+Begin `prev2-t01`. Do not begin `p04-t01` until Revision 2 completes and
+passes its fresh code review.
