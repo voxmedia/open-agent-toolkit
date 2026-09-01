@@ -169,7 +169,7 @@ function claimCounts(ledger) {
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
   const validation = await compileValidatedRun(packetRoot, {
-    removePublishedOnFailure: true,
+    removePublishedOnFailure: false,
   });
   if (!validation.valid || !validation.publishable) {
     throw new Error(
@@ -179,7 +179,10 @@ export async function renderPacket(packetDirectory) {
   return renderValidatedPacket(validation.validatedRun);
 }
 
-export async function renderValidatedPacket(validatedRun) {
+export async function renderValidatedPacket(
+  validatedRun,
+  { promote = rename } = {},
+) {
   const run = assertValidatedRun(validatedRun);
   const { manifest, ledger, packetRoot } = run;
   const target = join(packetRoot, 'packet.md');
@@ -195,8 +198,7 @@ export async function renderValidatedPacket(validatedRun) {
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
-    await rename(temporary, target);
-    return {
+    const result = {
       directory: packetRoot,
       status: manifest.run.status,
       requestedProfile: manifest.run.requestedProfile,
@@ -212,11 +214,12 @@ export async function renderValidatedPacket(validatedRun) {
           .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
           .map((gap) => gap.code),
       ],
-      digest: await hashFile(target),
+      digest: await hashFile(temporary),
     };
+    await promote(temporary, target);
+    return result;
   } catch (error) {
     await rm(temporary, { force: true });
-    await rm(target, { force: true });
     throw error;
   }
 }

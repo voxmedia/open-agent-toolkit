@@ -426,14 +426,69 @@ test('structural validation failure leaves no packet entry point', async () => {
   await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 });
 
-test('render construction failure removes a previously published packet', async () => {
+test('validation failure preserves a previously published packet', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
   await renderPacket(fixture.packetRoot);
+  const published = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
   fixture.ledger.synthesis.keyClaimIds = null;
   await fixture.persist();
   await assert.rejects(renderPacket(fixture.packetRoot));
-  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
+  assert.equal(
+    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    published,
+  );
+});
+
+test('promotion failure after temporary creation preserves the published packet and removes only the temp file', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  const published = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+  const validation = await compileValidatedRun(fixture.packetRoot);
+
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun, {
+      promote: async () => {
+        throw new Error('injected promotion failure');
+      },
+    }),
+    /injected promotion failure/,
+  );
+  assert.equal(
+    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    published,
+  );
+  assert.equal(
+    (await readdir(fixture.packetRoot)).some((name) => name.endsWith('.tmp')),
+    false,
+  );
+});
+
+test('successful promotion replaces the previously published packet', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  const published = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+  fixture.ledger.synthesis.answer = 'A replacement synthesis.';
+  await fixture.persist();
+
+  await renderPacket(fixture.packetRoot);
+  const replacement = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+  assert.notEqual(replacement, published);
+  assert.match(replacement, /A replacement synthesis\./);
 });
 
 test('consumer handoff contains only directory and compact status', async () => {
