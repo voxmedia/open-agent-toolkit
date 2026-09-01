@@ -515,6 +515,210 @@ describe('production lifecycle composition', () => {
     },
   );
 
+  it.each([
+    ['user-authorized', 'after-create-operation'],
+    ['user-authorized', 'after-create-action'],
+    ['user-authorized', 'after-create-authorization'],
+    ['user-authorized', 'after-create-attempt'],
+    ['user-authorized', 'before-create-envelope'],
+    ['user-approved', 'after-create-operation'],
+    ['user-approved', 'after-create-action'],
+    ['user-approved', 'after-create-authorization'],
+    ['user-approved', 'after-create-attempt'],
+    ['user-approved', 'before-create-envelope'],
+  ] as const)(
+    'resumes %s create handoff after %s with one exact durable action',
+    async (authorityMode, crashPoint) => {
+      const repository = await mkdtemp(join(tmpdir(), 'oat-create-handoff-'));
+      temporaryDirectories.push(repository);
+      execFileSync('git', ['init', '--quiet'], { cwd: repository });
+      const targetPath = join(
+        repository,
+        '.oat',
+        'repo',
+        'pjm',
+        'backlog',
+        'items',
+        'item-1.md',
+      );
+      await mkdir(join(targetPath, '..'), { recursive: true });
+      await writeFile(
+        targetPath,
+        '---\ntitle: Local title\npriority: high\nassociated_issues: []\n---\n\n## Description\n\nLocal description\n',
+      );
+      await writeFile(
+        join(repository, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          pjm: {
+            initialized: true,
+            schemaVersion: 1,
+            remote: {
+              schemaVersion: 1,
+              policy: {
+                description: 'managed-section',
+                authority: {
+                  default: 'read-only',
+                  operations: { create: authorityMode },
+                },
+              },
+            },
+          },
+        })}\n`,
+      );
+      const authorityPath = join(repository, '.oat', 'invocation.json');
+      const invocation = (approval: Record<string, unknown> | null) => ({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'host-session-1',
+        invocationId: 'invocation-1',
+        issuedAt: '2026-08-31T11:59:00.000Z',
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'create',
+          targetId: 'backlog:item-1',
+          evidenceDigest: 'sha256:instruction',
+        },
+        approval,
+      });
+      await writeFile(authorityPath, `${JSON.stringify(invocation(null))}\n`);
+      const capability = {
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: timestamp,
+      };
+      const request: RemoteCommandRequest = {
+        operation: 'publish',
+        projectRoot: repository,
+        createTarget: {
+          provider: 'linear',
+          localKind: 'backlog',
+          localId: 'item-1',
+        },
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      };
+      const runner = createProductionRemoteRunner({
+        now: () => timestamp,
+        randomId: vi
+          .fn()
+          .mockReturnValueOnce('handoff-operation')
+          .mockReturnValueOnce('handoff-binding'),
+        readObservationStdin: async () => capability,
+        crash: (point) => {
+          if (point === crashPoint) throw new Error(`crash:${point}`);
+        },
+      });
+      const operationId = 'op_handoff-operation';
+      let applyRequest = request;
+
+      if (authorityMode === 'user-approved') {
+        let preview;
+        if (crashPoint === 'after-create-operation') {
+          await expect(runner(request)).rejects.toThrow(`crash:${crashPoint}`);
+          const restartedPreview = createProductionRemoteRunner({
+            now: () => timestamp,
+            readObservationStdin: async () => capability,
+          });
+          preview = await restartedPreview({
+            ...request,
+            previewOperationId: operationId,
+          });
+        } else {
+          preview = await runner(request);
+        }
+        const emitted = preview.approvalPreview!;
+        expect(emitted).toMatchObject({
+          operationId,
+          operationClass: 'create',
+          fieldMask: expect.arrayContaining([
+            'title',
+            'description',
+            'priority',
+          ]),
+          authority: 'user-approved',
+        });
+        expect(emitted.fieldMask).toHaveLength(3);
+        await writeFile(
+          authorityPath,
+          `${JSON.stringify(
+            invocation({
+              previewDigest: emitted.digest,
+              operationClass: emitted.operationClass,
+              approvedAt: timestamp,
+              actor: 'operator-1',
+              source: 'emitted-public-preview',
+            }),
+          )}\n`,
+        );
+        applyRequest = { ...request, previewOperationId: emitted.operationId };
+        if (crashPoint === 'after-create-operation') {
+          const completed = await createProductionRemoteRunner({
+            now: () => timestamp,
+            readObservationStdin: async () => capability,
+          })(applyRequest);
+          expect(completed.externalAction).not.toBeNull();
+        } else {
+          await expect(runner(applyRequest)).rejects.toThrow(
+            `crash:${crashPoint}`,
+          );
+        }
+      } else {
+        await expect(runner(request)).rejects.toThrow(`crash:${crashPoint}`);
+      }
+
+      let resumed;
+      if (
+        authorityMode === 'user-authorized' &&
+        crashPoint === 'after-create-operation'
+      ) {
+        resumed = await createProductionRemoteRunner({
+          now: () => timestamp,
+          readObservationStdin: async () => capability,
+        })({ ...request, previewOperationId: operationId });
+      } else if (
+        !(
+          authorityMode === 'user-approved' &&
+          crashPoint === 'after-create-operation'
+        )
+      ) {
+        resumed = await createProductionRemoteRunner({ now: () => timestamp })({
+          operation: 'operation-continue',
+          projectRoot: repository,
+          operationId,
+        });
+      }
+
+      const store = new RemoteSyncStore(
+        resolveRemoteStorageLocations({
+          repoRoot: repository,
+          gitCommonDir: join(repository, '.git'),
+          repositoryIdentity: `local-repository:${resolve(repository)}`,
+          stateStorage: 'local',
+          target: { kind: 'backlog', scope: 'shared', path: null },
+        }),
+      );
+      const operation = await store.readOperation(operationId);
+      const durableAction = await store.readCurrentAction(operationId);
+      expect(operation).toMatchObject({
+        state: 'attempt-started',
+        attempts: [
+          {
+            attemptId: durableAction!.stepId,
+            requestDigest: durableAction!.actionDigest,
+          },
+        ],
+      });
+      if (resumed) {
+        expect(resumed.externalAction).toEqual(durableAction);
+      }
+    },
+  );
+
   it('blocks a same-field conflict before constructing an action', () => {
     const current = state();
     expect(() =>
@@ -546,6 +750,103 @@ describe('production lifecycle composition', () => {
         priorityMapping: true,
       }),
     ).toThrow(/same-field reconciliation conflict/i);
+  });
+
+  it('ignores remote-owned prose changes around unchanged governed managed content without writing', () => {
+    const current = state();
+    const managedBody =
+      'Remote owner changed this prefix.\n\n<!-- OAT-MANAGED:bnd_service_001:START -->\n## OAT-managed\n\nLocal managed description\n<!-- OAT-MANAGED:bnd_service_001:END -->\n\nRemote owner changed this suffix.';
+    const unchanged = state({
+      ...current,
+      localProjection: {
+        ...current.localProjection,
+        title: 'Remote title',
+        priority: null,
+      },
+      snapshot: sanitizeRemoteSnapshot({
+        ...current.snapshot!,
+        snapshotId: 'snap_service_surrounding_prose',
+        issue: { ...current.snapshot!.issue, description: managedBody },
+      }),
+      baseline: {
+        recordType: 'baseline',
+        schemaVersion: 1,
+        baselineId: 'base_service_managed',
+        bindingId: 'bnd_service_001',
+        agreedAt: timestamp,
+        acceptedByOperationId: 'op_service_managed',
+        localProjectionRevision: current.localProjection.sourceRevision,
+        remoteRevision: current.snapshot!.revision,
+        fields: {
+          title: { value: 'Remote title', hash: 'sha256:title' },
+          description: {
+            value: 'Local managed description',
+            hash: 'sha256:description',
+          },
+          priority: { value: null, hash: 'sha256:priority' },
+        },
+      },
+    });
+
+    expect(() =>
+      planProductionMutationProjection({
+        metadata: binding(),
+        state: unchanged,
+        descriptionMode: 'managed-section',
+        operation: 'reconcile',
+        priorityMapping: true,
+      }),
+    ).toThrow(/permit no outbound fields/i);
+  });
+
+  it('updates changed governed managed content while preserving remote-owned prose', () => {
+    const current = state();
+    const managedBody =
+      'Remote owner prefix.\n\n<!-- OAT-MANAGED:bnd_service_001:START -->\n## OAT-managed\n\nPrevious managed description\n<!-- OAT-MANAGED:bnd_service_001:END -->\n\nRemote owner suffix.';
+    const changed = state({
+      ...current,
+      localProjection: {
+        ...current.localProjection,
+        title: 'Remote title',
+        priority: null,
+      },
+      snapshot: sanitizeRemoteSnapshot({
+        ...current.snapshot!,
+        snapshotId: 'snap_service_changed_managed_content',
+        issue: { ...current.snapshot!.issue, description: managedBody },
+      }),
+      baseline: {
+        recordType: 'baseline',
+        schemaVersion: 1,
+        baselineId: 'base_service_changed_managed_content',
+        bindingId: 'bnd_service_001',
+        agreedAt: timestamp,
+        acceptedByOperationId: 'op_service_changed_managed_content',
+        localProjectionRevision: current.localProjection.sourceRevision,
+        remoteRevision: current.snapshot!.revision,
+        fields: {
+          title: { value: 'Remote title', hash: 'sha256:title' },
+          description: {
+            value: 'Previous managed description',
+            hash: 'sha256:description',
+          },
+          priority: { value: null, hash: 'sha256:priority' },
+        },
+      },
+    });
+
+    expect(
+      planProductionMutationProjection({
+        metadata: binding(),
+        state: changed,
+        descriptionMode: 'managed-section',
+        operation: 'reconcile',
+        priorityMapping: true,
+      }),
+    ).toEqual({
+      description:
+        'Remote owner prefix.\n\n<!-- OAT-MANAGED:bnd_service_001:START -->\n## OAT-managed\n\nLocal managed description\n<!-- OAT-MANAGED:bnd_service_001:END -->\n\nRemote owner suffix.',
+    });
   });
 
   it.each([
@@ -826,11 +1127,17 @@ describe('production lifecycle composition', () => {
       ).resolves.toMatchObject({
         snapshot: {
           revision: { contentHash: 'sha256:update-authoritative' },
+          issue: { description: fields.description },
         },
         baseline: {
           acceptedByOperationId: mutation.operationId,
           localProjectionRevision: localProjection.sourceRevision,
           remoteRevision: { contentHash: 'sha256:update-authoritative' },
+          fields: {
+            title: { value: 'Local title' },
+            description: { value: 'Local managed description' },
+            priority: { value: 'high' },
+          },
         },
       });
       await expect(
@@ -1044,6 +1351,11 @@ describe('production lifecycle composition', () => {
       baseline: {
         acceptedByOperationId: 'op_service-project',
         remoteRevision: { contentHash: 'sha256:project-readback' },
+        fields: {
+          title: { value: 'Published project' },
+          description: { value: 'Explicit summary' },
+          priority: { value: 'high' },
+        },
       },
     });
   });

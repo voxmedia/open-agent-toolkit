@@ -1,4 +1,5 @@
 import type { ExternalActionEnvelope } from './external-action';
+import type { BindingPreview } from './preview';
 
 export type RemoteCommandStatus =
   | 'ok'
@@ -26,6 +27,19 @@ export interface RemoteCommandEnvelope {
     diagnosticCode: string | null;
   }>;
   externalAction: ExternalActionEnvelope | null;
+  approvalPreview?: {
+    operationId: string;
+    digest: string;
+    operationClass: BindingPreview['operationClass'];
+    fieldMask: BindingPreview['fieldMask'];
+    renderedFields: Partial<BindingPreview['renderedFields']>;
+    authority: string;
+    revision: {
+      digest: string;
+      evidenceDigest: string;
+      observedAt: string;
+    };
+  };
   recovery: Array<{ code: string; instruction: string }>;
 }
 
@@ -58,6 +72,25 @@ export function renderRemoteCommand(
   ];
   if (envelope.externalAction)
     lines.push('external action: durable handoff required');
+  if (envelope.approvalPreview) {
+    const preview = envelope.approvalPreview;
+    lines.push(
+      `preview ${preview.operationId}: ${preview.operationClass}; fields=${preview.fieldMask.join(',')}; authority=${preview.authority}; revision=${preview.revision.digest}; revision-evidence=${preview.revision.evidenceDigest}; observed=${preview.revision.observedAt}`,
+    );
+    for (const field of preview.fieldMask) {
+      const rendered = preview.renderedFields[field];
+      if (!rendered) {
+        throw new Error(
+          `Approval preview is missing rendered field '${field}'.`,
+        );
+      }
+      lines.push(
+        rendered.kind === 'hash'
+          ? `preview field ${field}: hash=${rendered.digest}; bytes=${rendered.bytes}`
+          : `preview field ${field}: value=${JSON.stringify(rendered.value)}`,
+      );
+    }
+  }
   const rendered = `${lines.join('\n')}\n`;
   return envelope.status === 'failed'
     ? { stdout: '', stderr: rendered, exitCode }

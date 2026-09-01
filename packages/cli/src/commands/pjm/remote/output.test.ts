@@ -87,6 +87,47 @@ describe('remote command output', () => {
     );
   });
 
+  it('renders the same bounded persisted approval preview in JSON and human output', () => {
+    const value = envelope('needs-review');
+    value.approvalPreview = {
+      operationId: 'op_preview_001',
+      digest: 'sha256:preview',
+      operationClass: 'update-fields',
+      fieldMask: ['title', 'description'],
+      renderedFields: {
+        title: { kind: 'value', value: 'Safe title' },
+        description: {
+          kind: 'hash',
+          digest: 'sha256:description',
+          bytes: 42,
+        },
+      },
+      authority: 'user-approved',
+      revision: {
+        digest: 'sha256:revision',
+        evidenceDigest: 'sha256:revision-evidence',
+        observedAt: '2026-08-31T12:00:00.000Z',
+      },
+    };
+
+    const json = JSON.parse(
+      renderRemoteCommand(value, { json: true }).stdout,
+    ) as RemoteCommandEnvelope;
+    expect(json.approvalPreview).toEqual(value.approvalPreview);
+
+    const human = renderRemoteCommand(value, { json: false }).stdout;
+    expect(human).toContain(
+      'preview op_preview_001: update-fields; fields=title,description; authority=user-approved',
+    );
+    expect(human).toContain(
+      'revision=sha256:revision; revision-evidence=sha256:revision-evidence',
+    );
+    expect(human).toContain('preview field title: value="Safe title"');
+    expect(human).toContain(
+      'preview field description: hash=sha256:description; bytes=42',
+    );
+  });
+
   it('rejects success without persistence and actions outside pending handoff', () => {
     expect(() =>
       renderRemoteCommand(

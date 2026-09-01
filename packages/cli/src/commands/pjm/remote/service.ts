@@ -33,6 +33,7 @@ import type { RemoteCommandRequest } from './index';
 import { resolveLocalProjection } from './local-projection';
 import {
   buildManagedMarkdownBlock,
+  inspectManagedMarkdown,
   insertManagedMarkdown,
   replaceManagedMarkdown,
 } from './managed-markdown';
@@ -72,6 +73,11 @@ export interface ProductionRemoteRunnerDependencies {
 }
 
 export type MaterializationCrashPoint =
+  | 'after-create-operation'
+  | 'after-create-action'
+  | 'after-create-authorization'
+  | 'after-create-attempt'
+  | 'before-create-envelope'
   | 'after-journal'
   | 'after-target'
   | 'after-metadata'
@@ -476,10 +482,9 @@ async function prepareCreate(
   if (
     existing &&
     (existing.operationClass !== 'create' ||
-      existing.state !== 'planned' ||
+      !['planned', 'authorized'].includes(existing.state) ||
       existing.attempts.length > 0 ||
-      !existing.createIntent ||
-      (await store.readCurrentAction(existing.operationId)))
+      !existing.createIntent)
   ) {
     throw new Error('Persisted create preview is not safely applicable.');
   }
@@ -622,6 +627,7 @@ async function prepareCreate(
       safetyResultDigest: safety.resultDigest,
       previewDigest: preview.digest,
       approvalPreview: preview,
+      descriptionMode: effective.description,
       createIntent,
     });
     if (
@@ -634,7 +640,7 @@ async function prepareCreate(
   }
   if (authorityDecision.status === 'needs-review') {
     if (existing) {
-      throw new Error('Applying a preview requires fresh matching approval.');
+      return approvalPreviewEnvelope(request, existing);
     }
     const verification = createVerification(projection, true);
     await store.createOperation({
@@ -662,6 +668,7 @@ async function prepareCreate(
         safetyResultDigest: safety.resultDigest,
       }),
       approvalPreview: preview,
+      descriptionMode: effective.description,
       authority: authorityDecision.authority,
       approval: null,
       createdAt: now,
@@ -679,6 +686,7 @@ async function prepareCreate(
       },
       createIntent,
     });
+    dependencies.crash?.('after-create-operation');
     return approvalPreviewEnvelope(
       request,
       await requireOperation(operationId, store),
@@ -686,7 +694,7 @@ async function prepareCreate(
   }
   const action = buildExternalAction({
     operationId,
-    stepId: durableId('step', dependencies.randomId()),
+    stepId: durableId('step', operationId),
     provider,
     semanticOperation: 'create',
     context: capability.context,
@@ -719,9 +727,9 @@ async function prepareCreate(
     providerContext: compactContext(capability.context),
     lifecycleOperation: 'publish',
     operationClass: 'create',
-    state: 'attempt-started',
+    state: 'planned',
     reason: null,
-    lastSafeStep: 'attempt-started',
+    lastSafeStep: 'planned',
     preview: operationPreview({
       previewDigest: preview.digest,
       bindingId,
@@ -733,6 +741,8 @@ async function prepareCreate(
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
     }),
+    approvalPreview: preview,
+    descriptionMode: effective.description,
     authority: authorityDecision.authority,
     approval: authorityDecision.approval,
     createdAt: now,
@@ -744,8 +754,41 @@ async function prepareCreate(
       evidenceDigest: capability.evidenceDigest,
       semanticCapabilities: capability.semanticCapabilities,
     },
-    attempts: [
-      {
+    attempts: [],
+    observations: [],
+    verification,
+    retryDisposition: 'safe-before-attempt',
+    steps: [],
+    outcome: { classification: 'pending', message: null, verifiedAt: null },
+    createIntent,
+  };
+  if (!existing) {
+    await store.createOperation(record);
+    dependencies.crash?.('after-create-operation');
+  } else if (!existing.approval) {
+    await store.transitionOperation(operationId, existing.state, {
+      state: existing.state,
+      updatedAt: dependencies.now(),
+      approval: authorityDecision.approval,
+    });
+  }
+  await store.writeCurrentAction(operationId, action);
+  dependencies.crash?.('after-create-action');
+  let persisted = await requireOperation(operationId, store);
+  if (persisted.state === 'planned') {
+    persisted = await store.transitionOperation(operationId, 'planned', {
+      state: 'authorized',
+      updatedAt: dependencies.now(),
+      approval: authorityDecision.approval,
+      lastSafeStep: 'authorized',
+    });
+  }
+  dependencies.crash?.('after-create-authorization');
+  if (persisted.state === 'authorized') {
+    persisted = await store.transitionOperation(operationId, 'authorized', {
+      state: 'attempt-started',
+      updatedAt: dependencies.now(),
+      appendAttempt: {
         attemptId: action.stepId,
         startedAt: now,
         completedAt: null,
@@ -753,39 +796,14 @@ async function prepareCreate(
         requestDigest: action.actionDigest,
         receiptDigest: null,
       },
-    ],
-    observations: [],
-    verification,
-    retryDisposition: 'reconcile-required',
-    steps: [],
-    outcome: { classification: 'pending', message: null, verifiedAt: null },
-    createIntent,
-  };
-  if (existing) {
-    await store.transitionOperation(operationId, 'planned', {
-      state: 'authorized',
-      updatedAt: dependencies.now(),
-      approval: authorityDecision.approval,
-      lastSafeStep: 'authorized',
-    });
-    await store.transitionOperation(operationId, 'authorized', {
-      state: 'attempt-started',
-      updatedAt: dependencies.now(),
-      appendAttempt: record.attempts[0],
       lastSafeStep: 'attempt-started',
       retryDisposition: 'reconcile-required',
       outcome: record.outcome,
     });
-  } else {
-    await store.createOperation(record);
   }
-  await store.writeCurrentAction(operationId, action);
-  return envelopeFrom(
-    request,
-    await requireOperation(operationId, store),
-    null,
-    action,
-  );
+  dependencies.crash?.('after-create-attempt');
+  dependencies.crash?.('before-create-envelope');
+  return envelopeFrom(request, persisted, null, action);
 }
 
 async function prepareMutation(
@@ -960,6 +978,7 @@ async function prepareMutation(
     previewDigest: preview.digest,
     approvalPreview:
       authorityDecision.status === 'needs-review' ? preview : undefined,
+    descriptionMode: effective.description,
     capabilityEvidenceDigest: selection.evidence.evidenceDigest,
     policyDigest,
     projectionDigest: safety.projectionDigest,
@@ -1025,6 +1044,13 @@ async function continueOperation(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const operation = await requireOperation(request.operationId!, store);
+  if (
+    operation.createIntent &&
+    !request.observationStdin &&
+    ['planned', 'authorized', 'attempt-started'].includes(operation.state)
+  ) {
+    return resumeCreateActionHandoff(request, operation, store, dependencies);
+  }
   if (operation.materializationPlan && operation.state !== 'verified') {
     return resumeMaterialization(request, operation, store, dependencies);
   }
@@ -1292,6 +1318,7 @@ async function continueOperation(
         localProjectionRevision:
           targetMaterialization.localProjection.sourceRevision,
         agreedAt: now,
+        descriptionMode: 'replace',
       }),
       capability: null,
       contentRedacted: snapshot.contentRedacted,
@@ -1526,6 +1553,7 @@ async function continueOperation(
         operationId: operation.operationId,
         localProjectionRevision: localProjection.sourceRevision,
         agreedAt: now,
+        descriptionMode: requireOperationDescriptionMode(operation),
       }),
       capability: null,
       contentRedacted: snapshot.contentRedacted,
@@ -1583,6 +1611,7 @@ async function continueOperation(
         operationId: operation.operationId,
         localProjectionRevision: state.localProjection.sourceRevision,
         agreedAt: now,
+        descriptionMode: requireOperationDescriptionMode(operation),
       }),
       contentRedacted: snapshot.contentRedacted,
       updatedAt: now,
@@ -1620,6 +1649,67 @@ async function continueOperation(
     },
   );
   return envelopeFrom(request, updated, metadata, null);
+}
+
+async function resumeCreateActionHandoff(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  const action = await store.readCurrentAction(operation.operationId);
+  if (!action) {
+    throw new Error(
+      `Create operation '${operation.operationId}' has no durable action; reapply that exact persisted operation before host execution.`,
+    );
+  }
+  let current = operation;
+  if (current.state === 'planned') {
+    current = await store.transitionOperation(current.operationId, 'planned', {
+      state: 'authorized',
+      updatedAt: dependencies.now(),
+      lastSafeStep: 'authorized',
+    });
+  }
+  if (current.state === 'authorized') {
+    if (!current.selectedExecution) {
+      throw new Error(
+        'Create action handoff lacks selected execution evidence.',
+      );
+    }
+    current = await store.transitionOperation(
+      current.operationId,
+      'authorized',
+      {
+        state: 'attempt-started',
+        updatedAt: dependencies.now(),
+        appendAttempt: {
+          attemptId: action.stepId,
+          startedAt: current.createdAt,
+          completedAt: null,
+          execution: current.selectedExecution,
+          requestDigest: action.actionDigest,
+          receiptDigest: null,
+        },
+        lastSafeStep: 'attempt-started',
+        retryDisposition: 'reconcile-required',
+        outcome: {
+          classification: 'pending',
+          message: null,
+          verifiedAt: null,
+        },
+      },
+    );
+  }
+  if (
+    current.state !== 'attempt-started' ||
+    current.attempts.length !== 1 ||
+    current.attempts[0]?.attemptId !== action.stepId ||
+    current.attempts[0]?.requestDigest !== action.actionDigest
+  ) {
+    throw new Error('Create action handoff evidence is inconsistent.');
+  }
+  return envelopeFrom(request, current, null, action);
 }
 
 async function continueMutationPreRead(
@@ -1995,6 +2085,7 @@ function assertPreviewApplicationMatches(
     safetyResultDigest: string;
     previewDigest: string;
     approvalPreview?: BindingPreview;
+    descriptionMode?: 'none' | 'managed-section' | 'replace';
     createIntent?: PlannedBindingCreate;
   },
 ): void {
@@ -2003,6 +2094,8 @@ function assertPreviewApplicationMatches(
     operation.operationId !== expected.operationId ||
     !isDeepStrictEqual(operation.preview, preview) ||
     !isDeepStrictEqual(operation.approvalPreview, expected.approvalPreview) ||
+    (expected.descriptionMode !== undefined &&
+      operation.descriptionMode !== expected.descriptionMode) ||
     !isDeepStrictEqual(operation.createIntent, expected.createIntent)
   ) {
     throw new Error(
@@ -2037,6 +2130,19 @@ function approvalPreviewEnvelope(
       },
     ],
     externalAction: null,
+    approvalPreview: {
+      operationId: operation.operationId,
+      digest: operation.approvalPreview!.digest,
+      operationClass: operation.approvalPreview!.operationClass,
+      fieldMask: operation.approvalPreview!.fieldMask,
+      renderedFields: operation.approvalPreview!.renderedFields,
+      authority: operation.authority?.effective ?? 'user-approved',
+      revision: {
+        digest: operation.preview.revisionDigest,
+        evidenceDigest: operation.approvalPreview!.componentDigests.revision,
+        observedAt: operation.approvalPreview!.createdAt,
+      },
+    },
     recovery: [
       {
         code: 'preview-operation',
@@ -2066,25 +2172,40 @@ export function planProductionMutationProjection(input: {
     throw new Error('Remote mutation requires a current bounded snapshot.');
   }
   const purpose = composePurposePolicies(input.metadata.purposes);
+  const remoteDescription =
+    input.descriptionMode === 'managed-section'
+      ? managedDescriptionForReconciliation(
+          input.state.snapshot.issue.description,
+          input.metadata.bindingId,
+        )
+      : input.descriptionMode === 'none'
+        ? null
+        : input.state.snapshot.issue.description;
   const base = input.state.baseline
     ? {
         title: input.state.baseline.fields.title.value,
-        description: input.state.baseline.fields.description.value,
+        description:
+          input.descriptionMode === 'none'
+            ? null
+            : input.state.baseline.fields.description.value,
         priority: input.state.baseline.fields.priority.value,
       }
     : {
         title: input.state.snapshot.issue.title,
-        description: input.state.snapshot.issue.description,
+        description: remoteDescription,
         priority: input.state.snapshot.issue.priority,
       };
   const local = {
     title: input.state.localProjection.title,
-    description: input.state.localProjection.description,
+    description:
+      input.descriptionMode === 'none'
+        ? null
+        : input.state.localProjection.description,
     priority: input.state.localProjection.priority,
   };
   const remote = {
     title: input.state.snapshot.issue.title,
-    description: input.state.snapshot.issue.description,
+    description: remoteDescription,
     priority: input.state.snapshot.issue.priority,
   };
   const reconciliation = reconcileBinding({
@@ -2122,7 +2243,7 @@ export function planProductionMutationProjection(input: {
     if (input.descriptionMode === 'replace') {
       projection.description = local.description;
     } else {
-      const current = remote.description ?? '';
+      const current = input.state.snapshot.issue.description;
       const replacement = replaceManagedMarkdown(
         current,
         input.metadata.bindingId,
@@ -2155,6 +2276,18 @@ export function planProductionMutationProjection(input: {
     );
   }
   return projection;
+}
+
+function managedDescriptionForReconciliation(
+  body: string,
+  bindingId: string,
+): string {
+  const inspection = inspectManagedMarkdown(body, bindingId);
+  if (inspection.status === 'managed') return inspection.content;
+  if (inspection.status === 'absent') return body;
+  throw new Error(
+    `Remote managed description has invalid boundaries: ${inspection.reason}.`,
+  );
 }
 
 async function readBacklogProjection(
@@ -2450,11 +2583,31 @@ function baselineFromSnapshot(input: {
   operationId: string;
   localProjectionRevision: string;
   agreedAt: string;
+  descriptionMode: 'none' | 'managed-section' | 'replace';
 }): RemoteBaselineRecord {
   const field = (value: string | null) => ({
     value,
     hash: semanticDigest(value),
   });
+  let governedDescription: string | null;
+  if (input.descriptionMode === 'none') {
+    governedDescription = null;
+  } else if (input.descriptionMode === 'replace') {
+    governedDescription = input.snapshot.issue.description;
+  } else {
+    const inspection = inspectManagedMarkdown(
+      input.snapshot.issue.description,
+      input.snapshot.bindingId,
+    );
+    if (inspection.status !== 'managed') {
+      const reason =
+        inspection.status === 'absent' ? 'missing-boundary' : inspection.reason;
+      throw new Error(
+        `Verified managed description has invalid boundaries: ${reason}.`,
+      );
+    }
+    governedDescription = inspection.content;
+  }
   return {
     recordType: 'baseline',
     schemaVersion: 1,
@@ -2466,10 +2619,21 @@ function baselineFromSnapshot(input: {
     remoteRevision: input.snapshot.revision,
     fields: {
       title: field(input.snapshot.issue.title),
-      description: field(input.snapshot.issue.description),
+      description: field(governedDescription),
       priority: field(input.snapshot.issue.priority),
     },
   };
+}
+
+function requireOperationDescriptionMode(
+  operation: RemoteOperationRecord,
+): 'none' | 'managed-section' | 'replace' {
+  if (!operation.descriptionMode) {
+    throw new Error(
+      'Mutation operation lacks its persisted effective description policy.',
+    );
+  }
+  return operation.descriptionMode;
 }
 
 async function planIntakeBacklogTarget(
@@ -2616,6 +2780,7 @@ function operationRecord(input: {
   approval?: RemoteOperationRecord['approval'];
   previewDigest: string;
   approvalPreview?: BindingPreview;
+  descriptionMode?: 'none' | 'managed-section' | 'replace';
   capabilityEvidenceDigest: string;
   policyDigest: string;
   projectionDigest?: string;
@@ -2655,6 +2820,9 @@ function operationRecord(input: {
     },
     ...(input.approvalPreview
       ? { approvalPreview: input.approvalPreview }
+      : {}),
+    ...(input.descriptionMode
+      ? { descriptionMode: input.descriptionMode }
       : {}),
     authority: input.authority,
     approval: input.approval ?? null,

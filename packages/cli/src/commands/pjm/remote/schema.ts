@@ -947,6 +947,7 @@ const CurrentRemoteOperationRecordSchema = z
     ]),
     preview: OperationPreviewSchema,
     approvalPreview: ApprovalPreviewSchema.optional(),
+    descriptionMode: DescriptionModeSchema.optional(),
     authority: AuthorityDecisionSchema.nullable(),
     approval: ApprovalEvidenceSchema.nullable(),
     createdAt: TimestampSchema,

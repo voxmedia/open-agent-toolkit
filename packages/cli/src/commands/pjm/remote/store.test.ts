@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildExternalAction } from './external-action';
+import { assessOutboundProjectionSafety } from './outbound-projection-safety';
 import type {
   RemoteBindingMetadata,
   RemoteBindingState,
@@ -522,6 +523,65 @@ describe('RemoteSyncStore', () => {
       attempts: [{ completedAt: observation.observedAt }],
       observations: [observation],
     });
+  });
+
+  it('repairs a failed current-action pointer from exact append-only action evidence', async () => {
+    let failCurrentPointer = true;
+    const filesystem: RemoteStoreFilesystem = {
+      ...defaultRemoteStoreFilesystem,
+      rename: async (from, to) => {
+        if (failCurrentPointer && to.endsWith('op_operation_123.action')) {
+          failCurrentPointer = false;
+          throw new Error('injected current action pointer failure');
+        }
+        await defaultRemoteStoreFilesystem.rename(from, to);
+      },
+    };
+    const { store } = await createStore(filesystem);
+    const projection = { title: 'Safe title' };
+    const outboundSafety = assessOutboundProjectionSafety(projection, {
+      assessedAt: timestamp,
+    });
+    const action = buildExternalAction({
+      operationId: 'op_operation_123',
+      stepId: 'step_create_123',
+      provider: 'github',
+      semanticOperation: 'create',
+      context: { host: 'github.com', repositoryId: 'repo-123' },
+      intent: {
+        target: { kind: 'backlog', scope: 'shared', id: 'item-123' },
+        fields: projection,
+        provenanceToken: 'oat-binding:bnd_binding_123',
+      },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {
+        projectionDigest: outboundSafety.projectionDigest,
+        safetyResultDigest: outboundSafety.resultDigest,
+      },
+      projection,
+      outboundSafety,
+    });
+
+    await expect(
+      store.writeCurrentAction(action.operationId, action),
+    ).rejects.toThrow(/current action pointer failure/i);
+    await expect(
+      store.readAction(action.operationId, action.stepId),
+    ).resolves.toEqual(action);
+    await expect(
+      store.readCurrentAction(action.operationId),
+    ).resolves.toBeNull();
+
+    const restarted = new RemoteSyncStore(store.locations);
+    await restarted.writeCurrentAction(action.operationId, action);
+    await expect(
+      restarted.readCurrentAction(action.operationId),
+    ).resolves.toEqual(action);
   });
 
   it('requires expected state transitions and rejects duplicate steps', async () => {

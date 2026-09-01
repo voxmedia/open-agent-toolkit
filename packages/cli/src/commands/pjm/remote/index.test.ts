@@ -464,6 +464,7 @@ describe('pjm remote command family', () => {
     });
     const runApprovedCommand = async (extraArguments: string[]) => {
       let envelope: Awaited<ReturnType<typeof approvedRunner>> | undefined;
+      const stdout: string[] = [];
       const root = new Command().name('oat').option('--json');
       root.exitOverride();
       root.addCommand(
@@ -476,11 +477,19 @@ describe('pjm remote command family', () => {
           },
         }),
       );
-      vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-      vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      const stdoutSpy = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation((chunk) => {
+          stdout.push(String(chunk));
+          return true;
+        });
+      const stderrSpy = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true);
       await root.parseAsync([
         'node',
         'oat',
+        '--json',
         'remote',
         'publish',
         '--binding',
@@ -490,36 +499,55 @@ describe('pjm remote command family', () => {
         approvalPath,
         ...extraArguments,
       ]);
-      return envelope!;
+      stdoutSpy.mockRestore();
+      stderrSpy.mockRestore();
+      process.exitCode = undefined;
+      return {
+        envelope: envelope!,
+        output: JSON.parse(stdout.join()) as Awaited<
+          ReturnType<typeof approvedRunner>
+        >,
+      };
     };
     const approvalPath = await writeAuthorityEvidence(
       approved.repo,
       interactiveAuthority('update-fields', 'bnd_live_001'),
     );
     const preview = await runApprovedCommand([]);
-    expect(preview).toMatchObject({
+    expect(preview.output).toMatchObject({
       status: 'needs-review',
       persisted: true,
       externalAction: null,
+      approvalPreview: {
+        operationId: expect.stringMatching(/^op_/),
+        digest: expect.stringMatching(/^sha256:/),
+        operationClass: 'update-fields',
+        fieldMask: ['title', 'description', 'priority'],
+        renderedFields: {
+          title: { kind: 'value' },
+          description: { kind: 'hash' },
+          priority: { kind: 'value' },
+        },
+        authority: 'user-approved',
+        revision: {
+          digest: expect.stringMatching(/^sha256:/),
+          evidenceDigest: expect.stringMatching(/^sha256:/),
+          observedAt: '2026-08-31T11:59:00.000Z',
+        },
+      },
     });
-    const [previewOperation] =
-      await approved.store.listActiveOperations('bnd_live_001');
-    const previewDigest = previewOperation!.preview.digest;
-    expect(preview.recovery).toEqual(
+    const emittedPreview = preview.output.approvalPreview!;
+    const previewDigest = emittedPreview.digest;
+    expect(preview.output.recovery).toEqual(
       expect.arrayContaining([
         {
           code: 'preview-operation',
-          instruction: previewOperation!.operationId,
+          instruction: emittedPreview.operationId,
         },
         { code: 'preview-digest', instruction: previewDigest },
         expect.objectContaining({ code: 'preview-approval-required' }),
       ]),
     );
-    expect(previewOperation!.approvalPreview).toMatchObject({
-      digest: previewDigest,
-      operationClass: 'update-fields',
-      fieldMask: ['title', 'description', 'priority'],
-    });
     expect(previewDigest).toMatch(/^sha256:/);
     await writeAuthorityEvidence(
       approved.repo,
@@ -552,13 +580,13 @@ describe('pjm remote command family', () => {
         bindingId: 'bnd_live_001',
         capabilityEvidenceStdin: true,
         authorityEvidenceFile: approvalPath,
-        previewOperationId: previewOperation!.operationId,
+        previewOperationId: emittedPreview.operationId,
       }),
     ).rejects.toThrow(/preview|drift/i);
     await writeFile(approvalTarget, approvedContent);
     await expect(
-      runApprovedCommand(['--apply-preview', previewOperation!.operationId]),
-    ).resolves.toMatchObject({ status: 'pending' });
+      runApprovedCommand(['--apply-preview', emittedPreview.operationId]),
+    ).resolves.toMatchObject({ envelope: { status: 'pending' } });
     await expect(
       approvedRunner({
         operation: 'publish',
@@ -566,7 +594,7 @@ describe('pjm remote command family', () => {
         bindingId: 'bnd_live_001',
         capabilityEvidenceStdin: true,
         authorityEvidenceFile: approvalPath,
-        previewOperationId: previewOperation!.operationId,
+        previewOperationId: emittedPreview.operationId,
       }),
     ).rejects.toThrow(/safely applicable/i);
 
@@ -1392,6 +1420,11 @@ describe('pjm remote command family', () => {
             contentHash: 'sha256:update-authoritative-read',
           },
           localProjectionRevision: localProjection.sourceRevision,
+          fields: {
+            title: { value: localProjection.title },
+            description: { value: localProjection.description },
+            priority: { value: localProjection.priority },
+          },
         },
       },
     );
