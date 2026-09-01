@@ -75,12 +75,54 @@ describe('engine types', () => {
       scope: 'project',
       entries: [entry],
       removals: [removal, detachment],
+      collections: [],
     };
 
     expect(plan.scope).toBe('project');
     expect(plan.entries).toHaveLength(1);
     expect(plan.removals[0]?.operation).toBe('remove');
     expect(plan.removals[1]?.operation).toBe('detach');
+  });
+
+  it('models collection projection plans separately from child operations', () => {
+    const plan: SyncPlan = {
+      scope: 'project',
+      entries: [],
+      removals: [],
+      collections: [
+        {
+          provider: 'claude',
+          scope: 'project',
+          contentType: 'skill',
+          canonicalDir: '/repo/.agents/skills',
+          providerDir: '/repo/.claude/skills',
+          action: 'create-collection-link',
+          ownership: 'oat-created',
+          configuredStrategy: 'auto',
+          proof: {
+            status: 'absent',
+            canonicalDirectory: {
+              device: '1',
+              inode: '2',
+              type: 'directory',
+              modifiedAtNanoseconds: '3',
+            },
+            providerParent: {
+              device: '1',
+              inode: '4',
+              type: 'directory',
+              modifiedAtNanoseconds: '5',
+            },
+            checkedAt: '2026-02-13T00:00:00.000Z',
+          },
+          inheritedEntries: ['.agents/skills/example'],
+          reason: 'provider collection is absent',
+        },
+      ],
+    };
+
+    expect(plan.collections?.[0]?.action).toBe('create-collection-link');
+    expect(plan.entries).toEqual([]);
   });
 
   it('SyncResult retains compatibility counts and per-operation evidence', () => {

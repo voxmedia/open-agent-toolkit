@@ -2,6 +2,64 @@ import type { Scope } from '@shared/types';
 
 import type { CanonicalEntry } from './scanner';
 
+export interface CollectionPathIdentity {
+  device: string;
+  inode: string;
+  type: 'directory' | 'symlink';
+  modifiedAtNanoseconds: string;
+}
+
+export type CollectionIdentityProof =
+  | {
+      status: 'absent';
+      canonicalDirectory: CollectionPathIdentity;
+      providerParent: CollectionPathIdentity;
+      checkedAt: string;
+    }
+  | {
+      status: 'exact-link';
+      providerLink: CollectionPathIdentity;
+      canonicalDirectory: CollectionPathIdentity;
+      linkTextKind: 'relative' | 'absolute';
+      resolvedTarget: string;
+      entrySetDigest: string;
+      checkedAt: string;
+    }
+  | {
+      status: 'ineligible';
+      reason:
+        | 'real-directory'
+        | 'broken-link'
+        | 'foreign-target'
+        | 'divergent-entries'
+        | 'unsafe-ancestry'
+        | 'identity-unavailable';
+      observedIdentity?: CollectionPathIdentity;
+      checkedAt: string;
+    };
+
+export type CollectionSyncAction =
+  | 'create-collection-link'
+  | 'adopt-collection-link'
+  | 'inherit-collection'
+  | 'fallback-per-entry'
+  | 'detach-collection'
+  | 'reject-collection';
+
+export interface CollectionProjectionPlan {
+  provider: string;
+  scope: EngineScope;
+  contentType: CanonicalEntry['type'];
+  canonicalDir: string;
+  providerDir: string;
+  action: CollectionSyncAction;
+  ownership: 'oat-created' | 'adopted-exact' | 'none';
+  configuredStrategy: 'auto';
+  proof: CollectionIdentityProof;
+  inheritedEntries: readonly string[];
+  reason: string;
+}
+
 export type EngineScope = Exclude<Scope, 'all'>;
 
 export const SYNC_OPERATION_TYPES = [
@@ -34,6 +92,7 @@ export interface SyncPlan {
   scope: EngineScope;
   entries: SyncPlanEntry[];
   removals: RemovalSyncPlanEntry[];
+  collections?: CollectionProjectionPlan[];
 }
 
 export type SyncOperationStatus =

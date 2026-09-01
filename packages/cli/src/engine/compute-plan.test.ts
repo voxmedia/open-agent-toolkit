@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
-import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
+import { DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG } from '@config/sync-config';
 import { computeDirectoryHash } from '@manifest/hash';
 import { createEmptyManifest } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
@@ -13,6 +13,11 @@ import { computeSyncPlan } from './compute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import type { CanonicalEntry } from './scanner';
 import { createTestAdapter } from './test-helpers';
+
+const DEFAULT_SYNC_CONFIG = {
+  ...AUTO_SYNC_CONFIG,
+  defaultStrategy: 'symlink' as const,
+};
 
 function createCanonicalEntry(
   root: string,
@@ -708,7 +713,7 @@ describe('computeSyncPlan', () => {
       adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: AUTO_SYNC_CONFIG,
       scopeRoot: root,
     });
 
@@ -744,7 +749,139 @@ describe('computeSyncPlan', () => {
       scopeRoot: root,
     });
 
-    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries).toEqual([]);
+    expect(plan.collections).toEqual([
+      expect.objectContaining({
+        provider: 'claude',
+        action: 'create-collection-link',
+        ownership: 'oat-created',
+        inheritedEntries: ['.agents/skills/skill-one'],
+      }),
+    ]);
+  });
+
+  it.each(['symlink', 'copy'] as const)(
+    'keeps explicit configured %s as per-entry sync',
+    async (strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+        recursive: true,
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter()],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: {
+          ...DEFAULT_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(plan.collections).toEqual([]);
+      expect(plan.entries[0]?.strategy).toBe(strategy);
+    },
+  );
+
+  it('adopts an existing exact configured-auto collection alias', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toEqual([]);
+    expect(plan.collections).toEqual([
+      expect.objectContaining({
+        action: 'adopt-collection-link',
+        ownership: 'adopted-exact',
+      }),
+    ]);
+  });
+
+  it('inherits an already-owned exact collection without child operations', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const manifest = createEmptyManifest();
+    manifest.collections.push({
+      id: 'claude-skill-.agents-skills',
+      provider: 'claude',
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.claude/skills',
+      linkTarget: '.agents/skills',
+      ownership: 'oat-created',
+      lastVerified: '2026-02-13T00:00:00.000Z',
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter()],
+      manifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toEqual([]);
+    expect(plan.collections).toEqual([
+      expect.objectContaining({
+        action: 'inherit-collection',
+        ownership: 'oat-created',
+      }),
+    ]);
+  });
+
+  it('falls back unchanged for a real provider collection', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude', 'skills'), { recursive: true });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.collections).toEqual([
+      expect.objectContaining({
+        action: 'fallback-per-entry',
+        ownership: 'none',
+      }),
+    ]);
     expect(plan.entries[0]).toMatchObject({
       operation: 'create_symlink',
       strategy: 'symlink',
