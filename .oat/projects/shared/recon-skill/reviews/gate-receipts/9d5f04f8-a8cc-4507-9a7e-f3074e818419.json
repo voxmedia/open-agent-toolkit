@@ -1,0 +1,150 @@
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "0bb25a08-a4e7-4e4b-adef-ca236e685c2a",
+  "target": "cursor-fable-5-high",
+  "project": ".oat/projects/shared/recon-skill",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md",
+  "generatedAt": "2026-09-01T04:01:14Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 0
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Run oat-project-review-receive for .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md before treating this gate review as consumed.",
+  "diversity": {
+    "avoid": "same-family",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": ["openai"],
+      "contributingScopes": ["p01", "p02"],
+      "contributingStampCount": 2
+    },
+    "reviewer": {
+      "target": "cursor-fable-5-high",
+      "runtime": "cursor",
+      "family": "claude",
+      "model": "claude-fable-5-high"
+    }
+  },
+  "gateInvocation": {
+    "runId": "0bb25a08-a4e7-4e4b-adef-ca236e685c2a",
+    "targetId": "cursor-fable-5-high",
+    "runtime": "cursor",
+    "model": "claude-fable-5-high",
+    "reasoningEffort": "unknown",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "cursor-fable-5-high"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "preferredValue": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "classification": {
+      "taskClass": null,
+      "preferredEffort": null,
+      "source": "not-reported"
+    },
+    "notices": [],
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "0bb25a08-a4e7-4e4b-adef-ca236e685c2a",
+      "targetId": "cursor-fable-5-high",
+      "runtime": "cursor",
+      "model": "claude-fable-5-high",
+      "reasoningEffort": "unknown",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/shared/recon-skill",
+      "invocation": {
+        "runId": "0bb25a08-a4e7-4e4b-adef-ca236e685c2a",
+        "targetId": "cursor-fable-5-high",
+        "runtime": "cursor",
+        "model": "claude-fable-5-high",
+        "reasoningEffort": "unknown",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/shared/recon-skill",
+      "artifactProject": ".oat/projects/shared/recon-skill",
+      "normalizedArtifactProject": ".oat/projects/shared/recon-skill",
+      "matchingArtifactPaths": [
+        ".oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md"
+      ],
+      "invocation": {
+        "runId": "0bb25a08-a4e7-4e4b-adef-ca236e685c2a",
+        "targetId": "cursor-fable-5-high",
+        "runtime": "cursor",
+        "model": "claude-fable-5-high",
+        "reasoningEffort": "unknown",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}

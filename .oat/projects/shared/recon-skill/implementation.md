@@ -1400,6 +1400,15 @@ starting a new configured implementation exit-gate generation.
   `reviews/gate-receipts/9d5f04f8-a8cc-4507-9a7e-f3074e818419.json`.
 - No launch acceptance is inferred until the gate CLI creates exactly one
   matching run marker.
+- Gate run `0bb25a08-a4e7-4e4b-adef-ca236e685c2a` was positively accepted by
+  the configured `cursor-fable-5-high` route and completed with structured
+  envelope status `ok`.
+- The durable result receipt corroborates the declared project, gate
+  invocation, run ID, zero Critical/Important/Medium/Minor findings,
+  different-family reviewer, receive eligibility, and handoff artifact
+  `reviews/final-review-2026-09-01T040114Z.md`.
+- Launch state is durably `result_persisted`; policy disposition remains
+  pending until the exact gate review is received and reconciled.
 
 ## Deviations from Plan / Design
 
