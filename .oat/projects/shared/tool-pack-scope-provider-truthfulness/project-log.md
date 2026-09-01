@@ -132,6 +132,10 @@ Final p03 fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 resolved config-only refr
 
 p04 completed five planned commits plus recovered composition attempt 1/10 at 7be0d56dfe69791982fae373882c3d96dac981eb. Collection aliases are restricted to registry-supported skills; phase 368, live CLI 4823, full repository tests, static checks, and whitespace pass. Independent High review is next; p05 remains gated.
 
+### 2026-09-01 · structural · oat-project-implement · p04
+
+Phase 4 stopped at the terminal five-round review boundary with one Critical deferred-directory-copy collision; operator governance is required. Review orchestration and attempted reconnaissance evidence are recorded in reviews/p04-review-2026-09-01T013028Z.md, reviews/p04-review-2026-09-01T020351Z.md, reviews/p04-review-2026-09-01T023939Z.md, reviews/p04-review-2026-09-01T031017Z.md, and reviews/p04-review-2026-09-01T033543Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

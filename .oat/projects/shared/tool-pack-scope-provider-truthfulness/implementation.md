@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** final bounded fix complete; terminal High review pending
+**Status:** blocked at terminal review governance boundary
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -944,6 +944,23 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - A terminal exact-High round-5 reviewer will assess the complete Phase 4
   range. Any blocking result returns to operator governance; Phase 5 remains
   gated until a pass.
+
+### Review Round 5 — Terminal Governance Boundary
+
+- Artifact: `reviews/p04-review-2026-09-01T033543Z.md`
+- Reviewed head: `740e2a7ca90d16efd38f226db9840598ef634daf`
+- Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: attempted through one accepted consequential safety lane;
+  complete orchestration and primary reconciliation evidence is in the review
+  artifact.
+- All prior findings and whole-destination no-clobber cases are resolved. The
+  remaining race is inside deferred directory copy: after reserving the entry
+  root, ordinary recursive copy can overwrite a same-name unmanaged nested
+  child created before that source child is written.
+- The configured five-round p04 review budget is exhausted. No further automatic
+  correction is authorized. Operator governance must either authorize one new
+  bounded correction for complete-tree no-replace publication or revise the
+  Phase 4 delivery boundary. Phase 5 remains gated.
 
 ---
 
@@ -1366,6 +1383,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: the final Critical finding is closed; focused 58/58 and authoritative
   Phase 4 union 410/410 passed with exact three-file and whitespace checks.
 - Dispatch: scope=p04-review-r4-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 5 — terminal governance boundary
+
+- Reviewed head: `740e2a7ca90d16efd38f226db9840598ef634daf`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T033543Z.md`
+- Outcome: changes requested; 1 Critical finding. The five-round review budget
+  is exhausted, operator governance is required, and Phase 5 remains gated.
+- Reconnaissance: attempted; complete nested dispatch and primary
+  reconciliation evidence is preserved in the review artifact.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

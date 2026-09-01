@@ -1,7 +1,8 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 04a30164a1b9f0743b5ea83526a1a734f5afbbd0
-oat_blockers: []
+oat_last_commit: 740e2a7ca90d16efd38f226db9840598ef634daf
+oat_blockers:
+  - Phase 4 exhausted its five-round review budget with one Critical deferred-directory-copy collision; operator governance must authorize another bounded correction or revise the delivery boundary.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -123,7 +124,7 @@ review.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 final bounded fix complete and terminal High review pending)
+- **Implementation:** `implementation.md` (blocked — p01-p03 passed; p04 terminal review requires operator governance)
 
 ## Progress
 
