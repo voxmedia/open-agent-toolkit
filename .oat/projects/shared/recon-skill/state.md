@@ -41,8 +41,8 @@ oat_implement_exit_gate:
   reviewed_head: 3cc1cd2e37e776da21f12d7243a96a212762d77f
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fad1aafe97277d3dcf9e85e5f016eb2e94ad77e0eda6a507eaa3c8d50be8d6c3'
-  freshness_head: 33118c6e8218aad4d99b4b20c6836acf7d7a0ae2
-  freshness_fingerprint: 'sha256:effective-delta-v1:5cce86a5e208df12c9d4232b3832fadc39c7a4e37f658f312675e42380d211d9'
+  freshness_head: 40899bab20a704d7bef574c2014e8b9797b1a96a
+  freshness_fingerprint: 'sha256:effective-delta-v1:e6ad3700730c8788c97e71f0b54a7f0bbd7486693a506c4ac689da9f0bfcd175'
   launch_state: result_persisted
   launch_attempt_id: 81836b97-36ab-4d9f-bf0b-9260e755024d
   launch_started_at: '2026-08-31T23:34:49Z'
