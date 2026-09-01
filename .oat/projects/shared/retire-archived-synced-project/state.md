@@ -64,12 +64,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98
   freshness_head: 7eebf36e78f880793adc1f7c8b831affd3cf2a62
   freshness_fingerprint: sha256:effective-delta-v1:36aad9f102bdc786bf0b64ba7733fe8aa902da160f8879aeb6c60841fce124db
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 7137aa69-b118-4538-8db7-b57d8da84697
   launch_started_at: '2026-09-01T23:10:26Z'
   launch_result_receipt: /Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/7137aa69-b118-4538-8db7-b57d8da84697.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/2e607741-ddac-4b6e-bc38-0d65d66c93aa.json
+  gate_run_id: 2e607741-ddac-4b6e-bc38-0d65d66c93aa
   envelope_status: null
   artifact: null
   handoff: null
@@ -83,13 +83,13 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-01T23:10:55Z'
+  updated_at: '2026-09-01T23:11:38Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:10:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:11:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip

@@ -541,6 +541,11 @@ and could not be refreshed`.
   at
   `/Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/7137aa69-b118-4538-8db7-b57d8da84697.json`.
   Acceptance remains unclaimed until a unique correlated gate marker exists.
+- The CLI accepted gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` with the
+  unique marker
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/2e607741-ddac-4b6e-bc38-0d65d66c93aa.json`.
+  The synchronously awaited Claude Fable child remains the sole authoritative
+  run until its durable receipt completes.
 
 <!-- orchestration-runs-end -->
 
