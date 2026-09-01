@@ -14,6 +14,20 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p05:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recon-skill-p05-recovery-001
+        original_request_id: recon-skill-p05-implementation-20260901T232205Z
+        original_task_id: p05-t04
+        original_commit: e47466edd974a25056fa913a1230818f5dc8b554
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: ac8d8273efca9df5d4504cbdd7a0ce28810afb66
+        status: active
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
