@@ -3,7 +3,7 @@ oat_current_task: p04-t01
 oat_last_commit: 83ae7a9c160afdf4e6e4d08ff26268469403df0a
 oat_blockers:
   - task_id: p-rev1
-    reason: 'The bounded operator-extension fix closed the Round-3 Critical and Important findings in 83ae7a9c1; the authorized fourth independent review is pending.'
+    reason: 'The fourth operator-extension review blocked with one Critical verification-handoff restart gap and one Medium incomplete-intent provenance finding; the extension is exhausted.'
     since: '2026-09-01'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T18:02:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T18:32:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,9 +50,10 @@ oat_generated: false
 ## Current Phase
 
 Implementation revision — all four Revision 1 tasks and three bounded review-fix
-commits are complete. The operator-extension fix closed the Round-3 Critical
-create-handoff recovery finding and Important preview-freshness finding. The
-authorized fourth independent review is pending. Phase 4 has not started.
+commits are complete. The operator-extension fix closed the Round-3 findings,
+but the fourth independent review found one new Critical verification-handoff
+restart gap and one Medium incomplete-intent provenance finding. The extension
+is exhausted and Phase 4 has not started.
 
 ## Artifacts
 
@@ -134,19 +135,23 @@ authorized fourth independent review is pending. Phase 4 has not started.
 - ⧗ One bounded Revision 1 operator-extension fix/review cycle authorized
 - ✓ Operator-extension fix committed as `83ae7a9c1`; corrective suite passed
   236/236
-- ⧗ Authorized fourth independent Revision 1 review pending
-- ⛔ Phase 4 remains blocked until an operator-authorized fix/review extension passes
+- ⚠ Fourth operator-extension review blocked with 1 Critical and 1 Medium
+- ⛔ Revision 1 operator extension exhausted at 4/4 reviews and 3/3 fixes
+- ⛔ Phase 4 remains blocked pending new operator direction
 
 ## Blockers
 
-Revision 1 exhausted its three normal review rounds. The bounded same-target
-operator-extension fix is complete, but Phase 4 remains blocked until the
-authorized fourth independent review confirms zero Critical and zero Important
-findings. No further fix/review cycle is authorized.
+Revision 1 exhausted its normal review governance and the one authorized
+extension. A committed create can be stranded when the operation reaches
+`verification-pending` before its verification-read action becomes durable;
+the current action remains the accepted create and no public continuation path
+can recover it. The nonblocking Medium concerns incomplete project-create
+intents that synthesize explicit local publication provenance from remote
+fields. No further fix/review cycle is authorized.
 
 ## Next Milestone
 
-Run the authorized fourth independent Revision 1 review against the complete
-revision range through `83ae7a9c160afdf4e6e4d08ff26268469403df0a`.
-Do not begin `p04-t01` until it passes with zero Critical and zero Important
-findings; stop for direction if the fourth review remains blocked.
+Obtain operator direction for the confirmed Critical verification-handoff
+restart gap in
+`reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`. Do not begin
+`p04-t01` and do not run another fix/review cycle without new authorization.

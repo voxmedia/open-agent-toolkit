@@ -1191,9 +1191,9 @@ review_fix_commits:
   - 83ae7a9c160afdf4e6e4d08ff26268469403df0a
 recovery_usage: 0/10
 pending_attempt: null
-review_cycles: 3/4
+review_cycles: 4/4
 review_fix_loops: 3/3
-phase_outcome: operator_extension_review_pending
+phase_outcome: blocked_operator_extension_exhausted
 continuation_events:
   - id: remote-project-management-p-rev1-review-fix-1-20260901T0205Z
     outcome: done
@@ -1231,11 +1231,12 @@ target=oat-reviewer-gpt-5-6-sol-high
 
 **Review outcomes:**
 
-| Round | Artifact                                                 | Findings                | Outcome               |
-| ----- | -------------------------------------------------------- | ----------------------- | --------------------- |
-| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`            | 4 Critical              | fix `1a11231c8`       |
-| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md` | 2 Critical, 1 Important | fix `15332edbf`       |
-| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md` | 1 Critical, 1 Important | terminal normal block |
+| Round | Artifact                                                       | Findings                | Outcome                  |
+| ----- | -------------------------------------------------------------- | ----------------------- | ------------------------ |
+| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`                  | 4 Critical              | fix `1a11231c8`          |
+| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md`       | 2 Critical, 1 Important | fix `15332edbf`          |
+| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`       | 1 Critical, 1 Important | terminal normal block    |
+| 4     | `reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md` | 1 Critical, 1 Medium    | terminal extension block |
 
 - All four revision tasks completed. Root independently verified the final
   17-file corrective suite at 234/234, CLI type-check/build, `pnpm check`,
@@ -1245,9 +1246,10 @@ target=oat-reviewer-gpt-5-6-sol-high
   duplicate no-handle retry, while the approval preview mislabels creation time
   as remote revision freshness.
 - The original implementer used two optional read-only reconnaissance lanes for
-  bounded preview/policy and publication/materialization analysis. Every root
-  reviewer reported `**Reconnaissance:** not-attempted` and no review artifact
-  contains a `## Review Orchestration` section.
+  bounded preview/policy and publication/materialization analysis. Root review
+  rounds 1-3 reported `**Reconnaissance:** not-attempted`. Round 4 reported
+  `**Reconnaissance:** attempted` and its complete `## Review Orchestration`
+  section reconciles two bounded read-only lanes.
 - Normal review governance is exhausted at 3/3. Phase 4 did not start and
   requires an explicit operator extension before another bounded fix/review
   cycle.
@@ -1288,7 +1290,23 @@ target=oat-reviewer-gpt-5-6-sol-high
   (Turbo package checks replayed cached results); committed diff and file
   boundary checks passed; worktree was clean.
 - Recovery ledger remained `0/10` with `pending_attempt: null`. Review-fix
-  usage is now 3/3. The fourth independent review is pending.
+  usage is now 3/3.
+- Review dispatch: request
+  `remote-project-management-p-rev1-review-4-operator-20260901T180520Z` was
+  accepted natively on exact target `oat-reviewer-gpt-5-6-sol-high`, reviewing
+  `3a304e20c995f6d10f7de5d76430ef7d7c3f93fe..83ae7a9c160afdf4e6e4d08ff26268469403df0a`.
+- Fourth review artifact:
+  `reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md`.
+  Verdict: BLOCK with 1 Critical, 0 Important, 1 Medium, and 0 Minor.
+- The Round-3 findings are closed. The new Critical shows a later restart gap:
+  after an accepted create observation transitions the journal to
+  `verification-pending` but before the verification-read action is durable, a
+  crash can strand the committed create with the stale create action current
+  and no public recovery path. The Medium finding covers incomplete persisted
+  project-create intents synthesizing explicit local publication provenance
+  from remote fields.
+- Operator extension outcome: exhausted at 4/4 review cycles and 3/3 fix loops.
+  Phase 4 did not start. No further fix/review cycle is authorized.
 
 <!-- orchestration-runs-end -->
 

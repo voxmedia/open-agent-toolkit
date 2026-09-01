@@ -116,6 +116,10 @@ Phase 3 stopped after review cycle 3/3 with 6 Critical and 1 Important findings;
 
 BLOCKED after review round 3 exhausted normal governance with 1 Critical and 1 Important finding; see reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md.
 
+### 2026-09-01 · structural · oat-project-implement · p-rev1
+
+Operator-extension review 4 blocked with 1 Critical and 1 Medium after 3/3 fix loops; reconnaissance attempted and reconciled in reviews/p-rev1-round-4-operator-review-2026-09-01T180520Z.md; extension exhausted and Phase 4 remains blocked.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
