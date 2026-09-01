@@ -293,7 +293,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 ## Phase 3: Provider Materialization and Restart Truth
 
-**Status:** review round 5 correction authorized
+**Status:** fresh High review pending after verified round 5 correction
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -699,6 +699,24 @@ high confidence. The original commit remains the source authority.
   A passing fresh review completes Phase 3 and advances directly to Phase 4;
   another blocking review is terminal for this authorization.
 
+### Review Round 5 Correction
+
+- Commit: `5f3bc57a0e785224ff25fad007cf0a7ee1c0d118`
+- Exact changed extension configuration evidence now maps through the unique
+  registered materialization-extension capability and deduplicates with role
+  evidence by provider, scope, and content kind. Aggregate-only, failed,
+  unsupported, and ambiguous evidence remains advice-free.
+- Provider-specific refresh policies explicitly precede the repository
+  fallback. Registry validation rejects sourced policies on unsupported rows
+  and malformed or absent provenance.
+- Changed exactly four authorized source/test files. RED produced 8 expected
+  failures; focused 326/326 and expanded p03 518/518 passed. CLI lint,
+  type-check, format, `pnpm check`, `git diff --check`, and full `pnpm test`
+  passed; the live CLI run completed 4,771/4,771 tests, skills 586/586, and
+  release 39 pass plus one intentional skip.
+- Root independently verified the exact file boundary, clean worktree,
+  whitespace, and focused 326/326 suite at committed HEAD.
+
 ---
 
 ## Orchestration Runs
@@ -987,6 +1005,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: terminal governance boundary after the third p03 review cycle;
   operator disposition required before any fourth cycle
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 5
+
+- Original request: `dispatch-p03-20260831T171500Z-e3512dcbc`
+- Continuation: `p03-review-r5-fix-20260831T235717Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `5f3bc57a0e785224ff25fad007cf0a7ee1c0d118`
+- Outcome: config-only provider changes now receive deduplicated conservative
+  new-session advice, and registry refresh-policy precedence/provenance is
+  validated; focused 326, expanded p03 518, and full repository tests passed.
+- Selection reason: `native-catalog`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p03-review-r5-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

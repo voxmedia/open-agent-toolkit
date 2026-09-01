@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: a65ba0ce2f30d072666938c16de79e6a561e40d2
+oat_last_commit: 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -92,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-31T23:57:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T00:16:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,10 +108,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized one bounded Phase 3 correction for review
-round 5 and one fresh independent High review. The correction covers exact
-config-only provider changes plus the adjacent provider-policy precedence
-guardrail. Phase 4 remains gated until that review passes.
+Implementation - The bounded Phase 3 review correction is complete at
+`5f3bc57a0`. Exact config-only provider changes now receive conservative
+new-session advice, and provider-policy precedence/provenance is validated.
+Fresh independent High review is next; Phase 4 remains gated until it passes.
 
 ## Artifacts
 
@@ -119,7 +119,7 @@ guardrail. Phase 4 remains gated until that review passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 round 5 correction authorized)
+- **Implementation:** `implementation.md` (in progress — p01-p02 passed; p03 correction verified, fresh review pending)
 
 ## Progress
 
@@ -144,14 +144,13 @@ guardrail. Phase 4 remains gated until that review passes.
 - ✓ Phase 1 diagnostics-baseline reconciliation complete
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
-- ⧗ Phase 3 review round 5 correction authorized
+- ⧗ Phase 3 correction verified; fresh High review pending
 
 ## Blockers
 
-- None. The bounded p03 correction and fresh review are authorized; Phase 4
-  remains gated on a passing review.
+- None. Phase 4 remains gated on the authorized fresh review.
 
 ## Next Milestone
 
-Apply and verify the bounded p03 correction, then run a fresh independent High
-review. Continue to Phase 4 only if it passes.
+Run the authorized fresh independent High p03 review. Continue directly to
+Phase 4 only if it passes.

@@ -120,6 +120,10 @@ Approved policy fix a65ba0ce2f30d072666938c16de79e6a561e40d2 resolved the unknow
 
 Thomas authorized one bounded correction for the exact config-only new-session advice gap and adjacent provider-policy precedence guardrail in reviews/p03-review-2026-08-31T234602Z.md, followed by one fresh independent High review. A blocking review is terminal for this authorization; p04 remains gated until pass.
 
+### 2026-09-01 · structural · oat-project-implement · p03-round6-fix-complete
+
+Operator-authorized fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 covers exact config-only new-session advice and registry policy precedence/provenance. Focused 326, expanded p03 518, and full repository tests pass; fresh independent High review is next and p04 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
