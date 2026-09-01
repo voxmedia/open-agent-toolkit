@@ -82,7 +82,11 @@ describe('external action protocol', () => {
       provider: 'linear' as const,
       semanticOperation: 'create' as const,
       context,
-      intent: {},
+      intent: {
+        target: { kind: 'backlog', scope: 'shared', id: 'item-1' },
+        fields: projection,
+        provenanceToken: 'oat-binding:bnd-1',
+      },
       expectedObservation: {
         fields: ['title'],
         requireIdentity: true,
@@ -108,7 +112,7 @@ describe('external action protocol', () => {
         projection: { title: 'Changed' },
         outboundSafety: safety,
       }),
-    ).toThrow(/stale|mismatched/);
+    ).toThrow(/stale|mismatched|exactly match/);
     expect(() =>
       buildExternalAction({
         ...input,
@@ -196,6 +200,46 @@ describe('external action protocol', () => {
     ).toThrow(/unique and bounded/i);
   });
 
+  it.each([
+    [
+      'transition',
+      { stableId: 'issue-1', transition: 'closed' },
+      { status: 'open' },
+      ['status'],
+    ],
+    [
+      'annotate',
+      { stableId: 'issue-1', body: 'different token payload' },
+      { annotation: 'approved-safe' },
+      ['annotation'],
+    ],
+  ] as const)(
+    'requires %s intent to equal its operation-discriminated projection',
+    (semanticOperation, intent, writableProjection, fields) => {
+      const writableSafety = assessOutboundProjectionSafety(
+        writableProjection,
+        { assessedAt: '2026-08-31T12:00:00.000Z' },
+      );
+      expect(() =>
+        buildExternalAction({
+          ...action,
+          semanticOperation,
+          intent,
+          expectedObservation: {
+            ...action.expectedObservation,
+            fields: [...fields],
+          },
+          persistedPreview: {
+            projectionDigest: writableSafety.projectionDigest,
+            safetyResultDigest: writableSafety.resultDigest,
+          },
+          projection: writableProjection,
+          outboundSafety: writableSafety,
+        }),
+      ).toThrow(/exactly match/i);
+    },
+  );
+
   it('enforces the observation field and identity contract and suppresses whole sensitive fields', () => {
     expect(() =>
       acceptExternalObservation({
@@ -251,6 +295,84 @@ describe('external action protocol', () => {
         }),
       }),
     ).toThrow(/stable identity/i);
+  });
+
+  it('rejects unsafe stable identity, alias, and provider context evidence', () => {
+    const createProjection = { title: 'Safe title' };
+    const createSafety = assessOutboundProjectionSafety(createProjection, {
+      assessedAt: '2026-08-31T12:00:00.000Z',
+    });
+    const createAction = buildExternalAction({
+      ...action,
+      semanticOperation: 'create',
+      intent: {
+        target: { kind: 'backlog', scope: 'shared', id: 'item-1' },
+        fields: createProjection,
+        provenanceToken: 'oat-binding:bnd-1',
+      },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {
+        projectionDigest: createSafety.projectionDigest,
+        safetyResultDigest: createSafety.resultDigest,
+      },
+      projection: createProjection,
+      outboundSafety: createSafety,
+    });
+    for (const identity of [
+      {
+        stableId: 'Authorization Bearer private-tail',
+        aliases: ['ENG-1'],
+      },
+      { stableId: 'issue-1', aliases: ['api key private-tail'] },
+    ]) {
+      expect(() =>
+        acceptExternalObservation({
+          action: createAction,
+          observation: {
+            ...observation(),
+            actionDigest: createAction.actionDigest,
+            operationId: createAction.operationId,
+            stepId: createAction.stepId,
+            outcome: { ...observation().outcome, identity },
+          },
+        }),
+      ).toThrow(/identity evidence is unsafe/i);
+    }
+
+    const unsafeContext = {
+      workspaceId: 'Authorization Bearer private-tail',
+    };
+    const unsafeContextAction = buildExternalAction({
+      ...action,
+      context: unsafeContext,
+      expectedObservation: {
+        ...action.expectedObservation,
+        stableId: 'issue-1',
+      },
+      persistedPreview: {
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
+      },
+      projection,
+      outboundSafety: safety,
+    });
+    expect(() =>
+      acceptExternalObservation({
+        action: unsafeContextAction,
+        observation: {
+          ...observation(),
+          actionDigest: unsafeContextAction.actionDigest,
+          operationId: unsafeContextAction.operationId,
+          stepId: unsafeContextAction.stepId,
+          context: unsafeContext,
+        },
+      }),
+    ).toThrow(/context evidence is unsafe/i);
   });
 
   it.each([

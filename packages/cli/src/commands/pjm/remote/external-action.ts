@@ -229,12 +229,24 @@ export function buildExternalAction(input: {
   const mutation = ['create', 'update', 'transition', 'annotate'].includes(
     input.semanticOperation,
   );
+  assertDepth(input.intent, 0);
+  const intent = ActionIntentSchemas[input.semanticOperation].parse(
+    input.intent,
+  );
   let outboundSafety: ExternalActionEnvelope['outboundSafety'] = null;
   if (mutation) {
     if (!input.projection)
       throw new Error(
         'Mutation action requires an explicit outbound projection.',
       );
+    if (
+      canonicalJson(writableProjection(input.semanticOperation, intent)) !==
+      canonicalJson(input.projection)
+    ) {
+      throw new Error(
+        'Mutation action writable fields must exactly match its gated projection.',
+      );
+    }
     requireCurrentOutboundSafety(input.projection, input.outboundSafety);
     if (
       input.persistedPreview.projectionDigest !==
@@ -250,19 +262,6 @@ export function buildExternalAction(input: {
       projectionDigest: input.outboundSafety.projectionDigest,
       resultDigest: input.outboundSafety.resultDigest,
     };
-  }
-  assertDepth(input.intent, 0);
-  const intent = ActionIntentSchemas[input.semanticOperation].parse(
-    input.intent,
-  );
-  if (
-    (input.semanticOperation === 'create' ||
-      input.semanticOperation === 'update') &&
-    canonicalJson(intent.fields) !== canonicalJson(input.projection)
-  ) {
-    throw new Error(
-      'Mutation action writable fields must exactly match its gated projection.',
-    );
   }
   const expectedFields = input.expectedObservation.fields.map((field) =>
     SemanticFieldNameSchema.parse(field),
@@ -362,13 +361,26 @@ export function acceptExternalObservation(input: {
     throw new Error('External observation stable identity is mismatched.');
   }
   if (
-    observation.outcome.identity?.aliases.some((value) =>
-      containsSensitiveContentSignal(value),
-    ) ||
-    (observation.outcome.diagnosticCode &&
-      containsSensitiveContentSignal(observation.outcome.diagnosticCode))
+    observation.outcome.identity &&
+    [
+      observation.outcome.identity.stableId,
+      ...observation.outcome.identity.aliases,
+    ].some((value) => containsSensitiveContentSignal(value))
   ) {
     throw new Error('External observation identity evidence is unsafe.');
+  }
+  if (
+    Object.values(observation.context).some((value) =>
+      containsSensitiveContentSignal(value),
+    )
+  ) {
+    throw new Error('External observation context evidence is unsafe.');
+  }
+  if (
+    observation.outcome.diagnosticCode &&
+    containsSensitiveContentSignal(observation.outcome.diagnosticCode)
+  ) {
+    throw new Error('External observation diagnostic evidence is unsafe.');
   }
   const suppressedFields: string[] = [];
   const fields = Object.fromEntries(
@@ -391,6 +403,23 @@ export interface AcceptedExternalObservationEnvelope extends ExternalObservation
   outcome: ExternalObservationEnvelope['outcome'] & {
     suppressedFields: string[];
   };
+}
+
+function writableProjection(
+  semanticOperation: ExternalActionEnvelope['semanticOperation'],
+  intent: Record<string, unknown>,
+): OutboundProjection | null {
+  switch (semanticOperation) {
+    case 'create':
+    case 'update':
+      return intent.fields as OutboundProjection;
+    case 'transition':
+      return { status: intent.transition as string };
+    case 'annotate':
+      return { annotation: intent.body as string };
+    default:
+      return null;
+  }
 }
 
 function assertDepth(value: unknown, depth: number): void {

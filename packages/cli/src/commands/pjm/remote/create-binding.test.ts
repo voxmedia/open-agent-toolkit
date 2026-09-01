@@ -179,6 +179,32 @@ describe('initial remote binding creation', () => {
     expect(h.calls.slice(-2)).toEqual(['materialize', 'association']);
   });
 
+  it('rejects unsafe created identity evidence before journaling or materialization', async () => {
+    const h = harness();
+    h.setPersisted(intent);
+    const pending = await prepare(h);
+    const unsafe = observation(pending.action);
+    unsafe.outcome.identity = {
+      stableId: 'Authorization Bearer private-tail',
+      aliases: ['ENG-1'],
+    };
+    const callsBeforeObservation = [...h.calls];
+    await expect(
+      createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: unsafe },
+        },
+        h.dependencies,
+      ),
+    ).rejects.toThrow(/identity evidence is unsafe/i);
+    expect(h.calls).toEqual(callsBeforeObservation);
+    expect(h.calls).not.toContain('terminal');
+    expect(h.calls).not.toContain('materialize');
+    expect(h.calls).not.toContain('association');
+  });
+
   it.each(['rejected', 'unknown'] as const)(
     'does not materialize a %s create and never retries',
     async (classification) => {
