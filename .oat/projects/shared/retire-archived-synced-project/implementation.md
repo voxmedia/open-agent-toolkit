@@ -500,6 +500,17 @@ pre-approval steps, recap guard, and final post-p04 approval are closed.
   `.oat/repo/pjm/current-state.md` entry after the fresh gate basis exists so
   they cite p04-t06 and the current reviewed/gated state rather than the
   superseded receipt.
+- Fresh configured gate generation: resolved the unchanged project-local Claude
+  Fable command with canonical global `--json`, `onFailure: block`, and two
+  attempts. The explicit target remains the operator's deliberate local
+  override for the remainder of this project after Cursor Fable was unavailable;
+  the command is preserved exactly rather than rewritten at execution time.
+- Gate reviewed head: `a8238ae1df5fee8b404b2d4ca0aa0f685b61f81d`.
+- Gate base/fingerprint: `origin/main` at unique merge base
+  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`,
+  `sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98`.
+- Gate configuration fingerprint:
+  `sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f`.
 
 <!-- orchestration-runs-end -->
 

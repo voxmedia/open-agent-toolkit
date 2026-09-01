@@ -43,9 +43,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f
   resolved_command: >-
     oat --json gate review --project "$PROJECT_PATH" --review-type code
@@ -59,55 +59,37 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 98b005960b2c5f282fadb8781d990d2ed4a159c9
+  reviewed_head: a8238ae1df5fee8b404b2d4ca0aa0f685b61f81d
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v1:e7105d60d6c8f52e63b2f1b1895b7e8a4739dc00c945241499edec5b6b4dbc02
-  freshness_head: b5b3ff90bd1bf15f949948521531eb50b23fd598
-  freshness_fingerprint: sha256:effective-delta-v1:85faf8cd8241290c8270c83f242281c7b06e6e9c35f6554917a6e5eb1614ff89
-  launch_state: result_persisted
-  launch_attempt_id: c30a37ea-e6c5-43a7-88d4-d00d186dd2c1
-  launch_started_at: '2026-08-31T23:20:29Z'
-  launch_result_receipt: /Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/c30a37ea-e6c5-43a7-88d4-d00d186dd2c1.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/42a1a4fe-e3a4-4830-8fbc-474ba966613d.json
-  gate_run_id: 42a1a4fe-e3a4-4830-8fbc-474ba966613d
-  envelope_status: ok
-  artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
-  handoff: >-
-    Gate passed at the important threshold, but the final review still contains
-    non-blocking findings (minor=1). Run oat-project-review-receive for
-    .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
-    to disposition them before marking the final review row passed.
-  receive_state: completed
-  receive_correlation:
-    gate_run_id: 42a1a4fe-e3a4-4830-8fbc-474ba966613d
-    handoff: >-
-      Gate passed at the important threshold with one Minor finding and requires
-      oat-project-review-receive before closeout.
-    source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
-    scope: final
-    type: code
-    source_filename: final-review-2026-08-31T232653Z.md
-  receive_source_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-08-31T232653Z.md
-  receive_archived_artifact: .oat/projects/shared/retire-archived-synced-project/reviews/archived/final-review-2026-08-31T232653Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    source_filename: final-review-2026-08-31T232653Z.md
-  receive_pre_head: 5eced927eac74618c41a5316ab5bab62d15052d1
-  receive_commit: 237597d9463f019aed0829cf69ac1c7b80075204
-  receive_eligible: true
-  receive_completed: true
-  failure: >-
-    Substantive p04-t06 skill and regression changes at
-    9c1feafb843b71cb1b995395816001823d6d5d40 invalidate the prior reviewed
-    implementation fingerprint and gate allowance.
-  updated_at: '2026-09-01T22:42:06Z'
+  implementation_fingerprint: sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98
+  freshness_head: a8238ae1df5fee8b404b2d4ca0aa0f685b61f81d
+  freshness_fingerprint: sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-01T23:02:25Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T22:54:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:02:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
