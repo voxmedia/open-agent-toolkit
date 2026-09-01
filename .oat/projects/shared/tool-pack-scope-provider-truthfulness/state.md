@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: ea94ebb020be5aff1e4f775872e7c3fa4b2d2e40
+oat_last_commit: 91d3ca4fe5e721a435c845bd36f556478b8d3259
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:46:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T21:55:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +111,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized one bounded Phase 4 correction at
-`ea94ebb02` to preserve durable blocked-transition evidence across unchanged
-retries, followed by exactly one fresh independent review. Phase 5 remains
-gated until Phase 4 passes.
+Implementation - the authorized durable Phase 4 correction is committed at
+`91d3ca4fe`. Two unchanged runs retain collection evidence and block before
+directory copy. Exactly one fresh independent High review is pending; Phase 5
+remains gated until Phase 4 passes.
 
 ## Artifacts
 
@@ -122,7 +122,7 @@ gated until Phase 4 passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 durable repeated-sync correction authorized)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 durable repeated-sync correction complete and awaiting review)
 
 ## Progress
 
@@ -148,16 +148,15 @@ gated until Phase 4 passes.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 durable repeated-sync correction and one fresh review authorized
+- ⧗ Phase 4 durable repeated-sync correction complete; fresh review pending
 
 ## Blockers
 
-- None during the authorized bounded correction. Phase 5 remains gated on a
-  passing Phase 4 review.
+- None before the authorized fresh review. Phase 5 remains gated on a passing
+  Phase 4 verdict.
 
 ## Next Milestone
 
-Resume the original exact-High Phase 4 implementer for the durable
-blocked-transition correction, validate two unchanged runs, then dispatch one
-fresh exact-High independent review. Do not begin Phase 5 without a passing
-Phase 4 verdict; a blocking fresh review returns to operator governance.
+Dispatch the one authorized fresh exact-High Phase 4 review over the complete
+Phase 4 range through `91d3ca4fe`. Do not begin Phase 5 without a passing
+verdict; a blocking review returns to operator governance.

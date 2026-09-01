@@ -1097,6 +1097,32 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   correction or review is authorized. Phase 5 remains gated pending new
   operator direction or a revised Phase 4 delivery boundary.
 
+### Review Round 7 Operator-Authorized Durable Transition Fix
+
+- Commit: `91d3ca4fe5e721a435c845bd36f556478b8d3259`
+- Continuation: `p04-review-r7-authorized-durable-fix-20260901T214700Z`,
+  linked to original request `dispatch-p04-20260901T002500Z-36af8aadd` and
+  executed by the same exact High target
+  `oat-phase-implementer-gpt-5-6-sol-high`.
+- Deferred directory-copy transitions now reject collection detachment before
+  manifest persistence. The initial blocked run and an unchanged second run
+  retain the same collection evidence, remain deferred, and fail before the
+  ordinary directory copier.
+- The two-run integration regression proves zero copier calls, no provider
+  destination, byte-identical external content, no copy-entry ownership,
+  unchanged manifest evidence, actionable structured recovery, and safe
+  release after a configured symlink strategy change.
+- Verification: RED exposed persisted detachment through the initial failure
+  count. Focused GREEN passed 75/75 and the authoritative Phase 4 union passed
+  18 files / 412 tests. CLI lint, type-check, format, `pnpm check`, and an
+  isolated-HOME uncached Turbo run passed; the latter executed 10/10 tasks and
+  4,867 CLI tests. Root independently verified the exact one-commit/three-file
+  boundary, clean worktree, whitespace, implementation diff, and live focused
+  75-test result.
+- Exactly one fresh independent High review is now required. This consumes the
+  operator authorization; a blocking verdict returns to governance without
+  another correction. Phase 5 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1593,6 +1619,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   exactly one fresh `oat-reviewer-gpt-5-6-sol-high` review. This authorization
   does not imply another correction cycle if that review blocks, and Phase 5
   remains gated until Phase 4 passes.
+
+#### Review-fix continuation — round 7 authorized durable transition
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r7-authorized-durable-fix-20260901T214700Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `25c1b7f6fa460e588b4dd578cf8a826d121de38f`
+- Commit: `91d3ca4fe5e721a435c845bd36f556478b8d3259`
+- Outcome: collection evidence survives blocked directory-copy transitions
+  and unchanged retries remain deferred with zero copier calls. Focused 75/75,
+  authoritative Phase 4 union 412/412, uncached Turbo 10/10 tasks and 4,867
+  CLI tests, CLI lint/type/format, `pnpm check`, and whitespace checks passed.
+- Selection reason: `native-catalog`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p04-review-r7-authorized-durable-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
