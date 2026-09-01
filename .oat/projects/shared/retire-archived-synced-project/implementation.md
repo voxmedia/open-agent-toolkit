@@ -546,6 +546,16 @@ and could not be refreshed`.
   `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/2e607741-ddac-4b6e-bc38-0d65d66c93aa.json`.
   The synchronously awaited Claude Fable child remains the sole authoritative
   run until its durable receipt completes.
+- Gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` returned one complete `ok`
+  envelope with matching project, target, run, invocation, and artifact
+  provenance. It passed the Important threshold with 0 Critical, 0 Important,
+  1 Medium, and 1 Minor finding.
+- The non-null handoff and `receiveEligible: true` authorize receive of
+  `reviews/final-review-2026-09-01T231603Z.md`. The gate child committed the
+  artifact and `received` Reviews row at `1502af5e4`, then committed its
+  gate-owned project-log event at `7cf4bf2ac`.
+- Gate reconnaissance: not attempted; the artifact contains no Review
+  Orchestration section.
 
 <!-- orchestration-runs-end -->
 
