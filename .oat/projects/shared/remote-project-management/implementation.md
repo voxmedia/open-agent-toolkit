@@ -1389,7 +1389,20 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   work is outside p-rev2 authority, so this is preserved as a concern and the
   full release gate is not described as passing.
 - Worktree was clean. Recovery remained 0/10 with no pending attempt or event.
-- Fresh root-owned p-rev2 code review is pending. Phase 4 did not start.
+- Fresh root-owned review 1 is recorded at
+  `reviews/p-rev2-review-2026-09-01T202947Z.md` against exact code head
+  `1af99a23b5cb67142cd06f37c3b3b0bc648e941e`. It reported
+  `**Reconnaissance:** not-attempted` and blocked with 1 Critical, 0 Important,
+  0 Medium, and 0 Minor.
+- The Critical covers two remaining handoff windows: accepted observation can
+  still restart through the stale create action before the journal transition,
+  and `verification-pending` can be durably paired with that stale create
+  pointer before repair. The bounded fix must make the verification-read
+  lifecycle canonical/atomic or fail closed to explicit reconciliation; it
+  must add service and real Commander crash regressions for the uncovered
+  boundaries.
+- Review-fix loop 1/3 is pending on the original phase implementer handle.
+  Phase 4 did not start.
 
 <!-- orchestration-runs-end -->
 

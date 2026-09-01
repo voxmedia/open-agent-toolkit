@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T20:27:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T20:42:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,9 +50,9 @@ oat_generated: false
 ## Current Phase
 
 Implementation revision — both Revision 2 tasks are complete and independently
-verified. Its fresh root-owned code review is pending. Revision 1 history
-remains exhausted and immutable. Phase 4 has not started and remains dependent
-on a passing Revision 2 code review.
+verified, but fresh code review 1 blocked with one Critical in the durable
+mutation-to-verification handoff. A bounded fix loop is pending. Revision 1
+history remains exhausted and immutable. Phase 4 has not started.
 
 ## Artifacts
 
@@ -60,7 +60,7 @@ on a passing Revision 2 code review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 code review pending)
+- **Implementation:** implementation.md (in progress; Revision 2 review fix pending)
 
 ## Progress
 
@@ -139,17 +139,20 @@ on a passing Revision 2 code review.
 - ✓ Operator authorized separate corrective Revision 2
 - ✓ Revision 2 structured plan review passed with zero findings
 - ✓ Revision 2 implementation committed and focused union passed 134/134
-- ⧗ Fresh root-owned Revision 2 code review pending
+- ⚠ Fresh Revision 2 code review blocked with 1 Critical
+- ⧗ Revision 2 review-fix loop 1/3 pending
 - ⛔ Phase 4 remains blocked until Revision 2 passes code review
 
 ## Blockers
 
-No active implementation blocker inside Revision 2. Phase 4 remains
-dependency-blocked until the fresh Revision 2 code review passes with zero
-Critical and zero Important findings. The branch-level lockstep version gate
-remains a preserved out-of-phase release concern.
+Revision 2 is blocked on the confirmed durable-handoff Critical from
+`reviews/p-rev2-review-2026-09-01T202947Z.md`. The authorized bounded fix loop
+remains available. Phase 4 is dependency-blocked until a fresh Revision 2 code
+review passes with zero Critical and zero Important findings. The branch-level
+lockstep version gate remains a preserved out-of-phase release concern.
 
 ## Next Milestone
 
-Run the fresh root-owned `p-rev2` code review. Do not begin `p04-t01` until it
+Resume the original p-rev2 implementer for the bounded review-fix loop, then
+run a fresh root-owned re-review. Do not begin `p04-t01` until the re-review
 passes with zero Critical and zero Important findings.
