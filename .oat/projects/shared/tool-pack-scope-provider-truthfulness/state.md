@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 6da49610627aae9f3eb78879906239ac5a86fa48
+oat_last_commit: 996376f443e968784365ef2f1150834173de9da7
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -123,7 +123,7 @@ review.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 third safety review fixes added)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 third safety fixes complete and fresh High review pending)
 
 ## Progress
 

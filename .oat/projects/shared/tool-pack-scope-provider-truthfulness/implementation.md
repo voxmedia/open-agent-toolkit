@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** third review fixes added; bounded correction pending
+**Status:** third review fixes complete; fresh High review pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -890,6 +890,27 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   4. Document the current adoption-only collection-alias behavior and safe
      per-entry fallback for absent destinations.
 - Phase 5 remains gated pending a bounded fix and fresh complete Phase 4 review.
+
+### Review Round 3 Fix
+
+- Commit: `996376f443e968784365ef2f1150834173de9da7`
+- Disabled automatic collection-alias unlink, transition deletion, and rollback
+  deletion where the runtime lacks an identity-bound parent-relative primitive.
+  Replacements are preserved, manual recovery is reported, and deferred child
+  writes remain blocked until a later plan independently proves the destination
+  absent.
+- Aligned the design `CollectionProjectionPlan` fields and lifecycle semantics,
+  preserved original V1 manifest bytes when every apply operation fails while
+  retaining partial-success persistence, and corrected current-runtime docs for
+  exact-alias adoption, per-entry fallback, and manual recovery.
+- Verification: RED reproduced 10 intended failures across 85 tests; focused
+  GREEN passed 86/86. The authoritative Phase 4 union passed live at 18 files /
+  406 tests before and after commit. CLI lint, type-check, format, docs check,
+  `pnpm check`, full `pnpm test`, and `git diff --check` passed. Root
+  independently verified the exact ten-file boundary, clean worktree,
+  whitespace, and the live 406-test union.
+- A fresh exact-High reviewer will assess the complete Phase 4 range before
+  Phase 5 starts.
 
 ---
 
@@ -1281,6 +1302,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reconnaissance: attempted; complete nested dispatch and reconciliation
   evidence is preserved in the review artifact.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review-fix continuation — round 3
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Continuation: `p04-review-r3-fix-20260901T024500Z`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `996376f443e968784365ef2f1150834173de9da7`
+- Outcome: all four review findings closed; focused 86/86 and authoritative
+  Phase 4 union 406/406 passed with exact ten-file and whitespace checks.
+- Dispatch: scope=p04-review-r3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
