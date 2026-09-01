@@ -511,6 +511,11 @@ pre-approval steps, recap guard, and final post-p04 approval are closed.
   `sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98`.
 - Gate configuration fingerprint:
   `sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f`.
+- Gate launch intent: attempt `a87fa492-5eae-40d0-8908-f0ab0b7ac8ae`
+  preselected its durable structured-result receipt at
+  `/Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/a87fa492-5eae-40d0-8908-f0ab0b7ac8ae.json`
+  before process start. No acceptance is claimed until a unique correlated gate
+  run marker exists.
 
 <!-- orchestration-runs-end -->
 
