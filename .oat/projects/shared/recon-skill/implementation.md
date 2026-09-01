@@ -1394,6 +1394,12 @@ starting a new configured implementation exit-gate generation.
   `sha256:effective-delta-v1:688f2ff2a96e11a47f1a240bfa54a114b25b243c663874aa4ec5212e98f6dbef`.
 - The generation is durably `pending/not_started`; no gate command has launched
   and all launch, result, artifact, and receive provenance is empty.
+- Launch intent is now persisted for attempt
+  `9d5f04f8-a8cc-4507-9a7e-f3074e818419`, started at
+  `2026-09-01T03:53:30Z`, with durable result receipt
+  `reviews/gate-receipts/9d5f04f8-a8cc-4507-9a7e-f3074e818419.json`.
+- No launch acceptance is inferred until the gate CLI creates exactly one
+  matching run marker.
 
 ## Deviations from Plan / Design
 
