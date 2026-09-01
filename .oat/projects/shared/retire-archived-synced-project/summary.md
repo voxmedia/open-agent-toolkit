@@ -2,9 +2,9 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-31
+oat_last_updated: 2026-09-01
 oat_generated: true
-oat_summary_last_task: p04-t05
+oat_summary_last_task: p04-t06
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -13,89 +13,43 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-This project closed a lifecycle gap in synced OAT projects: successful archival
-left the active discovery JSON and project ref behind, allowing completed work
-to remain listed or be materialized again. The shipped contract retires active
-identity only after the configured archive is durable while retaining terminal
-history, commit reachability, and deterministic recovery.
+This project closed a synced-project lifecycle gap: successful archival left active discovery identity behind, allowing completed work to remain listed or rematerialized. The shipped contract retires active identity only after configured archive durability while retaining terminal history, commit reachability, and deterministic recovery.
 
 ## What Was Implemented
 
-- Added the completed-ref namespace and idempotent source-SHA-bound transition
-  receipts. Synced archival now proves local and configured S3 durability before
-  terminalization, checkout removal, and active-record deletion; recordless
-  retries recover the original snapshot instead of recreating active state.
-- Aligned list, dashboard, pull, open, links, and prune behavior with terminal
-  classification. Completed projects cannot be resurrected, legacy or
-  contradictory states get precise diagnoses, SHA-pinned links remain durable,
-  and prune stays a separate destructive operation.
-- Updated the completion skill, CLI and lifecycle documentation, lockstep public
-  package versions, and end-to-end interruption/retry coverage.
+- Added `refs/oat/completed/<slug>` and idempotent source-SHA-bound transition receipts. Archival now proves local and configured-S3 durability before terminalization, checkout removal, and active-record deletion; recordless retries reuse the original snapshot.
+- Aligned list, dashboard, pull, open, links, and prune with terminal classification so completed projects cannot be resurrected, contradictory states get precise diagnoses, SHA links remain reachable, and prune stays explicitly destructive.
+- Updated the completion skill, lifecycle documentation, lockstep public package versions, and interruption/retry coverage. PR follow-up p04-t06 made recordless resume accept omitted and explicit-`null` no-recap receipts while retaining strict validation for present recap evidence.
 
 ## Key Decisions
 
-- **Transactional active records.** A successful synced archive
-  deletes `.oat/projects/synced/<slug>.json`; durable terminal identity lives in
-  archive metadata, summary output, and the completed ref.
-- **Completed-ref authority.** `refs/oat/completed/<slug>` owns
-  the archived source SHA. A same-SHA active ref may remain as an inert alias,
-  while differing active/completed SHAs fail closed.
-- **Durability before retirement.** Terminal cleanup cannot report
-  success until every configured durability target, including configured S3,
-  has succeeded; unconfigured S3 remains outside the required set.
-- **Terminal discovery exclusion.** Completed refs and terminal
-  archive evidence are excluded from list, pull, open, and continuation paths,
-  preventing archived project resurrection.
-- **Explicit destructive prune.** Normal completion preserves
-  source-commit reachability; only explicit prune removes completed refs and
-  accepts the resulting permanent-link loss.
+- **Transactional active records.** Successful synced archival deletes `.oat/projects/synced/<slug>.json`; durable identity lives in archive metadata, summary output, and the completed ref.
+- **Completed-ref authority.** `refs/oat/completed/<slug>` owns the archived SHA. A same-SHA active ref may remain inert; differing SHAs fail closed.
+- **Durability before retirement.** Cleanup cannot succeed until every configured target, including configured S3, succeeds; unconfigured S3 remains outside the required set.
+- **Terminal discovery exclusion.** Completed refs and archive evidence are excluded from active list, pull, open, and continuation paths.
+- **Explicit destructive prune.** Completion preserves commit reachability; only explicit prune removes completed refs and accepts permanent-link loss.
 
 ## Design Deltas
 
-- Standard Git cannot atomically lease a no-op completed-ref update together
-  with active-ref deletion. The accepted contract therefore replaced mandatory
-  active-ref deletion with completed-ref authority plus a permitted matching
-  alias; implementation, reviewed tests, and the updated plan are authoritative.
-- Phase 3 added a leased active-alias deletion primitive in the shared ref-sync
-  module despite its original consume-only boundary because prune race
-  protection belonged at that shared boundary. The deviation was reviewed.
-
-## Notable Challenges
-
-- The first ref-transition design exhausted its review budget because Git
-  omitted the no-op completed update from receive-pack. An operator-approved
-  contract revision and one fresh fix round resolved it.
-- Archive-resume handling initially bypassed active work by exiting the whole
-  completion skill and accidentally skipped closeout. A bounded continuation
-  fix passed re-review. Final review then converted three terminal-path gaps
-  into tasks; all passed focused re-review with zero findings.
-
-## Tradeoffs Made
-
-- Allowing a same-SHA active alias avoids unsafe cross-ref deletion while
-  requiring all active surfaces to treat completed authority consistently.
-- Keeping completed refs preserves durable links and recovery at the cost of a
-  retained Git root. The gate's Minor shared-parser refactor was deferred until
-  a parser next changes because all six paths are correct and tested.
+- Git cannot atomically lease a no-op completed-ref update with active-ref deletion, so reviewed implementation replaced mandatory deletion with completed-ref authority and a permitted matching alias.
+- Phase 3 placed leased active-alias deletion in shared ref-sync despite its original consume-only boundary because prune race protection belonged there; the deviation was reviewed.
 
 ## Integration Notes
 
-- Terminal callers must probe active and completed refs together. Completed-only
-  and same-SHA aliases are valid terminal states; differing SHAs are recovery
-  errors, and transport/authentication failures must not be classified as
-  verified absence.
-- Archive retries must preserve the original source-SHA and snapshot binding,
-  including after the active record or checkout is absent. Final verification
-  passed uncached CLI (4721/4721), control-plane (78/78), repository, release,
-  docs, lint, format, skill, and Claude Fable exit gates.
+- Terminal callers probe both refs: completed-only and same-SHA aliases are terminal; differing SHAs are recovery errors, and transport/authentication failures are not verified absence.
+- Archive retries preserve the original source-SHA and snapshot even without an active record or checkout. Verification passed uncached CLI (4721/4721), control-plane (78/78), repository, release, docs, lint, format, and skill gates.
+- Authenticated Claude Fable gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87`, passed the Important threshold, and was received with its Medium and Minor findings dispositioned.
 
 ## Follow-up Items
 
-- Extract a shared typed remote-ref parser when one of the six current parsers
-  next changes; this was deferred as non-blocking maintenance.
-- A first-class completed-project browsing surface remains deferred until
-  usage evidence shows archive sync and summaries are insufficient.
+- Extract a shared typed remote-ref parser when one of the six current parsers next changes; this is deferred non-blocking maintenance.
+- Remove redundant optional chaining after the nullish recap guard when the executor next changes; it has no behavior or safety impact.
+- Defer a completed-project browser until usage shows archive sync and summaries are insufficient.
 - `BL-260831-retire-archived-synced-project` is completed by this project.
+
+## Associated Issues
+
+- `BL-260831-retire-archived-synced-project`
 
 ## Workflow Observations
 
@@ -198,3 +152,35 @@ Gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important with one recei
 ### 2026-08-31 · structural · oat-project-implement · exit-gate-passed
 
 Claude Fable gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important. Minor m1 was explicitly deferred with rationale; archived artifact, Reviews event, and receive commit 237597d94 reconcile, so the configured exit gate is allowed/passed.
+
+### 2026-09-01 · structural · oat-project-implement · documentation-approval-required
+
+Documentation scan found two thin-coverage updates: control-plane ProjectListRow terminal variants and CLI completed-ref lookup failure semantics. Mandatory PJM refresh completed at dd20abd21; recommendation-dependent edits await explicit operator approval.
+
+### 2026-09-01 · structural · oat-project-implement · p04-hill-approved
+
+Operator explicitly approved the post-p04 HiLL checkpoint after all 13 tasks, phase and final reviews, the configured Claude Fable exit gate, summary, documentation, PR #254, and the recap terminal guard completed. The immutable closeout sequence entered post-approval with no configured post-approval steps.
+
+### 2026-09-01 · structural · oat-project-implement · closeout-sequence-complete
+
+The configured `summary → document → pr` pre-approval sequence, explicit post-p04 approval, and empty post-approval sequence all completed in their persisted order. The closeout snapshot is terminal and implementation completion bookkeeping may proceed.
+
+### 2026-09-01 · structural · oat-project-implement · implementation-complete
+
+Implementation completed with 13/13 tasks, all phase and final review rows passed, the Claude Fable exit gate allowed/passed, recap intent terminally skipped, the configured closeout sequence complete, and p04 HiLL approved. PR #254 remains open; project archival may run before or after merge.
+
+### 2026-09-01 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/retire-archived-synced-project/references/project-retro.md evidence_used=archived-review-markdown,decision-records,gate-receipts,git-history,lifecycle-artifacts,pr-metadata,project-log,session-transcript evidence_unavailable=gate-run-marker,oat-execution-learnings promotions=1 upstream=0 apply=skipped filing=deferred
+
+### 2026-09-01 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/retire-archived-synced-project/references/project-retro.md evidence_used=archived-review-markdown,decision-records,gate-receipts,git-history,lifecycle-artifacts,pr-metadata,project-log,session-transcript evidence_unavailable=gate-run-marker,oat-execution-learnings promotions=1 upstream=0 apply=skipped filing=performed
+
+### 2026-09-01 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
+
+### 2026-09-01 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
