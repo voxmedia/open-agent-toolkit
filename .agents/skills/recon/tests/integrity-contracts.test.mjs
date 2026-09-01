@@ -851,6 +851,115 @@ test('production reconciliation preserves reviewed claims when verification woul
   ]);
 });
 
+test('production reconciliation retains exact incorporated review evidence and rejects dishonest links', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const results = await Promise.all(
+    ['semantic', 'adversarial', 'coverage'].map(async (kind) =>
+      readJson(join(packet.packetRoot, 'reviews', `${kind}.json`)),
+    ),
+  );
+  const reviewEvidence = structuredClone(priorLedger.evidence[0]);
+  reviewEvidence.id = 'evidence-review-1';
+
+  const incorporatedResults = structuredClone(results);
+  incorporatedResults[0].newEvidence = [reviewEvidence];
+  const incorporated = reconcileLedger({
+    priorLedger,
+    reviewResults: incorporatedResults,
+    priorReference,
+  });
+  assert.deepEqual(incorporated.ledger.evidence.at(-1), reviewEvidence);
+  assert.deepEqual(incorporated.ledger.claims[0].evidence.at(-1), {
+    evidenceId: reviewEvidence.id,
+    relation: 'context',
+  });
+
+  const withoutNewEvidence = reconcileLedger({
+    priorLedger,
+    reviewResults: results,
+    priorReference,
+  });
+  assert.deepEqual(withoutNewEvidence.ledger.evidence, priorLedger.evidence);
+  assert.deepEqual(
+    withoutNewEvidence.ledger.claims[0].evidence,
+    priorLedger.claims[0].evidence,
+  );
+
+  const duplicate = structuredClone(results);
+  duplicate[0].newEvidence = [reviewEvidence, structuredClone(reviewEvidence)];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: duplicate,
+        priorReference,
+      }),
+    /duplicate evidence/i,
+  );
+
+  const conflicting = structuredClone(results);
+  conflicting[0].newEvidence = [reviewEvidence];
+  const conflictingEvidence = structuredClone(reviewEvidence);
+  conflictingEvidence.displayExcerpt = 'conflicting bytes';
+  conflicting[1].newEvidence = [conflictingEvidence];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: conflicting,
+        priorReference,
+      }),
+    /conflicting evidence/i,
+  );
+
+  const unincorporated = structuredClone(results);
+  unincorporated[0].newEvidence = [reviewEvidence];
+  unincorporated[0].dispositions = [];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: unincorporated,
+        priorReference,
+      }),
+    /unincorporated evidence/i,
+  );
+
+  const invalid = structuredClone(results);
+  invalid[0].newEvidence = [structuredClone(reviewEvidence)];
+  delete invalid[0].newEvidence[0].locator;
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: invalid,
+        priorReference,
+      }),
+    /schema-invalid review/i,
+  );
+
+  const inventedLinkLedger = structuredClone(priorLedger);
+  inventedLinkLedger.claims[0].evidence.push({
+    evidenceId: 'evidence-invented',
+    relation: 'context',
+  });
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger: inventedLinkLedger,
+        reviewResults: results,
+        priorReference,
+      }),
+    /invented evidence link/i,
+  );
+});
+
 test('claim assurance and reconciliation reject an exact but unreceipted review result', async () => {
   const packet = await fixture();
   const semantic = await readJson(

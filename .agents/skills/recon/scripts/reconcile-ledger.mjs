@@ -1,4 +1,5 @@
 import { canonicalJson } from './lib/canonical-json.mjs';
+import { validateArtifactShape } from './lib/contracts.mjs';
 
 const requiredDispositions = new Map([
   ['semantic', 'affirmed'],
@@ -35,6 +36,16 @@ export function reconcileLedger({
   if (!Array.isArray(reviewResults)) {
     throw new Error('Reconciliation requires an exact review-result array');
   }
+  for (const review of reviewResults) {
+    const reviewArtifact = { ...review };
+    delete reviewArtifact.artifactReference;
+    const validation = validateArtifactShape(reviewArtifact);
+    if (!validation.valid) {
+      throw new Error(
+        `Reconciliation rejects schema-invalid review ${review.id ?? '<unknown>'}: ${validation.errors.map((error) => error.code).join(', ')}`,
+      );
+    }
+  }
   const reviewKinds = reviewResults.map((review) => review.reviewKind);
   if (
     new Set(reviewKinds).size !== reviewKinds.length ||
@@ -69,6 +80,74 @@ export function reconcileLedger({
       (review) => review.artifactReference ?? review.permittedInputs[0],
     ),
   ];
+  const claimsById = new Map(ledger.claims.map((claim) => [claim.id, claim]));
+  const priorEvidenceById = new Map();
+  for (const evidence of ledger.evidence) {
+    if (priorEvidenceById.has(evidence.id)) {
+      throw new Error(
+        `Reconciliation rejects duplicate evidence ${evidence.id}`,
+      );
+    }
+    priorEvidenceById.set(evidence.id, canonicalJson(evidence));
+  }
+  for (const claim of ledger.claims) {
+    const links = new Set();
+    for (const link of claim.evidence) {
+      if (!priorEvidenceById.has(link.evidenceId)) {
+        throw new Error(
+          `Reconciliation rejects invented evidence link ${link.evidenceId} on ${claim.id}`,
+        );
+      }
+      const key = canonicalJson(link);
+      if (links.has(key)) {
+        throw new Error(
+          `Reconciliation rejects duplicate evidence link ${link.evidenceId} on ${claim.id}`,
+        );
+      }
+      links.add(key);
+    }
+  }
+  const incorporatedEvidence = new Map();
+  for (const review of reviewResults) {
+    const affectedClaimIds = [
+      ...new Set(review.dispositions.map((item) => item.claimId)),
+    ];
+    for (const evidence of review.newEvidence) {
+      const bytes = canonicalJson(evidence);
+      const previousBytes = priorEvidenceById.get(evidence.id);
+      const incorporated = incorporatedEvidence.get(evidence.id);
+      if (previousBytes !== undefined || incorporated) {
+        const existingBytes = previousBytes ?? incorporated.bytes;
+        const description =
+          existingBytes === bytes
+            ? 'duplicate evidence'
+            : 'conflicting evidence';
+        throw new Error(`Reconciliation rejects ${description} ${evidence.id}`);
+      }
+      if (
+        affectedClaimIds.length === 0 ||
+        affectedClaimIds.some((claimId) => !claimsById.has(claimId))
+      ) {
+        throw new Error(
+          `Reconciliation rejects unincorporated evidence ${evidence.id} without an affected claim`,
+        );
+      }
+      incorporatedEvidence.set(evidence.id, {
+        bytes,
+        evidence: exactClone(evidence),
+        claimIds: affectedClaimIds,
+      });
+    }
+  }
+  for (const { evidence, claimIds } of incorporatedEvidence.values()) {
+    ledger.evidence.push(evidence);
+    for (const claimId of claimIds) {
+      claimsById.get(claimId).evidence.push({
+        evidenceId: evidence.id,
+        relation: 'context',
+      });
+    }
+  }
   const transitions = [];
   for (const claim of ledger.claims) {
     const supporting = reviewResults.filter((review) =>
@@ -145,5 +224,11 @@ export function reconcileLedger({
     coverageFindings: [],
     unresolvedIssues: [],
   };
+  const ledgerValidation = validateArtifactShape(ledger);
+  if (!ledgerValidation.valid) {
+    throw new Error(
+      `Reconciliation rejects schema-invalid review evidence: ${ledgerValidation.errors.map((error) => error.code).join(', ')}`,
+    );
+  }
   return { ledger, reconciliation };
 }
