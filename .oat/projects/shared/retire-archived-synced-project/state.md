@@ -14,7 +14,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -111,23 +111,23 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T19:30:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T19:32:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: retire-archived-synced-project
 
-**Status:** final review and configured Claude Fable exit gate passed
+**Status:** PR open; post-p04 HiLL approval pending
 **Started:** 2026-08-31
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implement - post-p04 closeout checkpoint
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -181,16 +181,17 @@ Implement - post-p04 closeout checkpoint
 - ✓ Configured pre-approval sequence snapshotted as `summary → document → pr`
 - ✓ Project summary generated with observation rollup and canonical decision promotion
 - ✓ Documentation sync completed with the two operator-approved terminal-contract updates
-- → Create the final PR, then request the post-p04 HiLL approval
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
-The configured `cursor-fable-5-high` target is unavailable before launch.
-`cursor-agent --version` reports that the macOS login keychain is locked. No
-gate process or reviewer child was accepted, so this is safely resumable after
-the keychain is unlocked.
+None.
 
 ## Next Milestone
 
-Unlock the macOS login keychain locally, re-probe `cursor-fable-5-high`, then
-run the configured exit gate and evaluate the post-p04 HiLL checkpoint.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
