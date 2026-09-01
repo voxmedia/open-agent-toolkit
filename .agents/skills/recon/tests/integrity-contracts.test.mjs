@@ -811,6 +811,46 @@ test('production reconciliation deterministically consumes the prior ledger and 
   );
 });
 
+test('production reconciliation preserves reviewed claims when verification would require an illegal transition', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const originalPriorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const results = await Promise.all(
+    ['semantic', 'adversarial', 'coverage'].map(async (kind) =>
+      readJson(join(packet.packetRoot, 'reviews', `${kind}.json`)),
+    ),
+  );
+
+  for (const status of ['unresolved', 'unsupported']) {
+    const priorLedger = structuredClone(originalPriorLedger);
+    priorLedger.claims[0].status = status;
+    const { ledger, reconciliation } = reconcileLedger({
+      priorLedger,
+      reviewResults: results,
+      priorReference,
+    });
+
+    assert.equal(ledger.claims[0].status, status);
+    assert.deepEqual(ledger.transitions, []);
+    assert.deepEqual(reconciliation.transitions, []);
+  }
+
+  const promoted = reconcileLedger({
+    priorLedger: originalPriorLedger,
+    reviewResults: results,
+    priorReference,
+  });
+  assert.equal(originalPriorLedger.claims[0].status, 'supported');
+  assert.equal(promoted.ledger.claims[0].status, 'verified');
+  assert.deepEqual(promoted.ledger.transitions, [
+    { claimId: 'claim-1', from: 'supported', to: 'verified' },
+  ]);
+});
+
 test('claim assurance and reconciliation reject an exact but unreceipted review result', async () => {
   const packet = await fixture();
   const semantic = await readJson(

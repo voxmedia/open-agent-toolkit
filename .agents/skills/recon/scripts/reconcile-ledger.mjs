@@ -6,6 +6,16 @@ const requiredDispositions = new Map([
   ['coverage', 'covered'],
 ]);
 
+const legalReconciliationTransitions = new Set([
+  'provisional:verified',
+  'provisional:contested',
+  'supported:verified',
+  'supported:contested',
+  'verified:contested',
+  'contested:verified',
+  'unresolved:contested',
+]);
+
 function exactClone(value) {
   return JSON.parse(canonicalJson(value));
 }
@@ -93,7 +103,9 @@ export function reconcileLedger({
     ];
     if (!coreComplete) continue;
     const from = claim.status;
-    claim.status = materialCoverageGap ? 'contested' : 'verified';
+    const to = materialCoverageGap ? 'contested' : 'verified';
+    if (!legalReconciliationTransitions.has(`${from}:${to}`)) continue;
+    claim.status = to;
     if (from !== claim.status)
       transitions.push({ claimId: claim.id, from, to: claim.status });
   }
