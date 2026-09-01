@@ -1,7 +1,7 @@
 ---
 id: BL-260831-retire-archived-synced-project
 title: Retire archived synced project records from the active namespace
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: L
@@ -13,7 +13,7 @@ labels:
   - ux
 assignee: null
 created: 2026-08-31T03:44:13.053Z
-updated: 2026-08-31T03:44:13.053Z
+updated: '2026-09-01T00:04:46Z'
 associated_issues: []
 external_plans: []
 ---

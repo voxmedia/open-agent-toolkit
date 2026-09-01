@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-09-01 — BL-260831-retire-archived-synced-project — Retire archived synced project records from the active namespace — Retired successful synced archives from active record and discovery namespaces while preserving completed-ref reachability, configured durability, and idempotent recovery.
 - 2026-08-30 — BL-260827-correct-scope-and-adoption — Correct scope and adoption diagnostics — Corrected PJM migration adoption semantics and made scoped pack diagnostics provider-aware, attributable, and fault-tolerant.
 - 2026-08-30 — BL-260726-validate-structured-output — Validate structured-output contract in gate skill commands — Gate configuration now rejects recognized lifecycle review commands that lack canonical global structured output.
 - 2026-08-30 — BL-260826-gate-targets-must-not-yield — Gate targets must not yield on background work in headless mode — Headless gate children must complete synchronously and clean no-artifact exits now have a distinct terminal diagnosis.
