@@ -1181,6 +1181,7 @@ git commit -m "fix(prev3-t01): reject drifted materializable agents"
 | final     | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                   |
 | final     | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high |
 | final     | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
+| final     | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
 | spec      | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
