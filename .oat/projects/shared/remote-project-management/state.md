@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: e79732b6cef1b996a54334e308860a121cdd989d
+oat_last_commit: 5a15f738df8e7d5ab467b94a1e28a77ca5df420c
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:21:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T21:30:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,10 +50,9 @@ oat_generated: false
 ## Current Phase
 
 Implementation revision — both Revision 2 tasks are complete and independently
-verified. Review 1's runtime Critical is closed by fix loop 1. Re-review 2
-blocked with one Important requiring exact durable-action assertions in the
-service and Commander crash regressions. Revision 1 history remains exhausted
-and immutable. Phase 4 has not started.
+verified. Review 1's runtime Critical is closed by fix loop 1. Re-review 2's
+test-proof Important is closed by fix loop 2 and awaits fresh re-review 3.
+Revision 1 history remains exhausted and immutable. Phase 4 has not started.
 
 ## Artifacts
 
@@ -61,7 +60,7 @@ and immutable. Phase 4 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 review fix 2 pending)
+- **Implementation:** implementation.md (in progress; Revision 2 re-review 3 pending)
 
 ## Progress
 
@@ -143,19 +142,19 @@ and immutable. Phase 4 has not started.
 - ⚠ Fresh Revision 2 code review blocked with 1 Critical
 - ✓ Revision 2 review-fix loop 1/3 committed as `e79732b6c`
 - ⚠ Revision 2 re-review 2 blocked with 1 Important test-proof finding
-- ⧗ Revision 2 review-fix loop 2/3 pending
+- ✓ Revision 2 review-fix loop 2/3 committed as `5a15f738d`
+- ⧗ Fresh Revision 2 re-review 3 pending
 - ⛔ Phase 4 remains blocked until Revision 2 passes code review
 
 ## Blockers
 
-Revision 2 remains review-blocked on the exact durable-action assertion gap in
-`reviews/p-rev2-rereview-2026-09-01T210901Z.md`. The runtime defect is closed;
-bounded test-only fix loop 2 remains available. Phase 4 is dependency-blocked.
-The branch-level lockstep version gate is preserved as an out-of-phase release
-concern.
+Revision 2 remains review-blocked until fresh re-review 3 confirms the runtime
+and exact-action test fixes with zero Critical and zero Important findings.
+Phase 4 is dependency-blocked. The branch-level lockstep version gate is
+preserved as an out-of-phase release concern.
 
 ## Next Milestone
 
-Resume the original p-rev2 implementer for bounded test-only fix loop 2, then
-run fresh root-owned re-review 3. Do not begin `p04-t01` until it passes with
-zero Critical and zero Important findings.
+Run fresh root-owned p-rev2 re-review 3 over the full phase range through
+`5a15f738d`. Do not begin `p04-t01` until it passes with zero Critical and zero
+Important findings.

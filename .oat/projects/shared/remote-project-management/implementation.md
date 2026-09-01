@@ -1424,7 +1424,19 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   regressions assert only read shape and stable ID, not equality with the exact
   canonical durable action across step ID, digest, provider context,
   capability evidence, fields, and preview evidence.
-- Review-fix loop 2/3 is pending on the original phase implementer handle.
+- Review-fix loop 2 resumed the original implementer through continuation event
+  `remote-project-management-p-rev2-review-fix-2-20260901` and committed the
+  test-only correction as `5a15f738df8e7d5ab467b94a1e28a77ca5df420c`.
+  Both post-journal crash regressions now reopen the durable operation, prove
+  `currentAction` exactly equals
+  `verificationHandoff.verificationAction`, and prove the recovered external
+  action exactly equals that canonical durable action. The early fail-closed
+  assertions remain intact.
+- Root independently verified the exact two-file fix boundary, one append-only
+  fix commit, exact eight-file union at 138/138, CLI type-check/build, and diff
+  integrity. The worktree was clean. Recovery remained 0/10 with no pending
+  attempt because this was a review-fix loop.
+- Review-fix loop 2/3 is complete. Fresh root-owned re-review 3 is pending;
   Phase 4 did not start.
 
 <!-- orchestration-runs-end -->
