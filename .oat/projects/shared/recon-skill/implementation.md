@@ -1523,6 +1523,17 @@ bounded receive commit are reconciled into the durable receive receipt.
   mutations across prepared/approved/accepted/completed states, 158/158 combined
   recon/dispatch tests, 164/164 CLI validation, and 744/744 skill tests. Root
   independently reran the 79/79 load-bearing focused set.
+- Revision p-rev3 passes 75/75 focused scanner and sync tests plus CLI
+  type-check. Independent final review additionally passes 51/51 update and
+  reconcile tests and validates the live pack-update command syntax.
+- The fresh configured cross-family gate passes with zero findings after 160
+  recon/dispatch skill tests, 186 focused CLI tests, CLI type-check, canonical
+  skill validation, skill-bump validation, release/version parity, and diff
+  checks.
+- Final post-fix repository gates pass in CI order: check, type-check, full
+  workspace tests, build, skill bumps, release version checks, release
+  validation, docs build, lint, and format. Logs:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/tmp.t4MM4gjAkX`.
 
 ## Final Summary (for PR/docs)
 
@@ -1562,5 +1573,9 @@ retains and validates the complete canonical projection with exhaustive
 deletion and receipt-mutation coverage. Fresh re-review then found remaining
 receipt causality/freshness and projection-value gaps. Tasks `prev2-t02` and
 `prev2-t03` now close those paths with direct RED/GREEN mutations; closeout
-terminal re-review passed with zero findings. Closeout remains in progress
-until the configured exit gate and approval-aware sequence complete.
+terminal re-review passed with zero findings. After rebasing onto current main,
+task `prev3-t01` closed one Important non-current agent projection gap with a
+single scanner guard and focused tests. The post-rebase final review and fresh
+configured cross-family gate both passed with zero findings; final repository
+gates are green. Closeout now waits only for the approval-aware sequence's
+human checkpoint.

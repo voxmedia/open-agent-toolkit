@@ -2,15 +2,16 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-31
+oat_last_updated: 2026-09-01
 oat_generated: true
 oat_template: false
 oat_template_name: summary
-oat_summary_last_task: prev2-t03
-oat_summary_revision_count: 2
+oat_summary_last_task: prev3-t01
+oat_summary_revision_count: 3
 oat_summary_includes_revisions:
   - p-rev1
   - p-rev2
+  - p-rev3
 ---
 
 # Summary: recon-skill
@@ -41,9 +42,10 @@ judgment with the consuming agent.
   dependency leases, reconciliation across install/update/remove lifecycles, and
   user-scope provider materialization for the worker definition.
 - Documentation, generated assets, release metadata, and focused contract,
-  lifecycle, integration, and adversarial test coverage. All 16 planned and
-  revision tasks completed, the final independent review passed with no findings,
-  and the configured cross-family implementation exit gate passed.
+  lifecycle, integration, and adversarial test coverage. All 17 planned and
+  revision tasks completed, the post-rebase final independent review passed with
+  no findings, and the fresh configured cross-family implementation exit gate
+  passed.
 
 ## Key Decisions
 
@@ -76,6 +78,9 @@ judgment with the consuming agent.
   inventory rows, and no lockfile change for workspace self-version bumps.
 - Two test fixtures were mechanically migrated to the complete canonical role
   selector when the reduced approval projection was removed.
+- Post-rebase provider projection now fails closed unless a manifest-declared
+  user-materializable agent has `current` inventory matching the bundled
+  definition; no new materialization layer was introduced.
 
 ## Notable Challenges
 
@@ -85,7 +90,11 @@ review found missing terminal-receipt causality, catalog freshness, and normativ
 array-value checks. Revision p-rev2 added those checks at the existing packet
 boundary; direct adversarial probes then rejected all tested structural,
 freshness, receipt-chain, and canonical-array mutations while valid runs still
-published.
+published. After rebasing onto current `origin/main`, a fresh final review found
+that native-role projection still accepted `outdated` and `newer` installed
+agents. Revision p-rev3 added one scanner guard and focused sync coverage; the
+subsequent final review and configured cross-family gate both passed with zero
+findings.
 
 ## Tradeoffs Made
 
@@ -115,6 +124,9 @@ completed passes, provenance, and unresolved gaps.
 - **p-rev2 — Bind the complete approved dispatch projection.** Replaced the
   reduced approval envelope, then added terminal receipt causality, freshness,
   and canonical array validation identified by final independent reviews.
+- **p-rev3 — Fail closed on drifted materializable agents.** Required `current`
+  inventory before native role projection, preserved missing/absent behavior,
+  and added actionable update guidance plus scanner and sync regressions.
 
 ## Follow-up Items
 
@@ -165,3 +177,14 @@ Terminal final review passed at 3cc1cd2e3 with 0 findings after 2 bounded review
 ### 2026-08-31 · structural · oat gate review · final
 
 target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-code-review-2026-08-31T234514Z.md
+
+### 2026-09-01 · structural · oat-project-implement · p-rev3
+
+Post-rebase final review found one Important native-role projection defect.
+Task prev3-t01 required current inventory, passed 75/75 focused scanner and
+sync tests, and a fresh full final review passed with zero findings at
+547705fae790c32d1bd9dada11f5877253e11530.
+
+### 2026-09-01 · structural · oat gate review · final
+
+target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
