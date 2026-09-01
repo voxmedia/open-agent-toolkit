@@ -798,21 +798,21 @@ git commit -m "fix(p04-t05): fail closed on terminal lookup errors"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T052034Z.md                    | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T053841Z.md                    | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T055541Z.md                    | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/p01-review-2026-08-31T120543Z.md                    | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
-| p01    | code     | passed          | 2026-08-31 | reviews/p01-review-2026-08-31T122419Z.md                    | c59bcc4c0f54c8541a43090eea6ebfe33e34244d | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T130719Z.md                    | 04b2ce008344b92ca9be447434dc9398b0037abf | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T134233Z.md                    | 87c7d690e551d58429f9dffffb83c5f44c5bb206 | manual     | -                             |
-| p02    | code     | blocked         | 2026-08-31 | reviews/p02-review-2026-08-31T140841Z.md                    | 2a8d84388376ef0f8f367dd321010182fe1afc93 | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T151747Z.md                    | 294d7467873c0a223bc9550356ddf7d4c50d4cf6 | manual     | -                             |
-| p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T154620Z.md                    | 95bb211215e469645fb9fd7e371cf665cd4b0bab | manual     | -                             |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T131555Z.md                    | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
-| p03    | code     | passed          | 2026-08-31 | reviews/p03-review-2026-08-31T134913Z.md                    | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
-| p04    | code     | passed          | 2026-08-31 | reviews/p04-review-2026-08-31T170239Z.md                    | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T052034Z.md           | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T053841Z.md           | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T055541Z.md           | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
+| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T120543Z.md           | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
+| p01    | code     | passed          | 2026-08-31 | reviews/archived/p01-review-2026-08-31T122419Z.md           | c59bcc4c0f54c8541a43090eea6ebfe33e34244d | manual     | -                             |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T130719Z.md           | 04b2ce008344b92ca9be447434dc9398b0037abf | manual     | -                             |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T134233Z.md           | 87c7d690e551d58429f9dffffb83c5f44c5bb206 | manual     | -                             |
+| p02    | code     | blocked         | 2026-08-31 | reviews/archived/p02-review-2026-08-31T140841Z.md           | 2a8d84388376ef0f8f367dd321010182fe1afc93 | manual     | -                             |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T151747Z.md           | 294d7467873c0a223bc9550356ddf7d4c50d4cf6 | manual     | -                             |
+| p02    | code     | passed          | 2026-08-31 | reviews/archived/p02-review-2026-08-31T154620Z.md           | 95bb211215e469645fb9fd7e371cf665cd4b0bab | manual     | -                             |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/archived/p03-review-2026-08-31T131555Z.md           | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
+| p03    | code     | passed          | 2026-08-31 | reviews/archived/p03-review-2026-08-31T134913Z.md           | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
+| p04    | code     | passed          | 2026-08-31 | reviews/archived/p04-review-2026-08-31T170239Z.md           | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
 | final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
-| final  | code     | passed          | 2026-08-31 | reviews/final-review-2026-08-31T180107Z.md                  | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
+| final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T180107Z.md         | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
 | final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T232653Z.md         | eab596991e11bfb864336101b93311668ced6366 | gate       | claude-fable-skip-permissions |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |

@@ -160,7 +160,7 @@ CLI check and type-check passed. The final review event is now
 **Focused re-review:** Passed at
 `98b005960b2c5f282fadb8781d990d2ed4a159c9` with 0 Critical, 0 Important, 0
 Medium, and 0 Minor findings. Artifact:
-`reviews/final-review-2026-08-31T180107Z.md`; independent verification passed
+`reviews/archived/final-review-2026-08-31T180107Z.md`; independent verification passed
 186/186 focused tests.
 
 ---
@@ -187,7 +187,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Implementation dispatch: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - Review request: `0972b10d-cd3e-4af9-b680-82e5e008eb08`
 - Review target: `oat-reviewer-gpt-5-6-sol-high`
-- Review artifact: `reviews/p01-review-2026-08-31T052034Z.md`
+- Review artifact: `reviews/archived/p01-review-2026-08-31T052034Z.md`
 - Review result: blocked — 1 Critical, 1 Important, 0 Medium, 0 Minor.
 - Review dispatch: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Review reconnaissance: not attempted.
@@ -195,14 +195,14 @@ _Orchestration runs from `oat-project-implement` are appended here._
   closed the missing-object Important finding and partially closed the
   concurrent-ref Critical finding.
 - Re-review request: `1578e833-870e-419a-a304-0af2a6ae1b0b`
-- Re-review artifact: `reviews/p01-review-2026-08-31T053841Z.md`
+- Re-review artifact: `reviews/archived/p01-review-2026-08-31T053841Z.md`
 - Re-review result: blocked — 1 remaining Critical, 0 Important, 0 Medium,
   0 Minor.
 - Fix round 2: `26264a2c8ed2fc0289473a81d0f296ceb764cb76`
   removed every non-atomic active-deletion fallback and preserved both refs on
   unsupported remotes.
 - Final review request: `ac612268-cf40-41c6-882b-d8cd5a3915ae`
-- Final p01 review artifact: `reviews/p01-review-2026-08-31T055541Z.md`
+- Final p01 review artifact: `reviews/archived/p01-review-2026-08-31T055541Z.md`
 - Final p01 review result: blocked — 1 Critical, 0 Important, 0 Medium,
   0 Minor.
 - Fix iterations: 2 of 2 used; review rounds: 3 of 3 used.
@@ -224,12 +224,12 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Authorization: user explicitly approved updating the plan and proceeding.
 - Revision implementation commit:
   `3d0f106597f80f5f3c22b96d89670028b89444b5`.
-- Revision review artifact: `reviews/p01-review-2026-08-31T120543Z.md`.
+- Revision review artifact: `reviews/archived/p01-review-2026-08-31T120543Z.md`.
 - Revision review result: blocked — 1 Critical torn remote-ref observation and
   1 Important unleased explicit-prune deletion.
 - Independent verification: 128/128 focused tests passed before review.
 - Fix round 1 commit: `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`.
-- Re-review artifact: `reviews/p01-review-2026-08-31T122419Z.md`.
+- Re-review artifact: `reviews/archived/p01-review-2026-08-31T122419Z.md`.
 - Re-review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - Final verification: 134/134 focused tests and CLI type-check passed.
 - Fresh fix iterations: 1 of 2 used; review rounds: 2 of 3 used.
@@ -278,14 +278,14 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - Starting branch head: `ff648a46b` (p02 implementation plus all prior review
   evidence); source fix head before this generation: `2a8d84388`.
 - Fresh implementation commit: `294d74678`; review artifact:
-  `reviews/p02-review-2026-08-31T151747Z.md`.
+  `reviews/archived/p02-review-2026-08-31T151747Z.md`.
 - Review round 1 result: blocked — 2 Critical, 0 Important, 0 Medium, 0 Minor.
   Recordless recap retries discarded the exact evidence receipt, and applicable
   tracked-PR update failures could still clear the pointer.
 - Fix iteration 1 commit: `95bb21121`. It reuses the existing exact Git receipt
   primitives for archived recap evidence and makes required synced-archive PR
   closeout failures stop before pointer clearing.
-- Re-review artifact: `reviews/p02-review-2026-08-31T154620Z.md`.
+- Re-review artifact: `reviews/archived/p02-review-2026-08-31T154620Z.md`.
 - Re-review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - Fresh fix iterations: 1 of 2 used; review rounds: 2 of 3 used.
 - p02 branch merged into the combined branch at `1637fe31f`.
@@ -313,7 +313,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
   docs-build, lint, format, and skill validation all exited 0. The first full
   test run had one SIGTERM cleanup timeout; the single no-edit rerun passed all
   140 smoke tests.
-- Review artifact: `reviews/p04-review-2026-08-31T170239Z.md`.
+- Review artifact: `reviews/archived/p04-review-2026-08-31T170239Z.md`.
 - Review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`.
 - Review target: `oat-reviewer-gpt-5-6-sol-high`.
@@ -346,7 +346,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
   uncached CLI 4721/4721, control-plane 78/78, and every repository, release,
   docs, lint, format, and skill-validation gate exited 0.
 - Focused final re-review artifact:
-  `reviews/final-review-2026-08-31T180107Z.md`.
+  `reviews/archived/final-review-2026-08-31T180107Z.md`.
 - Focused final re-review result: passed — 0 Critical, 0 Important, 0 Medium,
   0 Minor; 186/186 affected-path tests passed.
 - Remaining boundary: configured Cursor Fable exit gate, then the post-p04
@@ -428,7 +428,7 @@ terminal alias. The fresh generation passed after one bounded fix round; p01 is
 complete at `c59bcc4c0f54c8541a43090eea6ebfe33e34244d`. p03 passed after one
 bounded fix and is merged. p02 implemented all planned tasks but remains blocked
 after exhausting its automatic review budget on the post-archive continuation
-gap recorded in `reviews/p02-review-2026-08-31T140841Z.md`. The operator then
+gap recorded in `reviews/archived/p02-review-2026-08-31T140841Z.md`. The operator then
 authorized one fresh bounded generation to close that single continuation gap.
 That generation passed after one fix round and p02 is now merged.
 
