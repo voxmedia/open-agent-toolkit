@@ -60,7 +60,7 @@ started and remains dependent on a passing Revision 2 code review.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; formatter-path correction review passed)
-- **Implementation:** implementation.md (in progress; Revision 1 review blocked)
+- **Implementation:** implementation.md (in progress; Revision 2 plan review pending)
 
 ## Progress
 

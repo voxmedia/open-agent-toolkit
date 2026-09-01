@@ -691,7 +691,8 @@ packages/cli/src/commands/pjm/remote/index.test.ts.
 
 ## Phase 4: GitHub Semantic Adapter
 
-> Peer lane after p03. Own only providers/github\* and its additive conformance
+> Peer lane after p-rev2 passes its fresh code review. Own only
+> providers/github\* and its additive conformance
 > fixture entries. Host execution remains generic and live-discovered.
 
 ### Task p04-t01: Normalize GitHub identity and snapshots
@@ -859,7 +860,8 @@ packages/cli/src/commands/pjm/remote/providers/github.test.ts,
 
 ## Phase 5: Linear Semantic Adapter
 
-> Peer lane after p03. Own only providers/linear\* and its additive conformance
+> Peer lane after p-rev2 passes its fresh code review. Own only
+> providers/linear\* and its additive conformance
 > fixture entries. Host execution remains generic and live-discovered.
 
 ### Task p05-t01: Normalize Linear identity and snapshots
@@ -992,7 +994,8 @@ packages/cli/src/commands/pjm/remote/providers/linear.test.ts, and
 
 ## Phase 6: Jira Cloud Semantic Adapter
 
-> Peer lane after p03. Own only providers/jira\*, Jira ADF handling, and its
+> Peer lane after p-rev2 passes its fresh code review. Own only
+> providers/jira\*, Jira ADF handling, and its
 > additive conformance fixture entries. Host execution remains generic and
 > live-discovered.
 
@@ -1574,8 +1577,9 @@ schema.test.ts, packages/cli/src/commands/pjm/remote/store.ts and store.test.ts,
 packages/cli/src/commands/pjm/remote/external-action.ts and
 external-action.test.ts, packages/cli/src/commands/pjm/remote/index.ts and
 index.test.ts, and
-packages/cli/src/commands/pjm/remote/**integration**/lifecycle-harness.ts and
-lifecycle.test.ts only when mechanically required by the durable handoff.
+`packages/cli/src/commands/pjm/remote/__integration__/lifecycle-harness.ts` and
+`packages/cli/src/commands/pjm/remote/__integration__/lifecycle.test.ts` only
+when mechanically required by the durable handoff.
 
 1. Add failing filesystem and real Commander crash-injection cases at every
    boundary between accepting a mutation observation, persisting its bounded
@@ -1596,7 +1600,7 @@ lifecycle.test.ts only when mechanically required by the durable handoff.
    universal pre-write gate, whole-field inbound suppression, and bounded
    durable-evidence contracts.
 5. Format: pnpm format:fix
-6. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/index.test.ts src/commands/pjm/remote/**integration**/lifecycle.test.ts
+6. Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/store.test.ts src/commands/pjm/remote/external-action.test.ts src/commands/pjm/remote/index.test.ts src/commands/pjm/remote/__integration__/lifecycle.test.ts`
 7. Commit: fix(prev2-t01): persist the verification handoff atomically
 
 ### Task prev2-t02: (review) Fail closed on incomplete project-create provenance

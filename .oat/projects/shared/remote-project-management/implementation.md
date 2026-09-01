@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: remote-project-management
 
 **Started:** 2026-03-15
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -1432,7 +1432,7 @@ Track test execution during implementation.
 | 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed                     |
 | 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
-| rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 234/234; all checks                    | 0      | blocked by round-3 review  |
+| rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 
 ## Final Summary (for PR/docs)
 
