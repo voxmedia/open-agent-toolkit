@@ -1167,27 +1167,217 @@ git add packages/cli/src/engine/scanner.ts packages/cli/src/engine/scanner.test.
 git commit -m "fix(prev3-t01): reject drifted materializable agents"
 ```
 
+## Phase 5: Remote PR Review Fixes
+
+### Task p05-t01: (review) Keep reconciliation claim transitions legal
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add direct cases for reviewed claims whose prior state is `unresolved` or
+`unsupported`, proving that reconciliation currently emits an edge rejected by
+the packet contract.
+
+**Step 2: Implement fix**
+
+Derive only contract-legal state changes while preserving honest unresolved,
+unsupported, and contested outcomes when review completion does not authorize a
+legal promotion.
+
+**Step 3: Verify targeted behavior**
+
+Run focused integrity-contract tests with illegal-transition negative cases and
+a valid promotion control.
+
+**Step 4: Verify project commands and commit**
+
+Run the recon suite and project verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t01): keep reconciliation transitions legal"
+```
+
+### Task p05-t02: (review) Preserve published packets when re-rendering fails
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Reproduce failures before promotion and after temporary output creation while a
+valid `packet.md` already exists, and assert that the published file survives.
+
+**Step 2: Implement fix**
+
+Limit failure cleanup to the unpromoted temporary artifact and structure atomic
+promotion so no fallible post-promotion step deletes the valid consumer view.
+
+**Step 3: Verify targeted behavior**
+
+Run renderer tests with preservation negative controls and a successful
+replacement control.
+
+**Step 4: Verify project commands and commit**
+
+Run the recon suite and project verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t02): preserve packets across render failures"
+```
+
+### Task p05-t03: (review) Represent provisional claim genesis honestly
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Analyze failure context**
+
+Create a revision-one ledger containing a newly compiled claim that honestly
+remains `provisional`, without falsely describing an earlier unsupported state.
+
+**Step 2: Implement fix**
+
+Define one explicit genesis rule for revision-one provisional claims while
+retaining strict transition validation for actual state changes and later
+ledger revisions.
+
+**Step 3: Verify targeted behavior**
+
+Prove the honest provisional case passes and invalid incoming, self, or later
+revision transitions remain rejected under the chosen contract.
+
+**Step 4: Verify project commands and commit**
+
+Run the recon suite and project verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t03): support honest provisional genesis"
+```
+
+### Task p05-t04: (review) Bind recon dependency reads to one portable scope
+
+**Files:**
+
+- Modify: `.agents/skills/recon/SKILL.md`
+- Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add contract coverage proving the current chained reads lack loaded-skill,
+user-scope, then project-scope resolution and same-scope binding.
+
+**Step 2: Implement fix**
+
+Resolve and bind the installed dependency root once before reading
+`oat-dispatch-subagents` or `subagent-orchestration`, failing closed with an
+actionable pack-install/update message when no canonical dependency is found.
+
+**Step 3: Verify targeted behavior**
+
+Exercise loaded, user, project, and missing dependency cases without changing
+the selected provider target or launch mechanics.
+
+**Step 4: Verify project commands and commit**
+
+Run canonical skill validation, the recon suite, lint, format, and project
+verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t04): bind portable recon dependencies"
+```
+
+### Task p05-t05: (review) Incorporate review-supplied evidence
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add an incorporated review containing valid `newEvidence` and prove the current
+reconciler drops it from the next ledger.
+
+**Step 2: Implement fix**
+
+Copy only exact, incorporated, schema-valid review evidence into the next
+ledger, bind it to the affected claim, and reject duplicate IDs, conflicting
+bytes, unincorporated evidence, or invented links.
+
+**Step 3: Verify targeted behavior**
+
+Run focused positive and adversarial evidence-reconciliation cases, including a
+valid no-new-evidence control.
+
+**Step 4: Verify project commands and commit**
+
+Run the recon suite and project verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t05): retain incorporated review evidence"
+```
+
+### Task p05-t06: (review) Scan direct array strings for blind inputs
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/create-review-brief.mjs`
+- Modify: `.agents/skills/recon/tests/review-brief.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add review briefs with `raw/dossiers` strings directly inside questions and
+included/excluded scope arrays and prove they currently pass validation.
+
+**Step 2: Implement fix**
+
+Apply the forbidden-string check to every visited string regardless of whether
+it is an object field or array element, preserving path-specific diagnostics.
+
+**Step 3: Verify targeted behavior**
+
+Run review-brief tests with array, nested-object, allowed-string, and valid
+brief controls.
+
+**Step 4: Verify project commands and commit**
+
+Run the recon suite and project verification commands, then commit with:
+
+```bash
+git commit -m "fix(p05-t06): scan array strings in review briefs"
+```
+
 ## Reviews
 
-| Scope     | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
-| --------- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
-| p01       | code     | passed          | 2026-08-31 | `reviews/archived/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -                   |
-| p02       | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
-| p03       | code     | passed          | 2026-08-31 | `reviews/archived/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                   |
-| p04       | code     | passed          | 2026-08-31 | `reviews/archived/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                   |
-| p-rev1    | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
-| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`                  | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                   |
-| final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                   |
-| final     | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                   |
-| final     | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high |
-| final     | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
-| final     | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
-| final     | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
-| spec      | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
-| design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
-| plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
-| plan      | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                   |
-| plan      | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                   |
+| Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
+| -------------- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01            | code     | passed          | 2026-08-31 | `reviews/archived/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -                   |
+| p02            | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
+| p03            | code     | passed          | 2026-08-31 | `reviews/archived/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                   |
+| p04            | code     | passed          | 2026-08-31 | `reviews/archived/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                   |
+| p-rev1         | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
+| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`                  | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                   |
+| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                   |
+| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                   |
+| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high |
+| final          | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
+| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
+| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
+| spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
+| design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
+| plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
+| plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                   |
+| plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                   |
+| github-pr #248 | remote   | fixes_added     | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                   |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
@@ -1221,8 +1411,11 @@ the first diagnostic suspect. No plan change or implementation task is needed.
   recheck, and normative projection values.
 - Revision 3: 1 task — fail closed when user-materializable agent content does
   not match the current bundled definition before native role projection.
+- Phase 5: 6 tasks — correct remote-review findings in reconciliation,
+  publication safety, claim genesis, portable dependency binding, evidence
+  retention, and selective-blind scanning.
 
-**Total: 17 tasks**
+**Total: 23 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

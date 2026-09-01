@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: recon-skill
 
 **Initialized:** 2026-08-31
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 This document tracks resumable execution of the reviewed quick-workflow plan.
 `oat_current_task_id` always identifies the next incomplete plan task.
@@ -27,8 +27,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev1 | passed | 2     | 2/2       |
 | Phase p-rev2 | passed | 3     | 3/3       |
 | Phase p-rev3 | passed | 1     | 1/1       |
+| Phase 5      | active | 6     | 0/6       |
 
-**Total:** 17/17 tasks completed
+**Total:** 17/23 tasks completed
 
 ## Task Status
 
@@ -83,6 +84,31 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Task      | Status    | Commit      |
 | --------- | --------- | ----------- |
 | prev3-t01 | completed | `834f28fa4` |
+
+### Phase 5: Remote PR Review Fixes
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p05-t01 | pending | —      |
+| p05-t02 | pending | —      |
+| p05-t03 | pending | —      |
+| p05-t04 | pending | —      |
+| p05-t05 | pending | —      |
+| p05-t06 | pending | —      |
+
+## Remote Review Received
+
+- **Date:** 2026-09-01
+- **PR:** #248
+- **Findings:** 0 critical, 0 important, 5 medium, 1 minor
+- **New tasks:** `p05-t01`, `p05-t02`, `p05-t03`, `p05-t04`, `p05-t05`,
+  `p05-t06`
+- **Deferred:** None.
+- **Dismissed:** None.
+- **Artifact:**
+  `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`
+- **Provenance:** The source Bugbot events lack OAT marker provenance; ledger
+  lineage fields remain unknown rather than using the current PR head.
 
 ## Orchestration Runs
 
