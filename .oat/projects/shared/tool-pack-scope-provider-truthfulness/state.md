@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: 7c33b291cd3ff2b7df6b03d846c86ab4ea675098
+oat_last_commit: cb52e25d7b2e46f38ce801b59d44666d5c8ee2da
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T19:21:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T19:34:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,10 +111,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas authorized one additional one-use Phase 4 correction
-and re-review cycle on 2026-09-01. It is limited to the nested deferred
-directory-copy collision in the round-5 review. Phase 5 remains gated pending
-the correction and a fresh independent High review.
+Implementation - the one-use operator-authorized Phase 4 correction is
+committed at `cb52e25d7`. Complete-tree deferred directory copy now preserves
+nested collisions and fails without manifest ownership. Phase 5 remains gated
+pending the one authorized fresh independent High review.
 
 ## Artifacts
 
@@ -148,7 +148,7 @@ the correction and a fresh independent High review.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 operator-authorized nested-copy correction and fresh review in progress
+- ⧗ Phase 4 operator-authorized nested-copy correction complete; fresh review pending
 
 ## Blockers
 
@@ -156,6 +156,6 @@ the correction and a fresh independent High review.
 
 ## Next Milestone
 
-Correct only the Phase 4 nested deferred-directory-copy collision, then run the
-one authorized fresh independent High review. Do not begin Phase 5 without a
-passing Phase 4 verdict.
+Run the one authorized fresh independent High review over the complete Phase 4
+range through `cb52e25d7`. Do not begin Phase 5 without a passing Phase 4
+verdict.

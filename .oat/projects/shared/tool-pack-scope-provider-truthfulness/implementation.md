@@ -981,6 +981,32 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - Boundary: Phase 5 remains gated. A passing review advances implementation; a
   blocking result returns to operator governance without another fix launch.
 
+### Review Round 5 Operator-Authorized Fix
+
+- Commit: `cb52e25d7b2e46f38ce801b59d44666d5c8ee2da`
+- Continuation: `p04-review-r5-authorized-fix-20260901T192200Z`, linked to
+  original request `dispatch-p04-20260901T002500Z-36af8aadd` and executed by
+  the same exact High target `oat-phase-implementer-gpt-5-6-sol-high`.
+- Made deferred directory publication no-clobber across the complete tree:
+  nested directories are created exclusively and nested files are opened
+  exclusively. A same-name unmanaged nested file or directory now survives
+  unchanged, stops the child with actionable failure evidence, and produces no
+  manifest ownership claim. Ordinary non-transition copy behavior is
+  unchanged.
+- Added deterministic post-root-creation hooks and covered nested file,
+  directory, and complete deferred-transition collisions.
+- Verification: RED reproduced three failures. Focused tests passed 61/61 and
+  the authoritative Phase 4 union passed 18 files / 413 tests before and after
+  commit. CLI lint, type-check, format, `pnpm check`, full `pnpm test`, and
+  exact-range whitespace checks passed. The evidence-grade uncached Turbo run
+  reported 0 cache hits and 4,868 CLI tests; smoke passed 140/140, skills
+  586/586, and release 39 with one intentional skip. Root independently
+  verified the exact one-commit/four-file boundary, clean worktree, whitespace,
+  and live 413-test Phase 4 union.
+- One fresh independent High review is now required. This consumes the one-use
+  operator authorization; a blocking verdict returns to governance without
+  another correction. Phase 5 remains gated.
+
 ---
 
 ## Orchestration Runs
