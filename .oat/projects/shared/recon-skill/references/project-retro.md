@@ -262,7 +262,7 @@ replace that backlog item's cross-phase invariant propagation.
 - **Status:** filed
 - **Destination:** `.oat/repo/pjm/backlog/items/BL-260901-add-corrective-revision.md`
 - **Destination-receipt:** `6a31f37a02fd6e7ac1a8dfa91b8b7844690b7d05`
-- **Remote-visibility:** unpushed
+- **Remote-visibility:** pushed
 - **Sanitized:** yes
 - **Disposition-note:** Filed as canonical backlog item
   `BL-260901-add-corrective-revision` with confirmed M scope.
@@ -279,7 +279,7 @@ exhausted.
 - **Status:** filed
 - **Destination:** `.oat/repo/pjm/backlog/items/BL-260901-make-terminal-project-status.md`
 - **Destination-receipt:** `8a614e098627cb391ab7f8c354fcbae1bc824b1c`
-- **Remote-visibility:** unpushed
+- **Remote-visibility:** pushed
 - **Sanitized:** yes
 - **Disposition-note:** Filed as canonical backlog item
   `BL-260901-make-terminal-project-status` with confirmed S scope.
