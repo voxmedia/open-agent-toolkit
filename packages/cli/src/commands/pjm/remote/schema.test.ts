@@ -667,6 +667,18 @@ describe('remote record schemas', () => {
         ...base,
         redactions: [
           {
+            field: 'description',
+            reason: 'sensitive-content',
+            representation: 'whole-field-marker',
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      RemoteSnapshotRecordSchema.parse({
+        ...base,
+        redactions: [
+          {
             field: { kind: 'extension', key: 'provider.raw.path' },
             reason: 'sensitive-content',
             representation: 'whole-field-marker',

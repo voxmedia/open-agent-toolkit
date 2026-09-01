@@ -24,6 +24,17 @@ const SemanticFieldNameSchema = z
   .min(1)
   .max(64)
   .regex(/^[A-Za-z][A-Za-z0-9_-]*$/);
+const SuppressedFieldReferenceSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('core'),
+      name: z.enum(['title', 'description', 'priority', 'status']),
+    })
+    .strict(),
+  z
+    .object({ kind: z.literal('extension'), key: SemanticFieldNameSchema })
+    .strict(),
+]);
 const DurableActionIdSchema = z
   .string()
   .min(1)
@@ -69,6 +80,9 @@ export const ExternalObservationEnvelopeSchema = z
         fields: z.record(
           z.union([z.string(), z.number(), z.boolean(), z.null()]),
         ),
+        extensions: z
+          .record(z.union([z.string(), z.number(), z.boolean(), z.null()]))
+          .optional(),
         revisionDigest: z.string().min(1).max(512).nullable(),
         diagnosticCode: z.string().min(1).max(128).nullable(),
       })
@@ -87,6 +101,7 @@ export interface ExternalActionEnvelope {
   intent: Record<string, unknown>;
   expectedObservation: {
     fields: string[];
+    extensionFields?: string[];
     requireIdentity: boolean;
     stableId: string | null;
     capabilityEvidenceDigest: string;
@@ -182,6 +197,7 @@ const ExternalActionBaseSchema = z
     expectedObservation: z
       .object({
         fields: z.array(SemanticFieldNameSchema).max(64),
+        extensionFields: z.array(SemanticFieldNameSchema).max(32).optional(),
         requireIdentity: z.boolean(),
         stableId: z.string().min(1).max(512).nullable().optional(),
         capabilityEvidenceDigest: z.string().min(1).max(512).optional(),
@@ -266,6 +282,16 @@ export function buildExternalAction(input: {
   const expectedFields = input.expectedObservation.fields.map((field) =>
     SemanticFieldNameSchema.parse(field),
   );
+  const expectedExtensionFields = (
+    input.expectedObservation.extensionFields ?? []
+  ).map((field) => SemanticFieldNameSchema.parse(field));
+  if (
+    new Set(expectedExtensionFields).size !== expectedExtensionFields.length
+  ) {
+    throw new Error(
+      'External action extension fields must be unique and bounded.',
+    );
+  }
   if (
     new Set(expectedFields).size !== expectedFields.length ||
     expectedFields.length > 64
@@ -293,6 +319,9 @@ export function buildExternalAction(input: {
     expectedObservation: {
       ...input.expectedObservation,
       fields: expectedFields,
+      ...(expectedExtensionFields.length > 0
+        ? { extensionFields: expectedExtensionFields }
+        : {}),
       stableId: input.expectedObservation.stableId,
       capabilityEvidenceDigest:
         input.expectedObservation.capabilityEvidenceDigest,
@@ -346,6 +375,15 @@ export function acceptExternalObservation(input: {
   if (actual.some((field) => !expected.has(field))) {
     throw new Error('External observation contains an unexpected field.');
   }
+  const expectedExtensions = new Set(
+    input.action.expectedObservation.extensionFields ?? [],
+  );
+  const actualExtensions = Object.keys(observation.outcome.extensions ?? {});
+  if (actualExtensions.some((field) => !expectedExtensions.has(field))) {
+    throw new Error(
+      'External observation contains an unexpected adapter extension.',
+    );
+  }
   if (
     observation.outcome.classification === 'observed' &&
     input.action.expectedObservation.requireIdentity &&
@@ -382,26 +420,54 @@ export function acceptExternalObservation(input: {
   ) {
     throw new Error('External observation diagnostic evidence is unsafe.');
   }
-  const suppressedFields: string[] = [];
+  const suppressedFields: Array<
+    z.infer<typeof SuppressedFieldReferenceSchema>
+  > = [];
   const fields = Object.fromEntries(
     actual.map((field) => {
       const value = observation.outcome.fields[field] ?? null;
       const suppressed =
         typeof value === 'string' &&
         containsSensitiveContentSignalInValue(value);
-      if (suppressed) suppressedFields.push(field);
+      if (suppressed) {
+        if (!isCoreObservationField(field)) {
+          throw new Error(
+            `Sensitive observation field '${field}' requires a declared adapter extension.`,
+          );
+        }
+        suppressedFields.push({ kind: 'core', name: field });
+      }
       return [field, suppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : value];
+    }),
+  );
+  const extensions = Object.fromEntries(
+    actualExtensions.map((key) => {
+      const value = observation.outcome.extensions?.[key] ?? null;
+      const suppressed = containsSensitiveContentSignalInValue(value);
+      if (suppressed) suppressedFields.push({ kind: 'extension', key });
+      return [key, suppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : value];
     }),
   );
   return {
     ...observation,
-    outcome: { ...observation.outcome, fields, suppressedFields },
+    outcome: {
+      ...observation.outcome,
+      fields,
+      ...(actualExtensions.length > 0 ? { extensions } : {}),
+      suppressedFields,
+    },
   };
+}
+
+function isCoreObservationField(
+  field: string,
+): field is 'title' | 'description' | 'priority' | 'status' {
+  return ['title', 'description', 'priority', 'status'].includes(field);
 }
 
 export interface AcceptedExternalObservationEnvelope extends ExternalObservationEnvelope {
   outcome: ExternalObservationEnvelope['outcome'] & {
-    suppressedFields: string[];
+    suppressedFields: Array<z.infer<typeof SuppressedFieldReferenceSchema>>;
   };
 }
 

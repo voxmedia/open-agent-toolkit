@@ -217,6 +217,40 @@ describe('sanitizeRemoteSnapshot', () => {
     expect(JSON.stringify(result)).not.toContain('extension-private-tail');
   });
 
+  it('consumes a typed extension marker and evidence pair exactly once', () => {
+    const input = rawSnapshot();
+    input.extensions.workflow = WHOLE_FIELD_SUPPRESSION_MARKER;
+    const result = sanitizeRemoteSnapshot(input, {
+      allowedExtensionKeys: ['workflow'],
+      suppressedFields: [{ kind: 'extension', key: 'workflow' }],
+    });
+    expect(result.extensions?.github?.workflow).toBe(
+      WHOLE_FIELD_SUPPRESSION_MARKER,
+    );
+    expect(result.redactions).toEqual([
+      {
+        field: { kind: 'extension', key: 'workflow' },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      },
+    ]);
+    expect(() =>
+      sanitizeRemoteSnapshot(input, {
+        allowedExtensionKeys: ['workflow'],
+        suppressedFields: [
+          { kind: 'extension', key: 'workflow' },
+          { kind: 'extension', key: 'workflow' },
+        ],
+      }),
+    ).toThrow(/each field once/i);
+    expect(() =>
+      sanitizeRemoteSnapshot(input, {
+        allowedExtensionKeys: [],
+        suppressedFields: [{ kind: 'extension', key: 'workflow' }],
+      }),
+    ).toThrow(/adapter allowlist/i);
+  });
+
   it('rejects arbitrary provider paths as extension allowlist keys', () => {
     expect(() =>
       sanitizeRemoteSnapshot(rawSnapshot(), {

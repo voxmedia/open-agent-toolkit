@@ -272,7 +272,43 @@ describe('external action protocol', () => {
     expect(accepted.outcome.fields.title).toBe(
       '[SUPPRESSED:SENSITIVE-CONTENT]',
     );
-    expect(accepted.outcome.suppressedFields).toEqual(['title']);
+    expect(accepted.outcome.suppressedFields).toEqual([
+      { kind: 'core', name: 'title' },
+    ]);
+  });
+
+  it('carries typed suppression evidence for an allowlisted adapter extension', () => {
+    const extensionAction = buildExternalAction({
+      ...action,
+      expectedObservation: {
+        ...action.expectedObservation,
+        extensionFields: ['workflow'],
+      },
+      persistedPreview: {
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
+      },
+      projection,
+      outboundSafety: safety,
+    });
+    const accepted = acceptExternalObservation({
+      action: extensionAction,
+      observation: {
+        ...observation(),
+        actionDigest: extensionAction.actionDigest,
+        outcome: {
+          ...observation().outcome,
+          extensions: { workflow: 'api key extension-private-tail' },
+        },
+      },
+    });
+    expect(accepted.outcome.extensions).toEqual({
+      workflow: '[SUPPRESSED:SENSITIVE-CONTENT]',
+    });
+    expect(accepted.outcome.suppressedFields).toEqual([
+      { kind: 'extension', key: 'workflow' },
+    ]);
+    expect(JSON.stringify(accepted)).not.toContain('extension-private-tail');
   });
 
   it('pins stable identity and capability evidence across read-back', () => {

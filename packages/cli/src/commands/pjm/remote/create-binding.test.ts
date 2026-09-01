@@ -274,4 +274,81 @@ describe('initial remote binding creation', () => {
       expect(h.calls).not.toContain('association');
     },
   );
+
+  it.each([
+    'after-materialize',
+    'after-association',
+    'after-terminal',
+  ] as const)(
+    'resumes local create progress after %s without repeating a completed step',
+    async (crashAt) => {
+      const h = harness(crashAt);
+      const progress = new Set<'materialized' | 'associated' | 'terminal'>();
+      h.dependencies.readMaterializationProgress = vi.fn(async () => [
+        ...progress,
+      ]);
+      h.dependencies.recordMaterializationProgress = vi.fn(
+        async (_operationId, step) => {
+          progress.add(step);
+        },
+      );
+      h.dependencies.recordVerified = vi.fn(async () => {
+        h.calls.push('verified');
+      });
+      h.setPersisted(intent);
+      const pending = await prepare(h);
+      const verificationPending = await createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: observation(pending.action) },
+        },
+        h.dependencies,
+      );
+      if (verificationPending.status !== 'pending') {
+        throw new Error('expected verification read');
+      }
+      const finalObservation = observation(verificationPending.action);
+      await expect(
+        createAndBindRemoteIssue(
+          {
+            intent,
+            safety,
+            continuation: { observation: finalObservation },
+          },
+          h.dependencies,
+        ),
+      ).rejects.toThrow(`crash:${crashAt}`);
+
+      const restarted = { ...h.dependencies, crash: undefined };
+      if (crashAt === 'after-terminal') {
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: { observation: finalObservation },
+            },
+            restarted,
+          ),
+        ).rejects.toThrow(/terminal.*replay/i);
+      } else {
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: { observation: finalObservation },
+            },
+            restarted,
+          ),
+        ).resolves.toEqual({
+          status: 'verified',
+          bindingId: intent.bindingId,
+        });
+      }
+      expect(h.calls.filter((call) => call === 'materialize')).toHaveLength(1);
+      expect(h.calls.filter((call) => call === 'association')).toHaveLength(1);
+    },
+  );
 });

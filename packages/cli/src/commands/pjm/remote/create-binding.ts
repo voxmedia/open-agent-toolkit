@@ -56,8 +56,21 @@ export interface CreateBindingDependencies {
     ref: string;
     bindingId: string;
   }): Promise<void>;
+  readMaterializationProgress?(
+    operationId: string,
+  ): Promise<Array<'materialized' | 'associated' | 'terminal'>>;
+  recordMaterializationProgress?(
+    operationId: string,
+    step: 'materialized' | 'associated' | 'terminal',
+  ): Promise<void>;
+  recordVerified?(operationId: string): Promise<void>;
   crash?(
-    point: 'after-intent' | 'after-observation' | 'after-materialize',
+    point:
+      | 'after-intent'
+      | 'after-observation'
+      | 'after-materialize'
+      | 'after-association'
+      | 'after-terminal',
   ): void;
 }
 
@@ -107,6 +120,17 @@ export async function createAndBindRemoteIssue(
     });
     await dependencies.recordAction(input.intent.operationId, action);
     return { status: 'pending', action };
+  }
+
+  const progress = new Set(
+    (await dependencies.readMaterializationProgress?.(
+      input.intent.operationId,
+    )) ?? [],
+  );
+  if (progress.has('terminal')) {
+    throw new Error(
+      'Create operation is terminal; observation replay rejected.',
+    );
   }
 
   const persisted = await dependencies.readIntent(input.intent.operationId);
@@ -178,21 +202,40 @@ export async function createAndBindRemoteIssue(
     await dependencies.recordTerminal(input.intent.operationId, 'uncertain');
     return { status: 'uncertain', bindingId: null };
   }
-  await dependencies.materialize({
-    intent: input.intent,
-    stableId: observation.outcome.identity.stableId,
-    aliases: observation.outcome.identity.aliases,
-    observedFields: observation.outcome.fields,
-    revisionDigest: observation.outcome.revisionDigest,
-  });
-  dependencies.crash?.('after-materialize');
-  await dependencies.writeAssociation({
-    target: input.intent.target,
-    provider: input.intent.provider,
-    ref:
-      observation.outcome.identity.aliases[0] ??
-      observation.outcome.identity.stableId,
-    bindingId: input.intent.bindingId,
-  });
+  if (!progress.has('materialized')) {
+    await dependencies.materialize({
+      intent: input.intent,
+      stableId: observation.outcome.identity.stableId,
+      aliases: observation.outcome.identity.aliases,
+      observedFields: observation.outcome.fields,
+      revisionDigest: observation.outcome.revisionDigest,
+    });
+    await dependencies.recordMaterializationProgress?.(
+      input.intent.operationId,
+      'materialized',
+    );
+    dependencies.crash?.('after-materialize');
+  }
+  if (!progress.has('associated')) {
+    await dependencies.writeAssociation({
+      target: input.intent.target,
+      provider: input.intent.provider,
+      ref:
+        observation.outcome.identity.aliases[0] ??
+        observation.outcome.identity.stableId,
+      bindingId: input.intent.bindingId,
+    });
+    await dependencies.recordMaterializationProgress?.(
+      input.intent.operationId,
+      'associated',
+    );
+    dependencies.crash?.('after-association');
+  }
+  await dependencies.recordVerified?.(input.intent.operationId);
+  await dependencies.recordMaterializationProgress?.(
+    input.intent.operationId,
+    'terminal',
+  );
+  dependencies.crash?.('after-terminal');
   return { status: 'verified', bindingId: input.intent.bindingId };
 }

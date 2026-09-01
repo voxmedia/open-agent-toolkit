@@ -120,6 +120,12 @@ export interface RemoteOperationTransition {
     receiptDigest: string;
   };
   appendObservation?: RemoteOperationRecord['observations'][number];
+  appendMaterializationStep?: NonNullable<
+    RemoteOperationRecord['materializationSteps']
+  >[number];
+  materializationPlan?: NonNullable<
+    RemoteOperationRecord['materializationPlan']
+  >;
 }
 
 export interface ConcurrentOperationIntentInspection {
@@ -177,6 +183,15 @@ export class RemoteSyncStore {
       `${parsed.bindingId}.json`,
     );
     assertRecordIdMatchesFilename(path, parsed.bindingId);
+    const existing = await this.readBindingMetadata(parsed.bindingId);
+    if (existing) {
+      if (!isDeepStrictEqual(existing, parsed)) {
+        throw new Error(
+          `Binding metadata '${parsed.bindingId}' conflicts with its materialization plan.`,
+        );
+      }
+      return;
+    }
     await this.#atomicWrite(path, parsed);
   }
 
@@ -322,7 +337,12 @@ export class RemoteSyncStore {
       `${parsed.bindingId}.json`,
     );
     assertRecordIdMatchesFilename(path, parsed.bindingId);
-    await this.#exclusiveWrite(path, parsed);
+    try {
+      await this.#exclusiveWrite(path, parsed);
+    } catch (error) {
+      const existing = await this.readBindingMetadata(parsed.bindingId);
+      if (!existing || !isDeepStrictEqual(existing, parsed)) throw error;
+    }
   }
 
   async createOperation(record: RemoteOperationRecord): Promise<void> {
@@ -450,6 +470,24 @@ export class RemoteSyncStore {
     ) {
       throw new Error('Remote operation observation evidence is a duplicate.');
     }
+    if (
+      update.appendMaterializationStep &&
+      (current.materializationSteps ?? []).some(
+        (item) => item.step === update.appendMaterializationStep!.step,
+      )
+    ) {
+      throw new Error('Remote operation materialization step is a duplicate.');
+    }
+    if (
+      update.materializationPlan &&
+      current.materializationPlan &&
+      !isDeepStrictEqual(
+        update.materializationPlan,
+        current.materializationPlan,
+      )
+    ) {
+      throw new Error('Remote operation materialization plan is immutable.');
+    }
     let attempts = update.appendAttempt
       ? [...current.attempts, update.appendAttempt]
       : current.attempts;
@@ -494,6 +532,15 @@ export class RemoteSyncStore {
       steps: update.appendStep
         ? [...current.steps, update.appendStep]
         : current.steps,
+      materializationSteps: update.appendMaterializationStep
+        ? [
+            ...(current.materializationSteps ?? []),
+            update.appendMaterializationStep,
+          ]
+        : current.materializationSteps,
+      ...(update.materializationPlan !== undefined
+        ? { materializationPlan: update.materializationPlan }
+        : {}),
     });
     await this.#atomicWrite(
       join(this.locations.operational.operationsDir, `${operationId}.json`),
@@ -652,8 +699,10 @@ function assertMaterializationMatchesCreateIntent(
     );
   }
   if (
-    operation.state !== 'verified' ||
-    operation.outcome.classification !== 'verified' ||
+    !['pending', 'verification-pending', 'partial', 'verified'].includes(
+      operation.state,
+    ) ||
+    !['partial', 'verified'].includes(operation.outcome.classification) ||
     !operation.verification.some(
       (item) =>
         item.field === 'remoteIdentity' &&

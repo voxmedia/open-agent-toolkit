@@ -779,5 +779,34 @@ describe('RemoteSyncStore', () => {
       state: 'verified',
       createIntent: intent,
     });
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        record,
+        verification,
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      store.materializeVerifiedBinding(
+        intent.operationId,
+        { ...record, updatedAt: '2026-08-31T00:03:00.000Z' },
+        verification,
+      ),
+    ).rejects.toThrow(/conflicts.*materialization plan/i);
+  });
+
+  it('makes exact intake metadata replay idempotent and rejects one-sided drift', async () => {
+    const { store } = await createStore();
+    const record = metadata('bnd_intake_123');
+    await store.materializeIntakeBinding(record);
+    await expect(
+      store.materializeIntakeBinding(record),
+    ).resolves.toBeUndefined();
+    await expect(
+      store.materializeIntakeBinding({
+        ...record,
+        updatedAt: '2026-08-31T00:04:00.000Z',
+      }),
+    ).rejects.toBeTruthy();
   });
 });

@@ -816,6 +816,40 @@ const FieldVerificationSchema = z
   })
   .strict();
 
+const MaterializationStepSchema = z
+  .object({
+    step: z.enum([
+      'journal',
+      'target',
+      'metadata',
+      'state',
+      'snapshot',
+      'baseline',
+      'association',
+    ]),
+    completedAt: TimestampSchema,
+    evidenceDigest: z.string().min(1).max(512),
+  })
+  .strict();
+
+const MaterializationPlanSchema = z
+  .object({
+    kind: z.enum(['create', 'intake-create', 'intake-enrich', 'update']),
+    metadata: RemoteBindingMetadataSchema,
+    finalState: RemoteBindingStateSchema,
+    association: z
+      .object({
+        provider: ProviderSchema,
+        ref: z.string().min(1).max(2_048),
+        bindingId: StableIdSchema,
+        target: RemoteLocalTargetSchema,
+        seedContent: z.string().max(1_048_576).nullable(),
+      })
+      .strict()
+      .nullable(),
+  })
+  .strict();
+
 const OperationPreviewSchema = z
   .object({
     digest: z.string().min(1).max(512),
@@ -881,6 +915,8 @@ const CurrentRemoteOperationRecordSchema = z
       'reconcile-required',
     ]),
     steps: z.array(RemoteOperationStepSchema).max(64),
+    materializationSteps: z.array(MaterializationStepSchema).max(7).optional(),
+    materializationPlan: MaterializationPlanSchema.optional(),
     outcome: RemoteOperationOutcomeSchema,
     createIntent: PlannedBindingCreateSchema.optional(),
   })
@@ -1064,6 +1100,53 @@ const CurrentRemoteOperationRecordSchema = z
         });
       }
       seen.add(step.stepId);
+    }
+    const materializationSeen = new Set<string>();
+    for (const [index, step] of (record.materializationSteps ?? []).entries()) {
+      if (materializationSeen.has(step.step)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['materializationSteps', index, 'step'],
+          message: `Duplicate materialization step '${step.step}'.`,
+        });
+      }
+      materializationSeen.add(step.step);
+    }
+    if (record.materializationPlan) {
+      if (
+        record.materializationPlan.metadata.bindingId !== record.bindingId ||
+        record.materializationPlan.finalState.bindingId !== record.bindingId
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['materializationPlan'],
+          message: 'Materialization plan binding must match its operation.',
+        });
+      }
+      if (record.state === 'verified') {
+        const required = new Set<string>([
+          'journal',
+          ...(record.materializationPlan.association?.seedContent
+            ? ['target']
+            : []),
+          ...(record.materializationPlan.kind === 'update' ? [] : ['metadata']),
+          'state',
+          'snapshot',
+          'baseline',
+          ...(record.materializationPlan.association ? ['association'] : []),
+        ]);
+        const completed = new Set<string>(
+          (record.materializationSteps ?? []).map((step) => step.step),
+        );
+        if ([...required].some((step) => !completed.has(step))) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['materializationSteps'],
+            message:
+              'Verified materialization requires every planned local step.',
+          });
+        }
+      }
     }
     if (record.preview.bindingId !== record.bindingId) {
       context.addIssue({

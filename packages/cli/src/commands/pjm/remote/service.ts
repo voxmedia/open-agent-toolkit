@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import YAML from 'yaml';
@@ -66,7 +66,18 @@ export interface ProductionRemoteRunnerDependencies {
   now(): string;
   randomId(): string;
   readObservationStdin(): Promise<unknown>;
+  crash?(point: MaterializationCrashPoint): void;
 }
+
+export type MaterializationCrashPoint =
+  | 'after-journal'
+  | 'after-target'
+  | 'after-metadata'
+  | 'after-state'
+  | 'after-snapshot'
+  | 'after-baseline'
+  | 'after-association'
+  | 'after-terminal';
 
 const DEFAULT_DEPENDENCIES: ProductionRemoteRunnerDependencies = {
   now: () => new Date().toISOString(),
@@ -81,10 +92,8 @@ export function createProductionRemoteRunner(
   return async (request) => {
     const store = await openRepositoryStore(request.projectRoot);
     if (request.operation === 'operation-continue') {
-      if (!request.operationId || !request.observationStdin) {
-        throw new Error(
-          'Operation continuation requires an operation ID and stdin observation.',
-        );
+      if (!request.operationId) {
+        throw new Error('Operation continuation requires an operation ID.');
       }
       return continueOperation(request, store, dependencies);
     }
@@ -832,6 +841,23 @@ async function continueOperation(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const operation = await requireOperation(request.operationId!, store);
+  if (operation.materializationPlan && operation.state !== 'verified') {
+    return resumeMaterialization(request, operation, store, dependencies);
+  }
+  if (
+    ['verified', 'uncertain', 'rejected', 'failed', 'blocked'].includes(
+      operation.state,
+    )
+  ) {
+    throw new Error(
+      'Remote operation is terminal; observation replay is rejected.',
+    );
+  }
+  if (!request.observationStdin) {
+    throw new Error(
+      'Operation continuation requires stdin observation unless local materialization is pending.',
+    );
+  }
   let metadata = await store.readBindingMetadata(operation.bindingId);
   if (
     !metadata &&
@@ -1054,48 +1080,33 @@ async function continueOperation(
               : String(observation.outcome.fields.priority),
           status: String(observation.outcome.fields.status ?? ''),
         },
+        extensions: observation.outcome.extensions,
         lifecycle: 'active',
       },
       {
-        suppressedCoreFields:
-          observation.outcome.suppressedFields.filter(isCoreSnapshotField),
+        allowedExtensionKeys: action.expectedObservation.extensionFields ?? [],
+        suppressedFields: observation.outcome.suppressedFields,
       },
     );
-    await ensureIntakeBacklogTarget(
+    const targetMaterialization = await planIntakeBacklogTarget(
       request.projectRoot,
       target,
       snapshot,
-      operation.operationId,
-    );
-    await store.materializeIntakeBinding(metadata);
-    await writeVerifiedAssociation(
-      request.projectRoot,
-      {
-        bindingId: operation.bindingId,
-        provider: operation.provider,
-        target,
-      },
-      observation.outcome.identity.aliases[0] ??
-        observation.outcome.identity.stableId,
-      operation.operationId,
-    );
-    const localProjection = await readBacklogProjection(
-      request.projectRoot,
-      target.path,
       observation.observedAt,
     );
-    await store.writeBindingState({
+    const finalState: RemoteBindingState = {
       recordType: 'binding-state',
       schemaVersion: 2,
       bindingId: operation.bindingId,
       provider: operation.provider,
       metadataUpdatedAt: now,
-      localProjection,
+      localProjection: targetMaterialization.localProjection,
       snapshot,
       baseline: baselineFromSnapshot({
         snapshot,
         operationId: operation.operationId,
-        localProjectionRevision: localProjection.sourceRevision,
+        localProjectionRevision:
+          targetMaterialization.localProjection.sourceRevision,
         agreedAt: now,
       }),
       capability: null,
@@ -1105,6 +1116,30 @@ async function continueOperation(
       activeOperationIds: [],
       createdAt: now,
       updatedAt: now,
+    };
+    return stageAndResumeMaterialization({
+      request,
+      operation,
+      store,
+      dependencies,
+      observationEvidence,
+      verification: [],
+      plan: {
+        kind: targetMaterialization.seedContent
+          ? 'intake-create'
+          : 'intake-enrich',
+        metadata,
+        finalState,
+        association: {
+          provider: operation.provider,
+          ref:
+            observation.outcome.identity.aliases[0] ??
+            observation.outcome.identity.stableId,
+          bindingId: operation.bindingId,
+          target,
+          seedContent: targetMaterialization.seedContent,
+        },
+      },
     });
   }
   if (operation.lifecycleOperation === 'refresh') {
@@ -1163,11 +1198,12 @@ async function continueOperation(
               : String(observation.outcome.fields.priority),
           status: String(observation.outcome.fields.status ?? ''),
         },
+        extensions: observation.outcome.extensions,
         lifecycle: 'active',
       },
       {
-        suppressedCoreFields:
-          observation.outcome.suppressedFields.filter(isCoreSnapshotField),
+        allowedExtensionKeys: action.expectedObservation.extensionFields ?? [],
+        suppressedFields: observation.outcome.suppressedFields,
       },
     );
     await store.writeBindingState({
@@ -1210,26 +1246,27 @@ async function continueOperation(
     };
   });
   const verified = verification.every((item) => item.status === 'verified');
-  const updated = await store.transitionOperation(
-    operation.operationId,
-    operation.state,
-    {
-      state: verified ? 'verified' : 'uncertain',
-      updatedAt: now,
-      verification,
-      outcome: {
-        classification: verified ? 'verified' : 'uncertain',
-        message: verified
-          ? 'authoritative read-back verified'
-          : 'authoritative read-back mismatch',
-        verifiedAt: verified ? now : null,
+  if (!verified) {
+    const uncertain = await store.transitionOperation(
+      operation.operationId,
+      operation.state,
+      {
+        state: 'uncertain',
+        updatedAt: now,
+        verification,
+        outcome: {
+          classification: 'uncertain',
+          message: 'authoritative read-back mismatch',
+          verifiedAt: null,
+        },
+        appendObservation: observationEvidence,
+        lastSafeStep: 'verification-pending',
+        retryDisposition: 'reconcile-required',
       },
-      appendObservation: observationEvidence,
-      lastSafeStep: verified ? 'complete' : 'verification-pending',
-      retryDisposition: verified ? 'not-applicable' : 'reconcile-required',
-    },
-  );
-  if (verified && operation.createIntent) {
+    );
+    return envelopeFrom(request, uncertain, metadata, null);
+  }
+  if (operation.createIntent) {
     if (!observation.outcome.identity || !observation.outcome.revisionDigest) {
       throw new Error('Create read-back lacks durable identity evidence.');
     }
@@ -1257,12 +1294,6 @@ async function continueOperation(
       createdAt: intent.createdAt,
       updatedAt: now,
     };
-    await store.materializeVerifiedBinding(operation.operationId, metadata, {
-      provider: intent.provider,
-      stableId: observation.outcome.identity.stableId,
-      verifiedAt: now,
-      evidenceDigest: identityEvidence!,
-    });
     const localProjection =
       intent.target.kind === 'backlog'
         ? await readBacklogProjection(
@@ -1295,8 +1326,9 @@ async function continueOperation(
       context: intent.providerContext,
       identity: metadata.remoteIdentity,
       observation,
+      allowedExtensionKeys: action.expectedObservation.extensionFields ?? [],
     });
-    await store.writeBindingState({
+    const finalState: RemoteBindingState = {
       recordType: 'binding-state',
       schemaVersion: 2,
       bindingId: intent.bindingId,
@@ -1317,17 +1349,33 @@ async function continueOperation(
       activeOperationIds: [],
       createdAt: now,
       updatedAt: now,
+    };
+    return stageAndResumeMaterialization({
+      request,
+      operation,
+      store,
+      dependencies,
+      observationEvidence,
+      verification,
+      plan: {
+        kind: 'create',
+        metadata,
+        finalState,
+        association:
+          intent.target.kind === 'backlog'
+            ? {
+                provider: intent.provider,
+                ref:
+                  observation.outcome.identity.aliases[0] ??
+                  observation.outcome.identity.stableId,
+                bindingId: intent.bindingId,
+                target: intent.target,
+                seedContent: null,
+              }
+            : null,
+      },
     });
-    if (intent.target.kind === 'backlog') {
-      await writeVerifiedAssociation(
-        request.projectRoot,
-        intent,
-        observation.outcome.identity.aliases[0] ??
-          observation.outcome.identity.stableId,
-        operation.operationId,
-      );
-    }
-  } else if (verified && operation.operationClass === 'update-fields') {
+  } else if (operation.operationClass === 'update-fields') {
     if (!metadata) throw new Error('Verified mutation binding is missing.');
     const state = await store.readBindingState(operation.bindingId);
     if (!state || !observation.outcome.identity) {
@@ -1340,8 +1388,9 @@ async function continueOperation(
       context: metadata.remoteIdentity.context,
       identity: metadata.remoteIdentity,
       observation,
+      allowedExtensionKeys: action.expectedObservation.extensionFields ?? [],
     });
-    await store.writeBindingState({
+    const finalState: RemoteBindingState = {
       ...state,
       snapshot,
       baseline: baselineFromSnapshot({
@@ -1352,8 +1401,39 @@ async function continueOperation(
       }),
       contentRedacted: snapshot.contentRedacted,
       updatedAt: now,
+    };
+    return stageAndResumeMaterialization({
+      request,
+      operation,
+      store,
+      dependencies,
+      observationEvidence,
+      verification,
+      plan: {
+        kind: 'update',
+        metadata,
+        finalState,
+        association: null,
+      },
     });
   }
+  const updated = await store.transitionOperation(
+    operation.operationId,
+    operation.state,
+    {
+      state: 'verified',
+      updatedAt: now,
+      verification,
+      outcome: {
+        classification: 'verified',
+        message: 'authoritative read-back verified',
+        verifiedAt: now,
+      },
+      appendObservation: observationEvidence,
+      lastSafeStep: 'complete',
+      retryDisposition: 'not-applicable',
+    },
+  );
   return envelopeFrom(request, updated, metadata, null);
 }
 
@@ -1711,6 +1791,208 @@ async function readBacklogProjection(
   });
 }
 
+async function stageAndResumeMaterialization(input: {
+  request: RemoteCommandRequest;
+  operation: RemoteOperationRecord;
+  store: RemoteSyncStore;
+  dependencies: ProductionRemoteRunnerDependencies;
+  observationEvidence: RemoteOperationRecord['observations'][number];
+  verification: RemoteOperationRecord['verification'];
+  plan: NonNullable<RemoteOperationRecord['materializationPlan']>;
+}): Promise<RemoteCommandEnvelope> {
+  const now = input.dependencies.now();
+  const staged = await input.store.transitionOperation(
+    input.operation.operationId,
+    input.operation.state,
+    {
+      state: input.operation.state,
+      updatedAt: now,
+      verification: input.verification,
+      outcome: {
+        classification: 'partial',
+        message: 'remote effect verified; local materialization pending',
+        verifiedAt: now,
+      },
+      appendObservation: input.observationEvidence,
+      lastSafeStep: 'verification-pending',
+      retryDisposition: 'reconcile-required',
+      materializationPlan: input.plan,
+      appendMaterializationStep: {
+        step: 'journal',
+        completedAt: now,
+        evidenceDigest: semanticDigest(input.plan),
+      },
+    },
+  );
+  input.dependencies.crash?.('after-journal');
+  return resumeMaterialization(
+    input.request,
+    staged,
+    input.store,
+    input.dependencies,
+  );
+}
+
+async function resumeMaterialization(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  const plan = operation.materializationPlan;
+  if (!plan || operation.state === 'verified') {
+    throw new Error('Remote operation has no resumable materialization plan.');
+  }
+  const completed = () =>
+    new Set((operation.materializationSteps ?? []).map((item) => item.step));
+  const complete = async (
+    step: NonNullable<
+      RemoteOperationRecord['materializationSteps']
+    >[number]['step'],
+    evidence: unknown,
+    crashPoint: MaterializationCrashPoint,
+  ) => {
+    if (completed().has(step)) return;
+    operation = await store.transitionOperation(
+      operation.operationId,
+      operation.state,
+      {
+        state: operation.state,
+        updatedAt: dependencies.now(),
+        appendMaterializationStep: {
+          step,
+          completedAt: dependencies.now(),
+          evidenceDigest: semanticDigest(evidence),
+        },
+      },
+    );
+    dependencies.crash?.(crashPoint);
+  };
+
+  if (plan.association?.seedContent && !completed().has('target')) {
+    await writeSeedTarget(
+      request.projectRoot,
+      plan.association.target,
+      plan.association.seedContent,
+      operation.operationId,
+    );
+    await complete('target', plan.association.seedContent, 'after-target');
+  }
+  if (plan.kind !== 'update' && !completed().has('metadata')) {
+    if (plan.kind === 'create') {
+      const identityEvidence = operation.verification.find(
+        (item) => item.field === 'remoteIdentity',
+      )?.observedHash;
+      if (!identityEvidence) {
+        throw new Error('Create materialization lacks identity verification.');
+      }
+      await store.materializeVerifiedBinding(
+        operation.operationId,
+        plan.metadata,
+        {
+          provider: plan.metadata.provider,
+          stableId: plan.metadata.remoteIdentity.stableId,
+          verifiedAt: operation.outcome.verifiedAt!,
+          evidenceDigest: identityEvidence,
+        },
+      );
+    } else {
+      await store.materializeIntakeBinding(plan.metadata);
+    }
+    await complete('metadata', plan.metadata, 'after-metadata');
+  }
+
+  let state = await store.readBindingState(operation.bindingId);
+  if (!completed().has('state')) {
+    const initial = {
+      ...plan.finalState,
+      snapshot: null,
+      baseline: null,
+      contentRedacted: false,
+    };
+    if (!state) {
+      await store.writeBindingState(initial);
+      state = initial;
+    } else {
+      assertMaterializationStateCompatible(state, plan.finalState);
+    }
+    await complete('state', initial, 'after-state');
+  }
+  state = (await store.readBindingState(operation.bindingId))!;
+  if (!completed().has('snapshot')) {
+    if (!state.snapshot) {
+      state = {
+        ...state,
+        snapshot: plan.finalState.snapshot,
+        contentRedacted: plan.finalState.contentRedacted,
+        updatedAt: plan.finalState.updatedAt,
+      };
+      await store.writeBindingState(state);
+    } else if (!isDeepStrictEqual(state.snapshot, plan.finalState.snapshot)) {
+      throw new Error('Existing snapshot conflicts with materialization plan.');
+    }
+    await complete('snapshot', plan.finalState.snapshot, 'after-snapshot');
+  }
+  state = (await store.readBindingState(operation.bindingId))!;
+  if (!completed().has('baseline')) {
+    if (!state.baseline) {
+      state = { ...state, baseline: plan.finalState.baseline };
+      await store.writeBindingState(state);
+    } else if (!isDeepStrictEqual(state.baseline, plan.finalState.baseline)) {
+      throw new Error('Existing baseline conflicts with materialization plan.');
+    }
+    await complete('baseline', plan.finalState.baseline, 'after-baseline');
+  }
+  if (plan.association && !completed().has('association')) {
+    await writeVerifiedAssociation(
+      request.projectRoot,
+      {
+        bindingId: plan.association.bindingId,
+        provider: plan.association.provider,
+        target: plan.association.target,
+      },
+      plan.association.ref,
+      operation.operationId,
+    );
+    await complete('association', plan.association, 'after-association');
+  }
+  const terminal = await store.transitionOperation(
+    operation.operationId,
+    operation.state,
+    {
+      state: 'verified',
+      updatedAt: dependencies.now(),
+      outcome: {
+        classification: 'verified',
+        message: 'authoritative read-back and local materialization verified',
+        verifiedAt: operation.outcome.verifiedAt,
+      },
+      lastSafeStep: 'complete',
+      retryDisposition: 'not-applicable',
+    },
+  );
+  dependencies.crash?.('after-terminal');
+  return envelopeFrom(request, terminal, plan.metadata, null);
+}
+
+function assertMaterializationStateCompatible(
+  existing: RemoteBindingState,
+  planned: RemoteBindingState,
+): void {
+  const withoutProgress = (state: RemoteBindingState) => ({
+    ...state,
+    snapshot: null,
+    baseline: null,
+    contentRedacted: false,
+    updatedAt: planned.updatedAt,
+  });
+  if (!isDeepStrictEqual(withoutProgress(existing), withoutProgress(planned))) {
+    throw new Error(
+      'Existing binding state conflicts with materialization plan.',
+    );
+  }
+}
+
 function snapshotFromObservation(input: {
   snapshotId: string;
   bindingId: string;
@@ -1718,6 +2000,7 @@ function snapshotFromObservation(input: {
   context: Record<string, string>;
   identity: RemoteBindingMetadata['remoteIdentity'];
   observation: ReturnType<typeof acceptExternalObservation>;
+  allowedExtensionKeys: readonly string[];
 }): RemoteSnapshotRecord {
   if (!input.observation.outcome.revisionDigest) {
     throw new Error('Authoritative read-back lacks revision evidence.');
@@ -1759,11 +2042,12 @@ function snapshotFromObservation(input: {
             : String(input.observation.outcome.fields.priority),
         status: String(input.observation.outcome.fields.status ?? 'unknown'),
       },
+      extensions: input.observation.outcome.extensions,
       lifecycle: 'active',
     },
     {
-      suppressedCoreFields:
-        input.observation.outcome.suppressedFields.filter(isCoreSnapshotField),
+      allowedExtensionKeys: input.allowedExtensionKeys,
+      suppressedFields: input.observation.outcome.suppressedFields,
     },
   );
 }
@@ -1795,23 +2079,31 @@ function baselineFromSnapshot(input: {
   };
 }
 
-async function ensureIntakeBacklogTarget(
+async function planIntakeBacklogTarget(
   projectRoot: string,
   target: RemoteBindingMetadata['target'],
   snapshot: RemoteSnapshotRecord,
-  randomId: string,
-): Promise<void> {
+  observedAt: string,
+): Promise<{
+  seedContent: string | null;
+  localProjection: RemoteBindingState['localProjection'];
+}> {
   if (target.kind !== 'backlog') {
     throw new Error('Intake requires a backlog target.');
   }
   const path = resolveInsideProject(projectRoot, target.path);
   try {
-    await readFile(path, 'utf8');
-    return;
+    const content = await readFile(path, 'utf8');
+    return {
+      seedContent: null,
+      localProjection: resolveLocalProjection({
+        target: { kind: 'backlog', path: target.path, content },
+        observedAt,
+      }),
+    };
   } catch (error) {
     if (!isNodeError(error) || error.code !== 'ENOENT') throw error;
   }
-  await mkdir(dirname(path), { recursive: true });
   const frontmatter = new YAML.Document({
     id: target.id,
     title: snapshot.issue.title,
@@ -1819,9 +2111,38 @@ async function ensureIntakeBacklogTarget(
     associated_issues: [],
   });
   const content = `---\n${frontmatter.toString().trimEnd()}\n---\n\n## Description\n\n${snapshot.issue.description}\n`;
+  return {
+    seedContent: content,
+    localProjection: resolveLocalProjection({
+      target: { kind: 'backlog', path: target.path, content },
+      observedAt,
+    }),
+  };
+}
+
+async function writeSeedTarget(
+  projectRoot: string,
+  target: RemoteBindingMetadata['target'],
+  content: string,
+  operationId: string,
+): Promise<void> {
+  if (target.kind !== 'backlog') {
+    throw new Error('Seed materialization requires a backlog target.');
+  }
+  const path = resolveInsideProject(projectRoot, target.path);
+  try {
+    const existing = await readFile(path, 'utf8');
+    if (existing !== content) {
+      throw new Error('Existing intake target conflicts with its staged plan.');
+    }
+    return;
+  } catch (error) {
+    if (!isNodeError(error) || error.code !== 'ENOENT') throw error;
+  }
+  await mkdir(dirname(path), { recursive: true });
   const temporary = resolve(
     dirname(path),
-    `.${target.id}.${randomId.replace(/[^A-Za-z0-9_-]/g, '_')}.tmp`,
+    `.${target.id}.${operationId.replace(/[^A-Za-z0-9_-]/g, '_')}.tmp`,
   );
   try {
     await writeFile(temporary, content, { encoding: 'utf8', flag: 'wx' });
@@ -2003,12 +2324,6 @@ function capabilityReference(
   };
 }
 
-function isCoreSnapshotField(
-  field: string,
-): field is 'title' | 'description' | 'priority' | 'status' {
-  return ['title', 'description', 'priority', 'status'].includes(field);
-}
-
 function envelopeFrom(
   request: RemoteCommandRequest,
   operation: RemoteOperationRecord,
@@ -2131,14 +2446,28 @@ async function writeVerifiedAssociation(
     throw new Error('Association target frontmatter is invalid.');
   }
   const values = document.toJS() as Record<string, unknown>;
-  const next = materializeBoundAssociation(
-    parseAssociatedIssues(values.associated_issues),
-    {
-      type: intent.provider,
-      ref: remoteRef,
-      bindingId: intent.bindingId,
-    },
+  const existing = parseAssociatedIssues(values.associated_issues);
+  const existingBinding = existing.find(
+    (entry) =>
+      entry.kind === 'reference' && entry.bindingId === intent.bindingId,
   );
+  if (existingBinding) {
+    if (
+      existingBinding.kind === 'reference' &&
+      existingBinding.type === intent.provider &&
+      existingBinding.ref === remoteRef
+    ) {
+      return;
+    }
+    throw new Error(
+      `Association for binding '${intent.bindingId}' conflicts with its materialization plan.`,
+    );
+  }
+  const next = materializeBoundAssociation(existing, {
+    type: intent.provider,
+    ref: remoteRef,
+    bindingId: intent.bindingId,
+  });
   document.set('associated_issues', serializeAssociatedIssues(next));
   const updated = content.replace(
     match[0],

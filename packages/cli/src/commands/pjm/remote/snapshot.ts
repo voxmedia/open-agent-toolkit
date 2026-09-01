@@ -33,6 +33,7 @@ export interface SanitizableRemoteSnapshot {
 export interface SnapshotSanitizationOptions {
   allowedExtensionKeys?: readonly string[];
   suppressedCoreFields?: readonly CoreSnapshotField[];
+  suppressedFields?: readonly SnapshotRedaction['field'][];
 }
 
 const CORE_SNAPSHOT_FIELD_COUNT = 4;
@@ -51,9 +52,14 @@ export function sanitizeRemoteSnapshot(
   options: SnapshotSanitizationOptions = {},
 ): RemoteSnapshotRecord {
   const redactions: RemoteSnapshotRecord['redactions'] = [];
-  const suppressedCoreFields = validateSuppressedCoreFields(
-    options.suppressedCoreFields ?? [],
+  const pairedSuppression = validateSuppressedFieldReferences(
+    options.suppressedFields ?? [],
+    options.allowedExtensionKeys ?? [],
   );
+  const suppressedCoreFields = validateSuppressedCoreFields([
+    ...(options.suppressedCoreFields ?? []),
+    ...pairedSuppression.core,
+  ]);
   const issue = {
     title: sanitizeCoreField(
       'title',
@@ -89,6 +95,7 @@ export function sanitizeRemoteSnapshot(
     input.extensions,
     options.allowedExtensionKeys ?? [],
     redactions,
+    pairedSuppression.extensions,
   );
 
   return RemoteSnapshotRecordSchema.parse({
@@ -160,11 +167,42 @@ function validateSuppressedCoreFields(
   return new Set(fields);
 }
 
+function validateSuppressedFieldReferences(
+  fields: readonly SnapshotRedaction['field'][],
+  allowedExtensionKeys: readonly string[],
+): { core: CoreSnapshotField[]; extensions: Set<string> } {
+  if (fields.length > MAX_SNAPSHOT_SUPPRESSION_EVIDENCE) {
+    throw new Error('Suppression evidence exceeds the bounded field limit.');
+  }
+  const identities = fields.map((field) =>
+    field.kind === 'core' ? `core:${field.name}` : `extension:${field.key}`,
+  );
+  if (new Set(identities).size !== identities.length) {
+    throw new Error('Suppression evidence must consume each field once.');
+  }
+  const allowed = new Set(allowedExtensionKeys);
+  const extensions = fields.flatMap((field) =>
+    field.kind === 'extension' ? [field.key] : [],
+  );
+  if (extensions.some((key) => !allowed.has(key))) {
+    throw new Error(
+      'Suppressed adapter extensions must be present in the adapter allowlist.',
+    );
+  }
+  return {
+    core: fields.flatMap((field) =>
+      field.kind === 'core' ? [field.name] : [],
+    ),
+    extensions: new Set(extensions),
+  };
+}
+
 function sanitizeExtensions(
   provider: RemoteSnapshotRecord['provider'],
   extensions: Record<string, unknown> | undefined,
   allowedKeys: readonly string[],
   redactions: RemoteSnapshotRecord['redactions'],
+  suppressedExtensions: ReadonlySet<string>,
 ): RemoteSnapshotRecord['extensions'] {
   validateExtensionAllowlist(allowedKeys);
   if (!extensions || allowedKeys.length === 0) return undefined;
@@ -174,6 +212,20 @@ function sanitizeExtensions(
     if (!Object.hasOwn(extensions, key)) continue;
 
     const value = extensions[key];
+    if (suppressedExtensions.has(key)) {
+      if (value !== WHOLE_FIELD_SUPPRESSION_MARKER) {
+        throw new Error(
+          `Suppressed adapter extension '${key}' must contain only the suppression marker.`,
+        );
+      }
+      retained[key] = value;
+      redactions.push({
+        field: { kind: 'extension', key },
+        reason: 'sensitive-content',
+        representation: 'whole-field-marker',
+      });
+      continue;
+    }
     if (containsSensitiveContentSignalInValue(value)) {
       retained[key] = WHOLE_FIELD_SUPPRESSION_MARKER;
       redactions.push({

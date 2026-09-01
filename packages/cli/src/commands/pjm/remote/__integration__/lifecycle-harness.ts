@@ -11,6 +11,12 @@ export type CrashPoint =
   | 'after-planned'
   | 'after-attempt-started'
   | 'after-observation'
+  | 'after-metadata'
+  | 'after-state'
+  | 'after-snapshot'
+  | 'after-baseline'
+  | 'after-association'
+  | 'after-terminal'
   | null;
 
 export interface HarnessOperation {
@@ -20,6 +26,7 @@ export interface HarnessOperation {
     | 'planned'
     | 'attempt-started'
     | 'verification-pending'
+    | 'materializing'
     | 'verified'
     | 'uncertain'
     | 'blocked';
@@ -28,6 +35,7 @@ export interface HarnessOperation {
   capabilityEvidenceDigest: string;
   action: ExternalActionEnvelope | null;
   observationDigest: string | null;
+  materializationSteps: string[];
 }
 
 export class FakeLifecycleStore {
@@ -107,6 +115,7 @@ export class LifecycleHarness {
           capabilityEvidenceDigest: input.capabilityEvidenceDigest,
           action: null,
           observationDigest: null,
+          materializationSteps: [],
         };
         this.store.operations.set(operationId, operation);
         return operation;
@@ -120,6 +129,7 @@ export class LifecycleHarness {
         capabilityEvidenceDigest: input.capabilityEvidenceDigest,
         action: null,
         observationDigest: null,
+        materializationSteps: [],
       };
       this.store.operations.set(operationId, operation);
       this.crash(input.crashAt, 'after-planned');
@@ -169,16 +179,38 @@ export class LifecycleHarness {
       this.crash(input.crashAt, 'after-observation');
     }
 
-    try {
-      const observed = await this.readback();
-      operation.state = Object.entries(input.projection).every(
-        ([field, value]) =>
-          observed[field as keyof OutboundProjection] === value,
-      )
-        ? 'verified'
-        : 'uncertain';
-    } catch {
-      operation.state = 'uncertain';
+    if (operation.state === 'verification-pending') {
+      try {
+        const observed = await this.readback();
+        if (
+          !Object.entries(input.projection).every(
+            ([field, value]) =>
+              observed[field as keyof OutboundProjection] === value,
+          )
+        ) {
+          operation.state = 'uncertain';
+          return operation;
+        }
+        operation.state = 'materializing';
+      } catch {
+        operation.state = 'uncertain';
+        return operation;
+      }
+    }
+    if (operation.state === 'materializing') {
+      for (const step of [
+        'metadata',
+        'state',
+        'snapshot',
+        'baseline',
+        'association',
+      ] as const) {
+        if (operation.materializationSteps.includes(step)) continue;
+        operation.materializationSteps.push(step);
+        this.crash(input.crashAt, `after-${step}`);
+      }
+      operation.state = 'verified';
+      this.crash(input.crashAt, 'after-terminal');
     }
     return operation;
   }
