@@ -43,7 +43,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: sha256:8b5930aca197b1ab6cade2aa6ea70f32351384e7b015f076c1ecf47012bcfb7f
@@ -64,13 +64,13 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:ccc4ff84ada1ff084cd24b186042d9d269b85544f83468aaee881e115c2e8d98
   freshness_head: a92468383d83781d6ff092ba65872bb3ca66b719
   freshness_fingerprint: sha256:effective-delta-v1:3ee515320d8ef12a7c1ad65562ef9453de0944c2693bfe2ea3a31f38f4073cd8
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: a87fa492-5eae-40d0-8908-f0ab0b7ac8ae
   launch_started_at: '2026-09-01T23:04:18Z'
   launch_result_receipt: /Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/a87fa492-5eae-40d0-8908-f0ab0b7ac8ae.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a7a48998-876f-49b8-8343-a60049d42a43.json
+  gate_run_id: a7a48998-876f-49b8-8343-a60049d42a43
+  envelope_status: review_failed
   artifact: null
   handoff: null
   receive_state: not_started
@@ -82,14 +82,17 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: null
-  updated_at: '2026-09-01T23:04:45Z'
+  failure: >-
+    Configured Claude Fable gate was accepted, then failed before review because
+    the OAuth session expired and could not be refreshed. The structured result
+    is not receive-eligible and no remediation attempt was consumed.
+  updated_at: '2026-09-01T23:05:57Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:04:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:05:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -99,15 +102,16 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Final review passed; configured gate revalidation pending
+**Status:** Final review passed; configured gate blocked on Claude authentication
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
 Implementation — all 14 tasks and the current-basis final review are complete.
-A fresh configured exit gate, closeout artifact refresh, and renewed post-p04
-approval remain. PR #254 remains open.
+The fresh configured exit gate was accepted but failed before review because
+Claude authentication is absent. Closeout artifact refresh and renewed
+post-p04 approval remain. PR #254 remains open.
 
 ## Artifacts
 
@@ -171,14 +175,16 @@ approval remain. PR #254 remains open.
 - ✓ `p04-t06` completed at `9c1feafb8`; focused regression passed 15/15
 - ✓ Fresh `p04-t06` review passed with zero findings
 - ✓ Current-basis final review passed with one non-blocking artifact finding
-- ⧗ Prior configured gate allowance and p04 approval are stale on the new
-  substantive basis
+- ✗ Fresh Claude Fable gate was accepted but returned `review_failed`: OAuth
+  session expired and could not be refreshed
+- ⧗ Gate remediation attempts remain 0/2 because authentication failure is
+  operational, not a received blocking review
 
 ## Blockers
 
-None.
+- Claude CLI is logged out (`claude auth status` reports `loggedIn: false`).
 
 ## Next Milestone
 
-Run a fresh configured exit gate, then refresh the summary/current-state
-narrative and complete the approval-aware closeout sequence.
+Authenticate the Claude CLI, then resume `oat-project-implement` to reconcile
+the persisted failed run and start a new authorized gate generation.

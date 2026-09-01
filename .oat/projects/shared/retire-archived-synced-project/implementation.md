@@ -516,6 +516,17 @@ pre-approval steps, recap guard, and final post-p04 approval are closed.
   `/Users/tstang/.oat/runtime/closeout-receipts/retire-archived-synced-project/a87fa492-5eae-40d0-8908-f0ab0b7ac8ae.json`
   before process start. No acceptance is claimed until a unique correlated gate
   run marker exists.
+- Gate run `a7a48998-876f-49b8-8343-a60049d42a43` was accepted with the
+  preselected receipt and Claude Fable invocation provenance, then returned one
+  complete `review_failed` envelope. Claude reported: `OAuth session expired
+and could not be refreshed`.
+- The failed envelope is not receive-eligible, has no artifact or handoff, and
+  cannot be converted into an allowed disposition. It consumed 0 of 2
+  remediation attempts because the failure was operational rather than a
+  received blocking review. `claude auth status` confirms `loggedIn: false`.
+- Resume boundary: authenticate the Claude CLI, then run
+  `oat-project-implement`. The persisted failed generation must be reconciled;
+  it does not authorize an automatic replacement launch.
 
 <!-- orchestration-runs-end -->
 
