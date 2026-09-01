@@ -95,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T01:16:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T01:30:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,11 +111,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 4 completed five planned task commits plus one bounded
-composition recovery at `7be0d56df`. Manifest V2 ownership, exact alias proof,
-atomic no-clobber apply, drift-safe detach/removal, and truthful lifecycle
-rendering pass phase and full repository tests. Independent High review is
-next; Phase 5 remains gated until it passes.
+Implementation - Phase 4 review found two Critical safety defects, one
+Important strategy-transition defect, and two Medium validation/capability
+gaps at `09ab8e7a0`. All five are routed as one bounded correction to the
+original exact High implementer. Phase 5 remains gated pending fix and fresh
+review.
 
 ## Artifacts
 
@@ -123,7 +123,7 @@ next; Phase 5 remains gated until it passes.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 implementation complete, review pending)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 review fixes added)
 
 ## Progress
 
@@ -149,7 +149,7 @@ next; Phase 5 remains gated until it passes.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 implementation verified; independent High review pending
+- ⧗ Phase 4 review fixes added; fresh review required
 
 ## Blockers
 
@@ -157,5 +157,6 @@ next; Phase 5 remains gated until it passes.
 
 ## Next Milestone
 
-Run the independent High Phase 4 review. Continue to Phase 5 only after zero
-Critical and zero Important findings.
+Correct the Phase 4 ancestry race, stale unlink authority, explicit-strategy
+transition, path normalization, and registry-capability gate; then run a fresh
+independent High review.

@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** implementation complete; independent High review pending
+**Status:** review fixes added; bounded correction in progress
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -788,6 +788,28 @@ high confidence. The original commit remains the source authority.
 check` passed with 10/10 cache replays plus live validation of 63 skills.
 - Root independently reran the primary 15-file union at committed HEAD: 315/315
   passed.
+
+### Review Round 1
+
+- Artifact: `reviews/p04-review-2026-09-01T013028Z.md`
+- Reviewed head: `09ab8e7a0878e812caec569eed0512e3bd7a2e88`
+- Verdict: changes requested; 2 Critical, 1 Important, 2 Medium, 0 Minor.
+- Reconnaissance: attempted through one accepted consequential lane plus
+  caller-inline reconciliation after the shared thread limit rejected a second
+  lane. The artifact contains complete orchestration evidence; its project-log
+  entry is deferred until the terminal Phase 4 outcome so the fix child starts
+  from a clean worktree.
+- Bounded correction scope:
+  1. Close the apply-time ancestry swap before any directory/link mutation.
+  2. Persist creation-time alias identity and never unlink a user-replaced
+     same-target alias; legacy records detach while preserving the alias.
+  3. Safely transition owned collections from `auto` to explicit `symlink` or
+     `copy` before per-entry reconciliation.
+  4. Require normalized collection-child paths and segment-safe ancestry.
+  5. Thread registry `collectionAlias` capability into planning and fall back
+     to per-entry behavior when unsupported.
+- The original exact High p04 implementer remains the fix owner. Phase 5 stays
+  gated until a fresh review reports zero Critical and zero Important findings.
 
 ---
 
