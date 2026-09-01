@@ -595,6 +595,10 @@ final/code/source-filename Reviews event, and bounded receive commit
 `87ff7ba7073b728adea0d86e437a36c77c70f59a`. Receive is complete and will not
 be invoked again for gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa`.
 
+Configured exit-gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` is allowed
+with disposition `passed`. The current implementation basis may proceed to the
+approval-aware closeout sequence.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
