@@ -127,6 +127,9 @@ export interface RemoteOperationTransition {
   materializationPlan?: NonNullable<
     RemoteOperationRecord['materializationPlan']
   >;
+  verificationHandoff?: NonNullable<
+    RemoteOperationRecord['verificationHandoff']
+  >;
 }
 
 export interface ConcurrentOperationIntentInspection {
@@ -489,6 +492,16 @@ export class RemoteSyncStore {
     ) {
       throw new Error('Remote operation materialization plan is immutable.');
     }
+    if (
+      update.verificationHandoff &&
+      current.verificationHandoff &&
+      !isDeepStrictEqual(
+        update.verificationHandoff,
+        current.verificationHandoff,
+      )
+    ) {
+      throw new Error('Remote operation verification handoff is immutable.');
+    }
     let attempts = update.appendAttempt
       ? [...current.attempts, update.appendAttempt]
       : current.attempts;
@@ -542,6 +555,9 @@ export class RemoteSyncStore {
         : current.materializationSteps,
       ...(update.materializationPlan !== undefined
         ? { materializationPlan: update.materializationPlan }
+        : {}),
+      ...(update.verificationHandoff !== undefined
+        ? { verificationHandoff: update.verificationHandoff }
         : {}),
     });
     await this.#atomicWrite(

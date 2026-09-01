@@ -518,6 +518,67 @@ describe('pjm remote command family', () => {
         },
       ],
     });
+
+    const createObservation = {
+      schemaVersion: 1,
+      operationId,
+      stepId: firstAction!.stepId,
+      actionDigest: firstAction!.actionDigest,
+      observedAt: '2026-08-31T12:02:00.000Z',
+      surfaceKind: 'connector' as const,
+      capabilityEvidenceDigest: 'sha256:create-capability',
+      provider: 'linear' as const,
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed' as const,
+        identity: { stableId: 'issue-restart-1', aliases: ['RESTART-1'] },
+        fields: firstAction!.intent.fields,
+        revisionDigest: 'sha256:create-observation',
+        diagnosticCode: null,
+      },
+    };
+    const interruptedVerification = createProductionRemoteRunner({
+      now: () => '2026-08-31T12:02:00.000Z',
+      randomId: () => 'commander-verification',
+      readObservationStdin: async () => createObservation,
+      crash: (point) => {
+        if (point === 'before-verification-envelope') {
+          throw new Error('commander verification handoff interrupted');
+        }
+      },
+    });
+    await expect(
+      runCommand(interruptedVerification, [
+        'remote',
+        'operation',
+        'continue',
+        '--operation',
+        operationId,
+        '--observation-stdin',
+      ]),
+    ).resolves.toMatchObject({
+      status: 'failed',
+      message: 'commander verification handoff interrupted',
+    });
+
+    const recoveredVerification = await runCommand(
+      createProductionRemoteRunner({
+        now: () => '2026-08-31T12:03:00.000Z',
+        readObservationStdin: async () => {
+          throw new Error('restart must not repeat the create action');
+        },
+      }),
+      ['remote', 'operation', 'continue', '--operation', operationId],
+    );
+    expect(recoveredVerification?.externalAction).toMatchObject({
+      semanticOperation: 'read',
+      intent: { stableId: 'issue-restart-1' },
+    });
+    expect(
+      (await readdir(locations.operational.operationsDir)).filter((path) =>
+        path.endsWith('.json'),
+      ),
+    ).toEqual(operationFiles);
   });
 
   it('does not accept caller-self-attested mutation authority fields', async () => {

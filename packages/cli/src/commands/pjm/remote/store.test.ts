@@ -584,6 +584,127 @@ describe('RemoteSyncStore', () => {
     ).resolves.toEqual(action);
   });
 
+  it('atomically journals accepted identity and the exact verification action', async () => {
+    const { store } = await createStore();
+    const projection = { title: 'Safe title' };
+    const outboundSafety = assessOutboundProjectionSafety(projection, {
+      assessedAt: timestamp,
+    });
+    const createAction = buildExternalAction({
+      operationId: 'op_operation_123',
+      stepId: 'step_create_123',
+      provider: 'github',
+      semanticOperation: 'create',
+      context: { host: 'github.com', repositoryId: 'repo-123' },
+      intent: {
+        target: { kind: 'backlog', scope: 'shared', id: 'item-123' },
+        fields: projection,
+        provenanceToken: 'oat-binding:bnd_binding_123',
+      },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {
+        projectionDigest: outboundSafety.projectionDigest,
+        safetyResultDigest: outboundSafety.resultDigest,
+      },
+      projection,
+      outboundSafety,
+    });
+    const verificationAction = buildExternalAction({
+      operationId: createAction.operationId,
+      stepId: 'verify_create_123',
+      provider: 'github',
+      semanticOperation: 'read',
+      context: { host: 'github.com', repositoryId: 'repo-123' },
+      intent: { stableId: 'issue-node-123' },
+      expectedObservation: {
+        fields: ['title'],
+        requireIdentity: true,
+        stableId: 'issue-node-123',
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {},
+    });
+    const selectedExecution = {
+      provider: 'github' as const,
+      surfaceKind: 'connector' as const,
+      context: { host: 'github.com', repositoryId: 'repo-123' },
+      evidenceDigest: 'sha256:capability',
+      semanticCapabilities: ['create'],
+    };
+    await store.createOperation({
+      ...operation(),
+      lifecycleOperation: 'publish',
+      operationClass: 'create',
+      state: 'attempt-started',
+      lastSafeStep: 'attempt-started',
+      selectedExecution,
+      attempts: [
+        {
+          attemptId: createAction.stepId,
+          startedAt: timestamp,
+          completedAt: null,
+          execution: selectedExecution,
+          requestDigest: createAction.actionDigest,
+          receiptDigest: null,
+        },
+      ],
+      retryDisposition: 'reconcile-required',
+    });
+    await store.writeCurrentAction(createAction.operationId, createAction);
+    const observation = {
+      observedAt: '2026-08-31T00:02:00.000Z',
+      classification: 'committed' as const,
+      evidenceDigest: 'sha256:accepted-observation',
+      actionDigest: createAction.actionDigest,
+    };
+    await store.transitionOperation(
+      createAction.operationId,
+      'attempt-started',
+      {
+        state: 'verification-pending',
+        updatedAt: observation.observedAt,
+        appendObservation: observation,
+        completeAttempt: {
+          attemptId: createAction.stepId,
+          completedAt: observation.observedAt,
+          receiptDigest: observation.evidenceDigest,
+        },
+        lastSafeStep: 'verification-pending',
+        retryDisposition: 'reconcile-required',
+        verificationHandoff: {
+          acceptedMutation: {
+            actionDigest: createAction.actionDigest,
+            observedAt: observation.observedAt,
+            evidenceDigest: observation.evidenceDigest,
+            stableId: 'issue-node-123',
+          },
+          verificationAction,
+        },
+      },
+    );
+
+    const restarted = new RemoteSyncStore(store.locations);
+    await expect(
+      restarted.readOperation(createAction.operationId),
+    ).resolves.toMatchObject({
+      state: 'verification-pending',
+      verificationHandoff: {
+        acceptedMutation: { stableId: 'issue-node-123' },
+        verificationAction,
+      },
+      observations: [observation],
+      attempts: [{ completedAt: observation.observedAt }],
+    });
+    await expect(
+      restarted.readCurrentAction(createAction.operationId),
+    ).resolves.toEqual(createAction);
+  });
+
   it('requires expected state transitions and rejects duplicate steps', async () => {
     const { store } = await createStore();
     const annotationStep = {

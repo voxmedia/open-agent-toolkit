@@ -22,6 +22,7 @@ import {
 import {
   acceptExternalObservation,
   buildExternalAction,
+  parseExternalAction,
   type ExternalActionEnvelope,
 } from './external-action';
 import {
@@ -83,6 +84,9 @@ export type MaterializationCrashPoint =
   | 'after-create-authorization'
   | 'after-create-attempt'
   | 'before-create-envelope'
+  | 'after-verification-handoff'
+  | 'after-verification-action'
+  | 'before-verification-envelope'
   | 'after-journal'
   | 'after-target'
   | 'after-metadata'
@@ -1130,6 +1134,10 @@ async function continueOperation(
       'Remote operation is terminal; observation replay is rejected.',
     );
   }
+  if (operation.verificationHandoff && !request.observationStdin) {
+    const action = await restoreDurableVerificationAction(operation, store);
+    return envelopeFrom(request, operation, null, action);
+  }
   if (!request.observationStdin) {
     throw new Error(
       'Operation continuation requires stdin observation unless local materialization is pending.',
@@ -1142,7 +1150,9 @@ async function continueOperation(
     !operation.createIntent
   )
     throw new Error(`Remote binding '${operation.bindingId}' does not exist.`);
-  const action = await store.readCurrentAction(operation.operationId);
+  const action = operation.verificationHandoff
+    ? await restoreDurableVerificationAction(operation, store)
+    : await store.readCurrentAction(operation.operationId);
   if (!action)
     throw new Error(
       `Remote operation '${operation.operationId}' has no durable current action.`,
@@ -1277,9 +1287,23 @@ async function continueOperation(
         },
         lastSafeStep: 'verification-pending',
         retryDisposition: 'reconcile-required',
+        verificationHandoff: {
+          acceptedMutation: {
+            actionDigest: action.actionDigest,
+            observedAt: observationEvidence.observedAt,
+            evidenceDigest: observationEvidence.evidenceDigest,
+            stableId: observation.outcome.identity.stableId,
+          },
+          verificationAction: readAction as NonNullable<
+            RemoteOperationRecord['verificationHandoff']
+          >['verificationAction'],
+        },
       },
     );
+    dependencies.crash?.('after-verification-handoff');
     await store.writeCurrentAction(operation.operationId, readAction);
+    dependencies.crash?.('after-verification-action');
+    dependencies.crash?.('before-verification-envelope');
     return envelopeFrom(request, updated, metadata, readAction);
   }
   if (operation.lifecycleOperation === 'intake') {
@@ -1777,6 +1801,36 @@ async function resumeCreateActionHandoff(
     throw new Error('Create action handoff evidence is inconsistent.');
   }
   return envelopeFrom(request, current, null, action);
+}
+
+async function restoreDurableVerificationAction(
+  operation: RemoteOperationRecord,
+  store: RemoteSyncStore,
+): Promise<ExternalActionEnvelope> {
+  const handoff = operation.verificationHandoff;
+  if (!handoff || operation.state !== 'verification-pending') {
+    throw new Error(
+      'Remote operation lacks a recoverable verification-pending handoff.',
+    );
+  }
+  const durableAction = parseExternalAction(handoff.verificationAction);
+  const currentAction = await store.readCurrentAction(operation.operationId);
+  if (
+    currentAction &&
+    !isDeepStrictEqual(currentAction, durableAction) &&
+    !(
+      currentAction.actionDigest === handoff.acceptedMutation.actionDigest &&
+      currentAction.semanticOperation !== 'read'
+    )
+  ) {
+    throw new Error(
+      'Durable verification handoff contradicts the current action pointer.',
+    );
+  }
+  if (!isDeepStrictEqual(currentAction, durableAction)) {
+    await store.writeCurrentAction(operation.operationId, durableAction);
+  }
+  return durableAction;
 }
 
 async function continueMutationPreRead(

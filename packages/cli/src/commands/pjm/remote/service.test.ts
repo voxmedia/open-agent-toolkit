@@ -1298,13 +1298,39 @@ describe('production lifecycle composition', () => {
         diagnosticCode: null,
       },
     };
-    const pendingRead = await runner({
+    const interrupted = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: () => 'service-project-verify',
+      readObservationStdin: async () => currentObservation,
+      crash: (point) => {
+        if (point === 'after-verification-handoff') {
+          throw new Error('crash:after-verification-handoff');
+        }
+      },
+    });
+    await expect(
+      interrupted({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: createAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow('crash:after-verification-handoff');
+    const restarted = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: () => 'service-project-restarted',
+      readObservationStdin: async () => currentObservation,
+    });
+    const pendingRead = await restarted({
       operation: 'operation-continue',
       projectRoot: repository,
       operationId: createAction.operationId,
-      observationStdin: true,
     });
     const readAction = pendingRead.externalAction!;
+    expect(readAction).toMatchObject({
+      semanticOperation: 'read',
+      intent: { stableId: 'issue-project-1' },
+    });
     currentObservation = {
       schemaVersion: 1,
       operationId: readAction.operationId,
@@ -1324,7 +1350,7 @@ describe('production lifecycle composition', () => {
       },
     };
     await expect(
-      runner({
+      restarted({
         operation: 'operation-continue',
         projectRoot: repository,
         operationId: readAction.operationId,

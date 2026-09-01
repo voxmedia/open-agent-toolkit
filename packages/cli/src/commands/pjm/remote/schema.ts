@@ -808,6 +808,75 @@ const ExternalObservationSchema = z
   })
   .strict();
 
+const DurableVerificationReadActionSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    operationId: StableIdSchema,
+    stepId: StableIdSchema,
+    actionDigest: z.string().min(1).max(512),
+    provider: ProviderSchema,
+    semanticOperation: z.literal('read'),
+    context: RemoteAccountContextSchema,
+    intent: z.object({ stableId: z.string().min(1).max(512) }).strict(),
+    expectedObservation: z
+      .object({
+        fields: z
+          .array(
+            z
+              .string()
+              .min(1)
+              .max(64)
+              .regex(/^[A-Za-z][A-Za-z0-9_-]*$/),
+          )
+          .max(64),
+        extensionFields: z
+          .array(
+            z
+              .string()
+              .min(1)
+              .max(64)
+              .regex(/^[A-Za-z][A-Za-z0-9_-]*$/),
+          )
+          .max(32)
+          .optional(),
+        requireIdentity: z.literal(true),
+        stableId: z.string().min(1).max(512),
+        capabilityEvidenceDigest: z.string().min(1).max(512),
+      })
+      .strict(),
+    outboundSafety: z.null(),
+  })
+  .strict();
+
+const DurableVerificationHandoffSchema = z
+  .object({
+    acceptedMutation: z
+      .object({
+        actionDigest: z.string().min(1).max(512),
+        observedAt: TimestampSchema,
+        evidenceDigest: z.string().min(1).max(512),
+        stableId: z.string().min(1).max(512),
+      })
+      .strict(),
+    verificationAction: DurableVerificationReadActionSchema,
+  })
+  .strict()
+  .superRefine((handoff, context) => {
+    if (
+      handoff.verificationAction.intent.stableId !==
+        handoff.acceptedMutation.stableId ||
+      handoff.verificationAction.expectedObservation.stableId !==
+        handoff.acceptedMutation.stableId
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['verificationAction', 'intent', 'stableId'],
+        message:
+          'Verification action identity must match accepted mutation evidence.',
+      });
+    }
+  });
+
 const FieldVerificationSchema = z
   .object({
     field: z.string().min(1).max(255),
@@ -975,6 +1044,7 @@ const CurrentRemoteOperationRecordSchema = z
     steps: z.array(RemoteOperationStepSchema).max(64),
     materializationSteps: z.array(MaterializationStepSchema).max(7).optional(),
     materializationPlan: MaterializationPlanSchema.optional(),
+    verificationHandoff: DurableVerificationHandoffSchema.optional(),
     outcome: RemoteOperationOutcomeSchema,
     createIntent: PlannedBindingCreateSchema.optional(),
   })
@@ -1317,6 +1387,65 @@ const CurrentRemoteOperationRecordSchema = z
           code: z.ZodIssueCode.custom,
           path: ['createIntent', 'providerContext'],
           message: 'Pre-create provider context must match its journal.',
+        });
+      }
+    }
+    if (record.verificationHandoff) {
+      const handoff = record.verificationHandoff;
+      if (
+        handoff.verificationAction.operationId !== record.operationId ||
+        handoff.verificationAction.provider !== record.provider ||
+        JSON.stringify(handoff.verificationAction.context) !==
+          JSON.stringify(record.providerContext)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['verificationHandoff', 'verificationAction'],
+          message:
+            'Verification handoff action must match its persisted operation.',
+        });
+      }
+      const acceptedObservation = record.observations.find(
+        (item) =>
+          item.actionDigest === handoff.acceptedMutation.actionDigest &&
+          item.evidenceDigest === handoff.acceptedMutation.evidenceDigest &&
+          item.observedAt === handoff.acceptedMutation.observedAt,
+      );
+      if (
+        !acceptedObservation ||
+        acceptedObservation.classification !== 'committed'
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['verificationHandoff', 'acceptedMutation'],
+          message:
+            'Verification handoff requires matching committed mutation evidence.',
+        });
+      }
+      const acceptedAttempt = record.attempts.find(
+        (attempt) =>
+          attempt.requestDigest === handoff.acceptedMutation.actionDigest &&
+          attempt.completedAt !== null &&
+          attempt.receiptDigest === handoff.acceptedMutation.evidenceDigest,
+      );
+      if (!acceptedAttempt) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['verificationHandoff', 'acceptedMutation'],
+          message:
+            'Verification handoff requires matching completed attempt evidence.',
+        });
+      }
+      if (
+        !['verification-pending', 'verified', 'partial', 'uncertain'].includes(
+          record.state,
+        )
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['verificationHandoff'],
+          message:
+            'Verification handoff is valid only after the mutation attempt.',
         });
       }
     }

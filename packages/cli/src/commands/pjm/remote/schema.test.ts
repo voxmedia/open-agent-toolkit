@@ -950,6 +950,115 @@ describe('remote record schemas', () => {
     ).toThrow();
   });
 
+  it('requires complete matching evidence for a durable verification handoff', () => {
+    const observation = {
+      observedAt: timestamp,
+      classification: 'committed' as const,
+      evidenceDigest: 'sha256:accepted-observation',
+      actionDigest: 'sha256:create-action',
+    };
+    const record = {
+      recordType: 'operation' as const,
+      schemaVersion: 2 as const,
+      operationId: 'op_handoff_123',
+      correlationId: 'op_handoff_123',
+      bindingId: 'bnd_handoff_123',
+      provider: 'linear' as const,
+      providerContext: { workspaceId: 'workspace-1' },
+      lifecycleOperation: 'publish' as const,
+      operationClass: 'create' as const,
+      state: 'verification-pending' as const,
+      reason: null,
+      lastSafeStep: 'verification-pending' as const,
+      preview: {
+        digest: 'sha256:preview',
+        bindingId: 'bnd_handoff_123',
+        provider: 'linear' as const,
+        providerContext: { workspaceId: 'workspace-1' },
+        capabilityEvidenceDigest: 'sha256:capability',
+        revisionDigest: 'unbound',
+        policyDigest: 'sha256:policy',
+      },
+      authority: {
+        effective: 'user-authorized' as const,
+        sourceDigest: 'sha256:policy',
+      },
+      approval: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      selectedExecution: null,
+      attempts: [
+        {
+          attemptId: 'step_create_123',
+          startedAt: timestamp,
+          completedAt: timestamp,
+          execution: {
+            provider: 'linear' as const,
+            surfaceKind: 'connector' as const,
+            context: { workspaceId: 'workspace-1' },
+            evidenceDigest: 'sha256:capability',
+            semanticCapabilities: ['create'],
+          },
+          requestDigest: observation.actionDigest,
+          receiptDigest: observation.evidenceDigest,
+        },
+      ],
+      observations: [observation],
+      verification: [],
+      retryDisposition: 'reconcile-required' as const,
+      steps: [],
+      outcome: {
+        classification: 'pending' as const,
+        message: null,
+        verifiedAt: null,
+      },
+      verificationHandoff: {
+        acceptedMutation: {
+          actionDigest: observation.actionDigest,
+          observedAt: observation.observedAt,
+          evidenceDigest: observation.evidenceDigest,
+          stableId: 'issue-handoff-123',
+        },
+        verificationAction: {
+          schemaVersion: 1 as const,
+          operationId: 'op_handoff_123',
+          stepId: 'verify_handoff_123',
+          actionDigest: 'sha256:verification-action',
+          provider: 'linear' as const,
+          semanticOperation: 'read' as const,
+          context: { workspaceId: 'workspace-1' },
+          intent: { stableId: 'issue-handoff-123' },
+          expectedObservation: {
+            fields: ['title'],
+            requireIdentity: true as const,
+            stableId: 'issue-handoff-123',
+            capabilityEvidenceDigest: 'sha256:capability',
+          },
+          outboundSafety: null,
+        },
+      },
+    };
+
+    expect(
+      RemoteOperationRecordSchema.parse(record).verificationHandoff,
+    ).toBeDefined();
+    expect(() =>
+      RemoteOperationRecordSchema.parse({ ...record, observations: [] }),
+    ).toThrow(/committed mutation evidence/i);
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...record,
+        verificationHandoff: {
+          ...record.verificationHandoff,
+          verificationAction: {
+            ...record.verificationHandoff.verificationAction,
+            intent: { stableId: 'issue-other-123' },
+          },
+        },
+      }),
+    ).toThrow(/identity must match/i);
+  });
+
   it('requires explicit durable-identity verification evidence for materialization', () => {
     expect(() =>
       VerifiedDurableRemoteIdentitySchema.parse({
