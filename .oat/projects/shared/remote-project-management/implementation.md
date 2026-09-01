@@ -1,9 +1,12 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-08-31
-oat_current_task_id: prev1-t01
+oat_blockers:
+  - task_id: p-rev1
+    reason: 'Round-3 review exhausted normal governance with one Critical create-handoff recovery finding and one Important preview-freshness finding.'
+    since: '2026-09-01'
+oat_last_updated: 2026-09-01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,19 +27,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | pending     | 11    | 0/11      |
-| Phase 5    | pending     | 9     | 0/9       |
-| Phase 6    | pending     | 10    | 0/10      |
-| Phase 7    | pending     | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | in_progress | 4     | 0/4       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | pending   | 11    | 0/11      |
+| Phase 5    | pending   | 9     | 0/9       |
+| Phase 6    | pending   | 10    | 0/10      |
+| Phase 7    | pending   | 10    | 0/10      |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
 
-**Total:** 32/82 tasks completed
+**Total:** 36/82 tasks completed
 
 ---
 
@@ -1110,6 +1113,86 @@ target=oat-reviewer-gpt-5-6-sol-high
 - The final artifact's focused verification passed, but direct reproductions
   confirmed the projection and identity safety failures.
 
+### Run 5 — Corrective Revision p-rev1
+
+```yaml
+request_id: remote-project-management-p-rev1-20260901T003102Z
+caller: oat-project-implement
+scope: p-rev1
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+provider: codex
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+phase_base_head: 3a304e20c995f6d10f7de5d76430ef7d7c3f93fe
+phase_head: 15332edbf1a88e41fa1d909bb767273d527dcc28
+task_commits:
+  - 6e9f98292131b605e63e1552643d8a699f297b30
+  - fd27636394245eebbdd0eb6450e21c9ed05f5b20
+  - df9f482a6a9faa38bfbe20e41ca98496a5fbfd6a
+  - 8d546ab70ef0853c1dd31d34a3ad025ff76fed71
+review_fix_commits:
+  - 1a11231c8c72ae7aeb32627858c6ca3c0c0a1d7a
+  - 15332edbf1a88e41fa1d909bb767273d527dcc28
+recovery_usage: 0/10
+pending_attempt: null
+review_cycles: 3/3
+review_fix_loops: 2/3
+phase_outcome: blocked
+continuation_events:
+  - id: remote-project-management-p-rev1-review-fix-1-20260901T0205Z
+    outcome: done
+    commit: 1a11231c8c72ae7aeb32627858c6ca3c0c0a1d7a
+  - id: remote-project-management-p-rev1-review-fix-2-20260901T0314Z
+    outcome: invalid-run-abort
+    reason: supplied expanded fix-base SHA did not equal authoritative HEAD; no edits occurred
+  - id: remote-project-management-p-rev1-review-fix-2-relaunch-20260901T0330Z
+    outcome: interrupted
+    reason: host interruption after a bounded uncommitted seven-file diff
+  - id: remote-project-management-p-rev1-review-fix-2-takeover-20260901T0500Z
+    outcome: done
+    authorization: explicit operator takeover authorization
+    commit: 15332edbf1a88e41fa1d909bb767273d527dcc28
+```
+
+**Implementation/fix dispatch:** Dispatch: scope=p-rev1 action=fix role=fix
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+**Review dispatch:** Dispatch: scope=p-rev1 action=review role=reviewer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+target=oat-reviewer-gpt-5-6-sol-high
+
+**Task commits:** `6e9f98292`, `fd27636394`, `df9f482a6`, `8d546ab70`.
+
+**Review outcomes:**
+
+| Round | Artifact                                                 | Findings                | Outcome               |
+| ----- | -------------------------------------------------------- | ----------------------- | --------------------- |
+| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`            | 4 Critical              | fix `1a11231c8`       |
+| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md` | 2 Critical, 1 Important | fix `15332edbf`       |
+| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md` | 1 Critical, 1 Important | terminal normal block |
+
+- All four revision tasks completed. Root independently verified the final
+  17-file corrective suite at 234/234, CLI type-check/build, `pnpm check`,
+  formatting, and diff integrity.
+- Round-2 fixes closed managed-section baseline materialization. Round 3 found
+  that public create-handoff recovery remains unreachable and permits a
+  duplicate no-handle retry, while the approval preview mislabels creation time
+  as remote revision freshness.
+- The original implementer used two optional read-only reconnaissance lanes for
+  bounded preview/policy and publication/materialization analysis. Every root
+  reviewer reported `**Reconnaissance:** not-attempted` and no review artifact
+  contains a `## Review Orchestration` section.
+- Normal review governance is exhausted at 3/3. Phase 4 did not start and
+  requires an explicit operator extension before another bounded fix/review
+  cycle.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1192,10 +1275,11 @@ Chronological log of implementation progress.
 
 Document any deviations from the original plan.
 
-| Task           | Planned                                                | Actual                                                                                                          | Reason                                                                            |
-| -------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| p02-t10        | Continue expanding credential assignment/value parsing | Replace the parser with conservative whole-field suppression and bounded field-specific incompleteness evidence | Operator-approved requirements correction after the parser approach failed review |
-| p03-t02 onward | OAT-owned transport catalogs and provider CLI dialects | Live host capability discovery with provider-neutral semantic evidence; migration is assigned to p03-t02        | Operator-approved execution-boundary correction before Phase 3                    |
+| Task           | Planned                                                | Actual                                                                                                          | Reason                                                                             |
+| -------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| p02-t10        | Continue expanding credential assignment/value parsing | Replace the parser with conservative whole-field suppression and bounded field-specific incompleteness evidence | Operator-approved requirements correction after the parser approach failed review  |
+| p03-t02 onward | OAT-owned transport catalogs and provider CLI dialects | Live host capability discovery with provider-neutral semantic evidence; migration is assigned to p03-t02        | Operator-approved execution-boundary correction before Phase 3                     |
+| prev1-t03      | Keep the mutation-success fixture on source purpose    | Use planning purpose because source purpose permits no outbound fields                                          | Mechanically derived test correction preserving the intended mutation-success path |
 
 ## Test Results
 
@@ -1206,6 +1290,7 @@ Track test execution during implementation.
 | 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed                     |
 | 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
+| rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 234/234; all checks                    | 0      | blocked by round-3 review  |
 
 ## Final Summary (for PR/docs)
 

@@ -1,7 +1,10 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: 9872f13ddd2940b338ababfea297434dad6a4ae5
-oat_blockers: []
+oat_current_task: p04-t01
+oat_last_commit: 15332edbf1a88e41fa1d909bb767273d527dcc28
+oat_blockers:
+  - task_id: p-rev1
+    reason: 'Round-3 review exhausted normal governance with one Critical create-handoff recovery finding and one Important preview-freshness finding.'
+    since: '2026-09-01'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -34,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T00:31:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T16:24:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -42,13 +45,14 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-03-15
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation revision — Phase 3 code is complete at 12/12 tasks, and its
-three normal reviews remain historical evidence. The operator authorized a
-four-task corrective Revision 1 to close the production contract before Phase 4. Phase 4 has not started.
+Implementation revision — all four Revision 1 tasks and two bounded review-fix
+commits are complete. The third and final normal Revision 1 review remains
+blocked by one Critical create-handoff recovery finding and one Important
+preview-freshness finding. Phase 4 has not started.
 
 ## Artifacts
 
@@ -56,7 +60,7 @@ four-task corrective Revision 1 to close the production contract before Phase 4.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; formatter-path correction review passed)
-- **Implementation:** implementation.md (in progress; corrective revision at prev1-t01)
+- **Implementation:** implementation.md (in progress; Revision 1 review blocked)
 
 ## Progress
 
@@ -122,16 +126,23 @@ four-task corrective Revision 1 to close the production contract before Phase 4.
 - ✓ Revision 1 created with `prev1-t01` through `prev1-t04`; the initial
   planning review passed after one bounded fix retry
 - ✓ Formatter-safe path correction passed the final bounded planning review
-- ⧗ Revision 1 implementation ready at `prev1-t01`
-- ⛔ Phase 4 remains blocked until Revision 1 implementation and code review pass
+- ✓ Revision 1 tasks completed in `6e9f98292` through `8d546ab70`
+- ✓ Revision 1 review-fix commits completed in `1a11231c8` and `15332edbf`
+- ✓ Revision 1 final corrective suite passed 234/234 with CLI types/build/check
+- ⚠ Revision 1 round-3 review blocked with 1 Critical and 1 Important finding
+- ⛔ Normal Revision 1 review governance is exhausted at 3/3
+- ⛔ Phase 4 remains blocked until an operator-authorized fix/review extension passes
 
 ## Blockers
 
-None. The Phase 3 review findings have been converted into an explicitly
-authorized corrective revision. They remain unresolved implementation work and
-continue to gate Phase 4, but the project has an actionable revision path.
+Revision 1 exhausted its three normal review rounds. Public create-handoff
+recovery is unreachable and a no-handle direct-authorized retry can create a
+second action; the structured preview also labels preview creation time as the
+remote revision observation time. Another bounded fix/review cycle requires an
+explicit operator extension.
 
 ## Next Milestone
 
-Execute `prev1-t01` through `prev1-t04`. Do not begin Phase 4 until the
-revision's fresh code review passes.
+Obtain operator direction for one bounded Revision 1 fix/review extension.
+Do not begin `p04-t01` until that review passes with zero Critical and zero
+Important findings.

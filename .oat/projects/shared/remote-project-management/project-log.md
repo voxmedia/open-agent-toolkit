@@ -112,6 +112,10 @@ Phase p02 operator extension ended in terminal BLOCK after 4 reviews and 3 fix l
 
 Phase 3 stopped after review cycle 3/3 with 6 Critical and 1 Important findings; see reviews/p03-review-2026-08-31T232956Z.md.
 
+### 2026-09-01 · structural · oat-project-implement · p-rev1
+
+BLOCKED after review round 3 exhausted normal governance with 1 Critical and 1 Important finding; see reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
