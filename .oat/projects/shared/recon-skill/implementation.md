@@ -1442,6 +1442,15 @@ bounded receive commit are reconciled into the durable receive receipt.
 - This approval records the HiLL checkpoint only; PR #248 remains open and was
   not merged.
 
+### 2026-09-01 - approval-aware closeout sequence completed
+
+- All configured pre-approval steps remain complete: summary, documentation,
+  and final PR refresh.
+- User approval is durably recorded, and the configured post-approval step list
+  is empty.
+- Sequence status advanced to `complete`; implementation completion bookkeeping
+  is the remaining lifecycle mutation.
+
 ## Deviations from Plan / Design
 
 - p03-t02 uses `packages/cli/src/commands/tools/migrate/index.ts` as the minimal
