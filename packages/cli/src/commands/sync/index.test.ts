@@ -559,6 +559,44 @@ describe('createSyncCommand', () => {
     expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([adapter]);
   });
 
+  it('threads unsupported registry collection capability into per-entry planning', async () => {
+    const adapter = createAdapter('registry-only');
+    const { command, computeSyncPlan } = createHarness({
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [
+          {
+            adapter,
+            extensions: [],
+            capabilities: [
+              {
+                scope: 'project',
+                contentKind: 'skill',
+                support: 'supported',
+                projectionModes: ['entry-sync'],
+                nativeRoleSurface: false,
+                collectionAlias: 'unsupported',
+                catalogRefresh: { state: 'unknown', reason: 'test fixture' },
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    await runSyncCommand(command, ['--dry-run']);
+
+    expect(
+      computeSyncPlan.mock.calls[0]?.[0].collectionAliasEligibleMappings,
+    ).toEqual([]);
+  });
+
   it('dry-run no-op: shows no changes to apply guidance', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createEmptyPlan('project')],

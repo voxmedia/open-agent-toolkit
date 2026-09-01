@@ -55,6 +55,10 @@ interface ComputeSyncPlanArgs {
   extensionOwnedCanonicalPathsByProvider?: Readonly<
     Record<string, readonly string[]>
   >;
+  collectionAliasEligibleMappings?: readonly {
+    provider: string;
+    contentType: ContentType;
+  }[];
 }
 
 function buildUpLevels(depth: number): string[] {
@@ -180,6 +184,20 @@ function collectionFallbackReason(
     return 'provider collection is a real directory; use per-entry sync';
   }
   return `collection identity is ${reason}; preserve the provider collection without child mutation`;
+}
+
+function collectionCreationIdentityMatches(
+  collection: ManifestV2['collections'][number],
+  proof: CollectionProjectionPlan['proof'],
+): boolean {
+  return (
+    collection.ownership === 'oat-created' &&
+    collection.createdLink !== undefined &&
+    proof.status === 'exact-link' &&
+    collection.createdLink.device === proof.providerLink.device &&
+    collection.createdLink.inode === proof.providerLink.inode &&
+    collection.createdLink.linkText === proof.linkText
+  );
 }
 
 type CollectionIdentityProofReason = Extract<
@@ -592,6 +610,7 @@ export async function computeSyncPlan({
   scopeRoot: explicitScopeRoot,
   allowedCanonicalPaths,
   extensionOwnedCanonicalPathsByProvider,
+  collectionAliasEligibleMappings = [],
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
   const removals: RemovalSyncPlanEntry[] = [];
@@ -601,6 +620,11 @@ export async function computeSyncPlan({
   const activeProviderNames = new Set<string>();
   const activeMappingsByProvider = new Map<string, PathMapping[]>();
   const manifestV2 = manifest as unknown as ManifestV2;
+  const collectionAliasEligibility = new Set(
+    collectionAliasEligibleMappings.map(
+      ({ provider, contentType }) => `${provider}::${contentType}`,
+    ),
+  );
   const canonicalFilter = allowedCanonicalPaths
     ? new Set(
         allowedCanonicalPaths.map((canonicalPath) => normalize(canonicalPath)),
@@ -644,45 +668,110 @@ export async function computeSyncPlan({
         );
       });
       let inheritCollection = false;
-
-      if (
+      let deferredCollectionTransition = false;
+      const canonicalDir = scopeRoot
+        ? resolve(scopeRoot, mapping.canonicalDir)
+        : null;
+      const providerDir = scopeRoot
+        ? resolve(scopeRoot, mapping.providerDir)
+        : null;
+      const existingCollection =
+        scopeRoot && canonicalDir && providerDir
+          ? manifest.collections.find(
+              (collection) =>
+                collection.provider === adapter.name &&
+                collection.contentType === mapping.contentType &&
+                collection.canonicalDir ===
+                  relativeManifestPath(scopeRoot, canonicalDir) &&
+                collection.providerDir ===
+                  relativeManifestPath(scopeRoot, providerDir),
+            )
+          : undefined;
+      const existingInheritedEntries = existingCollection
+        ? manifestV2.entries
+            .filter(
+              (entry) =>
+                entry.strategy === 'collection' &&
+                entry.collectionId === existingCollection.id,
+            )
+            .map((entry) => entry.canonicalPath)
+            .sort()
+        : [];
+      const collectionEligible =
         configuredStrategy === 'auto' &&
         mapping.contentType === 'skill' &&
+        collectionAliasEligibility.has(
+          `${adapter.name}::${mapping.contentType}`,
+        ) &&
         adapter.defaultStrategy !== 'copy' &&
         !mapping.transformCanonical &&
         !mapping.providerExtension &&
-        scopeRoot !== null &&
+        canonicalDir !== null &&
+        providerDir !== null &&
+        collectionCandidates.length > 0;
+
+      if (
+        existingCollection !== undefined &&
+        !collectionEligible &&
+        canonicalDir !== null &&
+        providerDir !== null &&
         collectionCandidates.length > 0
       ) {
-        const canonicalDir = resolve(scopeRoot, mapping.canonicalDir);
-        const providerDir = resolve(scopeRoot, mapping.providerDir);
         const proof = await proveCollectionIdentity({
-          root: scopeRoot,
+          root: scopeRoot!,
           canonicalDir,
           providerDir,
         });
-        const existingCollection = manifest.collections.find(
-          (collection) =>
-            collection.provider === adapter.name &&
-            collection.contentType === mapping.contentType &&
-            collection.canonicalDir ===
-              relativeManifestPath(scopeRoot, canonicalDir) &&
-            collection.providerDir ===
-              relativeManifestPath(scopeRoot, providerDir),
-        );
+        const safelyClear =
+          proof.status === 'absent' ||
+          collectionCreationIdentityMatches(existingCollection, proof);
+        if (safelyClear) {
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: 'detach-collection',
+            ownership: existingCollection.ownership,
+            configuredStrategy: configuredStrategy ?? 'auto',
+            proof,
+            createdLink: existingCollection.createdLink,
+            transitionToPerEntry: true,
+            inheritedEntries: existingInheritedEntries,
+            reason:
+              'collection alias is safely clearable; transition to explicit per-entry sync',
+          });
+          deferredCollectionTransition = proof.status === 'exact-link';
+        } else {
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: 'reject-collection',
+            ownership: existingCollection.ownership,
+            configuredStrategy: configuredStrategy ?? 'auto',
+            proof,
+            createdLink: existingCollection.createdLink,
+            inheritedEntries: existingInheritedEntries,
+            reason:
+              'collection alias cannot be safely cleared with durable creation identity; preserve it and resolve the collection path before retrying per-entry sync',
+          });
+          inheritCollection = true;
+        }
+      }
+
+      if (collectionEligible && canonicalDir !== null && providerDir !== null) {
+        const proof = await proveCollectionIdentity({
+          root: scopeRoot!,
+          canonicalDir,
+          providerDir,
+        });
         const inheritedEntries = collectionCandidates.map((entry) =>
-          relativeManifestPath(scopeRoot, entry.canonicalPath),
+          relativeManifestPath(scopeRoot!, entry.canonicalPath),
         );
-        const existingInheritedEntries = existingCollection
-          ? manifestV2.entries
-              .filter(
-                (entry) =>
-                  entry.strategy === 'collection' &&
-                  entry.collectionId === existingCollection.id,
-              )
-              .map((entry) => entry.canonicalPath)
-              .sort()
-          : [];
         const inheritedEntriesUnchanged =
           existingCollection !== undefined &&
           existingInheritedEntries.length === inheritedEntries.length &&
@@ -719,6 +808,7 @@ export async function computeSyncPlan({
                   : 'inherit-collection',
               ownership: existingCollection?.ownership ?? 'adopted-exact',
               configuredStrategy: 'auto',
+              createdLink: existingCollection?.createdLink,
               proof,
               inheritedEntries,
               reason:
@@ -739,6 +829,7 @@ export async function computeSyncPlan({
               action: 'detach-collection',
               ownership: existingCollection.ownership,
               configuredStrategy: 'auto',
+              createdLink: existingCollection.createdLink,
               proof,
               inheritedEntries: existingInheritedEntries,
               reason:
@@ -824,15 +915,32 @@ export async function computeSyncPlan({
         );
         const entryStrategy = mapping.transformCanonical
           ? 'copy'
-          : (manifestEntry?.strategy ?? mappingStrategy);
+          : manifestEntry?.strategy === 'symlink' ||
+              manifestEntry?.strategy === 'copy'
+            ? manifestEntry.strategy
+            : mappingStrategy;
 
-        await assertSafeProviderMutationPath(entryScopeRoot, providerPath);
-        const operation = await classifyOperation(
-          canonicalEntry,
-          providerPath,
-          entryStrategy,
-          renderedContent,
-        );
+        const operation = deferredCollectionTransition
+          ? {
+              operation:
+                entryStrategy === 'copy'
+                  ? ('create_copy' as const)
+                  : ('create_symlink' as const),
+              reason:
+                'collection alias will be safely detached before per-entry reconciliation',
+            }
+          : await (async () => {
+              await assertSafeProviderMutationPath(
+                entryScopeRoot,
+                providerPath,
+              );
+              return classifyOperation(
+                canonicalEntry,
+                providerPath,
+                entryStrategy,
+                renderedContent,
+              );
+            })();
 
         entries.push({
           canonical: canonicalEntry,
@@ -842,6 +950,9 @@ export async function computeSyncPlan({
           strategy: entryStrategy,
           reason: operation.reason,
           renderedContent,
+          ...(deferredCollectionTransition
+            ? { deferredUntilCollectionDetached: true }
+            : {}),
         });
 
         seenCanonicalKeys.add(
@@ -876,6 +987,7 @@ export async function computeSyncPlan({
       ownership: collection.ownership,
       configuredStrategy: 'auto',
       proof,
+      createdLink: collection.createdLink,
       inheritedEntries: manifestV2.entries
         .filter(
           (entry) =>

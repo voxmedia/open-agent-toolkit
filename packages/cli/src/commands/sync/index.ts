@@ -421,6 +421,26 @@ async function computePlans(
         USER_SCOPE_MANAGED_AGENT_FILES.map((name) => `.agents/agents/${name}`),
       ]),
     );
+    const activeAdapterNameSet = new Set(activeAdapterNames);
+    const collectionAliasEligibleMappings =
+      providerContext?.registrations.flatMap((registration) =>
+        activeAdapterNameSet.has(registration.adapter.name)
+          ? registration.capabilities
+              .filter(
+                (capability) =>
+                  capability.scope === scope &&
+                  (capability.contentKind === 'skill' ||
+                    capability.contentKind === 'agent' ||
+                    capability.contentKind === 'rule') &&
+                  capability.collectionAlias === 'supported',
+              )
+              .map((capability) => ({
+                provider: registration.adapter.name,
+                contentType:
+                  capability.contentKind as CanonicalScanTarget['contentType'],
+              }))
+          : [],
+      ) ?? [];
 
     const plan = await dependencies.computeSyncPlan({
       canonical,
@@ -430,6 +450,7 @@ async function computePlans(
       config: resolved.config,
       scopeRoot,
       allowedCanonicalPaths: canonicalFilter?.paths,
+      collectionAliasEligibleMappings,
       ...(scope === 'user' ? { extensionOwnedCanonicalPathsByProvider } : {}),
     });
 

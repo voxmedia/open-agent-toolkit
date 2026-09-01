@@ -12,7 +12,7 @@ import {
   unlink,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 export async function fileExists(path: string): Promise<boolean> {
   try {
@@ -37,6 +37,13 @@ export interface CreatedCollectionSymlink {
   linkText: string;
   device: string;
   inode: string;
+}
+export interface CollectionSymlinkCreationGuard {
+  scopeRoot: string;
+  expectedParent: {
+    device: string;
+    inode: string;
+  };
 }
 export type CopyDirectoryFilter = (
   sourcePath: string,
@@ -117,8 +124,76 @@ export async function createSymlink(
 export async function createCollectionSymlinkNoClobber(
   target: string,
   linkPath: string,
+  guard: CollectionSymlinkCreationGuard,
 ): Promise<CreatedCollectionSymlink> {
-  await ensureDir(dirname(linkPath));
+  const scopeRoot = resolve(guard.scopeRoot);
+  const parent = resolve(dirname(linkPath));
+  const relativeParent = relative(scopeRoot, parent);
+  if (
+    relativeParent === '..' ||
+    relativeParent.startsWith(`..${sep}`) ||
+    isAbsolute(relativeParent)
+  ) {
+    throw new Error('Collection destination parent is outside the sync scope.');
+  }
+
+  const parentSegments = relativeParent === '' ? [] : relativeParent.split(sep);
+  const ancestors = [scopeRoot];
+  let current = scopeRoot;
+  for (const segment of parentSegments) {
+    current = resolve(current, segment);
+    ancestors.push(current);
+  }
+
+  let nearestExisting: Awaited<ReturnType<typeof lstat>> | undefined;
+  for (const ancestor of [...ancestors].reverse()) {
+    try {
+      nearestExisting = await lstat(ancestor);
+      break;
+    } catch (error) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 'ENOENT'
+      ) {
+        throw error;
+      }
+    }
+  }
+  if (
+    nearestExisting === undefined ||
+    nearestExisting.isSymbolicLink() ||
+    !nearestExisting.isDirectory() ||
+    String(nearestExisting.dev) !== guard.expectedParent.device ||
+    String(nearestExisting.ino) !== guard.expectedParent.inode
+  ) {
+    throw new Error('Collection destination ancestry changed before creation.');
+  }
+
+  for (const ancestor of ancestors) {
+    let ancestorStat: Awaited<ReturnType<typeof lstat>>;
+    try {
+      ancestorStat = await lstat(ancestor);
+    } catch (error) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 'ENOENT'
+      ) {
+        throw error;
+      }
+      await mkdir(ancestor);
+      ancestorStat = await lstat(ancestor);
+    }
+    if (ancestorStat.isSymbolicLink() || !ancestorStat.isDirectory()) {
+      throw new Error(
+        'Collection destination ancestry must contain only real directories.',
+      );
+    }
+  }
+
   const linkText = isAbsolute(target)
     ? relative(dirname(linkPath), target)
     : target;

@@ -76,6 +76,26 @@ export const ManifestEntrySchema = ManifestEntryBaseSchema.extend({
       path: ['collectionId'],
     });
   }
+
+  if (entry.strategy === 'collection') {
+    for (const field of ['canonicalPath', 'providerPath'] as const) {
+      const parsed = CollectionRelativePathSchema.safeParse(entry[field]);
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'Inherited collection paths must be normalized relative POSIX paths',
+          path: [field],
+        });
+      }
+    }
+  }
+});
+
+const ManifestCollectionLinkIdentitySchema = z.object({
+  device: z.string().min(1),
+  inode: z.string().min(1),
+  linkText: z.string().min(1),
 });
 
 export const ManifestCollectionEntrySchema = z.object({
@@ -86,8 +106,20 @@ export const ManifestCollectionEntrySchema = z.object({
   providerDir: CollectionRelativePathSchema,
   linkTarget: CollectionRelativePathSchema,
   ownership: z.enum(['oat-created', 'adopted-exact']),
+  createdLink: ManifestCollectionLinkIdentitySchema.optional(),
   lastVerified: z.string().datetime(),
 });
+
+function isStrictPathDescendant(parent: string, candidate: string): boolean {
+  const parentSegments = parent.split('/');
+  const candidateSegments = candidate.split('/');
+  return (
+    candidateSegments.length > parentSegments.length &&
+    parentSegments.every(
+      (segment, index) => candidateSegments[index] === segment,
+    )
+  );
+}
 
 function validateUniqueEntries(
   entries: readonly { canonicalPath: string; provider: string }[],
@@ -171,8 +203,8 @@ export const ManifestV2Schema = z
       if (
         entry.provider !== collection.provider ||
         entry.contentType !== collection.contentType ||
-        !entry.canonicalPath.startsWith(`${collection.canonicalDir}/`) ||
-        !entry.providerPath.startsWith(`${collection.providerDir}/`)
+        !isStrictPathDescendant(collection.canonicalDir, entry.canonicalPath) ||
+        !isStrictPathDescendant(collection.providerDir, entry.providerPath)
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -192,6 +224,9 @@ export type ManifestEntryV2 = z.infer<typeof ManifestEntrySchema>;
 export type ManifestEntry = ManifestEntryV1;
 export type ManifestCollectionEntry = z.infer<
   typeof ManifestCollectionEntrySchema
+>;
+export type ManifestCollectionLinkIdentity = z.infer<
+  typeof ManifestCollectionLinkIdentitySchema
 >;
 export type ManifestV1 = z.infer<typeof ManifestV1Schema>;
 export type ManifestV2 = z.infer<typeof ManifestV2Schema>;

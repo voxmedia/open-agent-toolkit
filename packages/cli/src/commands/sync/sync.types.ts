@@ -191,6 +191,10 @@ export interface SyncCommandDependencies {
     config: SyncConfig;
     scopeRoot: string;
     allowedCanonicalPaths?: string[];
+    collectionAliasEligibleMappings?: readonly {
+      provider: string;
+      contentType: CanonicalEntry['type'];
+    }[];
   }) => Promise<SyncPlan>;
   executeSyncPlan: (
     plan: SyncPlan,

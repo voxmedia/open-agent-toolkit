@@ -9,6 +9,12 @@ export interface CollectionPathIdentity {
   modifiedAtNanoseconds: string;
 }
 
+export interface CollectionLinkIdentity {
+  device: string;
+  inode: string;
+  linkText: string;
+}
+
 export type CollectionIdentityProof =
   | {
       status: 'absent';
@@ -21,6 +27,7 @@ export type CollectionIdentityProof =
       providerLink: CollectionPathIdentity;
       canonicalDirectory: CollectionPathIdentity;
       linkTextKind: 'relative' | 'absolute';
+      linkText: string;
       resolvedTarget: string;
       entrySetDigest: string;
       checkedAt: string;
@@ -54,7 +61,9 @@ export interface CollectionProjectionPlan {
   providerDir: string;
   action: CollectionSyncAction;
   ownership: 'oat-created' | 'adopted-exact' | 'none';
-  configuredStrategy: 'auto';
+  configuredStrategy: 'auto' | 'symlink' | 'copy';
+  createdLink?: CollectionLinkIdentity;
+  transitionToPerEntry?: boolean;
   proof: CollectionIdentityProof;
   inheritedEntries: readonly string[];
   reason: string;
@@ -82,6 +91,7 @@ export interface SyncPlanEntry {
   strategy: 'symlink' | 'copy';
   reason: string;
   renderedContent?: string;
+  deferredUntilCollectionDetached?: boolean;
 }
 
 export type RemovalSyncPlanEntry = SyncPlanEntry & {

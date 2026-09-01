@@ -60,7 +60,18 @@ describe('fs/io', () => {
     const provider = join(root, '.claude', 'skills');
     await mkdir(canonical, { recursive: true });
 
-    const created = await createCollectionSymlinkNoClobber(canonical, provider);
+    const parent = await lstat(root);
+    const created = await createCollectionSymlinkNoClobber(
+      canonical,
+      provider,
+      {
+        scopeRoot: root,
+        expectedParent: {
+          device: String(parent.dev),
+          inode: String(parent.ino),
+        },
+      },
+    );
 
     expect((await lstat(provider)).isSymbolicLink()).toBe(true);
     expect(created.linkText).toBe(await readlink(provider));
@@ -74,11 +85,44 @@ describe('fs/io', () => {
     await mkdir(canonical, { recursive: true });
     await mkdir(dirname(provider), { recursive: true });
     await writeFile(provider, 'foreign', 'utf8');
+    const parent = await lstat(dirname(provider));
 
     await expect(
-      createCollectionSymlinkNoClobber(canonical, provider),
+      createCollectionSymlinkNoClobber(canonical, provider, {
+        scopeRoot: root,
+        expectedParent: {
+          device: String(parent.dev),
+          inode: String(parent.ino),
+        },
+      }),
     ).rejects.toMatchObject({ code: 'EEXIST' });
     await expect(readFile(provider, 'utf8')).resolves.toBe('foreign');
+  });
+
+  it('refuses stale collection ancestry without creating through a replacement link', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-io-outside-'));
+    tempDirs.push(root, outside);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(provider), { recursive: true });
+    const expectedParent = await lstat(dirname(provider));
+    await rm(dirname(provider), { recursive: true, force: true });
+    await symlink(outside, dirname(provider), 'dir');
+
+    await expect(
+      createCollectionSymlinkNoClobber(canonical, provider, {
+        scopeRoot: root,
+        expectedParent: {
+          device: String(expectedParent.dev),
+          inode: String(expectedParent.ino),
+        },
+      }),
+    ).rejects.toThrow(/ancestry/i);
+    await expect(lstat(join(outside, 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it('rolls back only the unchanged collection link it created', async () => {
@@ -87,7 +131,18 @@ describe('fs/io', () => {
     const canonical = join(root, '.agents', 'skills');
     const provider = join(root, '.claude', 'skills');
     await mkdir(canonical, { recursive: true });
-    const created = await createCollectionSymlinkNoClobber(canonical, provider);
+    const parent = await lstat(root);
+    const created = await createCollectionSymlinkNoClobber(
+      canonical,
+      provider,
+      {
+        scopeRoot: root,
+        expectedParent: {
+          device: String(parent.dev),
+          inode: String(parent.ino),
+        },
+      },
+    );
 
     await expect(
       removeCollectionSymlinkIfUnchanged(provider, created),

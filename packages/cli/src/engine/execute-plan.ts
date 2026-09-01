@@ -1,4 +1,4 @@
-import { mkdir, readlink, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import {
@@ -416,45 +416,35 @@ async function executeCollectionTransaction(
     CollectionProjectionPlan,
     Awaited<ReturnType<typeof proveCollectionIdentity>>
   >();
-  for (const plan of actionable) {
-    const current = await dependencies.proveCollectionIdentity({
-      root: inferScopeRoot(plan.canonicalDir),
-      canonicalDir: plan.canonicalDir,
-      providerDir: plan.providerDir,
-    });
-    if (!collectionProofMatches(plan.proof, current)) {
-      return {
-        manifest,
-        results: [
-          ...passiveResults,
-          ...actionable.map((candidate) => ({
-            provider: candidate.provider,
-            contentType: candidate.contentType,
-            action: candidate.action,
-            ownership: candidate.ownership,
-            status: 'failed' as const,
-            reason:
-              candidate === plan
-                ? 'collection identity changed after planning; preserved destination'
-                : 'collection transaction aborted before mutation',
-          })),
-        ],
-        attempted: true,
-        persisted: false,
-      };
-    }
-    verified.set(plan, current);
-  }
 
   const createdCollections: CreatedCollection[] = [];
   let nextManifest = manifest;
   try {
     await beforeMutation();
     for (const plan of actionable) {
+      const current = await dependencies.proveCollectionIdentity({
+        root: inferScopeRoot(plan.canonicalDir),
+        canonicalDir: plan.canonicalDir,
+        providerDir: plan.providerDir,
+      });
+      if (!collectionProofMatches(plan.proof, current)) {
+        throw new Error(
+          'collection identity changed after planning; preserved destination',
+        );
+      }
+      verified.set(plan, current);
+
       if (plan.action === 'create-collection-link') {
+        if (current.status !== 'absent') {
+          throw new Error('collection destination is no longer absent');
+        }
         const created = await dependencies.createCollectionSymlinkNoClobber(
           plan.canonicalDir,
           plan.providerDir,
+          {
+            scopeRoot: inferScopeRoot(plan.canonicalDir),
+            expectedParent: current.providerParent,
+          },
         );
         createdCollections.push({ plan, created });
         const rescanned = await dependencies.proveCollectionIdentity({
@@ -491,7 +481,8 @@ async function executeCollectionTransaction(
       let status: CollectionOperationResult['status'] = 'changed';
       if (
         plan.ownership === 'oat-created' &&
-        plan.proof.status === 'exact-link'
+        plan.proof.status === 'exact-link' &&
+        plan.createdLink !== undefined
       ) {
         try {
           const current = await dependencies.proveCollectionIdentity({
@@ -501,16 +492,15 @@ async function executeCollectionTransaction(
           });
           if (
             current.status === 'exact-link' &&
-            collectionProofMatches(plan.proof, current)
+            collectionProofMatches(plan.proof, current) &&
+            current.providerLink.device === plan.createdLink.device &&
+            current.providerLink.inode === plan.createdLink.inode &&
+            current.linkText === plan.createdLink.linkText
           ) {
             const removed =
               await dependencies.removeCollectionSymlinkIfUnchanged(
                 plan.providerDir,
-                {
-                  device: current.providerLink.device,
-                  inode: current.providerLink.inode,
-                  linkText: await readlink(plan.providerDir),
-                },
+                plan.createdLink,
               );
             if (!removed) {
               status = 'partial';
@@ -526,6 +516,9 @@ async function executeCollectionTransaction(
           reason =
             'collection ownership detached; alias removal could not be proven safe and was preserved';
         }
+      } else if (plan.ownership === 'oat-created') {
+        reason =
+          'collection ownership detached; durable creation identity was unavailable and the alias was preserved';
       }
       detachmentResults.push({
         provider: plan.provider,
@@ -629,7 +622,10 @@ export async function executeSyncPlan(
   };
 
   for (const operation of operations) {
-    if (mutatesProviderPath(operation)) {
+    if (
+      mutatesProviderPath(operation) &&
+      !operation.deferredUntilCollectionDetached
+    ) {
       await assertSafeEntryProviderPath(operation);
     }
   }
@@ -642,8 +638,32 @@ export async function executeSyncPlan(
     beforeMutation,
   );
   nextManifest = collectionTransaction.manifest;
+  const blockedTransitions = new Set(
+    collectionTransaction.results
+      .filter(
+        ({ action, status }) =>
+          action === 'detach-collection' && status !== 'changed',
+      )
+      .map(({ provider, contentType }) => `${provider}::${contentType}`),
+  );
 
   for (const operation of operations) {
+    if (
+      operation.deferredUntilCollectionDetached &&
+      blockedTransitions.has(
+        `${operation.provider}::${operation.canonical.type}`,
+      )
+    ) {
+      operationResults.push(
+        operationEvidence(
+          plan.scope,
+          operation,
+          'failed',
+          'Collection alias could not be safely cleared; resolve the reported collection conflict and retry.',
+        ),
+      );
+      continue;
+    }
     if (operation.operation === 'skip') {
       nextManifest = await ensureSkipEntryManaged(operation, nextManifest);
       operationResults.push(

@@ -200,6 +200,47 @@ describe('manifest schema', () => {
     expect(ManifestSchema.safeParse(candidate).success).toBe(false);
   });
 
+  it.each([
+    ['canonicalPath', '.agents/skills/../outside'],
+    ['canonicalPath', '.agents/skills/./example'],
+    ['canonicalPath', '.agents/skills//example'],
+    ['canonicalPath', '.agents\\skills\\example'],
+    ['providerPath', '.claude/skills/../outside'],
+    ['providerPath', '.claude/skills/./example'],
+    ['providerPath', '.claude/skills//example'],
+    ['providerPath', '.claude\\skills\\example'],
+  ] as const)(
+    'rejects non-normalized inherited collection %s %s',
+    (field, value) => {
+      const candidate = {
+        ...validManifest,
+        version: 2,
+        entries: [
+          {
+            ...validManifest.entries[0],
+            strategy: 'collection',
+            collectionId: 'claude-skills',
+            [field]: value,
+          },
+        ],
+        collections: [
+          {
+            id: 'claude-skills',
+            provider: 'claude',
+            contentType: 'skill',
+            canonicalDir: '.agents/skills',
+            providerDir: '.claude/skills',
+            linkTarget: '.agents/skills',
+            ownership: 'adopted-exact',
+            lastVerified: '2026-02-13T00:00:00.000Z',
+          },
+        ],
+      };
+
+      expect(ManifestSchema.safeParse(candidate).success).toBe(false);
+    },
+  );
+
   it('rejects overlapping collection and per-entry ownership', () => {
     const collectionEntry = {
       ...validManifest.entries[0],

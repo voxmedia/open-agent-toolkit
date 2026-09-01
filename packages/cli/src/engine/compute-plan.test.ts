@@ -9,7 +9,7 @@ import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { computeSyncPlan } from './compute-plan';
+import { computeSyncPlan as computeSyncPlanImplementation } from './compute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import type { CanonicalEntry } from './scanner';
 import { createTestAdapter } from './test-helpers';
@@ -18,6 +18,24 @@ const DEFAULT_SYNC_CONFIG = {
   ...AUTO_SYNC_CONFIG,
   defaultStrategy: 'symlink' as const,
 };
+
+function computeSyncPlan(
+  args: Parameters<typeof computeSyncPlanImplementation>[0],
+): ReturnType<typeof computeSyncPlanImplementation> {
+  return computeSyncPlanImplementation({
+    ...args,
+    collectionAliasEligibleMappings:
+      args.collectionAliasEligibleMappings ??
+      args.adapters.flatMap((adapter) =>
+        [...adapter.projectMappings, ...adapter.userMappings]
+          .filter(({ contentType }) => contentType === 'skill')
+          .map(() => ({
+            provider: adapter.name,
+            contentType: 'skill' as const,
+          })),
+      ),
+  });
+}
 
 function createCanonicalEntry(
   root: string,
@@ -756,6 +774,32 @@ describe('computeSyncPlan', () => {
         action: 'create-collection-link',
         ownership: 'oat-created',
         inheritedEntries: ['.agents/skills/skill-one'],
+      }),
+    ]);
+  });
+
+  it('keeps an auto skill mapping per-entry when collection aliases are not registry-supported', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+      collectionAliasEligibleMappings: [],
+    });
+
+    expect(plan.collections).toEqual([]);
+    expect(plan.entries).toEqual([
+      expect.objectContaining({
+        operation: 'create_symlink',
+        provider: 'claude',
       }),
     ]);
   });

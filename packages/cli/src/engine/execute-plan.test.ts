@@ -201,6 +201,38 @@ describe('executeSyncPlan', () => {
     });
   });
 
+  it('re-proves collection ancestry after the mutation hook before reaching creation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-execute-outside-'));
+    tempDirs.push(root, outside);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+    const createCollection = vi.fn(async () => {
+      throw new Error('collection creation must not be reached');
+    });
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+      {
+        beforeFirstMutation: async () => {
+          await rm(join(root, '.claude'), { recursive: true, force: true });
+          await symlink(outside, join(root, '.claude'), 'dir');
+        },
+        createCollectionSymlinkNoClobber: createCollection,
+      },
+    );
+
+    expect(createCollection).not.toHaveBeenCalled();
+    await expect(lstat(join(outside, 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(result.collectionResults[0]).toMatchObject({ status: 'failed' });
+  });
+
   it('rolls back only a newly created unchanged link when manifest persistence fails', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);

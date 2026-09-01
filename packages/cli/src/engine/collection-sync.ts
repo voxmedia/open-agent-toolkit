@@ -210,6 +210,7 @@ export async function proveCollectionIdentity({
       providerLink: observedIdentity as CollectionPathIdentity,
       canonicalDirectory,
       linkTextKind: isAbsolute(linkText) ? 'absolute' : 'relative',
+      linkText,
       resolvedTarget,
       entrySetDigest: canonicalDigest,
       checkedAt,
@@ -253,6 +254,7 @@ export function collectionProofMatches(
     return (
       identitiesMatch(planned.providerLink, current.providerLink) &&
       identitiesMatch(planned.canonicalDirectory, current.canonicalDirectory) &&
+      planned.linkText === current.linkText &&
       planned.resolvedTarget === current.resolvedTarget &&
       planned.entrySetDigest === current.entrySetDigest
     );
@@ -325,6 +327,16 @@ export async function projectCollectionOwnership(
         collection.providerDir === providerDir
       ),
   );
+  const createdLink =
+    plan.ownership === 'oat-created'
+      ? plan.action === 'create-collection-link'
+        ? {
+            device: verifiedProof.providerLink.device,
+            inode: verifiedProof.providerLink.inode,
+            linkText: verifiedProof.linkText,
+          }
+        : plan.createdLink
+      : undefined;
 
   return {
     ...manifest,
@@ -339,6 +351,7 @@ export async function projectCollectionOwnership(
         providerDir,
         linkTarget: canonicalDir,
         ownership: plan.ownership === 'none' ? 'adopted-exact' : plan.ownership,
+        ...(createdLink === undefined ? {} : { createdLink }),
         lastVerified,
       },
     ],
