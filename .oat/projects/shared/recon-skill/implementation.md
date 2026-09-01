@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-08-31
-oat_current_task_id: null
+oat_last_updated: 2026-09-01
+oat_current_task_id: prev3-t01
 oat_generated: false
 oat_template: false
 ---
@@ -26,8 +26,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase 4      | passed | 2     | 2/2       |
 | Phase p-rev1 | passed | 2     | 2/2       |
 | Phase p-rev2 | passed | 3     | 3/3       |
+| Phase p-rev3 | active | 1     | 0/1       |
 
-**Total:** 16/16 tasks completed
+**Total:** 16/17 tasks completed
 
 ## Task Status
 
@@ -76,6 +77,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | prev2-t01 | completed | `4ef59b004` |
 | prev2-t02 | completed | `b2c462b58` |
 | prev2-t03 | completed | `47564e838` |
+
+### Phase p-rev3: Revision 3 — Fail Closed on Drifted Materializable Agents
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev3-t01 | pending | -      |
 
 ## Orchestration Runs
 
@@ -1303,6 +1310,38 @@ fresh final review before the configured exit gate.
 **Disposition:** Passing configured gate review received. No fix task or
 deferred finding was created. The durable receive commit must be reconciled
 before the gate becomes `allowed/passed`.
+
+### Review Received: post-rebase final review
+
+**Date:** 2026-09-01
+**Review artifact:**
+`reviews/archived/final-review-2026-09-01T032917Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `prev3-t01`
+
+**Finding disposition:**
+
+- I1 (`code_fix_required`): agreed. Native role projection accepts
+  user-materializable agents whose inventory status is `outdated` or `newer`,
+  so locally modified or version-divergent instructions can be projected as a
+  managed role. Revision p-rev3 will require `current`, emit an actionable
+  fail-closed diagnostic, and cover current and non-current sync paths.
+
+**Gate freshness:** The pre-rebase configured exit-gate generation is stale
+because the rebase conflict integration and this substantive correction change
+the effective implementation delta. Its prior provenance remains recorded in
+project state and this log; a new generation is required after fresh final
+review passes.
+
+**Next:** Execute `prev3-t01`, then run a fresh independent final review before
+starting a new configured implementation exit-gate generation.
 
 ## Deviations from Plan / Design
 

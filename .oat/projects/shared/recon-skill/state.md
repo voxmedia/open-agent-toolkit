@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev3-t01
 oat_last_commit: 47564e838317288bedac43c3ca022d8542289d16
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -29,7 +29,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -61,10 +61,10 @@ oat_implement_exit_gate:
   receive_commit: 3baa264d56fe71ec5ffb1c309d08d6f6f3637db8
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-08-31T23:50:00Z'
+  failure: 'Post-rebase final review found a substantive native-role projection defect; a fresh final review and new gate generation are required after prev3-t01.'
+  updated_at: '2026-09-01T03:33:04Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: pre_approval
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T02:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T03:33:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -89,13 +89,13 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation in progress / PR open
+**Status:** Implementation review fix in progress / PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — post-rebase final review fix `prev3-t01` in progress.
 
 ## Artifacts
 
@@ -103,7 +103,7 @@ Implementation — PR open; completion may run before or after merge.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (16/16 tasks complete; terminal review passed)
+- **Implementation:** `implementation.md` (16/17 tasks complete; review fix active)
 
 ## Progress
 
@@ -180,7 +180,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ PR #248 refreshed with the final implementation body
 - ✓ PR created
 - ✓ Project recap skipped by explicit user choice; terminal recap guard passed
-- ⧗ Awaiting final implementation approval
+- ⧗ Post-rebase final review found one Important native-role projection defect
+- ⧗ Revision task prev3-t01 requires current inventory before projection
+- ⧗ Fresh final lifecycle review and configured exit gate required after fix
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -189,8 +191,5 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Complete `prev3-t01`, run a fresh final lifecycle review, then execute a new
+configured implementation exit-gate generation before final HiLL approval.

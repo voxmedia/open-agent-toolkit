@@ -1123,6 +1123,50 @@ git add .agents/skills/recon
 git commit -m "fix(prev2-t03): validate canonical projection arrays"
 ```
 
+## Phase p-rev3: Revision 3 — Fail Closed on Drifted Materializable Agents
+
+### Task prev3-t01: (review) Require current inventory before native role projection
+
+**Files:**
+
+- Modify: `packages/cli/src/engine/scanner.ts`
+- Modify: `packages/cli/src/engine/scanner.test.ts`
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+
+**Step 1: Reproduce non-current projection**
+
+Add focused cases proving that manifest-declared user-materializable agents
+with `outdated` or `newer` inventory status currently reach native provider
+role projection while a `current` agent remains eligible.
+
+**Step 2: Enforce the existing bundled-content authority**
+
+Require an enabled, eligible manifest-declared agent to have `current`
+inventory before adding it to the native-role selection. Reject non-current
+content with an actionable fail-closed diagnostic. Keep the change inside the
+existing scanner predicate and add no new materialization abstraction.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/scanner.test.ts src/commands/sync/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec tsc --noEmit
+pnpm lint
+pnpm format
+```
+
+Expected: `outdated` and `newer` agents fail closed with actionable diagnostics,
+`current` agents remain eligible, and existing native-role sync behavior passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/engine/scanner.ts packages/cli/src/engine/scanner.test.ts packages/cli/src/commands/sync/index.test.ts
+git commit -m "fix(prev3-t01): reject drifted materializable agents"
+```
+
 ## Reviews
 
 | Scope     | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
@@ -1136,6 +1180,7 @@ git commit -m "fix(prev2-t03): validate canonical projection arrays"
 | final     | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                   |
 | final     | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                   |
 | final     | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high |
+| final     | code     | fixes_added     | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
 | spec      | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design    | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
@@ -1172,8 +1217,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Revision 2: 3 tasks — bind packet validation and receipts to the complete
   canonical user-approved dispatch projection, accepted child, fresh catalog
   recheck, and normative projection values.
+- Revision 3: 1 task — fail closed when user-materializable agent content does
+  not match the current bundled definition before native role projection.
 
-**Total: 16 tasks**
+**Total: 17 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
