@@ -433,6 +433,7 @@ function detachCollectionOwnership(
 async function executeCollectionTransaction(
   plans: readonly CollectionProjectionPlan[],
   manifest: ManifestV2,
+  blockedDeferredDirectoryCopies: ReadonlySet<string>,
   dependencies: Required<
     Pick<
       ExecuteSyncPlanDependencies,
@@ -563,6 +564,18 @@ async function executeCollectionTransaction(
           reason,
         });
       };
+
+      if (
+        blockedDeferredDirectoryCopies.has(
+          `${plan.provider}::${plan.contentType}`,
+        )
+      ) {
+        blockTransition(
+          'rejected',
+          'Manual recovery required: deferred directory-copy transitions are unavailable on this runtime, so collection ownership was preserved. Change the provider strategy to symlink and retry sync, or copy the directory yourself and manage it outside OAT.',
+        );
+        continue;
+      }
 
       if (plan.proof.status === 'absent') {
         try {
@@ -845,21 +858,36 @@ export async function executeSyncPlan(
     }
   }
 
+  const blockedDeferredDirectoryCopies = new Set(
+    operations
+      .filter(
+        (operation) =>
+          operation.operation === 'create_copy' &&
+          operation.deferredUntilCollectionDetached &&
+          !operation.canonical.isFile,
+      )
+      .map((operation) => `${operation.provider}::${operation.canonical.type}`),
+  );
+
   const collectionTransaction = await executeCollectionTransaction(
     plan.collections ?? [],
     nextManifest,
+    blockedDeferredDirectoryCopies,
     collectionDependencies,
     manifestPath,
     beforeMutation,
   );
   nextManifest = collectionTransaction.manifest;
-  const blockedTransitions = new Set(
+  const blockedTransitions = new Map(
     collectionTransaction.results
       .filter(
         ({ action, status }) =>
           action === 'detach-collection' && status !== 'changed',
       )
-      .map(({ provider, contentType }) => `${provider}::${contentType}`),
+      .map((result) => [
+        `${result.provider}::${result.contentType}`,
+        result.reason,
+      ]),
   );
 
   for (const operation of operations) {
@@ -874,7 +902,10 @@ export async function executeSyncPlan(
           plan.scope,
           operation,
           'failed',
-          'Collection alias could not be safely cleared; resolve the reported collection conflict and retry.',
+          blockedTransitions.get(
+            `${operation.provider}::${operation.canonical.type}`,
+          ) ??
+            'Collection alias could not be safely cleared; resolve the reported collection conflict and retry.',
         ),
       );
       continue;

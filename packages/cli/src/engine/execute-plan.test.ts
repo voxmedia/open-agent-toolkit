@@ -650,7 +650,8 @@ describe('executeSyncPlan', () => {
       expect(unsafePublicationCalls).toBe(0);
       expect(result.collectionResults[0]).toMatchObject({
         action: 'detach-collection',
-        status: 'changed',
+        status: 'rejected',
+        reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
       });
       expect(result.operations[0]).toMatchObject({
         status: 'failed',
@@ -664,8 +665,8 @@ describe('executeSyncPlan', () => {
         readFile(join(outside, 'user-owned.md'), 'utf8'),
       ).resolves.toBe('outside-before');
       await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-        collections: [],
-        entries: [],
+        collections: [{ id: 'collection-transition' }],
+        entries: [{ strategy: 'collection' }],
       });
     },
   );
@@ -760,7 +761,7 @@ describe('executeSyncPlan', () => {
 
       expect(result.collectionResults[0]).toMatchObject({
         action: 'detach-collection',
-        status: 'changed',
+        status: strategy === 'copy' ? 'rejected' : 'changed',
       });
       expect(result.operations[0]).toMatchObject({
         status: 'failed',
@@ -770,17 +771,28 @@ describe('executeSyncPlan', () => {
             : /appeared.*preserv.*retry/i,
         ),
       });
-      if (destinationKind === 'file') {
-        await expect(readFile(destination, 'utf8')).resolves.toBe(userBytes);
+      if (strategy === 'copy') {
+        expect(injected).toBe(false);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+          collections: [{ id: 'collection-transition' }],
+          entries: [{ strategy: 'collection' }],
+        });
       } else {
-        await expect(
-          readFile(join(destination, 'SKILL.md'), 'utf8'),
-        ).resolves.toBe(userBytes);
+        if (destinationKind === 'file') {
+          await expect(readFile(destination, 'utf8')).resolves.toBe(userBytes);
+        } else {
+          await expect(
+            readFile(join(destination, 'SKILL.md'), 'utf8'),
+          ).resolves.toBe(userBytes);
+        }
+        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+          collections: [],
+          entries: [],
+        });
       }
-      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-        collections: [],
-        entries: [],
-      });
     },
   );
 

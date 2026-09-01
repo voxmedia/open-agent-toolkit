@@ -2,6 +2,7 @@ import {
   lstat,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   readlink,
   rm,
@@ -431,11 +432,13 @@ describe('sync engine integration', () => {
     'blocks explicit %s transition until a later plan revalidates an absent alias',
     async (strategy) => {
       const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
-      tempDirs.push(root);
+      const outside = await mkdtemp(join(tmpdir(), 'oat-engine-outside-'));
+      tempDirs.push(root, outside);
       const adapter = createSkillCollectionAdapter();
       const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
       const canonicalDir = join(root, '.agents', 'skills');
       const providerDir = join(root, '.claude', 'skills');
+      await writeFile(join(outside, 'user-owned.md'), 'outside-before', 'utf8');
       await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
       await mkdir(join(root, '.claude'), { recursive: true });
       await writeFile(
@@ -500,7 +503,7 @@ describe('sync engine integration', () => {
       );
       expect(result.failed).toBe(2);
       expect(result.collectionResults[0]).toMatchObject({
-        status: 'partial',
+        status: strategy === 'copy' ? 'rejected' : 'partial',
         reason: expect.stringMatching(/manual|preserv|guard/i),
       });
       expect(result.operations[0]).toMatchObject({ status: 'failed' });
@@ -533,24 +536,98 @@ describe('sync engine integration', () => {
         expect.objectContaining({ deferredUntilCollectionDetached: true }),
       ]);
 
+      let ordinaryCopyCalls = 0;
+      const unsafeOrdinaryCopy = async (
+        _source: string,
+        destination: string,
+      ): Promise<void> => {
+        ordinaryCopyCalls += 1;
+        await mkdir(dirname(destination), { recursive: true });
+        await symlink(outside, destination, 'dir');
+        await writeFile(join(destination, 'unsafe.md'), 'unsafe-write', 'utf8');
+      };
       const resumed = await executeSyncPlan(
         absentTransitionPlan,
         collectionManifest,
         manifestPath,
+        { copyDirectory: unsafeOrdinaryCopy },
       );
       if (strategy === 'copy') {
-        expect(resumed.failed).toBe(1);
+        expect(resumed.failed).toBe(2);
+        expect(resumed.collectionResults[0]).toMatchObject({
+          action: 'detach-collection',
+          status: expect.stringMatching(/rejected|failed|partial/),
+          reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        });
         expect(resumed.operations[0]).toMatchObject({
           status: 'failed',
           failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
         });
+        expect(ordinaryCopyCalls).toBe(0);
         await expect(lstat(providerDir)).rejects.toMatchObject({
           code: 'ENOENT',
         });
-        await expect(loadManifest(manifestPath)).resolves.toMatchObject({
-          collections: [],
-          entries: [],
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(
+          readFile(join(outside, 'user-owned.md'), 'utf8'),
+        ).resolves.toBe('outside-before');
+
+        const blockedManifest = await loadManifest(manifestPath);
+        expect(blockedManifest).toMatchObject({
+          collections: [expect.objectContaining({ ownership: 'oat-created' })],
+          entries: [expect.objectContaining({ strategy: 'collection' })],
         });
+
+        const retryCanonical = await scanCanonical(root, 'project');
+        const retryPlan = await computeSyncPlan({
+          canonical: retryCanonical,
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'copy' } },
+          },
+          scopeRoot: root,
+        });
+        expect(retryPlan.collections).toEqual([
+          expect.objectContaining({
+            action: 'detach-collection',
+            transitionToPerEntry: true,
+            proof: expect.objectContaining({ status: 'absent' }),
+          }),
+        ]);
+        expect(retryPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_copy',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+
+        const retried = await executeSyncPlan(
+          retryPlan,
+          blockedManifest,
+          manifestPath,
+          { copyDirectory: unsafeOrdinaryCopy },
+        );
+        expect(retried.failed).toBe(2);
+        expect(retried.collectionResults[0]).toMatchObject({
+          action: 'detach-collection',
+          status: expect.stringMatching(/rejected|failed|partial/),
+          reason: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        });
+        expect(retried.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/manual.*director.*copy.*retry/i),
+        });
+        expect(ordinaryCopyCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
       } else {
         expect(resumed.failed).toBe(0);
         expect((await lstat(providerDir)).isDirectory()).toBe(true);
