@@ -72,6 +72,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 import {
   atomicWriteJson,
   copyDirectory,
+  copyDirectoryNoClobber,
   createCollectionSymlinkNoClobber,
   createSymlink,
   dirExists,
@@ -373,6 +374,61 @@ describe('fs/io', () => {
     const scriptStat = await stat(join(destDir, 'scripts', 'run.sh'));
     expect(scriptStat.mode & 0o111).not.toBe(0);
   });
+
+  it.each(['file', 'directory'] as const)(
+    'copyDirectoryNoClobber preserves a colliding nested %s created after the destination root',
+    async (collisionKind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+      tempDirs.push(root);
+      const srcDir = join(root, 'src');
+      const destDir = join(root, 'dest');
+      const collisionName =
+        collisionKind === 'file' ? 'SKILL.md' : 'references';
+      const destinationCollision = join(destDir, collisionName);
+      const userBytes = `user-owned-${collisionKind}`;
+      await mkdir(join(srcDir, 'references'), { recursive: true });
+      await writeFile(join(srcDir, 'SKILL.md'), 'canonical skill', 'utf8');
+      await writeFile(
+        join(srcDir, 'references', 'guide.md'),
+        'canonical guide',
+        'utf8',
+      );
+
+      let hookCalls = 0;
+      await expect(
+        copyDirectoryNoClobber(srcDir, destDir, undefined, {
+          afterDestinationRootCreated: async (createdRoot) => {
+            hookCalls += 1;
+            expect(createdRoot).toBe(destDir);
+            if (collisionKind === 'file') {
+              await writeFile(destinationCollision, userBytes, 'utf8');
+            } else {
+              await mkdir(destinationCollision);
+              await writeFile(
+                join(destinationCollision, 'user-owned.md'),
+                userBytes,
+                'utf8',
+              );
+            }
+          },
+        }),
+      ).rejects.toMatchObject({ code: 'EEXIST' });
+
+      expect(hookCalls).toBe(1);
+      if (collisionKind === 'file') {
+        await expect(readFile(destinationCollision, 'utf8')).resolves.toBe(
+          userBytes,
+        );
+      } else {
+        await expect(
+          readFile(join(destinationCollision, 'user-owned.md'), 'utf8'),
+        ).resolves.toBe(userBytes);
+        await expect(
+          readFile(join(destinationCollision, 'guide.md'), 'utf8'),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+      }
+    },
+  );
 
   it('atomicWriteJson writes to temp then renames', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));

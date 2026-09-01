@@ -2,6 +2,7 @@ import {
   chmod,
   lstat,
   mkdir,
+  open,
   readdir,
   readFile,
   readlink,
@@ -50,6 +51,11 @@ export type CopyDirectoryFilter = (
   sourcePath: string,
   relativePath: string,
 ) => boolean | Promise<boolean>;
+export interface CopyDirectoryNoClobberHooks {
+  afterDestinationRootCreated?: (
+    destinationRoot: string,
+  ) => void | Promise<void>;
+}
 
 export async function ensureDir(dirPath: string): Promise<void> {
   await mkdir(dirPath, { recursive: true });
@@ -113,10 +119,51 @@ export async function copyDirectoryNoClobber(
   src: string,
   dest: string,
   filter?: CopyDirectoryFilter,
+  hooks: CopyDirectoryNoClobberHooks = {},
 ): Promise<void> {
   await ensureDir(dirname(dest));
   await mkdir(dest);
-  await copyDirectory(src, dest, filter);
+  await hooks.afterDestinationRootCreated?.(dest);
+  await copyDirectoryContentsNoClobber(src, dest, filter, src);
+}
+
+async function copyDirectoryContentsNoClobber(
+  src: string,
+  dest: string,
+  filter: CopyDirectoryFilter | undefined,
+  sourceRoot: string,
+): Promise<void> {
+  const entries = await readdir(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const sourcePath = join(src, entry.name);
+    const destPath = join(dest, entry.name);
+    const relativePath = relative(sourceRoot, sourcePath);
+    if (filter && !(await filter(sourcePath, relativePath))) continue;
+
+    if (entry.isDirectory()) {
+      await mkdir(destPath);
+      await copyDirectoryContentsNoClobber(
+        sourcePath,
+        destPath,
+        filter,
+        sourceRoot,
+      );
+      continue;
+    }
+
+    if (entry.isFile()) {
+      const sourceStat = await stat(sourcePath);
+      const content = await readFile(sourcePath);
+      const destination = await open(destPath, 'wx', sourceStat.mode);
+      try {
+        await destination.writeFile(content);
+        await destination.chmod(sourceStat.mode);
+      } finally {
+        await destination.close();
+      }
+    }
+  }
 }
 
 export async function createSymlink(

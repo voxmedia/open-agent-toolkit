@@ -39,6 +39,7 @@ import { assertSafeProviderMutationPath } from './provider-path-safety';
 interface ExecuteSyncPlanDependencies {
   beforeFirstMutation?: () => Promise<void>;
   saveManifest?: typeof persistManifest;
+  copyDirectoryNoClobber?: typeof copyDirectoryNoClobber;
   createCollectionSymlinkNoClobber?: typeof createCollectionSymlinkNoClobber;
   removeCollectionSymlinkIfUnchanged?: typeof removeCollectionSymlinkIfUnchanged;
   proveCollectionIdentity?: typeof proveCollectionIdentity;
@@ -227,6 +228,7 @@ async function applyEntry(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
   destinationPolicy: EntryDestinationPolicy,
+  copyDirectoryNoClobberImpl: typeof copyDirectoryNoClobber,
 ): Promise<ManifestV2> {
   switch (planEntry.operation) {
     case 'create_symlink':
@@ -269,7 +271,7 @@ async function applyEntry(
             planEntry.providerPath,
           );
         } else {
-          await copyDirectoryNoClobber(
+          await copyDirectoryNoClobberImpl(
             planEntry.canonical.canonicalPath,
             planEntry.providerPath,
           );
@@ -891,6 +893,7 @@ export async function executeSyncPlan(
         operation,
         nextManifest,
         destinationPolicy,
+        dependencies.copyDirectoryNoClobber ?? copyDirectoryNoClobber,
       );
       operationResults.push(
         operationEvidence(plan.scope, operation, 'changed'),

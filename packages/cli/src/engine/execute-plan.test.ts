@@ -11,7 +11,10 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { removeCollectionSymlinkIfUnchanged } from '@fs/io';
+import {
+  copyDirectoryNoClobber,
+  removeCollectionSymlinkIfUnchanged,
+} from '@fs/io';
 import { computeFileHash } from '@manifest/hash';
 import {
   createEmptyManifest,
@@ -606,6 +609,70 @@ describe('executeSyncPlan', () => {
       }
     },
   );
+
+  it('preserves nested collisions during a deferred directory copy and records no ownership', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const { manifest, plan, providerDir } =
+      await createAbsentCollectionTransition(root, 'copy');
+    const canonicalEntry = join(root, '.agents', 'skills', 'skill-one');
+    await mkdir(join(canonicalEntry, 'references'), { recursive: true });
+    await writeFile(
+      join(canonicalEntry, 'references', 'guide.md'),
+      'canonical guide',
+      'utf8',
+    );
+    await saveManifest(manifestPath, manifest);
+    const destination = join(providerDir, 'skill-one');
+    const userFileBytes = 'user-owned skill bytes';
+    const userTreeBytes = 'user-owned tree bytes';
+    let hookCalls = 0;
+
+    const result = await executeSyncPlan(plan, manifest, manifestPath, {
+      copyDirectoryNoClobber: async (src, dest, filter) =>
+        copyDirectoryNoClobber(src, dest, filter, {
+          afterDestinationRootCreated: async (createdRoot) => {
+            hookCalls += 1;
+            expect(createdRoot).toBe(destination);
+            await writeFile(
+              join(createdRoot, 'SKILL.md'),
+              userFileBytes,
+              'utf8',
+            );
+            await mkdir(join(createdRoot, 'references'));
+            await writeFile(
+              join(createdRoot, 'references', 'user-owned.md'),
+              userTreeBytes,
+              'utf8',
+            );
+          },
+        }),
+    });
+
+    expect(hookCalls).toBe(1);
+    expect(result.collectionResults[0]).toMatchObject({
+      action: 'detach-collection',
+      status: 'changed',
+    });
+    expect(result.operations[0]).toMatchObject({
+      status: 'failed',
+      failure: expect.stringMatching(/appeared.*preserv.*retry/i),
+    });
+    await expect(readFile(join(destination, 'SKILL.md'), 'utf8')).resolves.toBe(
+      userFileBytes,
+    );
+    await expect(
+      readFile(join(destination, 'references', 'user-owned.md'), 'utf8'),
+    ).resolves.toBe(userTreeBytes);
+    await expect(
+      readFile(join(destination, 'references', 'guide.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+  });
 
   it('blocks deferred transition children while automatic unlink is unavailable', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
