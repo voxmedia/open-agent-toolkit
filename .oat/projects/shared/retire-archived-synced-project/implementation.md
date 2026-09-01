@@ -429,7 +429,7 @@ interactive choice. The explainer terminal-outcome guard passed with no
 manifest, no recap was attempted or reused, and the recap run path is `none`.
 The operator explicitly approved the configured post-p04 HiLL checkpoint on
 2026-09-01. The closeout sequence has entered `post_approval`; it has no
-configured post-approval steps.
+configured post-approval steps and therefore reached terminal `complete`.
 
 <!-- orchestration-runs-end -->
 

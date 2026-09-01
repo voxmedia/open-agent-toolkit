@@ -148,6 +148,10 @@ Documentation scan found two thin-coverage updates: control-plane ProjectListRow
 
 Operator explicitly approved the post-p04 HiLL checkpoint after all 13 tasks, phase and final reviews, the configured Claude Fable exit gate, summary, documentation, PR #254, and the recap terminal guard completed. The immutable closeout sequence entered post-approval with no configured post-approval steps.
 
+### 2026-09-01 · structural · oat-project-implement · closeout-sequence-complete
+
+The configured `summary → document → pr` pre-approval sequence, explicit post-p04 approval, and empty post-approval sequence all completed in their persisted order. The closeout snapshot is terminal and implementation completion bookkeeping may proceed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
