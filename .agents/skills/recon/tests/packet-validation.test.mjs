@@ -761,6 +761,34 @@ test('rejects illegal claim state transitions and quick verification', async () 
   await expectInvalid(quick, 'PROFILE_ASSURANCE_EXCEEDED');
 });
 
+test('revision-one provisional claims use genesis rather than an invented transition', async () => {
+  const genesis = await makePacket({ claimStatus: 'provisional' });
+  genesis.ledger.transitions = [];
+  await persist(genesis);
+  const valid = await validatePacket(genesis.packetRoot);
+  assert.equal(valid.valid, true, JSON.stringify(valid, null, 2));
+
+  const incoming = await makePacket({ claimStatus: 'provisional' });
+  incoming.ledger.transitions = [
+    { claimId: 'claim-1', from: 'unsupported', to: 'provisional' },
+  ];
+  await persist(incoming);
+  await expectInvalid(incoming, 'INVALID_PROVISIONAL_GENESIS');
+
+  const self = await makePacket({ claimStatus: 'provisional' });
+  self.ledger.transitions = [
+    { claimId: 'claim-1', from: 'provisional', to: 'provisional' },
+  ];
+  await persist(self);
+  await expectInvalid(self, 'ILLEGAL_CLAIM_TRANSITION');
+
+  const later = await makePacket({ claimStatus: 'provisional' });
+  later.ledger.revision = 2;
+  later.ledger.transitions = [];
+  await persist(later);
+  await expectInvalid(later, 'INVALID_PROVISIONAL_GENESIS');
+});
+
 test('rejects missing artifacts, hash mismatches, and path escape', async () => {
   const missing = await makePacket();
   await rm(join(missing.packetRoot, 'raw', 'dossiers', 'dossier-1.json'));
@@ -969,11 +997,7 @@ test('only exact and redacted-exact locator states are assurance eligible', asyn
   const retained = await makePacket();
   retained.ledger.evidence[0].locatorValidation.status = 'stale';
   retained.ledger.claims[0].status = 'provisional';
-  retained.ledger.transitions[0] = {
-    claimId: 'claim-1',
-    from: 'unsupported',
-    to: 'provisional',
-  };
+  retained.ledger.transitions = [];
   await persist(retained);
   const result = await validatePacket(retained.packetRoot);
   assert.equal(result.valid, true, JSON.stringify(result, null, 2));

@@ -172,6 +172,12 @@ Claim states are categorical:
 - `unresolved`: available evidence cannot settle the claim; and
 - `unsupported`: no valid support remains.
 
+A revision-one claim may honestly begin as `provisional`: that genesis is
+represented by the claim itself and has no transition entry. Revision one
+rejects any incoming or self-transition used to manufacture provisional
+genesis. In later revisions, `provisional` must result from an explicit legal
+incoming transition; the genesis exception cannot be reused.
+
 Quick packets never contain `verified` claims. Standard and thorough claims need
 recorded independent semantic, adversarial, and coverage reviews. Every review
 ID resolves to a unique, complete, typed, hashed result bound to the exact

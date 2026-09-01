@@ -1238,14 +1238,37 @@ function validateLedger(value, errors) {
     lastTransitionByClaim.set(transition.claimId, transition);
   }
   for (const claim of value.claims ?? []) {
-    if (
-      value.revision === 1 &&
-      lastTransitionByClaim.get(claim.id)?.to !== claim.status
-    ) {
+    const lastTransition = lastTransitionByClaim.get(claim.id);
+    if (value.revision === 1 && claim.status === 'provisional') {
+      if (lastTransition) {
+        errors.push(
+          issue(
+            'INVALID_PROVISIONAL_GENESIS',
+            `Revision-one provisional claim ${claim.id} must use genesis without an incoming transition`,
+            `claim:${claim.id}`,
+          ),
+        );
+      }
+      continue;
+    }
+    if (value.revision === 1 && lastTransition?.to !== claim.status) {
       errors.push(
         issue(
           'CLAIM_TRANSITION_MISMATCH',
           `Final transition does not establish ${claim.id} as ${claim.status}`,
+          `claim:${claim.id}`,
+        ),
+      );
+    }
+    if (
+      value.revision > 1 &&
+      claim.status === 'provisional' &&
+      lastTransition?.to !== 'provisional'
+    ) {
+      errors.push(
+        issue(
+          'INVALID_PROVISIONAL_GENESIS',
+          `Later revision provisional claim ${claim.id} requires a legal incoming transition`,
           `claim:${claim.id}`,
         ),
       );
