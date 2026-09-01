@@ -1401,8 +1401,19 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   lifecycle canonical/atomic or fail closed to explicit reconciliation; it
   must add service and real Commander crash regressions for the uncovered
   boundaries.
-- Review-fix loop 1/3 is pending on the original phase implementer handle.
-  Phase 4 did not start.
+- Review-fix loop 1 resumed the original implementer through continuation event
+  `remote-project-management-p-rev2-review-fix-1-20260901` and committed the
+  bounded correction as `e79732b6cef1b996a54334e308860a121cdd989d`.
+  The journal now owns the canonical verification-read action atomically, the
+  stale mutable pointer is retired before the transition, and an
+  `attempt-started` create that may already have executed fails closed instead
+  of being re-emitted.
+- Root independently verified the seven-file fix boundary, one append-only fix
+  commit, exact eight-file union at 138/138, CLI type-check/build, and diff
+  integrity. The worktree was clean. Recovery remained 0/10 with no pending
+  attempt because this was a review-fix loop.
+- Review-fix loop 1/3 is complete. Fresh root-owned re-review is pending; Phase
+  4 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1502,7 +1513,7 @@ Track test execution during implementation.
 | 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
-| rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 134/134; core checks passed            | 0      | code review pending        |
+| rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 
 ## Final Summary (for PR/docs)
 

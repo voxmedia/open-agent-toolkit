@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
+oat_last_commit: e79732b6cef1b996a54334e308860a121cdd989d
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -37,7 +37,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T20:42:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T21:07:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,9 +50,10 @@ oat_generated: false
 ## Current Phase
 
 Implementation revision — both Revision 2 tasks are complete and independently
-verified, but fresh code review 1 blocked with one Critical in the durable
-mutation-to-verification handoff. A bounded fix loop is pending. Revision 1
-history remains exhausted and immutable. Phase 4 has not started.
+verified. Fresh code review 1 blocked with one Critical in the durable
+mutation-to-verification handoff; bounded fix loop 1 is complete and awaiting
+fresh re-review. Revision 1 history remains exhausted and immutable. Phase 4
+has not started.
 
 ## Artifacts
 
@@ -60,7 +61,7 @@ history remains exhausted and immutable. Phase 4 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Revision 2 review fix pending)
+- **Implementation:** implementation.md (in progress; Revision 2 re-review pending)
 
 ## Progress
 
@@ -140,19 +141,19 @@ history remains exhausted and immutable. Phase 4 has not started.
 - ✓ Revision 2 structured plan review passed with zero findings
 - ✓ Revision 2 implementation committed and focused union passed 134/134
 - ⚠ Fresh Revision 2 code review blocked with 1 Critical
-- ⧗ Revision 2 review-fix loop 1/3 pending
+- ✓ Revision 2 review-fix loop 1/3 committed as `e79732b6c`
+- ⧗ Fresh Revision 2 re-review pending
 - ⛔ Phase 4 remains blocked until Revision 2 passes code review
 
 ## Blockers
 
-Revision 2 is blocked on the confirmed durable-handoff Critical from
-`reviews/p-rev2-review-2026-09-01T202947Z.md`. The authorized bounded fix loop
-remains available. Phase 4 is dependency-blocked until a fresh Revision 2 code
-review passes with zero Critical and zero Important findings. The branch-level
-lockstep version gate remains a preserved out-of-phase release concern.
+Revision 2 remains review-blocked until the completed durable-handoff fix
+passes a fresh code re-review with zero Critical and zero Important findings.
+Phase 4 remains dependency-blocked. The branch-level lockstep version gate is
+preserved as an out-of-phase release concern.
 
 ## Next Milestone
 
-Resume the original p-rev2 implementer for the bounded review-fix loop, then
-run a fresh root-owned re-review. Do not begin `p04-t01` until the re-review
-passes with zero Critical and zero Important findings.
+Run a fresh root-owned p-rev2 code re-review over the original phase range plus
+fix commit `e79732b6c`. Do not begin `p04-t01` until the re-review passes with
+zero Critical and zero Important findings.
