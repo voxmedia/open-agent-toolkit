@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: null
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -19,14 +19,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | completed | 3     | 3/3       |
-| p03   | completed | 3     | 3/3       |
-| p04   | completed | 5     | 5/5       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 2     | 2/2       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | completed   | 3     | 3/3       |
+| p04   | in_progress | 6     | 5/6       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/14 tasks completed
 
 ---
 
@@ -102,7 +102,7 @@ retry gaps. Re-review passed and p02 merged at `1637fe31f`.
 
 ## Phase 4: Integration, Documentation, and Release Validation
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-08-31
 
 ### Task p04-t01: Prove the terminal lifecycle end to end
@@ -132,6 +132,28 @@ combined test run; no runtime source changed.
 
 **Status:** completed
 **Commit:** af850a463b220ac47342c675c3f68986dcae576c
+
+### Task p04-t06: (review) Accept explicit null as no recap during archive resume
+
+**Status:** pending
+
+### Remote Review Received: PR #254
+
+**Date:** 2026-09-01
+**Review artifact:** `reviews/archived/remote-pr-254-review-2026-09-01T221509Z.md`
+
+**Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor.
+
+**New tasks added:** `p04-t06`.
+
+**Disposition:** M1 was converted. The current first-party archive JSON producer
+omits a missing recap export, so Bugbot's High severity was reduced to Medium;
+the executor still needs to accept the archive library and downstream parser's
+explicit-null representation consistently. No finding was deferred or
+dismissed.
+
+**Next:** Execute `p04-t06`, run its targeted regression and repository gates,
+then update the remote review event through the project implementation flow.
 
 ### Review Received: final
 

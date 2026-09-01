@@ -794,30 +794,72 @@ git commit -m "fix(p04-t05): fail closed on terminal lookup errors"
 
 ---
 
+### Task p04-t06: (review) Accept explicit null as no recap during archive resume
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/scripts/execute-synced-archive-entry.mjs`
+- Modify: `.agents/skills/oat-project-complete/tests/resolve-synced-archive-entry.test.mjs`
+
+**Step 1: Analyze the null/omitted receipt seam**
+
+Trace the archive library's nullable `projectRecapExport`, the first-party JSON
+producer's omitted-field representation, and the continuation parser's null-as-
+absent contract. Preserve strict validation for every non-null receipt.
+
+**Step 2: Accept both supported no-recap representations**
+
+Update the resume guard so `null` and `undefined` both mean that no recap was
+exported. Do not weaken validation of source, export root, or manifest identity
+when a recap receipt is present.
+
+**Step 3: Verify targeted behavior**
+
+Add a recordless archive-resume case with `projectRecapExport: null`. Assert
+that it reaches downstream closeout with empty recap/evidence fields and does
+not attempt recap attestation.
+
+```bash
+node --test .agents/skills/oat-project-complete/tests/resolve-synced-archive-entry.test.mjs
+```
+
+**Step 4: Verify project commands and commit**
+
+Run the repository definition-of-done gates from p04-t02, plus the skill-specific
+lint, format, and validation commands required for `.agents/skills` changes.
+
+```bash
+git add .agents/skills/oat-project-complete/scripts/execute-synced-archive-entry.mjs .agents/skills/oat-project-complete/tests/resolve-synced-archive-entry.test.mjs
+git commit -m "fix(p04-t06): accept null recap resume receipts"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T052034Z.md           | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T053841Z.md           | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T055541Z.md           | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
-| p01    | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T120543Z.md           | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
-| p01    | code     | passed          | 2026-08-31 | reviews/archived/p01-review-2026-08-31T122419Z.md           | c59bcc4c0f54c8541a43090eea6ebfe33e34244d | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T130719Z.md           | 04b2ce008344b92ca9be447434dc9398b0037abf | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T134233Z.md           | 87c7d690e551d58429f9dffffb83c5f44c5bb206 | manual     | -                             |
-| p02    | code     | blocked         | 2026-08-31 | reviews/archived/p02-review-2026-08-31T140841Z.md           | 2a8d84388376ef0f8f367dd321010182fe1afc93 | manual     | -                             |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T151747Z.md           | 294d7467873c0a223bc9550356ddf7d4c50d4cf6 | manual     | -                             |
-| p02    | code     | passed          | 2026-08-31 | reviews/archived/p02-review-2026-08-31T154620Z.md           | 95bb211215e469645fb9fd7e371cf665cd4b0bab | manual     | -                             |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/archived/p03-review-2026-08-31T131555Z.md           | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
-| p03    | code     | passed          | 2026-08-31 | reviews/archived/p03-review-2026-08-31T134913Z.md           | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
-| p04    | code     | passed          | 2026-08-31 | reviews/archived/p04-review-2026-08-31T170239Z.md           | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
-| final  | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
-| final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T180107Z.md         | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
-| final  | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T232653Z.md         | eab596991e11bfb864336101b93311668ced6366 | gate       | claude-fable-skip-permissions |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
-| plan   | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T044004Z.md | -                                        | gate       | claude-fable-skip-permissions |
+| Scope          | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                   |
+| -------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01            | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T052034Z.md           | ce631f78b9ebdce4746ec2f1614ffb30362c3ddf | manual     | -                             |
+| p01            | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T053841Z.md           | 2ccde026814c4c3f09d21d2267fe0d394c58490d | manual     | -                             |
+| p01            | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T055541Z.md           | 26264a2c8ed2fc0289473a81d0f296ceb764cb76 | manual     | -                             |
+| p01            | code     | fixes_completed | 2026-08-31 | reviews/archived/p01-review-2026-08-31T120543Z.md           | 3d0f106597f80f5f3c22b96d89670028b89444b5 | manual     | -                             |
+| p01            | code     | passed          | 2026-08-31 | reviews/archived/p01-review-2026-08-31T122419Z.md           | c59bcc4c0f54c8541a43090eea6ebfe33e34244d | manual     | -                             |
+| p02            | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T130719Z.md           | 04b2ce008344b92ca9be447434dc9398b0037abf | manual     | -                             |
+| p02            | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T134233Z.md           | 87c7d690e551d58429f9dffffb83c5f44c5bb206 | manual     | -                             |
+| p02            | code     | blocked         | 2026-08-31 | reviews/archived/p02-review-2026-08-31T140841Z.md           | 2a8d84388376ef0f8f367dd321010182fe1afc93 | manual     | -                             |
+| p02            | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T151747Z.md           | 294d7467873c0a223bc9550356ddf7d4c50d4cf6 | manual     | -                             |
+| p02            | code     | passed          | 2026-08-31 | reviews/archived/p02-review-2026-08-31T154620Z.md           | 95bb211215e469645fb9fd7e371cf665cd4b0bab | manual     | -                             |
+| p03            | code     | fixes_completed | 2026-08-31 | reviews/archived/p03-review-2026-08-31T131555Z.md           | 71b350d9a2afd58ee83d3330bf1294635d0bca0c | manual     | -                             |
+| p03            | code     | passed          | 2026-08-31 | reviews/archived/p03-review-2026-08-31T134913Z.md           | 28162dae60ac623c3f680a608e374afa1d0c24c5 | manual     | -                             |
+| p04            | code     | passed          | 2026-08-31 | reviews/archived/p04-review-2026-08-31T170239Z.md           | 7d9e9e77275a9ffb09ec0989662ec2954b257960 | manual     | -                             |
+| final          | code     | fixes_completed | 2026-08-31 | reviews/archived/final-review-2026-08-31T171506Z.md         | fd9fe6615efc32a89ea977deeb6d4cc27b51c175 | auto       | -                             |
+| final          | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T180107Z.md         | 98b005960b2c5f282fadb8781d990d2ed4a159c9 | auto       | -                             |
+| final          | code     | passed          | 2026-08-31 | reviews/archived/final-review-2026-08-31T232653Z.md         | eab596991e11bfb864336101b93311668ced6366 | gate       | claude-fable-skip-permissions |
+| github-pr #254 | code     | fixes_added     | 2026-09-01 | reviews/archived/remote-pr-254-review-2026-09-01T221509Z.md | 3f698e213e2bcfc0217750905322cbfb3a0d48ce | -          | -                             |
+| spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| design         | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
+| plan           | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |
+| plan           | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T044004Z.md | -                                        | gate       | claude-fable-skip-permissions |
 
 Status progression:
 `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
@@ -832,10 +874,11 @@ Status progression:
   completion integration.
 - Phase 3: 3 tasks — terminal classification, resurrection guards, links, and
   prune behavior.
-- Phase 4: 5 tasks — end-to-end proof, documentation, versioning, release
-  validation, and final-review terminal-path fixes.
+- Phase 4: 6 tasks — end-to-end proof, documentation, versioning, release
+  validation, final-review terminal-path fixes, and the remote-review
+  null-recap correction.
 
-**Total: 13 tasks across 4 phases**
+**Total: 14 tasks across 4 phases**
 
 Implementation is complete when every task is committed, the final review has
 passed, and all repository definition-of-done gates exit 0 with uncached test

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t06
 oat_last_commit: 98b005960b2c5f282fadb8781d990d2ed4a159c9
 oat_blockers: []
 associated_issues:
@@ -14,7 +14,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -115,7 +115,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T21:16:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T22:15:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -125,14 +125,14 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation complete; PR #254 open
+**Status:** Implementation resumed for PR #254 review fix
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — complete after final review, configured exit gate, closeout
-sequence, and post-p04 HiLL approval. PR #254 remains open.
+Implementation — in progress for remote-review task `p04-t06`. PR #254 remains
+open.
 
 ## Artifacts
 
@@ -140,7 +140,7 @@ sequence, and post-p04 HiLL approval. PR #254 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete; 13/13 tasks, final review, gate, and closeout passed)
+- **Implementation:** `implementation.md` (in progress; 13/14 tasks complete)
 
 ## Progress
 
@@ -192,6 +192,7 @@ sequence, and post-p04 HiLL approval. PR #254 remains open.
 - ✓ Operator approved the post-p04 HiLL checkpoint
 - ✓ Configured closeout sequence reached its terminal `complete` state
 - ✓ Implementation marked complete
+- → PR #254 remote review converted one Medium null-recap finding to `p04-t06`
 
 ## Blockers
 
@@ -199,8 +200,5 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Implement `p04-t06`, verify the focused no-recap regression and repository
+gates, then reconcile the remote review event before returning to closeout.
