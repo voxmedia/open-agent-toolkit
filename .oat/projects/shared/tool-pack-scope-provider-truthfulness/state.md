@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118
+oat_current_task: p05-t01
+oat_last_commit: 7be0d56dfe69791982fae373882c3d96dac981eb
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -47,17 +47,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p04-recovery-20260901T010500Z
-        original_request_id: dispatch-p04-20260901T002500Z-36af8aadd
-        original_task_id: p04-t05
-        original_commit: d668237fba3bfb7278ccd128f8804aa0c9d4e5cd
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: d668237fba3bfb7278ccd128f8804aa0c9d4e5cd
-        status: completed
-        verification: focused 66/66; phase 368/368; pnpm test passed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -105,7 +95,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T00:21:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T01:16:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -121,10 +111,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 3 passed fresh independent High review with zero
-findings at `f50e007d7`. Config-only provider changes and refresh-policy
-provenance are now fully covered. Phase 4 safe collection-directory alias work
-is next.
+Implementation - Phase 4 completed five planned task commits plus one bounded
+composition recovery at `7be0d56df`. Manifest V2 ownership, exact alias proof,
+atomic no-clobber apply, drift-safe detach/removal, and truthful lifecycle
+rendering pass phase and full repository tests. Independent High review is
+next; Phase 5 remains gated until it passes.
 
 ## Artifacts
 
@@ -132,7 +123,7 @@ is next.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — review findings resolved and approved)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 next)
+- **Implementation:** `implementation.md` (in progress — p01-p03 passed; p04 implementation complete, review pending)
 
 ## Progress
 
@@ -158,7 +149,7 @@ is next.
 - ✓ Phase 1 independent code review passed
 - ✓ Phase 2 implementation and independent review passed
 - ✓ Phase 3 implementation and independent review passed
-- ⧗ Phase 4 safe collection-directory aliases next
+- ⧗ Phase 4 implementation verified; independent High review pending
 
 ## Blockers
 
@@ -166,5 +157,5 @@ is next.
 
 ## Next Milestone
 
-Begin Phase 4 with Manifest V2 collection ownership, exact alias identity
-proof, atomic apply, drift reconciliation, and truthful lifecycle rendering.
+Run the independent High Phase 4 review. Continue to Phase 5 only after zero
+Critical and zero Important findings.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-08-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,12 +29,12 @@ oat_generated: false
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
 | Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | pending  | 5     | 0/5       |
+| Phase 4 | review   | 5     | 5/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
-**Total:** 13/30 tasks completed
+**Total:** 18/30 tasks completed
 
 ---
 
@@ -733,6 +733,64 @@ high confidence. The original commit remains the source authority.
 
 ---
 
+## Phase 4: Safe Collection-Directory Aliases
+
+**Status:** implementation complete; independent High review pending
+**Started:** 2026-08-31
+
+### Phase Summary
+
+- Added Manifest V2 collection ownership with V1 normalization, exact
+  identity proof, configured-auto skill collection planning, atomic no-clobber
+  apply/rollback, drift-safe detach/removal, and matching human/JSON/provider
+  lifecycle reporting.
+- Explicit configured symlink/copy remains per-entry. Collection aliases never
+  delete canonical targets or unmanaged content, never fall back to copy, and
+  never permit child mutation beneath an inherited collection.
+- All five planned task commits are present in order. One mechanically derived
+  p04-t04 executor seam safely consumes `detach-collection` by removing
+  manifest ownership and unlinking only a still-exact OAT-created alias.
+
+| Task    | Status   | Commit      | Outcome                                      |
+| ------- | -------- | ----------- | -------------------------------------------- |
+| p04-t01 | complete | `99fdd4734` | Manifest V2 collection ownership             |
+| p04-t02 | complete | `b2edc2b48` | Exact identity proof and auto-alias planning |
+| p04-t03 | complete | `1160d2c98` | Atomic no-clobber apply and rollback         |
+| p04-t04 | complete | `7653d456b` | Drift-safe detach, disablement, and removal  |
+| p04-t05 | complete | `d668237fb` | Human/JSON/provider lifecycle and docs       |
+
+### Recovery Event p04-recovery-20260901T010500Z
+
+- Phase/task: p04 / p04-t05
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Original commit: `d668237fba3bfb7278ccd128f8804aa0c9d4e5cd`
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Recovery commit: `7be0d56dfe69791982fae373882c3d96dac981eb`
+- Verification: authoritative post-commit focused 66/66, phase 368/368, and
+  full `pnpm test` passed
+- Reason: collection aliases are registry-supported only for skills; the
+  bounded correction prevents agent-alias collision with Cursor role
+  materialization and mechanically aligns two integration fixtures.
+
+### Verification
+
+- Root validated the exact seven-commit range, five ordered task commits,
+  recovery reservation/terminal marker, file boundaries, clean worktree, and
+  whitespace at `7be0d56df` before clearing the recovery marker.
+- Implementer phase union passed 18 files / 368 tests. Full `pnpm test` passed
+  with live CLI coverage of 317 files / 4,823 tests plus passing smoke, skills,
+  and release suites. CLI lint, type-check, and format passed live; `pnpm
+check` passed with 10/10 cache replays plus live validation of 63 skills.
+- Root independently reran the primary 15-file union at committed HEAD: 315/315
+  passed.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1043,6 +1101,41 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `native-catalog`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 8 — 2026-09-01T00:25:00Z
+
+- Branch: `tool-pack-scope-provider-truthfulness`
+- Tier: Tier 1 — exact-target phase implementer
+- Dispatch policy: managed High from project state
+- Scope: p04 implementation, five sequential tasks
+- Outcome: 5/5 planned tasks committed; one bounded composition recovery
+  completed under attempt 1/10
+- Verification: phase 368/368, live CLI 4,823/4,823, full repository tests,
+  CLI lint/type/format, `pnpm check`, and whitespace checks pass
+- Outstanding: independent root-owned p04 review
+
+#### Dispatch record — `dispatch-p04-20260901T002500Z-36af8aadd`
+
+- Scope/action/role: `p04` / `implementation` / `implementer`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Task class/floor: `consequential` / satisfied
+- Selection reason: `native-catalog`; candidates considered:
+  `gpt-5.6-sol/high`
+- Phase range:
+  `36af8aadd24dd4b9ec3d9dd74b1090d2809872cc..7be0d56dfe69791982fae373882c3d96dac981eb`
+- Child outcome: five ordered task commits, one validated recovery, clean
+  worktree
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Recovery continuation — `p04-recovery-20260901T010500Z`
+
+- Original request: `dispatch-p04-20260901T002500Z-36af8aadd`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Commit: `7be0d56dfe69791982fae373882c3d96dac981eb`
+- Outcome: restricted collection aliases to registry-supported skill mappings;
+  focused 66, phase 368, and full repository tests passed
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

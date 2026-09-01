@@ -128,6 +128,10 @@ Operator-authorized fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 covers exact co
 
 Final p03 fix 5f3bc57a0e785224ff25fad007cf0a7ee1c0d118 resolved config-only refresh advice and policy-provenance guardrails; fresh independent High review passed with critical:0, important:0, medium:0, minor:0 at reviews/p03-review-2026-09-01T002159Z.md. Phase 3 is complete and p04 may begin.
 
+### 2026-09-01 · structural · oat-project-implement · p04-implementation-complete
+
+p04 completed five planned commits plus recovered composition attempt 1/10 at 7be0d56dfe69791982fae373882c3d96dac981eb. Collection aliases are restricted to registry-supported skills; phase 368, live CLI 4823, full repository tests, static checks, and whitespace pass. Independent High review is next; p05 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
