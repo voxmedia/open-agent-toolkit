@@ -735,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** third review fixes complete; fresh High review pending
+**Status:** fourth review fix added; final bounded correction pending
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -911,6 +911,22 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   whitespace, and the live 406-test union.
 - A fresh exact-High reviewer will assess the complete Phase 4 range before
   Phase 5 starts.
+
+### Review Round 4 — Final Bounded Cycle
+
+- Artifact: `reviews/p04-review-2026-09-01T031017Z.md`
+- Reviewed head: `54ef41a4a57d9f1222096013e0d0a03dd2e8bb2b`
+- Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
+- Reconnaissance: attempted through one accepted consequential safety lane. The
+  artifact contains complete orchestration evidence; its project-log entry
+  remains deferred until the terminal Phase 4 outcome.
+- The prior four findings are resolved. The one remaining correction must give
+  deferred transition symlink/copy creates no-clobber semantics so an unmanaged
+  file or directory appearing after absence revalidation survives, the child
+  fails with actionable recovery, and manifest evidence cannot claim success.
+- This consumes the final bounded p04 review-fix cycle under the configured
+  retry limit. A fresh round-5 review must pass or return to operator governance;
+  Phase 5 remains gated.
 
 ---
 
@@ -1312,6 +1328,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: all four review findings closed; focused 86/86 and authoritative
   Phase 4 union 406/406 passed with exact ten-file and whitespace checks.
 - Dispatch: scope=p04-review-r3-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 4 — final bounded cycle
+
+- Reviewed head: `54ef41a4a57d9f1222096013e0d0a03dd2e8bb2b`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p04-review-2026-09-01T031017Z.md`
+- Outcome: changes requested; 1 Critical finding. All round-3 findings are
+  resolved; Phase 5 remains gated for the final bounded p04 correction/review.
+- Reconnaissance: attempted; complete nested dispatch and reconciliation
+  evidence is preserved in the review artifact.
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
