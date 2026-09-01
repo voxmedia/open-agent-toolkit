@@ -862,7 +862,7 @@ git commit -m "fix(p04-t06): accept null recap resume receipts"
 | design         | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan           | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |
 | plan           | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T044004Z.md | -                                        | gate       | claude-fable-skip-permissions |
-| final          | code     | received        | 2026-09-01 | reviews/final-review-2026-09-01T231603Z.md                  | 5a05907aee3f2a5bcff776baf9e9b870b3cc1b87 | gate       | claude-fable-skip-permissions |
+| final          | code     | passed          | 2026-09-01 | reviews/archived/final-review-2026-09-01T231603Z.md         | 5a05907aee3f2a5bcff776baf9e9b870b3cc1b87 | gate       | claude-fable-skip-permissions |
 
 Status progression:
 `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.

@@ -563,6 +563,32 @@ and could not be refreshed`.
   final/code/source-filename Reviews event. Pre-receive head:
   `fc05f6c80d76f92ac395dbf63b6d228eaca5b9bf`.
 
+### Review Received: final gate (current basis)
+
+**Date:** 2026-09-01
+**Review artifact:**
+`reviews/archived/final-review-2026-09-01T231603Z.md`
+
+**Findings:** 0 Critical, 0 Important, 1 Medium, 1 Minor.
+**New tasks added:** none.
+
+**Judgment-sweep dispositions:**
+
+- `M1` — defer only to this closeout's required summary/document steps. The
+  implementation and gate result are authoritative; `summary.md` and the owned
+  `.oat/repo/pjm/current-state.md` entry still describe the superseded gate
+  basis because the replacement gate had not existed when they were written.
+  Refresh both before PR #254 merges, naming p04-t06, reviewed head
+  `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87`, and gate run
+  `2e607741-ddac-4b6e-bc38-0d65d66c93aa`.
+- `m1` — defer the redundant `projectRecapExport?.` cleanup until the executor
+  is next changed. The three optional chains are unreachable only after the
+  new nullish guard, have no behavior or safety impact, and do not justify
+  reopening implementation, review, and gate work for a cosmetic refactor.
+
+The passing-gate judgment sweep is fully dispositioned. The review event is
+`passed`; no code fix tasks or re-review are required.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
