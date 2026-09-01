@@ -27,7 +27,7 @@ async function buildPostArchiveContinuation(
   let exportedBuildRecordPath = '';
   let evidenceCommit = '';
   let evidencePushRequired = false;
-  if (archiveReport.projectRecapExport !== undefined) {
+  if (archiveReport.projectRecapExport != null) {
     const sourceRunRoot = archiveReport.projectRecapExport?.sourceRunRoot;
     const exportRoot = archiveReport.projectRecapExport?.exportRoot;
     const manifestPath =

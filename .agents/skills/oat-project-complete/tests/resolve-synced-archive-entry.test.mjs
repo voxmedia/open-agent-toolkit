@@ -490,6 +490,68 @@ test('recordless retry resumes the same archive and completes downstream closeou
   assert.equal(confirmationCount, 1);
 });
 
+test('recordless retry accepts an explicit null recap receipt without attestation', async () => {
+  let attestationCount = 0;
+  let closeoutCount = 0;
+  const result = await executeSyncedArchiveEntry({
+    record: null,
+    projectName: 'demo',
+    projectPath: '/missing/active/demo',
+    repoRoot: '/repo',
+    pullProject: async () => assert.fail('recordless retry must not pull'),
+    runActiveWorkflowSteps: async () =>
+      assert.fail('recordless retry must not replay active steps'),
+    archiveProject: async (_projectPath, identity) => {
+      assert.deepEqual(identity, { recordless: true });
+      return {
+        status: 'ok',
+        mode: 'apply',
+        archivePath: '/archive/demo',
+        snapshotId: baseRecord.archiveSnapshot,
+        lifecycleCommit: 'b'.repeat(40),
+        completedRef: 'refs/oat/completed/demo',
+        verifiedSourceSha: sourceSha,
+        activeAliasDisposition: 'removed',
+        recordRetired: true,
+        projectRecapExport: null,
+      };
+    },
+    validateArchive: async ({ archiveReport, projectName }) =>
+      validateSyncedArchiveTerminalReport(archiveReport, projectName),
+  });
+
+  const fields = parseSyncedArchiveResumeFields(result);
+  assert.equal(fields.SELECTED_PROJECT_RECAP_RUN, '');
+  assert.equal(fields.PROJECT_RECAP_EXPORT_JSON, 'null');
+  assert.equal(fields.EXPORTED_MANIFEST_PATH, '');
+  assert.equal(fields.EXPORTED_BUILD_RECORD_PATH, '');
+  assert.equal(fields.EVIDENCE_COMMIT, '');
+  assert.equal(fields.EVIDENCE_PUSH_REQUIRED, 'false');
+
+  await continueSyncedArchiveCompletion({
+    executionResult: result,
+    finalizeLinks: async () => undefined,
+    refreshDashboard: async () => undefined,
+    attestRecap: async () => {
+      attestationCount += 1;
+    },
+    pushBookkeeping: async (continuation) => {
+      assert.equal(continuation.selectedProjectRecapRun, '');
+      assert.equal(continuation.projectRecapExport, null);
+      assert.equal(continuation.exportedManifestPath, '');
+      assert.equal(continuation.exportedBuildRecordPath, '');
+      assert.equal(continuation.evidenceCommit, '');
+    },
+    closeoutPr: async () => {
+      closeoutCount += 1;
+    },
+    clearPointer: async () => undefined,
+    confirmCompletion: async () => undefined,
+  });
+  assert.equal(attestationCount, 0);
+  assert.equal(closeoutCount, 1);
+});
+
 test('retains the active pointer when the synced archive attempt fails', async () => {
   let clearCount = 0;
   await assert.rejects(
