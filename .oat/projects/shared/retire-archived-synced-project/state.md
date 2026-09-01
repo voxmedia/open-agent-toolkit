@@ -104,7 +104,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -115,7 +115,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T19:32:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T19:35:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -181,7 +181,8 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Configured pre-approval sequence snapshotted as `summary → document → pr`
 - ✓ Project summary generated with observation rollup and canonical decision promotion
 - ✓ Documentation sync completed with the two operator-approved terminal-contract updates
-- ✓ PR created
+- ✓ PR #254 created from `backlog-retire-archived-synced-records` against `main`
+- ✓ Configured pre-approval sequence completed in stored order
 - ⧗ Awaiting human review
 
 ## Blockers

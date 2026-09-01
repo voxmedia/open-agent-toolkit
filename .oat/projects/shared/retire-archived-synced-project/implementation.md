@@ -417,6 +417,13 @@ Pre-approval `document` completed at `ffe97e1f8`: the control-plane README now
 documents terminal list-row variants, the CLI reference records fail-closed
 lookup semantics, and the 69-file docs check passed with zero errors.
 
+Pre-approval `pr` completed at `3f698e213`: the branch was pushed at the exact
+local head and [PR #254](https://github.com/voxmedia/open-agent-toolkit/pull/254)
+was opened against `main`. The published body excludes project frontmatter,
+all 17 review artifacts are archived, and no active review artifact remains.
+The configured pre-approval sequence is now complete in its stored
+`summary → document → pr` order.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
