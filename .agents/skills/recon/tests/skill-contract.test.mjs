@@ -41,6 +41,26 @@ test('controller binds one approved exact target to every wave', async () => {
   assert.match(skill, /generic role[\s\S]{0,220}before approval/i);
 });
 
+test('controller binds dispatch dependencies once to one portable installed scope', async () => {
+  const { skill } = await readContracts();
+  assert.match(
+    skill,
+    /loaded skill[\s\S]{0,240}\$\{SKILL_DIR\}\/\.\.[\s\S]{0,240}\$\{HOME\}\/\.agents\/skills[\s\S]{0,240}<repo-root>\/\.agents\/skills/i,
+  );
+  assert.match(
+    skill,
+    /first candidate[\s\S]{0,260}both `oat-dispatch-subagents\/SKILL\.md` and\s+`subagent-orchestration\/SKILL\.md`[\s\S]{0,260}same scope/i,
+  );
+  assert.match(
+    skill,
+    /never (?:resolve|bind)[\s\S]{0,180}(?:independently|different|mixed) scopes/i,
+  );
+  assert.match(
+    skill,
+    /oat tools install utility --scope\s+<user\|project>[\s\S]{0,180}oat tools update --pack utility --scope\s+<user\|project>/i,
+  );
+});
+
 test('profiles define adaptive bounded quick, standard, and thorough runs', async () => {
   const { profiles } = await readContracts();
   for (const profile of ['quick', 'standard', 'thorough']) {

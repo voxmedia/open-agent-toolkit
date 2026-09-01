@@ -108,11 +108,27 @@ concurrency—not the target tier.
 
 ### Step 4: Prepare One Exact Dispatch Manifest
 
-Use installed `oat-dispatch-subagents` in its selection-only `prepare`
-operation. Load its current instructions, the installed
-`subagent-orchestration` model-selection principles, exactly one active
-provider selection reference, and the matching provider mechanics reference.
-Do not copy provider catalogs or exact launch construction into this skill.
+Before reading either installed dispatch dependency, resolve one shared utility
+skills root. Probe these candidate roots in order: from this loaded skill use
+`${SKILL_DIR}/..`, then `${HOME}/.agents/skills` at user scope, then
+`<repo-root>/.agents/skills` at project scope. The first candidate containing
+both `oat-dispatch-subagents/SKILL.md` and
+`subagent-orchestration/SKILL.md` becomes `${UTILITY_SKILLS_ROOT}`; bind every
+dependency read to that same scope. Never resolve the dependencies
+independently or mix different scopes.
+
+If no candidate contains both dependencies, name the missing dependency and
+stop before preparing or launching workers. Give the recovery command for the
+intended scope: `oat tools install utility --scope <user|project>` or, when the
+pack is already installed, `oat tools update --pack utility --scope
+<user|project>`.
+
+Read `${UTILITY_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md` and use its
+selection-only `prepare` operation. From the same root, read
+`subagent-orchestration/references/model-selection-principles.md`, exactly one
+active-provider selection reference, and the matching
+`oat-dispatch-subagents` provider mechanics reference. Do not copy provider
+catalogs or exact launch construction into this skill.
 
 Prepare every planned and conditional wave against one exact target satisfying
 the run-wide floor. Prefer the canonical `recon-worker` role. If that role is
