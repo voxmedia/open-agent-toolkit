@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,17 +18,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status | Tasks | Completed |
-| ------------ | ------ | ----- | --------- |
-| Phase 1      | passed | 1     | 1/1       |
-| Phase 2      | passed | 4     | 4/4       |
-| Phase 3      | passed | 4     | 4/4       |
-| Phase 4      | passed | 2     | 2/2       |
-| Phase p-rev1 | passed | 2     | 2/2       |
-| Phase p-rev2 | passed | 3     | 3/3       |
-| Phase p-rev3 | active | 1     | 0/1       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | passed      | 1     | 1/1       |
+| Phase 2      | passed      | 4     | 4/4       |
+| Phase 3      | passed      | 4     | 4/4       |
+| Phase 4      | passed      | 2     | 2/2       |
+| Phase p-rev1 | passed      | 2     | 2/2       |
+| Phase p-rev2 | passed      | 3     | 3/3       |
+| Phase p-rev3 | implemented | 1     | 1/1       |
 
-**Total:** 16/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ## Task Status
 
@@ -80,9 +80,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev3: Revision 3 — Fail Closed on Drifted Materializable Agents
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev3-t01 | pending | -      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev3-t01 | completed | `834f28fa4` |
 
 ## Orchestration Runs
 
@@ -1342,6 +1342,26 @@ review passes.
 
 **Next:** Execute `prev3-t01`, then run a fresh independent final review before
 starting a new configured implementation exit-gate generation.
+
+### 2026-09-01 - p-rev3 fix completed
+
+- Request ID: `recon-skill-prev3-fix-20260901T033500Z`
+- Role/class: `oat-phase-implementer` / worker
+- Provider/context: Codex / root-native
+- Task class/floor: `default-implementation` / satisfied
+- Project dispatch policy: managed `high` ceiling
+- Selected target: `oat-phase-implementer-gpt-5-6-terra-high`
+- Model/effort axes: `gpt-5.6-terra` / `high`
+- Selection source/reason: native-default / native catalog within project ceiling
+- Authority: exactly `scanner.ts`, `scanner.test.ts`, and `sync/index.test.ts`;
+  one task commit; no nested dispatch
+- Launch/outcome: accepted / completed
+- Task commit: `834f28fa41f163091a1b3904d6daf2fd158e2560`
+- Root verification: 75/75 focused scanner and sync tests pass, CLI type-check
+  passes, the suggested remediation command resolves the research pack through
+  `--pack`, and the task diff is whitespace-clean.
+- The final-review event is `fixes_completed`; a fresh independent final review
+  is required before the configured exit gate may start a new generation.
 
 ## Deviations from Plan / Design
 

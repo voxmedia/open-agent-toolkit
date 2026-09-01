@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev3-t01
-oat_last_commit: 47564e838317288bedac43c3ca022d8542289d16
+oat_current_task: null
+oat_last_commit: 834f28fa41f163091a1b3904d6daf2fd158e2560
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -79,7 +79,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T03:33:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T03:41:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -89,13 +89,13 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation review fix in progress / PR open
+**Status:** Implementation review fix complete / PR open
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — post-rebase final review fix `prev3-t01` in progress.
+Implementation — post-rebase review fix complete; fresh final review pending.
 
 ## Artifacts
 
@@ -103,7 +103,7 @@ Implementation — post-rebase final review fix `prev3-t01` in progress.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (16/17 tasks complete; review fix active)
+- **Implementation:** `implementation.md` (17/17 tasks complete; fresh review pending)
 
 ## Progress
 
@@ -181,7 +181,8 @@ Implementation — post-rebase final review fix `prev3-t01` in progress.
 - ✓ PR created
 - ✓ Project recap skipped by explicit user choice; terminal recap guard passed
 - ⧗ Post-rebase final review found one Important native-role projection defect
-- ⧗ Revision task prev3-t01 requires current inventory before projection
+- ✓ Revision task prev3-t01 requires current inventory before projection
+- ✓ Non-current materializable agents fail closed with an actionable pack update
 - ⧗ Fresh final lifecycle review and configured exit gate required after fix
 - ⧗ Awaiting human review
 
@@ -191,5 +192,5 @@ None.
 
 ## Next Milestone
 
-Complete `prev3-t01`, run a fresh final lifecycle review, then execute a new
-configured implementation exit-gate generation before final HiLL approval.
+Run a fresh final lifecycle review, then execute a new configured
+implementation exit-gate generation before final HiLL approval.
