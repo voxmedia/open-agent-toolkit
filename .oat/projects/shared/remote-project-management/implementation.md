@@ -1414,6 +1414,18 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   attempt because this was a review-fix loop.
 - Review-fix loop 1/3 is complete. Fresh root-owned re-review is pending; Phase
   4 did not start.
+- Fresh root-owned review 2 is recorded at
+  `reviews/p-rev2-rereview-2026-09-01T210901Z.md` against exact code head
+  `e79732b6cef1b996a54334e308860a121cdd989d`. It reported
+  `**Reconnaissance:** not-attempted` and blocked with 0 Critical, 1 Important,
+  0 Medium, and 0 Minor.
+- Review 2 confirms the prior runtime Critical is closed. Its remaining
+  Important is test-only: the post-journal service and real Commander crash
+  regressions assert only read shape and stable ID, not equality with the exact
+  canonical durable action across step ID, digest, provider context,
+  capability evidence, fields, and preview evidence.
+- Review-fix loop 2/3 is pending on the original phase implementer handle.
+  Phase 4 did not start.
 
 <!-- orchestration-runs-end -->
 
