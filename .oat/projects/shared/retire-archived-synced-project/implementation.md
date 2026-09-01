@@ -427,7 +427,9 @@ The configured pre-approval sequence is now complete in its stored
 The implementation-tail project recap resolved to `skip` from the operator's
 interactive choice. The explainer terminal-outcome guard passed with no
 manifest, no recap was attempted or reused, and the recap run path is `none`.
-The closeout sequence is awaiting the configured post-p04 HiLL approval.
+The operator explicitly approved the configured post-p04 HiLL checkpoint on
+2026-09-01. The closeout sequence has entered `post_approval`; it has no
+configured post-approval steps.
 
 <!-- orchestration-runs-end -->
 

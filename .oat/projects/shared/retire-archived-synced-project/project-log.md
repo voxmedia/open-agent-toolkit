@@ -144,6 +144,10 @@ Claude Fable gate run 42a1a4fe-e3a4-4830-8fbc-474ba966613d passed at Important. 
 
 Documentation scan found two thin-coverage updates: control-plane ProjectListRow terminal variants and CLI completed-ref lookup failure semantics. Mandatory PJM refresh completed at dd20abd21; recommendation-dependent edits await explicit operator approval.
 
+### 2026-09-01 · structural · oat-project-implement · p04-hill-approved
+
+Operator explicitly approved the post-p04 HiLL checkpoint after all 13 tasks, phase and final reviews, the configured Claude Fable exit gate, summary, documentation, PR #254, and the recap terminal guard completed. The immutable closeout sequence entered post-approval with no configured post-approval steps.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
