@@ -168,6 +168,10 @@ retro artifact=.oat/projects/shared/retire-archived-synced-project/references/pr
 
 target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
 
+### 2026-09-01 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
