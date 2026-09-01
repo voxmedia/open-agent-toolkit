@@ -11,7 +11,10 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
+import {
+  DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
+  type SyncConfig,
+} from '@config/sync-config';
 import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
 import { claudeAdapter } from '@providers/claude/adapter';
@@ -25,6 +28,15 @@ import { executeSyncPlan } from './execute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import { scanCanonical } from './scanner';
 import { createTestAdapter } from './test-helpers';
+
+const DEFAULT_SYNC_CONFIG: SyncConfig = {
+  ...AUTO_SYNC_CONFIG,
+  defaultStrategy: 'symlink',
+};
+const COPY_SYNC_CONFIG: SyncConfig = {
+  ...AUTO_SYNC_CONFIG,
+  defaultStrategy: 'copy',
+};
 
 async function seedCanonical(root: string): Promise<void> {
   await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -104,6 +116,16 @@ function createLegacyCopilotAdapter(): ProviderAdapter {
   };
 }
 
+function createSkillCollectionAdapter(): ProviderAdapter {
+  const adapter = createTestAdapter();
+  return {
+    ...adapter,
+    projectMappings: adapter.projectMappings.filter(
+      ({ contentType }) => contentType === 'skill',
+    ),
+  };
+}
+
 describe('sync engine integration', () => {
   const tempDirs: string[] = [];
 
@@ -172,6 +194,223 @@ describe('sync engine integration', () => {
     expect(
       secondPlan.entries.every((entry) => entry.operation === 'skip'),
     ).toBe(true);
+  });
+
+  it('reconciles collection inheritance, removal, repetition, and disablement without child mutation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+
+    const firstCanonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical: firstCanonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(firstPlan.collections).toEqual([
+      expect.objectContaining({ action: 'create-collection-link' }),
+    ]);
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      '# skill two\n',
+      'utf8',
+    );
+    const secondCanonical = await scanCanonical(root, 'project');
+    const firstManifest = await loadManifest(manifestPath);
+    const inheritancePlan = await computeSyncPlan({
+      canonical: secondCanonical,
+      adapters: [adapter],
+      manifest: firstManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(inheritancePlan.entries).toEqual([]);
+    expect(inheritancePlan.collections).toEqual([
+      expect.objectContaining({
+        action: 'inherit-collection',
+        inheritedEntries: [
+          '.agents/skills/skill-one',
+          '.agents/skills/skill-two',
+        ],
+      }),
+    ]);
+    await executeSyncPlan(inheritancePlan, firstManifest, manifestPath);
+
+    const inheritedManifest = await loadManifest(manifestPath);
+    const repeatedPlan = await computeSyncPlan({
+      canonical: secondCanonical,
+      adapters: [adapter],
+      manifest: inheritedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(repeatedPlan).toMatchObject({
+      entries: [],
+      removals: [],
+      collections: [],
+    });
+
+    await rm(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+      force: true,
+    });
+    const reducedCanonical = await scanCanonical(root, 'project');
+    const removalPlan = await computeSyncPlan({
+      canonical: reducedCanonical,
+      adapters: [adapter],
+      manifest: inheritedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(removalPlan.entries).toEqual([]);
+    expect(removalPlan.removals).toEqual([
+      expect.objectContaining({ operation: 'detach' }),
+    ]);
+    await executeSyncPlan(removalPlan, inheritedManifest, manifestPath);
+
+    const reducedManifest = await loadManifest(manifestPath);
+    expect(reducedManifest.entries).toEqual([
+      expect.objectContaining({
+        canonicalPath: '.agents/skills/skill-two',
+        strategy: 'collection',
+      }),
+    ]);
+    const disablePlan = await computeSyncPlan({
+      canonical: reducedCanonical,
+      adapters: [],
+      manifest: reducedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(disablePlan.collections).toEqual([
+      expect.objectContaining({ action: 'detach-collection' }),
+    ]);
+    const result = await executeSyncPlan(
+      disablePlan,
+      reducedManifest,
+      manifestPath,
+    );
+
+    expect(result.collectionResults).toEqual([
+      expect.objectContaining({
+        action: 'detach-collection',
+        status: 'changed',
+      }),
+    ]);
+    await expect(lstat(join(root, '.claude', 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(
+      readFile(
+        join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('# skill two\n');
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+  });
+
+  it('detaches adopted and changed collection aliases without removing them', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const canonicalDir = join(root, '.agents', 'skills');
+    const providerDir = join(root, '.claude', 'skills');
+    await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(canonicalDir, 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+
+    const canonical = await scanCanonical(root, 'project');
+    const adoptionPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(adoptionPlan.collections).toEqual([
+      expect.objectContaining({ action: 'adopt-collection-link' }),
+    ]);
+    await executeSyncPlan(adoptionPlan, createEmptyManifest(), manifestPath);
+
+    const adoptedManifest = await loadManifest(manifestPath);
+    const adoptedDisablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: adoptedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(adoptedDisablePlan, adoptedManifest, manifestPath);
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+
+    const freshPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(freshPlan, createEmptyManifest(), manifestPath);
+    const ownedManifest = await loadManifest(manifestPath);
+    ownedManifest.collections[0]!.ownership = 'oat-created';
+    await rm(providerDir);
+    const foreignDir = join(root, 'foreign-skills');
+    await mkdir(foreignDir);
+    await symlink(join('..', 'foreign-skills'), providerDir, 'dir');
+    const changedDisablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: ownedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(changedDisablePlan, ownedManifest, manifestPath);
+
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    expect(await readlink(providerDir)).toBe(join('..', 'foreign-skills'));
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
   });
 
   it('repairs missing manifest entries for pre-existing in-sync symlinks', async () => {
@@ -343,7 +582,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
@@ -360,7 +599,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest,
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     const result = await executeSyncPlan(plan, manifest, manifestPath);
@@ -390,7 +629,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
@@ -464,7 +703,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
@@ -628,7 +867,7 @@ describe('sync engine integration', () => {
       adapters: [legacyAdapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(legacyPlan, createEmptyManifest(), manifestPath);

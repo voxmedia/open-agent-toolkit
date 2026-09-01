@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readlink, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import {
@@ -320,6 +320,47 @@ interface CreatedCollection {
   created: CreatedCollectionSymlink;
 }
 
+function detachCollectionOwnership(
+  manifest: ManifestV2,
+  plan: CollectionProjectionPlan,
+): ManifestV2 {
+  const scopeRoot = inferScopeRoot(plan.canonicalDir);
+  const canonicalDir = relative(scopeRoot, plan.canonicalDir).replaceAll(
+    '\\',
+    '/',
+  );
+  const providerDir = relative(scopeRoot, plan.providerDir).replaceAll(
+    '\\',
+    '/',
+  );
+  const detachedIds = new Set(
+    manifest.collections
+      .filter(
+        (collection) =>
+          collection.provider === plan.provider &&
+          collection.contentType === plan.contentType &&
+          collection.canonicalDir === canonicalDir &&
+          collection.providerDir === providerDir,
+      )
+      .map(({ id }) => id),
+  );
+  if (detachedIds.size === 0) {
+    return manifest;
+  }
+
+  return {
+    ...manifest,
+    collections: manifest.collections.filter(({ id }) => !detachedIds.has(id)),
+    entries: manifest.entries.filter(
+      (entry) =>
+        entry.strategy !== 'collection' ||
+        entry.collectionId === undefined ||
+        !detachedIds.has(entry.collectionId),
+    ),
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
 async function executeCollectionTransaction(
   plans: readonly CollectionProjectionPlan[],
   manifest: ManifestV2,
@@ -359,7 +400,10 @@ async function executeCollectionTransaction(
       action === 'adopt-collection-link' ||
       action === 'inherit-collection',
   );
-  if (actionable.length === 0) {
+  const detachments = plans.filter(
+    ({ action }) => action === 'detach-collection',
+  );
+  if (actionable.length === 0 && detachments.length === 0) {
     return {
       manifest,
       results: passiveResults,
@@ -435,7 +479,64 @@ async function executeCollectionTransaction(
       );
     }
 
+    for (const plan of detachments) {
+      nextManifest = detachCollectionOwnership(nextManifest, plan);
+    }
+
     await dependencies.saveManifest(manifestPath, nextManifest);
+
+    const detachmentResults: CollectionOperationResult[] = [];
+    for (const plan of detachments) {
+      let reason = plan.reason;
+      let status: CollectionOperationResult['status'] = 'changed';
+      if (
+        plan.ownership === 'oat-created' &&
+        plan.proof.status === 'exact-link'
+      ) {
+        try {
+          const current = await dependencies.proveCollectionIdentity({
+            root: inferScopeRoot(plan.canonicalDir),
+            canonicalDir: plan.canonicalDir,
+            providerDir: plan.providerDir,
+          });
+          if (
+            current.status === 'exact-link' &&
+            collectionProofMatches(plan.proof, current)
+          ) {
+            const removed =
+              await dependencies.removeCollectionSymlinkIfUnchanged(
+                plan.providerDir,
+                {
+                  device: current.providerLink.device,
+                  inode: current.providerLink.inode,
+                  linkText: await readlink(plan.providerDir),
+                },
+              );
+            if (!removed) {
+              status = 'partial';
+              reason =
+                'collection ownership detached; alias changed during removal and was preserved';
+            }
+          } else {
+            reason =
+              'collection ownership detached; alias identity changed after planning and was preserved';
+          }
+        } catch {
+          status = 'partial';
+          reason =
+            'collection ownership detached; alias removal could not be proven safe and was preserved';
+        }
+      }
+      detachmentResults.push({
+        provider: plan.provider,
+        contentType: plan.contentType,
+        action: plan.action,
+        ownership: plan.ownership,
+        status,
+        reason,
+      });
+    }
+
     return {
       manifest: nextManifest,
       results: [
@@ -451,6 +552,7 @@ async function executeCollectionTransaction(
               : ('changed' as const),
           reason: plan.reason,
         })),
+        ...detachmentResults,
       ],
       attempted: true,
       persisted: true,
@@ -480,6 +582,14 @@ async function executeCollectionTransaction(
           reason: partial
             ? 'collection transaction failed and an unchanged-link rollback could not be proven'
             : 'collection transaction failed; newly created links were rolled back',
+        })),
+        ...detachments.map((plan) => ({
+          provider: plan.provider,
+          contentType: plan.contentType,
+          action: plan.action,
+          ownership: plan.ownership,
+          status: 'failed' as const,
+          reason: 'collection transaction failed before ownership detachment',
         })),
       ],
       attempted: true,

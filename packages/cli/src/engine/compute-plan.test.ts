@@ -887,4 +887,179 @@ describe('computeSyncPlan', () => {
       strategy: 'symlink',
     });
   });
+
+  it('plans collection additions and removals without child mutation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const manifest = createEmptyManifest();
+    manifest.collections.push({
+      id: 'collection',
+      provider: 'claude',
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.claude/skills',
+      linkTarget: '.agents/skills',
+      ownership: 'oat-created',
+      lastVerified: '2026-02-13T00:00:00.000Z',
+    });
+    (manifest.entries as unknown[]).push({
+      canonicalPath: '.agents/skills/removed',
+      providerPath: '.claude/skills/removed',
+      provider: 'claude',
+      contentType: 'skill',
+      strategy: 'collection',
+      collectionId: 'collection',
+      contentHash: null,
+      isFile: false,
+      lastSynced: '2026-02-13T00:00:00.000Z',
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [
+        createCanonicalEntry(root, 'skill', 'skill-one'),
+        createCanonicalEntry(root, 'skill', 'skill-two'),
+      ],
+      adapters: [createTestAdapter()],
+      manifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries).toEqual([]);
+    expect(plan.collections).toEqual([
+      expect.objectContaining({
+        action: 'inherit-collection',
+        inheritedEntries: [
+          '.agents/skills/skill-one',
+          '.agents/skills/skill-two',
+        ],
+      }),
+    ]);
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        canonical: expect.objectContaining({ name: 'removed' }),
+      }),
+    ]);
+  });
+
+  it('produces no child or collection mutation for repeated exact sync', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const manifest = createEmptyManifest();
+    manifest.collections.push({
+      id: 'collection',
+      provider: 'claude',
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.claude/skills',
+      linkTarget: '.agents/skills',
+      ownership: 'adopted-exact',
+      lastVerified: '2026-02-13T00:00:00.000Z',
+    });
+    (manifest.entries as unknown[]).push({
+      canonicalPath: '.agents/skills/skill-one',
+      providerPath: '.claude/skills/skill-one',
+      provider: 'claude',
+      contentType: 'skill',
+      strategy: 'collection',
+      collectionId: 'collection',
+      contentHash: null,
+      isFile: false,
+      lastSynced: '2026-02-13T00:00:00.000Z',
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter()],
+      manifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan).toMatchObject({ entries: [], removals: [], collections: [] });
+  });
+
+  it.each([
+    { ownership: 'adopted-exact' as const, changed: false },
+    { ownership: 'oat-created' as const, changed: false },
+    { ownership: 'oat-created' as const, changed: true },
+  ])(
+    'detaches disabled $ownership collection safely (changed=$changed)',
+    async ({ ownership, changed }) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+        recursive: true,
+      });
+      await mkdir(join(root, '.claude'), { recursive: true });
+      if (changed) {
+        await mkdir(join(root, 'foreign'));
+        await symlink(
+          join(root, 'foreign'),
+          join(root, '.claude', 'skills'),
+          'dir',
+        );
+      } else {
+        await symlink(
+          join('..', '.agents', 'skills'),
+          join(root, '.claude', 'skills'),
+          'dir',
+        );
+      }
+      const manifest = createEmptyManifest();
+      manifest.collections.push({
+        id: 'collection',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership,
+        lastVerified: '2026-02-13T00:00:00.000Z',
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [],
+        manifest,
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          ownership,
+          proof: expect.objectContaining(
+            changed ? { status: 'ineligible' } : { status: 'exact-link' },
+          ),
+        }),
+      ]);
+    },
+  );
 });
