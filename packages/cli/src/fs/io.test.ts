@@ -16,6 +16,31 @@ import { dirname, isAbsolute, join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const collectionCreationRace = vi.hoisted(() => ({
+  beforePathBasedCreation: undefined as undefined | (() => Promise<void>),
+  pathBasedCreationCalls: 0,
+}));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+
+  return {
+    ...actual,
+    symlink: async (...args: Parameters<typeof actual.symlink>) => {
+      const [, linkPath] = args;
+      if (
+        collectionCreationRace.beforePathBasedCreation &&
+        typeof linkPath === 'string' &&
+        linkPath.endsWith('/.claude/skills')
+      ) {
+        collectionCreationRace.pathBasedCreationCalls += 1;
+        await collectionCreationRace.beforePathBasedCreation();
+      }
+      return actual.symlink(...args);
+    },
+  };
+});
+
 import {
   atomicWriteJson,
   copyDirectory,
@@ -31,6 +56,8 @@ describe('fs/io', () => {
   const tempDirs: string[] = [];
 
   afterEach(async () => {
+    collectionCreationRace.beforePathBasedCreation = undefined;
+    collectionCreationRace.pathBasedCreationCalls = 0;
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -53,7 +80,7 @@ describe('fs/io', () => {
     expect(strategy).toBe('symlink');
   });
 
-  it('creates collection links at the final path without copy fallback', async () => {
+  it('fails closed when no securely guarded collection-link primitive is available', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
     tempDirs.push(root);
     const canonical = join(root, '.agents', 'skills');
@@ -61,20 +88,50 @@ describe('fs/io', () => {
     await mkdir(canonical, { recursive: true });
 
     const parent = await lstat(root);
-    const created = await createCollectionSymlinkNoClobber(
-      canonical,
-      provider,
-      {
+    await expect(
+      createCollectionSymlinkNoClobber(canonical, provider, {
         scopeRoot: root,
         expectedParent: {
           device: String(parent.dev),
           inode: String(parent.ino),
         },
-      },
-    );
+      }),
+    ).rejects.toMatchObject({ code: 'E_COLLECTION_LINK_UNSAFE' });
 
-    expect((await lstat(provider)).isSymbolicLink()).toBe(true);
-    expect(created.linkText).toBe(await readlink(provider));
+    await expect(lstat(provider)).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(lstat(dirname(provider))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  });
+
+  it('never reaches path-based final creation when ancestry could swap after validation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-io-outside-'));
+    tempDirs.push(root, outside);
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(provider), { recursive: true });
+    const parent = await lstat(dirname(provider));
+    collectionCreationRace.beforePathBasedCreation = async () => {
+      await rm(dirname(provider), { recursive: true, force: true });
+      await symlink(outside, dirname(provider), 'dir');
+    };
+
+    await expect(
+      createCollectionSymlinkNoClobber(canonical, provider, {
+        scopeRoot: root,
+        expectedParent: {
+          device: String(parent.dev),
+          inode: String(parent.ino),
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'E_COLLECTION_LINK_UNSAFE' });
+
+    expect(collectionCreationRace.pathBasedCreationCalls).toBe(0);
+    await expect(lstat(join(outside, 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it('preserves an EEXIST collection destination without fallback or removal', async () => {
@@ -131,18 +188,14 @@ describe('fs/io', () => {
     const canonical = join(root, '.agents', 'skills');
     const provider = join(root, '.claude', 'skills');
     await mkdir(canonical, { recursive: true });
-    const parent = await lstat(root);
-    const created = await createCollectionSymlinkNoClobber(
-      canonical,
-      provider,
-      {
-        scopeRoot: root,
-        expectedParent: {
-          device: String(parent.dev),
-          inode: String(parent.ino),
-        },
-      },
-    );
+    await mkdir(dirname(provider), { recursive: true });
+    await symlink(canonical, provider, 'dir');
+    const createdStat = await lstat(provider);
+    const created = {
+      linkText: await readlink(provider),
+      device: String(createdStat.dev),
+      inode: String(createdStat.ino),
+    };
 
     await expect(
       removeCollectionSymlinkIfUnchanged(provider, created),

@@ -9,7 +9,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import {
   DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
@@ -17,6 +17,7 @@ import {
 } from '@config/sync-config';
 import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import type { ManifestV2 } from '@manifest/manifest.types';
 import { claudeAdapter } from '@providers/claude/adapter';
 import { copilotAdapter } from '@providers/copilot/adapter';
 import { cursorAdapter } from '@providers/cursor/adapter';
@@ -24,7 +25,7 @@ import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { computeSyncPlan as computeSyncPlanImplementation } from './compute-plan';
-import { executeSyncPlan } from './execute-plan';
+import { executeSyncPlan as executeSyncPlanImplementation } from './execute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import { scanCanonical } from './scanner';
 import { createTestAdapter } from './test-helpers';
@@ -43,6 +44,8 @@ function computeSyncPlan(
 ): ReturnType<typeof computeSyncPlanImplementation> {
   return computeSyncPlanImplementation({
     ...args,
+    collectionAliasCreationAvailable:
+      args.collectionAliasCreationAvailable ?? true,
     collectionAliasEligibleMappings:
       args.collectionAliasEligibleMappings ??
       args.adapters.flatMap((adapter) =>
@@ -53,6 +56,32 @@ function computeSyncPlan(
             contentType: 'skill' as const,
           })),
       ),
+  });
+}
+
+async function createTestCollectionLink(
+  target: string,
+  linkPath: string,
+): Promise<{ linkText: string; device: string; inode: string }> {
+  await mkdir(dirname(linkPath), { recursive: true });
+  const linkText = relative(dirname(linkPath), target);
+  await symlink(linkText, linkPath, 'dir');
+  const created = await lstat(linkPath);
+  return {
+    linkText,
+    device: String(created.dev),
+    inode: String(created.ino),
+  };
+}
+
+function executeSyncPlan(
+  ...args: Parameters<typeof executeSyncPlanImplementation>
+): ReturnType<typeof executeSyncPlanImplementation> {
+  const [plan, manifest, manifestPath, dependencies = {}] = args;
+  return executeSyncPlanImplementation(plan, manifest, manifestPath, {
+    ...dependencies,
+    createCollectionSymlinkNoClobber:
+      dependencies.createCollectionSymlinkNoClobber ?? createTestCollectionLink,
   });
 }
 
@@ -141,6 +170,47 @@ function createSkillCollectionAdapter(): ProviderAdapter {
     projectMappings: adapter.projectMappings.filter(
       ({ contentType }) => contentType === 'skill',
     ),
+  };
+}
+
+async function createHistoricalCollectionManifest(
+  root: string,
+  options: {
+    ownership?: 'oat-created' | 'adopted-exact';
+    durableIdentity?: boolean;
+  } = {},
+): Promise<ManifestV2> {
+  const canonicalDir = join(root, '.agents', 'skills');
+  const providerDir = join(root, '.claude', 'skills');
+  await mkdir(canonicalDir, { recursive: true });
+  await mkdir(join(root, '.claude'), { recursive: true });
+  await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+  const providerLink = await lstat(providerDir);
+  const durableIdentity = options.durableIdentity ?? true;
+
+  return {
+    ...createEmptyManifest(),
+    collections: [
+      {
+        id: 'historical-collection',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: options.ownership ?? 'oat-created',
+        ...(durableIdentity
+          ? {
+              createdLink: {
+                device: String(providerLink.dev),
+                inode: String(providerLink.ino),
+                linkText: await readlink(providerDir),
+              },
+            }
+          : {}),
+        lastVerified: new Date().toISOString(),
+      },
+    ],
   };
 }
 
@@ -431,6 +501,107 @@ describe('sync engine integration', () => {
       await expect(loadManifest(manifestPath)).resolves.toMatchObject({
         collections: [],
         entries: [expect.objectContaining({ strategy })],
+      });
+    },
+  );
+
+  it.each(['symlink', 'copy'] as const)(
+    'reconciles a zero-child auto collection to explicit %s through apply and reload',
+    async (strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const providerDir = join(root, '.claude', 'skills');
+      const manifest = await createHistoricalCollectionManifest(root);
+      const canonical = await scanCanonical(root, 'project');
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(transitionPlan.entries).toEqual([]);
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+        }),
+      ]);
+      const result = await executeSyncPlan(
+        transitionPlan,
+        manifest,
+        manifestPath,
+      );
+
+      expect(result.collectionResults).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          status: 'changed',
+        }),
+      ]);
+      await expect(lstat(providerDir)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [],
+        entries: [],
+      });
+    },
+  );
+
+  it.each(['adopted', 'changed', 'legacy', 'unverifiable'] as const)(
+    'preserves a zero-child %s collection conflict during explicit transition',
+    async (kind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const providerDir = join(root, '.claude', 'skills');
+      const manifest = await createHistoricalCollectionManifest(root, {
+        ownership: kind === 'adopted' ? 'adopted-exact' : 'oat-created',
+        durableIdentity: kind !== 'legacy',
+      });
+      if (kind === 'changed' || kind === 'unverifiable') {
+        await rm(providerDir);
+        if (kind === 'changed') {
+          await mkdir(join(root, 'foreign-skills'));
+        }
+        await symlink(
+          kind === 'changed' ? join(root, 'foreign-skills') : 'missing-skills',
+          providerDir,
+          'dir',
+        );
+      }
+      const canonical = await scanCanonical(root, 'project');
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy: 'symlink' } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(transitionPlan.entries).toEqual([]);
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({ action: 'reject-collection' }),
+      ]);
+      await executeSyncPlan(transitionPlan, manifest, manifestPath);
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'historical-collection' }],
       });
     },
   );

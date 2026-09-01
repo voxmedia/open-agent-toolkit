@@ -104,6 +104,15 @@ function classifyFailure(
   };
 }
 
+function hasErrorCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === code
+  );
+}
+
 async function assertSafeEntryProviderPath(
   entry: SyncPlanEntry,
 ): Promise<void> {
@@ -418,6 +427,11 @@ async function executeCollectionTransaction(
   >();
 
   const createdCollections: CreatedCollection[] = [];
+  const removedTransitionPlans = new Set<CollectionProjectionPlan>();
+  const blockedTransitionResults = new Map<
+    CollectionProjectionPlan,
+    CollectionOperationResult
+  >();
   let nextManifest = manifest;
   try {
     await beforeMutation();
@@ -470,13 +484,107 @@ async function executeCollectionTransaction(
     }
 
     for (const plan of detachments) {
-      nextManifest = detachCollectionOwnership(nextManifest, plan);
+      if (!plan.transitionToPerEntry) {
+        nextManifest = detachCollectionOwnership(nextManifest, plan);
+        continue;
+      }
+
+      const blockTransition = (
+        status: CollectionOperationResult['status'],
+        reason: string,
+      ): void => {
+        blockedTransitionResults.set(plan, {
+          provider: plan.provider,
+          contentType: plan.contentType,
+          action: plan.action,
+          ownership: plan.ownership,
+          status,
+          reason,
+        });
+      };
+
+      if (
+        plan.ownership !== 'oat-created' ||
+        plan.proof.status !== 'exact-link' ||
+        plan.createdLink === undefined
+      ) {
+        blockTransition(
+          'rejected',
+          'collection transition blocked; exact durable creation identity is unavailable, so ownership and the alias were preserved',
+        );
+        continue;
+      }
+
+      try {
+        const current = await dependencies.proveCollectionIdentity({
+          root: inferScopeRoot(plan.canonicalDir),
+          canonicalDir: plan.canonicalDir,
+          providerDir: plan.providerDir,
+        });
+        if (
+          current.status !== 'exact-link' ||
+          !collectionProofMatches(plan.proof, current) ||
+          current.providerLink.device !== plan.createdLink.device ||
+          current.providerLink.inode !== plan.createdLink.inode ||
+          current.linkText !== plan.createdLink.linkText
+        ) {
+          blockTransition(
+            'rejected',
+            'collection transition blocked; alias identity changed after planning, so ownership and the replacement path were preserved',
+          );
+          continue;
+        }
+
+        const removed = await dependencies.removeCollectionSymlinkIfUnchanged(
+          plan.providerDir,
+          plan.createdLink,
+        );
+        if (!removed) {
+          blockTransition(
+            'partial',
+            'collection transition blocked; exact alias removal could not be completed, so ownership was preserved',
+          );
+          continue;
+        }
+
+        removedTransitionPlans.add(plan);
+        nextManifest = detachCollectionOwnership(nextManifest, plan);
+      } catch {
+        blockTransition(
+          'rejected',
+          'collection transition blocked; alias identity could not be safely re-proven, so ownership and the provider path were preserved',
+        );
+      }
     }
 
-    await dependencies.saveManifest(manifestPath, nextManifest);
+    const hasManifestMutation =
+      actionable.length > 0 ||
+      detachments.some((plan) => !plan.transitionToPerEntry) ||
+      removedTransitionPlans.size > 0;
+    if (hasManifestMutation) {
+      await dependencies.saveManifest(manifestPath, nextManifest);
+    }
 
     const detachmentResults: CollectionOperationResult[] = [];
     for (const plan of detachments) {
+      const blocked = blockedTransitionResults.get(plan);
+      if (blocked) {
+        detachmentResults.push(blocked);
+        continue;
+      }
+      if (plan.transitionToPerEntry) {
+        detachmentResults.push({
+          provider: plan.provider,
+          contentType: plan.contentType,
+          action: plan.action,
+          ownership: plan.ownership,
+          status: 'changed',
+          reason:
+            'exact durably identified collection alias was removed before ownership detachment; per-entry reconciliation may proceed',
+        });
+        continue;
+      }
+
       let reason = plan.reason;
       let status: CollectionOperationResult['status'] = 'changed';
       if (
@@ -548,9 +656,9 @@ async function executeCollectionTransaction(
         ...detachmentResults,
       ],
       attempted: true,
-      persisted: true,
+      persisted: hasManifestMutation,
     };
-  } catch {
+  } catch (error) {
     const rollback = await Promise.all(
       [...createdCollections]
         .reverse()
@@ -561,7 +669,12 @@ async function executeCollectionTransaction(
           ),
         ),
     );
-    const partial = rollback.some((removed) => !removed);
+    const partial =
+      rollback.some((removed) => !removed) || removedTransitionPlans.size > 0;
+    const guardedCreationUnavailable = hasErrorCode(
+      error,
+      'E_COLLECTION_LINK_UNSAFE',
+    );
     return {
       manifest,
       results: [
@@ -572,18 +685,28 @@ async function executeCollectionTransaction(
           action: plan.action,
           ownership: plan.ownership,
           status: partial ? ('partial' as const) : ('failed' as const),
-          reason: partial
-            ? 'collection transaction failed and an unchanged-link rollback could not be proven'
-            : 'collection transaction failed; newly created links were rolled back',
+          reason: guardedCreationUnavailable
+            ? 'collection creation is disabled because this runtime cannot create a link relative to a securely guarded parent; configure explicit symlink/copy per-entry sync or create the exact collection alias manually and retry for adoption'
+            : partial
+              ? 'collection transaction failed and an unchanged-link rollback could not be proven'
+              : 'collection transaction failed; newly created links were rolled back',
         })),
-        ...detachments.map((plan) => ({
-          provider: plan.provider,
-          contentType: plan.contentType,
-          action: plan.action,
-          ownership: plan.ownership,
-          status: 'failed' as const,
-          reason: 'collection transaction failed before ownership detachment',
-        })),
+        ...detachments.map((plan) => {
+          const blocked = blockedTransitionResults.get(plan);
+          if (blocked) return blocked;
+          return {
+            provider: plan.provider,
+            contentType: plan.contentType,
+            action: plan.action,
+            ownership: plan.ownership,
+            status: removedTransitionPlans.has(plan)
+              ? ('partial' as const)
+              : ('failed' as const),
+            reason: removedTransitionPlans.has(plan)
+              ? 'exact alias was safely removed, but manifest ownership could not be detached; no per-entry child operations were attempted'
+              : 'collection transaction failed before ownership detachment',
+          };
+        }),
       ],
       attempted: true,
       persisted: false,

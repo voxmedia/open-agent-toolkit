@@ -9,15 +9,17 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import { computeFileHash } from '@manifest/hash';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import type { ManifestV2 } from '@manifest/manifest.types';
 import { OAT_VERSION } from '@shared/oat-version';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { proveCollectionIdentity } from './collection-sync';
 import type {
+  CollectionIdentityProof,
   RemovalSyncPlanEntry,
   SyncPlan,
   SyncPlanEntry,
@@ -102,6 +104,21 @@ async function seedCanonical(
   await writeFile(canonicalFile, content, 'utf8');
 }
 
+async function createTestCollectionLink(
+  target: string,
+  linkPath: string,
+): Promise<{ linkText: string; device: string; inode: string }> {
+  await mkdir(dirname(linkPath), { recursive: true });
+  const linkText = relative(dirname(linkPath), target);
+  await symlink(linkText, linkPath, 'dir');
+  const created = await lstat(linkPath);
+  return {
+    linkText,
+    device: String(created.dev),
+    inode: String(created.ino),
+  };
+}
+
 async function createCollectionPlan(
   root: string,
   action: 'create-collection-link' | 'adopt-collection-link',
@@ -136,6 +153,91 @@ async function createCollectionPlan(
   };
 }
 
+async function createOwnedCollectionTransition(root: string): Promise<{
+  manifest: ManifestV2;
+  plan: SyncPlan;
+  providerDir: string;
+}> {
+  await seedCanonical(root, 'skill-one', 'canonical-before');
+  const canonicalDir = join(root, '.agents', 'skills');
+  const providerDir = join(root, '.claude', 'skills');
+  await mkdir(dirname(providerDir), { recursive: true });
+  await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+  const proof = await proveCollectionIdentity({
+    root,
+    canonicalDir,
+    providerDir,
+  });
+  if (proof.status !== 'exact-link') {
+    throw new Error('test collection must prove exact');
+  }
+  const providerLink = await lstat(providerDir);
+  const collectionId = 'collection-transition';
+  const manifest: ManifestV2 = {
+    ...createEmptyManifest(),
+    collections: [
+      {
+        id: collectionId,
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: 'oat-created',
+        createdLink: {
+          device: String(providerLink.dev),
+          inode: String(providerLink.ino),
+          linkText: await readlink(providerDir),
+        },
+        lastVerified: new Date().toISOString(),
+      },
+    ],
+    entries: [
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.claude/skills/skill-one',
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'collection',
+        collectionId,
+        contentHash: null,
+        isFile: false,
+        lastSynced: new Date().toISOString(),
+      },
+    ],
+  };
+  const deferredEntry = createEntry(
+    root,
+    'skill-one',
+    'create_symlink',
+    'symlink',
+  );
+  deferredEntry.deferredUntilCollectionDetached = true;
+  const plan: SyncPlan = {
+    scope: 'project',
+    entries: [deferredEntry],
+    removals: [],
+    collections: [
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentType: 'skill',
+        canonicalDir,
+        providerDir,
+        action: 'detach-collection',
+        ownership: 'oat-created',
+        configuredStrategy: 'symlink',
+        createdLink: manifest.collections[0]!.createdLink,
+        transitionToPerEntry: true,
+        proof,
+        inheritedEntries: ['.agents/skills/skill-one'],
+        reason: 'transition to explicit per-entry sync',
+      },
+    ],
+  };
+  return { manifest, plan, providerDir };
+}
+
 describe('executeSyncPlan', () => {
   const tempDirs: string[] = [];
 
@@ -148,7 +250,7 @@ describe('executeSyncPlan', () => {
     tempDirs.length = 0;
   });
 
-  it('creates, rescans, and atomically commits collection ownership', async () => {
+  it('fails collection creation closed with truthful per-entry recovery', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);
     const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
@@ -160,6 +262,37 @@ describe('executeSyncPlan', () => {
       plan,
       createEmptyManifest(),
       manifestPath,
+    );
+
+    await expect(lstat(join(root, '.claude', 'skills'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+    expect(result.collectionResults).toEqual([
+      expect.objectContaining({
+        status: 'failed',
+        action: 'create-collection-link',
+        reason: expect.stringMatching(/secure|per-entry|exact alias/i),
+      }),
+    ]);
+  });
+
+  it('commits collection ownership when a guarded creation primitive is injected', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    const plan = await createCollectionPlan(root, 'create-collection-link');
+
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+      { createCollectionSymlinkNoClobber: createTestCollectionLink },
     );
 
     expect(
@@ -249,6 +382,7 @@ describe('executeSyncPlan', () => {
         saveManifest: vi.fn(async () => {
           throw new Error('manifest write failed');
         }),
+        createCollectionSymlinkNoClobber: createTestCollectionLink,
       },
     );
 
@@ -275,6 +409,7 @@ describe('executeSyncPlan', () => {
           throw new Error('manifest write failed');
         }),
         removeCollectionSymlinkIfUnchanged: vi.fn(async () => false),
+        createCollectionSymlinkNoClobber: createTestCollectionLink,
       },
     );
 
@@ -316,6 +451,96 @@ describe('executeSyncPlan', () => {
       (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
     ).toBe(true);
   });
+
+  it.each([
+    'real-directory',
+    'foreign-link',
+    'same-target-replacement',
+    'missing-path',
+    'identity-unavailable',
+    'removal-failure',
+  ] as const)(
+    'blocks deferred transition children when collection identity becomes %s',
+    async (kind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      const outside = await mkdtemp(
+        join(tmpdir(), 'oat-execute-plan-outside-'),
+      );
+      tempDirs.push(root, outside);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const { manifest, plan, providerDir } =
+        await createOwnedCollectionTransition(root);
+      const unavailableProof: CollectionIdentityProof = {
+        status: 'ineligible',
+        reason: 'identity-unavailable',
+        checkedAt: new Date().toISOString(),
+      };
+
+      const result = await executeSyncPlan(plan, manifest, manifestPath, {
+        beforeFirstMutation: async () => {
+          if (kind === 'identity-unavailable' || kind === 'removal-failure') {
+            return;
+          }
+          await rm(providerDir, { recursive: true, force: true });
+          if (kind === 'real-directory') {
+            await mkdir(providerDir, { recursive: true });
+            await writeFile(join(providerDir, 'user-owned.txt'), 'preserve');
+          } else if (kind === 'foreign-link') {
+            await symlink(outside, providerDir, 'dir');
+          } else if (kind === 'same-target-replacement') {
+            await symlink(
+              join('..', '.agents', 'skills'),
+              join(root, '.claude', 'identity-reservation'),
+              'dir',
+            );
+            await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+          }
+        },
+        ...(kind === 'identity-unavailable'
+          ? {
+              proveCollectionIdentity: async () => unavailableProof,
+            }
+          : {}),
+        ...(kind === 'removal-failure'
+          ? {
+              removeCollectionSymlinkIfUnchanged: async () => false,
+            }
+          : {}),
+      });
+
+      expect(result.collectionResults[0]?.status).not.toBe('changed');
+      expect(result.operations?.[0]).toMatchObject({ status: 'failed' });
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'collection-transition' }],
+        entries: [{ strategy: 'collection' }],
+      });
+      await expect(
+        readFile(
+          join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+          'utf8',
+        ),
+      ).resolves.toBe('canonical-before');
+
+      if (kind === 'real-directory') {
+        await expect(
+          readFile(join(providerDir, 'user-owned.txt'), 'utf8'),
+        ).resolves.toBe('preserve');
+        await expect(
+          lstat(join(providerDir, 'skill-one')),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+      } else if (kind === 'foreign-link') {
+        await expect(lstat(join(outside, 'skill-one'))).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+      } else if (kind === 'missing-path') {
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+      } else {
+        expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      }
+    },
+  );
 
   it('creates symlinks for create_symlink entries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));

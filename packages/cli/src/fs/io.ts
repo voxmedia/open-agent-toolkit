@@ -45,6 +45,8 @@ export interface CollectionSymlinkCreationGuard {
     inode: string;
   };
 }
+
+const COLLECTION_LINK_UNSAFE_CODE = 'E_COLLECTION_LINK_UNSAFE';
 export type CopyDirectoryFilter = (
   sourcePath: string,
   relativePath: string,
@@ -122,7 +124,7 @@ export async function createSymlink(
 }
 
 export async function createCollectionSymlinkNoClobber(
-  target: string,
+  _target: string,
   linkPath: string,
   guard: CollectionSymlinkCreationGuard,
 ): Promise<CreatedCollectionSymlink> {
@@ -184,8 +186,7 @@ export async function createCollectionSymlinkNoClobber(
       ) {
         throw error;
       }
-      await mkdir(ancestor);
-      ancestorStat = await lstat(ancestor);
+      continue;
     }
     if (ancestorStat.isSymbolicLink() || !ancestorStat.isDirectory()) {
       throw new Error(
@@ -194,20 +195,28 @@ export async function createCollectionSymlinkNoClobber(
     }
   }
 
-  const linkText = isAbsolute(target)
-    ? relative(dirname(linkPath), target)
-    : target;
-
-  await symlink(linkText, linkPath, 'dir');
-  const created = await lstat(linkPath);
-  if (!created.isSymbolicLink()) {
-    throw new Error('Collection destination was not created as a symlink.');
+  try {
+    await lstat(linkPath);
+    throw Object.assign(new Error('Collection destination already exists.'), {
+      code: 'EEXIST',
+    });
+  } catch (error) {
+    if (
+      typeof error !== 'object' ||
+      error === null ||
+      !('code' in error) ||
+      error.code !== 'ENOENT'
+    ) {
+      throw error;
+    }
   }
-  return {
-    linkText,
-    device: String(created.dev),
-    inode: String(created.ino),
-  };
+
+  throw Object.assign(
+    new Error(
+      'Collection link creation is disabled because this runtime has no securely guarded parent-relative symlink primitive.',
+    ),
+    { code: COLLECTION_LINK_UNSAFE_CODE },
+  );
 }
 
 export async function removeCollectionSymlinkIfUnchanged(

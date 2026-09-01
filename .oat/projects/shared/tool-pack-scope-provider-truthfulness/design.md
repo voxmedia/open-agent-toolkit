@@ -560,13 +560,18 @@ manifest manager, drift detector, and sync executor.
   later requires a separate destructive-operation design and approval, not a
   hidden extension of `auto`.
 - Collection creation and its manifest update are one recoverable transaction:
-  snapshot identities, call a dedicated no-clobber primitive that creates the
-  symlink directly at the final absent path, rescan exact identity, atomically
-  write the complete manifest, then report success. The primitive has no copy
-  fallback and never removes a destination; `EEXIST` is a race abort that
-  preserves the foreign path unchanged. Any later verification or manifest
-  failure unlinks only the unchanged just-created symlink. A failed rollback
-  is a `partial` outcome with exact recovery and never records OAT ownership.
+  snapshot identities, call a securely guarded no-clobber primitive that
+  creates relative to an identity-verified open parent without following a
+  replacement ancestor, rescan exact identity, atomically write the complete
+  manifest, then report success. Node's separate `lstat` plus path-based
+  `symlink` sequence does not meet this contract. When no guarded primitive is
+  available, automatic collection creation fails closed with explicit
+  per-entry/manual-adoption recovery; it never attempts the path-based create.
+  A guarded primitive has no copy fallback and never removes a destination;
+  `EEXIST` is a race abort that preserves the foreign path unchanged. Any later
+  verification or manifest failure unlinks only the unchanged just-created
+  symlink. A failed rollback is a `partial` outcome with exact recovery and
+  never records OAT ownership.
 - Adopting an existing exact alias mutates only the manifest. The atomic
   manifest write is its commit point. Collection operation groups do not use
   the current executor's save-after-partial-operation behavior.
@@ -850,6 +855,7 @@ type CollectionIdentityProof =
       providerLink: CollectionPathIdentity;
       canonicalDirectory: CollectionPathIdentity;
       linkTextKind: 'relative' | 'absolute';
+      linkText: string;
       resolvedTarget: string;
       entrySetDigest: string;
       checkedAt: string;
@@ -895,6 +901,11 @@ interface ManifestCollectionEntry {
   providerDir: string;
   linkTarget: string;
   ownership: 'oat-created' | 'adopted-exact';
+  createdLink?: {
+    device: string;
+    inode: string;
+    linkText: string;
+  };
   lastVerified: string;
 }
 ```
@@ -907,6 +918,16 @@ interface ManifestCollectionEntry {
 - Proofs are transient preflight evidence. Apply rechecks the captured
   provider-parent, provider-link, and canonical-directory identities before
   mutation; any mismatch invalidates the plan without retry or removal.
+- Exact-link proof retains the exact on-disk `linkText` in addition to its
+  relative/absolute kind and resolved target. Creation-time OAT ownership may
+  persist optional `{ device, inode, linkText }` `createdLink` evidence. An
+  unlink or explicit per-entry transition requires the current exact-link
+  proof to match all three durable creation fields immediately before removal.
+- `createdLink` remains optional so V2 manifests written before durable link
+  identity was introduced continue to load. Such legacy records may detach
+  manifest ownership when disabled, but they never authorize alias unlink.
+  During an explicit-strategy transition they remain owned and block child
+  operations until the collection path is resolved safely.
 - A `collection` entry references exactly one matching collection record.
 - Collection provider/content and directory ancestry match every inherited
   entry.
@@ -1219,8 +1240,11 @@ values are never inspected or persisted by evidence collection.
 
 - **Symlink traversal:** Collection and `AGENTS.md` paths receive lexical,
   realpath, lstat, containment, exact-target, and apply-time ancestry checks.
-- **Race-swapped targets:** Plans retain identity proof and repeat lstat/realpath
-  immediately before mutation; mismatch aborts without retry.
+- **Race-swapped targets:** Plans retain identity proof and repeat
+  lstat/realpath immediately before mutation. Automatic collection creation
+  additionally requires a parent-relative, no-follow guarded primitive; when
+  the runtime cannot provide one, creation is disabled rather than relying on
+  a final path-based `symlink` window.
 - **Unmanaged-content loss:** Provider divergence falls back to per-entry sync.
   Existing real directories are never converted in the first release.
 - **Canonical deletion through alias:** No child remove/update operation is
@@ -1454,21 +1478,25 @@ No database or remote data migration is required.
 
 1. Accept both manifest V1 and V2. Normalize V1 to empty collections in memory;
    write V2 only after a successful sync apply.
-2. Add explicit intent, scope availability, and `realizedPlacement` fields.
+2. Accept early V2 collection records without `createdLink` as legacy
+   ownership evidence. Do not synthesize device/inode/link text during load or
+   from a later observation: missing durable creation identity permits
+   detach-without-unlink only and blocks explicit per-entry transition.
+3. Add explicit intent, scope availability, and `realizedPlacement` fields.
    Retain each command's old JSON fields and legacy `placement` meaning for one
    compatibility release; new selectors and renderers use only the new model.
-3. Keep `user-agent-unmaterialized` for one compatibility release as a summary
+4. Keep `user-agent-unmaterialized` for one compatibility release as a summary
    derived from provider evidence. New consumers use provider-specific codes.
-4. Expand user scanning to agents only after the provider registry and
+5. Expand user scanning to agents only after the provider registry and
    materialization conflict tests are in place.
-5. Add real user-scope support to `oat providers set`; existing config files
+6. Add real user-scope support to `oat providers set`; existing config files
    already parse the necessary provider entries.
-6. Migrate legacy `OAT workflows` guidance only during explicit guidance
+7. Migrate legacy `OAT workflows` guidance only during explicit guidance
    opt-in; declining or non-interactive default makes no change.
-7. Preserve `DispatchReportV1`, its compatibility stamp, and the canonical
+8. Preserve `DispatchReportV1`, its compatibility stamp, and the canonical
    generic dispatch record. Add only namespaced OAT provenance; old project
    dispatch notes remain valid with runtime/fallback evidence not reported.
-8. Update bundled skills and tests to attest canonical records around native
+9. Update bundled skills and tests to attest canonical records around native
    launches. No old record is synthesized from prose.
 
 ### Rollback Strategy

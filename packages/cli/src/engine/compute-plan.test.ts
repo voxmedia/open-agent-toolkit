@@ -24,6 +24,8 @@ function computeSyncPlan(
 ): ReturnType<typeof computeSyncPlanImplementation> {
   return computeSyncPlanImplementation({
     ...args,
+    collectionAliasCreationAvailable:
+      args.collectionAliasCreationAvailable ?? true,
     collectionAliasEligibleMappings:
       args.collectionAliasEligibleMappings ??
       args.adapters.flatMap((adapter) =>
@@ -742,7 +744,7 @@ describe('computeSyncPlan', () => {
     });
   });
 
-  it('plans auto strategy as symlink-first with runtime fallback in execution', async () => {
+  it('falls auto strategy back to per-entry sync when guarded collection creation is unavailable', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -765,15 +767,22 @@ describe('computeSyncPlan', () => {
         defaultStrategy: 'auto',
       },
       scopeRoot: root,
+      collectionAliasCreationAvailable: false,
     });
 
-    expect(plan.entries).toEqual([]);
+    expect(plan.entries).toEqual([
+      expect.objectContaining({
+        operation: 'create_symlink',
+        strategy: 'symlink',
+      }),
+    ]);
     expect(plan.collections).toEqual([
       expect.objectContaining({
         provider: 'claude',
-        action: 'create-collection-link',
-        ownership: 'oat-created',
+        action: 'fallback-per-entry',
+        ownership: 'none',
         inheritedEntries: ['.agents/skills/skill-one'],
+        reason: expect.stringMatching(/guard|per-entry/i),
       }),
     ]);
   });

@@ -295,7 +295,7 @@ describe('CLI command integration', () => {
     expect(manifest.entries).toEqual([]);
   });
 
-  it('sync uses Cursor native skills while retaining Cursor agent views', async () => {
+  it('sync falls Claude skills back per-entry while retaining Cursor native skills and agent views', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     await runCli(root, ['init']);
@@ -317,8 +317,8 @@ describe('CLI command integration', () => {
       join(root, '.cursor', 'agents', 'agent-one'),
     );
 
-    expect(claudeSkillCollectionStat.isSymbolicLink()).toBe(true);
-    expect(claudeSkillStat.isDirectory()).toBe(true);
+    expect(claudeSkillCollectionStat.isDirectory()).toBe(true);
+    expect(claudeSkillStat.isSymbolicLink()).toBe(true);
     await expect(
       lstat(join(root, '.cursor', 'skills', 'skill-one')),
     ).rejects.toMatchObject({ code: 'ENOENT' });
@@ -338,6 +338,14 @@ describe('CLI command integration', () => {
         (collection: { contentType: string; provider: string }) =>
           collection.provider === 'claude' &&
           collection.contentType === 'skill',
+      ),
+    ).toBe(false);
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string; strategy: string }) =>
+          entry.provider === 'claude' &&
+          entry.contentType === 'skill' &&
+          entry.strategy === 'symlink',
       ),
     ).toBe(true);
   });

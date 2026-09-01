@@ -59,6 +59,7 @@ interface ComputeSyncPlanArgs {
     provider: string;
     contentType: ContentType;
   }[];
+  collectionAliasCreationAvailable?: boolean;
 }
 
 function buildUpLevels(depth: number): string[] {
@@ -611,6 +612,7 @@ export async function computeSyncPlan({
   allowedCanonicalPaths,
   extensionOwnedCanonicalPathsByProvider,
   collectionAliasEligibleMappings = [],
+  collectionAliasCreationAvailable = false,
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
   const removals: RemovalSyncPlanEntry[] = [];
@@ -714,17 +716,17 @@ export async function computeSyncPlan({
         existingCollection !== undefined &&
         !collectionEligible &&
         canonicalDir !== null &&
-        providerDir !== null &&
-        collectionCandidates.length > 0
+        providerDir !== null
       ) {
         const proof = await proveCollectionIdentity({
           root: scopeRoot!,
           canonicalDir,
           providerDir,
         });
-        const safelyClear =
-          proof.status === 'absent' ||
-          collectionCreationIdentityMatches(existingCollection, proof);
+        const safelyClear = collectionCreationIdentityMatches(
+          existingCollection,
+          proof,
+        );
         if (safelyClear) {
           collections.push({
             provider: adapter.name,
@@ -786,14 +788,20 @@ export async function computeSyncPlan({
             contentType: mapping.contentType,
             canonicalDir,
             providerDir,
-            action: 'create-collection-link',
-            ownership: 'oat-created',
+            action: collectionAliasCreationAvailable
+              ? 'create-collection-link'
+              : 'fallback-per-entry',
+            ownership: collectionAliasCreationAvailable
+              ? 'oat-created'
+              : 'none',
             configuredStrategy: 'auto',
             proof,
             inheritedEntries,
-            reason: 'provider collection is absent',
+            reason: collectionAliasCreationAvailable
+              ? 'provider collection is absent and a guarded creation primitive is available'
+              : 'provider collection is absent, but this runtime has no securely guarded parent-relative collection-link primitive; use safe per-entry sync',
           });
-          inheritCollection = true;
+          inheritCollection = collectionAliasCreationAvailable;
         } else if (proof.status === 'exact-link') {
           if (!inheritedEntriesUnchanged) {
             collections.push({
