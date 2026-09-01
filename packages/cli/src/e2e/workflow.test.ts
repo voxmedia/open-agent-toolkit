@@ -307,6 +307,11 @@ describe('e2e workflow', () => {
 
     await runCli(root, ['init']);
     await seedCanonical(root);
+    await writeSyncConfig(root, {
+      version: 1,
+      defaultStrategy: 'symlink',
+      providers: {},
+    });
     await runCli(root, ['sync']);
 
     const driftPath = join(root, '.claude', 'skills', 'skill-one');

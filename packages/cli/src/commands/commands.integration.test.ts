@@ -304,6 +304,9 @@ describe('CLI command integration', () => {
     const result = await runCli(root, ['sync']);
     expect(result.exitCode).toBe(0);
 
+    const claudeSkillCollectionStat = await lstat(
+      join(root, '.claude', 'skills'),
+    );
     const claudeSkillStat = await lstat(
       join(root, '.claude', 'skills', 'skill-one'),
     );
@@ -314,7 +317,8 @@ describe('CLI command integration', () => {
       join(root, '.cursor', 'agents', 'agent-one'),
     );
 
-    expect(claudeSkillStat.isSymbolicLink()).toBe(true);
+    expect(claudeSkillCollectionStat.isSymbolicLink()).toBe(true);
+    expect(claudeSkillStat.isDirectory()).toBe(true);
     await expect(
       lstat(join(root, '.cursor', 'skills', 'skill-one')),
     ).rejects.toMatchObject({ code: 'ENOENT' });
@@ -329,6 +333,13 @@ describe('CLI command integration', () => {
           entry.provider === 'cursor' && entry.contentType === 'skill',
       ),
     ).toBe(false);
+    expect(
+      manifest.collections.some(
+        (collection: { contentType: string; provider: string }) =>
+          collection.provider === 'claude' &&
+          collection.contentType === 'skill',
+      ),
+    ).toBe(true);
   });
 
   it('sync uses Copilot native skills while retaining Copilot agent and rule views', async () => {

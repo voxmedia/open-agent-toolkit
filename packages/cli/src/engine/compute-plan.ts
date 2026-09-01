@@ -647,6 +647,7 @@ export async function computeSyncPlan({
 
       if (
         configuredStrategy === 'auto' &&
+        mapping.contentType === 'skill' &&
         adapter.defaultStrategy !== 'copy' &&
         !mapping.transformCanonical &&
         !mapping.providerExtension &&

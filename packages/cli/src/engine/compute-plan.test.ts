@@ -760,6 +760,32 @@ describe('computeSyncPlan', () => {
     ]);
   });
 
+  it('keeps non-skill auto mappings per-entry', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'agents', 'agent-one'), {
+      recursive: true,
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'agent', 'agent-one')],
+      adapters: [createTestAdapter()],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.collections).toEqual([]);
+    expect(plan.entries).toEqual([
+      expect.objectContaining({
+        provider: 'claude',
+        operation: 'create_symlink',
+        strategy: 'symlink',
+      }),
+    ]);
+  });
+
   it.each(['symlink', 'copy'] as const)(
     'keeps explicit configured %s as per-entry sync',
     async (strategy) => {

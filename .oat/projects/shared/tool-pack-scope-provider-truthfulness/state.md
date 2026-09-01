@@ -56,7 +56,8 @@ oat_phase_recovery_policy:
         discovered_by: pnpm test
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: d668237fba3bfb7278ccd128f8804aa0c9d4e5cd
-        status: active
+        status: completed
+        verification: focused 66/66; phase 368/368; pnpm test passed
 oat_dispatch_policy:
   mode: managed
   policy: high
