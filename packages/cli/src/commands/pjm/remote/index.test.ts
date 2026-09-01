@@ -94,7 +94,7 @@ async function materializeFixtureBinding(store: RemoteSyncStore) {
       aliases: [],
     },
     identityHistory: [],
-    purposes: ['source'],
+    purposes: ['planning'],
     policyRestrictions: {},
     publicationProjection: {
       title: 'frontmatter',

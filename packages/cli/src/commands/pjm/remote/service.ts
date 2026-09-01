@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -30,14 +30,25 @@ import {
 } from './host-execution';
 import type { RemoteCommandRequest } from './index';
 import { resolveLocalProjection } from './local-projection';
-import { assessOutboundProjectionSafety } from './outbound-projection-safety';
+import {
+  insertManagedMarkdown,
+  replaceManagedMarkdown,
+} from './managed-markdown';
+import {
+  assessOutboundProjectionSafety,
+  type OutboundProjection,
+} from './outbound-projection-safety';
 import type { RemoteCommandEnvelope, RemoteCommandStatus } from './output';
-import { buildBindingPreview } from './preview';
+import { buildBindingPreview, type BindingPreview } from './preview';
 import { semanticDigest } from './provider';
+import { composePurposePolicies } from './purpose-policy';
+import { reconcileBinding } from './reconcile';
 import type {
   PlannedBindingCreate,
+  RemoteBaselineRecord,
   RemoteBindingMetadata,
   RemoteBindingState,
+  RemoteSnapshotRecord,
   RemoteOperationRecord,
 } from './schema';
 import {
@@ -410,11 +421,6 @@ async function prepareCreate(
   ) {
     throw new Error('Unbound publication target ID is invalid.');
   }
-  if (requested.localKind !== 'backlog') {
-    throw new Error(
-      'Project publication requires an explicit normalized publication projection.',
-    );
-  }
   if (!request.capabilityEvidenceStdin) {
     throw new Error(
       'Unbound publication requires current live host capability evidence on stdin.',
@@ -434,23 +440,57 @@ async function prepareCreate(
   if (!selection.selected)
     throw new Error(`No current host capability: ${selection.reason}.`);
 
-  const target = {
-    kind: 'backlog' as const,
-    scope: 'shared' as const,
-    id: requested.localId,
-    path: `.oat/repo/pjm/backlog/items/${requested.localId}.md`,
-  };
-  const targetPath = resolveInsideProject(request.projectRoot, target.path);
-  const content = await readFile(targetPath, 'utf8');
-  if (Buffer.byteLength(content, 'utf8') > 1_048_576) {
-    throw new Error('Unbound publication source exceeds the size limit.');
+  const projectPublication = (
+    requested as typeof requested & {
+      publication?: {
+        title: string;
+        description: string | null;
+        priority: string | null;
+      };
+    }
+  ).publication;
+  if (requested.localKind === 'project' && !projectPublication) {
+    throw new Error(
+      'Project publication requires an explicit normalized publication projection.',
+    );
   }
+  const target: RemoteBindingMetadata['target'] =
+    requested.localKind === 'backlog'
+      ? {
+          kind: 'backlog',
+          scope: 'shared',
+          id: requested.localId,
+          path: `.oat/repo/pjm/backlog/items/${requested.localId}.md`,
+        }
+      : {
+          kind: 'project',
+          scope: 'shared',
+          id: requested.localId,
+          path: `.oat/projects/shared/${requested.localId}`,
+        };
   const invocation = await readCurrentMutationInvocation(request);
   const now = invocation?.issuedAt ?? dependencies.now();
-  const local = resolveLocalProjection({
-    target: { kind: 'backlog', path: target.path, content },
-    observedAt: now,
-  });
+  let local;
+  if (target.kind === 'backlog') {
+    const targetPath = resolveInsideProject(request.projectRoot, target.path);
+    const content = await readFile(targetPath, 'utf8');
+    if (Buffer.byteLength(content, 'utf8') > 1_048_576) {
+      throw new Error('Unbound publication source exceeds the size limit.');
+    }
+    local = resolveLocalProjection({
+      target: { kind: 'backlog', path: target.path, content },
+      observedAt: now,
+    });
+  } else {
+    local = resolveLocalProjection({
+      target: {
+        kind: 'project',
+        path: target.path,
+        publication: projectPublication!,
+      },
+      observedAt: now,
+    });
+  }
   const projection = {
     title: local.title,
     description: local.description,
@@ -669,11 +709,13 @@ async function prepareMutation(
   });
   if (!selection.selected)
     throw new Error(`No current host capability: ${selection.reason}.`);
-  const projection = {
-    title: state.localProjection.title,
-    description: state.localProjection.description,
-    priority: state.localProjection.priority,
-  };
+  const projection = planProductionMutationProjection({
+    metadata,
+    state,
+    descriptionMode: effective.description,
+    operation: request.operation === 'reconcile' ? 'reconcile' : 'publish',
+    priorityMapping: true,
+  });
   const invocation = await readCurrentMutationInvocation(request);
   const now = invocation?.issuedAt ?? dependencies.now();
   const safety = assessOutboundProjectionSafety(projection, {
@@ -681,7 +723,7 @@ async function prepareMutation(
   });
   const operationId = durableId('op', dependencies.randomId());
   const policyDigest = semanticDigest(effective);
-  const preview = buildBindingPreview({
+  const preview = buildProductionMutationPreview({
     binding: {
       bindingId: metadata.bindingId,
       provider: metadata.provider,
@@ -713,7 +755,9 @@ async function prepareMutation(
     projection,
     outboundSafety: safety,
     operationClass: 'update-fields',
-    fieldMask: ['title', 'description', 'priority'],
+    fieldMask: Object.keys(projection) as Array<
+      'title' | 'description' | 'priority'
+    >,
     createdAt: now,
   });
   const authorityDecision = validateProductionMutationAuthority({
@@ -891,9 +935,7 @@ async function continueOperation(
       context: operation.providerContext,
       intent: { stableId: observation.outcome.identity.stableId },
       expectedObservation: {
-        fields: operation.verification
-          .map((item) => item.field)
-          .filter((field) => field !== 'remoteIdentity'),
+        fields: ['title', 'description', 'priority', 'status'],
         requireIdentity: true,
         stableId:
           operation.createIntent?.provider === operation.provider
@@ -1019,23 +1061,43 @@ async function continueOperation(
           observation.outcome.suppressedFields.filter(isCoreSnapshotField),
       },
     );
+    await ensureIntakeBacklogTarget(
+      request.projectRoot,
+      target,
+      snapshot,
+      operation.operationId,
+    );
     await store.materializeIntakeBinding(metadata);
+    await writeVerifiedAssociation(
+      request.projectRoot,
+      {
+        bindingId: operation.bindingId,
+        provider: operation.provider,
+        target,
+      },
+      observation.outcome.identity.aliases[0] ??
+        observation.outcome.identity.stableId,
+      operation.operationId,
+    );
+    const localProjection = await readBacklogProjection(
+      request.projectRoot,
+      target.path,
+      observation.observedAt,
+    );
     await store.writeBindingState({
       recordType: 'binding-state',
       schemaVersion: 2,
       bindingId: operation.bindingId,
       provider: operation.provider,
       metadataUpdatedAt: now,
-      localProjection: {
-        title: snapshot.issue.title,
-        description: snapshot.issue.description,
-        priority: snapshot.issue.priority,
-        source: 'backlog-description',
-        sourceRevision: observation.outcome.revisionDigest,
-        observedAt: observation.observedAt,
-      },
+      localProjection,
       snapshot,
-      baseline: null,
+      baseline: baselineFromSnapshot({
+        snapshot,
+        operationId: operation.operationId,
+        localProjectionRevision: localProjection.sourceRevision,
+        agreedAt: now,
+      }),
       capability: null,
       contentRedacted: snapshot.contentRedacted,
       lifecycle: 'active',
@@ -1201,46 +1263,96 @@ async function continueOperation(
       verifiedAt: now,
       evidenceDigest: identityEvidence!,
     });
+    const localProjection =
+      intent.target.kind === 'backlog'
+        ? await readBacklogProjection(
+            request.projectRoot,
+            intent.target.path,
+            observation.observedAt,
+          )
+        : resolveLocalProjection({
+            target: {
+              kind: 'project',
+              path: intent.target.path,
+              publication: {
+                title: String(observation.outcome.fields.title ?? ''),
+                description:
+                  observation.outcome.fields.description == null
+                    ? null
+                    : String(observation.outcome.fields.description),
+                priority:
+                  observation.outcome.fields.priority == null
+                    ? null
+                    : String(observation.outcome.fields.priority),
+              },
+            },
+            observedAt: observation.observedAt,
+          });
+    const snapshot = snapshotFromObservation({
+      snapshotId: durableId('snap', operation.operationId),
+      bindingId: intent.bindingId,
+      provider: intent.provider,
+      context: intent.providerContext,
+      identity: metadata.remoteIdentity,
+      observation,
+    });
     await store.writeBindingState({
       recordType: 'binding-state',
       schemaVersion: 2,
       bindingId: intent.bindingId,
       provider: intent.provider,
       metadataUpdatedAt: now,
-      localProjection: {
-        title: String(observation.outcome.fields.title ?? ''),
-        description:
-          observation.outcome.fields.description == null
-            ? null
-            : String(observation.outcome.fields.description),
-        priority:
-          observation.outcome.fields.priority == null
-            ? null
-            : String(observation.outcome.fields.priority),
-        source: 'backlog-description',
-        sourceRevision: String(
-          observation.outcome.fields.sourceRevision ??
-            observation.outcome.revisionDigest,
-        ),
-        observedAt: observation.observedAt,
-      },
-      snapshot: null,
-      baseline: null,
+      localProjection,
+      snapshot,
+      baseline: baselineFromSnapshot({
+        snapshot,
+        operationId: operation.operationId,
+        localProjectionRevision: localProjection.sourceRevision,
+        agreedAt: now,
+      }),
       capability: null,
-      contentRedacted: false,
+      contentRedacted: snapshot.contentRedacted,
       lifecycle: 'active',
       lifecycleCondition: 'active',
       activeOperationIds: [],
       createdAt: now,
       updatedAt: now,
     });
-    await writeVerifiedAssociation(
-      request.projectRoot,
-      intent,
-      observation.outcome.identity.aliases[0] ??
-        observation.outcome.identity.stableId,
-      dependencies.randomId(),
-    );
+    if (intent.target.kind === 'backlog') {
+      await writeVerifiedAssociation(
+        request.projectRoot,
+        intent,
+        observation.outcome.identity.aliases[0] ??
+          observation.outcome.identity.stableId,
+        operation.operationId,
+      );
+    }
+  } else if (verified && operation.operationClass === 'update-fields') {
+    if (!metadata) throw new Error('Verified mutation binding is missing.');
+    const state = await store.readBindingState(operation.bindingId);
+    if (!state || !observation.outcome.identity) {
+      throw new Error('Verified mutation lacks binding state or identity.');
+    }
+    const snapshot = snapshotFromObservation({
+      snapshotId: durableId('snap', operation.operationId),
+      bindingId: metadata.bindingId,
+      provider: metadata.provider,
+      context: metadata.remoteIdentity.context,
+      identity: metadata.remoteIdentity,
+      observation,
+    });
+    await store.writeBindingState({
+      ...state,
+      snapshot,
+      baseline: baselineFromSnapshot({
+        snapshot,
+        operationId: operation.operationId,
+        localProjectionRevision: state.localProjection.sourceRevision,
+        agreedAt: now,
+      }),
+      contentRedacted: snapshot.contentRedacted,
+      updatedAt: now,
+    });
   }
   return envelopeFrom(request, updated, metadata, null);
 }
@@ -1269,42 +1381,20 @@ async function continueMutationPreRead(
     throw new Error('Mutation pre-read detected remote revision drift.');
   }
   const { state } = await requireBinding(metadata.bindingId, store);
-  if (metadata.target.kind !== 'backlog') {
-    throw new Error(
-      'Project mutation requires an explicit normalized publication projection.',
-    );
-  }
-  const targetPath = resolveInsideProject(
-    request.projectRoot,
-    metadata.target.path,
-  );
-  const content = await readFile(targetPath, 'utf8');
-  if (Buffer.byteLength(content, 'utf8') > 1_048_576) {
-    throw new Error('Mutation projection source exceeds the size limit.');
-  }
-  const local = resolveLocalProjection({
-    target: {
-      kind: 'backlog',
-      path: metadata.target.path,
-      content,
-    },
-    observedAt: operation.createdAt,
-  });
-  const projection = {
-    title: local.title,
-    description: local.description,
-    priority: local.priority,
-  };
-  const safety = assessOutboundProjectionSafety(projection, {
-    assessedAt: operation.createdAt,
-  });
-  if (
-    safety.verdict !== 'safe' ||
-    safety.projectionDigest !== operation.preview.projectionDigest ||
-    safety.resultDigest !== operation.preview.safetyResultDigest
-  ) {
-    throw new Error('Mutation projection or safety evidence drifted.');
-  }
+  const local =
+    metadata.target.kind === 'backlog'
+      ? await readBacklogProjection(
+          request.projectRoot,
+          metadata.target.path,
+          operation.createdAt,
+        )
+      : state.localProjection.source === 'explicit-project-publication'
+        ? state.localProjection
+        : (() => {
+            throw new Error(
+              'Project mutation requires an explicit normalized publication projection.',
+            );
+          })();
 
   const config = await readOatConfig(request.projectRoot);
   const repositoryPolicy = config.pjm?.remote?.policy ?? {
@@ -1334,7 +1424,48 @@ async function continueMutationPreRead(
   ) {
     throw new Error('Mutation capability or workflow context drifted.');
   }
-  const preview = buildBindingPreview({
+  if (!state.snapshot) {
+    throw new Error('Mutation pre-read requires an existing snapshot.');
+  }
+  const preReadState: RemoteBindingState = {
+    ...state,
+    localProjection: local,
+    snapshot: {
+      ...state.snapshot,
+      observedAt: observation.observedAt,
+      issue: {
+        title: String(observation.outcome.fields.title ?? ''),
+        description:
+          observation.outcome.fields.description == null
+            ? ''
+            : String(observation.outcome.fields.description),
+        priority:
+          observation.outcome.fields.priority == null
+            ? null
+            : String(observation.outcome.fields.priority),
+        status: String(observation.outcome.fields.status ?? ''),
+      },
+    },
+  };
+  const projection = planProductionMutationProjection({
+    metadata,
+    state: preReadState,
+    descriptionMode: effective.description,
+    operation:
+      operation.lifecycleOperation === 'reconcile' ? 'reconcile' : 'publish',
+    priorityMapping: true,
+  });
+  const safety = assessOutboundProjectionSafety(projection, {
+    assessedAt: operation.createdAt,
+  });
+  if (
+    safety.verdict !== 'safe' ||
+    safety.projectionDigest !== operation.preview.projectionDigest ||
+    safety.resultDigest !== operation.preview.safetyResultDigest
+  ) {
+    throw new Error('Mutation projection or safety evidence drifted.');
+  }
+  const preview = buildProductionMutationPreview({
     binding: {
       bindingId: metadata.bindingId,
       provider: metadata.provider,
@@ -1350,7 +1481,7 @@ async function continueMutationPreRead(
           digest: semanticDigest(state.baseline),
         }
       : null,
-    revision: state.snapshot!.revision,
+    revision: preReadState.snapshot!.revision,
     capability: {
       surfaceKind: selected.surfaceKind as 'connector' | 'configured-cli',
       evidenceDigest: selected.evidenceDigest,
@@ -1361,7 +1492,9 @@ async function continueMutationPreRead(
     projection,
     outboundSafety: safety,
     operationClass: 'update-fields',
-    fieldMask: ['title', 'description', 'priority'],
+    fieldMask: Object.keys(projection) as Array<
+      'title' | 'description' | 'priority'
+    >,
     createdAt: operation.createdAt,
   });
   if (preview.digest !== operation.preview.digest) {
@@ -1458,6 +1591,305 @@ async function readCurrentMutationInvocation(
     throw new Error('Current caller invocation evidence is not valid JSON.');
   }
   return parseProductionMutationInvocation(value);
+}
+
+export function planProductionMutationProjection(input: {
+  metadata: RemoteBindingMetadata;
+  state: RemoteBindingState;
+  descriptionMode: 'none' | 'managed-section' | 'replace';
+  operation: 'publish' | 'reconcile';
+  priorityMapping: boolean;
+}): OutboundProjection {
+  if (!input.state.snapshot) {
+    throw new Error('Remote mutation requires a current bounded snapshot.');
+  }
+  const purpose = composePurposePolicies(input.metadata.purposes);
+  const base = input.state.baseline
+    ? {
+        title: input.state.baseline.fields.title.value,
+        description: input.state.baseline.fields.description.value,
+        priority: input.state.baseline.fields.priority.value,
+      }
+    : {
+        title: input.state.snapshot.issue.title,
+        description: input.state.snapshot.issue.description,
+        priority: input.state.snapshot.issue.priority,
+      };
+  const local = {
+    title: input.state.localProjection.title,
+    description: input.state.localProjection.description,
+    priority: input.state.localProjection.priority,
+  };
+  const remote = {
+    title: input.state.snapshot.issue.title,
+    description: input.state.snapshot.issue.description,
+    priority: input.state.snapshot.issue.priority,
+  };
+  const reconciliation = reconcileBinding({
+    base,
+    local,
+    remote,
+    fieldDirections: purpose.fields,
+    descriptionMode: input.descriptionMode,
+    priorityMapping: input.priorityMapping,
+    remoteLifecycle: input.state.lifecycleCondition,
+    uncertainOperation: false,
+  });
+  if (reconciliation.choiceRequired) {
+    throw new Error(
+      'Remote mutation has a same-field reconciliation conflict.',
+    );
+  }
+  if (
+    reconciliation.blockedBy.some(
+      (value) => value !== 'priority-mapping-unavailable',
+    )
+  ) {
+    throw new Error(
+      `Remote mutation is blocked by ${reconciliation.blockedBy.join(', ')}.`,
+    );
+  }
+
+  const projection: OutboundProjection = {};
+  const shouldWrite = (field: 'title' | 'description' | 'priority') =>
+    purpose.fields[field].includes('outbound') &&
+    (input.operation === 'publish' ||
+      reconciliation.fields[field]?.proposedDirection === 'outbound');
+  if (shouldWrite('title')) projection.title = local.title;
+  if (shouldWrite('description') && input.descriptionMode !== 'none') {
+    if (input.descriptionMode === 'replace') {
+      projection.description = local.description;
+    } else {
+      const current = remote.description ?? '';
+      const replacement = replaceManagedMarkdown(
+        current,
+        input.metadata.bindingId,
+        local.description ?? '',
+      );
+      const managed =
+        replacement.status === 'updated'
+          ? replacement
+          : replacement.reason === 'missing-boundary'
+            ? insertManagedMarkdown(
+                current,
+                input.metadata.bindingId,
+                local.description ?? '',
+              )
+            : replacement;
+      if (managed.status !== 'updated') {
+        throw new Error(
+          `Managed description requires a choice: ${managed.reason}.`,
+        );
+      }
+      projection.description = managed.body;
+    }
+  }
+  if (input.priorityMapping && shouldWrite('priority')) {
+    projection.priority = local.priority;
+  }
+  if (Object.keys(projection).length === 0) {
+    throw new Error(
+      'Effective binding purpose and field policy permit no outbound fields.',
+    );
+  }
+  return projection;
+}
+
+async function readBacklogProjection(
+  projectRoot: string,
+  relativePath: string,
+  observedAt: string,
+) {
+  const targetPath = resolveInsideProject(projectRoot, relativePath);
+  const content = await readFile(targetPath, 'utf8');
+  if (Buffer.byteLength(content, 'utf8') > 1_048_576) {
+    throw new Error('Mutation projection source exceeds the size limit.');
+  }
+  return resolveLocalProjection({
+    target: { kind: 'backlog', path: relativePath, content },
+    observedAt,
+  });
+}
+
+function snapshotFromObservation(input: {
+  snapshotId: string;
+  bindingId: string;
+  provider: RemoteBindingMetadata['provider'];
+  context: Record<string, string>;
+  identity: RemoteBindingMetadata['remoteIdentity'];
+  observation: ReturnType<typeof acceptExternalObservation>;
+}): RemoteSnapshotRecord {
+  if (!input.observation.outcome.revisionDigest) {
+    throw new Error('Authoritative read-back lacks revision evidence.');
+  }
+  const required = ['title', 'description', 'priority'];
+  if (
+    required.some(
+      (field) => !Object.hasOwn(input.observation.outcome.fields, field),
+    )
+  ) {
+    throw new Error('Authoritative read-back is missing a core field.');
+  }
+  return sanitizeRemoteSnapshot(
+    {
+      snapshotId: input.snapshotId,
+      bindingId: input.bindingId,
+      provider: input.provider,
+      observedAt: input.observation.observedAt,
+      observedBy: {
+        provider: input.provider,
+        surfaceKind: input.observation.surfaceKind,
+        context: input.context,
+        evidenceDigest: input.observation.capabilityEvidenceDigest,
+        semanticCapabilities: ['read'],
+      },
+      identity: input.identity,
+      revision: {
+        strength: 'hash-only',
+        token: null,
+        updatedAt: input.observation.observedAt,
+        contentHash: input.observation.outcome.revisionDigest,
+      },
+      issue: {
+        title: String(input.observation.outcome.fields.title ?? ''),
+        description: String(input.observation.outcome.fields.description ?? ''),
+        priority:
+          input.observation.outcome.fields.priority == null
+            ? null
+            : String(input.observation.outcome.fields.priority),
+        status: String(input.observation.outcome.fields.status ?? 'unknown'),
+      },
+      lifecycle: 'active',
+    },
+    {
+      suppressedCoreFields:
+        input.observation.outcome.suppressedFields.filter(isCoreSnapshotField),
+    },
+  );
+}
+
+function baselineFromSnapshot(input: {
+  snapshot: RemoteSnapshotRecord;
+  operationId: string;
+  localProjectionRevision: string;
+  agreedAt: string;
+}): RemoteBaselineRecord {
+  const field = (value: string | null) => ({
+    value,
+    hash: semanticDigest(value),
+  });
+  return {
+    recordType: 'baseline',
+    schemaVersion: 1,
+    baselineId: durableId('base', input.operationId),
+    bindingId: input.snapshot.bindingId,
+    agreedAt: input.agreedAt,
+    acceptedByOperationId: input.operationId,
+    localProjectionRevision: input.localProjectionRevision,
+    remoteRevision: input.snapshot.revision,
+    fields: {
+      title: field(input.snapshot.issue.title),
+      description: field(input.snapshot.issue.description),
+      priority: field(input.snapshot.issue.priority),
+    },
+  };
+}
+
+async function ensureIntakeBacklogTarget(
+  projectRoot: string,
+  target: RemoteBindingMetadata['target'],
+  snapshot: RemoteSnapshotRecord,
+  randomId: string,
+): Promise<void> {
+  if (target.kind !== 'backlog') {
+    throw new Error('Intake requires a backlog target.');
+  }
+  const path = resolveInsideProject(projectRoot, target.path);
+  try {
+    await readFile(path, 'utf8');
+    return;
+  } catch (error) {
+    if (!isNodeError(error) || error.code !== 'ENOENT') throw error;
+  }
+  await mkdir(dirname(path), { recursive: true });
+  const frontmatter = new YAML.Document({
+    id: target.id,
+    title: snapshot.issue.title,
+    priority: snapshot.issue.priority,
+    associated_issues: [],
+  });
+  const content = `---\n${frontmatter.toString().trimEnd()}\n---\n\n## Description\n\n${snapshot.issue.description}\n`;
+  const temporary = resolve(
+    dirname(path),
+    `.${target.id}.${randomId.replace(/[^A-Za-z0-9_-]/g, '_')}.tmp`,
+  );
+  try {
+    await writeFile(temporary, content, { encoding: 'utf8', flag: 'wx' });
+    await rename(temporary, path);
+  } catch (error) {
+    await unlink(temporary).catch(() => undefined);
+    throw error;
+  }
+}
+
+function buildProductionMutationPreview(input: {
+  binding: {
+    bindingId: string;
+    provider: RemoteBindingMetadata['provider'];
+    purposes: string[];
+  };
+  target: { stableId: string; context: Record<string, string> };
+  baseline: { baselineId: string; digest: string } | null;
+  revision: RemoteSnapshotRecord['revision'];
+  capability: {
+    surfaceKind: 'connector' | 'configured-cli';
+    evidenceDigest: string;
+    semanticCapabilities: string[];
+    context: Record<string, string>;
+  };
+  policy: Record<string, unknown>;
+  projection: OutboundProjection;
+  outboundSafety: ReturnType<typeof assessOutboundProjectionSafety>;
+  operationClass: 'update-fields';
+  fieldMask: Array<'title' | 'description' | 'priority'>;
+  createdAt: string;
+}): BindingPreview {
+  const componentDigests = {
+    target: semanticDigest(input.target),
+    baseline: semanticDigest(input.baseline),
+    revision: semanticDigest(input.revision),
+    capability: semanticDigest(input.capability),
+    policy: semanticDigest(input.policy),
+    projection: input.outboundSafety.projectionDigest,
+    outboundSafety: input.outboundSafety.resultDigest,
+  };
+  const digest = semanticDigest({
+    schemaVersion: 1,
+    binding: input.binding,
+    operationClass: input.operationClass,
+    fieldMask: input.fieldMask,
+    createdAt: input.createdAt,
+    componentDigests,
+  });
+  return {
+    schemaVersion: 1,
+    digest,
+    bindingId: input.binding.bindingId,
+    provider: input.binding.provider,
+    operationClass: input.operationClass,
+    fieldMask: input.fieldMask,
+    createdAt: input.createdAt,
+    componentDigests,
+    renderedFields: {
+      title: { kind: 'value', value: input.projection.title ?? null },
+      description: {
+        kind: 'hash',
+        digest: semanticDigest(input.projection.description ?? null),
+        bytes: Buffer.byteLength(input.projection.description ?? '', 'utf8'),
+      },
+      priority: { kind: 'value', value: input.projection.priority ?? null },
+    },
+  };
 }
 
 function operationRecord(input: {
@@ -1686,7 +2118,7 @@ function resolveInsideProject(
 
 async function writeVerifiedAssociation(
   projectRoot: string,
-  intent: PlannedBindingCreate,
+  intent: Pick<PlannedBindingCreate, 'bindingId' | 'provider' | 'target'>,
   remoteRef: string,
   randomId: string,
 ): Promise<void> {
@@ -1723,6 +2155,10 @@ async function writeVerifiedAssociation(
     await unlink(temporary).catch(() => undefined);
     throw error;
   }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error;
 }
 
 function durableId(prefix: string, value: string): string {
