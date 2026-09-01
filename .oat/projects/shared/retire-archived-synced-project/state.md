@@ -76,7 +76,7 @@ oat_implement_exit_gate:
     Gate passed at the important threshold with one Medium and one Minor
     finding. Run oat-project-review-receive for the correlated final review
     artifact before allowing the gate.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     gate_run_id: 2e607741-ddac-4b6e-bc38-0d65d66c93aa
     handoff: >-
@@ -93,17 +93,17 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-09-01T231603Z.md
   receive_pre_head: fc05f6c80d76f92ac395dbf63b6d228eaca5b9bf
-  receive_commit: null
+  receive_commit: 87ff7ba7073b728adea0d86e437a36c77c70f59a
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-01T23:19:56Z'
+  updated_at: '2026-09-01T23:21:10Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-01T23:19:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-01T23:21:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -113,7 +113,7 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Gate findings dispositioned; receive reconciliation pending
+**Status:** Gate receive reconciled; allowance persistence pending
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
@@ -121,10 +121,10 @@ oat_project_recap:
 
 Implementation — all 14 tasks and the current-basis final review are complete.
 The authenticated Claude Fable gate passed the Important threshold. Its Medium
-and Minor findings are dispositioned without fix tasks and the artifact is
-archived; durable receive reconciliation remains before the gate can be
-allowed. Closeout artifact refresh and renewed post-p04 approval remain. PR
-#254 remains open.
+and Minor findings are dispositioned without fix tasks, the artifact is
+archived, and the receive commit is durably reconciled. Gate allowance
+persistence, closeout artifact refresh, and renewed post-p04 approval remain.
+PR #254 remains open.
 
 ## Artifacts
 
@@ -197,7 +197,8 @@ allowed. Closeout artifact refresh and renewed post-p04 approval remain. PR
 - ✓ Gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` passed the Important
   threshold with a receive-eligible artifact
 - ✓ Medium closeout-artifact refresh and Minor cleanup nit dispositioned
-- ⧗ Reconcile the archived artifact, exact Reviews row, and receive commit
+- ✓ Archived artifact, exact Reviews row, and receive commit reconciled
+- ⧗ Persist the configured gate's allowed disposition
 
 ## Blockers
 
@@ -205,5 +206,4 @@ None.
 
 ## Next Milestone
 
-Reconcile the receive commit, allow the configured gate, then continue the
-approval-aware closeout sequence.
+Allow the configured gate, then continue the approval-aware closeout sequence.

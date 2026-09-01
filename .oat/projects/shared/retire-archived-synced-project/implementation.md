@@ -589,6 +589,12 @@ and could not be refreshed`.
 The passing-gate judgment sweep is fully dispositioned. The review event is
 `passed`; no code fix tasks or re-review are required.
 
+The receive receipt reconciles archived artifact
+`reviews/archived/final-review-2026-09-01T231603Z.md`, the exact
+final/code/source-filename Reviews event, and bounded receive commit
+`87ff7ba7073b728adea0d86e437a36c77c70f59a`. Receive is complete and will not
+be invoked again for gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa`.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
