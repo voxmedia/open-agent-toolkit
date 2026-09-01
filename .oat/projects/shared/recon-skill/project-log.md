@@ -50,27 +50,27 @@ target=cursor-fable-5-high threshold=important findings=critical:0,important:0,m
 
 ### 2026-08-31 · structural · oat-project-implement · p01
 
-Phase p01 passed after 1 fix loop; final review artifact: reviews/p01-code-rereview-2026-08-31T045845Z.md.
+Phase p01 passed after 1 fix loop; final review artifact: reviews/archived/p01-code-rereview-2026-08-31T045845Z.md.
 
 ### 2026-08-31 · structural · oat-project-implement · p02
 
-Phase p02 blocked after exhausting 2 review-fix iterations; final artifact: reviews/p02-code-final-rereview-2026-08-31T065541Z.md (4 Critical, 1 Important). Explicit correction authorization is required to continue.
+Phase p02 blocked after exhausting 2 review-fix iterations; final artifact: reviews/archived/p02-code-final-rereview-2026-08-31T065541Z.md (4 Critical, 1 Important). Explicit correction authorization is required to continue.
 
 ### 2026-08-31 · structural · oat-project-implement · p02
 
-Phase p02 remains blocked after operator-authorized review-fix iteration 3/3; fresh review artifact reviews/p02-code-rereview-r4-2026-08-31T123548Z.md reports 3 Critical and 2 Important findings.
+Phase p02 remains blocked after operator-authorized review-fix iteration 3/3; fresh review artifact reviews/archived/p02-code-rereview-r4-2026-08-31T123548Z.md reports 3 Critical and 2 Important findings.
 
 ### 2026-08-31 · structural · oat-project-implement · p-rev1
 
-Terminal review passed at 841a7164a with 0 findings after 3 review-fix iterations; reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md closes p-rev1 and the complete p02 blocking history.
+Terminal review passed at 841a7164a with 0 findings after 3 review-fix iterations; reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md closes p-rev1 and the complete p02 blocking history.
 
 ### 2026-08-31 · structural · oat-project-implement · p03
 
-Terminal review passed at cb3d94ac2 with 0 findings after 3 review-fix iterations; reviews/p03-review-2026-08-31T204054Z.md closes all seven prior p03 Critical/Important findings.
+Terminal review passed at cb3d94ac2 with 0 findings after 3 review-fix iterations; reviews/archived/p03-review-2026-08-31T204054Z.md closes all seven prior p03 Critical/Important findings.
 
 ### 2026-08-31 · structural · oat-project-implement · p04
 
-Terminal review passed at e2b8b4077 with 0 findings and no fix iterations; reviews/p04-review-2026-08-31T213712Z.md closes both p04 tasks and advances the project to final implementation closeout.
+Terminal review passed at e2b8b4077 with 0 findings and no fix iterations; reviews/archived/p04-review-2026-08-31T213712Z.md closes both p04 tasks and advances the project to final implementation closeout.
 
 ### 2026-08-31 · structural · oat-project-implement · p-rev2
 

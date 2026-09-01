@@ -117,7 +117,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p01-code-review-2026-08-31T044331Z.md`
+- Artifact: `reviews/archived/p01-code-review-2026-08-31T044331Z.md`
 - Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -150,7 +150,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with passing verdict
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p01-code-rereview-2026-08-31T045845Z.md`
+- Artifact: `reviews/archived/p01-code-rereview-2026-08-31T045845Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -195,7 +195,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p02-code-review-2026-08-31T054704Z.md`
+- Artifact: `reviews/archived/p02-code-review-2026-08-31T054704Z.md`
 - Findings: 2 Critical, 3 Important, 1 Medium, 0 Minor
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -229,7 +229,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p02-code-rereview-2026-08-31T062204Z.md`
+- Artifact: `reviews/archived/p02-code-rereview-2026-08-31T062204Z.md`
 - Findings: 4 Critical, 2 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -263,7 +263,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p02-code-final-rereview-2026-08-31T065541Z.md`
+- Artifact: `reviews/archived/p02-code-final-rereview-2026-08-31T065541Z.md`
 - Findings: 4 Critical, 1 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -277,7 +277,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Worktree: root checkout, clean before terminal bookkeeping
 - Outstanding items: four Critical and one Important finding in
-  `reviews/p02-code-final-rereview-2026-08-31T065541Z.md`
+  `reviews/archived/p02-code-final-rereview-2026-08-31T065541Z.md`
 
 #### Dispatch p02 fix round 3
 
@@ -311,7 +311,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+- Artifact: `reviews/archived/p02-code-rereview-r4-2026-08-31T123548Z.md`
 - Findings: 3 Critical, 2 Important, 0 Medium, 0 Minor
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -325,7 +325,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Optional nested dispatches: none
 - Worktree: root checkout, clean before terminal bookkeeping
 - Outstanding items: three Critical and two Important findings in
-  `reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+  `reviews/archived/p02-code-rereview-r4-2026-08-31T123548Z.md`
 
 #### Dispatch p-rev1 implementation
 
@@ -357,7 +357,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p-rev1-code-review-2026-08-31T145006Z.md`
+- Artifact: `reviews/archived/p-rev1-code-review-2026-08-31T145006Z.md`
 - Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
 - Overengineering assessment: passed; the revision is a focused simplification
   with no new schema, profile, persisted intermediate, review pass, provider
@@ -398,7 +398,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with one blocking finding
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p-rev1-code-rereview-2026-08-31T153329Z.md`
+- Artifact: `reviews/archived/p-rev1-code-rereview-2026-08-31T153329Z.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Closed dispositions: all receipt drift/outcome gaps and all five p02
   review-round-4 assurance bypasses close in direct probes
@@ -443,7 +443,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with one blocking finding
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p-rev1-code-final-rereview-2026-08-31T160738Z.md`
+- Artifact: `reviews/archived/p-rev1-code-final-rereview-2026-08-31T160738Z.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Closed dispositions: the 36-case ineligible-audit identity matrix and every
   earlier p02/p-rev1 Critical or Important finding pass direct probes
@@ -488,7 +488,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed and passed
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md`
+- Artifact: `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reviewed head: `841a7164a4f789f244b1e7adac47b44365d09dfb`
 - Disposition: p-rev1 passes and the complete p02 blocking review history is
@@ -503,7 +503,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Review-fix iterations: 3/3
 - Recovery attempts: 0
 - Optional nested dispatches: none
-- Terminal review: `reviews/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md`
+- Terminal review: `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md`
 - Phase p02 is also passed at this terminal closure; all four planned p02 tasks
   are completed and its full blocking review history is resolved.
 
@@ -546,7 +546,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p03-review-2026-08-31T183356Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T183356Z.md`
 - Findings: 0 Critical, 3 Important, 0 Medium, 0 Minor
 - Reviewed head: `3d5eaa12aad12282808d18728bd01db1c0e11c1a`
 - Blocking dispositions: update-all promotes transitive placement to direct
@@ -590,7 +590,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with blocking findings
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p03-review-2026-08-31T191413Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T191413Z.md`
 - Findings: 1 Critical, 2 Important, 0 Medium, 0 Minor
 - Reviewed head: `63829d6426fc50df40598ac3c9bae4519360fc34`
 - Closed dispositions: all three round-1 findings close in their exact forms
@@ -640,7 +640,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed with one blocking finding
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p03-review-2026-08-31T200338Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T200338Z.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Reviewed head: `c3d9da4ccb9e76006df5bfafb40abd9b65817b1e`
 - Closed dispositions: all six prior p03 findings close; sync, migration, and
@@ -688,7 +688,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed and passed
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p03-review-2026-08-31T204054Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T204054Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reviewed head: `cb3d94ac2afa9d29f59257c708f71161fec35dcb`
 - Disposition: all seven prior p03 findings close under direct probes; p03 and
@@ -705,7 +705,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Pre-review correction commits: 1 within fix round 2
 - Recovery attempts: 0
 - Optional nested dispatches: none
-- Terminal review: `reviews/p03-review-2026-08-31T204054Z.md`
+- Terminal review: `reviews/archived/p03-review-2026-08-31T204054Z.md`
 - Accepted deviations: migration runtime seam, scanner export seam, generated
   project provider outputs, and Cursor native-read skill behavior
 
@@ -744,7 +744,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed and passed
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p04-review-2026-08-31T213712Z.md`
+- Artifact: `reviews/archived/p04-review-2026-08-31T213712Z.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Reviewed head: `e2b8b40771dd64d22dc3e16e2faa1110db1e792a`
 - Disposition: p04-t01, p04-t02, and p04 are authorized to pass and enter the
@@ -760,7 +760,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Review-fix iterations: 0
 - Recovery attempts: 0
 - Optional nested dispatches: none
-- Terminal review: `reviews/p04-review-2026-08-31T213712Z.md`
+- Terminal review: `reviews/archived/p04-review-2026-08-31T213712Z.md`
 - Accepted deviations: generated release-version asset, two mechanical
   autonomy inventory rows, and no lockfile diff for workspace self versions
 
@@ -982,7 +982,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 **Date:** 2026-08-31
 **Source:** inline conversation plus
-`reviews/p02-code-rereview-r4-2026-08-31T123548Z.md`
+`reviews/archived/p02-code-rereview-r4-2026-08-31T123548Z.md`
 
 **Changes requested:**
 
@@ -1364,7 +1364,7 @@ before the gate becomes `allowed/passed`.
   782/782 suite, CLI type-check, 742/742 skill suite, canonical skill
   validation, project provider sync/link verification, and diff checks.
 - Passing gates do not override the three production-function lifecycle
-  failures recorded in `reviews/p03-review-2026-08-31T183356Z.md`.
+  failures recorded in `reviews/archived/p03-review-2026-08-31T183356Z.md`.
 - After p03 fix round 1, the exact three production regressions pass 52/52 and
   the complete Phase 3 surface passes 739/739; CLI type-check, lint, format,
   and diff checks also pass.
