@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: ef806735359899afd7b720055a776045ec93dca7
-oat_blockers: ['Phase 5 review round 2 is pending after fix loop 1']
+oat_blockers:
+  ['Phase 5 review round 2 has one Critical and two Important findings']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -43,7 +44,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:31:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:42:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -56,10 +57,9 @@ oat_generated: false
 ## Current Phase
 
 Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented in
-ordered declared-boundary commits. Review-fix loop 1 resolved the three Critical
-and three Important round-1 findings in `ef8067353`; the expanded focused and
-remote suites pass 81/81 and 532/532. Fresh review round 2 is pending. Phase 6
-has not started.
+ordered declared-boundary commits. Review round 2 passed the focused and remote
+suites at 81/81 and 532/532 but blocked with one Critical and two Important
+public-adapter findings. Bounded fix loop 2/3 is next. Phase 6 has not started.
 
 ## Artifacts
 
@@ -67,7 +67,7 @@ has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 review round 2 pending)
+- **Implementation:** implementation.md (in progress; Phase 5 review fixes pending)
 
 ## Progress
 
@@ -173,18 +173,20 @@ has not started.
 - ⚠ Phase 5 review round 1 blocked with 3 Critical and 3 Important findings
 - ✓ Phase 5 bounded fix loop 1/3 committed as `ef8067353` through the original implementer
 - ✓ Expanded Phase 5 live suite passed 81/81 and remote suite passed 532/532
-- ⧗ Fresh Phase 5 review round 2 pending
+- ⚠ Phase 5 review round 2 blocked with 1 Critical and 2 Important findings
+- ⧗ Phase 5 bounded fix loop 2/3 pending through the original implementer
 
 ## Blockers
 
-No active implementation defect is known after bounded fix loop 1, but Phase 5
-remains gated on fresh review round 2. Phase 6 is blocked until that review
-passes. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+Phase 5 review round 2 found a wrong-UUID public read acceptance, a public
+mutation selector/input mismatch, and forged create provenance accepted by
+public validation. Phase 6 is blocked until bounded fixes pass a fresh review.
+The branch-level lockstep version gate remains preserved for planned `p08-t05`
+release work.
 
 ## Next Milestone
 
-Run fresh Phase 5 review round 2 over the full post-fix phase range ending at
-`ef806735359899afd7b720055a776045ec93dca7`, including explicit disposition of
-all findings in `reviews/p05-review-2026-09-02T210533Z.md`. Do not begin Phase 6
-until a review passes with zero Critical and zero Important findings.
+Run bounded Phase 5 fix loop 2/3 through the original accepted implementer,
+limited to the findings in `reviews/p05-review-2026-09-02T214026Z.md`, then run
+a fresh exact-range review. Do not begin Phase 6 until a review passes with
+zero Critical and zero Important findings.

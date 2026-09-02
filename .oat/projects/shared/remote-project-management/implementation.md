@@ -839,8 +839,8 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** in progress — review-fix loop 1 resolved all three Critical and
-three Important round-1 findings; fresh review round 2 is pending.
+**Status:** blocked — review round 2 found one Critical and two Important
+public-adapter findings requiring bounded fix loop 2/3.
 **Started:** 2026-09-02
 **Implementation head:** ef806735359899afd7b720055a776045ec93dca7
 
@@ -896,7 +896,15 @@ three Important round-1 findings; fresh review round 2 is pending.
   focused suite at 81/81. The implementer also passed the full remote suite at
   532/532 plus CLI lint, type-check, format, diff, build, and provider-neutrality
   checks.
-- Fresh review round 2 is next. Phase 6 has not started.
+- Review round 2 at `reviews/p05-review-2026-09-02T214026Z.md` blocked with one
+  Critical and two Important findings. It reported
+  `Reconnaissance: not-attempted`, passed the focused suite at 81/81 and remote
+  suite at 532/532, and reproduced a wrong-UUID public read, a selector/input
+  mutation mismatch, and forged create provenance accepted by public
+  validation.
+- Prior findings C1, C3, and I1-I3 are resolved; prior C2 is partially resolved.
+  Bounded fix loop 2/3 through the original Phase 5 implementer is next. Phase
+  6 has not started.
 
 ---
 
@@ -1791,7 +1799,7 @@ continuation_events:
   - p05-review-fix-1-20260902-eed3fca5b
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 1/3
+review_rounds: 2/3
 fix_loops: 1/3
 review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
 review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
@@ -1799,7 +1807,11 @@ review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 fix_1_commit: ef806735359899afd7b720055a776045ec93dca7
 fix_1_outcome: done
-phase_outcome: fixes_completed_review_2_pending
+review_2_artifact: reviews/p05-review-2026-09-02T214026Z.md
+review_2_head: ef806735359899afd7b720055a776045ec93dca7
+review_2_findings: 1 critical, 2 important, 0 medium, 0 minor
+review_2_reconnaissance: not-attempted
+phase_outcome: review_2_blocked_fix_2_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1827,7 +1839,12 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - The focused suite expanded to 81/81 and passed independently at the root; the
   full remote suite passed 532/532, and lint, types, format, diff, build, and
   provider-neutrality checks passed.
-- Review round 2 is pending; Phase 6 did not start.
+- Review round 2 blocked with one Critical and two Important public-adapter
+  findings at exact reviewed head `ef806735359899afd7b720055a776045ec93dca7`;
+  reconnaissance was not attempted. Prior C1, C3, and I1-I3 are resolved, while
+  prior C2 is partially resolved.
+- Bounded fix loop 2/3 through the original accepted implementer is pending;
+  Phase 6 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1929,7 +1946,7 @@ Track test execution during implementation.
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 81/81; remote 532/532; checks passed   | 0      | review round 2 pending     |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 81/81; remote 532/532; checks passed   | 0      | blocked by review round 2  |
 
 ## Final Summary (for PR/docs)
 
