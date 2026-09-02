@@ -275,11 +275,26 @@ const runtimeObservationSchema = z.discriminatedUnion('status', [
     .strict(),
 ]);
 
+/**
+ * The rejected trigger owns the single-fallback right. Publishing a fallback
+ * record requires this durable claim on the trigger first, so two concurrent
+ * callers cannot each observe "no fallback yet" and then create their own.
+ */
+const fallbackClaimSchema = z
+  .object({
+    fallbackRequestId: z.string().min(1),
+    claimedAt: z.string().datetime(),
+  })
+  .strict();
+
+export type FallbackClaim = z.infer<typeof fallbackClaimSchema>;
+
 const oatRecordSchema = z
   .object({
     schemaVersion: z.literal(1),
     canonicalRole: canonicalRoleSchema.nullable(),
     preStartRejection: rejectionSchema.nullable(),
+    fallbackClaim: fallbackClaimSchema.nullable().default(null),
     fallback: fallbackSchema,
     runtimeObservation: runtimeObservationSchema,
   })
@@ -316,6 +331,14 @@ const oatDispatchEvidenceEventSchema = z.discriminatedUnion('kind', [
     .strict(),
   z
     .object({
+      kind: z.literal('fallback-claim'),
+      requestId: z.string().min(1),
+      source: z.literal('provider-wrapper'),
+      claim: fallbackClaimSchema,
+    })
+    .strict(),
+  z
+    .object({
       kind: z.literal('fallback-link'),
       requestId: z.string().min(1),
       source: z.literal('provider-wrapper'),
@@ -341,6 +364,7 @@ function initialOatRecord(): PersistedOatDispatchRecordV1['oat'] {
     schemaVersion: 1,
     canonicalRole: null,
     preStartRejection: null,
+    fallbackClaim: null,
     fallback: { status: 'not-applicable', reason: 'No fallback recorded.' },
     runtimeObservation: { status: 'not-reported' },
   };
@@ -437,6 +461,35 @@ export function augmentDispatchRecord(input: {
       oat.preStartRejection = rejectionSchema.parse(event.rejection);
       break;
     }
+    case 'fallback-claim': {
+      const claim = event.claim;
+      if (record.launch_status !== 'blocked-before-start') {
+        throw new Error(
+          'Only a request blocked before start can claim a fallback.',
+        );
+      }
+      if (oat.preStartRejection === null) {
+        throw new Error(
+          'A fallback claim requires proven pre-start rejection evidence.',
+        );
+      }
+      if (
+        oat.canonicalRole === null ||
+        oat.canonicalRole.status !== 'resolved'
+      ) {
+        throw new Error(
+          'A fallback claim requires resolved canonical role evidence.',
+        );
+      }
+      if (
+        oat.fallbackClaim !== null &&
+        oat.fallbackClaim.fallbackRequestId !== claim.fallbackRequestId
+      ) {
+        throw new Error('The rejected request already has a fallback.');
+      }
+      oat.fallbackClaim = claim;
+      break;
+    }
     case 'fallback-link': {
       const trigger = input.triggerRecord
         ? parsePersistedOatDispatchRecord(input.triggerRecord)
@@ -486,6 +539,14 @@ export function augmentDispatchRecord(input: {
       ) {
         throw new Error(
           'Fallback must preserve the exact target and controls; the configured control digest changed.',
+        );
+      }
+      if (
+        trigger.oat.fallbackClaim === null ||
+        trigger.oat.fallbackClaim.fallbackRequestId !== record.request_id
+      ) {
+        throw new Error(
+          'The rejected trigger must durably claim this fallback request before the fallback can publish.',
         );
       }
       const triggerRole = trigger.oat.canonicalRole;

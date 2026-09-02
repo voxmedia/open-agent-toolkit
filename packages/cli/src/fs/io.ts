@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   chmod,
   lstat,
@@ -302,6 +302,76 @@ interface FileIdentity {
   inode: string;
 }
 
+/**
+ * Revision identity for a JSON journal. Callers read a record, keep its digest,
+ * and hand it back so publication can compare and swap atomically under a
+ * writer lock rather than blindly replacing a concurrent winner.
+ */
+export function jsonJournalDigest(content: string): string {
+  return `sha256:${createHash('sha256').update(content, 'utf8').digest('hex')}`;
+}
+
+const DISPATCH_LOCK_RETRY_MS = 10;
+const DISPATCH_LOCK_TIMEOUT_MS = 5000;
+
+/**
+ * Exclusive contained writer lock. `mkdir` without `recursive` is the atomic
+ * primitive: exactly one caller can create the directory, and every other
+ * caller observes `EEXIST`. The lock is validated as a real directory so a
+ * planted symlink fails closed instead of redirecting the guarded section.
+ */
+export async function withContainedWriterLock<T>(
+  lockPath: string,
+  scopeRoot: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  const resolvedScope = resolve(scopeRoot);
+  const resolvedLock = resolve(lockPath);
+  if (dirname(resolvedLock) !== resolvedScope) {
+    throw new Error('Writer lock must live directly inside its scope root.');
+  }
+  const scopeStat = await lstat(resolvedScope);
+  if (scopeStat.isSymbolicLink() || !scopeStat.isDirectory()) {
+    throw new Error('Writer lock scope must be a real directory.');
+  }
+
+  const deadline = Date.now() + DISPATCH_LOCK_TIMEOUT_MS;
+  for (;;) {
+    try {
+      await mkdir(resolvedLock);
+      break;
+    } catch (error) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 'EEXIST'
+      ) {
+        throw error;
+      }
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `Another writer holds ${resolvedLock}. Remove it once no writer is running, then retry.`,
+          { cause: error },
+        );
+      }
+      await new Promise((resolveDelay) =>
+        setTimeout(resolveDelay, DISPATCH_LOCK_RETRY_MS),
+      );
+    }
+  }
+
+  try {
+    const held = await lstat(resolvedLock);
+    if (held.isSymbolicLink() || !held.isDirectory()) {
+      throw new Error('Writer lock is not a real directory.');
+    }
+    return await run();
+  } finally {
+    await rm(resolvedLock, { recursive: true, force: true });
+  }
+}
+
 function identityOf(entry: {
   dev: bigint | number;
   ino: bigint | number;
@@ -430,7 +500,7 @@ export async function atomicWriteJsonContained(
   filePath: string,
   data: unknown,
   scopeRoot: string,
-  options: { createOnly?: boolean } = {},
+  options: { createOnly?: boolean; expectedDigest?: string } = {},
 ): Promise<void> {
   const resolvedScope = resolve(scopeRoot);
   const resolvedFile = resolve(filePath);
@@ -537,6 +607,18 @@ export async function atomicWriteJsonContained(
       tempIdentity,
       'JSON journal staging file identity changed before publication.',
     );
+    if (options.expectedDigest !== undefined) {
+      // Compare-and-swap: the revision this write is based on must still be
+      // the published revision, so a concurrent winner is never overwritten.
+      const currentDigest = jsonJournalDigest(
+        await readFile(resolvedFile, 'utf8'),
+      );
+      if (currentDigest !== options.expectedDigest) {
+        throw new Error(
+          'JSON journal changed since it was read; the concurrent update was preserved and this stale write was refused.',
+        );
+      }
+    }
 
     if (options.createOnly) {
       await link(tempPath, resolvedFile);

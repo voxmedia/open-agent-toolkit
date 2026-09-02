@@ -74,12 +74,12 @@ const target: ExactTargetRef = {
   selectedRoute: 'native',
 };
 
-function rejectedTrigger() {
+function rejectedTrigger(claimFor: string | null = 'dispatch-fallback-1') {
   const blocked = genericRecord({
     launch_status: 'blocked-before-start',
     child_outcome: 'not-started',
   });
-  return augmentDispatchRecord({
+  const rejected = augmentDispatchRecord({
     record: augmentDispatchRecord({
       record: blocked,
       event: {
@@ -98,6 +98,19 @@ function rejectedTrigger() {
         code: 'native-role-unavailable',
         rejectedAt: '2026-09-02T00:00:01.000Z',
         provesNoChildStarted: true,
+      },
+    },
+  });
+  if (claimFor === null) return rejected;
+  return augmentDispatchRecord({
+    record: rejected,
+    event: {
+      kind: 'fallback-claim',
+      requestId: rejected.request_id,
+      source: 'provider-wrapper',
+      claim: {
+        fallbackRequestId: claimFor,
+        claimedAt: '2026-09-02T00:00:02.000Z',
       },
     },
   });
@@ -275,21 +288,97 @@ describe('augmentDispatchRecord', () => {
       approximation: true,
       triggerRequestId: trigger.request_id,
     });
+    const secondFallbackEvent = {
+      ...fallbackEvent(),
+      requestId: 'dispatch-fallback-2',
+      evidence: {
+        ...fallbackEvent().evidence,
+        fallbackRequestId: 'dispatch-fallback-2',
+      },
+    };
     expect(() =>
       augmentDispatchRecord({
         record: { ...fallback, request_id: 'dispatch-fallback-2' },
         triggerRecord: trigger,
         relatedRecords: [linked],
+        event: secondFallbackEvent,
+      }),
+    ).toThrow(/must durably claim this fallback request/i);
+    expect(() =>
+      augmentDispatchRecord({
+        record: { ...fallback, request_id: 'dispatch-fallback-2' },
+        triggerRecord: rejectedTrigger('dispatch-fallback-2'),
+        relatedRecords: [linked],
+        event: secondFallbackEvent,
+      }),
+    ).toThrow(/already has a fallback/i);
+  });
+
+  it('requires the trigger to durably claim exactly this fallback first', () => {
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord(),
+        triggerRecord: rejectedTrigger(null),
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/must durably claim this fallback request/i);
+
+    expect(() =>
+      augmentDispatchRecord({
+        record: rejectedTrigger('dispatch-fallback-1'),
         event: {
-          ...fallbackEvent(),
-          requestId: 'dispatch-fallback-2',
-          evidence: {
-            ...fallbackEvent().evidence,
+          kind: 'fallback-claim',
+          requestId: 'dispatch-native-1',
+          source: 'provider-wrapper',
+          claim: {
             fallbackRequestId: 'dispatch-fallback-2',
+            claimedAt: '2026-09-02T00:00:03.000Z',
           },
         },
       }),
     ).toThrow(/already has a fallback/i);
+
+    expect(
+      rejectedTrigger('dispatch-fallback-1').oat.fallbackClaim,
+    ).toMatchObject({ fallbackRequestId: 'dispatch-fallback-1' });
+  });
+
+  it('refuses a fallback claim without proven rejection or resolved role evidence', () => {
+    const accepted = genericRecord();
+    expect(() =>
+      augmentDispatchRecord({
+        record: accepted,
+        event: {
+          kind: 'fallback-claim',
+          requestId: accepted.request_id,
+          source: 'provider-wrapper',
+          claim: {
+            fallbackRequestId: 'dispatch-fallback-1',
+            claimedAt: '2026-09-02T00:00:03.000Z',
+          },
+        },
+      }),
+    ).toThrow(/blocked before start can claim a fallback/i);
+
+    const blocked = genericRecord({
+      launch_status: 'blocked-before-start',
+      child_outcome: 'not-started',
+    });
+    expect(() =>
+      augmentDispatchRecord({
+        record: blocked,
+        event: {
+          kind: 'fallback-claim',
+          requestId: blocked.request_id,
+          source: 'provider-wrapper',
+          claim: {
+            fallbackRequestId: 'dispatch-fallback-1',
+            claimedAt: '2026-09-02T00:00:03.000Z',
+          },
+        },
+      }),
+    ).toThrow(/proven pre-start rejection evidence/i);
   });
 
   it.each([
@@ -391,10 +480,19 @@ describe('augmentDispatchRecord', () => {
       },
     });
     expect(roleless.oat.canonicalRole).toBeNull();
+    // A tampered journal that carries a claim without resolved role evidence
+    // must still fail; the claim event itself can never produce this state.
+    const tamperedClaim = {
+      fallbackRequestId: 'dispatch-fallback-1',
+      claimedAt: '2026-09-02T00:00:02.000Z',
+    };
     expect(() =>
       augmentDispatchRecord({
         record: fallbackRecord(),
-        triggerRecord: roleless,
+        triggerRecord: {
+          ...roleless,
+          oat: { ...roleless.oat, fallbackClaim: tamperedClaim },
+        },
         relatedRecords: [],
         event: fallbackEvent(),
       }),
@@ -423,6 +521,7 @@ describe('augmentDispatchRecord', () => {
           oat: {
             ...missingRole.oat,
             preStartRejection: roleless.oat.preStartRejection,
+            fallbackClaim: tamperedClaim,
           },
         },
         relatedRecords: [],
