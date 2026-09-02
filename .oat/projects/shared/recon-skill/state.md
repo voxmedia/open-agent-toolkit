@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:42:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:58:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,7 +94,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Authorized final lifecycle review pending
+**Status:** Final lifecycle review passed; receive pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
@@ -103,9 +103,9 @@ oat_project_recap:
 Revision 7 closes the remaining post-promotion continuity window by making the
 retained canonical-byte assertion the final awaited publication check. The
 bounded two-file change passed its independent phase review with zero findings.
-All 30 tasks are complete. The user explicitly authorized exactly one fresh
-mandatory final lifecycle review on the current committed basis; PR #248
-remains open while that review runs.
+All 30 tasks are complete. The single explicitly authorized mandatory final
+lifecycle review passed with zero findings on the immutable reviewed basis.
+PR #248 remains open while the review event is received durably.
 
 ## Artifacts
 
@@ -229,16 +229,15 @@ remains open while that review runs.
   publication check with deterministic mutation controls
 - ✓ Revision 7 independent phase review passed with 0 Critical, 0 Important,
   0 Medium, and 0 Minor findings
-- ⧗ One explicitly authorized final lifecycle review is pending
+- ✓ Single explicitly authorized final lifecycle review passed with zero findings
+- ⧗ Final review artifact receipt and archival are pending
 
 ## Blockers
 
-None. The otherwise-exhausted final-scope review-cycle cap has one explicit,
-single-use user override for the pending mandatory final lifecycle review.
+None. The single-use review-cycle override has been consumed by the passing
+final review; no additional final review is authorized.
 
 ## Next Milestone
 
-Run exactly one fresh mandatory final lifecycle review on committed head
-`4f5a6113959d29958e5e6396a436bc31d3cfcc60`. If it passes, run the configured
-cross-family exit gate; if it finds blocking issues, stop without an automatic
-fix or re-review cycle.
+Receive and archive `reviews/final-review-2026-09-02T214500Z.md`, then run the
+configured cross-family exit gate on the received passing review basis.
