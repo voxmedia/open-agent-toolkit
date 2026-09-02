@@ -34,40 +34,40 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
-  config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
+  disposition: null
+  config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 547705fae790c32d1bd9dada11f5877253e11530
+  reviewed_head: fd5d5c85c10590fb293855ec27d8cac32c67d6b3
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:688f2ff2a96e11a47f1a240bfa54a114b25b243c663874aa4ec5212e98f6dbef'
-  freshness_head: c9fa1b2855aec2c18887ca20fceb5f020da45ebd
-  freshness_fingerprint: 'sha256:effective-delta-v1:9f05d9a87e0d1087cbf77aeb183589114689c64aae3bbabba43b009386d1e920'
-  launch_state: result_persisted
-  launch_attempt_id: 9d5f04f8-a8cc-4507-9a7e-f3074e818419
-  launch_started_at: '2026-09-01T03:53:30Z'
-  launch_result_receipt: .oat/projects/shared/recon-skill/reviews/gate-receipts/9d5f04f8-a8cc-4507-9a7e-f3074e818419.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/0bb25a08-a4e7-4e4b-adef-ca236e685c2a.json
-  gate_run_id: 0bb25a08-a4e7-4e4b-adef-ca236e685c2a
-  envelope_status: ok
-  artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md before treating this gate review as consumed.'
-  receive_state: completed
-  receive_correlation: 'run=0bb25a08-a4e7-4e4b-adef-ca236e685c2a|scope=final|type=code|source=final-review-2026-09-01T040114Z.md'
-  receive_source_artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
-  receive_archived_artifact: .oat/projects/shared/recon-skill/reviews/archived/final-review-2026-09-01T040114Z.md
-  receive_event_identity: 'scope=final|type=code|source=final-review-2026-09-01T040114Z.md'
-  receive_pre_head: a6e4156098871f6076a9c9dda7da4e9eb51445f0
-  receive_commit: a6655a548963350e5d01aac5c1a1ac810d846361
-  receive_eligible: true
-  receive_completed: true
-  failure: 'Substantive Phase 5 changes require a fresh final lifecycle review and a new configured-gate generation; the final reviewer was accepted but interrupted before writing an artifact.'
-  updated_at: '2026-09-02T00:30:00Z'
+  implementation_fingerprint: 'sha256:effective-delta-v1:f9145e660594cd00f5effd8d195a0cea12c0915553b9564c8ff30eb455fb5809'
+  freshness_head: fd5d5c85c10590fb293855ec27d8cac32c67d6b3
+  freshness_fingerprint: 'sha256:effective-delta-v1:f9145e660594cd00f5effd8d195a0cea12c0915553b9564c8ff30eb455fb5809'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-02T22:03:57Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:59:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T22:03:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip

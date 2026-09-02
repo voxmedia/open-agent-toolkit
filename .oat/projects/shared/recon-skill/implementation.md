@@ -1280,6 +1280,21 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Receive outcome: passed with no findings; the exact artifact is archived and
   the configured cross-family exit gate is next
 
+#### Configured exit-gate generation — 2026-09-02T22:03:57Z
+
+- Final lifecycle reviewed head:
+  `fd5d5c85c10590fb293855ec27d8cac32c67d6b3`
+- Logical integration base: `origin/main`; unique merge base
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9`
+- Resolved command: `oat --json gate review --project "$PROJECT_PATH"`
+  with code/final scope, Important threshold, and the configured review prompt
+- Policy: `onFailure=block`, `maxAttempts=2`; configuration fingerprint
+  `sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7`
+- Reviewed implementation fingerprint:
+  `sha256:effective-delta-v1:f9145e660594cd00f5effd8d195a0cea12c0915553b9564c8ff30eb455fb5809`
+- Generation state: pending / configured / not started. The prior stale gate
+  provenance remains preserved in Git history and archived receipts.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
