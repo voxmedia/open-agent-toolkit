@@ -1761,7 +1761,10 @@ gates exit 0 at the final reviewed head.
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T052445Z.md                      | 9eab2dc3ea99026ef00ff649f320057df51537b6 | manual     | operator-override-granted       |
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T124148Z.md                      | 19198457148de815415304c620db39e78b41ef2c | manual     | operator-redesign-authorized    |
 | p05    | code     | passed          | 2026-09-02 | reviews/p05-review-2026-09-02T134849Z.md                      | 52d2e69addd6ca17b421f48de9a858a9a31a0366 | manual     | operator-accepted-residual-risk |
-| p06    | code     | fixes_added     | 2026-09-02 | reviews/p06-review-2026-09-02T151842Z.md                      | 642912319c1a3e79ee43397d5158e6fecc15b051 | manual     | -                               |
+| p06    | code     | fixes_completed | 2026-09-02 | reviews/p06-review-2026-09-02T151842Z.md                      | 642912319c1a3e79ee43397d5158e6fecc15b051 | manual     | -                               |
+| p06    | code     | fixes_completed | 2026-09-02 | reviews/p06-review-2026-09-02T191958Z.md                      | bd39617209c97427ed2f46257fd0a6eee33a0e7f | manual     | operator-directed-fix           |
+| p06    | code     | fixes_completed | 2026-09-02 | reviews/p06-review-2026-09-02T200551Z.md                      | 656c49ec735bbb6b9f36b0e1d86ee77987579153 | manual     | -                               |
+| p06    | code     | passed          | 2026-09-02 | reviews/p06-review-2026-09-02T203606Z.md                      | 36511be140685eb8dd6f874616c713cf0c529274 | manual     | -                               |
 | p07    | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                               |

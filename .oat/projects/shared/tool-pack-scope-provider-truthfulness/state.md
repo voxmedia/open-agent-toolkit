@@ -1,8 +1,7 @@
 ---
-oat_current_task: p06-review-r4
-oat_last_commit: f18d1b131
-oat_blockers:
-  - Phase 6 review rounds 1-3 are fixed at `f18d1b131`; Phase 7 remains gated until the round 4 independent review passes.
+oat_current_task: p07-t01
+oat_last_commit: f18d1b13175b87946cb31cce1f933901969230cd
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -112,11 +111,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 6 completed four planned tasks. Review round 1 found
-five defects and round 2 disproved the first fix's publication-safety claim,
-proving the journal update path was destructive rather than fail-closed. Both
-rounds are now fixed at `bb93fa12a`, with publication made append-only and
-non-destructive by operator direction. Round 3 review is pending.
+Implementation - Phase 6 is complete and passed independent review round 4
+with 0 Critical and 0 Important findings. It took three bounded fix rounds:
+round 2 disproved round 1's publication-safety claim, and the operator
+directed eliminating the destructive class, which made journal publication
+append-only and `link`-only. Phase 7 runtime observation is next.
 
 ## Artifacts
 
@@ -124,7 +123,7 @@ non-destructive by operator direction. Round 3 review is pending.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — awaiting p06 review round 4)
+- **Implementation:** `implementation.md` (in progress — Phase 6 closed, Phase 7 active)
 
 ## Progress
 
@@ -176,15 +175,16 @@ non-destructive by operator direction. Round 3 review is pending.
 - ✓ Review round 3 confirmed the publication guarantee with 0 Critical
 - ✓ Round 3 fix closed redaction, content bounds, provenance and lock findings
 - ✓ Phase 6 focused union independently re-verified at 641/641
+- ✓ Review round 4 passed with 0 Critical and 0 Important
+- ✓ Phase 6 complete after three bounded fix rounds
 
 ## Blockers
 
-- Phase 6 requires a passing round 4 independent review before Phase 7.
 - `origin/main` advanced to `0.2.51` during Phase 5/6, so p07-t04 must merge
   main and land `0.2.52` across all five lockstep packages; the two release
   gates fail for this reason alone until then.
 
 ## Next Milestone
 
-Obtain a passing round 4 independent review of the complete Phase 6 range
-`e690bd2b4..f18d1b131`, then begin Phase 7 runtime observation.
+Implement Phase 7 runtime observation (p07-t01 through p07-t04), then the
+final review and integrated release gates.

@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 6 review rounds 1 and 2 are fixed at `bb93fa12a`; Phase 7 remains gated until the round 3 independent review passes.
+oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: p06-review-r3
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -32,7 +31,7 @@ oat_generated: false
 | Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | complete | 5     | 5/5       |
 | Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | blocked  | 4     | 4/4       |
+| Phase 6 | complete | 4     | 4/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
 **Total:** 22/30 tasks completed
@@ -1399,7 +1398,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ## Phase 6: Native Dispatch and Fallback Provenance
 
-**Status:** blocked pending review round 3
+**Status:** complete
 **Started:** 2026-09-02
 
 ### Task Outcomes
@@ -1534,6 +1533,30 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - The focused Phase 6 union rose from 597 to 641 tests. Independently
   re-verified by the orchestrator at 641/641, exit 0. Every Turbo gate ran
   forced under an isolated `HOME` with zero cache replays.
+
+### Review Round 4 — Passed
+
+- Artifact: `reviews/p06-review-2026-09-02T203606Z.md`
+- Reviewed head: `36511be140685eb8dd6f874616c713cf0c529274` (code at
+  `f18d1b13175b87946cb31cce1f933901969230cd`)
+- Verdict: passed; 0 Critical, 0 Important, 1 Medium, 3 Minor.
+- All seven round 3 code findings verified closed by reproducing each original
+  probe. The round 2 publication guarantee was confirmed not regressed: with
+  every `rename`/`rm`/`unlink` instrumented, the out-of-scope victim survived
+  byte-for-byte and inode-for-inode on both the first-revision and update
+  paths, with zero destructive syscalls against any destination.
+- The reviewer independently endorsed all three flagged bound consequences. It
+  measured a realistically rich record at 3,751 bytes against the 64 KiB
+  ceiling, and found the implementer's own stated consequence stricter than
+  what shipped: NFKD folds accented Latin cleanly, so only non-Latin scripts
+  fail closed.
+- It ran the full workspace suite beyond the requested minimum because
+  `fs/io.ts` is shared infrastructure edited across three rounds: 5,223 tests
+  passed with zero cache replays.
+- The Medium and one Minor were orchestrator bookkeeping, closed at the
+  receive commit. Two non-blocking observations remain for Phase 7: the size
+  bounds are undocumented in caller-facing `record-schema.md`, and a
+  `redactDispatchMessage` backstop regex gap is currently unreachable.
 
 ---
 
