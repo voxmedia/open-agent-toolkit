@@ -217,6 +217,65 @@ export function normalizeRuntimeIdentity(value) {
   };
 }
 
+const OBSERVATION_MATCH_VALUES = new Set([
+  'matching',
+  'mismatching',
+  'not-comparable',
+]);
+
+const NOT_REPORTED_OBSERVATION = Object.freeze({
+  childLineage: null,
+  effort: null,
+  match: null,
+  model: null,
+  observedAt: null,
+  provider: null,
+  role: null,
+  serviceTier: null,
+  source: null,
+  status: 'not-reported',
+});
+
+/**
+ * Project an optional runtime observation.
+ *
+ * This is a projection of what the launcher-owned record already says, not a
+ * second observation channel: the collector reads files and never launches a
+ * provider. An observation is `reported` only when the record names its
+ * provider, source, observation time, and one of the three closed match values.
+ * Anything else — including a partially filled observation — becomes
+ * `not-reported`, and nothing is ever promoted from `configuredInvocation`.
+ */
+export function normalizeRuntimeObservation(value) {
+  if (!isPlainObject(value) || value.status !== 'reported') {
+    return { ...NOT_REPORTED_OBSERVATION };
+  }
+  const provider = optionalString(value.provider);
+  const source = optionalString(value.source);
+  const observedAt = optionalString(value.observedAt);
+  const match = optionalString(value.match);
+  if (
+    !provider ||
+    !source ||
+    !observedAt ||
+    !OBSERVATION_MATCH_VALUES.has(match)
+  ) {
+    return { ...NOT_REPORTED_OBSERVATION };
+  }
+  return {
+    childLineage: optionalString(value.childLineage),
+    effort: optionalString(value.effort),
+    match,
+    model: optionalString(value.model),
+    observedAt,
+    provider,
+    role: optionalString(value.role),
+    serviceTier: optionalString(value.serviceTier),
+    source,
+    status: 'reported',
+  };
+}
+
 function normalizeDispatch(record, index) {
   const configured = isPlainObject(record.configuredInvocation)
     ? record.configuredInvocation
@@ -260,6 +319,9 @@ function normalizeDispatch(record, index) {
     requestId: optionalString(record.requestId),
     role: requireString(record.role, `dispatch[${index}].role`),
     runtimeIdentity: normalizeRuntimeIdentity(record.runtimeIdentity),
+    runtimeObservation: normalizeRuntimeObservation(
+      record.runtimeObservation ?? record.oat?.runtimeObservation,
+    ),
     schemaVersion: record.schemaVersion === 2 ? 2 : 1,
     scope: requireString(record.scope, `dispatch[${index}].scope`),
     selection: {

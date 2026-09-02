@@ -805,3 +805,211 @@ describe('recordProjectDispatch', () => {
     }
   });
 });
+
+describe('runtime observation integration', () => {
+  const codexEntries = [
+    {
+      type: 'session_meta',
+      payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+    },
+    {
+      type: 'turn_context',
+      payload: {
+        model: 'gpt-5.6-sol',
+        effort: 'high',
+        service_tier: 'priority',
+      },
+    },
+  ];
+
+  function observationEvent(entries: readonly unknown[], provider = 'codex') {
+    return {
+      kind: 'runtime-observation' as const,
+      requestId: 'dispatch-native-1',
+      source: 'runtime-observer' as const,
+      metadata: {
+        provider,
+        observedAt: '2026-09-02T12:00:00.000Z',
+        entries,
+      },
+    };
+  }
+
+  async function record(
+    entries: readonly unknown[],
+    overrides: Partial<GenericDispatchRecord> = {},
+    provider = 'codex',
+  ) {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const result = await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: genericRecord(overrides),
+        event: observationEvent(entries, provider),
+      },
+    });
+    return { projectPath, result };
+  }
+
+  it('records a matching observation without touching configured evidence', async () => {
+    const configured = genericRecord();
+    const { result } = await record(codexEntries);
+
+    expect(result.record.oat.runtimeObservation).toEqual({
+      status: 'reported',
+      provider: 'codex',
+      childLineage: 'root',
+      role: 'oat-phase-implementer',
+      model: 'gpt-5.6-sol',
+      effort: 'high',
+      serviceTier: 'priority',
+      source: 'codex-rollout-metadata',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      match: 'matching',
+    });
+    const { oat: _oat, ...generic } = result.record;
+    expect(generic).toEqual(configured);
+    expect(result.record.launch_status).toBe('accepted');
+    expect(result.record.runtime_confirmation).toBe('not-reported');
+  });
+
+  it('records a mismatch as evidence without changing launch or controls', async () => {
+    const { result } = await record([
+      { type: 'session_meta', payload: { id: 'sess-root' } },
+      { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
+    ]);
+
+    expect(result.record.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+      model: 'gpt-5.6-terra',
+    });
+    // A post-acceptance mismatch is not a fallback trigger.
+    expect(result.record.oat.fallback).toEqual({
+      status: 'not-applicable',
+      reason: 'No fallback recorded.',
+    });
+    expect(result.record.model_selector).toBe('gpt-5.6-sol');
+    expect(result.record.launch_status).toBe('accepted');
+    expect(result.record.child_outcome).toBe('completed');
+  });
+
+  it('records missing metadata and Cursor as not-reported', async () => {
+    const missing = await record([]);
+    expect(missing.result.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+
+    const cursor = await record(
+      codexEntries,
+      { provider: 'cursor', role_selector: 'generalPurpose' },
+      'cursor',
+    );
+    expect(cursor.result.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+    expect(JSON.stringify(cursor.result.record.oat)).not.toContain(
+      'gpt-5.6-sol',
+    );
+  });
+
+  it('reports configured and observed evidence as separate result fields', async () => {
+    const { result } = await record(codexEntries);
+    expect(result.runtimeIdentity).toEqual({
+      configured: {
+        roleName: 'oat-phase-implementer',
+        roleSelector: 'oat-phase-implementer-gpt-5-6-sol-high',
+        model: 'gpt-5.6-sol',
+        effort: 'high',
+        serviceTier: 'priority',
+      },
+      observed: {
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        childLineage: 'root',
+        role: 'oat-phase-implementer',
+        model: 'gpt-5.6-sol',
+        effort: 'high',
+        serviceTier: 'priority',
+      },
+      match: 'matching',
+      status: 'reported',
+    });
+
+    const absent = await record([]);
+    expect(absent.result.runtimeIdentity).toMatchObject({
+      observed: null,
+      match: null,
+      status: 'not-reported',
+    });
+    expect(absent.result.runtimeIdentity.configured.model).toBe('gpt-5.6-sol');
+  });
+
+  it('refuses an ambiguous or malformed observation event', () => {
+    expect(() =>
+      parseDispatchRecordInput({
+        record: genericRecord(),
+        event: {
+          ...observationEvent(codexEntries),
+          observation: { status: 'not-reported' },
+        },
+      }),
+    ).toThrow(/observation or metadata/i);
+    expect(() =>
+      parseDispatchRecordInput({
+        record: genericRecord(),
+        event: {
+          ...observationEvent(codexEntries),
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: codexEntries,
+            transcript: 'the whole conversation',
+          },
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('keeps a finished observation event working unchanged', () => {
+    const parsed = parseDispatchRecordInput({
+      record: genericRecord(),
+      event: {
+        kind: 'runtime-observation',
+        requestId: 'dispatch-native-1',
+        source: 'runtime-observer',
+        observation: { status: 'not-reported' },
+      },
+    });
+    expect(parsed.event).toMatchObject({
+      kind: 'runtime-observation',
+      observation: { status: 'not-reported' },
+    });
+  });
+
+  it('launches no provider: the recorder graph cannot start a process', async () => {
+    const modules = [
+      './record.ts',
+      './index.ts',
+      '../../../providers/identity/runtime-observation.ts',
+      '../../../providers/identity/codex-runtime-observation.ts',
+      '../../../providers/identity/claude-runtime-observation.ts',
+      '../../../providers/identity/oat-dispatch-record.ts',
+      '../../../providers/identity/generic-dispatch-record.ts',
+    ];
+    const launchers =
+      /child_process|node:net|node:http|\bspawn\s*\(|\bexecFile|\bexecSync\s*\(|\bfetch\s*\(/u;
+    for (const specifier of modules) {
+      const source = await readFile(
+        new URL(specifier, import.meta.url),
+        'utf8',
+      );
+      expect(
+        launchers.test(source),
+        `${specifier} must not be able to launch a provider`,
+      ).toBe(false);
+    }
+  });
+});

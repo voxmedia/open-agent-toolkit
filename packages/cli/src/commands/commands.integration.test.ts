@@ -242,6 +242,44 @@ async function seedProjectTemplates(root: string): Promise<void> {
   }
 }
 
+function dispatchRecordFixture() {
+  return {
+    request_id: 'dispatch-native-1',
+    caller: 'oat-project-implement',
+    scope: 'p07',
+    objective: 'Integrate runtime observation',
+    action: 'implementation',
+    role_name: 'oat-phase-implementer',
+    role_class: 'implementation',
+    provider: 'codex',
+    dispatch_context: 'root-native',
+    catalog_snapshot: {
+      id: 'catalog-1',
+      source: 'tool-schema',
+      observed_at: '2026-09-02T00:00:00.000Z',
+    },
+    authority: 'phase-files',
+    role_selector: 'oat-phase-implementer-gpt-5-6-sol-high',
+    model_selector: 'gpt-5.6-sol',
+    model_selector_granularity: 'exact-native-model-choice',
+    effort_selector: 'high',
+    service_tier_selector: 'priority',
+    selection_source: 'policy-resolved',
+    candidates_considered: ['oat-phase-implementer-gpt-5-6-sol-high'],
+    selection_reason: 'native-catalog',
+    selected_route: 'native',
+    deadline_seconds: 600,
+    retry_limit: 0,
+    payload: {},
+    launch_status: 'accepted',
+    child_outcome: 'completed',
+    configured_invocation_evidence: ['dispatch ceiling resolver'],
+    runtime_confirmation: 'not-reported',
+    diagnostics: [],
+    continuation_events: [],
+  };
+}
+
 describe('CLI command integration', () => {
   const tempDirs: string[] = [];
 
@@ -1230,5 +1268,147 @@ describe('CLI command integration', () => {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
     }
+  });
+
+  it('project dispatch record persists an observation without launching a provider', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+
+    const dispatchRecord = dispatchRecordFixture();
+    const eventFile = join(root, 'observation.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: dispatchRecord,
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              {
+                type: 'session_meta',
+                payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+              },
+              {
+                type: 'turn_context',
+                payload: {
+                  model: 'gpt-5.6-terra',
+                  effort: 'high',
+                  service_tier: 'priority',
+                },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('persisted');
+    expect(payload.path).toBe('dispatch/dispatch-native-1.json');
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+      configured: { model: 'gpt-5.6-sol', effort: 'high' },
+      observed: { model: 'gpt-5.6-terra', provider: 'codex' },
+    });
+    // The observation is corroboration only: the configured invocation and the
+    // launch lifecycle are unchanged, and no conversation content is stored.
+    expect(payload.record.model_selector).toBe('gpt-5.6-sol');
+    expect(payload.record.launch_status).toBe('accepted');
+    expect(result.stdout).not.toContain(root);
+
+    const persisted = JSON.parse(
+      await readFile(
+        join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+        'utf8',
+      ),
+    );
+    expect(persisted.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+      source: 'codex-rollout-metadata',
+    });
+  });
+
+  it('project dispatch record refuses a content-bearing observation envelope', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+
+    const eventFile = join(root, 'content.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: dispatchRecordFixture(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              { type: 'session_meta', payload: { id: 'sess-root' } },
+              {
+                type: 'response_item',
+                payload: { content: 'SECRET-USER-MESSAGE' },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+
+    // The observation channel is metadata-only. A transcript body is refused at
+    // the input boundary rather than filtered out of a persisted record.
+    expect(result.exitCode).toBe(1);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('error');
+    expect(payload.message).toMatch(/sensitive dispatch content/i);
+    expect(result.stdout).not.toContain('SECRET-USER-MESSAGE');
+    expect(result.stdout).not.toContain(root);
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

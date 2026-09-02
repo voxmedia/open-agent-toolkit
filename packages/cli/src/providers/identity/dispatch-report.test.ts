@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseCodexRuntimeObservation } from './codex-runtime-observation';
 import {
   buildDispatchReport,
   formatDispatchReport,
@@ -10,6 +11,14 @@ import {
   type DispatchReportV1,
 } from './dispatch-report';
 import { formatDispatchStamp } from './stamp';
+
+/** Minimal generic dispatch fields for a persisted-record shape assertion. */
+const genericDispatchFields = {
+  request_id: 'dispatch-native-1',
+  provider: 'codex',
+  model_selector: 'gpt-5.6-sol',
+  effort_selector: 'high',
+};
 
 function resolution(
   overrides: Partial<DispatchReportResolution> = {},
@@ -888,5 +897,59 @@ describe('dispatch report rendering', () => {
     expect(formatDispatchStamp(report)).toBe(
       'Dispatch: scope=p03-t01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high',
     );
+  });
+
+  it('keeps the report and stamp identical when a runtime observation exists', () => {
+    const report = buildDispatchReport(input());
+    const persisted = {
+      ...genericDispatchFields,
+      oat: {
+        schemaVersion: 1 as const,
+        canonicalRole: null,
+        preStartRejection: null,
+        fallbackClaim: null,
+        fallback: {
+          status: 'not-applicable' as const,
+          reason: 'No fallback recorded.',
+        },
+        runtimeObservation: parseCodexRuntimeObservation({
+          entries: [
+            {
+              type: 'session_meta',
+              payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+            },
+            { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
+          ],
+          observedAt: '2026-09-02T12:00:00.000Z',
+          configured: { model: 'gpt-5.6-sol' },
+        }),
+      },
+    };
+    // The observation exists and disagrees; neither the V1 report nor the
+    // stamp may move because of it.
+    expect(persisted.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+    });
+    const serialized = serializeDispatchReport(report);
+    expect(serialized).toBe(
+      serializeDispatchReport(buildDispatchReport(input())),
+    );
+    for (const observationOnly of [
+      'childLineage',
+      'not-comparable',
+      'mismatching',
+      'codex-rollout-metadata',
+      'observedAt',
+    ]) {
+      expect(serialized).not.toContain(observationOnly);
+      expect(formatDispatchReport(report)).not.toContain(observationOnly);
+    }
+    expect(formatDispatchStamp(report)).toBe(
+      'Dispatch: scope=p03-t01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high',
+    );
+    expect(
+      Object.keys(report.runtimeIdentity as Record<string, unknown>),
+    ).toEqual(['producer', 'model', 'effort', 'provenance', 'confidence']);
   });
 });

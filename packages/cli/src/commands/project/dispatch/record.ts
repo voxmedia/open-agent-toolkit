@@ -16,7 +16,12 @@ import {
   parsePersistedOatDispatchRecord,
   type OatDispatchEvidenceEvent,
   type PersistedOatDispatchRecordV1,
+  type RuntimeObservation,
 } from '@providers/identity/oat-dispatch-record';
+import {
+  normalizeRuntimeObservation,
+  parseRuntimeObservationEnvelope,
+} from '@providers/identity/runtime-observation';
 
 const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
 const DISPATCH_LOCK_NAME = '.dispatch-lock';
@@ -102,15 +107,73 @@ export interface DispatchRecordInput {
   event: OatDispatchEvidenceEvent;
 }
 
+/**
+ * Configured and observed identity, reported side by side and never merged.
+ * `configured` is the launcher-owned immutable selection; `observed` is
+ * optional per-run corroboration that is `null` whenever the provider reported
+ * nothing. A `match` of `mismatching` is evidence, not authorization.
+ */
+export interface DispatchRecordRuntimeIdentity {
+  configured: {
+    roleName: string;
+    roleSelector: string | null;
+    model: string | null;
+    effort: string | null;
+    serviceTier: string | null;
+  };
+  observed: {
+    provider: string;
+    source: string;
+    observedAt: string;
+    childLineage: string | null;
+    role: string | null;
+    model: string | null;
+    effort: string | null;
+    serviceTier: string | null;
+  } | null;
+  match: 'matching' | 'mismatching' | 'not-comparable' | null;
+  status: 'reported' | 'not-reported';
+}
+
 export type ProjectDispatchRecordResult = {
   status: 'persisted' | 'validated-only';
   path: string | null;
   created: boolean;
   record: PersistedOatDispatchRecordV1;
+  runtimeIdentity: DispatchRecordRuntimeIdentity;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Resolve a post-launch observation event.
+ *
+ * A caller may submit either a finished `observation` or the sanitized
+ * provider `metadata` it was derived from. Metadata is normalized here, against
+ * this record's own immutable configured invocation, so the comparison happens
+ * once at the durable-write boundary instead of in each producer. Submitting
+ * both is ambiguous and is refused rather than silently preferring one.
+ */
+function resolveObservationEvent(
+  record: GenericDispatchRecord,
+  event: Record<string, unknown>,
+): Record<string, unknown> {
+  if (event.kind !== 'runtime-observation' || !('metadata' in event)) {
+    return event;
+  }
+  if ('observation' in event) {
+    throw new Error(
+      'A runtime observation event carries either observation or metadata, not both.',
+    );
+  }
+  const { metadata, ...rest } = event;
+  const envelope = parseRuntimeObservationEnvelope(metadata);
+  return {
+    ...rest,
+    observation: normalizeRuntimeObservation({ record, envelope }),
+  };
 }
 
 export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
@@ -128,7 +191,40 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
   }
   return {
     record,
-    event: value.event as OatDispatchEvidenceEvent,
+    event: resolveObservationEvent(
+      record,
+      value.event,
+    ) as OatDispatchEvidenceEvent,
+  };
+}
+
+function runtimeIdentityFor(
+  record: PersistedOatDispatchRecordV1,
+): DispatchRecordRuntimeIdentity {
+  const observation: RuntimeObservation = record.oat.runtimeObservation;
+  return {
+    configured: {
+      roleName: record.role_name,
+      roleSelector: record.role_selector,
+      model: record.model_selector,
+      effort: record.effort_selector,
+      serviceTier: record.service_tier_selector ?? null,
+    },
+    observed:
+      observation.status === 'reported'
+        ? {
+            provider: observation.provider,
+            source: observation.source,
+            observedAt: observation.observedAt,
+            childLineage: observation.childLineage ?? null,
+            role: observation.role ?? null,
+            model: observation.model ?? null,
+            effort: observation.effort ?? null,
+            serviceTier: observation.serviceTier ?? null,
+          }
+        : null,
+    match: observation.status === 'reported' ? observation.match : null,
+    status: observation.status,
   };
 }
 
@@ -256,11 +352,13 @@ export async function recordProjectDispatch(input: {
 }): Promise<ProjectDispatchRecordResult> {
   const parsedInput = parseDispatchRecordInput(input.input);
   if (input.projectPath === null) {
+    const record = augmentDispatchRecord(parsedInput);
     return {
       status: 'validated-only',
       path: null,
       created: false,
-      record: augmentDispatchRecord(parsedInput),
+      record,
+      runtimeIdentity: runtimeIdentityFor(record),
     };
   }
 
@@ -366,6 +464,7 @@ export async function recordProjectDispatch(input: {
         path,
         created: revision === 1,
         record,
+        runtimeIdentity: runtimeIdentityFor(record),
       };
     },
   );

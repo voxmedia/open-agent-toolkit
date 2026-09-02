@@ -22,6 +22,7 @@ import {
   EvidenceCollectionError,
   normalizeReviewFrontmatter,
   normalizeRuntimeIdentity,
+  normalizeRuntimeObservation,
   observedLifecycleState,
   parseCollectorArgs,
 } from './collect.mjs';
@@ -280,6 +281,70 @@ test('runtime identity requires independently observed provenance', () => {
   );
 });
 
+test('runtime observation stays a projection and defaults to not-reported', () => {
+  const notReported = {
+    childLineage: null,
+    effort: null,
+    match: null,
+    model: null,
+    observedAt: null,
+    provider: null,
+    role: null,
+    serviceTier: null,
+    source: null,
+    status: 'not-reported',
+  };
+
+  for (const value of [
+    undefined,
+    null,
+    'reported',
+    { status: 'not-reported' },
+    // Partial evidence is not evidence: a missing source, time, or match value
+    // cannot be completed from anywhere else.
+    {
+      status: 'reported',
+      provider: 'codex',
+      model: 'gpt-5.6-sol',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      match: 'matching',
+    },
+    {
+      status: 'reported',
+      provider: 'codex',
+      source: 'codex-rollout-metadata',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      match: 'plausible',
+    },
+  ]) {
+    assert.deepEqual(normalizeRuntimeObservation(value), notReported);
+  }
+
+  assert.deepEqual(
+    normalizeRuntimeObservation({
+      status: 'reported',
+      provider: 'codex',
+      source: 'codex-rollout-metadata',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      match: 'mismatching',
+      childLineage: 'depth-1',
+      model: 'gpt-5.6-terra',
+    }),
+    {
+      childLineage: 'depth-1',
+      effort: null,
+      match: 'mismatching',
+      model: 'gpt-5.6-terra',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      provider: 'codex',
+      role: null,
+      serviceTier: null,
+      source: 'codex-rollout-metadata',
+      status: 'reported',
+    },
+  );
+});
+
 test('normalizes an absolute fixture project path in review frontmatter', () => {
   const worktreePath = resolve('/tmp/oat-smoke-review-worktree');
   const fixtureProjectPath = join(worktreePath, '.oat/projects/smoke-fixture');
@@ -432,6 +497,12 @@ test('collects a deterministic normalized evidence bundle', async () => {
       provenance: 'not-reported',
       status: 'not-reported',
     });
+    // Observation is additive and optional: a fixture that records none still
+    // collects cleanly, and a missing Layer 3 never fails a Layer 2 assertion.
+    for (const dispatch of bundle.dispatches) {
+      assert.equal(dispatch.runtimeObservation.status, 'not-reported');
+      assert.equal(dispatch.runtimeObservation.match, null);
+    }
     assert.equal(
       bundle.dispatches[1].configuredInvocation.target,
       'cursor-cli:gpt-5.6-terra-medium',

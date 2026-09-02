@@ -1472,3 +1472,253 @@ describe('synced project lifecycle', () => {
     }
   });
 });
+
+describe('dispatch runtime observation', () => {
+  const tempRoots: string[] = [];
+
+  afterEach(async () => {
+    while (tempRoots.length > 0) {
+      const root = tempRoots.pop();
+      if (root) await rm(root, { force: true, recursive: true });
+    }
+  });
+
+  function baseRecord(overrides: Record<string, unknown> = {}) {
+    return {
+      request_id: 'dispatch-native-1',
+      caller: 'oat-project-implement',
+      scope: 'p07',
+      objective: 'Corroborate runtime identity',
+      action: 'implementation',
+      role_name: 'oat-phase-implementer',
+      role_class: 'implementation',
+      provider: 'codex',
+      dispatch_context: 'root-native',
+      catalog_snapshot: {
+        id: 'catalog-1',
+        source: 'tool-schema',
+        observed_at: '2026-09-02T00:00:00.000Z',
+      },
+      authority: 'phase-files',
+      role_selector: 'oat-phase-implementer-gpt-5-6-sol-high',
+      model_selector: 'gpt-5.6-sol',
+      model_selector_granularity: 'exact-native-model-choice',
+      effort_selector: 'high',
+      service_tier_selector: 'priority',
+      selection_source: 'policy-resolved',
+      candidates_considered: ['oat-phase-implementer-gpt-5-6-sol-high'],
+      selection_reason: 'native-catalog',
+      selected_route: 'native',
+      deadline_seconds: 600,
+      retry_limit: 0,
+      payload: {},
+      launch_status: 'accepted',
+      child_outcome: 'completed',
+      configured_invocation_evidence: ['dispatch ceiling resolver'],
+      runtime_confirmation: 'not-reported',
+      diagnostics: [],
+      continuation_events: [],
+      ...overrides,
+    };
+  }
+
+  async function seedProject(root: string): Promise<string> {
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    return projectPath;
+  }
+
+  it('appends a matching observation revision and preserves the first one', async () => {
+    const root = await createWorkspace();
+    tempRoots.push(root);
+    const projectPath = await seedProject(root);
+
+    const canonicalFile = join(root, 'canonical.json');
+    await writeFile(
+      canonicalFile,
+      JSON.stringify({
+        record: baseRecord(),
+        event: {
+          kind: 'canonical-role-resolution',
+          requestId: 'dispatch-native-1',
+          source: 'canonical-role-resolver',
+          evidence: {
+            status: 'resolved',
+            dependency: 'workflows',
+            canonicalRole: 'oat-phase-implementer',
+            tier: 'user',
+            validation: 'direct-canonical',
+            canonicalPath: '<user>/agents/oat-phase-implementer.md',
+            selectedPath: '<user>/agents/oat-phase-implementer.md',
+            roleVersion: '1.2.3',
+            contentDigest: `sha256:${'a'.repeat(64)}`,
+            candidateMisses: [],
+          },
+        },
+      }),
+      'utf8',
+    );
+    const observationFile = join(root, 'observation.json');
+    await writeFile(
+      observationFile,
+      JSON.stringify({
+        record: baseRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              {
+                type: 'session_meta',
+                payload: { id: 'sess-parent' },
+              },
+              {
+                type: 'session_meta',
+                payload: {
+                  id: 'sess-child',
+                  parent_id: 'sess-parent',
+                  role: 'oat-phase-implementer',
+                },
+              },
+              {
+                type: 'turn_context',
+                payload: {
+                  model: 'gpt-5.6-sol',
+                  effort: 'high',
+                  service_tier: 'priority',
+                },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const first = await runCli(root, [
+      'project',
+      'dispatch',
+      'record',
+      '--project',
+      '.oat/projects/shared/demo',
+      '--event-file',
+      canonicalFile,
+    ]);
+    expect(first.exitCode).toBe(0);
+    const firstRevision = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+
+    const second = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        observationFile,
+      ],
+      ['--json'],
+    );
+    expect(second.exitCode).toBe(0);
+
+    // Append-only: revision 1 is untouched and the observation lands on a new
+    // revision alongside it.
+    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
+      'dispatch-native-1.json',
+      'dispatch-native-1@0002.json',
+    ]);
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).resolves.toBe(firstRevision);
+
+    const payload = JSON.parse(second.stdout);
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'reported',
+      match: 'matching',
+      observed: { childLineage: 'depth-1', model: 'gpt-5.6-sol' },
+      configured: { model: 'gpt-5.6-sol', effort: 'high' },
+    });
+    expect(payload.record.oat.canonicalRole.status).toBe('resolved');
+    expect(payload.record.model_selector).toBe('gpt-5.6-sol');
+  });
+
+  it('keeps Cursor not-reported and never emits an absolute path', async () => {
+    const root = await createWorkspace();
+    tempRoots.push(root);
+    await seedProject(root);
+
+    const eventFile = join(root, 'cursor.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: baseRecord({
+          provider: 'cursor',
+          role_selector: 'generalPurpose',
+        }),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'cursor',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              { type: 'session_meta', payload: { id: 'sess-root' } },
+              { type: 'turn_context', payload: { model: 'gpt-5.6-sol' } },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const reported = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+    expect(reported.exitCode).toBe(0);
+    const payload = JSON.parse(reported.stdout);
+    expect(payload.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'not-reported',
+      observed: null,
+      match: null,
+    });
+
+    const failure = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        join(root, 'missing.json'),
+      ],
+      ['--json'],
+    );
+    expect(failure.exitCode).toBe(1);
+    expect(failure.stdout).not.toContain(root);
+    expect(failure.stdout).not.toContain(tmpdir());
+  });
+});

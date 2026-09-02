@@ -15,6 +15,7 @@ import {
   parseDispatchRecordInput,
   recordProjectDispatch,
   redactDispatchMessage,
+  type DispatchRecordRuntimeIdentity,
 } from './record';
 
 interface DispatchRecordCommandOptions {
@@ -55,6 +56,44 @@ async function resolveProjectPath(
   return validated.realPath;
 }
 
+function axes(values: readonly (readonly [string, string | null])[]): string {
+  return values
+    .map(([name, value]) => `${name}=${value ?? 'not-reported'}`)
+    .join(' ');
+}
+
+/**
+ * Render the two layers separately. Configured invocation is launcher-owned and
+ * immutable; runtime observation is optional per-run corroboration. They are
+ * never combined into one "effective" identity, because a mismatch must stay
+ * legible as a mismatch rather than silently overwrite either side.
+ */
+function runtimeIdentityLines(
+  identity: DispatchRecordRuntimeIdentity,
+): string[] {
+  const { configured, observed } = identity;
+  return [
+    `Configured invocation (immutable): ${axes([
+      ['role', configured.roleName],
+      ['role_selector', configured.roleSelector],
+      ['model', configured.model],
+      ['effort', configured.effort],
+      ['service_tier', configured.serviceTier],
+    ])}`,
+    observed === null
+      ? 'Observed runtime identity: not reported (corroboration only; the configured invocation is unchanged).'
+      : `Observed runtime identity (${observed.source}, ${identity.match}): ${axes(
+          [
+            ['lineage', observed.childLineage],
+            ['role', observed.role],
+            ['model', observed.model],
+            ['effort', observed.effort],
+            ['service_tier', observed.serviceTier],
+          ],
+        )}`,
+  ];
+}
+
 async function runRecordCommand(
   options: DispatchRecordCommandOptions,
   context: CommandContext,
@@ -73,12 +112,17 @@ async function runRecordCommand(
     const result = await recordProjectDispatch({ projectPath, input });
     if (context.json) {
       context.logger.json(result);
-    } else if (result.status === 'persisted') {
-      context.logger.success(`Recorded project dispatch: ${result.path}`);
     } else {
-      context.logger.info(
-        'Dispatch evidence is valid; no project path was supplied, so nothing was persisted.',
-      );
+      if (result.status === 'persisted') {
+        context.logger.success(`Recorded project dispatch: ${result.path}`);
+      } else {
+        context.logger.info(
+          'Dispatch evidence is valid; no project path was supplied, so nothing was persisted.',
+        );
+      }
+      for (const line of runtimeIdentityLines(result.runtimeIdentity)) {
+        context.logger.info(line);
+      }
     }
     process.exitCode = 0;
   } catch (error) {

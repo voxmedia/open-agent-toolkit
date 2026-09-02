@@ -104,6 +104,27 @@ Claude binds the exact model argument described above. Cursor launches the
 exact native variant. A missing or unselectable managed target blocks rather
 than falling back to the root target or a base role.
 
+### Post-launch runtime observation
+
+Runtime observation is a separate, optional layer from the configured
+invocation above. It never changes launch, fallback, policy, ceiling, role,
+authority, or any selector: it only records what a provider said about its own
+child, so a configured selection and an observed identity stay independently
+readable.
+
+Codex reports child lineage, role, model, effort, and service tier through its
+session and turn metadata. Claude reports role, model, and service tier; it
+exposes no selectable reasoning-effort axis for a native child, so that axis is
+recorded as `not-exposed` rather than blank or copied from the request. Cursor
+exposes no metadata channel and stays explicitly `not-reported`.
+
+Observation is metadata-only. Parsers select entries by type and never read
+conversation content, and prompts, messages, credentials, and transcript bodies
+are refused at the input boundary. A missing, unparseable, or uncorrelated
+observation is `not-reported`, never a copy of the requested arguments or the
+materialized pin. An observed mismatch is evidence for a human to read; it is
+not a fallback trigger and cannot authorize replacement or retry.
+
 ## Materialization, refresh, and visibility
 
 OAT reports three separate facts rather than collapsing them into “available”:

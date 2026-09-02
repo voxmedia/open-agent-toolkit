@@ -104,6 +104,43 @@ missing or `not-reported` runtime identity **never invalidates** the
 launcher-owned configured-invocation evidence in Layer 2. Selected model and
 effort axes stay exact even when runtime producer identity is not reported.
 
+### Provider metadata observation
+
+`oat project dispatch record` accepts an optional post-launch observation event
+whose `metadata` is a sanitized provider envelope — `provider`, `observedAt`,
+and `entries` — and normalizes it against the record's own immutable configured
+invocation. The result is stored under the record's `oat.runtimeObservation`.
+
+The channel is metadata-only and capability-gated:
+
+| Provider | Observed axes                                      | Notes                                                                 |
+| -------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| Codex    | child lineage, role, model, effort, service tier   | Read from `session_meta` and `turn_context` metadata entries.         |
+| Claude   | role, model, service tier; effort is `not-exposed` | Read from the `system`/`init` and `result` metadata entries.          |
+| Cursor   | none                                               | Explicitly `not-reported`; requested values are never copied into it. |
+
+Parsers classify entries by their `type` discriminator alone, so a conversation
+entry's body is never read, and only bounded provider identifiers are extracted.
+Prompts, messages, credentials, and transcript bodies are refused at the input
+boundary rather than filtered out of a stored record; a raw, unsanitized
+transcript is rejected instead of being partially accepted.
+
+Comparison covers only the axes both sides report. With no comparable axis the
+match is `not-comparable`, because silence is not agreement. An axis a provider
+does not expose (`not-exposed`) is excluded rather than compared as a literal.
+An axis the configured invocation names under two equally authoritative
+spellings — a canonical role name and its materialized native selector —
+matches either.
+
+A parse failure, a declined request correlation, an unsupported provider, or an
+absent envelope all produce `not-reported`. None of them copies a requested
+argument or a materialized pin into observed state, and `mismatching` is
+evidence only: it authorizes no replacement, retry, or fallback, and leaves
+`launch_status`, `child_outcome`, and every configured control untouched. The
+`--json` result reports `runtimeIdentity.configured` and
+`runtimeIdentity.observed` as separate objects that are never merged into one
+"effective" identity.
+
 ## How the smoke runner consumes these layers
 
 The smoke runner's evidence pipeline reads all three layers and asserts only on
@@ -121,6 +158,12 @@ collection. The collector then flows the evidence through three stages:
 3. **Report** — emit the evidence report from launcher-owned records and gate
    artifacts, carrying `reported` / `not-reported` runtime status without
    letting a missing Layer 3 fail a Layer 2 assertion.
+
+The collector projects `runtimeObservation` the same way: it reads committed
+records and never launches a provider, so an observation appears in a bundle
+only because a launcher-owned record already carried one. A partially filled
+observation normalizes to `not-reported` rather than being completed from any
+other layer.
 
 For how to run this end to end and when to refresh the fixture, see
 [Smoke testing](../../contributing/smoke-testing.md).
