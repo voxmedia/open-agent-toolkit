@@ -865,4 +865,28 @@ describe('dispatch report rendering', () => {
       confidence: 'not-reported',
     });
   });
+
+  it('keeps DispatchReportV1 byte-shape isolated from persisted OAT provenance', () => {
+    const report = buildDispatchReport(input());
+    const serialized = serializeDispatchReport(report);
+
+    expect(
+      Object.keys(JSON.parse(serialized) as Record<string, unknown>),
+    ).toEqual([
+      'schemaVersion',
+      'route',
+      'policy',
+      'selection',
+      'classification',
+      'notices',
+      'requestedControls',
+      'configuredDefaults',
+      'gateInvocation',
+      'runtimeIdentity',
+    ]);
+    expect(serialized).not.toContain('"oat"');
+    expect(formatDispatchStamp(report)).toBe(
+      'Dispatch: scope=p03-t01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high',
+    );
+  });
 });
