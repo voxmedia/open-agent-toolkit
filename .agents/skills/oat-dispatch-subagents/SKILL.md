@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.2.3
+version: 1.2.4
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -128,6 +128,42 @@ decomposition.
 
 The optional policy and ceiling are already-resolved inputs. Do not infer where
 they came from or resolve project state to obtain them.
+
+## Native Dispatch Lineage
+
+For a project-aware dispatch, the calling workflow records native dispatch
+lineage through the project adapter; this provider-neutral engine never writes
+project state itself.
+
+1. Construct the complete generic record and namespaced OAT event, redact it,
+   and validate sensitive-content exclusion before the native host call or
+   launch. Construction is in memory; do not claim a launch result yet.
+2. Invoke the exact native target once. Immediately after the host returns,
+   record either `launch_status: accepted` or
+   `launch_status: blocked-before-start` in the generic dispatch record. A
+   blocked result also requires the provider-wrapper attestation
+   `provesNoChildStarted: true`.
+3. Preserve the exact target and controls: provider, model, effort, reasoning
+   mode, service tier, route, authority, sandbox/tool payload, deadline, and
+   retry limit. Namespaced evidence cannot redefine any generic field.
+4. Only a proven pre-start rejection permits one fresh fallback record; that
+   one fallback requires `provesNoChildStarted: true`. It preserves the exact
+   target and controls, links both request IDs,
+   includes resolved canonical role identity, and says `approximation: true`.
+5. Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch, missing
+   telemetry, malformed output, and interruption never authorize fallback or
+   replacement. Continue only through the accepted handle or stop.
+
+Project-aware callers pass the validated record and event on standard input:
+
+```bash
+oat project dispatch record \
+  --project "$PROJECT_PATH" \
+  --event-file - \
+  --json
+```
+
+The command validates and persists evidence only. It never launches a provider.
 
 ## Capability and Authorization
 

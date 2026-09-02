@@ -63,7 +63,7 @@ launched**, and it records:
   `gate-target` (adapters may add a more specific diagnostic but never replace
   or rename these);
 - the ordered `candidates_considered` before launch (never sorted);
-- launch acceptance status (`accepted` or `pre-start-rejected`) and mechanism.
+- launch acceptance status (`accepted` or `blocked-before-start`) and mechanism.
 
 Because the launcher constructs the invocation payload itself, this layer does
 not depend on any child cooperation. A launch is judged consistent only when its
@@ -74,6 +74,20 @@ recompute eligibility from the configured candidates and named ceiling instead.
 This layer maps to Dispatch Report V1 and its provenance record; see the
 [Dispatch Report V1 / producer provenance](dispatch-ceiling.md#dispatch-report-v1-and-producer-provenance)
 section.
+
+For project-aware work, OAT persists this native dispatch lineage as one
+generic record per request under the project's `dispatch/` directory. The
+generic snake-case fields remain authoritative. A namespaced `oat` block adds
+only canonical-role identity, proven pre-start rejection, fallback linkage,
+and optional runtime observation. `DispatchReportV1` and the parseable
+`Dispatch:` compatibility stamp keep their existing byte shape.
+
+The launcher constructs and redacts the complete payload before calling the
+native host, then records the host's accepted or `blocked-before-start` result
+immediately. Only a provider-wrapper attestation proving that no child started
+can authorize one fresh, exact-target fallback record. Timeout, `BLOCKED`,
+refusal after acceptance, runtime mismatch, missing telemetry, and malformed
+output cannot authorize replacement.
 
 ## Layer 3 — Runtime-observed identity (optional corroboration)
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.5.2
+version: 1.5.3
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -723,6 +723,17 @@ After constructing the complete provider payload, record the launcher-owned
 `launcher-selected/config-declared` provenance. These fields are immutable:
 missing telemetry, missing reviewer self-report, or contradictory self-report
 must not populate, replace, or overwrite them and must not trigger fallback.
+
+Persist native dispatch lineage around the host-owned review launch. Construct
+and redact the complete generic record plus OAT role event before the native
+call. Immediately after the call returns `accepted` or
+`blocked-before-start`, run `oat project dispatch record --project
+"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
+`provesNoChildStarted: true`; only it permits one exact-target approximation
+with a fresh request ID. Preserve the exact model, effort, route, authority,
+and provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime
+mismatch, missing telemetry, interruption, and malformed output never
+authorize fallback or replacement.
 
 Once the native host accepts a reviewer, every terminal result is an
 authoritative review outcome. An accepted reviewer returning `BLOCKED` is a

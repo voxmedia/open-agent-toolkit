@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.20
+version: 1.2.21
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -258,6 +258,17 @@ boundary. Never use a managed base role because an exact target is missing or
 unavailable in the current session. Base Codex roles are allowed only for
 explicit inherit/default behavior and the documented managed-uncapped reviewer
 fallback.
+
+Artifact-review launches preserve native dispatch lineage. Construct and
+redact the complete generic record plus OAT role event before the native call.
+Immediately after the call returns `accepted` or `blocked-before-start`, the
+calling project workflow runs `oat project dispatch record --project
+"$PROJECT_PATH" --event-file - --json`. Only a rejection attesting
+`provesNoChildStarted: true` permits one exact-target approximation with a
+fresh request ID. Preserve exact model, effort, route, authority, and provider
+controls. Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch,
+missing telemetry, interruption, and malformed output never authorize fallback
+or replacement.
 
 Inline review of a concrete managed exception target is permitted only with
 verified equivalent current-host model and effort controls. The default

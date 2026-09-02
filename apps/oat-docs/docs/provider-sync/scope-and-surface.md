@@ -43,6 +43,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat providers inspect`
 - `oat providers set`
 - `oat providers codex materialize`
+- `oat project dispatch record` (project-aware dispatch evidence only; never a
+  provider launcher)
 
 ## Adjacent CLI commands (commonly used with provider interop)
 
@@ -105,6 +107,15 @@ A fresh pinned child is allowed only after explicit pre-start native
 role-selection rejection. Missing runtime telemetry, missing self-report, or a
 child accepted by the native route that later returns `BLOCKED` are not
 role-selection rejection and do not permit fallback.
+
+Project workflows construct and redact the complete dispatch payload before
+the native call, then persist its accepted or `blocked-before-start` result
+immediately under the active project's `dispatch/` directory. The generic
+record remains provider-neutral. OAT-specific canonical role, rejection,
+fallback, and runtime facts live only under its `oat` namespace. A qualifying
+fallback is a fresh request that preserves exact target and controls and is
+explicitly labeled an approximation; timeout, refusal after acceptance,
+runtime mismatch, malformed output, and missing telemetry never authorize it.
 
 ## Non-interop namespaces in the same CLI
 
