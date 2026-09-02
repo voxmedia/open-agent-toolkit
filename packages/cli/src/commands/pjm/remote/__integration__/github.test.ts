@@ -6,8 +6,6 @@ import {
 import {
   classifyGitHubReadObservation,
   githubAdapter,
-  planDuplicateSearch,
-  planDiscussionRead,
   planGitHubMutation,
   previewGitHubMutation,
   validateDuplicateSearchObservation,
@@ -145,6 +143,7 @@ function mutationReadback(
     context,
     fields: {
       ...fields,
+      hostCapability: capability,
       mutationEvidence: action.intent.executionEvidence,
       ...(action.operation === 'create'
         ? { createProvenance: action.intent.provenance }
@@ -165,6 +164,31 @@ function transferEvidence() {
   return { ...content, evidenceDigest: semanticDigest(content) };
 }
 
+function persistAfterPublicValidation(
+  store: GitHubStoreSpy,
+  action: ReturnType<typeof safeMutation>,
+  readback: SanitizedProviderObservation,
+) {
+  const validation = githubAdapter.validateObservation(action, readback);
+  if (!validation.valid) {
+    return { persisted: false, validation, verification: [] };
+  }
+  const normalized = githubAdapter.normalize(readback);
+  const verification = githubAdapter.verify(action, normalized);
+  if (
+    verification.length === 0 ||
+    verification.some((field) => field.status !== 'verified')
+  ) {
+    return { persisted: false, validation, verification };
+  }
+  store.appendJournal({
+    operation: action.operation,
+    actionDigest: action.intent.actionDigest,
+  });
+  store.writeSnapshot(normalized.stableId, normalized);
+  return { persisted: true, validation, verification };
+}
+
 class GitHubLifecycleFixture {
   readonly store = new GitHubStoreSpy();
   private readonly readAction = githubAdapter.plan('read', {
@@ -173,6 +197,7 @@ class GitHubLifecycleFixture {
     stableNodeId: 'issue_node_42',
     stableId: 'github:github.example:issue_node_42',
     capabilityEvidenceDigest: capability.evidenceDigest,
+    stepId: 'integration-read-step',
   });
 
   intake() {
@@ -295,7 +320,7 @@ class GitHubLifecycleFixture {
   }
 
   duplicateSearch() {
-    const action = planDuplicateSearch({
+    const action = githubAdapter.plan('search-duplicates', {
       context,
       hostCapability: capability,
       provenanceToken: 'origin:local-project:item-42',
@@ -334,7 +359,7 @@ class GitHubLifecycleFixture {
       journal: this.store.journalWrites,
     };
     const result = validateDiscussionReadObservation({
-      action: planDiscussionRead({
+      action: githubAdapter.plan('read-discussion', {
         context,
         hostCapability: capability,
         stableId: 'github:github.example:issue_node_42',
@@ -365,6 +390,37 @@ class GitHubLifecycleFixture {
       ...result,
       bindingSnapshotUnchanged:
         this.store.snapshotWrites === writesBefore.snapshot,
+      journalUnchanged: this.store.journalWrites === writesBefore.journal,
+    };
+  }
+
+  staleDeletion() {
+    const writesBefore = {
+      snapshot: this.store.snapshotWrites,
+      journal: this.store.journalWrites,
+    };
+    const content = {
+      provider: 'github' as const,
+      stableId: this.readAction.intent.stableId as string,
+      context,
+      capabilityEvidenceDigest: capability.evidenceDigest,
+      actionDigest: this.readAction.intent.actionDigest as string,
+      stepId: this.readAction.intent.stepId as string,
+      observedAt: '2026-09-02T11:00:00.000Z',
+    };
+    const result = classifyGitHubReadObservation({
+      action: this.readAction,
+      hostCapability: capability,
+      observedAt: '2026-09-02T12:00:00.000Z',
+      outcome: 'not-found',
+      deletionEvidence: {
+        ...content,
+        evidenceDigest: semanticDigest(content),
+      },
+    });
+    return {
+      ...result,
+      snapshotUnchanged: this.store.snapshotWrites === writesBefore.snapshot,
       journalUnchanged: this.store.journalWrites === writesBefore.journal,
     };
   }
@@ -449,6 +505,12 @@ describe('GitHub remote lifecycle integration', () => {
       bindingSnapshotUnchanged: true,
       journalUnchanged: true,
     });
+    expect(fixture.staleDeletion()).toMatchObject({
+      classification: 'inaccessible',
+      preservePriorEvidence: true,
+      snapshotUnchanged: true,
+      journalUnchanged: true,
+    });
   });
 
   it('reports rate limits and independent closeout outcomes per binding', async () => {
@@ -480,22 +542,9 @@ describe('GitHub remote lifecycle integration', () => {
         ...issue.fields,
         ...readbackPatch,
       });
-      const verified = verifyGitHubMutationObservation({
-        action,
-        attempt: {
-          count: 1,
-          outcome: 'accepted',
-          capabilityEvidenceDigest: capability.evidenceDigest,
-        },
-        hostCapability: capability,
-        readback,
-      });
-      expect(verified.classification).toBe('verified');
-      store.appendJournal({
-        operation,
-        actionDigest: action.intent.actionDigest,
-      });
-      store.writeSnapshot('github:github.example:issue_node_42', readback);
+      expect(
+        persistAfterPublicValidation(store, action, readback),
+      ).toMatchObject({ persisted: true });
 
       const altered = {
         ...readback,
@@ -508,19 +557,9 @@ describe('GitHub remote lifecycle integration', () => {
         },
       };
       expect(
-        verifyGitHubMutationObservation({
-          action,
-          attempt: {
-            count: 1,
-            outcome: 'accepted',
-            capabilityEvidenceDigest: capability.evidenceDigest,
-          },
-          hostCapability: capability,
-          readback: altered,
-        }),
+        persistAfterPublicValidation(store, action, altered),
       ).toMatchObject({
-        classification: 'uncertain',
-        reason: 'readback-action-evidence-mismatch',
+        persisted: false,
       });
     }
     expect(store.snapshotWrites).toBe(4);

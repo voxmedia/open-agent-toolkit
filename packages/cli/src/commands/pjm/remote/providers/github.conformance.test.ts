@@ -55,7 +55,7 @@ const observation: SanitizedProviderObservation = {
       availability: 'available',
       accountId: 'account_123',
       repositoryId: 'repo_123',
-      operations: ['read', 'update', 'transition', 'annotate'],
+      operations: ['read', 'create', 'update', 'transition', 'annotate'],
       observableFields: ['stable-identity', 'title', 'state', 'revision'],
       evidenceDigest: 'sha256:bounded-capability',
     },
@@ -110,6 +110,25 @@ function safeMutation(
   });
 }
 
+function mutationObservation(
+  action: ReturnType<typeof safeMutation>,
+  patch: Partial<SanitizedProviderObservation> = {},
+): SanitizedProviderObservation {
+  return {
+    ...observation,
+    ...patch,
+    fields: {
+      ...observation.fields,
+      hostCapability: capability,
+      mutationEvidence: action.intent.executionEvidence,
+      ...(action.operation === 'create'
+        ? { createProvenance: action.intent.provenance }
+        : {}),
+      ...patch.fields,
+    },
+  };
+}
+
 const adapter: ProviderAdapter = {
   ...githubAdapter,
   plan(operation, input) {
@@ -122,6 +141,15 @@ const adapter: ProviderAdapter = {
       });
     }
     return githubAdapter.plan(operation, { ...input, context });
+  },
+  validateObservation(action, candidate) {
+    return githubAdapter.validateObservation(
+      action,
+      mutationObservation(action as ReturnType<typeof safeMutation>, {
+        ...candidate,
+        fields: candidate.fields,
+      }),
+    );
   },
 };
 
@@ -190,8 +218,76 @@ describe('GitHub provider conformance', () => {
       stableId: 'github:github.example:issue_node_42',
       stableNodeId: 'issue_node_42',
       capabilityEvidenceDigest: capability.evidenceDigest,
+      stepId: 'conformance-read-step',
     });
     expect(read).not.toHaveProperty('tool');
     expect(read).not.toHaveProperty('command');
+  });
+
+  it('validates and verifies the exact public mutation readback pair', () => {
+    const action = safeMutation('update', { title: 'Conformance issue' });
+    const exact = mutationObservation(action);
+    expect(githubAdapter.validateObservation(action, exact)).toEqual({
+      valid: true,
+      reasons: [],
+    });
+    expect(
+      githubAdapter.verify(action, githubAdapter.normalize(exact)),
+    ).toEqual([{ field: 'title', status: 'verified' }]);
+  });
+
+  it.each([
+    {
+      name: 'wrong node',
+      patch: {
+        identity: { stableId: 'wrong_node', aliases: [] },
+        fields: { nodeId: 'wrong_node' },
+      },
+    },
+    {
+      name: 'wrong repository',
+      patch: { context: { ...context, repositoryId: 'repo_other' } },
+    },
+    {
+      name: 'wrong capability',
+      patch: { capabilityEvidenceDigest: 'sha256:other-capability' },
+    },
+    {
+      name: 'wrong execution evidence',
+      patch: {
+        fields: {
+          mutationEvidence: {
+            capabilityEvidenceDigest: 'sha256:other-capability',
+          },
+        },
+      },
+    },
+  ])('rejects public adapter readback with $name', ({ patch }) => {
+    const action = safeMutation('update', { title: 'Conformance issue' });
+    const mismatched = mutationObservation(action, patch);
+    expect(githubAdapter.validateObservation(action, mismatched).valid).toBe(
+      false,
+    );
+    expect(
+      githubAdapter.verify(action, githubAdapter.normalize(mismatched)),
+    ).toEqual([{ field: 'title', status: 'unavailable' }]);
+  });
+
+  it('rejects create readback with mismatched provenance through the public pair', () => {
+    const action = safeMutation('create', { title: 'Conformance issue' });
+    const mismatched = mutationObservation(action, {
+      fields: {
+        createProvenance: {
+          bindingId: 'binding_other',
+          origin: 'local-project:item-42',
+        },
+      },
+    });
+    expect(githubAdapter.validateObservation(action, mismatched).valid).toBe(
+      false,
+    );
+    expect(
+      githubAdapter.verify(action, githubAdapter.normalize(mismatched)),
+    ).toEqual([{ field: 'title', status: 'unavailable' }]);
   });
 });

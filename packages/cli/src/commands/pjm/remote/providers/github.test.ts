@@ -32,6 +32,7 @@ const observation: SanitizedProviderObservation = {
   provider: 'github',
   context: {
     host: 'github.example',
+    accountId: 'account_123',
     repositoryId: 'repo_123',
     owner: 'acme',
     name: 'widgets',
@@ -274,12 +275,15 @@ describe('GitHub semantic adapter', () => {
         stableNodeId: 'issue_node_42',
         stableId: 'github:github.example:issue_node_42',
         capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        stepId: 'lifecycle-read-step',
       });
       const deletionBase = {
         provider: 'github' as const,
         stableId: 'github:github.example:issue_node_42',
         context: hostCapability.context,
         capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        actionDigest: action.intent.actionDigest as string,
+        stepId: action.intent.stepId as string,
         observedAt: '2026-09-01T12:01:00.000Z',
       };
       const result = classifyGitHubReadObservation({
@@ -391,6 +395,13 @@ describe('GitHub semantic adapter', () => {
       },
       reason: 'observation-account-mismatch',
     },
+    {
+      name: 'missing account context',
+      patch: {
+        context: { ...observation.context, accountId: undefined },
+      },
+      reason: 'observation-account-mismatch',
+    },
   ])('rejects a read with mismatched $name', ({ patch, reason }) => {
     const result = classifyGitHubReadObservation({
       action: githubAdapter.plan('read', {
@@ -399,6 +410,7 @@ describe('GitHub semantic adapter', () => {
         stableNodeId: 'issue_node_42',
         stableId: 'github:github.example:issue_node_42',
         capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        stepId: 'mismatch-read-step',
       }),
       hostCapability,
       observedAt: '2026-09-01T12:01:00.000Z',
@@ -419,6 +431,7 @@ describe('GitHub semantic adapter', () => {
       stableNodeId: 'issue_node_42',
       stableId: 'github:github.example:issue_node_42',
       capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      stepId: 'transfer-read-step',
     });
     const moved = {
       ...observation,
@@ -462,6 +475,73 @@ describe('GitHub semantic adapter', () => {
       }),
     ).toMatchObject({ classification: 'transferred' });
   });
+
+  it.each([
+    {
+      name: 'stale',
+      evidenceAt: '2020-01-01T00:00:00.000Z',
+      actionDigest: 'planned',
+      stepId: 'read-step-42',
+      legacyDigest: true,
+      classification: 'inaccessible',
+    },
+    {
+      name: 'future',
+      evidenceAt: '2026-09-01T12:02:00.000Z',
+      actionDigest: 'planned',
+      stepId: 'read-step-42',
+      legacyDigest: false,
+      classification: 'inaccessible',
+    },
+    {
+      name: 'wrong action',
+      evidenceAt: '2026-09-01T12:01:00.000Z',
+      actionDigest: 'sha256:wrong-action',
+      stepId: 'read-step-42',
+      legacyDigest: true,
+      classification: 'inaccessible',
+    },
+    {
+      name: 'wrong step',
+      evidenceAt: '2026-09-01T12:01:00.000Z',
+      actionDigest: 'planned',
+      stepId: 'wrong-step',
+      legacyDigest: true,
+      classification: 'inaccessible',
+    },
+    {
+      name: 'current exact action and step',
+      evidenceAt: '2026-09-01T12:01:00.000Z',
+      actionDigest: 'planned',
+      stepId: 'read-step-42',
+      legacyDigest: false,
+      classification: 'deleted',
+    },
+  ])(
+    'classifies $name deletion evidence against the current read',
+    ({ evidenceAt, actionDigest, stepId, legacyDigest, classification }) => {
+      const action = plannedReadAction();
+      const evidence = deletionEvidenceForRead({
+        actionDigest:
+          actionDigest === 'planned' ? plannedReadActionDigest() : actionDigest,
+        stepId,
+        observedAt: evidenceAt,
+        legacyDigest,
+      });
+      expect(
+        classifyGitHubReadObservation({
+          action,
+          hostCapability,
+          observedAt: '2026-09-01T12:01:00.000Z',
+          outcome: 'not-found',
+          deletionEvidence: evidence,
+        }),
+      ).toMatchObject({
+        classification,
+        preservePriorEvidence: true,
+      });
+    },
+  );
 
   it('plans create provenance and exact title/managed-body postconditions from a safe projection', () => {
     const projection = {
@@ -833,6 +913,57 @@ describe('GitHub semantic adapter', () => {
     ).toThrow('GitHub duplicate search bounds are invalid');
   });
 
+  it('routes public duplicate planning through the bounded planner', () => {
+    const input = {
+      context: hostCapability.context,
+      hostCapability,
+      provenanceToken: 'origin:local-project:item-42',
+      reservedBindingId: 'binding_reserved_42',
+      historicalAliases: ['acme/widgets#42'],
+      maxResults: 10,
+    };
+    expect(githubAdapter.plan('search-duplicates', input)).toEqual(
+      planDuplicateSearch(input),
+    );
+    expect(() =>
+      githubAdapter.plan('search-duplicates', {
+        ...input,
+        maxResults: 1_000_000,
+      }),
+    ).toThrow('GitHub duplicate search bounds are invalid');
+    expect(() =>
+      githubAdapter.plan('search-duplicates', {
+        context: hostCapability.context,
+        maxResults: 1_000_000,
+      }),
+    ).toThrow('complete GitHub duplicate search input');
+  });
+
+  it('rejects a directly forged duplicate action with recomputed oversized contracts', () => {
+    const action = duplicateSearchAction();
+    const forged = {
+      ...action,
+      intent: {
+        ...action.intent,
+        resultContract: {
+          maxResults: 1_000_000,
+          classifications: ['no-match', 'one-match', 'ambiguous'],
+          matchStatus: 'evidence-until-identity-and-context-verified',
+        },
+      },
+    };
+    expect(
+      validateDuplicateSearchObservation({
+        action: forged,
+        hostCapability,
+        observation: {
+          ...duplicateObservation([duplicateCandidate('issue_1')]),
+          queryDigest: String(forged.intent.queryDigest),
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'invalid' });
+  });
+
   it('accepts one exact-repository provenance match only after stable identity verification', () => {
     expect(
       validateDuplicateSearchObservation({
@@ -1021,6 +1152,70 @@ describe('GitHub semantic adapter', () => {
         limit: 101,
       }),
     ).toThrow('GitHub discussion read bounds are invalid');
+  });
+
+  it('routes public discussion planning through the bounded planner', () => {
+    const input = {
+      context: hostCapability.context,
+      hostCapability,
+      stableId: 'github:github.example:issue_node_42',
+      evidenceKind: 'comments' as const,
+      cursor: null,
+      limit: 10,
+    };
+    expect(githubAdapter.plan('read-discussion', input)).toEqual(
+      planDiscussionRead(input),
+    );
+    expect(() =>
+      githubAdapter.plan('read-discussion', {
+        ...input,
+        limit: 1_000_000,
+      }),
+    ).toThrow('GitHub discussion read bounds are invalid');
+    expect(() =>
+      githubAdapter.plan('read-discussion', {
+        context: hostCapability.context,
+        limit: 1_000_000,
+      }),
+    ).toThrow('complete GitHub discussion read input');
+  });
+
+  it('rejects a directly forged discussion action with recomputed oversized contracts', () => {
+    const action = planDiscussionRead({
+      context: hostCapability.context,
+      hostCapability,
+      stableId: 'github:github.example:issue_node_42',
+      evidenceKind: 'comments',
+      cursor: null,
+      limit: 10,
+    });
+    const forged = {
+      ...action,
+      intent: {
+        ...action.intent,
+        limit: 1_000_000,
+        resultContract: {
+          maxItems: 1_000_000,
+          content: 'sanitized-non-persistent-evidence',
+        },
+      },
+    };
+    expect(
+      validateDiscussionReadObservation({
+        action: forged,
+        hostCapability,
+        observation: {
+          provider: 'github',
+          context: hostCapability.context,
+          stableId: 'github:github.example:issue_node_42',
+          availability: 'available',
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          requestedCursor: null,
+          nextCursor: null,
+          items: [],
+        },
+      }),
+    ).toMatchObject({ classification: 'invalid' });
   });
 
   it('accepts a sanitized bounded page and suppresses the whole signaled field', () => {
@@ -1212,6 +1407,54 @@ function transferEvidence(fromRepositoryId: string, toRepositoryId: string) {
     observedAt: '2026-09-01T12:01:00.000Z',
   };
   return { ...content, evidenceDigest: semanticDigest(content) };
+}
+
+function plannedReadAction() {
+  return githubAdapter.plan('read', {
+    context: hostCapability.context,
+    currentAlias: 'acme/widgets#42',
+    stableNodeId: 'issue_node_42',
+    stableId: 'github:github.example:issue_node_42',
+    capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    stepId: 'read-step-42',
+  });
+}
+
+function plannedReadActionDigest() {
+  return semanticDigest({
+    provider: 'github',
+    operation: 'read',
+    context: hostCapability.context,
+    stableId: 'github:github.example:issue_node_42',
+    stableNodeId: 'issue_node_42',
+    currentAlias: 'acme/widgets#42',
+    capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    stepId: 'read-step-42',
+  });
+}
+
+function deletionEvidenceForRead(input: {
+  actionDigest: string;
+  stepId: string;
+  observedAt: string;
+  legacyDigest: boolean;
+}) {
+  const base = {
+    provider: 'github' as const,
+    stableId: 'github:github.example:issue_node_42',
+    context: hostCapability.context,
+    capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    observedAt: input.observedAt,
+  };
+  const evidence = {
+    ...base,
+    actionDigest: input.actionDigest,
+    stepId: input.stepId,
+  };
+  return {
+    ...evidence,
+    evidenceDigest: semanticDigest(input.legacyDigest ? base : evidence),
+  };
 }
 
 function mutationAction(

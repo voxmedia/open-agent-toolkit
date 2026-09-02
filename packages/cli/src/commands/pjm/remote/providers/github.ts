@@ -97,6 +97,8 @@ export interface GitHubReadObservationInput {
     stableId: string;
     context: ProviderContext;
     capabilityEvidenceDigest: string;
+    actionDigest: string;
+    stepId: string;
     observedAt: string;
     evidenceDigest: string;
   };
@@ -260,6 +262,7 @@ export interface GitHubDiscussionReadValidationResult {
 const URL_REFERENCE =
   /^https:\/\/([^/]+)\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:[/?#].*)?$/;
 const SHORT_REFERENCE = /^([^/\s]+)\/([^#\s]+)#(\d+)$/;
+const MAX_DELETION_EVIDENCE_AGE_MS = 30_000;
 
 export function parseGitHubIssueReference(
   reference: string,
@@ -302,10 +305,19 @@ export function normalizeGitHubIssueObservation(
   const status = requiredString(observation.fields, 'state');
   const databaseId = requiredPositiveInteger(observation.fields, 'databaseId');
   const pullRequests = uniqueStrings(observation.fields.pullRequests);
+  const annotations = Array.isArray(observation.fields.annotations)
+    ? uniqueStrings(observation.fields.annotations)
+    : null;
   const historicalRepositoryIds = optionalStringArray(
     observation.fields.historicalRepositoryIds,
   );
   const currentShortAlias = `${owner}/${name}#${number}`;
+  const mutationEvidence = parseMutationExecutionEvidence(
+    observation.fields.mutationEvidence,
+  );
+  const createProvenance = parseCreateProvenance(
+    observation.fields.createProvenance,
+  );
 
   return {
     provider: 'github',
@@ -327,6 +339,14 @@ export function normalizeGitHubIssueObservation(
       repositoryId,
       historicalRepositoryIds,
       pullRequests,
+      ...(annotations ? { annotations } : {}),
+      ...(mutationEvidence
+        ? {
+            capabilityEvidenceDigest: observation.capabilityEvidenceDigest,
+            mutationEvidence,
+          }
+        : {}),
+      ...(createProvenance ? { createProvenance } : {}),
     },
   };
 }
@@ -406,7 +426,8 @@ export function classifyGitHubReadObservation(
     typeof plannedCapabilityDigest !== 'string' ||
     plannedCapabilityDigest !== input.hostCapability.evidenceDigest ||
     typeof plannedStableId !== 'string' ||
-    typeof plannedNodeId !== 'string'
+    typeof plannedNodeId !== 'string' ||
+    !validReadActionEvidence(input.action)
   ) {
     return unavailableReadResult('inaccessible', [
       'planned-read-evidence-missing-or-mismatched',
@@ -422,6 +443,7 @@ export function classifyGitHubReadObservation(
       input.deletionEvidence,
       input.action,
       input.hostCapability.evidenceDigest,
+      input.observedAt,
     );
     return unavailableReadResult(deleted ? 'deleted' : 'inaccessible', [
       deleted ? 'authoritative-deletion' : 'absence-not-authoritative',
@@ -456,7 +478,7 @@ export function classifyGitHubReadObservation(
     ]);
   }
   if (
-    input.observation.context.accountId !== undefined &&
+    input.action.context.accountId !== undefined &&
     input.observation.context.accountId !== input.action.context.accountId
   ) {
     return unavailableReadResult('inaccessible', [
@@ -758,7 +780,8 @@ export function planDuplicateSearch(
     !Number.isInteger(input.maxResults) ||
     input.maxResults < 1 ||
     input.maxResults > 100 ||
-    input.historicalAliases.length > 64
+    input.historicalAliases.length > 64 ||
+    input.historicalAliases.some((alias) => !alias)
   ) {
     throw new Error('GitHub duplicate search bounds are invalid.');
   }
@@ -799,6 +822,11 @@ export function validateDuplicateSearchObservation(
   ) {
     throw new Error('GitHub duplicate validation requires a search action.');
   }
+  if (!validDuplicateSearchAction(input.action)) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      'action-contract-invalid',
+    ]);
+  }
   const capability = validateGitHubHostCapability(
     {
       operation: 'search-duplicates',
@@ -836,6 +864,7 @@ export function validateDuplicateSearchObservation(
   if (
     !Number.isInteger(maxResults) ||
     Number(maxResults) < 1 ||
+    Number(maxResults) > 100 ||
     input.observation.results.length > Number(maxResults)
   ) {
     return duplicateValidationResult(false, 'invalid', null, [
@@ -844,6 +873,15 @@ export function validateDuplicateSearchObservation(
   }
   if (input.observation.results.length === 0) {
     return duplicateValidationResult(true, 'no-match', null, []);
+  }
+  if (
+    input.observation.results.some(
+      (candidate) => !validDuplicateCandidateBounds(candidate),
+    )
+  ) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      'candidate-bound-invalid',
+    ]);
   }
   if (input.observation.results.length > 1) {
     return duplicateValidationResult(false, 'ambiguous', null, [
@@ -914,6 +952,7 @@ export function planDiscussionRead(
     !Number.isInteger(input.limit) ||
     input.limit < 1 ||
     input.limit > 100 ||
+    !['comments', 'activity'].includes(input.evidenceKind) ||
     !validDiscussionCursor(input.cursor)
   ) {
     throw new Error('GitHub discussion read bounds are invalid.');
@@ -946,6 +985,9 @@ export function validateDiscussionReadObservation(
     throw new Error(
       'GitHub discussion validation requires a discussion action.',
     );
+  }
+  if (!validDiscussionReadAction(input.action)) {
+    return discussionResult('invalid', null, ['action-contract-invalid']);
   }
   const capability = validateGitHubHostCapability(
     {
@@ -984,6 +1026,8 @@ export function validateDiscussionReadObservation(
   const maxItems = Number(contract.maxItems);
   if (
     !Number.isInteger(maxItems) ||
+    maxItems < 1 ||
+    maxItems > 100 ||
     input.observation.items.length > maxItems ||
     !validDiscussionCursor(input.observation.nextCursor)
   ) {
@@ -1031,18 +1075,65 @@ export const githubAdapter: ProviderAdapter = {
       }
       return planGitHubMutation(input as unknown as GitHubMutationPlanInput);
     }
+    if (operation === 'search-duplicates') {
+      if (!isCompleteDuplicateSearchInput(input)) {
+        throw new Error(
+          'GitHub adapter requires complete GitHub duplicate search input.',
+        );
+      }
+      return planDuplicateSearch(
+        input as unknown as GitHubDuplicateSearchPlanInput,
+      );
+    }
+    if (operation === 'read-discussion') {
+      if (!isCompleteDiscussionReadInput(input)) {
+        throw new Error(
+          'GitHub adapter requires complete GitHub discussion read input.',
+        );
+      }
+      return planDiscussionRead(
+        input as unknown as GitHubDiscussionReadPlanInput,
+      );
+    }
     const { context, ...intent } = input;
     if (operation === 'read') {
       if (
-        !isProviderContext(context) ||
+        !hasPinnedGitHubContext(context) ||
         typeof intent.stableId !== 'string' ||
+        intent.stableId.length === 0 ||
         typeof intent.stableNodeId !== 'string' ||
-        typeof intent.capabilityEvidenceDigest !== 'string'
+        intent.stableNodeId.length === 0 ||
+        typeof intent.capabilityEvidenceDigest !== 'string' ||
+        intent.capabilityEvidenceDigest.length === 0 ||
+        typeof intent.stepId !== 'string' ||
+        intent.stepId.length === 0
       ) {
         throw new Error(
           'GitHub read plan requires pinned identity and capability.',
         );
       }
+      const readIntent = {
+        stableId: intent.stableId,
+        stableNodeId: intent.stableNodeId,
+        currentAlias:
+          typeof intent.currentAlias === 'string' ? intent.currentAlias : null,
+        capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
+        stepId: intent.stepId,
+      };
+      return {
+        provider: 'github',
+        operation: 'read',
+        context,
+        intent: {
+          ...readIntent,
+          actionDigest: semanticDigest({
+            provider: 'github',
+            operation: 'read',
+            context,
+            ...readIntent,
+          }),
+        },
+      };
     }
     return {
       provider: 'github',
@@ -1052,6 +1143,13 @@ export const githubAdapter: ProviderAdapter = {
     };
   },
   validateObservation(action, observation) {
+    if (
+      action.provider !== 'github' ||
+      observation.provider !== 'github' ||
+      !contextsEqual(action.context, observation.context)
+    ) {
+      return { valid: false, reasons: ['observation-context-mismatch'] };
+    }
     const hostCapability = parseHostCapability(
       observation.fields.hostCapability,
     );
@@ -1069,13 +1167,70 @@ export const githubAdapter: ProviderAdapter = {
     );
     if (!capability.valid) return capability;
     if (
-      typeof action.intent.capabilityEvidenceDigest === 'string' &&
-      (observation.capabilityEvidenceDigest !==
+      typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+      observation.capabilityEvidenceDigest !==
         action.intent.capabilityEvidenceDigest ||
-        hostCapability.evidenceDigest !==
-          action.intent.capabilityEvidenceDigest)
+      hostCapability.evidenceDigest !== action.intent.capabilityEvidenceDigest
     ) {
       return { valid: false, reasons: ['capability-evidence-mismatch'] };
+    }
+    if (
+      ['create', 'update', 'transition', 'annotate'].includes(action.operation)
+    ) {
+      if (!validMutationActionEvidence(action)) {
+        return { valid: false, reasons: ['action-evidence-invalid'] };
+      }
+      if (
+        !semanticValuesEqual(
+          observation.fields.mutationEvidence,
+          action.intent.executionEvidence,
+        )
+      ) {
+        return { valid: false, reasons: ['mutation-evidence-mismatch'] };
+      }
+      if (
+        action.operation === 'create' &&
+        !semanticValuesEqual(
+          observation.fields.createProvenance,
+          action.intent.provenance,
+        )
+      ) {
+        return { valid: false, reasons: ['create-provenance-mismatch'] };
+      }
+      let issue: NormalizedRemoteIssue;
+      try {
+        issue = normalizeGitHubIssueObservation(observation);
+      } catch {
+        return { valid: false, reasons: ['observation-invalid'] };
+      }
+      const nodeId = String(observation.fields.nodeId ?? '');
+      if (
+        !observationIdentityMatches(
+          observation.identity.stableId,
+          issue.stableId,
+          nodeId,
+        ) ||
+        (action.operation !== 'create' &&
+          issue.stableId !== action.intent.stableId)
+      ) {
+        return { valid: false, reasons: ['observation-identity-mismatch'] };
+      }
+    } else if (action.operation === 'read') {
+      if (!validReadActionEvidence(action)) {
+        return { valid: false, reasons: ['action-evidence-invalid'] };
+      }
+      let issue: NormalizedRemoteIssue;
+      try {
+        issue = normalizeGitHubIssueObservation(observation);
+      } catch {
+        return { valid: false, reasons: ['observation-invalid'] };
+      }
+      if (
+        issue.stableId !== action.intent.stableId ||
+        observation.fields.nodeId !== action.intent.stableNodeId
+      ) {
+        return { valid: false, reasons: ['observation-identity-mismatch'] };
+      }
     }
     return { valid: true, reasons: [] };
   },
@@ -1083,8 +1238,26 @@ export const githubAdapter: ProviderAdapter = {
     return Object.keys(parsePostconditions(action.intent.postconditions));
   },
   verify(action, issue) {
-    if (!validMutationActionEvidence(action)) {
-      return this.verificationFields(action).map((field) => ({
+    const fields = safeVerificationFields(action);
+    if (
+      !validMutationActionEvidence(action) ||
+      issue.provider !== 'github' ||
+      !contextsEqual(action.context, issue.context) ||
+      (action.operation !== 'create' &&
+        issue.stableId !== action.intent.stableId) ||
+      issue.extensions.capabilityEvidenceDigest !==
+        action.intent.capabilityEvidenceDigest ||
+      !semanticValuesEqual(
+        issue.extensions.mutationEvidence,
+        action.intent.executionEvidence,
+      ) ||
+      (action.operation === 'create' &&
+        !semanticValuesEqual(
+          issue.extensions.createProvenance,
+          action.intent.provenance,
+        ))
+    ) {
+      return fields.map((field) => ({
         field,
         status: 'unavailable' as const,
       }));
@@ -1318,7 +1491,7 @@ function isCompleteMutationInput(
   return (
     ['create', 'update', 'transition', 'annotate'].includes(operation) &&
     input.operation === operation &&
-    isProviderContext(input.context) &&
+    hasPinnedGitHubContext(input.context) &&
     typeof input.bindingId === 'string' &&
     Array.isArray(input.fieldMask) &&
     !!input.projection &&
@@ -1330,6 +1503,36 @@ function isCompleteMutationInput(
     !!input.publicationSafety &&
     typeof input.publicationSafety === 'object' &&
     typeof input.approvedPreviewDigest === 'string'
+  );
+}
+
+function isCompleteDuplicateSearchInput(
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    hasPinnedGitHubContext(input.context) &&
+    !!parseHostCapability(input.hostCapability) &&
+    typeof input.provenanceToken === 'string' &&
+    input.provenanceToken.length > 0 &&
+    typeof input.reservedBindingId === 'string' &&
+    input.reservedBindingId.length > 0 &&
+    Array.isArray(input.historicalAliases) &&
+    input.historicalAliases.every((alias) => typeof alias === 'string') &&
+    Number.isInteger(input.maxResults)
+  );
+}
+
+function isCompleteDiscussionReadInput(
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    hasPinnedGitHubContext(input.context) &&
+    !!parseHostCapability(input.hostCapability) &&
+    typeof input.stableId === 'string' &&
+    input.stableId.length > 0 &&
+    ['comments', 'activity'].includes(String(input.evidenceKind)) &&
+    (input.cursor === null || typeof input.cursor === 'string') &&
+    Number.isInteger(input.limit)
   );
 }
 
@@ -1451,6 +1654,206 @@ function validMutationActionEvidence(action: SemanticAction): boolean {
   }
 }
 
+function validReadActionEvidence(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'github' ||
+    action.operation !== 'read' ||
+    !hasPinnedGitHubContext(action.context) ||
+    typeof action.intent.stableId !== 'string' ||
+    action.intent.stableId.length === 0 ||
+    typeof action.intent.stableNodeId !== 'string' ||
+    action.intent.stableNodeId.length === 0 ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    action.intent.capabilityEvidenceDigest.length === 0 ||
+    typeof action.intent.stepId !== 'string' ||
+    action.intent.stepId.length === 0 ||
+    typeof action.intent.actionDigest !== 'string'
+  ) {
+    return false;
+  }
+  return (
+    semanticDigest({
+      provider: 'github',
+      operation: 'read',
+      context: action.context,
+      stableId: action.intent.stableId,
+      stableNodeId: action.intent.stableNodeId,
+      currentAlias:
+        typeof action.intent.currentAlias === 'string'
+          ? action.intent.currentAlias
+          : null,
+      capabilityEvidenceDigest: action.intent.capabilityEvidenceDigest,
+      stepId: action.intent.stepId,
+    }) === action.intent.actionDigest
+  );
+}
+
+function validDuplicateSearchAction(action: SemanticAction): boolean {
+  try {
+    const query = recordValue(
+      action.intent.query,
+      'GitHub duplicate query contract is missing.',
+    );
+    const repository = recordValue(
+      query.repository,
+      'GitHub duplicate repository contract is missing.',
+    );
+    const resultContract = recordValue(
+      action.intent.resultContract,
+      'GitHub duplicate result contract is missing.',
+    );
+    const aliases = query.historicalAliases;
+    return (
+      action.provider === 'github' &&
+      action.operation === 'search-duplicates' &&
+      hasPinnedGitHubContext(action.context) &&
+      typeof query.provenanceToken === 'string' &&
+      query.provenanceToken.length > 0 &&
+      typeof query.reservedBindingId === 'string' &&
+      query.reservedBindingId.length > 0 &&
+      Array.isArray(aliases) &&
+      aliases.length <= 64 &&
+      aliases.every((alias) => typeof alias === 'string' && alias.length > 0) &&
+      new Set(aliases).size === aliases.length &&
+      semanticValuesEqual(repository, {
+        host: action.context.host,
+        repositoryId: action.context.repositoryId,
+        owner: action.context.owner,
+        name: action.context.name,
+      }) &&
+      action.intent.queryDigest === semanticDigest(query) &&
+      typeof action.intent.capabilityEvidenceDigest === 'string' &&
+      action.intent.capabilityEvidenceDigest.length > 0 &&
+      Number.isInteger(resultContract.maxResults) &&
+      Number(resultContract.maxResults) >= 1 &&
+      Number(resultContract.maxResults) <= 100 &&
+      semanticValuesEqual(resultContract.classifications, [
+        'no-match',
+        'one-match',
+        'ambiguous',
+      ]) &&
+      resultContract.matchStatus ===
+        'evidence-until-identity-and-context-verified'
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validDuplicateCandidateBounds(
+  candidate: GitHubDuplicateCandidate,
+): boolean {
+  return (
+    typeof candidate.stableId === 'string' &&
+    candidate.stableId.length > 0 &&
+    isProviderContext(candidate.context) &&
+    ['provenance', 'reserved-binding', 'alias'].includes(candidate.matchedBy) &&
+    typeof candidate.stableIdentityVerified === 'boolean' &&
+    typeof candidate.contextVerified === 'boolean' &&
+    Array.isArray(candidate.aliases) &&
+    candidate.aliases.length <= 64 &&
+    candidate.aliases.every(
+      (alias) => typeof alias === 'string' && alias.length > 0,
+    ) &&
+    Array.isArray(candidate.historicalRepositoryIds) &&
+    candidate.historicalRepositoryIds.length <= 64 &&
+    candidate.historicalRepositoryIds.every(
+      (repositoryId) =>
+        typeof repositoryId === 'string' && repositoryId.length > 0,
+    )
+  );
+}
+
+function validDiscussionReadAction(action: SemanticAction): boolean {
+  try {
+    const contract = recordValue(
+      action.intent.resultContract,
+      'GitHub discussion result contract is missing.',
+    );
+    return (
+      action.provider === 'github' &&
+      action.operation === 'read-discussion' &&
+      hasPinnedGitHubContext(action.context) &&
+      typeof action.intent.stableId === 'string' &&
+      action.intent.stableId.length > 0 &&
+      ['comments', 'activity'].includes(String(action.intent.evidenceKind)) &&
+      (action.intent.cursor === null ||
+        typeof action.intent.cursor === 'string') &&
+      validDiscussionCursor(action.intent.cursor as string | null) &&
+      Number.isInteger(action.intent.limit) &&
+      Number(action.intent.limit) >= 1 &&
+      Number(action.intent.limit) <= 100 &&
+      typeof action.intent.capabilityEvidenceDigest === 'string' &&
+      action.intent.capabilityEvidenceDigest.length > 0 &&
+      contract.maxItems === action.intent.limit &&
+      Number.isInteger(contract.maxItems) &&
+      Number(contract.maxItems) >= 1 &&
+      Number(contract.maxItems) <= 100 &&
+      contract.content === 'sanitized-non-persistent-evidence'
+    );
+  } catch {
+    return false;
+  }
+}
+
+function parseMutationExecutionEvidence(
+  value: unknown,
+): Record<string, string> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const evidence = value as Record<string, unknown>;
+  const fields = [
+    'capabilityEvidenceDigest',
+    'projectionDigest',
+    'outboundSafetyResultDigest',
+    'publicationSafetyResultDigest',
+    'visibilityEvidenceDigest',
+    'previewDigest',
+    'approvalDigest',
+    'actionDigest',
+  ];
+  if (
+    Object.keys(evidence).length !== fields.length ||
+    fields.some(
+      (field) =>
+        typeof evidence[field] !== 'string' ||
+        String(evidence[field]).length === 0,
+    )
+  ) {
+    return null;
+  }
+  return Object.fromEntries(
+    fields.map((field) => [field, String(evidence[field])]),
+  );
+}
+
+function parseCreateProvenance(
+  value: unknown,
+): { bindingId: string; origin: string } | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const provenance = value as Record<string, unknown>;
+  if (
+    Object.keys(provenance).length !== 2 ||
+    typeof provenance.bindingId !== 'string' ||
+    provenance.bindingId.length === 0 ||
+    typeof provenance.origin !== 'string' ||
+    provenance.origin.length === 0
+  ) {
+    return null;
+  }
+  return {
+    bindingId: provenance.bindingId,
+    origin: provenance.origin,
+  };
+}
+
+function safeVerificationFields(action: SemanticAction): string[] {
+  try {
+    return Object.keys(parsePostconditions(action.intent.postconditions));
+  } catch {
+    return [];
+  }
+}
+
 function observationIdentityMatches(
   declared: string,
   canonical: string,
@@ -1491,22 +1894,29 @@ function validDeletionEvidence(
   value: GitHubReadObservationInput['deletionEvidence'],
   action: SemanticAction,
   capabilityEvidenceDigest: string,
+  currentObservedAt: string,
 ): boolean {
   if (!value || value.provider !== 'github') return false;
   if (
     value.stableId !== action.intent.stableId ||
     !contextsEqual(value.context, action.context) ||
     value.capabilityEvidenceDigest !== capabilityEvidenceDigest ||
+    value.actionDigest !== action.intent.actionDigest ||
+    value.stepId !== action.intent.stepId ||
     !Number.isFinite(Date.parse(value.observedAt))
   ) {
     return false;
   }
+  const age = Date.parse(currentObservedAt) - Date.parse(value.observedAt);
+  if (age < 0 || age > MAX_DELETION_EVIDENCE_AGE_MS) return false;
   return (
     semanticDigest({
       provider: value.provider,
       stableId: value.stableId,
       context: value.context,
       capabilityEvidenceDigest: value.capabilityEvidenceDigest,
+      actionDigest: value.actionDigest,
+      stepId: value.stepId,
       observedAt: value.observedAt,
     }) === value.evidenceDigest
   );
@@ -1528,6 +1938,15 @@ function isProviderContext(value: unknown): value is ProviderContext {
     !Array.isArray(value) &&
     Object.values(value).every(
       (entry) => entry === undefined || typeof entry === 'string',
+    )
+  );
+}
+
+function hasPinnedGitHubContext(value: unknown): value is ProviderContext {
+  return (
+    isProviderContext(value) &&
+    ['host', 'accountId', 'repositoryId', 'owner', 'name'].every(
+      (key) => typeof value[key] === 'string' && value[key]!.length > 0,
     )
   );
 }
