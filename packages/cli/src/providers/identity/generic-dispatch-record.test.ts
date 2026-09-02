@@ -197,6 +197,37 @@ describe('parseGenericDispatchRecord', () => {
     },
   );
 
+  it.each([
+    ['\u1d18\u1d00ss\u1d21\u1d0f\u0280\u1d05', 'small-capital PASSWORD'],
+    ['\u1d00\u1d18\u026a\u1d0b\u1d07\u028f', 'small-capital APIKEY'],
+    ['p\u00e0ssword', 'diacritic password'],
+    ['a\u200dpiKey', 'zero-width-joined apiKey'],
+    ['\u2705field', 'emoji-prefixed field'],
+    ['\u0915\u0941\u091e\u094d\u091c\u0940', 'non-Latin script'],
+  ])('fails closed on the unaccounted spelling %s (%s)', (key) => {
+    expect(isSensitiveDispatchKey(key)).toBe(true);
+    expect(() =>
+      assertNoSensitiveDispatchContent({ payload: { [key]: 'value' } }),
+    ).toThrow(/sensitive dispatch content/i);
+  });
+
+  it('folds diacritics through NFKD before classification', () => {
+    expect(normalizeDispatchKey('p\u00e0ssword')).toBe('password');
+    expect(normalizeDispatchKey('cr\u00e9dential')).toBe('credential');
+  });
+
+  it('keeps every ASCII separator spelling admissible', () => {
+    for (const key of [
+      'role instructions',
+      'role.instructions',
+      'role/instructions',
+      'role[instructions]',
+      'ROLE_INSTRUCTIONS',
+    ]) {
+      expect(isSensitiveDispatchKey(key)).toBe(false);
+    }
+  });
+
   it('keeps roleInstructions admissible while denying the instruction family', () => {
     // `roleInstructions` carries canonical role identity, never role content,
     // so it is allowed explicitly rather than by an accident of matching.

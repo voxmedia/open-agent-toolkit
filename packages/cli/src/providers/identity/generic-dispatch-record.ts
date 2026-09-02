@@ -305,9 +305,10 @@ export const genericDispatchRecordSchema = z
 export type GenericDispatchRecord = z.infer<typeof genericDispatchRecordSchema>;
 
 /**
- * Latin look-alikes from other scripts. Stripping non-ASCII characters would
- * silently delete a homoglyph and unmask nothing, so confusables are folded to
- * their Latin counterpart before the strip.
+ * Latin look-alikes from other scripts, folded to their Latin counterpart so a
+ * homoglyph spelling classifies as the token it imitates. This map is a
+ * convenience for common cases, not the safety boundary: anything it does not
+ * cover is reported as unrecognized and fails closed.
  */
 const CONFUSABLE_FOLDING: ReadonlyMap<string, string> = new Map([
   ['\u0430', 'a'],
@@ -348,19 +349,49 @@ const CONFUSABLE_FOLDING: ReadonlyMap<string, string> = new Map([
 ]);
 
 /**
- * Sensitive-key classification folds compatibility forms (NFKC handles
- * full-width and mathematical alphanumerics), case, cross-script confusables,
- * and separators before matching, so `api_key`, `apiKey`, `API-KEY`,
- * full-width `\uff41\uff50\uff49\uff2b\uff45\uff59`, and a Cyrillic-a
- * `\u0430piKey` all collapse to the same classified token. Matching is
- * deliberately family-based rather than an exact-spelling denylist.
+ * Recognized separators: ASCII punctuation and space. Anything outside
+ * `[a-z0-9]` and this set survives folding as an unrecognized character.
  */
-export function normalizeDispatchKey(key: string): string {
-  let folded = '';
-  for (const character of key.normalize('NFKC').toLowerCase()) {
-    folded += CONFUSABLE_FOLDING.get(character) ?? character;
+const RECOGNIZED_SEPARATOR = /[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/;
+
+interface FoldedDispatchKey {
+  normalized: string;
+  unrecognized: boolean;
+}
+
+/**
+ * Fold a key to its classified token.
+ *
+ * NFKC collapses full-width and mathematical alphanumerics; case folding
+ * collapses spelling; NFKD plus combining-mark removal collapses diacritics
+ * (`pàssword`); the confusable map collapses cross-script look-alikes
+ * (Cyrillic-a `apiKey`). Whatever survives that and is neither `[a-z0-9]` nor a
+ * recognized separator is reported as unrecognized, because silently deleting
+ * it would unmask nothing and let spellings such as small-capital `ᴘᴀssᴡᴏʀᴅ`
+ * evade the family list. Callers fail closed on it rather than growing the map
+ * indefinitely.
+ */
+function foldDispatchKey(key: string): FoldedDispatchKey {
+  const decomposed = key
+    .normalize('NFKC')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '');
+  let normalized = '';
+  let unrecognized = false;
+  for (const character of decomposed) {
+    const folded = CONFUSABLE_FOLDING.get(character) ?? character;
+    if (/^[a-z0-9]$/.test(folded)) {
+      normalized += folded;
+    } else if (!RECOGNIZED_SEPARATOR.test(folded)) {
+      unrecognized = true;
+    }
   }
-  return folded.replace(/[^a-z0-9]/g, '');
+  return { normalized, unrecognized };
+}
+
+export function normalizeDispatchKey(key: string): string {
+  return foldDispatchKey(key).normalized;
 }
 
 /**
@@ -465,7 +496,10 @@ const SENSITIVE_VALUE_PATTERNS: readonly RegExp[] = [
 ];
 
 export function isSensitiveDispatchKey(key: string): boolean {
-  const normalized = normalizeDispatchKey(key);
+  const { normalized, unrecognized } = foldDispatchKey(key);
+  // Fail closed: a key this normalizer cannot fully account for is treated as
+  // sensitive rather than classified on a partial token.
+  if (unrecognized) return true;
   if (normalized === '') return false;
   if (SENSITIVE_KEY_ALLOWLIST.has(normalized)) return false;
   if (SENSITIVE_KEY_EXACT.has(normalized)) return true;
