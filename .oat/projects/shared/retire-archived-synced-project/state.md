@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 9c1feafb843b71cb1b995395816001823d6d5d40
+oat_last_commit: 18e80b556391e4edac6170ac81b5d6d7a87d74fd
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -11,10 +11,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: current p04 basis awaits renewed approval
+oat_hill_completed: [p04] # Progress: final p04 basis approved after closeout
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -114,7 +114,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T03:29:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T03:30:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -124,17 +124,16 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Configured gate allowed; pre-approval closeout in progress
+**Status:** Implementation complete; PR #254 open
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — all 14 tasks and the current-basis final review are complete.
-The authenticated Claude Fable gate passed the Important threshold. Its Medium
-and Minor findings are dispositioned without fix tasks, the artifact is
-archived, the receive commit is durably reconciled, and the gate is allowed.
-Closeout artifact refresh and renewed post-p04 approval remain. PR #254 remains
+Implementation — complete. All 14 tasks, current-basis final review, the
+authenticated Claude Fable exit gate, the configured closeout sequence, and
+the renewed post-p04 HiLL checkpoint passed. The gate's Medium artifact drift
+is closed, its Minor cleanup is deferred with rationale, and PR #254 remains
 open.
 
 ## Artifacts
@@ -143,7 +142,7 @@ open.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress; 14/14 tasks complete)
+- **Implementation:** `implementation.md` (complete; 14/14 tasks complete)
 
 ## Progress
 
@@ -210,7 +209,12 @@ open.
 - ✓ Medium closeout-artifact refresh and Minor cleanup nit dispositioned
 - ✓ Archived artifact, exact Reviews row, and receive commit reconciled
 - ✓ Configured gate allowed with disposition `passed`
-- ⧗ Configured pre-approval sequence: `summary → document → pr`
+- ✓ Refreshed summary and repository current state against the accepted gate basis
+- ✓ Updated and pushed PR #254 with the current review and gate evidence
+- ✓ Optional project recap remained explicitly skipped; terminal guard passed
+- ✓ Operator approved the renewed post-p04 HiLL checkpoint
+- ✓ Configured closeout sequence reached terminal `complete`
+- ✓ Implementation marked complete
 
 ## Blockers
 
@@ -218,5 +222,5 @@ None.
 
 ## Next Milestone
 
-Run `summary → document → pr` in stored order, then enter the post-p04 approval
-boundary.
+PR #254 is open for review. Run `oat-project-revise` for review feedback or
+`oat-project-complete` when ready to archive the project.
