@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; Thomas authorized one additional bounded fix and fresh review cycle.
+  - The single operator-authorized post-cap Phase 5 review found two Critical and three Important filesystem identity, recovery ownership, metadata, and consumer-reporting defects; the override is exhausted.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-review-r3-fix
+oat_current_task_id: p05-review-governance
 oat_generated: false
 ---
 
@@ -1337,6 +1337,34 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - If that review still reports Critical or Important findings, the override is
   exhausted and operator governance is required again. Phase 6 remains gated.
 
+### Authorized Round-3 Fix
+
+- Commit: `19198457148de815415304c620db39e78b41ef2c`
+- Added deterministic identity-validated recovery discovery, actionable
+  repo-relative recovery state, exact managed-range splicing and ordinary mode
+  preservation, structured sanitization, one-publication PJM composition, and
+  truthful partial outcomes for docs/PJM/decision consumers.
+- Focused verification passed 91/91 and the expanded Phase 5 union passed
+  430/430. CLI lint/type/format and a fresh uncached 10/10 root check passed.
+  Recovery remains 0/10 with no pending attempt.
+
+### Authorized Post-Cap Review — Terminal Governance Boundary
+
+- Artifact: `reviews/p05-review-2026-09-02T124148Z.md`
+- Reviewed head: `19198457148de815415304c620db39e78b41ef2c`
+- Verdict: changes requested; 2 Critical, 3 Important, 0 Medium, 0 Minor.
+- Temporary source identity is not securely bound through metadata mutation and
+  publication; final destination and retained-original identities are not
+  conditionally protected at commit.
+- Recovery ownership can be inferred from self-describing filenames, special
+  mode bits can be lost, and some post-scaffold failures still erase truthful
+  partial-state semantics.
+- Reconnaissance was attempted through one consequential read-only filesystem
+  lane; the intended consumer lane was rejected before start by the team limit
+  and covered inline. The primary reviewer fully reconciled both scopes.
+- The one-use operator override is exhausted. Phase 5 and Phase 6 stop pending
+  a new operator decision; no further automated fix/review cycle is authorized.
+
 ---
 
 ## Orchestration Runs
@@ -2006,6 +2034,32 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `reviews/p05-review-2026-09-02T052445Z.md` only.
 - Boundary: one bounded exact-target fix and one fresh independent review. The
   authorization does not advance Phase 6 unless that review passes.
+
+#### Authorized round-3 fix — truthful recovery lifecycle
+
+- Continuation event: `p05-review-r3-authorized-fix-20260902T053700Z`
+- Original request: `dispatch-p05-20260902T021900Z-01454ec32`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `a73d3e0860ec7fc5959bd02764652416d28f4e1b`
+- Commit: `19198457148de815415304c620db39e78b41ef2c`
+- Outcome: five round-3 findings addressed; focused 91/91, expanded union
+  430/430, scoped static checks, and uncached root check passed.
+- Dispatch: scope=p05-review-r3-authorized-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Authorized post-cap review — terminal governance boundary
+
+- Reviewed head: `19198457148de815415304c620db39e78b41ef2c`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p05-review-2026-09-02T124148Z.md`
+- Outcome: changes requested; 2 Critical and 3 Important findings in
+  publication identity, recovery ownership, complete metadata preservation,
+  and partial consumer reporting. The one-use override is exhausted.
+- Reconnaissance: attempted; one consequential filesystem lane completed, one
+  intelligent consumer lane was rejected before start by the team limit, and
+  the primary reviewer covered and reconciled the full scope inline.
+- Selection reason: `review-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

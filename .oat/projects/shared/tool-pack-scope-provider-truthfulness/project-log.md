@@ -144,6 +144,10 @@ Operator-authorized fail-closed fix 567f9ae0a3d39d9986e517924551e6381058d27e blo
 
 Phase 4 terminal review verdict=blocked with 1 Critical after 7 review-fix continuations; see reviews/p04-review-2026-09-01T220158Z.md. The one-use authorization is exhausted and p05 remains gated.
 
+### 2026-09-02 · structural · oat-project-implement · p05
+
+Authorized Phase 5 review at 191984571 is blocked with 2 Critical and 3 Important findings; reconnaissance attempted and reconciled in reviews/p05-review-2026-09-02T124148Z.md; the one-use override is exhausted and Phase 6 remains gated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

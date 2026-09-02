@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-review-r3-fix
-oat_last_commit: 9eab2dc3ea99026ef00ff649f320057df51537b6
+oat_current_task: p05-review-governance
+oat_last_commit: 19198457148de815415304c620db39e78b41ef2c
 oat_blockers:
-  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; Thomas authorized one additional bounded fix and fresh review cycle.
+  - The single operator-authorized post-cap Phase 5 review found two Critical and three Important filesystem identity, recovery ownership, metadata, and consumer-reporting defects; the override is exhausted.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T05:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T12:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 5 review round 3 found two Critical and three Important
-recovery-lifecycle defects. Thomas explicitly authorized one additional bounded
-fix and fresh review cycle after the three-cycle governance stop.
+Implementation - the authorized Phase 5 recovery-lifecycle fix is committed at
+`191984571`, but its single post-cap review found two Critical and three
+Important adjacent defects. The one-use override is exhausted.
 
 ## Artifacts
 
@@ -154,20 +154,19 @@ fix and fresh review cycle after the three-cycle governance stop.
 - ✓ Phase 5 four-task implementation and 331/331 union completed
 - ✓ Phase 5 production workflows registration corrected
 - ✓ Phase 5 public-path liveness/open-inode retention and crossed/nested marker rejection corrected
-- ✓ One additional bounded Phase 5 fix/review cycle explicitly authorized
-- ⧗ Phase 5 recovery lifecycle and shared-consumer truth fixes in progress
+- ✓ One additional bounded Phase 5 fix/review cycle executed
+- ✓ Expanded Phase 5 verification passed 430/430 plus uncached root checks
+- ⧗ Authorized post-cap review blocked with 2 Critical and 3 Important findings
 
 ## Blockers
 
-- Recovery cleanup can delete a raced foreign replacement at the private path.
-- Docs, PJM, and decision consumers can report success after
-  `recovery-required`; unresolved recovery can be forgotten on rerun.
-- Live unrelated bytes/mode can change, and raw recovery errors can leak
-  absolute paths.
-- The one-use override covers only the current five findings and one fresh
-  review. Phase 6 remains gated.
+- Publication still lacks identity-bound conditional protection for its
+  temporary source, final destination, and retained original.
+- Recovery ownership evidence is not independent, special mode bits can be
+  lost, and some post-scaffold failures still obscure partial completion.
+- The one-use post-cap fix/review override is exhausted. Phase 6 remains gated.
 
 ## Next Milestone
 
-Apply the one authorized bounded Phase 5 fix through the original implementer,
-rerun the full phase union, and run exactly one fresh independent review.
+Obtain operator direction: authorize another bounded remediation/review cycle,
+choose a different fail-closed design, or stop with the recorded findings.
