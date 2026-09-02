@@ -6,6 +6,8 @@ import {
   redactedFsError,
   withContainedWriterLock,
 } from '@fs/io';
+import { CLAUDE_OBSERVATION_SOURCE } from '@providers/identity/claude-runtime-observation';
+import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-observation';
 import {
   assertNoSensitiveDispatchContent,
   parseGenericDispatchRecord,
@@ -24,9 +26,10 @@ import {
   type RuntimeObservation,
 } from '@providers/identity/oat-dispatch-record';
 import {
-  normalizeRuntimeObservation,
+  observationFromFacts,
   parseRuntimeObservationEnvelope,
-  projectRuntimeMetadataEntries,
+  projectRuntimeObservationFacts,
+  providerSupportsRuntimeObservation,
 } from '@providers/identity/runtime-observation';
 
 const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
@@ -108,6 +111,17 @@ export function redactDispatchMessage(
   return redacted.replace(ABSOLUTE_PATH_PATTERN, '<redacted-path>');
 }
 
+/**
+ * Source strings that state provenance. A parser source is only ever written by
+ * the projection path that actually parsed provider output; a caller-supplied
+ * observation is always recorded as caller-asserted.
+ */
+const OBSERVATION_SOURCE_BY_PROVIDER: Readonly<Record<string, string>> = {
+  codex: CODEX_OBSERVATION_SOURCE,
+  claude: CLAUDE_OBSERVATION_SOURCE,
+};
+const CALLER_ASSERTED_OBSERVATION_SOURCE = 'caller-asserted';
+
 export interface DispatchRecordInput {
   record: GenericDispatchRecord;
   event: OatDispatchEvidenceEvent;
@@ -187,15 +201,7 @@ function resolveObservationEvent(
       'A runtime observation event carries either observation or metadata, not both.',
     );
   }
-
-  if ('metadata' in event) {
-    const { metadata, ...rest } = event;
-    const envelope = parseRuntimeObservationEnvelope(metadata);
-    return {
-      ...rest,
-      observation: normalizeRuntimeObservation({ record, envelope }),
-    };
-  }
+  if ('metadata' in event) return event;
 
   const observation = event.observation;
   if (!isRecord(observation) || observation.status !== 'reported') {
@@ -206,10 +212,18 @@ function resolveObservationEvent(
       'A runtime observation must name the same provider as its dispatch record.',
     );
   }
+  if (!providerSupportsRuntimeObservation(record.provider)) {
+    throw new Error(
+      `Provider ${record.provider} has no runtime observation capability, so it cannot report an observation.`,
+    );
+  }
   return {
     ...event,
     observation: parseRuntimeObservation({
       ...observation,
+      // Provenance is derived, never accepted: a hand-authored observation
+      // cannot borrow a parser's source string and pass as a genuine parse.
+      source: CALLER_ASSERTED_OBSERVATION_SOURCE,
       match: compareObservedRuntimeMetadata(
         observation as ObservedRuntimeMetadata,
         configuredInvocationForObservation(record),
@@ -256,20 +270,43 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
   );
 
   const record = parseGenericDispatchRecord(value.record);
-  let event: Record<string, unknown> = value.event;
   if (rawMetadata !== null) {
+    if ('observation' in value.event) {
+      throw new Error(
+        'A runtime observation event carries either observation or metadata, not both.',
+      );
+    }
     const envelope = parseRuntimeObservationEnvelope(rawMetadata);
-    const entries = projectRuntimeMetadataEntries(
-      envelope.provider,
-      envelope.entries,
-    );
-    assertNoSensitiveDispatchContent(entries, '<observation-metadata>');
-    event = { ...value.event, metadata: { ...envelope, entries } };
+    const facts =
+      envelope.provider === record.provider
+        ? projectRuntimeObservationFacts(envelope.provider, envelope.entries)
+        : null;
+    assertNoSensitiveDispatchContent(facts, '<observation-metadata>');
+    const { metadata: _metadata, ...rest } = value.event;
+    // Built here from parsed provider output, so it carries a parser source and
+    // must not be re-processed as if a caller had supplied it.
+    return {
+      record,
+      event: {
+        ...rest,
+        observation: observationFromFacts({
+          record,
+          provider: envelope.provider,
+          source:
+            OBSERVATION_SOURCE_BY_PROVIDER[envelope.provider] ?? 'unknown',
+          observedAt: envelope.observedAt,
+          facts,
+        }),
+      } as OatDispatchEvidenceEvent,
+    };
   }
 
   return {
     record,
-    event: resolveObservationEvent(record, event) as OatDispatchEvidenceEvent,
+    event: resolveObservationEvent(
+      record,
+      value.event,
+    ) as OatDispatchEvidenceEvent,
   };
 }
 

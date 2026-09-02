@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GenericDispatchRecord } from './generic-dispatch-record';
+import { isSensitiveDispatchKey } from './generic-dispatch-record';
 import {
   normalizeRuntimeObservation,
+  OBSERVED_RUNTIME_FACT_KEYS,
   parseRuntimeObservationEnvelope,
+  projectRuntimeObservationFacts,
   providerSupportsRuntimeObservation,
 } from './runtime-observation';
 
@@ -122,19 +125,22 @@ describe('parseRuntimeObservationEnvelope', () => {
     ).toHaveLength(2);
   });
 
-  it('bounds the envelope by serialized size as well as entry count', () => {
-    expect(() =>
-      parseRuntimeObservationEnvelope({
-        provider: 'codex',
-        observedAt: OBSERVED_AT,
-        entries: [
-          {
-            type: 'session_meta',
-            payload: { id: 'x'.repeat(17 * 1024 * 1024) },
-          },
-        ],
-      }),
-    ).toThrow(/bytes|size/i);
+  it('degrades an over-bound envelope rather than throwing', () => {
+    // Size is not a shape violation. Throwing here would destroy the mandatory
+    // record write over an optional attachment.
+    for (const entries of [
+      [{ type: 'session_meta', payload: { id: 'x'.repeat(17 * 1024 * 1024) } }],
+      Array.from({ length: 5001 }, () => ({ type: 'event_msg' })),
+    ]) {
+      expect(() =>
+        parseRuntimeObservationEnvelope({
+          provider: 'codex',
+          observedAt: OBSERVED_AT,
+          entries,
+        }),
+      ).not.toThrow();
+      expect(projectRuntimeObservationFacts('codex', entries)).toBeNull();
+    }
   });
 
   it('rejects unknown keys, bad shapes, and content-bearing envelopes', () => {
@@ -160,13 +166,17 @@ describe('parseRuntimeObservationEnvelope', () => {
         entries: 'rollout.jsonl',
       }),
     ).toThrow();
-    expect(() =>
-      parseRuntimeObservationEnvelope({
-        provider: 'codex',
-        observedAt: OBSERVED_AT,
-        entries: Array.from({ length: 5001 }, () => ({ type: 'event_msg' })),
-      }),
-    ).toThrow(/entries/i);
+  });
+
+  it('owns neutral projection keys that cannot classify sensitive', () => {
+    // Mirroring a provider's own entry shape is what put `sessionId` and
+    // `message` into the projected output and made every real Claude
+    // transcript unrecordable. These keys are owned here instead.
+    for (const key of OBSERVED_RUNTIME_FACT_KEYS) {
+      expect(isSensitiveDispatchKey(key), key).toBe(false);
+    }
+    expect(isSensitiveDispatchKey('sessionId')).toBe(true);
+    expect(isSensitiveDispatchKey('message')).toBe(true);
   });
 });
 

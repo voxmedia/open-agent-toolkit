@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CLAUDE_ASSISTANT_KEYS,
+  CLAUDE_INIT_KEYS,
   CLAUDE_OBSERVATION_SOURCE,
   extractClaudeRuntimeMetadata,
   parseClaudeRuntimeObservation,
-  projectClaudeMetadataEntries,
+  observeClaudeRuntimeFacts,
 } from './claude-runtime-observation';
 import {
   MAIN_SESSION_TRANSCRIPT,
@@ -243,26 +245,66 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
   });
 });
 
-describe('projectClaudeMetadataEntries', () => {
-  it('reaches message by two explicit key paths and nothing else', () => {
-    const [projected] = projectClaudeMetadataEntries([contentTrapEntry()]) as [
-      Record<string, unknown>,
-    ];
-    expect(projected.message).toEqual({
+describe('declared read surface', () => {
+  it('is sufficient on its own and is the whole surface', () => {
+    // An entry carrying only the declared keys plus the two message paths must
+    // extract completely. If the parser ever needs more, this fails first.
+    const minimal: Record<string, unknown> = {
+      type: 'assistant',
+      isSidechain: true,
+      effort: 'high',
+      attributionAgent: 'oat-reviewer',
+      sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
+      requestId: 'req_1',
+      message: { model: 'claude-opus-5', usage: { service_tier: 'standard' } },
+    };
+    expect(
+      Object.keys(minimal)
+        .filter((key) => key !== 'message')
+        .sort(),
+    ).toEqual(
+      [...CLAUDE_ASSISTANT_KEYS].filter((k) => k !== 'session_id').sort(),
+    );
+    expect(extractClaudeRuntimeMetadata([minimal])).toMatchObject({
+      childLineage: 'depth-unknown',
+      role: 'oat-reviewer',
       model: 'claude-opus-5',
-      usage: { service_tier: 'standard' },
+      effort: 'high',
+      serviceTier: 'standard',
     });
-    expect(projected.attributionAgent).toBe('oat-phase-implementer');
-    // Unread entry-level keys are dropped, not carried through.
-    expect(projected).not.toHaveProperty('uuid');
-    expect(projected).not.toHaveProperty('parentUuid');
-    expect(JSON.stringify(projected)).not.toContain('msg_01');
+    // The stream-json surface is retained but unverified; it must stay small.
+    expect(CLAUDE_INIT_KEYS.length).toBeLessThanOrEqual(10);
+  });
+});
+
+describe('observeClaudeRuntimeFacts', () => {
+  it('emits only neutral facts, never the transcript shape', () => {
+    const facts = observeClaudeRuntimeFacts([contentTrapEntry()]);
+    expect(Object.keys(facts ?? {}).sort()).toEqual([
+      'correlation',
+      'effort',
+      'lineage',
+      'model',
+      'role',
+      'serviceTier',
+    ]);
+    // The provider's own key names never escape this module.
+    const serialized = JSON.stringify(facts);
+    for (const providerKey of ['sessionId', 'session_id', 'message', 'uuid']) {
+      expect(serialized, providerKey).not.toContain(providerKey);
+    }
   });
 
-  it('drops the body of a conversation entry entirely', () => {
-    expect(projectClaudeMetadataEntries([conversationEntry('user')])).toEqual([
-      { type: 'user' },
-    ]);
+  it('reads model and tier without touching message.content', () => {
+    expect(observeClaudeRuntimeFacts([contentTrapEntry()])).toMatchObject({
+      model: 'claude-opus-5',
+      serviceTier: 'standard',
+      role: 'oat-phase-implementer',
+    });
+  });
+
+  it('returns nothing for a conversation-only transcript', () => {
+    expect(observeClaudeRuntimeFacts([conversationEntry('user')])).toBeNull();
   });
 });
 

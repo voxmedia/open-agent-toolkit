@@ -11,6 +11,15 @@ import {
 import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import {
+  MAIN_SESSION_TRANSCRIPT,
+  SIDECHAIN_TRANSCRIPT,
+} from '@providers/identity/claude-runtime-observation.fixtures';
+import {
+  DEPTH_1_ROLLOUT,
+  DEPTH_2_ROLLOUT,
+  ROOT_ROLLOUT,
+} from '@providers/identity/codex-runtime-observation.fixtures';
 import type { GenericDispatchRecord } from '@providers/identity/generic-dispatch-record';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -1004,6 +1013,168 @@ describe('runtime observation integration', () => {
         },
       }),
     ).toThrow();
+  });
+
+  it.each([
+    ['codex', 'ROOT_ROLLOUT', ROOT_ROLLOUT],
+    ['codex', 'DEPTH_1_ROLLOUT', DEPTH_1_ROLLOUT],
+    ['codex', 'DEPTH_2_ROLLOUT', DEPTH_2_ROLLOUT],
+    ['claude', 'MAIN_SESSION_TRANSCRIPT', MAIN_SESSION_TRANSCRIPT],
+    ['claude', 'SIDECHAIN_TRANSCRIPT', SIDECHAIN_TRANSCRIPT],
+  ])(
+    'drives the real %s fixture %s through the durable-write boundary',
+    async (provider, _name, entries) => {
+      // The captured shapes must survive the boundary they cross in
+      // production. Testing the parsers alone let a projection that the
+      // sensitive-content boundary refuses ship twice.
+      const projectPath = await mkdtemp(
+        join(tmpdir(), 'oat-dispatch-project-'),
+      );
+      roots.push(projectPath);
+      const result = await recordProjectDispatch({
+        projectPath,
+        input: {
+          record: genericRecord({ provider }),
+          event: {
+            kind: 'runtime-observation',
+            requestId: 'dispatch-native-1',
+            source: 'runtime-observer',
+            metadata: {
+              provider,
+              observedAt: '2026-09-02T12:00:00.000Z',
+              entries,
+            },
+          },
+        },
+      });
+      expect(result.status).toBe('persisted');
+      expect(result.record.oat.runtimeObservation).toMatchObject({
+        status: 'reported',
+      });
+      await expect(
+        readFile(
+          join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+          'utf8',
+        ),
+      ).resolves.toContain('runtimeObservation');
+    },
+  );
+
+  it('refuses a second differing observation and leaves the journal intact', async () => {
+    const { projectPath } = await record(codexEntries);
+    const path = join(projectPath, 'dispatch', 'dispatch-native-1.json');
+    const before = await readFile(path, 'utf8');
+    const revisionsBefore = (
+      await readdir(join(projectPath, 'dispatch'))
+    ).sort();
+
+    await expect(
+      recordProjectDispatch({
+        projectPath,
+        input: {
+          record: genericRecord(),
+          event: {
+            kind: 'runtime-observation',
+            requestId: 'dispatch-native-1',
+            source: 'runtime-observer',
+            metadata: {
+              provider: 'codex',
+              observedAt: '2026-09-02T13:00:00.000Z',
+              entries: codexEntries,
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow(/immutable once reported/i);
+
+    await expect(readFile(path, 'utf8')).resolves.toBe(before);
+    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual(
+      revisionsBefore,
+    );
+  });
+
+  it('degrades an over-bound envelope instead of losing the record', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const result = await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: genericRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: Array.from({ length: 20_000 }, () => ({
+              type: 'event_msg',
+            })),
+          },
+        },
+      },
+    });
+    // The observation layer is optional; a size violation on it must never
+    // destroy the mandatory record write.
+    expect(result.status).toBe('persisted');
+    expect(result.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+  });
+
+  it('refuses a reported observation for a provider with no capability', async () => {
+    await expect(
+      recordProjectDispatch({
+        projectPath: null,
+        input: {
+          record: genericRecord({
+            provider: 'cursor',
+            role_selector: 'generalPurpose',
+          }),
+          event: {
+            kind: 'runtime-observation',
+            requestId: 'dispatch-native-1',
+            source: 'runtime-observer',
+            observation: {
+              status: 'reported',
+              provider: 'cursor',
+              model: 'cursor-composer-2',
+              source: 'cursor-transcript-metadata',
+              observedAt: '2026-09-02T12:00:00.000Z',
+              match: 'matching',
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow(/capabilit/i);
+  });
+
+  it('never lets a caller borrow a parser source string', async () => {
+    const result = await recordProjectDispatch({
+      projectPath: null,
+      input: {
+        record: genericRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          observation: {
+            status: 'reported',
+            provider: 'codex',
+            model: 'gpt-5.6-sol',
+            source: 'codex-rollout-metadata',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            match: 'matching',
+          },
+        },
+      },
+    });
+    // Source states provenance, so it is derived from the path that produced
+    // the evidence rather than accepted from the caller.
+    expect(result.record.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      source: 'caller-asserted',
+    });
   });
 
   it('accepts a raw captured rollout and stores none of its content', async () => {

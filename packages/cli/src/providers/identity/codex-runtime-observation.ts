@@ -10,7 +10,17 @@ import {
  *
  * Field paths here are taken from captured Codex 0.152.1 rollouts, not from
  * assumption; see `codex-runtime-observation.fixtures.ts` for the sanitized
- * captures the tests run against. An earlier revision of this parser read
+ * captures the tests run against.
+ *
+ * Four accepted paths are UNVERIFIED against any captured rollout and appear
+ * zero times in the operator's local corpus (1,596 rollouts spanning cli_version
+ * 0.142.4-0.152.x, as of 2026-09-02): `turn_context.service_tier`,
+ * `turn_context.serviceTier`, `turn_context.reasoning_effort`, and
+ * `session_meta.request_id`. They are retained as forward-compatible readers
+ * and all fail closed to `null`, so no Codex rollout observed to date reports a
+ * service tier, and Codex request correlation is caller-asserted in practice.
+ * They are labelled here for the same reason `CLAUDE_INIT_KEYS` is labelled:
+ * an unverified path must not read as a captured one. An earlier revision of this parser read
  * `payload.parent_id` and `payload.role`, which Codex does not emit, so every
  * subagent was misreported as a root with no role while hand-written fixtures
  * agreed with the parser instead of with the world.
@@ -150,6 +160,7 @@ function sessionFrame(payload: Record<string, unknown>): SessionFrame {
     agentPathSegments:
       agentPathDepth(payload.agent_path) ?? agentPathDepth(spawn?.agent_path),
     role: observedValue(payload.agent_role) ?? observedValue(spawn?.agent_role),
+    // UNVERIFIED path; Codex declares no OAT request id in any capture.
     requestId: observedValue(payload.request_id),
     historyStartOrdinal: nonNegativeInteger(
       payload.subagent_history_start_ordinal,
@@ -235,83 +246,6 @@ function applicableTurns(
   return own.length > 0 ? own : turns;
 }
 
-/** Payload keys the Codex parser can read. Nothing else survives projection. */
-const CODEX_SESSION_META_KEYS = [
-  'id',
-  'parent_thread_id',
-  'forked_from_id',
-  'thread_source',
-  'agent_role',
-  'agent_path',
-  'request_id',
-  'subagent_history_start_ordinal',
-] as const;
-const CODEX_TURN_CONTEXT_KEYS = [
-  'model',
-  'effort',
-  'reasoning_effort',
-  'service_tier',
-  'serviceTier',
-] as const;
-const CODEX_THREAD_SPAWN_KEYS = [
-  'parent_thread_id',
-  'depth',
-  'agent_path',
-  'agent_role',
-] as const;
-
-function pick(
-  source: Record<string, unknown>,
-  keys: readonly string[],
-): Record<string, unknown> {
-  const projected: Record<string, unknown> = {};
-  for (const key of keys) {
-    if (source[key] !== undefined) projected[key] = source[key];
-  }
-  return projected;
-}
-
-/**
- * Project raw rollout entries down to exactly what this parser reads.
- *
- * This is the guarantee behind "no conversation content is stored": a caller
- * may hand over an unmodified rollout, and everything outside the allowlist —
- * `base_instructions`, `cwd`, `git`, every conversation entry's payload, and
- * `session_id`, which is the root's id rather than this session's — is dropped
- * before the record boundary asserts anything. Projecting here rather than
- * requiring pre-sanitized input keeps the stripper inside reviewed code
- * instead of in each caller.
- */
-export function projectCodexMetadataEntries(
-  entries: readonly unknown[],
-): unknown[] {
-  if (!Array.isArray(entries)) return [];
-  return entries.map((entry) => {
-    const type = metadataEntryType(entry);
-    const record = isRecord(entry) ? entry : {};
-    const base: Record<string, unknown> = { type: record.type };
-    if (typeof record.ordinal === 'number') base.ordinal = record.ordinal;
-    // A non-metadata entry keeps its discriminator and nothing else; its
-    // payload is never read, so it is never carried.
-    if (type === null) return base;
-    const payload = metadataPayload(record);
-    if (payload === null) return base;
-    if (type === 'turn_context') {
-      return { ...base, payload: pick(payload, CODEX_TURN_CONTEXT_KEYS) };
-    }
-    const projected = pick(payload, CODEX_SESSION_META_KEYS);
-    const spawn = threadSpawn(payload);
-    if (typeof payload.source === 'string') {
-      projected.source = payload.source;
-    } else if (spawn !== null) {
-      projected.source = {
-        subagent: { thread_spawn: pick(spawn, CODEX_THREAD_SPAWN_KEYS) },
-      };
-    }
-    return { ...base, payload: projected };
-  });
-}
-
 /**
  * Extract the applicable child's metadata from Codex rollout entries.
  *
@@ -387,6 +321,32 @@ export function extractCodexRuntimeMetadata(
  * different request. A declined correlation is deliberately silent rather than
  * attributed: another session's identity is not evidence about this request.
  */
+/**
+ * Neutral observation facts for the cross-provider projection.
+ *
+ * Nothing of the rollout's own shape escapes this module: the caller receives
+ * only the closed fact set owned by `runtime-observation.ts`.
+ */
+export function observeCodexRuntimeFacts(entries: readonly unknown[]): {
+  lineage: string | null;
+  role: string | null;
+  model: string | null;
+  effort: string | null;
+  serviceTier: string | null;
+  correlation: string | null;
+} | null {
+  const metadata = extractCodexRuntimeMetadata(entries);
+  if (metadata === null) return null;
+  return {
+    lineage: metadata.childLineage,
+    role: metadata.role,
+    model: metadata.model,
+    effort: metadata.effort,
+    serviceTier: metadata.serviceTier,
+    correlation: metadata.requestId,
+  };
+}
+
 export function parseCodexRuntimeObservation(input: {
   entries: readonly unknown[];
   observedAt: string;
