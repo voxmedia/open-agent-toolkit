@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | blocked   | 12    | 12/12     |
-| Phase 4    | blocked   | 11    | 11/11     |
-| Phase 5    | pending   | 9     | 0/9       |
-| Phase 6    | pending   | 10    | 0/10      |
-| Phase 7    | pending   | 10    | 0/10      |
-| Phase 8    | pending   | 6     | 0/6       |
-| Revision 1 | blocked   | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | in_progress | 11    | 11/11     |
+| Phase 5    | pending     | 9     | 0/9       |
+| Phase 6    | pending     | 10    | 0/10      |
+| Phase 7    | pending     | 10    | 0/10      |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | blocked     | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
 
 **Total:** 49/84 tasks completed
 
@@ -739,8 +739,8 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** blocked — final normal review round 3 found one Critical, one
-Important, and one Medium defect; normal review governance is exhausted.
+**Status:** in progress — the operator authorized one bounded extension fix and
+one additional independent review after normal review governance exhausted.
 **Started:** 2026-09-01
 **Implementation head:** 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 
@@ -816,8 +816,10 @@ Important, and one Medium defect; normal review governance is exhausted.
   `Reconnaissance: not-attempted`, independently passed the focused suite at
   92/92 and the remote suite at 427/427, and reproduced wrong-context duplicate
   recovery plus generic specialized-action validation.
-- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops. No
-  third fix or fourth review is authorized. Phase 5 has not started.
+- Normal review governance exhausted at 3/3 reviews and 2/3 fix loops. The
+  operator explicitly authorized one bounded extension: fix loop 3/3 followed
+  by independent review 4/4 on the same accepted handles and targets.
+- Operator-extension fix loop 3/3 is next. Phase 5 has not started.
 
 ---
 
@@ -1598,7 +1600,10 @@ review_3_artifact: reviews/p04-final-review-2026-09-02T140132Z.md
 review_3_head: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 review_3_findings: 1 critical, 1 important, 1 medium, 0 minor
 review_3_reconnaissance: not-attempted
-phase_outcome: blocked_review_governance_exhausted
+operator_extension_authorized: true
+operator_extension_fix_limit: 1
+operator_extension_review_limit: 1
+phase_outcome: operator_extension_fix_3_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1643,8 +1648,10 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   generic specialized-action validation. Reconnaissance was not attempted, so
   no review-orchestration section is required.
 - Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops. No
-  further fix/review cycle, target change, or Phase 5 dispatch is authorized
-  without explicit operator direction.
+  further normal fix/review cycle or Phase 5 dispatch is authorized.
+- The operator authorized one bounded extension: fix loop 3/3 and independent
+  review 4/4 through the original accepted implementer and reviewer. No target
+  change or additional extension is authorized.
 
 <!-- orchestration-runs-end -->
 

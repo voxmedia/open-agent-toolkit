@@ -128,6 +128,10 @@ Phase p-rev2 passed root review round 3 after two bounded review-fix loops; see 
 
 Phase 4 blocked after review round 3/3 and fix loop 2/3; one Critical, one Important, and one Medium finding remain in reviews/p04-final-review-2026-09-02T140132Z.md; further corrective work requires operator authorization.
 
+### 2026-09-02 · structural · oat-project-implement · p04-operator-extension
+
+Operator authorized one bounded Phase 4 extension: fix loop 3/3 and independent review 4/4 on the original accepted handles; Phase 5 remains blocked pending a passing review.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
