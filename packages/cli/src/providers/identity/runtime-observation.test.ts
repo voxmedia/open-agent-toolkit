@@ -1,0 +1,290 @@
+import { describe, expect, it } from 'vitest';
+
+import type { GenericDispatchRecord } from './generic-dispatch-record';
+import {
+  normalizeRuntimeObservation,
+  parseRuntimeObservationEnvelope,
+  providerSupportsRuntimeObservation,
+} from './runtime-observation';
+
+const OBSERVED_AT = '2026-09-02T12:00:00.000Z';
+
+function genericRecord(
+  overrides: Partial<GenericDispatchRecord> = {},
+): GenericDispatchRecord {
+  return {
+    request_id: 'dispatch-native-1',
+    caller: 'oat-project-implement',
+    scope: 'p07',
+    objective: 'Implement runtime observation',
+    action: 'implementation',
+    role_name: 'oat-phase-implementer',
+    role_class: 'implementation',
+    provider: 'codex',
+    dispatch_context: 'root-native',
+    dispatch_policy: 'high',
+    dispatch_ceiling: 'high',
+    catalog_snapshot: {
+      id: 'catalog-1',
+      source: 'tool-schema',
+      observed_at: '2026-09-02T00:00:00.000Z',
+    },
+    authority: 'phase-files',
+    role_selector: 'oat-phase-implementer-gpt-5-6-sol-high',
+    model_selector: 'gpt-5.6-sol',
+    model_selector_granularity: 'exact-native-model-choice',
+    effort_selector: 'high',
+    reasoning_mode_selector: null,
+    service_tier_selector: 'priority',
+    selection_source: 'policy-resolved',
+    candidates_considered: ['oat-phase-implementer-gpt-5-6-sol-high'],
+    selection_reason: 'native-catalog',
+    selected_route: 'native',
+    deadline_seconds: 600,
+    retry_limit: 0,
+    payload: { task: 'p07' },
+    launch_status: 'accepted',
+    child_outcome: 'completed',
+    configured_invocation_evidence: ['dispatch ceiling resolver'],
+    runtime_confirmation: 'not-reported',
+    diagnostics: [],
+    continuation_events: [],
+    ...overrides,
+  };
+}
+
+const codexEntries = [
+  {
+    type: 'session_meta',
+    payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+  },
+  {
+    type: 'turn_context',
+    payload: {
+      model: 'gpt-5.6-sol',
+      effort: 'high',
+      service_tier: 'priority',
+    },
+  },
+];
+
+const claudeEntries = [
+  {
+    type: 'system',
+    subtype: 'init',
+    model: 'claude-opus-5',
+    service_tier: 'standard',
+    agent: 'oat-phase-implementer',
+  },
+];
+
+describe('providerSupportsRuntimeObservation', () => {
+  it('gates observation on provider capability', () => {
+    expect(providerSupportsRuntimeObservation('codex')).toBe(true);
+    expect(providerSupportsRuntimeObservation('claude')).toBe(true);
+    expect(providerSupportsRuntimeObservation('cursor')).toBe(false);
+    expect(providerSupportsRuntimeObservation('some-future-host')).toBe(false);
+  });
+});
+
+describe('parseRuntimeObservationEnvelope', () => {
+  it('accepts a metadata-only envelope', () => {
+    expect(
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: codexEntries,
+      }).entries,
+    ).toHaveLength(2);
+  });
+
+  it('rejects unknown keys, bad shapes, and content-bearing envelopes', () => {
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: codexEntries,
+        transcript: 'the whole conversation',
+      }),
+    ).toThrow();
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: 'yesterday',
+        entries: [],
+      }),
+    ).toThrow();
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: 'rollout.jsonl',
+      }),
+    ).toThrow();
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: Array.from({ length: 5001 }, () => ({ type: 'event_msg' })),
+      }),
+    ).toThrow(/entries/i);
+  });
+});
+
+describe('normalizeRuntimeObservation', () => {
+  it('routes Codex metadata to a matching observation', () => {
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord(),
+        envelope: {
+          provider: 'codex',
+          observedAt: OBSERVED_AT,
+          entries: codexEntries,
+        },
+      }),
+    ).toMatchObject({
+      status: 'reported',
+      provider: 'codex',
+      match: 'matching',
+      model: 'gpt-5.6-sol',
+      childLineage: 'root',
+    });
+  });
+
+  it('routes Claude metadata and keeps the effort axis not-exposed', () => {
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord({
+          provider: 'claude',
+          model_selector: 'claude-opus-5',
+          service_tier_selector: 'standard',
+          role_selector: 'oat-phase-implementer',
+        }),
+        envelope: {
+          provider: 'claude',
+          observedAt: OBSERVED_AT,
+          entries: claudeEntries,
+        },
+      }),
+    ).toMatchObject({
+      status: 'reported',
+      provider: 'claude',
+      effort: 'not-exposed',
+      match: 'matching',
+    });
+  });
+
+  it('preserves Cursor not-reported even with rich metadata', () => {
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord({
+          provider: 'cursor',
+          role_selector: 'generalPurpose',
+        }),
+        envelope: {
+          provider: 'cursor',
+          observedAt: OBSERVED_AT,
+          entries: [...codexEntries, ...claudeEntries],
+        },
+      }),
+    ).toEqual({ status: 'not-reported' });
+  });
+
+  it('declines an envelope whose provider is not the recorded provider', () => {
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord(),
+        envelope: {
+          provider: 'claude',
+          observedAt: OBSERVED_AT,
+          entries: claudeEntries,
+        },
+      }),
+    ).toEqual({ status: 'not-reported' });
+  });
+
+  it('accepts the canonical role name or the materialized selector', () => {
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord(),
+        envelope: {
+          provider: 'codex',
+          observedAt: OBSERVED_AT,
+          entries: [
+            {
+              type: 'session_meta',
+              payload: {
+                id: 'sess-root',
+                role: 'oat-phase-implementer-gpt-5-6-sol-high',
+              },
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ match: 'matching' });
+    expect(
+      normalizeRuntimeObservation({
+        record: genericRecord(),
+        envelope: {
+          provider: 'codex',
+          observedAt: OBSERVED_AT,
+          entries: [
+            {
+              type: 'session_meta',
+              payload: { id: 'sess-root', role: 'oat-reviewer' },
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ match: 'mismatching' });
+  });
+
+  it('never lets a requested argument or materialized pin become an observation', () => {
+    const record = genericRecord();
+    const before = JSON.stringify(record);
+    const observation = normalizeRuntimeObservation({
+      record,
+      envelope: { provider: 'codex', observedAt: OBSERVED_AT, entries: [] },
+    });
+    expect(observation).toEqual({ status: 'not-reported' });
+    expect(JSON.stringify(record)).toBe(before);
+    const serialized = JSON.stringify(observation);
+    for (const requested of [
+      'gpt-5.6-sol',
+      'oat-phase-implementer-gpt-5-6-sol-high',
+      'priority',
+      'high',
+    ]) {
+      expect(serialized).not.toContain(requested);
+    }
+  });
+
+  it('stores no prompt, message, or transcript body from the entries', () => {
+    const observation = normalizeRuntimeObservation({
+      record: genericRecord(),
+      envelope: {
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: [
+          {
+            type: 'session_meta',
+            payload: {
+              id: 'sess-root',
+              instructions: 'SECRET-SYSTEM-PROMPT',
+              role: 'oat-phase-implementer',
+            },
+          },
+          {
+            type: 'response_item',
+            payload: { content: 'SECRET-USER-MESSAGE' },
+          },
+          { type: 'turn_context', payload: { model: 'gpt-5.6-sol' } },
+        ],
+      },
+    });
+    const serialized = JSON.stringify(observation);
+    expect(serialized).not.toContain('SECRET-SYSTEM-PROMPT');
+    expect(serialized).not.toContain('SECRET-USER-MESSAGE');
+    expect(observation).toMatchObject({ status: 'reported' });
+  });
+});

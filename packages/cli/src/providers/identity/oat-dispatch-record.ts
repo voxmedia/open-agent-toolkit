@@ -372,12 +372,46 @@ export interface ObservedRuntimeMetadata {
 /**
  * The immutable configured invocation an observation is compared against. It is
  * read-only input to the comparison and is never written into an observation.
+ *
+ * An axis may carry several equally authoritative configured spellings — a
+ * canonical role name and the materialized native selector that expresses it,
+ * for example. Observing any one of them is agreement; treating the alternate
+ * spelling as disagreement would manufacture a false mismatch.
  */
+export type ConfiguredObservationAxis =
+  | string
+  | readonly string[]
+  | null
+  | undefined;
+
 export interface ConfiguredInvocationForObservation {
-  role?: string | null;
-  model?: string | null;
-  effort?: string | null;
-  serviceTier?: string | null;
+  role?: ConfiguredObservationAxis;
+  model?: ConfiguredObservationAxis;
+  effort?: ConfiguredObservationAxis;
+  serviceTier?: ConfiguredObservationAxis;
+}
+
+/** The literal an axis carries when the provider exposes no selectable value. */
+export const NOT_EXPOSED_OBSERVATION_VALUE = 'not-exposed';
+
+/**
+ * Project the record's immutable configured selection axes for comparison.
+ *
+ * This is a read-only projection: it never mutates the record, and its output
+ * is only ever compared against, never copied into, an observation.
+ */
+export function configuredInvocationForObservation(
+  record: GenericDispatchRecord,
+): ConfiguredInvocationForObservation {
+  const roles = [record.role_name, record.role_selector].filter(
+    (value): value is string => typeof value === 'string' && value !== '',
+  );
+  return {
+    role: [...new Set(roles)],
+    model: record.model_selector,
+    effort: record.effort_selector,
+    serviceTier: record.service_tier_selector ?? null,
+  };
 }
 
 export type RuntimeObservationMatch =
@@ -412,6 +446,13 @@ function comparableValue(value: string | null | undefined): string | null {
     : trimmed.toLowerCase();
 }
 
+function comparableValues(axis: ConfiguredObservationAxis): string[] {
+  const values = typeof axis === 'string' ? [axis] : (axis ?? []);
+  return values
+    .map(comparableValue)
+    .filter((value): value is string => value !== null);
+}
+
 /**
  * Compare observed metadata with the configured invocation.
  *
@@ -428,10 +469,10 @@ export function compareObservedRuntimeMetadata(
   let mismatched = false;
   for (const axis of COMPARED_OBSERVATION_AXES) {
     const observed = comparableValue(metadata[axis]);
-    const expected = comparableValue(configured?.[axis]);
-    if (observed === null || expected === null) continue;
+    const expected = comparableValues(configured?.[axis]);
+    if (observed === null || expected.length === 0) continue;
     compared += 1;
-    if (observed !== expected) mismatched = true;
+    if (!expected.includes(observed)) mismatched = true;
   }
   if (compared === 0) return 'not-comparable';
   return mismatched ? 'mismatching' : 'matching';

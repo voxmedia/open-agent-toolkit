@@ -7,6 +7,7 @@ import {
   augmentDispatchRecord,
   buildRuntimeObservation,
   compareObservedRuntimeMetadata,
+  configuredInvocationForObservation,
   IMMUTABLE_FALLBACK_CONTROL_FIELDS,
   MUTABLE_FALLBACK_CONTROL_FIELDS,
   parsePersistedOatDispatchRecord,
@@ -919,5 +920,56 @@ describe('runtime observation construction', () => {
         },
       }),
     ).toThrow();
+  });
+});
+
+describe('configuredInvocationForObservation', () => {
+  it('projects only the immutable configured selection axes', () => {
+    expect(configuredInvocationForObservation(genericRecord())).toEqual({
+      role: ['oat-phase-implementer', 'oat-phase-implementer-gpt-5-6-sol-high'],
+      model: 'gpt-5.6-sol',
+      effort: 'high',
+      serviceTier: 'priority',
+    });
+  });
+
+  it('reports an absent selector as null rather than inventing one', () => {
+    expect(
+      configuredInvocationForObservation(
+        genericRecord({
+          role_selector: null,
+          model_selector: null,
+          effort_selector: null,
+          service_tier_selector: null,
+        }),
+      ),
+    ).toEqual({
+      role: ['oat-phase-implementer'],
+      model: null,
+      effort: null,
+      serviceTier: null,
+    });
+  });
+
+  it('matches an observation against any configured spelling of an axis', () => {
+    const configured = configuredInvocationForObservation(genericRecord());
+    expect(
+      compareObservedRuntimeMetadata(
+        { role: 'oat-phase-implementer-gpt-5-6-sol-high' },
+        configured,
+      ),
+    ).toBe('matching');
+    expect(
+      compareObservedRuntimeMetadata(
+        { role: 'oat-phase-implementer' },
+        configured,
+      ),
+    ).toBe('matching');
+    expect(
+      compareObservedRuntimeMetadata({ role: 'oat-reviewer' }, configured),
+    ).toBe('mismatching');
+    expect(
+      compareObservedRuntimeMetadata({ role: 'anything' }, { role: [] }),
+    ).toBe('not-comparable');
   });
 });
