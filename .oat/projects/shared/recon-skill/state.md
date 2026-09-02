@@ -1,10 +1,7 @@
 ---
-oat_current_task: null
+oat_current_task: prev4-t01
 oat_last_commit: 79f344ce97b15037b0a09d5a066bc928b7393ec8
-oat_blockers:
-  - task_id: final-review
-    reason: fresh final review found three Important and one Medium correctness gaps requiring review-receive and bounded fixes
-    since: 2026-09-02
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T12:11:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T12:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -97,7 +94,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation tasks complete / final review fixes required
+**Status:** Revision 4 review fixes ready
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-01
 
@@ -106,9 +103,10 @@ oat_project_recap:
 All 23 implementation tasks are complete. The Phase 5 independent review passed
 the configured Critical/Important threshold with two recorded Medium findings.
 The fresh final review completed on the exact Phase 5 implementation basis and
-found three Important and one Medium correctness gaps. Review receive, bounded
-fixes, and fresh final re-review are required before the configured exit gate or
-closeout can continue. PR #248 remains open.
+found three Important and one Medium correctness gaps. All four findings are
+now bounded Revision 4 tasks beginning at `prev4-t01`; the user authorized one
+fresh final re-review after implementation despite the existing review-cycle
+count. PR #248 remains open.
 
 ## Artifacts
 
@@ -212,8 +210,7 @@ closeout can continue. PR #248 remains open.
 - ✓ All six Phase 5 tasks and one bounded recovery attempt completed
 - ✓ Phase 5 review passed the Critical/Important threshold with two recorded
   Medium residual risks
-- ! Fresh final review found three Important and one Medium findings; review
-  receive and bounded fixes are required
+- ⧗ Revision 4 tasks `prev4-t01` through `prev4-t04` ready for implementation
 
 ## Blockers
 

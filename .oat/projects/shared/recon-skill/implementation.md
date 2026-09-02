@@ -1,12 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: final-review
-    reason: fresh final review found three Important and one Medium correctness gaps requiring review-receive and bounded fixes
-    since: 2026-09-02
-oat_last_updated: 2026-09-01
-oat_current_task_id: null
+oat_blockers: []
+oat_last_updated: 2026-09-02
+oat_current_task_id: prev4-t01
 oat_generated: false
 oat_template: false
 ---
@@ -31,8 +28,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev2 | passed | 3     | 3/3       |
 | Phase p-rev3 | passed | 1     | 1/1       |
 | Phase 5      | passed | 6     | 6/6       |
+| Phase p-rev4 | active | 4     | 0/4       |
 
-**Total:** 23/23 tasks completed
+**Total:** 23/27 tasks completed
 
 ## Task Status
 
@@ -99,6 +97,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | p05-t05 | completed | `fc21fa920` |
 | p05-t06 | completed | `ac8d8273e` |
 
+### Phase p-rev4: Revision 4 — Final Packet Assurance Corrections
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev4-t01 | pending | —      |
+| prev4-t02 | pending | —      |
+| prev4-t03 | pending | —      |
+| prev4-t04 | pending | —      |
+
 ## Remote Review Received
 
 - **Date:** 2026-09-01
@@ -112,6 +119,19 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`
 - **Provenance:** The source Bugbot events lack OAT marker provenance; ledger
   lineage fields remain unknown rather than using the current PR head.
+
+## Final Review Received: Revision 4
+
+- **Date:** 2026-09-02
+- **Artifact:** `reviews/archived/final-review-2026-09-02T121146Z.md`
+- **Findings:** 0 Critical, 3 Important, 1 Medium, 0 Minor
+- **New tasks:** `prev4-t01`, `prev4-t02`, `prev4-t03`, `prev4-t04`
+- **Disposition:** all findings converted; no deferrals or dismissals
+- **Cycle override:** the user explicitly authorized one fresh final re-review
+  after these tasks despite the standard final-scope three-cycle cap (8
+  standard final artifacts currently recorded)
+- **Next:** execute Revision 4 through `oat-project-implement`, then run the one
+  authorized fresh final review
 
 ## Orchestration Runs
 

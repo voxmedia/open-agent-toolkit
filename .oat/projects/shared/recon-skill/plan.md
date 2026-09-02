@@ -1356,6 +1356,148 @@ Run the recon suite and project verification commands, then commit with:
 git commit -m "fix(p05-t06): scan array strings in review briefs"
 ```
 
+## Phase p-rev4: Revision 4 — Final Packet Assurance Corrections
+
+Source: `reviews/archived/final-review-2026-09-02T121146Z.md`
+(2026-09-02). The user explicitly authorized conversion of all findings and one
+fresh final re-review despite the standard final-scope review-cycle cap.
+
+### Task prev4-t01: (review) Bind incorporated evidence to exact claims and final validation
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Reproduce the persisted boundary failures**
+
+Add a two-claim review with incorporated evidence and prove the current
+reconciler associates it with every disposition claim and the final validated
+packet rejects the resulting ledger with brief/continuity mismatches.
+
+**Step 2: Implement the minimum exact association contract**
+
+Add one closed typed claim/evidence association to review results. Reconcile
+only exact incorporated associations, validate only those additions against the
+immutable pre-review claim and brief, and preserve byte continuity for every
+unaffected evidence link. Do not introduce a generalized evidence graph.
+
+**Step 3: Verify end-to-end controls**
+
+Run persisted reconcile-then-`compileValidatedRun` positive coverage plus
+cross-claim, duplicate/conflicting, unincorporated, invented-link, and
+no-new-evidence negative controls.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev4-t01): bind incorporated evidence exactly"
+```
+
+### Task prev4-t02: (review) Enforce terminal receipt chronology
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Reproduce impossible completion order**
+
+Rebind an otherwise valid completed receipt with `completedAt` before
+`acceptedAt` and prove the candidate remains publishable.
+
+**Step 2: Complete the existing causal check**
+
+Parse the terminal completion timestamp at the normalized packet boundary and
+enforce the declared receipt sequence through `acceptedAt <= completedAt`,
+without adding a new receipt lifecycle abstraction.
+
+**Step 3: Verify chronology controls**
+
+Prove completion-before-acceptance fails closed and valid equal/after boundaries
+pass according to the existing timestamp precision contract.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev4-t02): enforce receipt completion chronology"
+```
+
+### Task prev4-t03: (review) Bind packet promotion to rendered bytes
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+
+**Step 1: Reproduce temporary identity drift**
+
+At the promotion boundary, replace the temporary path after hashing and prove
+the renderer currently reports success while the published bytes differ from
+the returned digest.
+
+**Step 2: Preserve rendered-object identity through promotion**
+
+Use an unpredictable exclusive temporary file, retain and verify its identity
+through write, hash, and atomic promotion, and verify the promoted target
+matches the returned digest before reporting success. On identity drift, leave
+the last-known-good packet intact.
+
+**Step 3: Verify promotion controls**
+
+Add a replacement negative control and normal atomic-replacement control, then
+run the complete renderer and recon suites.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev4-t03): bind packet promotion identity"
+```
+
+### Task prev4-t04: (review) Align the last-known-good packet policy
+
+**Files:**
+
+- Modify: `.agents/skills/recon/SKILL.md`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+- Modify: `.oat/projects/shared/recon-skill/design.md`
+
+**Step 1: Reproduce the documented sequence**
+
+Execute the exact skill-directed validate-then-render sequence with an existing
+valid packet and an invalid new candidate; prove standalone prevalidation
+removes the prior consumer entry point before renderer preservation can run.
+
+**Step 2: Establish one authoritative preservation policy**
+
+Make candidate prevalidation non-destructive and keep the previous validated
+packet until a new candidate promotes successfully. Align the skill, validator,
+packet contract, and design with that last-known-good policy; do not add another
+publication state machine or persisted artifact.
+
+**Step 3: Verify the shipped workflow**
+
+Cover the documented invalid-candidate sequence, successful replacement,
+structural failure without any prior packet, and direct renderer controls.
+Because this task edits canonical `recon/SKILL.md`, preserve the existing single
+PR-scoped version bump relative to `origin/main`; do not bump it a second time.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev4-t04): align packet preservation workflow"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
@@ -1373,7 +1515,7 @@ git commit -m "fix(p05-t06): scan array strings in review briefs"
 | final          | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
-| final          | code     | received        | 2026-09-02 | `reviews/final-review-2026-09-02T121146Z.md`                           | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
+| final          | code     | fixes_added     | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
@@ -1416,8 +1558,11 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Phase 5: 6 tasks — correct remote-review findings in reconciliation,
   publication safety, claim genesis, portable dependency binding, evidence
   retention, and selective-blind scanning.
+- Revision 4: 4 tasks — bind incorporated evidence, enforce terminal receipt
+  chronology, preserve rendered-object identity through promotion, and align
+  the last-known-good packet policy.
 
-**Total: 23 tasks**
+**Total: 27 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
