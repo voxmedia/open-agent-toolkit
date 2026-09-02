@@ -162,6 +162,15 @@ export interface LinearMutationVerificationResult {
   retryAllowed: false;
 }
 
+export interface LinearDuplicateSearchPlanInput {
+  context: ProviderContext;
+  hostCapability: LinearHostCapabilityObservation;
+  provenanceToken: string;
+  reservedBindingId: string;
+  historicalIdentifiers: string[];
+  maxResults: number;
+}
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[A-Z][A-Z0-9]*-[1-9][0-9]*$/;
@@ -776,6 +785,60 @@ export function verifyLinearMutationObservation(
   );
 }
 
+export function planLinearDuplicateSearch(
+  input: LinearDuplicateSearchPlanInput,
+): SemanticAction {
+  const capability = validateLinearHostCapability(
+    'search-duplicates',
+    input.context,
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('Linear duplicate search capability is unavailable.');
+  }
+  if (
+    !input.provenanceToken ||
+    input.provenanceToken.length > 512 ||
+    !input.reservedBindingId ||
+    input.reservedBindingId.length > 128 ||
+    !Number.isInteger(input.maxResults) ||
+    input.maxResults < 1 ||
+    input.maxResults > 100 ||
+    input.historicalIdentifiers.length > 64 ||
+    new Set(input.historicalIdentifiers).size !==
+      input.historicalIdentifiers.length ||
+    input.historicalIdentifiers.some(
+      (identifier) => !IDENTIFIER.test(identifier),
+    )
+  ) {
+    throw new Error('Linear duplicate search bounds are invalid.');
+  }
+  const query = {
+    provenanceToken: input.provenanceToken,
+    reservedBindingId: input.reservedBindingId,
+    historicalIdentifiers: [...input.historicalIdentifiers],
+    workspaceId: input.context.workspaceId!,
+    teamId: input.context.teamId!,
+  };
+  return {
+    provider: 'linear',
+    operation: 'search-duplicates',
+    context: input.context,
+    intent: {
+      query,
+      queryDigest: semanticDigest(query),
+      resultContract: {
+        maxResults: input.maxResults,
+        classifications: ['no-match', 'one-match', 'ambiguous'],
+        requireStableUuid: true,
+        requireExactContext: true,
+        matchStatus: 'evidence-until-identity-and-context-verified',
+      },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    },
+  };
+}
+
 export const linearAdapter: ProviderAdapter = {
   provider: 'linear',
   normalize: normalizeLinearIssueObservation,
@@ -798,6 +861,16 @@ export const linearAdapter: ProviderAdapter = {
       }
       return planLinearDiscussionRead(
         input as unknown as LinearDiscussionReadPlanInput,
+      );
+    }
+    if (operation === 'search-duplicates') {
+      if (!isCompleteLinearDuplicateSearchInput(input)) {
+        throw new Error(
+          'Linear adapter requires complete duplicate search input.',
+        );
+      }
+      return planLinearDuplicateSearch(
+        input as unknown as LinearDuplicateSearchPlanInput,
       );
     }
     throw new Error(`Linear adapter does not support '${operation}' yet.`);
@@ -1168,5 +1241,18 @@ function isCompleteLinearDiscussionInput(
     typeof input.stableId === 'string' &&
     Number.isInteger(input.limit) &&
     (input.cursor === null || typeof input.cursor === 'string')
+  );
+}
+
+function isCompleteLinearDuplicateSearchInput(
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    isRecord(input.context) &&
+    isRecord(input.hostCapability) &&
+    typeof input.provenanceToken === 'string' &&
+    typeof input.reservedBindingId === 'string' &&
+    Array.isArray(input.historicalIdentifiers) &&
+    Number.isInteger(input.maxResults)
   );
 }

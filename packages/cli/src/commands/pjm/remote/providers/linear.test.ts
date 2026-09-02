@@ -6,6 +6,7 @@ import {
   classifyLinearReadObservation,
   normalizeLinearIssueObservation,
   parseLinearIssueReference,
+  planLinearDuplicateSearch,
   planLinearMutation,
   planLinearDiscussionRead,
   planLinearRead,
@@ -66,6 +67,7 @@ export const linearCapability: LinearHostCapabilityObservation = {
     'update',
     'transition',
     'annotate',
+    'search-duplicates',
   ],
   observableFields: [
     'stable-identity',
@@ -598,5 +600,65 @@ describe('Linear mutation observations', () => {
         },
       }).classification,
     ).toBe('uncertain');
+  });
+});
+
+describe('Linear duplicate-search intents', () => {
+  it('plans a bounded provenance and historical-identifier search', () => {
+    const action = planLinearDuplicateSearch({
+      context: linearContext,
+      hostCapability: linearCapability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_linear_42',
+      historicalIdentifiers: ['ALPHA-42', 'OLD-19'],
+      maxResults: 10,
+    });
+    expect(action).toMatchObject({
+      provider: 'linear',
+      operation: 'search-duplicates',
+      context: linearContext,
+      intent: {
+        query: {
+          provenanceToken: 'origin:local:item-42',
+          reservedBindingId: 'binding_linear_42',
+          historicalIdentifiers: ['ALPHA-42', 'OLD-19'],
+          workspaceId: 'workspace_01',
+          teamId: 'team_alpha',
+        },
+        resultContract: {
+          maxResults: 10,
+          requireStableUuid: true,
+          requireExactContext: true,
+        },
+      },
+    });
+    expect(action.intent).toHaveProperty('queryDigest');
+    expect(JSON.stringify(action)).not.toMatch(/graphql|mcp|toolName|command/i);
+  });
+
+  it('fails closed when search is unavailable or unbounded', () => {
+    const base = {
+      context: linearContext,
+      hostCapability: linearCapability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_linear_42',
+      historicalIdentifiers: ['ALPHA-42'],
+      maxResults: 10,
+    };
+    expect(() =>
+      planLinearDuplicateSearch({
+        ...base,
+        hostCapability: { ...linearCapability, operations: ['read'] },
+      }),
+    ).toThrow('unavailable');
+    expect(() =>
+      planLinearDuplicateSearch({ ...base, maxResults: 101 }),
+    ).toThrow('bounds');
+    expect(() =>
+      planLinearDuplicateSearch({
+        ...base,
+        historicalIdentifiers: ['ALPHA-42', 'ALPHA-42'],
+      }),
+    ).toThrow('bounds');
   });
 });

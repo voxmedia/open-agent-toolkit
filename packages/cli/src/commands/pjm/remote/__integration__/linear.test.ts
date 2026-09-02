@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   classifyLinearReadObservation,
   normalizeLinearIssueObservation,
+  planLinearDuplicateSearch,
   planLinearRead,
   type LinearHostCapabilityObservation,
 } from '../providers/linear';
@@ -26,7 +27,14 @@ const capability: LinearHostCapabilityObservation = {
   accountId: 'acct_linear',
   workspaceId: 'workspace_01',
   teamId: 'team_alpha',
-  operations: ['read', 'create', 'update', 'transition', 'annotate'],
+  operations: [
+    'read',
+    'create',
+    'update',
+    'transition',
+    'annotate',
+    'search-duplicates',
+  ],
   observableFields: [
     'stable-identity',
     'title',
@@ -200,5 +208,25 @@ describe('Linear remote lifecycle integration', () => {
     });
     expect(archived.classification).toBe('archived');
     expect(resumed.state).toBe('verified');
+  });
+
+  it('prepares duplicate recovery from exact provenance, aliases, and context', () => {
+    const action = planLinearDuplicateSearch({
+      context,
+      hostCapability: capability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_linear_42',
+      historicalIdentifiers: ['ALPHA-42', 'OLD-19'],
+      maxResults: 10,
+    });
+    expect(action).toMatchObject({
+      operation: 'search-duplicates',
+      intent: {
+        resultContract: {
+          requireStableUuid: true,
+          requireExactContext: true,
+        },
+      },
+    });
   });
 });
