@@ -308,7 +308,14 @@ const WRITER_LOCK_TIMEOUT_MS = 5000;
 /** A lock younger than this is never reclaimed, so a writer that has not yet
  * written its holder file is not mistaken for a crash. */
 const WRITER_LOCK_MIN_RECLAIM_MS = 1000;
-/** A lock older than this is reclaimed even when liveness cannot be decided. */
+/**
+ * Hard cap. A lock older than this is reclaimed unconditionally — including one
+ * whose holder is provably alive — because a dispatch write is a sub-second
+ * operation and a holder past this bound is hung rather than working. This is
+ * safe because the lock is not what protects the journal: the create-only
+ * revision compare-and-swap is, and it holds independently of any lock, so a
+ * wrongly reclaimed lock costs mutual exclusion but never correctness.
+ */
 const WRITER_LOCK_HARD_STALE_MS = 15 * 60 * 1000;
 
 const HOLDER_FILE = 'holder.json';
@@ -478,11 +485,12 @@ export async function withContainedWriterLock<T>(
     processStartedAt: processStartedAt(),
     acquiredAt: new Date().toISOString(),
   };
+  const held = await lstat(resolvedLock);
+  if (held.isSymbolicLink() || !held.isDirectory()) {
+    throw new Error(`Writer lock ${reportedLock} is not a real directory.`);
+  }
+  const lockIdentity = identityOf(held);
   try {
-    const held = await lstat(resolvedLock);
-    if (held.isSymbolicLink() || !held.isDirectory()) {
-      throw new Error(`Writer lock ${reportedLock} is not a real directory.`);
-    }
     await writeFile(
       join(resolvedLock, HOLDER_FILE),
       `${JSON.stringify(holder, null, 2)}\n`,
@@ -490,15 +498,39 @@ export async function withContainedWriterLock<T>(
     );
     return await run();
   } finally {
-    // Release only a lock this call still holds, so a lock already reclaimed
-    // and re-acquired by another writer is never removed from under it.
-    const current = await readWriterLockHolder(resolvedLock);
+    await releaseWriterLock(resolvedLock, lockIdentity, holder);
+  }
+}
+
+/**
+ * Release only a lock this call still provably holds. Both the directory
+ * identity captured at acquisition and the holder record must still match. A
+ * missing holder file counts as "not mine" — it is exactly the window in which
+ * a reclaiming writer has re-created the directory but not yet written its own
+ * record — so the replacement is left to the staleness policy rather than
+ * removed from under its new owner.
+ */
+async function releaseWriterLock(
+  lockPath: string,
+  identity: FileIdentity,
+  holder: WriterLockHolder,
+): Promise<void> {
+  try {
+    const current = await lstat(lockPath);
+    if (current.isSymbolicLink() || !current.isDirectory()) return;
+    if (!sameIdentity(identityOf(current), identity)) return;
+    const currentHolder = await readWriterLockHolder(lockPath);
     if (
-      current === null ||
-      (current.pid === holder.pid && current.acquiredAt === holder.acquiredAt)
+      currentHolder === null ||
+      currentHolder.hostId !== holder.hostId ||
+      currentHolder.pid !== holder.pid ||
+      currentHolder.acquiredAt !== holder.acquiredAt
     ) {
-      await rm(resolvedLock, { recursive: true, force: true });
+      return;
     }
+    await rm(lockPath, { recursive: true, force: true });
+  } catch {
+    // Nothing releasable remains.
   }
 }
 
@@ -618,6 +650,13 @@ async function publicationIsMisplaced(
  * this call created. A swapped directory pathname therefore strands the staged
  * file rather than deleting an unrelated one. Returns whether the staged data
  * was provably removed, so callers can report the outcome accurately.
+ *
+ * Precisely: this removes only the *inode* this call created, not only the
+ * *names* it created. A privileged process that hard-links the staged file into
+ * a directory it controls and then swaps the journal pathname at it can have
+ * that alias unlinked here. No data is destroyed — the inode stays linked from
+ * the real directory, and no pre-existing foreign file can ever match, since a
+ * distinct file has a distinct dev/ino pair.
  */
 async function removeStagedFile(
   tempPath: string,

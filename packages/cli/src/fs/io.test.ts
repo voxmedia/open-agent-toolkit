@@ -730,6 +730,36 @@ describe('fs/io', () => {
     await expect(lstat(lock)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('leaves a replacement lock alone when releasing its own', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+
+    await withContainedWriterLock(lock, root, async () => {
+      // Simulate another writer reclaiming mid-run: the directory is replaced,
+      // and its new owner has not yet written a holder record.
+      await rm(lock, { recursive: true, force: true });
+      await mkdir(lock);
+    });
+
+    const replacement = await lstat(lock);
+    expect(replacement.isDirectory()).toBe(true);
+  });
+
+  it('leaves a lock alone when its holder record was replaced', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+
+    await withContainedWriterLock(lock, root, async () => {
+      await writeFile(join(lock, 'holder.json'), holderJson(DEAD_PID), 'utf8');
+    });
+
+    await expect(
+      readFile(join(lock, 'holder.json'), 'utf8'),
+    ).resolves.toContain(`"pid":${DEAD_PID}`);
+  });
+
   it('ensureDir creates directory recursively', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
     tempDirs.push(root);
