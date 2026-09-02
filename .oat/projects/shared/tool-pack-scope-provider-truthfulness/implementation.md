@@ -1567,12 +1567,14 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 - `p07-t01` committed as `935a80a62`: Codex runtime identity metadata parsed
   from `session_meta`/`turn_context` only, classified by the `type`
-  discriminator so conversation payloads are never read, with child lineage
-  derived from declared `parent_id` links.
-- `p07-t02` committed as `480dc9e33`: Claude metadata parsing with
-  `not-exposed` for the unselectable native effort axis, Cursor preserved as
-  `not-reported`, and one normalizer comparing observations against the
-  immutable configured invocation. Non-comparable values are excluded from
+  discriminator so conversation payloads are never read. **Superseded** — the
+  `parent_id` lineage this shipped does not exist in real rollouts; see "Live
+  Verification and Its Findings" below.
+- `p07-t02` committed as `480dc9e33`: Claude metadata parsing, Cursor
+  preserved as `not-reported`, and one normalizer comparing observations
+  against the immutable configured invocation. **Superseded** — the
+  `not-exposed` effort claim this shipped was false against real transcripts,
+  and the parsed format does not occur on disk; see below. Non-comparable values are excluded from
   comparison rather than compared as literals, so zero comparable axes yields
   `not-comparable` and never `matching`.
 - `p07-t03` committed as `a6a131e80`: recorder and command render `configured`
@@ -1585,7 +1587,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   review-fix rounds, with no regression. Independently re-verified by the
   orchestrator at 664/664, exit 0.
 - Live-verification and review fixes landed across `715ace3cd..8a0032294`
-  (8 commits): real-shape Codex lineage, boundary-derived observation `match`
+  (6 commits): real-shape Codex lineage, boundary-derived observation `match`
   with provider binding, allowlist projection of raw provider metadata,
   `comparedAxes` qualifying every match, and the Claude on-disk parser.
 
@@ -1677,6 +1679,26 @@ Corrections, all verified against real artifacts:
   with their corpus denominator, matching how the Claude stream-json path was
   labelled, and the docs claims about a Codex service-tier axis were
   corrected.
+
+### Review Round 3
+
+- Artifact: `reviews/p07-review-2026-09-02T234824Z.md`; **0 Critical**, 2
+  Important, 2 Medium, 4 Minor. The reviewer's verdict is that the
+  implementation is ready and nothing requires redesign.
+- Full-corpus sweep through the production input path, recomputed
+  independently: Codex 1,596 files 0 refused (1,538 reported); Claude 2,731
+  files 0 refused (2,657 reported). Round 2's 245-of-250 Claude refusals are
+  gone with no Codex regression. A 316 KB real transcript produced a
+  1,956-byte record with zero hits across 18 forbidden keys.
+- The neutral-projection guard test was proven load-bearing: adding
+  `sessionId` to `OBSERVED_RUNTIME_FACT_KEYS` failed both the test and `tsc`.
+- Phase 6 contract intact with 0-byte diffs on all three protected files; the
+  `entries: null` exclusion was probed five ways and holds.
+- Remaining code work: the declared request-correlation check fell off the
+  production path in the round-2 single-parse change (no real-world trigger —
+  `session_meta.request_id` is 0 of 2,735), and the envelope byte bound
+  serializes the whole envelope before bounding, which both performs the
+  unbounded work it prevents and reads `content`.
 
 ### Open Items for p07-t04
 

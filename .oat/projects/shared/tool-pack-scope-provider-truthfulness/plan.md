@@ -1765,7 +1765,9 @@ gates exit 0 at the final reviewed head.
 | p06    | code     | fixes_completed | 2026-09-02 | reviews/p06-review-2026-09-02T191958Z.md                      | bd39617209c97427ed2f46257fd0a6eee33a0e7f | manual     | operator-directed-fix           |
 | p06    | code     | fixes_completed | 2026-09-02 | reviews/p06-review-2026-09-02T200551Z.md                      | 656c49ec735bbb6b9f36b0e1d86ee77987579153 | manual     | -                               |
 | p06    | code     | passed          | 2026-09-02 | reviews/p06-review-2026-09-02T203606Z.md                      | 36511be140685eb8dd6f874616c713cf0c529274 | manual     | -                               |
-| p07    | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
+| p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T212839Z.md                      | 715ace3cd0928e096e5d7c57bdb2c8c699128d17 | manual     | -                               |
+| p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T230419Z.md                      | 27b97852848d0229fe7b0c722242c85bfbe353aa | manual     | live-artifact-mandate           |
+| p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T234824Z.md                      | e7d99d3012c4f49a008bf45e9538dc640f18a348 | manual     | -                               |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                               |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -                                        | -          | -                               |

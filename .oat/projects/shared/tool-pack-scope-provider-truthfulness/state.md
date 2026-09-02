@@ -1,6 +1,6 @@
 ---
 oat_current_task: p07-t04
-oat_last_commit: 8a00322947af68fc637de0e52e3e0104bdd7e8b5
+oat_last_commit: 51e5f825cbba26e2e4c410aa470b3f5e346c7f2d
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -187,6 +187,10 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 - ✓ Live nested Codex dispatch disproved the Codex lineage parser
 - ✓ Real-shape Codex and Claude parsers landed at `8a0032294`
 - ✓ Forged-observation and allowlist-projection review fixes landed
+- ⧗ Review round 2 blocked with 1 Critical: the Claude path aborted every write
+- ✓ Neutral six-key projection removed the provider-key collision class
+- ✓ Full-corpus sweeps: Codex 1,596 and Claude 2,731 files, 0 refused
+- ✓ Review round 3 returned 0 Critical; implementation judged ready
 
 ## Blockers
 
