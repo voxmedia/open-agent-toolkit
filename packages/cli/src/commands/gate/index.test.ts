@@ -25,6 +25,7 @@ import {
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
 import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
 import { resolveAssetsRoot } from '@fs/assets';
+import { ValidationStore } from '@review/validation-store';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -35,7 +36,12 @@ import type {
 } from './activity-probes';
 import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { extractStructuredRefusal } from './child-process';
-import { createGateCommand, selectExecTarget } from './index';
+import {
+  cleanupPreStartRejectedGateRun,
+  createGateCommand,
+  selectExecTarget,
+} from './index';
+import { resolveReviewPlanFailure as resolveReviewPlanFailureFromDisk } from './review-plan-failure';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
 interface HarnessOptions {
@@ -45,6 +51,11 @@ interface HarnessOptions {
   createGateActivityProbe?: () => Promise<GateActivityProbe | null>;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
+  deletePreStartRejectedGateRun?: (
+    gateRunId: string,
+    launchAttemptId: string,
+  ) => Promise<void>;
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: (
     path: string,
@@ -157,6 +168,10 @@ function createHarness(options: HarnessOptions): {
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
       : {}),
+    resolveReviewPlanFailure:
+      options.resolveReviewPlanFailure ?? (async () => null),
+    deletePreStartRejectedGateRun:
+      options.deletePreStartRejectedGateRun ?? (async () => {}),
     ...(options.writeGateRunMarker
       ? { writeGateRunMarker: options.writeGateRunMarker }
       : {}),
@@ -381,6 +396,8 @@ async function runReviewGate(options: {
   processEnv?: NodeJS.ProcessEnv;
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
+  resolveReviewPlanFailure?: typeof resolveReviewPlanFailureFromDisk;
+  deletePreStartRejectedGateRun?: HarnessOptions['deletePreStartRejectedGateRun'];
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
@@ -397,6 +414,8 @@ async function runReviewGate(options: {
     processEnv: options.processEnv,
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
+    resolveReviewPlanFailure: options.resolveReviewPlanFailure,
+    deletePreStartRejectedGateRun: options.deletePreStartRejectedGateRun,
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
@@ -3838,6 +3857,63 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('emits accounting-invalid completion before artifact discovery', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    const resolveReviewPlanFailure = vi.fn(
+      async (input: { gateRunId: string; launchAttemptId: string }) => ({
+        status: 'review_failed' as const,
+        failure: {
+          kind: 'review_complete_accounting_invalid' as const,
+          ...input,
+          validationRunId: 'validation-run',
+          validationAttempts: 3,
+          repairAttempts: 2,
+          diagnosticPath: '/private/diagnostic.json',
+        },
+        artifactPath: null,
+        receiveEligible: false as const,
+        handoff: null,
+      }),
+    );
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      resolveReviewPlanFailure,
+    });
+
+    expect(resolveReviewPlanFailure).toHaveBeenCalledWith({
+      gateRunId: expect.any(String),
+      launchAttemptId: expect.any(String),
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      runId: expect.any(String),
+      outcome: 'review_complete_accounting_invalid',
+      message: 'Review completed without valid accounting.',
+      failure: {
+        kind: 'review_complete_accounting_invalid',
+        gateRunId: expect.any(String),
+        launchAttemptId: expect.any(String),
+        validationRunId: 'validation-run',
+        validationAttempts: 3,
+        repairAttempts: 2,
+        diagnosticPath: '/private/diagnostic.json',
+      },
+      artifactPath: null,
+      receiveEligible: false,
+      handoff: null,
+    });
+    expect(capture.jsonPayloads[0]?.failure).toMatchObject({
+      gateRunId: capture.jsonPayloads[0]?.runId,
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('runs gate review through an explicit target, annotates the prompt, and blocks on Important findings', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -5189,6 +5265,7 @@ describe('oat gate', () => {
       OAT_GATE_HEADLESS: '1',
       OAT_NON_INTERACTIVE: '1',
       OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+      OAT_GATE_LAUNCH_ATTEMPT_ID: expect.stringMatching(/^[0-9a-f-]{36}$/),
       OAT_GATE_RUNTIME: promptRuntime,
       OAT_INVOCATION_MODEL: promptModel,
       OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
@@ -5397,14 +5474,20 @@ describe('oat gate', () => {
         executeExitCode: exitCode,
         executeOutput: 'diagnostic\nOAT_GATE_REFUSAL: cannot await reviewer\n',
       });
+      const deletePreStartRejectedGateRun = vi.fn(async () => {});
 
       const capture = await runReviewGate({
         root,
         home,
         runProcess: runner.runProcess,
+        deletePreStartRejectedGateRun,
         args: ['--target', 'codex-default', 'Review'],
       });
 
+      expect(deletePreStartRejectedGateRun).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+      );
       expect(capture.jsonPayloads[0]).toMatchObject({
         status: 'review_failed',
         outcome: 'review_did_not_complete',
@@ -5414,6 +5497,77 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     },
   );
+
+  it('preserves an out-of-contract refusal after accepted-handle binding', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: 'OAT_GATE_REFUSAL: refusal after acceptance\n',
+    });
+    const deletePreStartRejectedGateRun = vi.fn(async () => {
+      throw new Error(
+        'accepted gate launch attempt cannot be replaced or deleted',
+      );
+    });
+    const diagnostics: string[] = [];
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      deletePreStartRejectedGateRun,
+      writeDiagnostic: (message) => diagnostics.push(message),
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(deletePreStartRejectedGateRun).toHaveBeenCalledWith(
+      capture.jsonPayloads[0]?.runId,
+      expect.any(String),
+    );
+    expect(capture.jsonPayloads).toHaveLength(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      refusal: 'refusal after acceptance',
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    expect(diagnostics).toContainEqual(
+      expect.stringContaining('"type":"gate-refusal-cleanup"'),
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('treats accepted pre-start cleanup as a deliberate no-op', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-gate-validation-'));
+    tempDirs.push(root);
+    const deleteAttempt = vi
+      .spyOn(ValidationStore.prototype, 'deletePreStartRejectedGateRun')
+      .mockRejectedValue(
+        new Error('accepted gate launch attempt cannot be replaced or deleted'),
+      );
+
+    try {
+      await expect(
+        cleanupPreStartRejectedGateRun('accepted-gate', 'accepted-attempt', {
+          OAT_REVIEW_AUTHORITY_KEY: Buffer.alloc(32, 17).toString('base64url'),
+          OAT_REVIEW_VALIDATION_ROOT: root,
+        }),
+      ).resolves.toBeUndefined();
+      expect(deleteAttempt).toHaveBeenCalledWith(
+        'accepted-gate',
+        'accepted-attempt',
+      );
+    } finally {
+      deleteAttempt.mockRestore();
+    }
+  });
+
+  it('tolerates legacy pre-start refusal cleanup without validation state', async () => {
+    await expect(
+      cleanupPreStartRejectedGateRun('legacy-gate', 'legacy-attempt', {}),
+    ).resolves.toBeUndefined();
+  });
 
   it('uses the first strict line-start refusal and ignores mid-line tokens', async () => {
     const { root, home } = await setup();
@@ -6184,6 +6338,42 @@ describe('oat gate', () => {
     expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: expected });
   });
 
+  it.each(['final', 'p01', 'p01-p03', 'p01-t02', 'plan', 'design'])(
+    'uses the 20-minute artifact default for %s',
+    async (scope) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner();
+      const markers: Record<string, unknown>[] = [];
+      await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        writeGateRunMarker: async (_path, marker) => {
+          markers.push(marker);
+          return true;
+        },
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'artifact',
+          '--review-scope',
+          scope,
+          'Review',
+        ],
+      });
+      expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_200_000 });
+      expect(markers).toEqual([
+        expect.objectContaining({
+          budgetMs: 1_200_000,
+          budgetSource: 'scope-default',
+        }),
+      ]);
+    },
+  );
+
   it('uses config before env and env before scope defaults', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -6263,7 +6453,7 @@ describe('oat gate', () => {
       expect.stringContaining('OAT_GATE_EXEC_TIMEOUT_MS'),
     ]);
     expect(capture.info).toContain(
-      'Running gate target codex-default (codex); timeout=900000ms (source=scope-default).',
+      'Running gate target codex-default (codex); timeout=1200000ms (source=scope-default).',
     );
   });
 

@@ -66,6 +66,11 @@ import {
   type IdentityRecord,
 } from '@providers/identity/provenance';
 import { parseDispatchStamps } from '@providers/identity/stamp';
+import { ValidationStore } from '@review/validation-store';
+import {
+  launcherValidationStoreAuthority,
+  launcherValidationStoreRoot,
+} from '@review/validation-store-authority';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -86,6 +91,10 @@ import {
   type ProcessRunResult,
 } from './child-process';
 import { validateConfiguredGateCommand } from './configured-command';
+import {
+  type ReviewAccountingInvalidFailure,
+  resolveReviewPlanFailure,
+} from './review-plan-failure';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -122,6 +131,11 @@ interface GateCommandDependencies {
     options: ProcessRunOptions,
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
+  resolveReviewPlanFailure: typeof resolveReviewPlanFailure;
+  deletePreStartRejectedGateRun: (
+    gateRunId: string,
+    launchAttemptId: string,
+  ) => Promise<void>;
   appendProjectLog: typeof appendProjectLog;
   processEnv: NodeJS.ProcessEnv;
   writeGateRunMarker: (
@@ -196,6 +210,7 @@ interface GateTimeoutResolution {
 
 interface GateRunMarker {
   runId: string;
+  launchAttemptId: string;
   targetId: string;
   runtime: string;
   reviewType: string | null;
@@ -297,6 +312,7 @@ interface GateDiversityMetadata {
 
 interface GateInvocationMetadata {
   readonly runId: string;
+  readonly launchAttemptId: string;
   readonly targetId: string;
   readonly runtime: string;
   readonly model: string | 'provider-default' | 'unknown';
@@ -372,12 +388,46 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readGateRouteReceipt,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
+  resolveReviewPlanFailure,
+  deletePreStartRejectedGateRun: (gateRunId, launchAttemptId) =>
+    cleanupPreStartRejectedGateRun(gateRunId, launchAttemptId),
   appendProjectLog,
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
   writeDiagnostic: (message) => process.stderr.write(message),
 };
+
+export async function cleanupPreStartRejectedGateRun(
+  gateRunId: string,
+  launchAttemptId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): Promise<void> {
+  try {
+    const store = new ValidationStore(
+      launcherValidationStoreRoot({ environment }),
+      launcherValidationStoreAuthority(environment),
+    );
+    await store.deletePreStartRejectedGateRun(gateRunId, launchAttemptId);
+  } catch (error) {
+    const missing =
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT';
+    const legacyWithoutAuthority =
+      error instanceof Error &&
+      error.message.includes(
+        'OAT_REVIEW_AUTHORITY_KEY is required for review state authority',
+      );
+    const acceptedAttempt =
+      error instanceof Error &&
+      error.message.includes(
+        'accepted gate launch attempt cannot be replaced or deleted',
+      );
+    if (!missing && !legacyWithoutAuthority && !acceptedAttempt) throw error;
+  }
+}
 
 const VALID_ON_FAILURE: readonly GateOnFailure[] = ['block', 'prompt', 'warn'];
 const VALID_WRITE_LAYERS: readonly GateWriteLayer[] = [
@@ -475,6 +525,7 @@ function normalizedTargetInvocation(
 
 function createGateInvocationMetadata(
   runId: string,
+  launchAttemptId: string,
   selected: SelectedExecTarget,
 ): GateInvocationMetadata {
   const configuredInvocation = normalizedTargetInvocation(selected.target);
@@ -492,6 +543,7 @@ function createGateInvocationMetadata(
 
   return Object.freeze({
     runId,
+    launchAttemptId,
     targetId: selected.id,
     runtime: selected.target.runtime,
     ...configuredInvocation,
@@ -570,6 +622,7 @@ function gateInvocationPromptContext(
   const frontmatter = YAML.stringify({
     oat_gate_headless: true,
     oat_gate_run_id: invocation.runId,
+    oat_gate_launch_attempt_id: invocation.launchAttemptId,
     oat_gate_target: invocation.targetId,
     oat_gate_runtime: invocation.runtime,
     oat_invocation_model: invocation.model,
@@ -836,7 +889,7 @@ function resolveGateExecTimeout(input: {
 
   const scope = input.reviewScope?.trim().toLowerCase() ?? '';
   if (reviewType === 'artifact') {
-    return { timeoutMs: 900_000, source: 'scope-default' };
+    return { timeoutMs: 1_200_000, source: 'scope-default' };
   }
   if (reviewType === 'code') {
     if (/^p\d+-t\d+$/.test(scope)) {
@@ -3157,6 +3210,7 @@ async function runReviewGate(
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   const runId = randomUUID();
+  const launchAttemptId = randomUUID();
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
   let branchLocalGateCli: BranchLocalGateCli | undefined;
@@ -3200,7 +3254,11 @@ async function runReviewGate(
       context,
       dependencies,
     );
-    const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const gateInvocation = createGateInvocationMetadata(
+      runId,
+      launchAttemptId,
+      selected,
+    );
     const rawPersisted = await readRawGateTimeoutLayers({
       repoRoot,
       userConfigDir,
@@ -3261,6 +3319,7 @@ async function runReviewGate(
       runMarkerPath,
       {
         runId,
+        launchAttemptId,
         targetId: selected.id,
         runtime: selected.target.runtime,
         reviewType: options.reviewType?.trim() || null,
@@ -3300,6 +3359,7 @@ async function runReviewGate(
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,
+          OAT_GATE_LAUNCH_ATTEMPT_ID: launchAttemptId,
           OAT_GATE_RUNTIME: gateInvocation.runtime,
           OAT_INVOCATION_MODEL: gateInvocation.model,
           OAT_GATE_CLI_PATH: branchLocalGateCli.cliPath,
@@ -3321,6 +3381,45 @@ async function runReviewGate(
         ...routeReceipt,
       })}\n`,
     );
+    let reviewPlanFailure: ReviewAccountingInvalidFailure | null;
+    try {
+      reviewPlanFailure = await dependencies.resolveReviewPlanFailure({
+        gateRunId: runId,
+        launchAttemptId,
+      });
+    } catch (error) {
+      if (
+        !(
+          error instanceof Error &&
+          error.message.includes(
+            'OAT_REVIEW_AUTHORITY_KEY is required for review state authority',
+          )
+        )
+      ) {
+        throw error;
+      }
+      reviewPlanFailure = null;
+    }
+    if (reviewPlanFailure !== null) {
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = 1;
+      }
+      if (context.json) {
+        context.logger.json({
+          ...reviewPlanFailure,
+          runId,
+          outcome: 'review_complete_accounting_invalid',
+          message: 'Review completed without valid accounting.',
+        });
+      } else {
+        context.logger.error(
+          `Review completed without valid accounting. Diagnostic: ${reviewPlanFailure.failure.diagnosticPath}`,
+        );
+      }
+      process.exitCode = 1;
+      return;
+    }
     const childExitCode = childResult.exitCode;
     const refusal = childResult.refusal;
     const writeRefusalFailure = (): boolean => {
@@ -3366,8 +3465,26 @@ async function runReviewGate(
         artifactResolution.artifact?.path ??
         artifactResolution.diagnosticArtifact?.path;
     }
-    if (!artifactResolution.artifact && writeRefusalFailure()) {
-      return;
+    if (!artifactResolution.artifact && refusal) {
+      if (writeRefusalFailure()) {
+        try {
+          await dependencies.deletePreStartRejectedGateRun(
+            runId,
+            launchAttemptId,
+          );
+        } catch (error) {
+          dependencies.writeDiagnostic(
+            `${JSON.stringify({
+              type: 'gate-refusal-cleanup',
+              runId,
+              launchAttemptId,
+              status: 'failed',
+              message: error instanceof Error ? error.message : String(error),
+            })}\n`,
+          );
+        }
+        return;
+      }
     }
     if (
       childExitCode !== 0 &&

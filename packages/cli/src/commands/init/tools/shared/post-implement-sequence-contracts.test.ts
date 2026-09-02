@@ -186,6 +186,17 @@ describe('post-implementation sequence contracts', () => {
     expect(skill).toContain('directly executes every task');
     expect(skill).toContain('root workflow owns implementation review');
     expect(skill).toContain('Optional third-tier readiness is not');
+    expect(normalized).toContain(
+      'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
+    );
+    expect(normalized).toMatch(
+      /prepare-context[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*publish-output[\s\S]*bookkeeping[\s\S]*cleanupValidationRun/,
+    );
+    expect(normalized).toContain('preparation-supplied');
+    expect(normalized).toContain('A not-delegated inline lane has no dossier');
+    expect(normalized).toContain(
+      'neither coordinator descriptor may enter reviewer input',
+    );
   });
 
   it('defers only the final checkpoint until final review and pre-approval work finish', () => {

@@ -469,6 +469,66 @@ commit range, task IDs and boundaries, artifacts, verification evidence,
 configured axes, selection reason, and candidates. Require a timestamped review
 artifact under the project's `reviews/` directory.
 
+The direct phase review is a first-class shared artifact coordinator. Before
+launch, invoke launcher-owned `oat review prepare-context` for the phase range,
+artifact sink, invocation, and resolved budget. Pre-compute the final review
+path, retain `coordinatorCommands` only in the launcher, and pass only the
+private draft path plus reviewer-safe `commands` to the reviewer. On host
+acceptance, retain the exact accepted reviewer handle and immediately execute
+launcher-retained `coordinatorCommands.bindAcceptedContinuation` with its exact
+executable, argv, absolute cwd, and bounded exact handle JSON. Do not allow a
+reviewer command before binding succeeds; an unbound checkpoint is non-consuming
+and may be retried only after binding that same accepted handle. That handle
+performs required artifact intake, invokes
+`checkpointArtifacts`, submits `ReviewPlanV1` through `validate-plan`, retains
+the exact `PlanValidationReceiptV1` only for evidence authorization and dossier
+binding, invokes `begin-evidence`, executes selective evidence, and keeps every
+accepted complete or partial `WorkerDossierV1` inside the same continuation.
+It treats `ReviewAccountingSeedV1` as compatibility output rather than reviewer
+state. Every supplied command descriptor is the launcher-owned
+`{ executable, argv, cwd, stdin }` contract: execute it in its required
+absolute `cwd`; never use the reviewer's ambient working directory and never
+change cwd to repair branch-local alias resolution. As each applicable dossier
+is accepted, execute the preparation-supplied `bindWorkerDossier` invocation
+with its exact executable, argv array, and cwd, replace only
+`__OAT_PLAN_RECEIPT__` with the retained receipt, and provide exactly that
+dossier as bounded JSON stdin. Identical retries are idempotent. A
+not-delegated inline lane has no dossier and remains unchanged.
+
+When this direct review covers an implemented prefix before later tasks in the
+same phase, pass the plan-declared inclusive current task as `throughTaskId`.
+Never infer that boundary from implementation status; omission intentionally
+reviews every task in the phase.
+Never invoke ambient `oat`, reconstruct a dossier from terminal digests, or
+transfer a full dossier to the parent. Only after applicable dossiers are bound
+may the accepted handle return one `ReviewerTerminalOverlayV1` with terminal
+substance, mutable outcomes, evidence, selectors, budget observations, and
+typed verification-slot inputs. It must not retain/copy the seed or supply
+immutable identity, paths, obligations, classification policy, completion, or
+claim kind/mode.
+
+Submit the overlay through launcher-owned `validate-output`; the launcher
+strictly parses and assembles canonical `ReviewerTerminalV1` from sealed state
+before artifact snapshot handling or validation, including after context
+compaction. If and only if all errors are within the closed encoding allowlist,
+offer at most two
+same-handle accounting repair turns with immutable review substance. Only an
+accepted complete terminal may invoke launcher-owned `oat review publish-output`
+with the validation run ID and final destination. Same-destination retries
+reconcile interrupted publication; destination changes are forbidden. After publication, continue to artifact
+integrity validation, orchestration checks, and project bookkeeping. Blocked or
+accounting-invalid output remains non-actionable: create no discoverable review
+artifact or ledger/log entry and stop without a replacement reviewer. In
+coordinator `finally`, after publication/bookkeeping or terminal diagnostic
+translation, execute launcher-retained
+`coordinatorCommands.cleanupValidationRun` exactly once. Cleanup failure is a
+lifecycle blocker; neither coordinator descriptor may enter reviewer input.
+
+Gate and checkpoint/final aliases inherit this coordinator; they do not create
+another authoritative context. `oat gate review` remains an indirect consumer
+of its child project-review coordinator, while checkpoint/final aliases remain
+indirect consumers of `oat-project-review-provide`.
+
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
 `providers.claude.dispatchArgs.model`, or

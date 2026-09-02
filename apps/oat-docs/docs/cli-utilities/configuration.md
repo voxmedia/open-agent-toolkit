@@ -99,6 +99,8 @@ Common keys in `.oat/config.json`:
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
 - `pjm.initialized` / `pjm.schemaVersion` — explicit repository PJM adoption written by `oat pjm init`
+- `workflow.reviewPlanMode` — plan-first review compatibility mode (`legacy` or
+  `enforce`)
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
 
@@ -276,14 +278,17 @@ instead of the scalar `oat config set` surface. See
 Gate budgets resolve per run in this order: CLI `--timeout-ms`, selected
 target `timeoutMs`, `workflow.gateTimeouts` by review type,
 `OAT_GATE_EXEC_TIMEOUT_MS`, then the built-in type-and-scope default. Values
-must be integer milliseconds from `1,000` through `14,400,000`.
+must be integer milliseconds from `1,000` through `14,400,000`. Built-in
+artifact reviews default to 1,200,000 ms (20 minutes). Task code reviews remain
+900,000 ms (15 minutes), while phase, phase-range, and final code reviews remain
+1,800,000 ms (30 minutes).
 
 ```json
 {
   "workflow": {
     "gateTimeouts": {
       "code": 2400000,
-      "artifact": 900000
+      "artifact": 1200000
     },
     "gates": {
       "execTargets": {
@@ -668,6 +673,10 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.retro.apply` — `auto` or `ask`; defaults to `ask` behavior when unset. `auto` authorizes bounded promotion application in non-interactive runs; `ask` is propose-only when no interaction is possible.
 - `workflow.retro.upstreamRepo` — `owner/repo`; unset in CLI configuration. Retro guidance defaults it to `voxmedia/open-agent-toolkit`.
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
+- `workflow.reviewPlanMode` — `legacy` or `enforce`; initial default `legacy`.
+  `legacy` preserves the compatibility review path. `enforce` requires the
+  plan-first capability, budget, validation, and accounting preflight and never
+  silently downgrades after resolution.
 - `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
 - `workflow.autoNarrowReReviewScope` — boolean, default `true`. Re-reviews automatically use the guarded range after the prior matching review's recorded head. Unset and `true` enable narrowing without a prompt; set `false` to opt out and use the nominal full scope.
 - `workflow.autoArtifactReview.plan` — boolean, default `true`. Automatically run the bounded artifact-review loop for generated `plan.md` files before implementation handoff. Set to `false` only when you intentionally want to skip the plan artifact review.
@@ -751,6 +760,7 @@ oat config set workflow.archiveOnComplete true --user
 oat config set workflow.createPrOnComplete true --user
 oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
+oat config set workflow.reviewPlanMode enforce --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
 oat config set workflow.designMode selective --user
 oat config set workflow.dispatchCeiling.preset balanced --user
@@ -760,6 +770,7 @@ oat config set workflow.autoArtifactReview.analysis true --user
 
 # Shared repo: team decision for this repo
 oat config set workflow.createPrOnComplete false --shared
+oat config set workflow.reviewPlanMode enforce --shared
 oat config set workflow.designMode collaborative --shared
 oat config set workflow.dispatchCeiling.preset balanced --shared
 oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared
@@ -769,12 +780,45 @@ oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observa
 
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every
+oat config set workflow.reviewPlanMode legacy --local
 oat config set workflow.designMode draft
 oat config set workflow.dispatchCeiling.providers.codex medium  # Advanced: per-provider override
 oat config set workflow.autoArtifactReview.analysis false
 ```
 
 Default (no flag) targets `.oat/config.local.json` for workflow keys. Pass at most one of `--user`, `--shared`, or `--local`. Structural keys (`projects.root`, `worktrees.root`, `git.*`, `documentation.*`, `archive.*`, `tools.*`) are still shared-only regardless of flag.
+
+### Review plan mode migration and rollback
+
+Inspect the effective mode and its owner before changing rollout behavior:
+
+```bash
+oat config get workflow.reviewPlanMode --json
+oat config describe workflow.reviewPlanMode
+```
+
+The initial built-in default is `legacy`. An explicit value resolves through
+`local > shared > user > default`, so write the narrowest intended scope:
+
+```bash
+# This checkout only
+oat config set workflow.reviewPlanMode enforce --local
+
+# Repository-wide rollout
+oat config set workflow.reviewPlanMode enforce --shared
+
+# Personal fallback across repositories without a stronger override
+oat config set workflow.reviewPlanMode enforce --user
+```
+
+After each change, run `oat config get workflow.reviewPlanMode --json` and
+confirm both `value` and `source`. Enforce mode does not silently fall back when
+capabilities are missing or its resolved finite budget is below the exact
+120,000 ms floor. Remedy a budget failure by raising the winning timeout source
+to at least 120,000 ms. If coordinator compatibility must be restored
+temporarily, set `legacy` at the same owning scope, verify the source, and
+record why the rollback is temporary. Return that layer to `enforce` after the
+incompatibility is corrected.
 
 ### Choosing the right surface (personal vs per-repo)
 

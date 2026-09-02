@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/cli",
-  "version": "0.2.51",
+  "version": "0.2.52",
   "private": false,
   "description": "Open Agent Toolkit CLI",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",
@@ -26,8 +26,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bash scripts/bundle-assets.sh && { [ ! -d dist ] || find dist -type d -name __tests__ -prune -exec rm -rf {} +; } && tsc && tsc-alias && chmod +x dist/index.js && touch dist/index.js",
-    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "build": "bash scripts/bundle-assets.sh && { [ ! -d dist ] || find dist -type d -name __tests__ -prune -exec rm -rf {} +; } && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && chmod +x dist/index.js && touch dist/index.js",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo",
     "dev": "tsx watch src/index.ts",
     "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",
     "check:fix": "oxlint --fix . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt .",

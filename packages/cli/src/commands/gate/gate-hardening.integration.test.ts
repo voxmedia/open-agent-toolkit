@@ -1,5 +1,14 @@
-import { execFileSync, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,6 +82,315 @@ async function setupFixture(): Promise<{ root: string; home: string }> {
     })}\n`,
   );
   return { root, home };
+}
+
+async function configureCorrelationRuntime(fixture: {
+  root: string;
+}): Promise<string> {
+  const runtime = join(fixture.root, 'correlation-runtime.mjs');
+  await writeFile(
+    runtime,
+    String.raw`
+import { spawnSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+function invoke(executable, argv, input) {
+  const result = spawnSync(executable, argv, {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    env: process.env,
+    input: input === undefined ? undefined : JSON.stringify(input),
+  });
+  let envelope;
+  try {
+    envelope = JSON.parse(result.stdout);
+  } catch {
+    process.stderr.write(result.stderr || result.stdout);
+    process.exit(20);
+  }
+  return { result, envelope };
+}
+
+const cli = process.env.OAT_GATE_CLI_PATH;
+writeFileSync(
+  process.env.OAT_GATE_ROUTE_RECEIPT_PATH,
+  JSON.stringify({
+    route: 'inline',
+    reason: 'correlation integration fixture',
+    cliRoot: process.env.OAT_GATE_CLI_ROOT,
+    runtime: 'cursor',
+  }),
+);
+const preparationInput = {
+  schemaVersion: 1,
+  repoRoot: process.cwd(),
+  project: '.oat/projects/shared/demo',
+  scope: 'p01',
+  workflowMode: 'spec-driven',
+  range: {
+    baseSha: process.env.FAKE_GATE_BASE_SHA,
+    headSha: process.env.FAKE_GATE_HEAD_SHA,
+  },
+  sink: 'structured',
+  invocation: 'gate',
+  budget: null,
+  gateRunId: null,
+  launchAttemptId: null,
+  obligationSources: {
+    plan: {
+      path: '.oat/projects/shared/demo/plan.md',
+      source: '### Task p01-t01: Review fixture\n\n**Files:**\n\n- Modify: \`fixture.txt\`\n',
+    },
+    spec: null,
+    implementation: null,
+  },
+  priorEvidenceCandidates: [],
+  target: 'fake-runtime',
+};
+const preparedCall = invoke(
+  cli,
+  ['--json', 'review', 'prepare-context'],
+  preparationInput,
+);
+if (preparedCall.result.status !== 0 || !preparedCall.envelope.ok) {
+  process.stderr.write(preparedCall.result.stderr || preparedCall.result.stdout);
+  process.exit(21);
+}
+const prepared = preparedCall.envelope.result;
+writeFileSync(
+  join(process.env.HOME, 'coordinator-cleanup.json'),
+  JSON.stringify({
+    invocation: prepared.coordinatorCommands.cleanupValidationRun,
+    validationRunId: prepared.validationRunId,
+    gateRunId: process.env.OAT_GATE_RUN_ID,
+    launchAttemptId: process.env.OAT_GATE_LAUNCH_ATTEMPT_ID,
+  }),
+);
+const bindCall = invoke(
+  prepared.coordinatorCommands.bindAcceptedContinuation.executable,
+  prepared.coordinatorCommands.bindAcceptedContinuation.argv,
+  {
+    schemaVersion: 1,
+    handleId: 'gate-correlation-runtime-handle',
+  },
+);
+if (bindCall.result.status !== 0 || !bindCall.envelope.ok) {
+  process.stderr.write(bindCall.result.stderr || bindCall.result.stdout);
+  process.exit(27);
+}
+const checkpointCall = invoke(
+  prepared.commands.checkpointArtifacts.executable,
+  prepared.commands.checkpointArtifacts.argv,
+);
+if (checkpointCall.result.status !== 0 || !checkpointCall.envelope.ok) {
+  process.stderr.write(checkpointCall.result.stderr || checkpointCall.result.stdout);
+  process.exit(22);
+}
+const storeModule = pathToFileURL(
+  join(process.env.OAT_GATE_CLI_ROOT, 'packages/cli/src/review/validation-store.ts'),
+).href;
+const authorityModule = pathToFileURL(
+  join(
+    process.env.OAT_GATE_CLI_ROOT,
+    'packages/cli/src/review/validation-store-authority.ts',
+  ),
+).href;
+const stateReader = [
+  "const { ValidationStore } = await import(" + JSON.stringify(storeModule) + ");",
+  "const { launcherValidationStoreAuthority, launcherValidationStoreRoot } = await import(" + JSON.stringify(authorityModule) + ");",
+  "const store = new ValidationStore(launcherValidationStoreRoot(), launcherValidationStoreAuthority());",
+  "process.stdout.write(JSON.stringify((await store.readRun(" + JSON.stringify(prepared.validationRunId) + ")).state.context));",
+].join('\n');
+const stateCall = spawnSync(
+  process.execPath,
+  ['--import', 'tsx', '--input-type=module', '--eval', stateReader],
+  {
+    cwd: join(process.env.OAT_GATE_CLI_ROOT, 'packages/cli'),
+    encoding: 'utf8',
+    env: process.env,
+  },
+);
+if (stateCall.status !== 0) {
+  process.stderr.write(stateCall.stderr || stateCall.stdout);
+  process.exit(26);
+}
+const context = JSON.parse(stateCall.stdout);
+const paths = context.changeMap.files.map((file) => file.path);
+const obligationIds = context.obligations.map((obligation) => obligation.id);
+const estimatedTokens = context.changeMap.totals.estimatedPatchTokens;
+const evidenceBudgetTokens = context.budget.context?.evidenceBudgetTokens ?? null;
+let wholeDiffReason = 'whole diff is eligible';
+if (context.budget.context === null) {
+  wholeDiffReason = 'missing post-artifact context telemetry';
+} else if (
+  context.changeMap.totals.patchEstimateState !== 'exact' ||
+  estimatedTokens === null
+) {
+  wholeDiffReason = 'patch size is not exact';
+} else if (estimatedTokens > evidenceBudgetTokens) {
+  wholeDiffReason = 'patch exceeds the sealed evidence budget';
+}
+const plan = {
+  schemaVersion: 1,
+  runId: prepared.validationRunId,
+  contextDigest: checkpointCall.envelope.result.contextDigest,
+  strategy: 'selective-inline',
+  lanes: [{
+    id: 'fixture-lane',
+    paths,
+    primaryObligationIds: obligationIds,
+    seamObligationIds: [],
+    risk: 'high',
+    evidenceClass: 'semantic',
+    strategy: 'path-diff',
+    checks: ['inspect'],
+    delegated: false,
+    independenceRationale: null,
+    substantial: false,
+    substantialityRationale: null,
+    deadlineMs: null,
+    dossier: { contractVersion: 1, partialAllowed: true },
+    replay: 'direct-verify',
+    primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+  }],
+  classifications: [],
+  crossLaneInvariants: [],
+  delegationEconomics: {
+    independentLaneIds: [],
+    nonReplayedLaneIds: [],
+    expectedSavings: [],
+    coordinationCosts: [],
+    decisionRationale: 'inline fixture',
+    decision: 'inline',
+  },
+  verificationBoundary: {
+    requiredClaims: [
+      { kind: 'promoted-finding', mode: 'direct' },
+      { kind: 'consequential-absence', mode: 'direct' },
+      { kind: 'worker-conflict', mode: 'direct' },
+      { kind: 'cross-lane-gap', mode: 'direct' },
+    ],
+    positiveCoverage: {
+      mode: 'sample',
+      laneIds: ['fixture-lane'],
+      rationale: 'fixture sample',
+    },
+    deterministicAcceptance: {
+      mode: 'provenance',
+      requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+    },
+  },
+  wholeDiff: {
+    allowed: wholeDiffReason === 'whole diff is eligible',
+    estimatedTokens,
+    evidenceBudgetTokens,
+    reason: wholeDiffReason,
+  },
+  timeAllocation: null,
+};
+const validatedCall = invoke(
+  prepared.commands.validatePlan.executable,
+  prepared.commands.validatePlan.argv,
+  plan,
+);
+if (validatedCall.result.status !== 0 || !validatedCall.envelope.ok) {
+  process.stderr.write(validatedCall.result.stderr || validatedCall.result.stdout);
+  process.exit(23);
+}
+const receipt = validatedCall.envelope.result.receipt;
+const begin = structuredClone(prepared.commands.beginEvidence);
+begin.argv[begin.argv.indexOf('__OAT_PLAN_RECEIPT__')] = receipt.token;
+const beginCall = invoke(begin.executable, begin.argv);
+if (beginCall.result.status !== 0 || !beginCall.envelope.ok) {
+  process.stderr.write(beginCall.result.stderr || beginCall.result.stdout);
+  process.exit(24);
+}
+const terminal = {
+  schemaVersion: 1,
+  status: 'complete',
+  candidate: {
+    kind: 'structured',
+    review: { summary: 'fixture', findings: [], verification_commands: [] },
+  },
+  reviewAccounting: {
+    schemaVersion: 1,
+    receipt: 'wrong-receipt',
+    contextDigest: receipt.contextDigest,
+    planDigest: receipt.planDigest,
+    assignmentDigest: receipt.assignmentDigest,
+    strategy: 'selective-inline',
+    completion: 'complete',
+    evidence: [],
+    lanes: [{
+      id: 'fixture-lane',
+      paths,
+      primaryObligationIds: obligationIds,
+      seamObligationIds: [],
+      workerOutcome: 'not-delegated',
+      dossierDigest: null,
+      inspectionCoverage: 'all',
+      uninspectedPathIndexes: [],
+      uncoveredObligationIds: [],
+      commands: [],
+      evidenceRefIds: [],
+      uncertainty: [],
+      primaryCompletion: {
+        outcome: 'not-needed',
+        completedPathIndexes: [],
+        completedObligationIds: [],
+        commands: [],
+        evidenceRefIds: [],
+      },
+    }],
+    classifications: [],
+    verification: [],
+    budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+  },
+};
+const outputCall = invoke(
+  cli,
+  [
+    '--json',
+    'review',
+    'validate-output',
+    '--run-id',
+    prepared.validationRunId,
+    '--stdin',
+  ],
+  terminal,
+);
+if (outputCall.result.status === 0 || outputCall.envelope.ok) {
+  process.stderr.write(outputCall.result.stderr || outputCall.result.stdout);
+  process.exit(25);
+}
+process.exit(1);
+`,
+  );
+  await writeFile(
+    join(fixture.root, '.oat', 'config.json'),
+    `${JSON.stringify({
+      version: 1,
+      workflow: {
+        reviewPlanMode: 'enforce',
+        gates: {
+          execTargets: {
+            'fake-runtime': {
+              runtime: 'cursor',
+              baseCommand: [process.execPath, runtime],
+              invocation: {
+                model: 'fake-model',
+                reasoningEffort: 'none',
+              },
+              priority: 999,
+            },
+          },
+        },
+      },
+    })}\n`,
+  );
+  return runtime;
 }
 
 async function runGate(
@@ -332,5 +650,142 @@ describe(
         `oat_gate_run_id: ${String(result.payload?.runId)}`,
       );
     });
+
+    it('case 8: exact gate tuple reaches accounting-invalid translation', async () => {
+      const fixture = await setupFixture();
+      await configureCorrelationRuntime(fixture);
+      await writeFile(join(fixture.root, 'fixture.txt'), 'before\n');
+      execFileSync('git', ['add', '.'], { cwd: fixture.root });
+      execFileSync(
+        'git',
+        [
+          '-c',
+          'user.name=OAT Test',
+          '-c',
+          'user.email=oat@example.invalid',
+          'commit',
+          '-qm',
+          'base',
+        ],
+        { cwd: fixture.root },
+      );
+      const baseSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.root,
+        encoding: 'utf8',
+      }).trim();
+      await writeFile(join(fixture.root, 'fixture.txt'), 'after\n');
+      execFileSync('git', ['add', 'fixture.txt'], { cwd: fixture.root });
+      execFileSync(
+        'git',
+        [
+          '-c',
+          'user.name=OAT Test',
+          '-c',
+          'user.email=oat@example.invalid',
+          'commit',
+          '-qm',
+          'change',
+        ],
+        { cwd: fixture.root },
+      );
+      const headSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fixture.root,
+        encoding: 'utf8',
+      }).trim();
+      const validationRoot = join(fixture.home, 'validation');
+      const cleanupPath = join(fixture.home, 'coordinator-cleanup.json');
+      const authorityKey = randomBytes(32).toString('base64url');
+      let diagnosticPath = '';
+      try {
+        const result = await runGate(fixture, {
+          env: {
+            OAT_REVIEW_AUTHORITY_KEY: authorityKey,
+            OAT_REVIEW_VALIDATION_ROOT: validationRoot,
+            TSX_TSCONFIG_PATH: join(repoRoot, 'packages/cli/tsconfig.json'),
+            FAKE_GATE_BASE_SHA: baseSha,
+            FAKE_GATE_HEAD_SHA: headSha,
+          },
+        });
+
+        expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(1);
+        expect(
+          result.payload,
+          `${result.stdout}\n${result.stderr}`,
+        ).toMatchObject({
+          status: 'review_failed',
+          runId: expect.any(String),
+          outcome: 'review_complete_accounting_invalid',
+          message: 'Review completed without valid accounting.',
+          failure: {
+            kind: 'review_complete_accounting_invalid',
+            gateRunId: expect.any(String),
+            launchAttemptId: expect.any(String),
+            validationRunId: expect.any(String),
+            validationAttempts: 1,
+            repairAttempts: 0,
+            diagnosticPath: expect.any(String),
+          },
+          artifactPath: null,
+          receiveEligible: false,
+          handoff: null,
+        });
+        diagnosticPath = String(
+          (result.payload?.failure as { diagnosticPath?: unknown })
+            .diagnosticPath,
+        );
+        expect(
+          JSON.parse(await readFile(diagnosticPath, 'utf8')),
+        ).toMatchObject({
+          kind: 'review_complete_accounting_invalid',
+          validationRunId: (
+            result.payload?.failure as { validationRunId?: unknown }
+          ).validationRunId,
+          expiresAt: expect.any(String),
+        });
+      } finally {
+        const cleanupSource = await readFile(cleanupPath, 'utf8');
+        const cleanup = JSON.parse(cleanupSource) as {
+          invocation: {
+            executable: string;
+            argv: string[];
+            cwd: string;
+          };
+          validationRunId: string;
+          gateRunId: string;
+          launchAttemptId: string;
+        };
+        const socketIndex =
+          cleanup.invocation.argv.indexOf('--broker-socket') + 1;
+        const socketPath = cleanup.invocation.argv[socketIndex]!;
+        await expect(access(socketPath)).resolves.toBeUndefined();
+        const cleanupResult = spawnSync(
+          cleanup.invocation.executable,
+          cleanup.invocation.argv,
+          {
+            cwd: cleanup.invocation.cwd,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              OAT_REVIEW_AUTHORITY_KEY: authorityKey,
+              OAT_REVIEW_VALIDATION_ROOT: validationRoot,
+              NO_UPDATE_NOTIFIER: '1',
+            },
+          },
+        );
+        expect(
+          cleanupResult.status,
+          cleanupResult.stderr || cleanupResult.stdout,
+        ).toBe(0);
+        await expect(access(dirname(socketPath))).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        const retainedEntries = await readdir(validationRoot);
+        expect(retainedEntries).not.toContain(`run-${cleanup.validationRunId}`);
+        expect(
+          retainedEntries.some((entry) => entry.startsWith('correlation-')),
+        ).toBe(false);
+        await expect(access(diagnosticPath)).resolves.toBeUndefined();
+      }
+    }, 30_000);
   },
 );

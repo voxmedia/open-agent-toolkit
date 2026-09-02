@@ -21,7 +21,7 @@ and updates project state.
 - **Recovery boundary:** an eligible post-commit defect may produce a separate
   same-target recovery commit under the phase's bounded recovery authority.
 - **Review boundary:** the root dispatches one independent reviewer after the
-  phase report.
+  phase report and owns that review's plan-first coordinator lifecycle.
 - **Fix boundary:** blocking findings return to the original phase handle when
   possible.
 - **Final exit-gate boundary:** after final verification and final lifecycle
@@ -221,6 +221,26 @@ The root sends the reviewer a fresh scope containing the authoritative phase
 commit range, task IDs and boundaries, project artifacts, and verification
 evidence. The review passes with zero Critical and zero Important findings.
 Medium and Minor findings are recorded without blocking the phase.
+
+For a direct enforce-mode phase review, the root remains the coordinator. It
+prepares the authoritative context, retains the accepted reviewer handle,
+requires artifact intake followed by a validated `ReviewPlanV1` and
+`beginEvidence`, validates the review terminal, and publishes or records
+bookkeeping only after that terminal is accepted. The validated plan exists
+before the declared evidence transition, and final accounting must match it;
+this contract does not mechanically prove provider tool-read ordering.
+
+The phase can advance only from an accepted complete terminal. Reviewer
+`BLOCKED` and `review_complete_accounting_invalid` are non-actionable blocking
+outcomes: neither can publish an artifact, create review bookkeeping, count as a
+pass, or trigger a fallback reviewer. Accounting-only validation errors may use
+at most two repair turns through the same accepted handle; review substance
+cannot change.
+
+Checkpoint, final, and configured-gate aliases reuse this direct phase
+coordinator lifecycle. They inherit its resolved mode, authoritative context,
+accepted-continuation rules, and terminal validation rather than creating a
+second context or duplicating the changed-file and obligation inventory.
 
 ## Final Exit-Gate Boundary
 

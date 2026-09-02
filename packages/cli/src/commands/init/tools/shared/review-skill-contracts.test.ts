@@ -92,13 +92,335 @@ function expectValidReportContext(command: string): void {
 }
 
 describe('review skill contracts', () => {
+  it('pins compatibility mode behavior across direct coordinators', () => {
+    for (const path of [
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/SKILL.md',
+    ]) {
+      const content = readRepoFile(path);
+      expect(content, path).toContain('workflow.reviewPlanMode');
+      expect(content, path).toContain('legacy-unvalidated');
+      expect(content, path).toContain('review-budget-below-minimum');
+      expect(content, path).toMatch(/120,000 ms/);
+      expect(content, path).toMatch(/before\s+(?:any\s+)?model\s+launch/i);
+      expect(content, path).toMatch(
+        /(?:never\s+silently|without\s+silent)\s+downgrade/i,
+      );
+      expect(content, path).toMatch(
+        /(?:indirect|Gate and checkpoint\/final) aliases inherit/i,
+      );
+      expect(content, path).toMatch(
+        /duplicate (?:validation |review )?context/i,
+      );
+      expect(content, path).toContain('oat_gate_launch_attempt_id');
+      expect(content, path).toContain('OAT_GATE_LAUNCH_ATTEMPT_ID');
+      expect(content, path).toMatch(
+        /partial or mismatched tuple[\s\S]*never downgrade/i,
+      );
+      expect(content, path).toContain(
+        'Manual and auto invocations continue to pass no gate correlation.',
+      );
+    }
+  });
+
+  it('pins the canonical reviewer plan-first evidence boundary', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const orderedBoundary = [
+      'Required artifact intake',
+      'checkpointArtifacts',
+      'ReviewPlanV1',
+      'PlanValidationReceiptV1',
+      'beginEvidence',
+      'Selective evidence execution',
+      'ReviewerTerminalOverlayV1',
+    ];
+    let previousIndex = -1;
+
+    for (const marker of orderedBoundary) {
+      const markerIndex = content.indexOf(marker);
+      expect(markerIndex, marker).toBeGreaterThan(previousIndex);
+      previousIndex = markerIndex;
+    }
+
+    for (const requiredField of [
+      'delegationEconomics',
+      'independentLaneIds',
+      'nonReplayedLaneIds',
+      'verificationBoundary',
+      'primaryContingency',
+      'WorkerDossierV1',
+    ]) {
+      expect(content, requiredField).toContain(requiredField);
+    }
+
+    expect(normalizedContent).toContain(
+      'Do not read source files or content-level diffs before `beginEvidence` succeeds.',
+    );
+    expect(normalizedContent).toContain(
+      'An accepted worker timeout or failure never authorizes a replacement launch.',
+    );
+    expect(content).toContain('ReviewerTerminalOverlayV1');
+    expect(content).toContain('ReviewerTerminalV1');
+    expect(content.match(/^## Review Accounting$/gm)).toHaveLength(1);
+    expect(content).toMatch(
+      /^## Review Accounting\n(?:\n)?```json\n\{[\s\S]*?"promotedFindings": \[\][\s\S]*?\n\}\n```$/m,
+    );
+    expect(
+      content.match(
+        /^## Review Accounting\n(?:\n)?```json\n([\s\S]*?)\n```$/m,
+      )?.[1],
+    ).not.toContain('"receipt"');
+    expect(normalizedContent).toContain(
+      '`artifact:{critical|important|medium|minor}:{1-based severity ordinal}`',
+    );
+    expect(normalizedContent).toContain(
+      'one promoted-finding slot per finding',
+    );
+    expect(content).toMatch(
+      /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
+    );
+    for (const severity of ['Critical', 'Important', 'Medium', 'Minor']) {
+      expect(content).toMatch(new RegExp(`^### ${severity}$`, 'm'));
+    }
+  });
+
+  it('pins canonical command evidence digests in every reviewer view', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.claude/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer-gpt-5-6-sol-high.md',
+    ]) {
+      const content = readRepoFile(path);
+      const normalized = content.replace(/\s+/g, ' ');
+      expect(normalized, path).toContain(
+        '{ scopeRefs: command.scopeRefs, provenance: command.provenance, result: command.result }',
+      );
+      expect(content, path).toContain(
+        'packages/cli/src/review/command-result-digest.ts',
+      );
+      expect(content, path).toContain(
+        'createHash("sha256").update(j({scopeRefs:c.scopeRefs,provenance:c.provenance,result:c.result}))',
+      );
+    }
+  });
+
+  it('pins launcher-owned working directories across review coordinators', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.cursor/agents/oat-reviewer-gpt-5-6-sol-high.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    ]) {
+      const normalized = readRepoFile(path).replace(/\s+/g, ' ');
+      expect(normalized, path).toContain('{ executable, argv, cwd, stdin }');
+      expect(normalized, path).toMatch(/required absolute `?cwd`?/);
+      expect(normalized, path).toMatch(
+        /never (?:substitute|use)[\s\S]{0,100}ambient working directory/i,
+      );
+      expect(normalized, path).toMatch(
+        /never[\s\S]{0,100}change cwd to repair[\s\S]{0,80}alias resolution/i,
+      );
+    }
+  });
+
+  it('pins launcher-owned terminal assembly across review coordinators', () => {
+    for (const path of [
+      '.agents/agents/oat-reviewer.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    ]) {
+      const normalized = readRepoFile(path).replace(/\s+/g, ' ');
+      expect(normalized, path).toContain('ReviewAccountingSeedV1');
+      expect(normalized, path).toContain('ReviewerTerminalOverlayV1');
+      expect(normalized, path).toMatch(/compatibility (?:response|output)/i);
+      expect(normalized, path).toMatch(
+        /(?:must not|never|do not)[\s\S]{0,40}retains?(?:\/cop(?:y|ies)| or copy)/i,
+      );
+      expect(normalized, path).toMatch(
+        /launcher[\s\S]*(?:joins|assembl)[\s\S]*(?:sealed state|canonical)/i,
+      );
+      expect(normalized, path).toMatch(/after context compaction/i);
+    }
+  });
+
+  it('makes Tier 3 a receipt-bound selective inline continuation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier3 =
+      content.match(
+        /### Step 6d: Tier 3[\s\S]*?(?=### Step 7: Determine Review Artifact Path)/,
+      )?.[0] ?? '';
+    const normalizedTier3 = tier3.replace(/\s+/g, ' ');
+    const orderedBoundary = [
+      'prepare-context',
+      'Required artifact intake',
+      'checkpointArtifacts',
+      'ReviewPlanV1',
+      'PlanValidationReceiptV1',
+      'beginEvidence',
+      'Selective evidence',
+      'bindWorkerDossier',
+      'ReviewerTerminalOverlayV1',
+      'validate-output',
+      'ReviewerTerminalV1',
+    ];
+    let previousIndex = -1;
+
+    for (const marker of orderedBoundary) {
+      const markerIndex = tier3.indexOf(marker);
+      expect(markerIndex, marker).toBeGreaterThan(previousIndex);
+      previousIndex = markerIndex;
+    }
+
+    expect(normalizedTier3).toContain(
+      'The current planning parent is the accepted inline continuation.',
+    );
+    expect(tier3).toContain("patchEstimateState === 'exact'");
+    expect(tier3).toContain('estimatedPatchTokens <= evidenceBudgetTokens');
+    expect(tier3).not.toMatch(/read all (?:files in )?`?FILES_CHANGED`?/i);
+  });
+
+  it('keeps both local artifact tiers behind one acceptance coordinator', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier1 =
+      content.match(
+        /\*\*Step 6b: Tier 1[\s\S]*?(?=\*\*Step 6c: Tier 2)/,
+      )?.[0] ?? '';
+    const tier3 =
+      content.match(
+        /### Step 6d: Tier 3[\s\S]*?(?=### Step 7: Determine Review Artifact Path)/,
+      )?.[0] ?? '';
+    for (const [name, tier] of [
+      ['Tier 1', tier1],
+      ['Tier 3', tier3],
+    ] as const) {
+      const normalized = tier.replace(/\s+/g, ' ');
+      const ordered = [
+        'prepare-context',
+        name === 'Tier 1' ? 'accepted handle' : 'bindAcceptedContinuation',
+        'checkpointArtifacts',
+        'validate-plan',
+        'begin-evidence',
+        'bindWorkerDossier',
+        'ReviewerTerminalOverlayV1',
+        'validate-output',
+        'ReviewerTerminalV1',
+        'same-handle accounting repair',
+        'publish-output',
+        'bookkeeping',
+        'cleanupValidationRun',
+      ];
+      let prior = -1;
+      for (const marker of ordered) {
+        const index = normalized.indexOf(marker);
+        expect(index, `${name}: ${marker}`).toBeGreaterThan(prior);
+        prior = index;
+      }
+      expect(normalized).toContain(
+        'Blocked or accounting-invalid output remains non-actionable',
+      );
+      expect(normalized).toContain(
+        'No discoverable artifact, Reviews row, project log, or bookkeeping commit',
+      );
+      expect(normalized).toContain('preparation-supplied');
+      expect(normalized).toContain('exact executable, argv array, and');
+      expect(normalized).toContain('absolute cwd');
+      expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+      expect(normalized).toContain('bounded JSON stdin');
+      expect(normalized).toContain('ambient `oat`');
+      expect(normalized).toContain('coordinatorCommands');
+    }
+  });
+
+  it('keeps the Tier 1 final artifact path launcher-private', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier1 =
+      content.match(
+        /\*\*Step 6b: Tier 1[\s\S]*?(?=\*\*Step 6c: Tier 2)/,
+      )?.[0] ?? '';
+    expect(tier1).toContain('Pass only `artifactDraftPath`');
+    expect(tier1).toContain(
+      'Do not include the pre-computed final publication path',
+    );
+    expect(tier1).not.toContain(
+      'Include the pre-computed artifact path for the subagent to write to',
+    );
+  });
+
+  it('keeps remote structured tiers behind terminal validation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+    const rails = [
+      content.match(
+        /\*\*Step 5b: Tier 1[\s\S]*?(?=\*\*Step 5c: Tier 2)/,
+      )?.[0] ?? '',
+      content.match(
+        /\*\*Step 5d: Tier 3[\s\S]*?(?=### Step 6: Map Inline Comments)/,
+      )?.[0] ?? '',
+    ];
+    for (const rail of rails) {
+      const normalized = rail.replace(/\s+/g, ' ');
+      expect(normalized).toMatch(
+        /prepare-context[\s\S]*(?:accepted handle|current planning parent)[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+      );
+      expect(normalized).toMatch(
+        /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,
+      );
+      expect(normalized).toMatch(/never launch(?:es)? a replacement/i);
+      expect(normalized).toContain('preparation-supplied');
+      expect(normalized).toContain('exact executable, argv array, and');
+      expect(normalized).toContain('absolute cwd');
+      expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+      expect(normalized).toContain('bounded JSON stdin');
+      expect(normalized).toContain('ambient `oat`');
+      expect(normalized).toContain('cleanupValidationRun');
+      expect(normalized).toContain('coordinatorCommands');
+    }
+    expect(rails[1]).not.toMatch(/read all files in the review scope/i);
+  });
+
+  it('makes direct phase review a shared validated artifact coordinator', () => {
+    const content = [
+      readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ].join('\n');
+    const normalized = content.replace(/\s+/g, ' ');
+    expect(normalized).toMatch(
+      /direct phase review[\s\S]*prepare-context[\s\S]*accepted reviewer handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*bindWorkerDossier[\s\S]*ReviewerTerminalOverlayV1[\s\S]*validate-output[\s\S]*ReviewerTerminalV1[\s\S]*same-handle accounting repair[\s\S]*publish-output[\s\S]*bookkeeping[\s\S]*cleanupValidationRun/i,
+    );
+    expect(normalized).toContain('preparation-supplied');
+    expect(normalized).toContain('{ executable, argv, cwd, stdin }');
+    expect(normalized).toContain('required absolute `cwd`');
+    expect(normalized).toContain('__OAT_PLAN_RECEIPT__');
+    expect(normalized).toContain('bounded JSON stdin');
+    expect(normalized).toContain(
+      'neither coordinator descriptor may enter reviewer input',
+    );
+    expect(normalized).toContain(
+      'Gate and checkpoint/final aliases inherit this coordinator; they do not create another authoritative context.',
+    );
+  });
+
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
     const content = readRepoFile('.agents/agents/oat-reviewer.md');
     const templateStart = content.indexOf('````markdown\n---');
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.2');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );

@@ -811,6 +811,34 @@ describe('oat-config', () => {
   });
 
   describe('workflow preferences', () => {
+    it('round-trips valid review plan modes and drops invalid values', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        workflow: { reviewPlanMode: 'enforce' },
+      });
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: { reviewPlanMode: 'enforce' },
+      });
+
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { reviewPlanMode: 'automatic', archiveOnComplete: true },
+        }),
+        'utf8',
+      );
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: { archiveOnComplete: true },
+      });
+      expect((await readOatConfig(repoRoot)).workflow).not.toHaveProperty(
+        'reviewPlanMode',
+      );
+    });
+
     it.each([
       ['wait', { preApproval: [], postApproval: [] }],
       ['summary', { preApproval: ['summary'], postApproval: [] }],

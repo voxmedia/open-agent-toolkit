@@ -1,0 +1,18 @@
+[
+  {
+    "id": "FR1",
+    "kind": "requirement",
+    "source": "spec-v1.md",
+    "summary": "Prepare metadata",
+    "expectedPaths": [],
+    "expectedChecks": ["unit"]
+  },
+  {
+    "id": "NFR1",
+    "kind": "requirement",
+    "source": "spec-v1.md",
+    "summary": "Preserve rigor",
+    "expectedPaths": [],
+    "expectedChecks": ["integration"]
+  }
+]

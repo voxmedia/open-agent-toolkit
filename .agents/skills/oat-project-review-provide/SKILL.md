@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.5.2
+version: 1.5.3
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -75,6 +75,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ```
 oat-project-review-provide code p02          # Code review for phase
+oat-project-review-provide code p02 through=p02-t03 # Inclusive implemented phase prefix
 oat-project-review-provide code p02-p03      # Code review for contiguous phase range
 oat-project-review-provide code p02-t03      # Code review for task
 oat-project-review-provide code final        # Final code review
@@ -152,6 +153,8 @@ If validation passes, derive `{project-name}` as basename of `PROJECT_PATH`. Sum
 
 - Parse `$ARGUMENTS[0]` as review type: `code` or `artifact`
 - Parse `$ARGUMENTS[1]` as scope token
+- Parse optional `through=pNN-tNN` only with a matching phase scope. Pass it as
+  `throughTaskId`; omission preserves full-phase behavior.
 
 **If no arguments — infer from project state:**
 
@@ -829,9 +832,45 @@ Detection logic:
 - If the user explicitly requests inline or confirms they are already in a fresh session, use **Tier 3** only when the guarded inline route is valid.
 - Gate-originated review skips fresh-session handoff instructions and immediately uses the first target-preserving route available from Step 6.0. If none exists, fail closed.
 
+**Review plan compatibility mode (before every direct Tier 1 or Tier 3 rail):**
+
+Resolve `workflow.reviewPlanMode` from effective configuration. The default is
+`legacy`.
+
+- In `legacy`, use the existing review path, create no review validation state
+  or receipt, and mark the resulting output `legacy-unvalidated`.
+- In `enforce`, run capability and resolved-budget preflight before any model
+  launch. A budget of 120,000 ms or an unbounded/null budget is valid; a lower
+  budget fails with `review-budget-below-minimum`, including source, value,
+  floor, and both remedies (raise the timeout or explicitly select temporary
+  `legacy`). Missing capability or budget failure blocks the rail. Never
+  silently downgrade to `legacy`, Tier 2, or another coordinator.
+- Indirect gate and checkpoint/final aliases inherit this resolved branch and
+  must not create a duplicate validation context.
+
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
+
 **Step 6b: Tier 1 — Subagent (if available)**
 
-First, pre-compute the review artifact path using Step 7 naming conventions so it can be passed to the subagent.
+First, pre-compute the final review artifact path using Step 7 naming
+conventions, but do not create that discoverable file. For enforce-mode code
+review, invoke launcher-owned `oat review prepare-context` before dispatch and
+retain its validation run, private artifact draft path, and command
+invocations. Include the explicit `throughTaskId` or `null` in preparation.
+Retain `coordinatorCommands` only in the launcher; never include them in the
+reviewer prompt or payload. The reviewer receives the private draft path and
+only the exact descriptors under `commands`.
+Each descriptor is the launcher-owned
+`{ executable, argv, cwd, stdin }` contract. Execute it with the required
+absolute `cwd`; never substitute the reviewer's ambient working directory or
+change cwd to repair branch-local alias resolution.
 
 Then spawn the reviewer:
 
@@ -840,20 +879,67 @@ Then spawn the reviewer:
   - Cursor: for a concrete managed target, invoke `providers.cursor.dispatchArgs.variant` as the exact resolver-selected native reviewer variant. Do not attach a Task-level model argument or normalize the mapped model. Base `oat-reviewer` is allowed only for explicit inherit/default behavior. A pre-start native role-selection rejection is the only replacement boundary.
   - Codex style: for a concrete managed target, first spawn the exact resolver-returned native `agent_type`; only an explicit pre-start native role-selection rejection permits the explicitly pinned fresh-child route from Step 6.0. Generic auto-selection is permitted only for the documented base-role exceptions.
 - Pass the Review Scope metadata block from Step 5 as the prompt
-- Include the pre-computed artifact path for the subagent to write to
+- Pass only `artifactDraftPath` for the subagent to write to. Do not include the pre-computed final publication path in any reviewer input, payload, or instruction.
 - **If a worktree was resolved in Step 1.5:** include the worktree path in the prompt so the subagent writes the artifact to the worktree directory, not the current session's working directory
 - Run in background if supported (`run_in_background: true`)
 
 The `oat-reviewer` agent definition contains the full review process, mode contract, severity categories, artifact template, and critical rules. No additional instructions need to be injected.
 
+When the host accepts the reviewer, retain that exact accepted handle for the
+full coordinator lifetime and immediately execute launcher-retained
+`coordinatorCommands.bindAcceptedContinuation` with its exact executable, argv,
+and absolute cwd plus exact bounded stdin
+`{"schemaVersion":1,"handleId":"<accepted-handle>"}`. Do not allow the reviewer
+to execute `checkpointArtifacts` until binding succeeds; an unbound checkpoint
+is non-consuming and may be retried only after this same accepted handle is
+bound. The accepted reviewer performs required
+artifact intake, invokes the supplied `checkpointArtifacts`, submits
+`ReviewPlanV1` through `validate-plan`, retains its exact
+`PlanValidationReceiptV1` for evidence authorization and dossier binding, and
+invokes `begin-evidence` before selective content evidence. Keep every complete
+or partial `WorkerDossierV1` inside this
+accepted primary continuation. As each dossier is accepted, and before
+terminal return, the continuation must execute the preparation-supplied
+`bindWorkerDossier` invocation with its exact executable, argv array, and
+absolute cwd, replace only `__OAT_PLAN_RECEIPT__` with the retained receipt,
+and write exactly that dossier as bounded JSON stdin. Only after applicable
+dossiers are bound may it return `ReviewerTerminalOverlayV1`: terminal
+substance, mutable outcomes, evidence, budget observations, selectors, and
+typed verification-slot inputs. It must not retain/copy compatibility
+`ReviewAccountingSeedV1` or supply immutable identity, paths, obligations,
+policy, completion, or claim kind/mode. Never invoke ambient `oat`, override
+descriptor cwd, reconstruct a dossier from terminal digests, or hand a full
+dossier back to the parent launcher.
+Retain that exact accepted reviewer handle for its typed terminal; never launch
+a replacement after accepted timeout, blocked, malformed, or
+accounting-invalid output.
+
 After the subagent completes:
 
-- Treat its terminal status as authoritative. An accepted `BLOCKED` result
-  blocks the review; do not invoke fallback and do not infer a pass from a
-  missing review artifact or absent findings.
-- Verify the review artifact was written to the expected path
-- Continue with Step 8.5 (artifact/orchestration validation), Step 9 (plan
-  update), and Step 9.5 (commit)
+- Confirm its terminal accounts only for dossiers already bound inside the
+  accepted continuation. Identical retries there are idempotent; a
+  not-delegated inline lane has no dossier. The parent must not reconstruct or
+  submit a dossier from terminal digest fields.
+- Submit the compact overlay through launcher-owned `validate-output`; the
+  launcher strictly parses and assembles canonical `ReviewerTerminalV1` from
+  sealed state before validation, including after context compaction.
+- If and only if every error points into the closed accounting allowlist, offer
+  at most two same-handle accounting repair turns through the retained handle.
+  Substance mutation or exhausted repair yields
+  `review_complete_accounting_invalid`.
+- Only an accepted complete artifact terminal may invoke launcher-owned
+  `oat review publish-output --run-id <id> --destination <final-path> --json`.
+  The command consumes the private accepted snapshot once and never reads or
+  re-snapshots the reviewer draft. After publication, continue to Step 8.5 and
+  then the Step 9/9.5 bookkeeping.
+- Blocked or accounting-invalid output remains non-actionable. No discoverable
+  artifact, Reviews row, project log, or bookkeeping commit may be created.
+  Never infer a pass from absent findings.
+- In coordinator `finally`, after publication/bookkeeping or terminal diagnostic
+  translation has finished, execute launcher-retained
+  `coordinatorCommands.cleanupValidationRun` exactly once. Treat cleanup failure
+  as a lifecycle blocker; never expose either coordinator descriptor to the
+  reviewer.
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
@@ -874,7 +960,7 @@ To run review in a fresh session:
 4. Run the oat-project-review-receive skill
 ```
 
-**Step 6d: Tier 3 — Inline Reset (fallback)**
+### Step 6d: Tier 3 — Plan-First Inline Continuation (fallback)
 
 If the user requests inline review, first verify equivalent current-host model
 and effort controls. Inline is also allowed for explicit inherit/default or the
@@ -882,14 +968,92 @@ documented managed-uncapped reviewer behavior. User preference alone does not
 override a concrete managed target; if the guard fails, use the exact/pinned
 route or block.
 
-When inline is allowed:
+When inline is allowed, use the following contract. The current planning parent
+is the accepted inline continuation. Do not launch a replacement reviewer or
+introduce another coordinator. The launcher-owned commands and validators
+remain authoritative. Execute every exact
+`{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
+never use the ambient working directory or change cwd to repair alias
+resolution.
 
-- Run "reset protocol":
-  1. Re-read required artifacts for current workflow mode from scratch
-  2. Read all files in `FILES_CHANGED`. For a narrowed re-review, do not expand
-     this back to every file in the nominal full scope.
-  3. Apply oat-reviewer checklist inline
-  4. Write review artifact
+Use this exact contract:
+
+1. **Preparation (`oat review prepare-context`)** — Invoke the launcher-owned
+   `prepare-context` command for the authoritative range, sink, invocation, and
+   already-resolved outer budget. Treat its changed-file set, metadata-only
+   ChangeMap, obligations, run identity, and command invocations as
+   authoritative. Keep `coordinatorCommands` launcher-only, execute
+   `bindAcceptedContinuation` with exact bounded JSON for the current planning
+   parent's opaque handle, and retain that same handle for all continuation and
+   repair turns. Do not execute any reviewer command before binding succeeds.
+2. **Required artifact intake** — Re-read the mode-required lifecycle artifacts
+   from scratch. Use `FILES_CHANGED` only as the authoritative path inventory;
+   do not read source files or content-level diffs yet. For a narrowed
+   re-review, keep the exact narrowed range and inherited-coverage provenance.
+3. **Artifact checkpoint (`checkpointArtifacts`)** — After artifact intake,
+   execute the supplied one-shot checkpoint command from this accepted
+   continuation. Construct the plan only from its immutable `planning`
+   projection: metadata-only ChangeMap, selected obligations, prior-evidence
+   hints, budget, and exact derived policy values. Select the exact
+   `singleLane` or `multipleLanes` whole-diff entry from final lane topology.
+   Never reconstruct these from the filesystem or supply self-reported token
+   counts.
+4. **Validated plan (`ReviewPlanV1`)** — Build one compact inline plan that
+   assigns every authoritative path and obligation, records the mandatory
+   delegation economics and verification boundary, and records a
+   selective-inline or eligible whole-diff-inline evidence strategy. Submit it
+   with the supplied `validate-plan` command. One rejected plan may be
+   corrected once before evidence.
+5. **Plan receipt (`PlanValidationReceiptV1`)** — Retain the exact receipt only
+   for evidence authorization and dossier binding. Treat
+   `ReviewAccountingSeedV1` as a compatibility response, not reviewer state.
+6. **Evidence transition (`beginEvidence`)** — Execute the supplied
+   begin-evidence command with the seeded receipt. Do not read source files or
+   content-level diffs unless this atomic transition succeeds.
+7. **Selective evidence** — Inspect consequential seams first, then use
+   path-scoped diffs and targeted source context according to the validated
+   plan. Inline does not imply whole-diff. Whole-diff is valid only when
+   `patchEstimateState === 'exact'`, observed post-artifact telemetry produced
+   a context budget, `estimatedPatchTokens <= evidenceBudgetTokens`, and the
+   scope is one coherent lane without an unresolved consequential seam.
+   Missing telemetry, missing budget evidence, or an inexact/capped patch
+   estimate keeps the review inline but requires path-scoped evidence.
+8. **Delegated dossier binding (`bindWorkerDossier`)** — Keep every applicable
+   complete or partial `WorkerDossierV1` in this accepted continuation. As each
+   dossier is accepted, execute the preparation-supplied exact executable, argv
+   array, and absolute cwd, replace only `__OAT_PLAN_RECEIPT__`, and provide
+   that dossier as bounded JSON stdin. Never use ambient `oat`, override
+   descriptor cwd, or reconstruct a dossier from a terminal digest. Identical
+   retries are idempotent. A not-delegated inline lane has no dossier.
+9. **Typed overlay (`ReviewerTerminalOverlayV1`)** — Only after applicable dossiers
+   are bound, apply the full canonical `oat-reviewer` checklist, reconcile
+   evidence, and return one complete or blocked terminal from this same
+   continuation. Complete output carries the dispatch-selected candidate and
+   mutable overlay accounting; blocked output carries no actionable candidate.
+   Artifact drafts embed that exact overlay accounting object; the launcher
+   materializes canonical `ReviewAccountingV1` into the immutable snapshot.
+10. **Output validation (`validate-output`)** — Run the launcher-owned output
+    validator, which assembles canonical `ReviewerTerminalV1` from sealed state
+    even after context compaction, before translating to the artifact sink. For
+    an artifact candidate, require the private draft path and immutable embedded
+    accounting snapshot to equal the terminal envelope.
+11. **Bounded repair** — If and only if all validation errors point into the
+    closed encoding allowlist, perform at most two same-handle accounting repair
+    turns in this accepted inline continuation. Preserve the immutable substance
+    digest and never launch a replacement after accepted timeout, blocked,
+    malformed, or accounting-invalid output.
+12. **Acceptance side effects** — Only accepted complete artifact output may
+    invoke launcher-owned
+    `oat review publish-output --run-id <id> --destination <final-path> --json`
+    for the final Step 7 path and then continue with artifact orchestration
+    validation and bookkeeping. The command consumes the exact private accepted
+    snapshot once and never reads or re-snapshots the reviewer draft. Identical
+    same-destination retries reconcile an interrupted publication; a different
+    destination remains forbidden. Blocked or accounting-invalid output remains
+    non-actionable. No discoverable artifact, Reviews row, project log, or
+    bookkeeping commit may be created. In coordinator `finally`, after every
+    terminal side effect or diagnostic translation, execute launcher-retained
+    `cleanupValidationRun`; cleanup failure is a lifecycle blocker.
 
 ### Step 7: Determine Review Artifact Path
 
@@ -921,7 +1085,12 @@ mkdir -p "$PROJECT_PATH/reviews"
 
 ### Step 8: Write Review Artifact (if Tier 3)
 
-If running inline (Tier 3), execute the review and write artifact.
+If running inline (Tier 3), execute the review into the launcher-created
+private draft only. Do not write the Step 7 discoverable path directly.
+Step 6d validates the terminal and embedded accounting snapshot, then publishes
+the accepted snapshot atomically. If validation does not accept a complete
+terminal, skip Steps 8.5, 9, and 9.5; launcher-owned final cleanup removes the
+private run and draft after terminal translation.
 
 **Review checklist (from oat-reviewer):**
 

@@ -19,6 +19,10 @@ external_plans: []
 
 Five incidents on 2026-07-12: (1) concurrent CLI invocations failed a backlog-index regeneration; (2) the skill validator collided with a concurrent CLI build; (3) an interleaved delete/copy left `assets/migration/pjm-restructure.md` silently missing from the bundle until `release:validate` caught it; (4) two agents nearly raced the same regeneration during a backlog capture; (5) parallel validation commands reproduced the collision (format and type-check failed only in the shared generator).
 
+Sixth incident on 2026-07-30: two parallel `pnpm run cli -- …` planning
+preflights both entered `bundle-assets.sh`; one failed while copying
+`packages/cli/assets/skills/authoring-docs` with `File exists`.
+
 The failure has two modes: loud transient errors, and — worse — silently incomplete generated state. Multi-agent workflows running concurrent CLI invocations in one worktree make this routine rather than rare.
 
 ## Acceptance Criteria

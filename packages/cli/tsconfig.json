@@ -20,9 +20,11 @@
       "@fs/*": ["./src/fs/*"],
       "@errors/*": ["./src/errors/*"],
       "@app/*": ["./src/app/*"],
+      "@review/*": ["./src/review/*"],
       "@validation/*": ["./src/validation/*"]
     }
   },
+  "files": ["src/review/types.test.ts"],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/__tests__/**"]
 }

@@ -1,14 +1,16 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   createBranchLocalGateCli,
+  currentGateCliLaunch,
   readGateRouteReceipt,
   removeBranchLocalGateCli,
+  resolveCurrentLoaderArgs,
   validateGateRouteEnvelope,
   type BranchLocalGateCli,
 } from './branch-local-cli';
@@ -20,6 +22,36 @@ afterEach(async () => {
 });
 
 describe('branch-local gate CLI', () => {
+  it('preserves and resolves the active loader arguments', () => {
+    const loaderArgs = resolveCurrentLoaderArgs([
+      '--import',
+      'tsx',
+      '--require=commander',
+    ]);
+    expect(loaderArgs[0]).toBe('--import');
+    expect(loaderArgs[1]).not.toBe('tsx');
+    expect(loaderArgs[2]).toMatch(/^--require=.+commander/);
+    expect(
+      currentGateCliLaunch({
+        argv: ['node', '/checkout/packages/cli/src/index.ts'],
+        execArgv: ['--import', 'tsx'],
+        execPath: '/runtime/node',
+        cwd: '/checkout',
+      }),
+    ).toEqual({
+      command: '/runtime/node',
+      args: ['--import', loaderArgs[1], '/checkout/packages/cli/src/index.ts'],
+      cwd: '/checkout',
+    });
+    expect(
+      currentGateCliLaunch({
+        argv: ['node', '/checkout/packages/cli/src/index.ts'],
+        execPath: '/runtime/node',
+        cwd: 'relative-checkout',
+      }).cwd,
+    ).toBe(resolve('relative-checkout'));
+  });
+
   it('creates an executable shim for the exact running checkout launch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-gate-cli-test-'));
     const fixture = join(root, 'fixture.mjs');

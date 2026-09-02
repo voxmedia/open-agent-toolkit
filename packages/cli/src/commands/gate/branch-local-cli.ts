@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 export interface GateCliLaunch {
   command: string;
   args: string[];
-  cwd?: string;
+  cwd: string;
 }
 
 export interface BranchLocalGateCli {
@@ -31,19 +31,29 @@ export function currentGateCliRoot(): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
 }
 
-export function currentGateCliLaunch(): GateCliLaunch {
-  const entrypoint = process.argv[1];
+export function currentGateCliLaunch(
+  input: {
+    argv?: string[];
+    execArgv?: string[];
+    execPath?: string;
+    cwd?: string;
+  } = {},
+): GateCliLaunch {
+  const entrypoint = (input.argv ?? process.argv)[1];
   if (!entrypoint) {
     throw new Error('Unable to resolve the running OAT CLI entrypoint.');
   }
   return {
-    command: process.execPath,
-    args: [...resolveCurrentLoaderArgs(process.execArgv), entrypoint],
-    cwd: process.cwd(),
+    command: input.execPath ?? process.execPath,
+    args: [
+      ...resolveCurrentLoaderArgs(input.execArgv ?? process.execArgv),
+      entrypoint,
+    ],
+    cwd: resolve(input.cwd ?? process.cwd()),
   };
 }
 
-function resolveCurrentLoaderArgs(args: readonly string[]): string[] {
+export function resolveCurrentLoaderArgs(args: readonly string[]): string[] {
   const resolved: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;

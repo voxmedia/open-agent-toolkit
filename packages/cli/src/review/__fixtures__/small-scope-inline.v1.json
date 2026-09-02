@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fixture": "small-scope-compact-review-plan",
+  "changedFiles": 3,
+  "strategy": "whole-diff-inline",
+  "laneStrategy": "path-diff",
+  "replay": "direct-verify"
+}

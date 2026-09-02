@@ -625,19 +625,44 @@ describe('help output snapshots', () => {
       OAT review artifact commands
 
       Options:
-        -h, --help        display help for command
+        -h, --help                      display help for command
 
       Global Options:
-        -V, --version     output the version number
-        --json            Output a single JSON document
-        --verbose         Enable verbose debug output
-        --cwd <path>      Override working directory
+        -V, --version                   output the version number
+        --json                          Output a single JSON document
+        --verbose                       Enable verbose debug output
+        --cwd <path>                    Override working directory
 
       Commands:
-        latest [options]  Find the most recent OAT review artifact
-        help [command]    display help for command
+        latest [options]                Find the most recent OAT review artifact
+        prepare-context                 Prepare authoritative review context from
+                                        JSON stdin
+        checkpoint-artifacts [options]  Seal loaded review artifacts
+        validate-plan [options]         Validate a review plan from JSON stdin
+        begin-evidence [options]        Begin receipt-authorized review evidence
+        bind-worker-dossier [options]   Bind accepted worker coverage before output
+                                        validation
+        validate-output [options]       Validate complete reviewer output from JSON
+                                        stdin
+        publish-output [options]        Publish the accepted review artifact snapshot
+                                        once
+        help [command]                  display help for command
       "
     `);
+  });
+
+  it('review bind-worker-dossier --help pins accepted-continuation arguments', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'bind-worker-dossier',
+    ]).helpInformation();
+    expect(help).toContain('Usage: oat review bind-worker-dossier [options]');
+    expect(help).toContain('--run-id <id>');
+    expect(help).toContain('--receipt <receipt>');
+    expect(help).toContain('--broker-socket <path>');
+    expect(help).toContain('--stdin');
+    expect(help).toContain('--json');
   });
 
   it('review latest --help matches snapshot', () => {
@@ -665,6 +690,20 @@ describe('help output snapshots', () => {
         --cwd <path>          Override working directory
       "
     `);
+  });
+
+  it('review publish-output --help pins launcher-owned publication arguments', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'publish-output',
+    ]).helpInformation();
+    expect(help).toContain('Usage: oat review publish-output [options]');
+    expect(help).toContain('--run-id <id>         Validation run identifier');
+    expect(help).toContain(
+      '--destination <path>  Launcher-owned destination path',
+    );
+    expect(help).toContain('--json                Emit one JSON envelope');
   });
 
   it('doctor --help matches snapshot', () => {

@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { createProgram } from '@app/create-program';
 import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
 import { resolveAssetsRoot } from '@fs/assets';
+import { executeCommandInvocation } from '@review/command-invocation';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
@@ -730,6 +732,63 @@ describe('CLI command integration', () => {
       kind: null,
       archived: null,
       actionable: null,
+    });
+  });
+
+  it('registers the complete review validation command lifecycle', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const review = program.commands.find(
+      (command) => command.name() === 'review',
+    );
+
+    expect(review?.commands.map((command) => command.name())).toEqual([
+      'latest',
+      'authority-broker',
+      'bind-accepted-continuation',
+      'cleanup-validation-run',
+      'prepare-context',
+      'checkpoint-artifacts',
+      'validate-plan',
+      'begin-evidence',
+      'bind-worker-dossier',
+      'validate-output',
+      'publish-output',
+    ]);
+  });
+
+  it('executes branch-local review command identity ahead of ambient PATH', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const candidate = join(root, 'branch-candidate.cjs');
+    const ambient = join(root, 'ambient');
+    await mkdir(ambient);
+    await writeFile(
+      candidate,
+      'process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2), cwd: process.cwd() }))',
+    );
+    await writeFile(join(ambient, 'oat'), 'older global installation');
+
+    const result = await executeCommandInvocation(
+      {
+        executable: process.execPath,
+        argv: [candidate, 'review', 'checkpoint-artifacts'],
+        cwd: root,
+        stdin: 'none',
+      },
+      {
+        environment: {
+          ...process.env,
+          PATH: `${ambient}:${process.env.PATH ?? ''}`,
+        },
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      candidate: await realpath(candidate),
+      argv: ['review', 'checkpoint-artifacts'],
+      cwd: await realpath(root),
     });
   });
 

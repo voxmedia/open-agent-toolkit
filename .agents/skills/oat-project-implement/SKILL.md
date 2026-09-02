@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.3.1
+version: 2.3.2
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -101,7 +101,7 @@ record only the gate decision and its review/dispatch provenance.
 After every code commit and after every phase/review-fix completion, you MUST commit the OAT tracking files (project: `implementation.md`, `state.md`, `plan.md`) as a separate bookkeeping commit. Refresh the repo dashboard with `oat state refresh` before staging when available, but do not stage `.oat/state.md`; it is generated dashboard state and is normally gitignored. Do not defer, batch, or skip these commits under the reasoning that they "aren't related to the implementation." Skipping a bookkeeping commit is the primary cause of cross-session state drift and will cause the next implementation run to fail bookkeeping cross-checks. If bookkeeping commits feel frequent, that is the intended design — they are cheap and they prevent drift.
 
 **CRITICAL — Review boundaries require a committed artifact baseline.**
-Do not enter checkpoint review, final review, revise, or PR-final handoff with dirty core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`). If one of those boundaries is next and artifact bookkeeping is still uncommitted, stop and create the bookkeeping commit first.
+Do not enter checkpoint review, final review, revise, or PR-final handoff with dirty core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`). If one of those boundaries is next and artifact bookkeeping is still uncommitted, stop and create the bookkeeping commit first. Direct phase review and its gate/checkpoint/final aliases inherit the shared validation coordinator defined by the phase-execution route, including launcher-only accepted-handle binding and final cleanup descriptors, exact reviewer `{ executable, argv, cwd, stdin }` descriptors executed in their required absolute `cwd`—never the ambient working directory or a changed cwd used to repair alias resolution—and preparation-supplied worker-dossier binding inside the accepted continuation before terminal validation. Coordinator descriptors and capabilities never enter reviewer input.
 
 **CRITICAL — Intentional artifact divergence must be recorded.**
 If implementation intentionally diverges from `spec.md`, `design.md`, or `plan.md`, record the delta in `implementation.md` before the next phase/review boundary. Include what diverged, why it diverged, whether the implementation or original artifact is now source of truth, and any follow-up artifact updates or explicit deferral. Do not leave accepted design drift only in chat, a review artifact, or code comments; final summary generation depends on `implementation.md` preserving the delta.
@@ -187,6 +187,17 @@ the remote ref when the current branch does not yet have a record.
   ```
 
 **If `PROJECT_PATH` is valid:** derive `{project-name}` as the directory name (basename of the path).
+
+**Review plan compatibility:** Before any direct phase review, resolve `workflow.reviewPlanMode` from effective configuration (default `legacy`). `legacy` preserves the existing path, creates no validation state or receipt, and marks output `legacy-unvalidated`. `enforce` runs capability and resolved-budget preflight before model launch; 120,000 ms and unbounded/null are valid, while a lower budget returns `review-budget-below-minimum` with source, value, floor, and remedies to raise the timeout or explicitly select temporary `legacy`. Never silently downgrade or launch a replacement. Gate and checkpoint/final aliases inherit this mode and create no duplicate review context.
+
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
 
 ### Route Loading Contract
 

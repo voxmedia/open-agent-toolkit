@@ -109,6 +109,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
     createPrOnComplete: null,
     postImplementSequence: null,
     reviewExecutionModel: null,
+    reviewPlanMode: 'legacy',
     autoReviewAtHillCheckpoints: null,
     autoNarrowReReviewScope: true,
     autoArtifactReview: {

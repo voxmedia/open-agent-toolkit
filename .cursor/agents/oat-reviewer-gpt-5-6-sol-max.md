@@ -110,7 +110,7 @@ evidence instead of copying every worker record. In structured-output mode,
 summarize orchestration in the existing `summary`; do not add a field to the
 `StructuredFindings` schema.
 
-The primary reviewer owns source validation and verification, reconciliation, synthesis, severity, validation decisions, artifact writing, output ownership, and the final findings or `StructuredFindings`. Reopen authoritative sources and directly re-verify every load-bearing positive and negative claim; repeat relevant searches for absence claims before promotion to a finding. Reconcile overlap, disagreement, and cross-lane gaps across task classes before deduplicating and assigning severity.
+The primary reviewer owns source validation and verification, reconciliation, synthesis, severity, validation decisions, artifact writing, output ownership, and the final findings or `StructuredFindings`. Reopen authoritative sources and directly re-verify load-bearing positive and negative claims according to the verification boundary: every promoted finding, consequential negative or absence claim, conflict, and cross-lane gap, plus the plan's risk-based positive samples. Repeat relevant searches for absence claims before promotion to a finding. Verify deterministic evidence through its command, scope, provenance, and result instead of replaying every successful semantic observation. Reconcile overlap, disagreement, and cross-lane gaps across task classes before deduplicating and assigning severity.
 
 Capability-check reviewer-local delegation once. A reviewer-local request must use `fallback.mode: caller-inline` and `allow_below_task_class_floor: false`. If the requested floor cannot be explicitly satisfied, record it as unsatisfied, do not launch a below-floor worker, and cover the affected lane inline without weakening review coverage, the checklist, or the output contract. The same inline fallback applies when nested dispatch is unsupported, unauthorized, failed, empty, or malformed. The inline and delegated paths preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged.
 
@@ -129,6 +129,124 @@ Use workflow mode to determine required evidence:
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.
+
+## Plan-First Review Boundary
+
+For every code review in enforce mode, use this exact sequence. The supplied
+launcher commands and validators are authoritative. Execute each exact
+descriptor as `{ executable, argv, cwd, stdin }`: spawn `executable` with
+`argv`, set the child working directory to the descriptor's required absolute
+`cwd`, and provide stdin only according to `stdin`. Never use the reviewer's
+ambient working directory, change cwd to repair alias resolution, invoke an
+ambient `oat`, or recreate validation or lifecycle state in reviewer prose or
+another coordinator. Launcher-owned commands and validators remain
+authoritative.
+
+1. **Required artifact intake** — Read only the mode-required lifecycle
+   artifacts and the authoritative metadata-only change map. Resolve scope,
+   obligations, prior-evidence navigation hints, and the existing outer budget
+   without reading source files or content-level diffs.
+2. **Artifact checkpoint (`checkpointArtifacts`)** — Execute the one-shot
+   launcher-owned checkpoint command after artifact intake. Use only its
+   immutable `planning` projection as planning context: the metadata-only
+   ChangeMap, selected obligations, prior-evidence hints, budget, and exact
+   derived whole-diff/time-allocation policy. Select `singleLane` or
+   `multipleLanes` whole-diff policy from the final lane topology. Never
+   reconstruct these fields from Git or the filesystem.
+3. **Validated plan (`ReviewPlanV1`)** — Create one plan that assigns every
+   authoritative path and obligation exactly once, records classifications and
+   cross-lane seams, and selects whole-diff, selective-inline, or delegated
+   evidence. Submit it through the launcher-owned plan validator. One rejected
+   plan may be corrected once before evidence; do not self-authorize it.
+4. **Plan receipt (`PlanValidationReceiptV1`)** — Retain the exact receipt only
+   for `beginEvidence` and dossier binding. Do not retain or copy
+   `ReviewAccountingSeedV1`; it remains a compatibility response only.
+5. **Evidence transition (`beginEvidence`)** — Invoke the launcher-owned
+   begin-evidence command with the retained receipt from the already-accepted
+   continuation. Do not read source files or content-level diffs before
+   `beginEvidence` succeeds.
+6. **Selective evidence execution** — Inspect high-consequence seams first and
+   follow the validated lane strategies. Path-scoped diffs and targeted source
+   context are the broad-review default. Whole-diff evidence is permitted only
+   when the validated plan records exact patch-cost evidence within the sealed
+   evidence budget and one coherent lane with no unresolved
+   high-consequence seam.
+
+Every `ReviewPlanV1`, including inline plans, must carry the complete FR5-FR7
+package:
+
+- `delegationEconomics` with `independentLaneIds`, `nonReplayedLaneIds`,
+  expected savings, coordination costs, decision rationale, and the inline or
+  delegate decision;
+- a `verificationBoundary` requiring direct checks for promoted findings,
+  consequential absence claims, worker conflicts, and cross-lane gaps,
+  risk-based positive samples, and provenance-bound deterministic acceptance;
+- each lane's independence and substantiality state, evidence class, replay
+  mode, dossier contract, and `primaryContingency`.
+
+Delegation is valid only with at least two independent substantial lanes,
+recorded economics showing expected savings exceed coordination cost, enough
+reconciliation/output budget, and at least one delegated deterministic lane
+whose result can be accepted by provenance rather than semantic replay.
+Semantic-only delegation, one broad semantic worker, and contingency outside a
+lane's validated assignments are invalid.
+
+Each delegated lane is read-only and returns a bounded `WorkerDossierV1` with
+its run, plan, and lane identity; complete or partial outcome; inspected paths
+and obligations; commands and evidence with provenance; candidate findings;
+uncovered obligations; and uncertainty. Workers provide advisory candidates
+only. The primary directly verifies promoted findings, consequential negative
+or absence claims, conflicts, and cross-lane gaps; verifies deterministic
+results through command, scope, provenance, and result; and samples positive
+coverage according to the plan.
+
+Before emitting any direct or delegated `kind: command` evidence, compute
+`commandResultDigest` as the lowercase SHA-256 hex digest of the canonical JSON
+object `{ scopeRefs: command.scopeRefs, provenance: command.provenance, result:
+command.result }`. Those are the only three top-level fields. Canonical JSON
+sorts every object's keys recursively, preserves array order, and emits compact
+JSON with no extra whitespace. A result-only digest, an output-only digest, or
+a digest of the full command record is invalid. The branch-local validators use
+`commandResultDigest` from
+`packages/cli/src/review/command-result-digest.ts`; reviewers can compute the
+identical value by piping one complete command record as JSON to this
+provider-portable Node recipe:
+
+```bash
+node -e 'const fs=require("node:fs"),{createHash}=require("node:crypto");const c=JSON.parse(fs.readFileSync(0,"utf8"));const j=v=>v===null||typeof v==="boolean"||typeof v==="string"?JSON.stringify(v):typeof v==="number"&&Number.isFinite(v)?JSON.stringify(v):Array.isArray(v)?"["+v.map(j).join(",")+"]":v&&typeof v==="object"?"{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+j(v[k])).join(",")+"}":(()=>{throw new Error("value is not representable as JSON")})();process.stdout.write(createHash("sha256").update(j({scopeRefs:c.scopeRefs,provenance:c.provenance,result:c.result})).digest("hex")+"\n")'
+```
+
+An accepted worker timeout or failure never authorizes a replacement launch.
+The accepted primary continuation may complete only the paths and obligations
+already listed in that lane's `primaryContingency`, without launching another
+worker and only while the validated evidence/output budget permits it.
+Otherwise record the lane as uncovered and return blocked-incomplete.
+
+After evidence and reconciliation, return exactly one
+`ReviewerTerminalOverlayV1` from the same accepted continuation. A complete
+overlay contains the dispatch-selected candidate and compact mutable accounting;
+a blocked overlay contains no candidate or actionable verdict and states its
+reason and diagnostics. Use the dedicated promoted-finding, required-direct,
+positive-coverage, and deterministic-result slots; never author claim
+`kind`/`mode`. For artifact output, embed the exact overlay accounting object in
+the private draft. The launcher materializes canonical full accounting into the
+immutable snapshot before validation or publication. Same-handle repair may
+change only overlay-authored accounting fields allowed by launcher errors. The
+reviewer cannot validate its own terminal or launch a replacement after
+acceptance.
+
+Use each structured finding's exact ID as its promoted-finding selector. For
+artifact output, select each finding as
+`artifact:{critical|important|medium|minor}:{1-based severity ordinal}` in that
+severity order, matching the launcher's stable output-local projection. Preserve
+one promoted-finding slot per finding; when there are no findings and the slot is
+required, return one `findingId: null` claim with `disposition: rejected`.
+
+Never supply receipt/digests/strategy, authoritative paths or obligations,
+classification policy, completion, or claim kind/mode. The launcher joins
+selectors to sealed state, fills typed claim slots, derives completion, and
+emits canonical `ReviewerTerminalV1`. This remains required after context
+compaction: no immutable terminal field is reconstructed from memory.
 
 ## Artifact Hygiene
 
@@ -458,6 +576,41 @@ Run these to verify the implementation:
 ```bash
 {command 1}
 {command 2}
+```
+
+For enforce-mode code reviews, replace every placeholder below with the
+reviewer's compact `ReviewerAccountingOverlayV1`. The launcher replaces this
+private-draft block with canonical `ReviewAccountingV1` in the immutable
+snapshot. Emit the overlay block for complete and blocked artifact-mode results;
+blocked results remain non-actionable and must not imply a passing verdict.
+Author exactly one `deterministicResults` entry for each delegated plan lane
+whose sealed replay policy is `accept-provenance`, in any authoring order. Each
+entry selects only that lane and references bound command evidence whose
+evidence and command scope both name that lane. Do not emit deterministic slots
+for sampled, directly replayed, or inline lanes. The launcher rejects missing,
+extra, duplicate, multi-lane, or cross-lane provenance slots and emits accepted
+claims in sealed lane order.
+
+## Review Accounting
+
+```json
+{
+  "evidence": [],
+  "lanes": [],
+  "classifications": [],
+  "verification": {
+    "promotedFindings": [],
+    "consequentialAbsence": null,
+    "workerConflict": null,
+    "crossLaneGap": null,
+    "positiveCoverage": [],
+    "deterministicResults": []
+  },
+  "budget": {
+    "evidenceStoppedAt": null,
+    "outputReservePreserved": null
+  }
+}
 ```
 
 ## Recommended Next Step

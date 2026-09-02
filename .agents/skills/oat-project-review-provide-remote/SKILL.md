@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.1
+version: 1.1.2
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -83,10 +83,12 @@ Use step indicators:
 ```
 oat-project-review-provide-remote [code <scope>|artifact <scope>]
                                   [--pr <N>] [--project <path>]
+                                  [--through-task <pNN-tNN>]
                                   [--no-checkout] [--narrow|--no-narrow]
 ```
 
 - `code <scope>` / `artifact <scope>`: review type and scope token. Scope tokens: `pNN`, `pNN-tNN`, `pNN-pMM`, `final`, or `artifact <name>`. When omitted, infer from PR state (default `code` with the phase scope; `final` when the implementation is complete).
+- `--through-task <pNN-tNN>`: inclusive implemented prefix boundary for a matching `pNN` code scope. Pass it as `throughTaskId`; reject it for task, range, final, or artifact scopes.
 - `--pr <N>`: target PR number. When omitted, auto-detect from the current branch.
 - `--project <path>`: explicit OAT project directory. Takes precedence over the diff scan. Required when the diff touches zero or multiple projects' `state.md`.
 - `--no-checkout`: skip the ephemeral worktree and review from `gh pr diff` only (degraded context; project artifacts read from `gh` blob fetches instead of the checkout).
@@ -332,30 +334,130 @@ Detection:
 - Codex multi-agent: verify `[features] multi_agent = true`; if the host requires explicit authorization before `spawn_agent`, announce `authorization required` and ask one concise confirmation before selecting a lower tier. If authorized -> Tier 1; if declined -> Tier 2/3 fallback.
 - If the runtime can dispatch reviewer work -> Tier 1. If subagent dispatch is unavailable -> Tier 2. If the user requests inline / confirms a fresh session -> Tier 3.
 
+Before every direct Tier 1 or Tier 3 rail, resolve
+`workflow.reviewPlanMode` from effective configuration (default `legacy`).
+`legacy` uses the existing remote path, creates no validation state or receipt,
+and marks output `legacy-unvalidated`. `enforce` must complete capability and
+resolved-budget preflight before any model launch. Accept 120,000 ms or an
+unbounded/null budget; below the floor return
+`review-budget-below-minimum` with source, value, floor, and both remedies:
+raise the timeout or explicitly select temporary `legacy`. Missing capability
+or a short budget blocks without silent downgrade, replacement, or fallback.
+Indirect aliases inherit this branch and create no duplicate context.
+
+For an enforce-mode gate invocation, keep `invocation: "gate"` and pass the
+exact gate correlation tuple to `oat review prepare-context`. Read
+`gateRunId` / `launchAttemptId` from the prompt fields `oat_gate_run_id` /
+`oat_gate_launch_attempt_id`, or from `OAT_GATE_RUN_ID` /
+`OAT_GATE_LAUNCH_ATTEMPT_ID` when the prompt fields are unavailable. When both
+channels are present, they must match exactly. A partial or mismatched tuple is
+terminal input failure; never downgrade the invocation to `manual` or `auto`.
+Manual and auto invocations continue to pass no gate correlation.
+
 **Step 5b: Tier 1 — `oat-reviewer` in structured-output mode (preferred).**
 
-Build the dispatch payload and spawn the reviewer in structured-output mode. This mirrors the tested wrapper at `packages/cli/src/review-remote/reviewer-dispatch.ts` (`buildDispatchPayload` / `dispatchStructuredReview`):
+Before dispatch, invoke launcher-owned `oat review prepare-context` with sink
+`structured`, the authoritative PR range, invocation lineage, and resolved
+budget. Retain `coordinatorCommands` only in the launcher and build the dispatch
+payload with only the reviewer-safe `commands`; never copy coordinator
+descriptors or capabilities into reviewer input. Spawn the reviewer in
+structured-output mode. This mirrors the tested wrapper at
+`packages/cli/src/review-remote/reviewer-dispatch.ts`
+(`buildDispatchPayload` / `dispatchStructuredReview`):
 
 - Set `oat_output_mode: structured` in the dispatch payload (the flag
   `${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md` recognizes). In
-  this mode the reviewer returns a `StructuredFindings` object in-memory and
-  writes NO artifact under `reviews/`.
+  enforce mode the reviewer
+  returns a `ReviewerTerminalOverlayV1` whose accepted complete candidate
+  contains `StructuredFindings`; the launcher later assembles the canonical full
+  terminal, and the reviewer writes NO artifact under `reviews/`.
 - Include the project context (`oat_project`, `oat_review_scope`, `oat_review_head_sha`), the Review Scope metadata block, a pointer to the posted-review-body schema (`design.md` → Data Models → Posted-review-body), and the resolved narrowing range (`<prior_sha>..<HEAD>` or none).
 - If a worktree was resolved in Step 2, include its path so the reviewer reads from the checkout.
 - For Cursor concrete managed dispatch, invoke
   `providers.cursor.dispatchArgs.variant` as the exact native agent type. Do
   not substitute base `oat-reviewer` or add a concrete model argument.
-- The reviewer returns `StructuredFindings` (summary + findings array +
-  `verification_commands`). Tier 2/3 is eligible only when dispatch is
-  unavailable before launch or the exact native role is explicitly rejected
-  before any reviewer starts; record that pre-start outcome and do not retry
-  at Tier 1. Once a reviewer is accepted, malformed structured output is a
-  terminal validation failure: surface the error, block the review, and do not
-  launch another reviewer.
+- On host acceptance, retain the exact accepted handle and immediately execute
+  launcher-retained `coordinatorCommands.bindAcceptedContinuation` with its
+  exact executable, argv, and absolute cwd plus bounded stdin
+  `{"schemaVersion":1,"handleId":"<accepted-handle>"}`. Do not allow the reviewer
+  to invoke `checkpointArtifacts` before binding succeeds; an unbound checkpoint
+  is non-consuming and may be retried only after this same accepted handle is
+  bound. The reviewer performs required artifact intake, invokes supplied `checkpointArtifacts`,
+  submits `ReviewPlanV1` through `validate-plan`, retains the exact
+  `PlanValidationReceiptV1` only for evidence authorization and dossier binding,
+  treats `ReviewAccountingSeedV1` as compatibility output, and invokes
+  `begin-evidence` before selective content evidence. Every supplied command descriptor is the launcher-owned
+  `{ executable, argv, cwd, stdin }` contract: execute it in its required
+  absolute `cwd`; never use the reviewer's ambient working directory and never
+  change cwd to repair branch-local alias resolution.
+- Keep every applicable complete or partial `WorkerDossierV1` inside the
+  accepted primary continuation. As each dossier is accepted, the continuation
+  executes the preparation-supplied `bindWorkerDossier` invocation with its
+  exact executable, argv array, and absolute cwd, replaces only
+  `__OAT_PLAN_RECEIPT__`, and supplies exactly that dossier as bounded JSON
+  stdin. It must do this before returning one `ReviewerTerminalOverlayV1` with
+  compact substance, mutable outcomes, evidence, selectors, budget
+  observations, and typed verification-slot inputs. It never retains/copies the
+  seed or supplies immutable identity, paths, obligations, classification
+  policy, completion, or claim kind/mode. Never invoke ambient `oat`, override
+  descriptor cwd, reconstruct a dossier from terminal digests, or hand a full
+  dossier to the parent launcher.
+  Identical retries are idempotent; not-delegated inline lanes have no dossier.
+  Then submit the overlay envelope through launcher-owned `validate-output`,
+  which strictly parses and assembles canonical `ReviewerTerminalV1` from
+  sealed state before validation, including after context compaction.
+  If and only if
+  every validation error is accounting-allowlisted, perform at most two
+  same-handle accounting repair turns with frozen review substance.
+- Only an accepted, validated complete structured terminal may project
+  `StructuredFindings` for Step 6 finding mapping, Step 7 body/verdict
+  construction, confirmation, or Step 8 GitHub posting. Accepted timeout,
+  `BLOCKED`, malformed terminal, or accounting-invalid output is non-actionable:
+  perform no finding mapping and no GitHub post.
+- In coordinator `finally`, after accepted posting or non-actionable terminal
+  translation, execute launcher-retained
+  `coordinatorCommands.cleanupValidationRun` exactly once. Cleanup failure is a
+  lifecycle blocker. Never disclose either coordinator descriptor to the
+  reviewer.
+- Tier 2/3 is eligible only when dispatch is unavailable before launch or the
+  exact native role is explicitly rejected before any reviewer starts; record
+  that pre-start outcome and do not retry at Tier 1. Once accepted, never
+  launch a replacement or select a fallback tier.
 
 **Step 5c: Tier 2 — Fresh session (recommended fallback).** If subagent dispatch is unavailable and the user is not already in a fresh session, provide fresh-session instructions and exit. (If Codex reported `authorization required` and the user later authorizes, return to Tier 1.)
 
-**Step 5d: Tier 3 — Inline review (fallback).** If the user insists on inline review in the current session, run the reset protocol: re-read the required project artifacts, read all files in the review scope, apply the `oat-reviewer` checklist inline, and produce the findings set in the same `StructuredFindings` shape. Write NO artifact.
+**Step 5d: Tier 3 — Inline review (fallback).** If the user insists on inline
+review and the managed-target guard permits it, invoke
+`oat review prepare-context` with sink `structured`, then bind the current
+planning parent by executing launcher-retained
+`coordinatorCommands.bindAcceptedContinuation` with exact bounded handle JSON.
+Keep `coordinatorCommands` out of reviewer inputs and execute no reviewer
+command until binding succeeds. Perform required artifact intake; invoke supplied
+`checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain the
+exact `PlanValidationReceiptV1` only for evidence authorization and dossier
+binding; treat `ReviewAccountingSeedV1` as compatibility output; and invoke
+`begin-evidence` with the receipt before selective, path-scoped content
+evidence. Execute every exact
+`{ executable, argv, cwd, stdin }` descriptor in its required absolute `cwd`;
+never use the ambient working directory or change cwd to repair alias
+resolution. Keep every applicable complete or partial
+`WorkerDossierV1` in this same continuation and, as each is accepted, execute
+the preparation-supplied `bindWorkerDossier` exact executable, argv array, and
+absolute cwd with only `__OAT_PLAN_RECEIPT__` replaced and the dossier as
+bounded JSON stdin. Do not use ambient `oat`; not-delegated inline lanes remain
+unchanged. Only after binding, return one `ReviewerTerminalOverlayV1` with
+compact mutable accounting and typed verification-slot inputs. Never supply
+immutable terminal identity, assignment paths/obligations, classification
+policy, completion, or claim kind/mode. Then run `validate-output`, which
+assembles canonical `ReviewerTerminalV1` from sealed state even after context
+compaction, and permit at most two same-handle accounting
+repair turns. Only a validated complete structured terminal may
+project `StructuredFindings` and proceed to finding mapping, body construction,
+confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or
+accounting-invalid output is non-actionable and never launches a replacement or
+fallback tier. Write NO artifact. In coordinator `finally`, after posting or
+terminal translation, execute launcher-retained `cleanupValidationRun`; cleanup
+failure is a lifecycle blocker.
 
 ### Step 6: Map Inline Comments to the Diff
 

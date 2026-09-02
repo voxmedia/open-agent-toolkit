@@ -1,0 +1,18 @@
+[
+  {
+    "id": "deferred-finding:REV-2",
+    "kind": "deferred-finding",
+    "source": "implementation-v1.md",
+    "summary": "Add a recovery test",
+    "expectedPaths": [],
+    "expectedChecks": []
+  },
+  {
+    "id": "deviation:p02-t01:2",
+    "kind": "deviation",
+    "source": "review-paths.ts",
+    "summary": "Portable paths",
+    "expectedPaths": [],
+    "expectedChecks": []
+  }
+]

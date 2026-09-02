@@ -19,6 +19,7 @@ export default defineConfig({
       '@providers': resolvePath('./src/providers'),
       '@agents': resolvePath('./src/agents'),
       '@rules': resolvePath('./src/rules'),
+      '@review': resolvePath('./src/review'),
       '@shared': resolvePath('./src/shared'),
       '@test-support': resolvePath('./src/__tests__'),
       '@ui': resolvePath('./src/ui'),

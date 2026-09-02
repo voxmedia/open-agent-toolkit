@@ -5,16 +5,18 @@
  * this wrapper exercises.
  */
 
+import {
+  StructuredFindingsError,
+  type StructuredFindings,
+} from '@review/structured-findings';
 import { describe, expect, it } from 'vitest';
 
 import {
   STRUCTURED_OUTPUT_MODE_FLAG,
-  StructuredFindingsError,
   buildDispatchPayload,
   dispatchStructuredReview,
   type Dispatcher,
   type ReviewDispatchContext,
-  type StructuredFindings,
 } from './reviewer-dispatch';
 
 const HEAD_SHA = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678';

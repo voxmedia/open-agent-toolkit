@@ -1491,6 +1491,43 @@ describe('oat config', () => {
       });
     });
 
+    it('sets explicit review plan enforcement without rewriting sibling config', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({ cwd: root });
+
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: { archiveOnComplete: true },
+        }),
+      );
+      await runCommand(command, ['set', 'workflow.reviewPlanMode', 'enforce']);
+
+      expect(
+        JSON.parse(
+          await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+        ),
+      ).toMatchObject({
+        workflow: { archiveOnComplete: true, reviewPlanMode: 'enforce' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('rejects invalid review plan modes', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'workflow.reviewPlanMode',
+        'automatic',
+      ]);
+
+      expect(capture.error[0]).toContain('legacy | enforce');
+      expect(process.exitCode).toBe(1);
+    });
+
     it('sets workflow.autoArtifactReview.plan and resolves it via get', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -3279,6 +3316,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('workflow.createPrOnComplete');
       expect(capture.info[0]).toContain('workflow.postImplementSequence');
       expect(capture.info[0]).toContain('workflow.reviewExecutionModel');
+      expect(capture.info[0]).toContain('workflow.reviewPlanMode');
       expect(capture.info[0]).toContain('workflow.autoReviewAtHillCheckpoints');
       expect(capture.info[0]).toContain('workflow.autoNarrowReReviewScope');
       expect(capture.info[0]).toContain('workflow.autoArtifactReview.plan');

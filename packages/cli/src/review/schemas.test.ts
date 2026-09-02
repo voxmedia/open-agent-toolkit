@@ -1,0 +1,1052 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  parseArtifactFindingProjectionV1,
+  parsePrepareReviewContextInputV1,
+  parseHostTelemetryEvidenceV1,
+  parsePlanValidationReceiptV1,
+  parsePreparedReviewContextV1,
+  parseReviewCommandInvocationV1,
+  parseReviewCoordinatorCommandInvocationV1,
+  parseReviewerTerminalIngressV1,
+  parseReviewerTerminalOverlayV1,
+  parseReviewerTerminalV1,
+  parseReviewPreparationV1,
+  parseReviewPlanV1,
+  ReviewSchemaError,
+} from './schemas';
+
+const preparationInput = {
+  schemaVersion: 1,
+  repoRoot: '/repo',
+  project: '.oat/projects/shared/demo',
+  scope: 'p02',
+  throughTaskId: null,
+  workflowMode: 'spec-driven',
+  range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
+  sink: 'structured',
+  invocation: 'manual',
+  budget: { totalMs: 120_000, source: 'outer' },
+  gateRunId: null,
+  launchAttemptId: null,
+  obligationSources: {
+    plan: { source: '# Plan', path: 'plan.md' },
+    spec: null,
+    implementation: null,
+  },
+  priorEvidenceCandidates: [],
+  target: 'reviewer',
+};
+
+describe('prepare review input schema', () => {
+  it('strictly parses the complete versioned command input', () => {
+    expect(parsePrepareReviewContextInputV1(preparationInput)).toEqual(
+      preparationInput,
+    );
+    expect(
+      parsePrepareReviewContextInputV1({
+        ...preparationInput,
+        throughTaskId: 'p02-t01',
+      }),
+    ).toMatchObject({ scope: 'p02', throughTaskId: 'p02-t01' });
+  });
+
+  it('rejects a through-task from a different phase', () => {
+    expect(() =>
+      parsePrepareReviewContextInputV1({
+        ...preparationInput,
+        throughTaskId: 'p03-t01',
+      }),
+    ).toThrow('$/throughTaskId must belong to phase scope p02');
+  });
+
+  it.each([
+    { ...preparationInput, unknown: true },
+    { ...preparationInput, schemaVersion: 2 },
+    { ...preparationInput, repoRoot: 'relative' },
+    { ...preparationInput, scope: 'all' },
+    {
+      ...preparationInput,
+      range: { baseSha: 'bad', headSha: 'b'.repeat(40) },
+    },
+    {
+      ...preparationInput,
+      invocation: 'gate',
+    },
+    {
+      ...preparationInput,
+      obligationSources: { ...preparationInput.obligationSources, plan: null },
+    },
+  ])('rejects malformed complete input %#', (candidate) => {
+    expect(() => parsePrepareReviewContextInputV1(candidate)).toThrow(
+      ReviewSchemaError,
+    );
+  });
+});
+
+const hostTelemetry = {
+  schemaVersion: 1,
+  validationRunId: 'validation-run-1',
+  phase: 'pre_artifact',
+  adapterId: 'host',
+  requestStartedAt: '2026-07-30T20:00:00.000Z',
+  requestCompletedAt: '2026-07-30T20:00:01.000Z',
+  observation: {
+    observedAt: '2026-07-30T20:00:00.500Z',
+    contextWindowTokens: 100_000,
+    consumedTokens: 20_000,
+    remainingTokens: 80_000,
+    adapterId: 'host',
+    source: 'host-observed',
+  },
+  disposition: 'accepted',
+  rejectionReason: null,
+};
+
+describe('host telemetry evidence schema', () => {
+  it('parses complete coherent telemetry evidence', () => {
+    expect(
+      parseHostTelemetryEvidenceV1(hostTelemetry, 'validation-run-1'),
+    ).toEqual(hostTelemetry);
+  });
+
+  it.each([
+    { ...hostTelemetry, adapterId: 1 },
+    { ...hostTelemetry, requestStartedAt: 'July 30, 2026' },
+    { ...hostTelemetry, requestCompletedAt: '2026-07-30T19:59:59.000Z' },
+    { ...hostTelemetry, rejectionReason: 'unexpected' },
+    {
+      ...hostTelemetry,
+      observation: { ...hostTelemetry.observation, adapterId: 'other' },
+    },
+    {
+      ...hostTelemetry,
+      observation: { ...hostTelemetry.observation, remainingTokens: 70_000 },
+    },
+    {
+      ...hostTelemetry,
+      disposition: 'invalid',
+      observation: null,
+      rejectionReason: 'made-up',
+    },
+  ])('rejects malformed telemetry %#', (candidate) => {
+    expect(() =>
+      parseHostTelemetryEvidenceV1(candidate, 'validation-run-1'),
+    ).toThrow(ReviewSchemaError);
+  });
+});
+
+function preparation(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    runId: 'validation-run-1',
+    mode: 'enforce',
+    project: '.oat/projects/shared/example',
+    scope: 'p01',
+    invocation: 'manual',
+    sink: 'artifact',
+    correlation: { gateRunId: null, launchAttemptId: 'launch-1' },
+    range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
+    changeMap: {
+      files: [
+        {
+          path: 'src/review.ts',
+          status: 'modified',
+          isBinary: false,
+          additions: 2,
+          deletions: 1,
+          generatedHint: false,
+          bookkeepingHint: false,
+        },
+      ],
+      totals: {
+        files: 1,
+        additions: 2,
+        deletions: 1,
+        binaryFiles: 0,
+        numstatChangedLines: 3,
+        numstatTokenDenialEstimate: 1,
+        patchBytes: 90,
+        patchByteLowerBound: null,
+        patchEstimateState: 'exact',
+        patchCountingSkippedReason: null,
+        estimatedPatchTokens: 30,
+      },
+    },
+    obligations: [
+      {
+        id: 'task:p01-t01',
+        kind: 'task',
+        source: 'plan.md',
+        summary: 'Review the runtime.',
+        expectedPaths: ['src/review.ts'],
+        expectedChecks: ['pnpm test'],
+      },
+    ],
+    priorEvidence: [],
+    timeBudget: {
+      totalMs: 120_000,
+      source: 'scope-default',
+      deadlineMs: 130_000,
+    },
+    prepareContextTelemetry: null,
+    prepareTelemetryEvidenceDigest: 'pre-telemetry-digest',
+    preparationDigest: 'preparation-digest',
+    createdAt: '2026-07-30T20:00:00.000Z',
+    expiresAt: '2026-07-30T22:00:00.000Z',
+  };
+}
+
+function context(): Record<string, unknown> {
+  const value = preparation();
+  delete value['timeBudget'];
+  return {
+    ...value,
+    budget: {
+      time: {
+        totalMs: 120_000,
+        source: 'scope-default',
+        deadlineMs: 130_000,
+      },
+      context: null,
+    },
+    postArtifactTelemetryEvidenceDigest: 'post-telemetry-digest',
+    artifactCheckpointAt: '2026-07-30T20:01:00.000Z',
+    contextDigest: 'context-digest',
+  };
+}
+
+describe('preparation schemas', () => {
+  it('parses valid preparation and prepared context fixtures', () => {
+    expect(parseReviewPreparationV1(preparation()).runId).toBe(
+      'validation-run-1',
+    );
+    expect(parsePreparedReviewContextV1(context()).contextDigest).toBe(
+      'context-digest',
+    );
+  });
+
+  it.each([
+    ['overlay', terminalOverlay, parseReviewerTerminalOverlayV1],
+    ['legacy terminal', structuredTerminal, parseReviewerTerminalV1],
+  ] as const)(
+    'rejects duplicate finding IDs in %s ingress',
+    (_name, make, parse) => {
+      const terminal = make();
+      const review = (
+        terminal['candidate'] as Record<string, Record<string, unknown>>
+      )['review']!;
+      const finding = {
+        id: 'I1',
+        severity: 'important',
+        title: 'Duplicate ID',
+        file: null,
+        line: null,
+        body: 'The ID is duplicated.',
+        fix_guidance: null,
+      };
+      review['findings'] = [finding, { ...finding }];
+      expect(() => parse(terminal)).toThrow(/duplicates finding ID I1/);
+    },
+  );
+
+  it.each([
+    [
+      'wrong version',
+      (value: Record<string, unknown>) => (value['schemaVersion'] = 2),
+    ],
+    [
+      'unknown field',
+      (value: Record<string, unknown>) => (value['extra'] = true),
+    ],
+    [
+      'malformed SHA',
+      (value: Record<string, unknown>) =>
+        ((value['range'] as Record<string, unknown>)['headSha'] = 'not-a-sha'),
+    ],
+    [
+      'non-normalized path',
+      (value: Record<string, unknown>) =>
+        ((
+          (value['changeMap'] as Record<string, unknown>)['files'] as Array<
+            Record<string, unknown>
+          >
+        )[0]!['path'] = '../review.ts'),
+    ],
+    [
+      'duplicate path',
+      (value: Record<string, unknown>) => {
+        const files = (value['changeMap'] as Record<string, unknown>)[
+          'files'
+        ] as unknown[];
+        files.push(structuredClone(files[0]));
+      },
+    ],
+    [
+      'duplicate obligation',
+      (value: Record<string, unknown>) => {
+        const obligations = value['obligations'] as unknown[];
+        obligations.push(structuredClone(obligations[0]));
+      },
+    ],
+    [
+      'gate correlation on manual invocation',
+      (value: Record<string, unknown>) =>
+        ((value['correlation'] as Record<string, unknown>)['gateRunId'] =
+          'gate-1'),
+    ],
+    [
+      'missing gate correlation',
+      (value: Record<string, unknown>) => (value['invocation'] = 'gate'),
+    ],
+    [
+      'draft path smuggled into preparation',
+      (value: Record<string, unknown>) =>
+        (value['artifactDraftPath'] = '/private/draft.md'),
+    ],
+  ])('rejects %s', (_name, mutate) => {
+    const value = preparation();
+    mutate(value);
+    expect(() => parseReviewPreparationV1(value)).toThrow(ReviewSchemaError);
+  });
+
+  it('rejects unknown fields in nested strict objects', () => {
+    const value = context();
+    (value['budget'] as Record<string, unknown>)['reviewerEstimate'] = 10;
+    expect(() => parsePreparedReviewContextV1(value)).toThrow('unknown field');
+  });
+});
+
+function plan(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    runId: 'validation-run-1',
+    contextDigest: 'context-digest',
+    strategy: 'selective-inline',
+    lanes: [
+      {
+        id: 'semantic',
+        paths: ['src/review.ts'],
+        primaryObligationIds: ['task:p01-t01'],
+        seamObligationIds: [],
+        risk: 'high',
+        evidenceClass: 'semantic',
+        strategy: 'path-diff',
+        checks: ['Inspect behavior'],
+        delegated: false,
+        independenceRationale: null,
+        substantial: false,
+        substantialityRationale: null,
+        deadlineMs: null,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'direct-verify',
+        primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+      },
+    ],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: [],
+      nonReplayedLaneIds: [],
+      expectedSavings: [],
+      coordinationCosts: [],
+      decisionRationale: 'One semantic lane remains inline.',
+      decision: 'inline',
+    },
+    verificationBoundary: {
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['semantic'],
+        rationale: 'Sample positive coverage.',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: {
+      allowed: false,
+      estimatedTokens: 30,
+      evidenceBudgetTokens: null,
+      reason: 'No sealed context budget.',
+    },
+    timeAllocation: null,
+  };
+}
+
+function receipt(): Record<string, unknown> {
+  return {
+    token: 'opaque-token',
+    validationRunId: 'validation-run-1',
+    gateRunId: null,
+    launchAttemptId: 'launch-1',
+    acceptedHandleDigest: 'handle-digest',
+    contractVersion: 1,
+    contextDigest: 'context-digest',
+    planDigest: 'plan-digest',
+    assignmentDigest: 'assignment-digest',
+    validatedAt: '2026-07-30T20:02:00.000Z',
+    expiresAt: '2026-07-30T22:00:00.000Z',
+  };
+}
+
+function accounting(
+  completion: 'complete' | 'blocked-incomplete',
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    receipt: 'opaque-token',
+    contextDigest: 'context-digest',
+    planDigest: 'plan-digest',
+    assignmentDigest: 'assignment-digest',
+    strategy: 'selective-inline',
+    completion,
+    evidence: [],
+    lanes: [],
+    classifications: [],
+    verification: [],
+    budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+  };
+}
+
+function commandEvidence(): Record<string, unknown> {
+  return {
+    id: 'command-1',
+    command: 'pnpm test',
+    cwd: '.',
+    scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+    provenance: {
+      runner: 'host',
+      invocationDigest: 'invocation-digest',
+      capturedAt: '2026-07-30T20:03:00.000Z',
+    },
+    result: {
+      status: 'completed',
+      exitCode: 0,
+      outputDigest: 'output-digest',
+    },
+  };
+}
+
+function interruptedCommandEvidence(): Record<string, unknown> {
+  return {
+    ...commandEvidence(),
+    id: 'command-2',
+    result: {
+      status: 'interrupted',
+      signal: 'SIGTERM',
+      outputDigest: 'interrupted-output-digest',
+    },
+  };
+}
+
+function richAccounting(
+  completion: 'complete' | 'blocked-incomplete' = 'complete',
+): Record<string, unknown> {
+  return {
+    ...accounting(completion),
+    evidence: [
+      {
+        id: 'evidence-1',
+        kind: 'command',
+        locator: 'pnpm test',
+        scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+        provenance: 'host',
+        digest: 'evidence-digest',
+        commandId: 'command-1',
+        commandResultDigest: 'command-result-digest',
+      },
+      {
+        id: 'evidence-2',
+        kind: 'source',
+        locator: 'src/review.ts:1',
+        scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+        provenance: 'host',
+        digest: 'source-digest',
+        commandId: null,
+        commandResultDigest: null,
+      },
+    ],
+    lanes: [
+      {
+        id: 'semantic',
+        paths: ['src/review.ts'],
+        primaryObligationIds: ['task:p01-t01'],
+        seamObligationIds: [],
+        workerOutcome: 'not-delegated',
+        dossierDigest: null,
+        inspectionCoverage: 'all',
+        uninspectedPathIndexes: [],
+        uncoveredObligationIds: [],
+        commands: [commandEvidence()],
+        evidenceRefIds: ['evidence-1'],
+        uncertainty: [],
+        primaryCompletion: {
+          outcome: 'not-needed',
+          completedPathIndexes: [],
+          completedObligationIds: [],
+          commands: [interruptedCommandEvidence()],
+          evidenceRefIds: ['evidence-1'],
+        },
+      },
+    ],
+    classifications: [
+      {
+        id: 'generated',
+        kind: 'generated',
+        reason: 'Generated output requires a manifest check.',
+        paths: ['dist/review.js'],
+        planDisposition: 'inspect',
+        strategy: 'manifest-check',
+        plannedChecks: ['Verify generated manifest'],
+        exclusionAuthority: null,
+        outcome: 'complete',
+        inspectionCoverage: 'all',
+        uninspectedPathIndexes: [],
+        commands: [commandEvidence()],
+        uncertainty: [],
+      },
+    ],
+    verification: [
+      {
+        claimId: 'claim-1',
+        kind: 'deterministic-result',
+        findingId: null,
+        laneIds: ['semantic'],
+        mode: 'provenance',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+    ],
+  };
+}
+
+function structuredTerminal(
+  reviewAccounting: Record<string, unknown> = richAccounting(),
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: {
+        summary: 'One issue found.',
+        findings: [
+          {
+            id: 'I1',
+            severity: 'important',
+            title: 'Missing validation',
+            file: 'src/review.ts',
+            line: 42,
+            body: 'The nested value is not validated.',
+            fix_guidance: 'Validate it strictly.',
+          },
+        ],
+        verification_commands: ['pnpm test'],
+      },
+    },
+    reviewAccounting,
+  };
+}
+
+function terminalOverlay(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    contract: 'reviewer-terminal-overlay/v1',
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: {
+        summary: 'No issues found.',
+        findings: [],
+        verification_commands: ['pnpm test'],
+      },
+    },
+    reviewAccounting: {
+      evidence: [],
+      lanes: [],
+      classifications: [],
+      verification: {
+        promotedFindings: [],
+        consequentialAbsence: null,
+        workerConflict: null,
+        crossLaneGap: null,
+        positiveCoverage: [],
+        deterministicResults: [],
+      },
+      budget: {
+        evidenceStoppedAt: null,
+        outputReservePreserved: true,
+      },
+    },
+  };
+}
+
+describe('plan, receipt, and terminal schemas', () => {
+  it('strictly parses overlay and legacy terminal ingress', () => {
+    expect(parseReviewerTerminalOverlayV1(terminalOverlay())).toMatchObject({
+      contract: 'reviewer-terminal-overlay/v1',
+      status: 'complete',
+    });
+    expect(parseReviewerTerminalIngressV1(terminalOverlay())).toMatchObject({
+      contract: 'reviewer-terminal-overlay/v1',
+    });
+    expect(parseReviewerTerminalIngressV1(structuredTerminal())).toMatchObject({
+      status: 'complete',
+      reviewAccounting: { completion: 'complete' },
+    });
+  });
+
+  it.each([
+    ['overlay', terminalOverlay, parseReviewerTerminalOverlayV1],
+    ['legacy terminal', structuredTerminal, parseReviewerTerminalV1],
+  ] as const)(
+    'rejects severity-mismatched IDs in %s ingress',
+    (_name, make, parse) => {
+      const terminal = make();
+      const review = (
+        terminal['candidate'] as Record<string, Record<string, unknown>>
+      )['review']!;
+      review['findings'] = [
+        {
+          id: 'M1',
+          severity: 'important',
+          title: 'Mismatched ID',
+          file: null,
+          line: null,
+          body: 'The ID prefix does not match.',
+          fix_guidance: null,
+        },
+      ];
+      expect(() => parse(terminal)).toThrow(
+        /id must match severity and use a positive ordinal/,
+      );
+    },
+  );
+
+  it.each([
+    ['unknown field', { unknown: true }],
+    ['receipt', { receipt: 'reviewer-authored' }],
+    ['context digest', { contextDigest: 'reviewer-authored' }],
+    ['paths', { paths: ['src/fabricated.ts'] }],
+    ['completion', { completion: 'complete' }],
+  ])('rejects overlay accounting with %s', (_name, immutableField) => {
+    const overlay = terminalOverlay();
+    Object.assign(
+      overlay['reviewAccounting'] as Record<string, unknown>,
+      immutableField,
+    );
+    expect(() => parseReviewerTerminalOverlayV1(overlay)).toThrow(
+      /unknown field/,
+    );
+  });
+
+  it('strictly parses launcher-derived artifact finding projections', () => {
+    const projection = {
+      schemaVersion: 1,
+      snapshotDigest: 'a'.repeat(64),
+      accountingDigest: 'b'.repeat(64),
+      findingIds: ['artifact:critical:1', 'artifact:important:1'],
+    };
+    expect(parseArtifactFindingProjectionV1(projection)).toEqual(projection);
+    expect(() =>
+      parseArtifactFindingProjectionV1({
+        ...projection,
+        findingIds: ['artifact:critical:1', 'artifact:critical:1'],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(() =>
+      parseArtifactFindingProjectionV1({
+        ...projection,
+        snapshotDigest: 'not-a-digest',
+      }),
+    ).toThrow(/digest/i);
+  });
+
+  it('strictly parses portable command invocations', () => {
+    expect(
+      parseReviewCommandInvocationV1({
+        executable: '/branch/oat',
+        argv: ['review', 'validate-plan', 'a&b'],
+        cwd: '/branch',
+        stdin: 'review-plan-json',
+      }),
+    ).toEqual({
+      executable: '/branch/oat',
+      argv: ['review', 'validate-plan', 'a&b'],
+      cwd: '/branch',
+      stdin: 'review-plan-json',
+    });
+    expect(() =>
+      parseReviewCommandInvocationV1({
+        executable: '/branch/oat',
+        argv: [],
+        cwd: '/branch',
+        stdin: 'none',
+        command: 'shell text',
+      }),
+    ).toThrow(/unknown field/);
+    for (const cwd of [undefined, null, 42, '', 'relative/path']) {
+      expect(() =>
+        parseReviewCommandInvocationV1({
+          executable: '/branch/oat',
+          argv: [],
+          ...(cwd === undefined ? {} : { cwd }),
+          stdin: 'none',
+        }),
+      ).toThrow(/cwd/);
+    }
+    const coordinator = {
+      executable: '/branch/oat',
+      argv: ['review', 'bind-accepted-continuation'],
+      cwd: '/branch',
+      stdin: 'accepted-continuation-json',
+    };
+    expect(parseReviewCoordinatorCommandInvocationV1(coordinator)).toEqual(
+      coordinator,
+    );
+    expect(() => parseReviewCommandInvocationV1(coordinator)).toThrow(/stdin/);
+  });
+
+  it('parses valid plan, receipt, complete, and blocked branches', () => {
+    expect(parseReviewPlanV1(plan()).strategy).toBe('selective-inline');
+    expect(parsePlanValidationReceiptV1(receipt()).contractVersion).toBe(1);
+    expect(
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'complete',
+        candidate: {
+          kind: 'structured',
+          review: {
+            summary: 'No issues.',
+            findings: [],
+            verification_commands: [],
+          },
+        },
+        reviewAccounting: accounting('complete'),
+      }).status,
+    ).toBe('complete');
+    expect(
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'blocked',
+        reason: 'Coverage incomplete.',
+        diagnostics: ['One obligation remains.'],
+        reviewAccounting: accounting('blocked-incomplete'),
+      }).status,
+    ).toBe('blocked');
+  });
+
+  it('rejects missing delegation and verification fields', () => {
+    const missingEconomics = plan();
+    delete missingEconomics['delegationEconomics'];
+    expect(() => parseReviewPlanV1(missingEconomics)).toThrow(
+      'missing delegationEconomics',
+    );
+
+    const missingBoundary = plan();
+    delete missingBoundary['verificationBoundary'];
+    expect(() => parseReviewPlanV1(missingBoundary)).toThrow(
+      'missing verificationBoundary',
+    );
+  });
+
+  it('rejects incomplete and duplicate direct verification claim kinds', () => {
+    const incomplete = plan();
+    (
+      (incomplete['verificationBoundary'] as Record<string, unknown>)[
+        'requiredClaims'
+      ] as unknown[]
+    ).pop();
+    expect(() => parseReviewPlanV1(incomplete)).toThrow(
+      'direct claim kinds must be complete and unique',
+    );
+
+    const duplicate = plan();
+    (
+      (duplicate['verificationBoundary'] as Record<string, unknown>)[
+        'requiredClaims'
+      ] as unknown[]
+    ).push({ kind: 'promoted-finding', mode: 'direct' });
+    expect(() => parseReviewPlanV1(duplicate)).toThrow(
+      'direct claim kinds must be complete and unique',
+    );
+  });
+
+  it('rejects unknown plan enums and malformed receipts', () => {
+    const invalidPlan = plan();
+    invalidPlan['strategy'] = 'read-everything';
+    expect(() => parseReviewPlanV1(invalidPlan)).toThrow('invalid value');
+    const planWithUnknownField = plan();
+    planWithUnknownField['unknown'] = true;
+    expect(() => parseReviewPlanV1(planWithUnknownField)).toThrow(
+      'unknown field',
+    );
+
+    const invalidReceipt = receipt();
+    invalidReceipt['contractVersion'] = 2;
+    expect(() => parsePlanValidationReceiptV1(invalidReceipt)).toThrow(
+      'must be 1',
+    );
+  });
+
+  it('rejects complete terminals without candidates', () => {
+    expect(() =>
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'complete',
+        reviewAccounting: accounting('complete'),
+      }),
+    ).toThrow('missing candidate');
+  });
+
+  it('rejects blocked terminals with candidates', () => {
+    expect(() =>
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'blocked',
+        reason: 'Coverage incomplete.',
+        diagnostics: [],
+        candidate: {
+          kind: 'artifact-draft',
+          privateDraftPath: '/private/draft.md',
+        },
+        reviewAccounting: accounting('blocked-incomplete'),
+      }),
+    ).toThrow('unknown field candidate');
+  });
+
+  it('strictly parses every nested terminal and accounting branch', () => {
+    expect(parseReviewerTerminalV1(structuredTerminal())).toMatchObject({
+      status: 'complete',
+      reviewAccounting: { completion: 'complete' },
+    });
+  });
+
+  it.each([
+    [
+      'structured finding',
+      (terminal: Record<string, unknown>) => {
+        const review = (
+          terminal['candidate'] as Record<string, Record<string, unknown>>
+        )['review']!;
+        review['findings'] = [42];
+      },
+    ],
+    [
+      'evidence',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['evidence'] =
+          [42];
+      },
+    ],
+    [
+      'evidence scope reference',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown>;
+        evidence['scopeRefs'] = [null];
+      },
+    ],
+    [
+      'command',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['commands'] = ['invalid'];
+      },
+    ],
+    [
+      'command provenance',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['provenance'] = null;
+      },
+    ],
+    [
+      'command result',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['result'] = { status: 'unknown' };
+      },
+    ],
+    [
+      'lane',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['lanes'] = [
+          null,
+        ];
+      },
+    ],
+    [
+      'primary completion',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['primaryCompletion'] = {};
+      },
+    ],
+    [
+      'classification',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)[
+          'classifications'
+        ] = ['invalid'];
+      },
+    ],
+    [
+      'claim verification',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)[
+          'verification'
+        ] = [{}];
+      },
+    ],
+    [
+      'budget',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['budget'] =
+          null;
+      },
+    ],
+  ])('rejects malformed nested %s entries', (_name, mutate) => {
+    const terminal = structuredTerminal();
+    mutate(terminal);
+    expect(() => parseReviewerTerminalV1(terminal)).toThrow(ReviewSchemaError);
+  });
+
+  it.each([
+    [
+      'structured finding',
+      (terminal: Record<string, unknown>) => {
+        const review = (
+          terminal['candidate'] as Record<string, Record<string, unknown>>
+        )['review']!;
+        const finding = (review['findings'] as Record<string, unknown>[])[0]!;
+        finding['garbage'] = true;
+      },
+    ],
+    [
+      'evidence',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown>;
+        evidence['garbage'] = true;
+      },
+    ],
+    [
+      'scope reference',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown[]>;
+        const scopeRef = evidence['scopeRefs']![0] as Record<string, unknown>;
+        scopeRef['garbage'] = true;
+      },
+    ],
+    [
+      'command',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['garbage'] = true;
+      },
+    ],
+    [
+      'command provenance',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<
+          string,
+          Record<string, unknown>
+        >;
+        command['provenance']!['garbage'] = true;
+      },
+    ],
+    [
+      'command result',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<
+          string,
+          Record<string, unknown>
+        >;
+        command['result']!['garbage'] = true;
+      },
+    ],
+    [
+      'lane',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['garbage'] = true;
+      },
+    ],
+    [
+      'primary completion',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, Record<string, unknown>>;
+        lane['primaryCompletion']!['garbage'] = true;
+      },
+    ],
+    [
+      'classification',
+      (terminal: Record<string, unknown>) => {
+        const classification = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['classifications']![0] as Record<string, unknown>;
+        classification['garbage'] = true;
+      },
+    ],
+    [
+      'claim verification',
+      (terminal: Record<string, unknown>) => {
+        const claim = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['verification']![0] as Record<string, unknown>;
+        claim['garbage'] = true;
+      },
+    ],
+    [
+      'budget',
+      (terminal: Record<string, unknown>) => {
+        const budget = (
+          terminal['reviewAccounting'] as Record<
+            string,
+            Record<string, unknown>
+          >
+        )['budget']!;
+        budget['garbage'] = true;
+      },
+    ],
+  ])('rejects unknown fields in nested %s branches', (_name, mutate) => {
+    const terminal = structuredTerminal();
+    mutate(terminal);
+    expect(() => parseReviewerTerminalV1(terminal)).toThrow('unknown field');
+  });
+});

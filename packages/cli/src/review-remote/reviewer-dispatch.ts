@@ -24,7 +24,19 @@
  *   output.
  */
 
+import {
+  type StructuredFindings,
+  validateStructuredFindings,
+} from '@review/structured-findings';
+
 import type { NarrowingResult } from './narrowing';
+
+export {
+  type FindingSeverity,
+  type StructuredFinding,
+  type StructuredFindings,
+  StructuredFindingsError,
+} from '@review/structured-findings';
 
 /**
  * The dispatch-payload key that selects structured-output mode on the
@@ -36,36 +48,6 @@ export const STRUCTURED_OUTPUT_MODE_FLAG = 'oat_output_mode' as const;
 
 /** The single accepted value of {@link STRUCTURED_OUTPUT_MODE_FLAG}. */
 export const STRUCTURED_OUTPUT_MODE_VALUE = 'structured' as const;
-
-export type FindingSeverity = 'critical' | 'important' | 'medium' | 'minor';
-
-const SEVERITIES: ReadonlySet<string> = new Set([
-  'critical',
-  'important',
-  'medium',
-  'minor',
-]);
-
-/** A single structured finding (see design.md → Data Models). */
-export interface StructuredFinding {
-  /** Stable per-dispatch ID with a C/I/M/m prefix. */
-  id: string;
-  severity: FindingSeverity;
-  title: string;
-  /** Repo-relative path; both `file` and `line` are set or both `null`. */
-  file: string | null;
-  /** 1-based line in the post-image; paired with `file`. */
-  line: number | null;
-  body: string;
-  fix_guidance: string | null;
-}
-
-/** Typed return shape from `oat-reviewer` in structured-output mode. */
-export interface StructuredFindings {
-  summary: string;
-  findings: StructuredFinding[];
-  verification_commands: string[];
-}
 
 /**
  * Raw response envelope from a provider dispatch. The reviewer's structured
@@ -99,14 +81,6 @@ export interface ReviewDispatchContext {
   narrowing: NarrowingResult;
 }
 
-/** Typed error raised when the reviewer returns a malformed structured shape. */
-export class StructuredFindingsError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'StructuredFindingsError';
-  }
-}
-
 /**
  * Build the dispatch payload for a structured-output reviewer run. The
  * structured-mode flag is always set; the narrowing range is included only when
@@ -128,102 +102,6 @@ export function buildDispatchPayload(
     review_scope_metadata: context.reviewScopeMetadata,
     posted_body_schema_ref: context.postedBodySchemaRef,
     narrowing_range: narrowingRange,
-  };
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function validateFinding(value: unknown, index: number): StructuredFinding {
-  const at = `findings[${index}]`;
-  if (!isObject(value)) {
-    throw new StructuredFindingsError(`${at} must be an object.`);
-  }
-
-  if (typeof value['id'] !== 'string' || value['id'] === '') {
-    throw new StructuredFindingsError(`${at}.id must be a non-empty string.`);
-  }
-  if (
-    typeof value['severity'] !== 'string' ||
-    !SEVERITIES.has(value['severity'])
-  ) {
-    throw new StructuredFindingsError(
-      `${at}.severity must be one of critical|important|medium|minor.`,
-    );
-  }
-  if (typeof value['title'] !== 'string') {
-    throw new StructuredFindingsError(`${at}.title must be a string.`);
-  }
-  if (typeof value['body'] !== 'string') {
-    throw new StructuredFindingsError(`${at}.body must be a string.`);
-  }
-
-  const file = value['file'];
-  const line = value['line'];
-  const fileSet = file !== null;
-  const lineSet = line !== null;
-  if (fileSet !== lineSet) {
-    throw new StructuredFindingsError(
-      `${at} must set both file and line, or set both to null.`,
-    );
-  }
-  if (fileSet && typeof file !== 'string') {
-    throw new StructuredFindingsError(`${at}.file must be a string or null.`);
-  }
-  if (lineSet && typeof line !== 'number') {
-    throw new StructuredFindingsError(`${at}.line must be a number or null.`);
-  }
-
-  const fixGuidance = value['fix_guidance'];
-  if (fixGuidance !== null && typeof fixGuidance !== 'string') {
-    throw new StructuredFindingsError(
-      `${at}.fix_guidance must be a string or null.`,
-    );
-  }
-
-  return {
-    id: value['id'],
-    severity: value['severity'] as FindingSeverity,
-    title: value['title'],
-    file: fileSet ? (file as string) : null,
-    line: lineSet ? (line as number) : null,
-    body: value['body'],
-    fix_guidance: fixGuidance === null ? null : (fixGuidance as string),
-  };
-}
-
-/**
- * Validate an unknown value against the `StructuredFindings` contract. Throws a
- * {@link StructuredFindingsError} on the first violation; returns the typed
- * object otherwise.
- */
-export function validateStructuredFindings(value: unknown): StructuredFindings {
-  if (!isObject(value)) {
-    throw new StructuredFindingsError('StructuredFindings must be an object.');
-  }
-  if (typeof value['summary'] !== 'string') {
-    throw new StructuredFindingsError('summary must be a string.');
-  }
-  if (!Array.isArray(value['findings'])) {
-    throw new StructuredFindingsError('findings must be an array.');
-  }
-  const commands = value['verification_commands'];
-  if (
-    !Array.isArray(commands) ||
-    !commands.every((c) => typeof c === 'string')
-  ) {
-    throw new StructuredFindingsError(
-      'verification_commands must be an array of strings.',
-    );
-  }
-
-  const findings = value['findings'].map((f, i) => validateFinding(f, i));
-
-  return {
-    summary: value['summary'],
-    findings,
-    verification_commands: commands as string[],
   };
 }
 

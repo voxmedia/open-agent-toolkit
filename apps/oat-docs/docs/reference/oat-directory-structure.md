@@ -86,6 +86,9 @@ Current config ownership:
 - `.oat/config.json` owns shared non-sync repo settings (including `worktrees.root`, `projects.root`, and `documentation.*`).
 - `.oat/config.local.json` owns per-developer project lifecycle state (`activeProject`, `lastPausedProject`, `activeIdea`).
 - `~/.oat/config.json` owns user-level state (`activeIdea` at global scope).
+- Workflow preferences such as `workflow.reviewPlanMode` resolve from
+  `.oat/config.local.json`, then `.oat/config.json`, then
+  `~/.oat/config.json`, then their built-in default.
 - `.oat/sync/config.json` owns project sync/provider behavior and project known strays.
 - `~/.oat/sync/config.json` owns user sync/provider behavior and personal known
   strays. OAT migrates legacy `~/.oat/config.json#knownStrays` entries here
@@ -117,6 +120,7 @@ Current schema keys:
 | `documentation.requireForProjectCompletion`                | `boolean`                  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                                                                                                                                                           |
 | `git.defaultBranch`                                        | `string`                   | `"main"`                 | Default branch for PR creation. Auto-detected during `oat init` via `gh repo view` or `origin/HEAD`. Used by `oat-project-pr-final` and `oat-project-pr-progress`.                                                                                                                                      |
 | `workflow.autoReviewAtHillCheckpoints`                     | `boolean`                  | unset                    | When `true`, completing a HiLL checkpoint automatically runs the extra lifecycle review. Does not control Tier 1 per-phase `oat-reviewer` gates. Can be overridden per-project via `oat_auto_review_at_hill_checkpoints` in `plan.md` frontmatter. Legacy `autoReviewAtCheckpoints` remains a fallback. |
+| `workflow.reviewPlanMode`                                  | `legacy` or `enforce`      | `legacy`                 | Controls plan-first review enforcement. `legacy` preserves the compatibility path; `enforce` requires capability, budget, plan-validation, and output-accounting preflight. Resolves `local > shared > user > default`.                                                                                 |
 | `workflow.dispatchPolicy.mode`                             | `string`                   | unset                    | Dispatch policy mode: `managed` lets OAT select model/effort controls; `inherit` leaves controls to the host/provider defaults.                                                                                                                                                                         |
 | `workflow.dispatchPolicy.policy`                           | `string`                   | unset                    | Managed dispatch policy: `economy`, `balanced`, `high`, `frontier`, or `uncapped`. Capped policies compile to provider targets; `uncapped` keeps OAT-managed preferred selection without provider caps. `inherit` mode is separate and leaves controls to the host/provider.                            |
 | `workflow.dispatchCeiling.preset`                          | `string`                   | unset                    | Legacy compatibility preset for capped managed policy setup (`balanced`, `maximum`, `cost-conscious`). `maximum` maps to `high`; `cost-conscious` maps to `economy`.                                                                                                                                    |
@@ -246,6 +250,30 @@ Not all workflow modes require every artifact:
 - `spec-driven`: discovery + spec + design + plan + implementation
 - `quick`: discovery + plan + implementation (spec/design optional)
 - `import`: imported plan + implementation (spec/design optional)
+
+## Temporary review validation state
+
+Enforce-mode review validation does not add a directory under `.oat`. The
+launcher-owned `ValidationStore` defaults to the operating system temporary
+directory:
+
+```text
+<os-temp>/oat-review-validation-v1/
+```
+
+The store is private, run-scoped, and short-TTL. It carries validation context,
+receipts, accepted-snapshot state, and terminal classification while a review
+is active. It is not project state, is never committed, and is outside active
+and archived review resolvers.
+
+If a review completes with invalid accounting, OAT can retain a minimal
+temporary diagnostic containing correlation and attempt-count information
+while deleting the parent review state. That diagnostic remains non-actionable:
+it is not a review artifact, Reviews row, handoff, or passing verdict.
+
+Do not create, copy, or move `oat-review-validation-v1` under `.oat`, a project
+directory, or a review-artifact directory. Its separation from durable project
+state is part of the validation and actionability boundary.
 
 ## `.oat/repo/` structure
 

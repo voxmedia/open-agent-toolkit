@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "fixture": "large-scope-pre-review-plan",
+  "changedFiles": 237,
+  "operations": [
+    { "kind": "content-diff", "count": 1 },
+    { "kind": "full-file-read", "count": 237 },
+    { "kind": "semantic-replay", "count": 237 },
+    { "kind": "tool-step", "count": 481 }
+  ],
+  "completion": "blocked",
+  "accountingBytes": 0
+}

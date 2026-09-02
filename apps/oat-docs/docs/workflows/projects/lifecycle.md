@@ -122,6 +122,40 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 
 ### Auto-review at HiLL checkpoints
 
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+
+### Reviews around phase boundaries
+
+Three independent triggers can run around a phase boundary:
+
+- The ordinary root-owned phase review runs after every implemented phase and
+  must pass before phase bookkeeping can advance.
+- HiLL checkpoint auto-review is an optional additional lifecycle review. It
+  runs only at a configured pause boundary and may cover a phase range or final
+  scope.
+- `oat_phase_review_gate` is an optional external phase gate. It runs after the
+  ordinary phase review and committed bookkeeping, and a passing gate does not
+  pause execution.
+
+Passing one trigger does not satisfy either of the others. Where a trigger uses
+the direct enforce-mode review rail, it shares the plan-first lifecycle:
+required artifact intake, validated plan and receipt, `beginEvidence`, selective
+evidence, and accepted terminal accounting. Alias routes inherit the existing
+authoritative validation context instead of creating a duplicate. This proves
+the validated plan preceded the declared evidence transition and that final
+accounting matches it; it does not prove provider tool-read ordering.
+
+### Phase-review setup during planning
+
+Spec-driven, quick, and import planning run one shared setup after stable phase
+IDs exist and before the plan artifact review. The target probe qualifies only
+an explicitly configured, enabled, and available review target, then offers all
+phases, selected phases, or disabled. Existing explicit
+`oat_phase_review_gate` values are preserved unchanged without re-prompting.
+Probe failure, no qualifying target, non-interactive execution, or user decline
+leaves phase review disabled. Provider native plan mode inherits this behavior
+through the import-plan lane.
+
 ### Approval-aware post-implementation sequencing
 
 `workflow.postImplementSequence` can use the legacy string values or a structured
@@ -162,17 +196,6 @@ generation occurs only through an explicitly configured post-approval `retro`
 step.
 
 When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
-
-### Phase-review setup during planning
-
-Spec-driven, quick, and import planning run one shared setup after stable phase
-IDs exist and before the plan artifact review. The target probe qualifies only
-an explicitly configured, enabled, and available review target, then offers all
-phases, selected phases, or disabled. Existing explicit
-`oat_phase_review_gate` values are preserved unchanged without re-prompting.
-Probe failure, no qualifying target, non-interactive execution, or user decline
-leaves phase review disabled. Provider native plan mode inherits this behavior
-through the import-plan lane.
 
 ## Implementation modes
 

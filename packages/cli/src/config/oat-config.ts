@@ -109,6 +109,7 @@ export type WorkflowReviewExecutionModel =
   | 'inline'
   | 'fresh-session';
 export type WorkflowDesignMode = 'collaborative' | 'selective' | 'draft';
+export type WorkflowReviewPlanMode = 'legacy' | 'enforce';
 export type WorkflowRetroFilingDestination = 'issues' | 'backlog' | 'none';
 export type WorkflowRetroApply = 'auto' | 'ask';
 export interface WorkflowRetroConfig {
@@ -219,6 +220,7 @@ export interface OatWorkflowConfig {
   createPrOnComplete?: boolean;
   postImplementSequence?: WorkflowPostImplementSequence;
   reviewExecutionModel?: WorkflowReviewExecutionModel;
+  reviewPlanMode?: WorkflowReviewPlanMode;
   autoReviewAtHillCheckpoints?: boolean;
   autoNarrowReReviewScope?: boolean;
   autoArtifactReview?: WorkflowAutoArtifactReview;
@@ -267,6 +269,10 @@ const VALID_REVIEW_EXECUTION_MODELS: readonly WorkflowReviewExecutionModel[] = [
   'subagent',
   'inline',
   'fresh-session',
+];
+const VALID_REVIEW_PLAN_MODES: readonly WorkflowReviewPlanMode[] = [
+  'legacy',
+  'enforce',
 ];
 const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'collaborative',
@@ -722,6 +728,15 @@ function normalizeWorkflowConfig(
   ) {
     next.reviewExecutionModel =
       parsed.reviewExecutionModel as WorkflowReviewExecutionModel;
+  }
+
+  if (
+    typeof parsed.reviewPlanMode === 'string' &&
+    (VALID_REVIEW_PLAN_MODES as readonly string[]).includes(
+      parsed.reviewPlanMode,
+    )
+  ) {
+    next.reviewPlanMode = parsed.reviewPlanMode as WorkflowReviewPlanMode;
   }
 
   if (typeof parsed.autoReviewAtHillCheckpoints === 'boolean') {
