@@ -1,7 +1,8 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 52d2e69addd6ca17b421f48de9a858a9a31a0366
-oat_blockers: []
+oat_current_task: p06-review-r1-fix
+oat_last_commit: 642912319c1a3e79ee43397d5158e6fecc15b051
+oat_blockers:
+  - Phase 6 review round 1 found four Critical and one Important dispatch-integrity defects; the bounded fix is assigned to the original implementer before Phase 7.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -111,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 5 passes by explicit operator acceptance of the narrow
-absent-file parent-swap residual risk. Existing `AGENTS.md` files and symlinks
-remain zero-write. Phase 6 begins at `p06-t01`.
+Implementation - Phase 6 completed four planned tasks, but its first review
+reproduced fallback authorization, concurrency, sensitive-content, containment,
+and generic-correlation defects. A bounded review fix is active.
 
 ## Artifacts
 
@@ -121,7 +122,7 @@ remain zero-write. Phase 6 begins at `p06-t01`.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p06-t01 next)
+- **Implementation:** `implementation.md` (blocked — p06 review round 1 fix active)
 
 ## Progress
 
@@ -161,12 +162,16 @@ remain zero-write. Phase 6 begins at `p06-t01`.
 - ⧗ Fresh review blocked with 1 Critical parent-identity race
 - ✓ Parent-swap residual risk explicitly accepted by operator
 - ✓ Phase 5 passed by operator disposition
+- ✓ Phase 6 four-task implementation completed at `642912319`
+- ✓ Phase 6 verification passed 559/559 plus skill/static gates
+- ⧗ Phase 6 review round 1 blocked with 4 Critical and 1 Important findings
 
 ## Blockers
 
-- None.
+- Phase 6 requires the bounded round-1 fallback/journal integrity fix and a
+  fresh independent review before Phase 7.
 
 ## Next Milestone
 
-Implement Phase 6 native dispatch and fallback provenance beginning with the
-canonical role resolver in `p06-t01`.
+Fix the five Phase 6 round-1 findings through the original implementer, rerun
+the complete Phase 6 verification set, and obtain a fresh independent review.

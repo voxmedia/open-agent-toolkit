@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 6 review round 1 found four Critical and one Important dispatch-integrity defects; the bounded fix is assigned to the original implementer before Phase 7.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-review-r1-fix
 oat_generated: false
 ---
 
@@ -31,7 +32,7 @@ oat_generated: false
 | Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | complete | 5     | 5/5       |
 | Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | pending  | 4     | 0/4       |
+| Phase 6 | blocked  | 4     | 4/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
 **Total:** 22/30 tasks completed
@@ -1396,6 +1397,44 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ---
 
+## Phase 6: Native Dispatch and Fallback Provenance
+
+**Status:** blocked pending review round 1 fixes
+**Started:** 2026-09-02
+
+### Task Outcomes
+
+- `p06-t01` committed as `c833eb8ccdda1f13632ad19ff6a461e9155636a6`:
+  extracted the exact canonical role resolver and retained the bundled contract
+  as an integration consumer.
+- `p06-t02` committed as `42b0632d02b61dd94280088fe3e011c729f43bef`:
+  added neutral generic and namespaced OAT dispatch record validation.
+- `p06-t03` committed as `8e0a284956da60c36c50b3349f91941e8096fe2c`:
+  added validating project dispatch persistence and contained atomic JSON I/O.
+- `p06-t04` committed as `642912319c1a3e79ee43397d5158e6fecc15b051`:
+  instrumented native-first dispatch protocols across canonical skills and docs.
+- Phase verification passed 559/559 direct tests and 586/586 skill tests; all
+  63 skills validated, all five changed skill versions passed the committed-diff
+  bump gate, and lint/format/check/type/diff checks passed.
+
+### Review Round 1 — Fallback and Journal Integrity
+
+- Artifact: `reviews/p06-review-2026-09-02T151842Z.md`
+- Reviewed head: `642912319c1a3e79ee43397d5158e6fecc15b051`
+- Verdict: changes requested; 4 Critical, 1 Important, 0 Medium, 0 Minor.
+- Direct probes accepted prohibited/control-widened/unrelated-role fallback,
+  persisted two concurrent fallbacks, lost a concurrent evidence update,
+  accepted common sensitive aliases, and confirmed a final ancestor-swap
+  window in journal publication.
+- The generic task-class correlation fields can also be partial or
+  contradictory while validating successfully.
+- Declared suites remained green, so the fix must add deterministic negative
+  and concurrency/barrier regressions for every reproduced path.
+- Reconnaissance was not attempted. The original exact-High Phase 6 implementer
+  owns the bounded review fix; Phase 7 remains gated.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -2137,6 +2176,29 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   and symlinks remain zero-write manual guidance.
 - Outcome: the lifecycle artifacts record the exception; no Phase 5 code change
   or re-review is required. Phase 5 passes and Phase 6 begins at `p06-t01`.
+
+#### Dispatch record — `dispatch-p06-20260902-e690bd2b4`
+
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `e690bd2b487db5e9ae4880ea8922afa745e27bbb`
+- Final head: `642912319c1a3e79ee43397d5158e6fecc15b051`
+- Outcome: all four Phase 6 tasks committed in order; phase union 559/559,
+  skill tests 586/586, static/skill gates passed, and recovery usage remained
+  0/10.
+- Selection reason: `candidate-requested`; task class `hard-reasoning`;
+  candidate `gpt-5.6-sol/high`.
+- Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 1 — fallback and journal integrity
+
+- Reviewed head: `642912319c1a3e79ee43397d5158e6fecc15b051`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p06-review-2026-09-02T151842Z.md`
+- Outcome: changes requested; 4 Critical and 1 Important findings are assigned
+  to the original Phase 6 implementer before Phase 7.
+- Reconnaissance: not attempted.
+- Selection reason: `review-target`; candidate `gpt-5.6-sol/high`.
+- Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
