@@ -4,6 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
+import { renderPacket } from '../scripts/render-packet.mjs';
+import { validatePacket } from '../scripts/validate-packet.mjs';
+import { createPacketFixture } from './fixtures/packet-fixture.mjs';
 import { runFakeRecon } from './helpers/fake-recon-run.mjs';
 
 const tempRoots = [];
@@ -179,6 +182,59 @@ test('structural failure leaves diagnostics but no consumer packet', async () =>
     ).code,
     'STRUCTURAL_VALIDATION_FAILED',
   );
+});
+
+test('documented candidate validation preserves the last-known-good packet until successful promotion', async () => {
+  const fixture = await createPacketFixture({ profile: 'quick' });
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  const published = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+
+  fixture.manifest.schemaVersion = 99;
+  await fixture.persist();
+  const invalidCandidate = await validatePacket(fixture.packetRoot);
+  assert.equal(
+    invalidCandidate.valid,
+    false,
+    JSON.stringify(invalidCandidate, null, 2),
+  );
+  assert.equal(
+    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    published,
+  );
+  await assert.rejects(renderPacket(fixture.packetRoot));
+  assert.equal(
+    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    published,
+  );
+
+  fixture.manifest.schemaVersion = 1;
+  fixture.ledger.synthesis.answer = 'A successfully promoted replacement.';
+  await fixture.persist();
+  const validCandidate = await validatePacket(fixture.packetRoot);
+  assert.equal(
+    validCandidate.valid,
+    true,
+    JSON.stringify(validCandidate, null, 2),
+  );
+  await renderPacket(fixture.packetRoot);
+  const replacement = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+  assert.notEqual(replacement, published);
+  assert.match(replacement, /successfully promoted replacement/i);
+
+  const fresh = await createPacketFixture({ profile: 'quick' });
+  tempRoots.push(fresh.tempRoot);
+  fresh.manifest.schemaVersion = 99;
+  await fresh.persist();
+  const structuralFailure = await validatePacket(fresh.packetRoot);
+  assert.equal(structuralFailure.valid, false);
+  await assert.rejects(readFile(join(fresh.packetRoot, 'packet.md'), 'utf8'));
 });
 
 test('parent handoff is directory-only and never leaks dossier contents', async () => {

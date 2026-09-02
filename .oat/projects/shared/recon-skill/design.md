@@ -679,9 +679,12 @@ worker or controller never declares it directly.
   diagnostics may remain, but `packet.md` is absent.
 
 Rendering accepts only an immutable `ValidatedRun`, writes to a temporary
-sibling, and promotes `packet.md` only after final validation. If validation,
-rendering, or promotion fails, any previous consumer packet is removed from
-publication eligibility rather than treated as current.
+sibling, and promotes `packet.md` only after final validation. Candidate
+validation is non-destructive. If validation, rendering, or promotion fails,
+the previous validated consumer packet remains the last-known-good entry point;
+the failed candidate is reported separately and is never represented by those
+preserved bytes. When no previous packet exists, structural failure leaves no
+consumer entry point.
 
 ### Diagnostics
 

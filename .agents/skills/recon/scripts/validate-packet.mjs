@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, rm } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -1950,7 +1950,7 @@ function validateAssurance(validatedRun, errors) {
   }
 }
 
-export async function compileValidatedRun(packetDirectory, options = {}) {
+export async function compileValidatedRun(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
   const errors = [];
   const warnings = [];
@@ -2231,9 +2231,6 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
     }
 
     const valid = errors.length === 0;
-    if (!valid && options.removePublishedOnFailure !== false) {
-      await rm(resolve(packetRoot, 'packet.md'), { force: true });
-    }
     return {
       valid,
       publishable:
@@ -2250,9 +2247,6 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
     };
   }
 
-  if (options.removePublishedOnFailure !== false) {
-    await rm(resolve(packetRoot, 'packet.md'), { force: true });
-  }
   return {
     valid: false,
     publishable: false,
@@ -2265,11 +2259,9 @@ export async function compileValidatedRun(packetDirectory, options = {}) {
   };
 }
 
-export async function validatePacket(packetDirectory, options = {}) {
-  const { validatedRun: _validatedRun, ...result } = await compileValidatedRun(
-    packetDirectory,
-    options,
-  );
+export async function validatePacket(packetDirectory) {
+  const { validatedRun: _validatedRun, ...result } =
+    await compileValidatedRun(packetDirectory);
   return result;
 }
 
