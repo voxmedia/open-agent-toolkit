@@ -12,8 +12,10 @@ labels:
   - efficiency
 assignee: null
 created: 2026-07-29T14:46:45.249Z
-updated: 2026-07-29T14:52:00.000Z
-associated_issues: []
+updated: 2026-09-02T23:49:54Z
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/206
 external_plans: []
 ---
 
@@ -63,6 +65,7 @@ Redesign broad OAT reviews around an enforced artifact-only intake, metadata-onl
 - Canonical skill and agent changes are versioned and synced, all five public
   packages receive the required lockstep release bump, and
   `pnpm release:validate` passes.
+- Continuation ranges are self-validating (GitHub issue #206): every continuation review records exact full-SHA start and end provenance, normalizes and persists the range before launch, and stops with a diagnosable error when the range cannot be verified against the repository.
 
 ## Context and Dependencies
 

@@ -19,6 +19,11 @@ labels:
 assignee: null
 created: 2026-08-29T00:25:34.986Z
 updated: '2026-09-03T00:56:44Z'
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/228
+||||||| parent of 5a6f5e5c7 (chore(pjm): triage program-intake issues into the backlog):.oat/repo/pjm/backlog/items/BL-260829-make-tool-pack-scope-selection.md
+updated: 2026-08-29T00:27:41Z
 associated_issues: []
 external_plans: []
 ---
