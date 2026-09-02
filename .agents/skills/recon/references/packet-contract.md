@@ -89,7 +89,10 @@ different terminal handle is a replacement and fails validation. The catalog
 recheck is a distinct observation from the projection's original catalog
 observation, occurs strictly after approval and strictly before launch
 acceptance, and retains the approved catalog source, context, and relevant
-fingerprint. Copied or non-fresh catalog evidence cannot support publication.
+fingerprint. The completed receipt's terminal timestamp is parseable and cannot
+precede launch acceptance; equality is valid at the contract's millisecond
+precision. Copied, non-fresh, or causally impossible receipt evidence cannot
+support publication.
 
 ## Manifest
 

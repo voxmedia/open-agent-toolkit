@@ -524,6 +524,30 @@ test('accepted receipt chain binds approval time, child handle, and fresh catalo
   assert.deepEqual(unexpectedlyValid, []);
 });
 
+test('terminal receipt chronology rejects completion before acceptance and permits equal or later completion', async () => {
+  const mutateCompletedAt = async (completedAt) => {
+    const packet = await fixture();
+    const reference = packet.manifest.artifacts.find(
+      (item) =>
+        item.path.startsWith('raw/dispatch/') &&
+        item.path.endsWith('-completed.json'),
+    );
+    const receipt = await readJson(join(packet.packetRoot, reference.path));
+    receipt.terminalOutcome.completedAt = completedAt;
+    await replaceArtifact(packet, reference.path, receipt);
+    return validatePacket(packet.packetRoot);
+  };
+
+  const before = await mutateCompletedAt('2026-08-31T00:00:59.999Z');
+  assert.equal(before.valid, false, JSON.stringify(before, null, 2));
+
+  const equal = await mutateCompletedAt('2026-08-31T00:01:00.000Z');
+  assert.equal(equal.valid, true, JSON.stringify(equal, null, 2));
+
+  const after = await mutateCompletedAt('2026-08-31T00:01:00.001Z');
+  assert.equal(after.valid, true, JSON.stringify(after, null, 2));
+});
+
 test('declared-complete stages reject selection drift under complete and partial outcomes', async () => {
   for (const status of ['complete', 'partial']) {
     for (const receiptState of ['accepted', 'completed']) {

@@ -731,6 +731,9 @@ function stageArtifactIsComplete(
   const acceptedTime = Date.parse(
     acceptedReceipt?.launchAcceptance?.acceptedAt,
   );
+  const completedTime = Date.parse(
+    completedReceipt?.terminalOutcome?.completedAt,
+  );
   const originalCatalog = approvalProjection?.catalog_observation;
   if (
     receipts.some(
@@ -776,8 +779,10 @@ function stageArtifactIsComplete(
     !Number.isFinite(approvalTime) ||
     !Number.isFinite(recheckTime) ||
     !Number.isFinite(acceptedTime) ||
+    !Number.isFinite(completedTime) ||
     recheckTime <= approvalTime ||
-    recheckTime >= acceptedTime
+    recheckTime >= acceptedTime ||
+    completedTime < acceptedTime
   ) {
     return false;
   }

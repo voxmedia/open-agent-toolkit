@@ -688,6 +688,32 @@ for (const profile of ['quick', 'standard', 'thorough']) {
   });
 }
 
+test('normalized packet validation enforces acceptedAt before or equal to completedAt', async () => {
+  const setCompletedAt = async (packet, completedAt) => {
+    const reference = packet.manifest.artifacts.find(
+      (item) =>
+        item.path.startsWith('raw/dispatch/') &&
+        item.path.endsWith('-completed.json'),
+    );
+    const path = join(packet.packetRoot, reference.path);
+    const receipt = JSON.parse(await readFile(path, 'utf8'));
+    receipt.terminalOutcome.completedAt = completedAt;
+    await writeJson(path, receipt);
+    reference.digest = await hashFile(path);
+    await writeJson(packet.manifestPath, packet.manifest);
+  };
+
+  const before = await makePacket({ profile: 'standard' });
+  await setCompletedAt(before, '2026-08-31T00:00:59.999Z');
+  const invalid = await validatePacket(before.packetRoot);
+  assert.equal(invalid.valid, false, JSON.stringify(invalid, null, 2));
+
+  const equal = await makePacket({ profile: 'standard' });
+  await setCompletedAt(equal, '2026-08-31T00:01:00.000Z');
+  const valid = await validatePacket(equal.packetRoot);
+  assert.equal(valid.valid, true, JSON.stringify(valid, null, 2));
+});
+
 for (const sourceKind of [
   'repository',
   'url',
