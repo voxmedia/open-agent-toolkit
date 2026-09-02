@@ -1,7 +1,8 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 6e58771901d222dc64ee0ecacadf510808a69c97
-oat_blockers: []
+oat_current_task: p05-review-r1-fix
+oat_last_commit: 61a1ea59083d3d9987a24c0a07ae349924e39cf9
+oat_blockers:
+  - Phase 5 review found two Critical and one Important defect: the registered workflows leaf bypasses project guidance, concurrent in-place edits can be clobbered, and malformed legacy markers can partially mutate AGENTS.md.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -95,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T02:18:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T04:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -111,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 4 is complete. The operator accepted the design-only
-alignment at `6e5877190` without another review after the round-9 review had
-already passed the full production safety surface. Phase 5 begins at `p05-t01`.
+Implementation - all four Phase 5 tasks are committed through `61a1ea590`, but
+the first independent review reproduced two Critical and one Important defect.
+The original Phase 5 implementer owns the bounded correction before Phase 6.
 
 ## Artifacts
 
@@ -121,7 +122,7 @@ already passed the full production safety surface. Phase 5 begins at `p05-t01`.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p01-p04 complete; p05-t01 next)
+- **Implementation:** `implementation.md` (blocked — p05 review fixes in progress)
 
 ## Progress
 
@@ -150,12 +151,17 @@ already passed the full production safety surface. Phase 5 begins at `p05-t01`.
 - ✓ Phase 4 authorized fail-closed deferred-symlink correction committed
 - ✓ Phase 4 code safety verified at 414/414
 - ✓ Phase 4 design alignment accepted by explicit operator disposition
-- ⧗ Phase 5 starts at p05-t01
+- ✓ Phase 5 four-task implementation and 331/331 union completed
+- ⧗ Phase 5 review fixes required for production leaf registration, concurrent-edit no-clobber, and malformed-legacy atomicity
 
 ## Blockers
 
-None.
+- The registered production workflows leaf does not execute the accepted
+  project-guidance path.
+- Same-inode concurrent edits can be overwritten during managed-file publish.
+- Malformed legacy markers can reject after a partial managed-section write.
 
 ## Next Milestone
 
-Execute Phase 5, beginning with `p05-t01` shared AGENTS.md mutation safety.
+Apply the bounded Phase 5 review fixes through the original implementer, rerun
+the full phase union, and require a fresh independent Phase 5 review.

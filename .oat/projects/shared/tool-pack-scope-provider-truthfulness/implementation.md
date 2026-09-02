@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-09-01
-oat_current_task_id: p05-t01
+oat_blockers:
+  - Phase 5 review found two Critical and one Important defect: the registered workflows leaf bypasses project guidance, concurrent in-place edits can be clobbered, and malformed legacy markers can partially mutate AGENTS.md.
+oat_last_updated: 2026-09-02
+oat_current_task_id: p05-review-r1-fix
 oat_generated: false
 ---
 
@@ -30,11 +31,11 @@ oat_generated: false
 | Phase 2 | complete | 7     | 7/7       |
 | Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | complete | 5     | 5/5       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase 5 | blocked  | 4     | 4/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
-**Total:** 18/30 tasks completed
+**Total:** 22/30 tasks completed
 
 ---
 
@@ -1230,6 +1231,47 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ---
 
+## Phase 5: Independent Project AGENTS.md Guidance
+
+**Status:** blocked pending review fixes
+**Started:** 2026-09-02
+
+### Task Outcomes
+
+- `p05-t01` committed as `abcedf36b3f55d4c7002ef0dce5aa607ad065c28`:
+  hardened managed-section writes and their existing docs/PJM/decision
+  consumers.
+- `p05-t02` committed as `3e37fc84a723064458335653ffb677e10867376c`:
+  added the shared explicit project-guidance planner, CLI flags, and reporting
+  contracts.
+- `p05-t03` committed as `be5132af3daf89755e0c54c13df40580f2c6465b`:
+  applied accepted guidance through aggregate and guided init while preserving
+  decline, noninteractive, idempotence, and PJM-independent behavior.
+- `p05-t04` committed as `61a1ea59083d3d9987a24c0a07ae349924e39cf9`:
+  aligned the standalone workflow surface and documentation.
+- Phase verification passed 331/331 focused tests plus CLI lint, type-check,
+  format, `pnpm check`, and exact-range whitespace checks. Recovery usage is
+  0/10 with no pending attempt.
+
+### Review Round 1 — Production Registration and No-Clobber Boundary
+
+- Artifact: `reviews/p05-review-2026-09-02T043143Z.md`
+- Reviewed head: `61a1ea59083d3d9987a24c0a07ae349924e39cf9`
+- Verdict: changes requested; 2 Critical, 1 Important, 0 Medium, 0 Minor.
+- The production registered `workflows` leaf bypasses the guidance-aware
+  command path, so explicit opt-in can exit successfully without writing or
+  reporting guidance.
+- The managed-file commit protocol checks path identity but not unchanged
+  bytes, allowing a same-inode concurrent user edit to be overwritten.
+- Aggregate and standalone migration perform two mutations, so malformed
+  legacy markers can reject only after the new managed section was published.
+- Reconnaissance was not attempted. The reviewer independently reproduced all
+  three findings and confirmed the declared 331/331 suite did not cover them.
+- The original exact-High Phase 5 implementer owns the bounded fix. Phase 6
+  remains gated pending a clean fix report and fresh independent review.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1815,6 +1857,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: the approved design now matches the verified fail-closed directory
   transition policy. The sole round-9 Important finding is resolved by
   operator disposition; Phase 4 passes and `p05-t01` is next.
+
+#### Dispatch record — `dispatch-p05-20260902T021900Z-01454ec32`
+
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `01454ec3203afee2990b3d2d7e748d6e7c8cbd35`
+- Final head: `61a1ea59083d3d9987a24c0a07ae349924e39cf9`
+- Outcome: all four Phase 5 tasks committed in order; phase union 331/331 and
+  scoped static checks passed; recovery usage 0/10.
+- Selection reason: `candidate-requested`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 1 — production registration and no-clobber boundary
+
+- Reviewed head: `61a1ea59083d3d9987a24c0a07ae349924e39cf9`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p05-review-2026-09-02T043143Z.md`
+- Outcome: changes requested; 2 Critical and 1 Important findings. The
+  production leaf bypass, same-inode concurrent-edit clobber, and partial
+  malformed-legacy mutation are assigned to the original Phase 5 implementer.
+- Reconnaissance: not attempted.
+- Selection reason: `review-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
