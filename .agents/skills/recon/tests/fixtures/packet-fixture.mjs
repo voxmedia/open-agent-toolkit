@@ -465,6 +465,7 @@ export async function createPacketFixture({
         excludedInputs: ['prior_reasoning'],
         dispositions: [{ claimId, disposition }],
         newEvidence: [],
+        evidenceAssociations: [],
         coverageFindings: [],
         unresolvedIssues: [],
         ...(reviewKind === 'contradiction-resolution'
@@ -513,6 +514,7 @@ export async function createPacketFixture({
       excludedInputs: [],
       dispositions: [],
       newEvidence: [],
+      evidenceAssociations: [],
       coverageFindings: [],
       unresolvedIssues: [],
     };

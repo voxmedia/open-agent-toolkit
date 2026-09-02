@@ -1060,8 +1060,8 @@ function validateReviewBindings(
     for (const disposition of result.dispositions) {
       const currentClaim = claims.get(disposition.claimId);
       const priorClaim = priorClaims.get(disposition.claimId);
-      const claim = currentClaim ?? priorClaim;
-      const bindingLedger = currentClaim ? ledger : priorLedger;
+      const claim = priorClaim ?? currentClaim;
+      const bindingLedger = priorClaim ? priorLedger : ledger;
       if (
         !claim ||
         seen.has(disposition.claimId) ||
@@ -1082,6 +1082,46 @@ function validateReviewBindings(
         );
       }
       seen.add(disposition.claimId);
+    }
+    const suppliedEvidenceIds = new Set(
+      result.newEvidence.map((evidence) => evidence.id),
+    );
+    const dispositionClaimIds = new Set(
+      result.dispositions.map((disposition) => disposition.claimId),
+    );
+    const associationKeys = new Set();
+    const associatedEvidenceIds = new Set();
+    for (const association of result.evidenceAssociations ?? []) {
+      const key = hashCanonicalJson(association);
+      if (
+        associationKeys.has(key) ||
+        !suppliedEvidenceIds.has(association.evidenceId) ||
+        !dispositionClaimIds.has(association.claimId) ||
+        (!priorClaims.has(association.claimId) &&
+          !claims.has(association.claimId))
+      ) {
+        errors.push(
+          issue(
+            'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH',
+            `Review ${result.id} evidence associations must bind exact supplied evidence to disposition claims`,
+            result.id,
+          ),
+        );
+      }
+      associationKeys.add(key);
+      associatedEvidenceIds.add(association.evidenceId);
+    }
+    if (
+      suppliedEvidenceIds.size !== associatedEvidenceIds.size ||
+      [...suppliedEvidenceIds].some((id) => !associatedEvidenceIds.has(id))
+    ) {
+      errors.push(
+        issue(
+          'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH',
+          `Review ${result.id} must associate every new evidence record`,
+          result.id,
+        ),
+      );
     }
     if (result.reviewKind === 'contradiction-resolution') {
       const challengeOwners = new Map();
@@ -1270,10 +1310,62 @@ function validateReconciliation(
       (transitionCounts.get(transition.claimId) ?? 0) + 1,
     );
   }
+  const incorporatedReviews = (reconciliation.incorporatedReviewIds ?? [])
+    .map((id) => artifactsById.get(id)?.value)
+    .filter(Boolean);
+  const expectedNewEvidence = [];
+  const allowedNewEvidence = new Map();
+  const expectedAssociationsByClaim = new Map();
+  const associationKeys = new Set();
+  for (const review of incorporatedReviews) {
+    const reviewEvidenceIds = new Set(
+      (review.newEvidence ?? []).map((evidence) => evidence.id),
+    );
+    const dispositionClaimIds = new Set(
+      (review.dispositions ?? []).map((disposition) => disposition.claimId),
+    );
+    for (const evidence of review.newEvidence ?? []) {
+      if (allowedNewEvidence.has(evidence.id)) {
+        errors.push(
+          issue(
+            'RECONCILIATION_EVIDENCE_INVENTION',
+            `Evidence ${evidence.id} was supplied more than once`,
+            evidence.id,
+          ),
+        );
+        continue;
+      }
+      allowedNewEvidence.set(evidence.id, evidence);
+      expectedNewEvidence.push(evidence);
+    }
+    for (const association of review.evidenceAssociations ?? []) {
+      const key = hashCanonicalJson(association);
+      if (
+        associationKeys.has(key) ||
+        !reviewEvidenceIds.has(association.evidenceId) ||
+        !dispositionClaimIds.has(association.claimId)
+      ) {
+        errors.push(
+          issue(
+            'RECONCILIATION_EVIDENCE_ASSOCIATION_MISMATCH',
+            `Review ${review.id} contains an invalid incorporated evidence association`,
+            review.id,
+          ),
+        );
+      }
+      associationKeys.add(key);
+      const links = expectedAssociationsByClaim.get(association.claimId) ?? [];
+      links.push({
+        evidenceId: association.evidenceId,
+        relation: association.relation,
+      });
+      expectedAssociationsByClaim.set(association.claimId, links);
+    }
+  }
   for (const [claimId, priorClaim] of priorClaims) {
     const currentClaim = currentClaims.get(claimId);
     if (!currentClaim) continue;
-    for (const field of ['statement', 'evidence', 'qualifications']) {
+    for (const field of ['statement', 'qualifications']) {
       if (
         hashCanonicalJson(priorClaim[field]) !==
         hashCanonicalJson(currentClaim[field])
@@ -1286,6 +1378,22 @@ function validateReconciliation(
           ),
         );
       }
+    }
+    const expectedEvidenceLinks = [
+      ...priorClaim.evidence,
+      ...(expectedAssociationsByClaim.get(claimId) ?? []),
+    ];
+    if (
+      hashCanonicalJson(expectedEvidenceLinks) !==
+      hashCanonicalJson(currentClaim.evidence)
+    ) {
+      errors.push(
+        issue(
+          'RECONCILIATION_CONTINUITY_MISMATCH',
+          `Claim ${claimId} evidence links do not preserve prior bytes plus exact incorporated associations`,
+          claimId,
+        ),
+      );
     }
     for (const field of ['derivedFrom', 'challenges']) {
       if (
@@ -1343,14 +1451,6 @@ function validateReconciliation(
     }
   }
   const priorEvidence = new Map(prior.evidence.map((item) => [item.id, item]));
-  const allowedNewEvidence = new Map(
-    [...artifactsById.values()]
-      .filter(({ value }) =>
-        reconciliation.incorporatedReviewIds?.includes(value.id),
-      )
-      .flatMap(({ value }) => value.newEvidence ?? [])
-      .map((item) => [item.id, item]),
-  );
   for (const evidence of ledger.evidence) {
     const previous = priorEvidence.get(evidence.id);
     if (
@@ -1378,6 +1478,18 @@ function validateReconciliation(
         ),
       );
     }
+  }
+  if (
+    hashCanonicalJson([...prior.evidence, ...expectedNewEvidence]) !==
+    hashCanonicalJson(ledger.evidence)
+  ) {
+    errors.push(
+      issue(
+        'RECONCILIATION_EVIDENCE_INVENTION',
+        'Canonical evidence must preserve prior bytes and append exactly incorporated review evidence',
+        reconciliation.id,
+      ),
+    );
   }
   if (
     JSON.stringify(reconciliation.transitions) !==
@@ -1558,6 +1670,9 @@ function validateAssurance(validatedRun, errors) {
   const evidenceById = new Map(
     (ledger.evidence ?? []).map((item) => [item.id, item]),
   );
+  const priorClaims = new Map(
+    (validatedRun.priorLedger?.claims ?? []).map((claim) => [claim.id, claim]),
+  );
   for (const claim of ledger.claims ?? []) {
     if (
       (claim.status === 'supported' || claim.status === 'verified') &&
@@ -1698,8 +1813,8 @@ function validateAssurance(validatedRun, errors) {
           !reviewBriefBindsClaim(
             brief,
             artifact.reviewKind,
-            claim,
-            ledger,
+            priorClaims.get(claim.id) ?? claim,
+            priorClaims.has(claim.id) ? validatedRun.priorLedger : ledger,
             manifest,
           ) ||
           !artifact.permittedInputs?.some((reference) =>

@@ -1805,6 +1805,43 @@ function validateReviewResult(value, errors) {
       errors,
     );
   }
+  if (
+    (value.newEvidence ?? []).length > 0 ||
+    value.evidenceAssociations !== undefined
+  ) {
+    requiredArray(value, 'evidenceAssociations', errors);
+  }
+  for (const [index, association] of (
+    value.evidenceAssociations ?? []
+  ).entries()) {
+    for (const key of ['evidenceId', 'claimId', 'relation']) {
+      requiredString(
+        association,
+        key,
+        errors,
+        `$.evidenceAssociations[${index}]`,
+      );
+    }
+    if (
+      !['supports', 'contradicts', 'qualifies', 'context'].includes(
+        association.relation,
+      )
+    ) {
+      errors.push(
+        issue(
+          'INVALID_EVIDENCE_RELATION',
+          'Evidence association relation is not supported',
+          `$.evidenceAssociations[${index}].relation`,
+        ),
+      );
+    }
+    closedObject(
+      association,
+      new Set(['evidenceId', 'claimId', 'relation']),
+      errors,
+      `$.evidenceAssociations[${index}]`,
+    );
+  }
   const common = [
     'kind',
     'schemaVersion',
@@ -1817,6 +1854,7 @@ function validateReviewResult(value, errors) {
     'excludedInputs',
     'dispositions',
     'newEvidence',
+    'evidenceAssociations',
     'coverageFindings',
     'unresolvedIssues',
   ];

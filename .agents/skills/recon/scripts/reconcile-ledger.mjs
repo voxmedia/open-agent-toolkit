@@ -109,9 +109,37 @@ export function reconcileLedger({
   }
   const incorporatedEvidence = new Map();
   for (const review of reviewResults) {
-    const affectedClaimIds = [
-      ...new Set(review.dispositions.map((item) => item.claimId)),
-    ];
+    const reviewEvidenceById = new Map(
+      review.newEvidence.map((evidence) => [evidence.id, evidence]),
+    );
+    const dispositionClaimIds = new Set(
+      review.dispositions.map((item) => item.claimId),
+    );
+    const associationKeys = new Set();
+    for (const association of review.evidenceAssociations ?? []) {
+      const key = canonicalJson(association);
+      if (associationKeys.has(key)) {
+        throw new Error(
+          `Reconciliation rejects duplicate evidence association ${association.evidenceId} -> ${association.claimId}`,
+        );
+      }
+      associationKeys.add(key);
+      if (!reviewEvidenceById.has(association.evidenceId)) {
+        throw new Error(
+          `Reconciliation rejects association for ${association.evidenceId} without matching new evidence`,
+        );
+      }
+      if (!claimsById.has(association.claimId)) {
+        throw new Error(
+          `Reconciliation rejects association to unknown claim ${association.claimId}`,
+        );
+      }
+      if (!dispositionClaimIds.has(association.claimId)) {
+        throw new Error(
+          `Reconciliation rejects association to claim ${association.claimId} without a review disposition`,
+        );
+      }
+    }
     for (const evidence of review.newEvidence) {
       const bytes = canonicalJson(evidence);
       const previousBytes = priorEvidenceById.get(evidence.id);
@@ -124,10 +152,10 @@ export function reconcileLedger({
             : 'conflicting evidence';
         throw new Error(`Reconciliation rejects ${description} ${evidence.id}`);
       }
-      if (
-        affectedClaimIds.length === 0 ||
-        affectedClaimIds.some((claimId) => !claimsById.has(claimId))
-      ) {
+      const associations = (review.evidenceAssociations ?? []).filter(
+        (association) => association.evidenceId === evidence.id,
+      );
+      if (associations.length === 0) {
         throw new Error(
           `Reconciliation rejects unincorporated evidence ${evidence.id} without an affected claim`,
         );
@@ -135,16 +163,16 @@ export function reconcileLedger({
       incorporatedEvidence.set(evidence.id, {
         bytes,
         evidence: exactClone(evidence),
-        claimIds: affectedClaimIds,
+        associations: exactClone(associations),
       });
     }
   }
-  for (const { evidence, claimIds } of incorporatedEvidence.values()) {
+  for (const { evidence, associations } of incorporatedEvidence.values()) {
     ledger.evidence.push(evidence);
-    for (const claimId of claimIds) {
-      claimsById.get(claimId).evidence.push({
-        evidenceId: evidence.id,
-        relation: 'context',
+    for (const association of associations) {
+      claimsById.get(association.claimId).evidence.push({
+        evidenceId: association.evidenceId,
+        relation: association.relation,
       });
     }
   }
@@ -221,6 +249,7 @@ export function reconcileLedger({
     excludedInputs: [],
     dispositions: [],
     newEvidence: [],
+    evidenceAssociations: [],
     coverageFindings: [],
     unresolvedIssues: [],
   };

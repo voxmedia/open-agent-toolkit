@@ -6,7 +6,10 @@ import { afterEach, test } from 'node:test';
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
 import { reconcileLedger } from '../scripts/reconcile-ledger.mjs';
-import { validatePacket } from '../scripts/validate-packet.mjs';
+import {
+  compileValidatedRun,
+  validatePacket,
+} from '../scripts/validate-packet.mjs';
 import {
   createApprovalBinding,
   createPacketFixture,
@@ -868,7 +871,18 @@ test('production reconciliation retains exact incorporated review evidence and r
   reviewEvidence.id = 'evidence-review-1';
 
   const incorporatedResults = structuredClone(results);
+  incorporatedResults[0].dispositions.push({
+    claimId: 'claim-2',
+    disposition: 'affirmed',
+  });
   incorporatedResults[0].newEvidence = [reviewEvidence];
+  incorporatedResults[0].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
   const incorporated = reconcileLedger({
     priorLedger,
     reviewResults: incorporatedResults,
@@ -877,8 +891,12 @@ test('production reconciliation retains exact incorporated review evidence and r
   assert.deepEqual(incorporated.ledger.evidence.at(-1), reviewEvidence);
   assert.deepEqual(incorporated.ledger.claims[0].evidence.at(-1), {
     evidenceId: reviewEvidence.id,
-    relation: 'context',
+    relation: 'supports',
   });
+  assert.deepEqual(
+    incorporated.ledger.claims[1].evidence,
+    priorLedger.claims[1].evidence,
+  );
 
   const withoutNewEvidence = reconcileLedger({
     priorLedger,
@@ -893,6 +911,13 @@ test('production reconciliation retains exact incorporated review evidence and r
 
   const duplicate = structuredClone(results);
   duplicate[0].newEvidence = [reviewEvidence, structuredClone(reviewEvidence)];
+  duplicate[0].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
   assert.throws(
     () =>
       reconcileLedger({
@@ -905,9 +930,23 @@ test('production reconciliation retains exact incorporated review evidence and r
 
   const conflicting = structuredClone(results);
   conflicting[0].newEvidence = [reviewEvidence];
+  conflicting[0].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
   const conflictingEvidence = structuredClone(reviewEvidence);
   conflictingEvidence.displayExcerpt = 'conflicting bytes';
   conflicting[1].newEvidence = [conflictingEvidence];
+  conflicting[1].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'context',
+    },
+  ];
   assert.throws(
     () =>
       reconcileLedger({
@@ -920,7 +959,7 @@ test('production reconciliation retains exact incorporated review evidence and r
 
   const unincorporated = structuredClone(results);
   unincorporated[0].newEvidence = [reviewEvidence];
-  unincorporated[0].dispositions = [];
+  unincorporated[0].evidenceAssociations = [];
   assert.throws(
     () =>
       reconcileLedger({
@@ -929,6 +968,67 @@ test('production reconciliation retains exact incorporated review evidence and r
         priorReference,
       }),
     /unincorporated evidence/i,
+  );
+
+  const crossClaim = structuredClone(results);
+  crossClaim[0].newEvidence = [reviewEvidence];
+  crossClaim[0].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-2',
+      relation: 'supports',
+    },
+  ];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: crossClaim,
+        priorReference,
+      }),
+    /association.*disposition/i,
+  );
+
+  const duplicateAssociation = structuredClone(results);
+  duplicateAssociation[0].newEvidence = [reviewEvidence];
+  duplicateAssociation[0].evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: duplicateAssociation,
+        priorReference,
+      }),
+    /duplicate evidence association/i,
+  );
+
+  const inventedAssociation = structuredClone(results);
+  inventedAssociation[0].evidenceAssociations = [
+    {
+      evidenceId: 'evidence-not-supplied',
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
+  assert.throws(
+    () =>
+      reconcileLedger({
+        priorLedger,
+        reviewResults: inventedAssociation,
+        priorReference,
+      }),
+    /association.*new evidence/i,
   );
 
   const invalid = structuredClone(results);
@@ -957,6 +1057,62 @@ test('production reconciliation retains exact incorporated review evidence and r
         priorReference,
       }),
     /invented evidence link/i,
+  );
+});
+
+test('persisted reconciliation compiles exact review evidence associations against immutable briefs', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const persistedResults = await Promise.all(
+    ['semantic', 'adversarial', 'coverage'].map(async (kind) => {
+      const relative = `reviews/${kind}.json`;
+      return {
+        value: await readJson(join(packet.packetRoot, relative)),
+        reference: packet.manifest.artifacts.find(
+          (item) => item.path === relative,
+        ),
+      };
+    }),
+  );
+  const semantic = persistedResults[0].value;
+  const reviewEvidence = structuredClone(priorLedger.evidence[0]);
+  reviewEvidence.id = 'evidence-review-persisted';
+  semantic.newEvidence = [reviewEvidence];
+  semantic.evidenceAssociations = [
+    {
+      evidenceId: reviewEvidence.id,
+      claimId: 'claim-1',
+      relation: 'supports',
+    },
+  ];
+  await replaceArtifact(packet, 'reviews/semantic.json', semantic);
+
+  const reviewResults = persistedResults.map(({ value, reference }) => ({
+    ...value,
+    artifactReference: { ...reference },
+  }));
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults,
+    priorReference,
+  });
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.deepEqual(compiled.validatedRun.ledger.claims[0].evidence.at(-1), {
+    evidenceId: reviewEvidence.id,
+    relation: 'supports',
+  });
+  assert.deepEqual(
+    compiled.validatedRun.ledger.claims[1].evidence,
+    priorLedger.claims[1].evidence,
   );
 });
 

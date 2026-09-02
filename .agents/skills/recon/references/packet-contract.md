@@ -191,7 +191,9 @@ canonical claim transitions. Standard and thorough output is exactly the next
 revision of the bound prior ledger; revision one cannot bypass reconciliation.
 It also binds additions, removals, and every prior/current state change;
 preserves statement, evidence-link, and qualification continuity; accepts new
-evidence only when an incorporated review supplied the exact record; and
+evidence only when an incorporated review supplied the exact record plus a
+closed `{ evidenceId, claimId, relation }` association to one of that review's
+disposition claims; preserves every unaffected evidence link byte-for-byte; and
 requires a receipted typed rejection disposition before removing a prior claim.
 
 ## Evidence and Secret Redaction
@@ -213,8 +215,11 @@ branch; source ineligibility never bypasses persistence safety.
   uncertainty, contradictions, gaps, and outcome.
 - `recon.review-brief`: immutable selective-blind projection and digest.
 - `recon.review-result`: review kind, lane, exact brief reference,
-  permitted/excluded inputs, dispositions, new evidence, coverage findings,
-  unresolved issues, and completion status. Reconciliation results replace the
+  permitted/excluded inputs, dispositions, new evidence, closed typed
+  claim/evidence associations, coverage findings, unresolved issues, and
+  completion status. Every new evidence record has at least one exact
+  association, and an association cannot name evidence absent from that result
+  or a claim without a disposition in that result. Reconciliation results replace the
   brief reference with prior-ledger/revision, additions/removals, exact
   transitions, and coverage-disposition bindings. Coverage findings are closed
   records bound to affected claims and exact manifest gaps. Accepted material

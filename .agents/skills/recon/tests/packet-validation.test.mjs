@@ -413,6 +413,7 @@ async function makePacket({
         excludedInputs: ['prior_reasoning'],
         dispositions: [{ claimId: 'claim-1', disposition }],
         newEvidence: [],
+        evidenceAssociations: [],
         coverageFindings: [],
         unresolvedIssues: [],
         ...(reviewKind === 'contradiction-resolution'
@@ -466,6 +467,7 @@ async function makePacket({
       excludedInputs: [],
       dispositions: [],
       newEvidence: [],
+      evidenceAssociations: [],
       coverageFindings: [],
       unresolvedIssues: [],
     };
@@ -959,6 +961,85 @@ test('verified claims require unique complete typed review results bound to immu
     .value.unresolvedIssues.push('tampered without manifest rehash');
   await persistReview(tampered, 'review-coverage', { updateManifest: false });
   await expectInvalid(tampered, 'ARTIFACT_DIGEST_MISMATCH');
+});
+
+test('persisted review evidence associations reject cross-claim, duplicate, conflicting, and unincorporated links', async () => {
+  const evidenceFor = (packet, id, excerpt = 'Review evidence.') => ({
+    ...structuredClone(packet.ledger.evidence[0]),
+    id,
+    displayExcerpt: excerpt,
+  });
+  const associationFor = (evidenceId, claimId = 'claim-1') => ({
+    evidenceId,
+    claimId,
+    relation: 'supports',
+  });
+
+  const crossClaim = await makePacket({ profile: 'standard' });
+  const crossSemantic = crossClaim.reviewPaths.get('review-semantic').value;
+  crossSemantic.newEvidence = [
+    evidenceFor(crossClaim, 'evidence-review-cross-claim'),
+  ];
+  crossSemantic.evidenceAssociations = [
+    associationFor('evidence-review-cross-claim', 'claim-2'),
+  ];
+  await persistReview(crossClaim, 'review-semantic');
+  await expectInvalid(crossClaim, 'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH');
+
+  const duplicate = await makePacket({ profile: 'standard' });
+  const duplicateSemantic = duplicate.reviewPaths.get('review-semantic').value;
+  duplicateSemantic.newEvidence = [
+    evidenceFor(duplicate, 'evidence-review-duplicate'),
+  ];
+  duplicateSemantic.evidenceAssociations = [
+    associationFor('evidence-review-duplicate'),
+    associationFor('evidence-review-duplicate'),
+  ];
+  await persistReview(duplicate, 'review-semantic');
+  await expectInvalid(duplicate, 'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH');
+
+  const conflicting = await makePacket({ profile: 'standard' });
+  const conflictingSemantic =
+    conflicting.reviewPaths.get('review-semantic').value;
+  const conflictingAdversarial =
+    conflicting.reviewPaths.get('review-adversarial').value;
+  conflictingSemantic.newEvidence = [
+    evidenceFor(conflicting, 'evidence-review-conflict', 'first bytes'),
+  ];
+  conflictingSemantic.evidenceAssociations = [
+    associationFor('evidence-review-conflict'),
+  ];
+  conflictingAdversarial.newEvidence = [
+    evidenceFor(conflicting, 'evidence-review-conflict', 'different bytes'),
+  ];
+  conflictingAdversarial.evidenceAssociations = [
+    associationFor('evidence-review-conflict'),
+  ];
+  await persistReview(conflicting, 'review-semantic');
+  await persistReview(conflicting, 'review-adversarial');
+  await expectInvalid(conflicting, 'RECONCILIATION_EVIDENCE_INVENTION');
+
+  const unincorporated = await makePacket({ profile: 'standard' });
+  const unincorporatedSemantic =
+    unincorporated.reviewPaths.get('review-semantic').value;
+  unincorporatedSemantic.newEvidence = [
+    evidenceFor(unincorporated, 'evidence-review-unincorporated'),
+  ];
+  unincorporatedSemantic.evidenceAssociations = [];
+  await persistReview(unincorporated, 'review-semantic');
+  await expectInvalid(unincorporated, 'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH');
+
+  const invented = await makePacket({ profile: 'standard' });
+  const inventedSemantic = invented.reviewPaths.get('review-semantic').value;
+  inventedSemantic.evidenceAssociations = [
+    associationFor('evidence-review-not-supplied'),
+  ];
+  await persistReview(invented, 'review-semantic');
+  await expectInvalid(invented, 'REVIEW_EVIDENCE_ASSOCIATION_MISMATCH');
+
+  const noNewEvidence = await makePacket({ profile: 'standard' });
+  const valid = await validatePacket(noNewEvidence.packetRoot);
+  assert.equal(valid.valid, true, JSON.stringify(valid, null, 2));
 });
 
 test('closed schemas reject incomplete declared artifacts and missing ledger sections', async () => {
