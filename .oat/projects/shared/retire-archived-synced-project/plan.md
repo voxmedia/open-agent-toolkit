@@ -867,6 +867,47 @@ git commit -m "fix(p04-t06): accept null recap resume receipts"
 Status progression:
 `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
 
+## Phase p-rev1: Revision 1
+
+Source: CI feedback from PR #254 (2026-09-02)
+
+### Task prev1-t01: (revision) Stabilize killed gate-marker CI coverage
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Reproduce and classify the timeout**
+
+Run the failing test under uncached, CI-like conditions and confirm whether the
+failure is a gate lifecycle race or the test's five-second harness timeout
+expiring before its existing ten-second marker-polling budget.
+
+**Step 2: Align the test timeout with its lifecycle budget**
+
+Apply the smallest durable correction. Preserve the marker-location,
+process-group kill, child-close, and clean-repository assertions; do not weaken
+the behavior under test.
+
+**Step 3: Verify focused and full behavior**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t "keeps a killed gate run marker outside the repository status"
+HOME=$(mktemp -d) pnpm exec turbo run test --force
+```
+
+Expected: the killed-marker test completes without timing out and the forced
+workspace test run passes.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.test.ts
+git commit -m "test(prev1-t01): stabilize killed gate marker coverage"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -880,8 +921,10 @@ Status progression:
 - Phase 4: 6 tasks — end-to-end proof, documentation, versioning, release
   validation, final-review terminal-path fixes, and the remote-review
   null-recap correction.
+- Revision 1: 1 task — stabilize CI coverage for killed gate-run marker
+  isolation.
 
-**Total: 14 tasks across 4 phases**
+**Total: 15 tasks across 5 phases**
 
 Implementation is complete when every task is committed, the final review has
 passed, and all repository definition-of-done gates exit 0 with uncached test

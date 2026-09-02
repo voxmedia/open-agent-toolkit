@@ -1,16 +1,16 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-01
-oat_current_task_id: null
+oat_last_updated: 2026-09-02
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
 # Implementation: retire-archived-synced-project
 
 **Started:** 2026-08-31
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -19,14 +19,33 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 2     | 2/2       |
-| p02   | completed | 3     | 3/3       |
-| p03   | completed | 3     | 3/3       |
-| p04   | completed | 6     | 6/6       |
+| Phase  | Status      | Tasks | Completed |
+| ------ | ----------- | ----- | --------- |
+| p01    | completed   | 2     | 2/2       |
+| p02    | completed   | 3     | 3/3       |
+| p03    | completed   | 3     | 3/3       |
+| p04    | completed   | 6     | 6/6       |
+| p-rev1 | in_progress | 1     | 0/1       |
 
-**Total:** 14/14 tasks completed
+**Total:** 14/15 tasks completed
+
+---
+
+### Revision Received: PR #254 CI Feedback
+
+**Date:** 2026-09-02
+**Source:** GitHub Actions CI run `33587438304`
+
+**Changes requested:**
+
+- Stabilize the killed gate-run marker test that timed out at the default five-
+  second Vitest limit while its marker polling loop permits up to ten seconds.
+- Preserve the lifecycle and repository-cleanliness assertions; determine from
+  focused reproduction whether any production race also needs correction.
+
+**New tasks added:** `prev1-t01`
+
+**Next:** Execute the revision task via `oat-project-implement`.
 
 ---
 

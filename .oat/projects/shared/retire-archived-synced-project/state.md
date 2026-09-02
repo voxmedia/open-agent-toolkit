@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: c916812e70248ac64e4a9db300f606de06c841c0
 oat_blockers: []
 associated_issues:
@@ -14,7 +14,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: final p04 basis approved after closeout
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -114,7 +114,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T03:31:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T12:01:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -124,17 +124,16 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Implementation complete; PR #254 open
+**Status:** Revision in progress for PR #254 CI timeout
 **Started:** 2026-08-31
 **Last Updated:** 2026-09-01
 
 ## Current Phase
 
-Implementation — complete. All 14 tasks, current-basis final review, the
-authenticated Claude Fable exit gate, the configured closeout sequence, and
-the renewed post-p04 HiLL checkpoint passed. The gate's Medium artifact drift
-is closed, its Minor cleanup is deferred with rationale, and PR #254 remains
-open.
+Implementation revision — CI run `33587438304` timed out in the killed
+gate-run marker coverage after 4,720/4,721 CLI tests passed. Revision task
+`prev1-t01` will reproduce and stabilize that test without weakening its
+lifecycle or clean-repository assertions. PR #254 remains open.
 
 ## Artifacts
 
@@ -142,7 +141,7 @@ open.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete; 14/14 tasks complete)
+- **Implementation:** `implementation.md` (revision in progress; 14/15 tasks complete)
 
 ## Progress
 
@@ -194,6 +193,9 @@ open.
 - ✓ Operator approved the post-p04 HiLL checkpoint
 - ✓ Configured closeout sequence reached its terminal `complete` state
 - ✓ Implementation marked complete
+- ✓ Bugbot and release dry-run passed on PR #254
+- ✗ CI run `33587438304` timed out in killed gate-marker coverage
+- ⧗ Revision task `prev1-t01` pending
 - ✓ PR #254 remote review converted one Medium null-recap finding to `p04-t06`
 - ✓ `p04-t06` completed at `9c1feafb8`; focused regression passed 15/15
 - ✓ Fresh `p04-t06` review passed with zero findings
@@ -222,5 +224,5 @@ None.
 
 ## Next Milestone
 
-PR #254 is open for review. Run `oat-project-revise` for review feedback or
-`oat-project-complete` when ready to archive the project.
+Execute `prev1-t01`, re-run the affected and forced workspace tests, then push
+the correction to PR #254 and revalidate CI.
