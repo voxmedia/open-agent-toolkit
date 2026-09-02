@@ -104,6 +104,10 @@ Final lifecycle review passed at fd5d5c85c10590fb293855ec27d8cac32c67d6b3 with 0
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-02T221657Z.md
 
+### 2026-09-02 · structural · oat-project-review-receive · final
+
+Received configured gate run 814287bf-abce-4264-8e51-11226227b9c8: 0 Critical, 1 Important, 1 Medium, 1 Minor; created Revision 8 tasks prev8-t01 through prev8-t03 with no deferrals; source archived at reviews/archived/final-review-2026-09-02T221657Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

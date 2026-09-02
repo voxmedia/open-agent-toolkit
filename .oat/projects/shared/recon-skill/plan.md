@@ -1653,6 +1653,106 @@ and commit with:
 git commit -m "fix(prev7-t01): finalize packet continuity check"
 ```
 
+## Phase p-rev8: Revision 8 — Close Configured-Gate Findings
+
+Source: `reviews/archived/final-review-2026-09-02T221657Z.md`
+(2026-09-02). The configured cross-family exit gate returned one Important,
+one Medium, and one Minor finding. Its validated blocked envelope is
+receive-eligible under `onFailure: block`; this revision converts every finding
+without widening the existing packet or reconciliation architecture.
+
+### Task prev8-t01: (review) Withdraw valid but non-publishable packet generations
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/SKILL.md`
+
+**Step 1: Reproduce the valid-but-non-publishable split generation**
+
+Add negative controls that publish a valid packet, change only `run.status` to
+each non-publishable status (`failed`, `running`, `preparing`, and
+`awaiting-approval`), and prove the current validator returns success while the
+old consumer entry point survives.
+
+**Step 2: Bind withdrawal and diagnostics to publishability**
+
+Compute publishability before withdrawal and use the existing unchanged-root
+guard to withdraw `packet.md` whenever the candidate is not publishable. Emit
+one categorical `PACKET_NOT_PUBLISHABLE` issue at `$.run.status`, make the CLI
+return nonzero for non-publishable candidates, and ensure renderer diagnostics
+include the categorical code. Keep `complete` and `partial` behavior unchanged;
+do not add staging, locks, state machines, or another publication abstraction.
+
+**Step 3: Align the controller contract and verify**
+
+Change only the affected "valid candidate" wording to "publishable candidate."
+Run the focused validator/renderer controls and the complete recon/dispatch
+suite. Format the changed files with `pnpm exec oxfmt --write` and commit with:
+
+```bash
+git commit -m "fix(prev8-t01): withdraw non-publishable packet generations"
+```
+
+### Task prev8-t02: (review) Reconcile legal negative review dispositions
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Reproduce the unreachable contested outcome**
+
+Add controls showing that contract-valid `challenged` and `rejected`
+dispositions currently throw before the reconciliation ledger can preserve a
+contested result. Preserve the existing valid affirmed/unchallenged controls.
+
+**Step 2: Apply the existing reconciliation contract**
+
+Accept every disposition already permitted by the shared contract. Map a
+challenge or rejection to the existing contract-legal contested transition (or
+the existing typed removal when the review explicitly authorizes removal), and
+keep `uncertain` as no promotion. Do not invent new states, schemas, or worker
+roles.
+
+**Step 3: Verify honest contested publication**
+
+Cover challenged-to-contested and rejected-to-removal through
+`compileValidatedRun`, plus one workflow integration scenario retaining a real
+contradiction as contested. Run the focused and complete recon suites, format
+with `pnpm exec oxfmt --write`, and commit with:
+
+```bash
+git commit -m "fix(prev8-t02): reconcile negative review dispositions"
+```
+
+### Task prev8-t03: (review) Align the Cursor projection plan record
+
+**Files:**
+
+- Modify: `.oat/projects/shared/recon-skill/plan.md`
+
+**Step 1: Correct the stale provider-view claim**
+
+Remove the p03-t04 claim and verification step for `.cursor/skills/recon`.
+Preserve the implemented Cursor agent projection and record that this
+repository's Cursor adapter does not materialize skill views.
+
+**Step 2: Preserve plan invariants and commit**
+
+Keep stable task IDs, every review row, implementation totals, and all other
+provider projections unchanged. Format `plan.md` with
+`pnpm exec oxfmt --write` and commit with:
+
+```bash
+git commit -m "docs(prev8-t03): align Cursor projection plan record"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target           |
@@ -1676,7 +1776,7 @@ git commit -m "fix(prev7-t01): finalize packet continuity check"
 | final          | code     | fixes_completed | 2026-09-02 | reviews/archived/final-review-2026-09-02T194356Z.md                    | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                     |
 | p-rev7         | code     | passed          | 2026-09-02 | reviews/archived/p-rev7-review-2026-09-02T212045Z.md                   | dbfeeede518556ed5678839bc18ab1342e381593 | manual     | -                     |
 | final          | code     | passed          | 2026-09-02 | reviews/archived/final-review-2026-09-02T214500Z.md                    | fd5d5c85c10590fb293855ec27d8cac32c67d6b3 | manual     | -                     |
-| final          | code     | received        | 2026-09-02 | `reviews/final-review-2026-09-02T221657Z.md`                           | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high |
+| final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T221657Z.md                    | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                     |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                     |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                     |
@@ -1728,8 +1828,11 @@ the first diagnostic suspect. No plan change or implementation task is needed.
   publication to the canonical bytes retained by `ValidatedRun`.
 - Revision 7: 1 task — make retained canonical-byte continuity the final
   awaited validation before publication returns success.
+- Revision 8: 3 tasks — withdraw valid-but-non-publishable generations,
+  reconcile contract-legal negative review dispositions, and align the Cursor
+  projection plan record.
 
-**Total: 30 tasks**
+**Total: 33 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

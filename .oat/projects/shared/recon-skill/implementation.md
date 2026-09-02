@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: prev8-t01
 oat_generated: false
 oat_template: false
 ---
@@ -32,8 +32,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev5 | passed         | 1     | 1/1       |
 | Phase p-rev6 | review_pending | 1     | 1/1       |
 | Phase p-rev7 | passed         | 1     | 1/1       |
+| Phase p-rev8 | pending        | 3     | 0/3       |
 
-**Total:** 30/30 tasks completed
+**Total:** 30/33 tasks completed
 
 ## Task Status
 
@@ -126,6 +127,14 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Task      | Status    | Commit      |
 | --------- | --------- | ----------- |
 | prev7-t01 | completed | `dbfeeede5` |
+
+### Phase p-rev8: Revision 8 — Close Configured-Gate Findings
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev8-t01 | pending | -      |
+| prev8-t02 | pending | -      |
+| prev8-t03 | pending | -      |
 
 ## Remote Review Received
 
@@ -223,6 +232,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   alignment work
 - **Next:** start the configured cross-family exit gate on this received
   passing-review basis
+
+## Configured Gate Review Received: Revision 8
+
+- **Date:** 2026-09-02
+- **Artifact:** `reviews/archived/final-review-2026-09-02T221657Z.md`
+- **Gate run:** `814287bf-abce-4264-8e51-11226227b9c8`
+- **Target:** `cursor-fable-5-1-high`; different-family independence achieved
+- **Reviewed head:** `676941aeae600d58d7c7e07a30a289df26725432`
+- **Findings:** 0 Critical, 1 Important, 1 Medium, 1 Minor
+- **New tasks:** `prev8-t01`, `prev8-t02`, `prev8-t03`
+- **Disposition:** auto-disposition for a validated blocking gate review; all
+  findings converted, with no deferrals or dismissals
+- **I1:** close the valid-but-non-publishable stale-packet path using existing
+  withdrawal and categorical-diagnostic seams
+- **M1:** accept the negative dispositions already legal in the shared
+  reconciliation contract without adding states or schemas
+- **m1:** align the stale Cursor skill-view claim in `plan.md`; implementation
+  remains authoritative
+- **Deferred Medium ledger:** empty before this review and remains empty
+- **Next:** execute Revision 8, mark this gate event `fixes_completed`, then
+  rerun final verification and the configured gate within its remaining
+  remediation budget
 
 ## Orchestration Runs
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev8-t01
 oat_last_commit: dbfeeede518556ed5678839bc18ab1342e381593
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T22:21:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T22:23:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,7 +94,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Final lifecycle review passed; configured gate pending
+**Status:** Configured gate fixes queued in Revision 8
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
@@ -103,10 +103,10 @@ oat_project_recap:
 Revision 7 closes the remaining post-promotion continuity window by making the
 retained canonical-byte assertion the final awaited publication check. The
 bounded two-file change passed its independent phase review with zero findings.
-All 30 tasks are complete. The single explicitly authorized mandatory final
-lifecycle review passed with zero findings on the immutable reviewed basis and
-has been received durably. PR #248 remains open while the configured
-cross-family exit gate runs.
+The single explicitly authorized mandatory final lifecycle review passed and
+was received durably. The configured cross-family gate then returned one
+Important, one Medium, and one Minor finding in a valid blocked envelope.
+Revision 8 converts all three findings; PR #248 remains open.
 
 ## Artifacts
 
@@ -114,7 +114,7 @@ cross-family exit gate runs.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (30/30 tasks complete; closeout pending)
+- **Implementation:** `implementation.md` (30/33 tasks complete; Revision 8 queued)
 
 ## Progress
 
@@ -232,14 +232,17 @@ cross-family exit gate runs.
   0 Medium, and 0 Minor findings
 - ✓ Single explicitly authorized final lifecycle review passed with zero findings
 - ✓ Final review event received and artifact archived with no deferred findings
-- ⧗ Configured cross-family exit gate is pending
+- ! Configured cross-family exit gate returned 1 Important, 1 Medium, and 1
+  Minor finding with a receive-eligible blocked result
+- ⧗ Revision 8 tasks `prev8-t01` through `prev8-t03` are queued
 
 ## Blockers
 
-None. The single-use review-cycle override has been consumed by the passing
-final review; no additional final review is authorized.
+None. The configured gate findings are converted into bounded Revision 8 work;
+the single-use manual final-review override remains consumed.
 
 ## Next Milestone
 
-Run the configured cross-family exit gate on the received passing final-review
-basis. Continue closeout only if its structured result is valid and allowed.
+Execute Revision 8 through `oat-project-implement`. After its phase review,
+rerun final verification and the configured gate within the remaining
+remediation budget.
