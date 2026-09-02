@@ -1295,6 +1295,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Generation state: pending / configured / not started. The prior stale gate
   provenance remains preserved in Git history and archived receipts.
 
+#### Configured exit-gate result — 2026-09-02T22:20:42Z
+
+- Launch attempt: `5c778d32-fd19-4dec-89d5-dbccccde5277`
+- Gate run: `814287bf-abce-4264-8e51-11226227b9c8`
+- Target: `cursor-fable-5-1-high`; different-family review achieved
+- Structured outcome: `blocked`, receive eligible, with 0 Critical, 1
+  Important, 1 Medium, and 1 Minor finding
+- Artifact: `reviews/final-review-2026-09-02T221657Z.md`
+- Corroboration: run, project, invocation, target, artifact, and non-null
+  handoff all match the persisted launch
+- Policy: no disposition has been applied yet. The structured review must be
+  received durably before the configured `onFailure: block` remediation policy
+  can consume an attempt or authorize fixes.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
