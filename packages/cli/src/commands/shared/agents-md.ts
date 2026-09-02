@@ -155,6 +155,25 @@ function findManagedSection(
   return { start: starts[0], end: ends[0] + endMarker.length };
 }
 
+function assertManagedSectionsAreDisjoint(
+  sections: readonly { start: number; end: number }[],
+): void {
+  const ordered = [...sections].sort((left, right) => left.start - right.start);
+  for (let index = 1; index < ordered.length; index += 1) {
+    const previous = ordered[index - 1];
+    const current = ordered[index];
+    if (
+      previous !== undefined &&
+      current !== undefined &&
+      previous.end > current.start
+    ) {
+      throw new Error(
+        'AGENTS.md managed sections must be mutually disjoint and non-crossing before OAT can mutate them.',
+      );
+    }
+  }
+}
+
 async function planAgentsMd(
   repoRoot: string,
   fileSystem: AgentsMdFileSystem,
@@ -427,17 +446,17 @@ async function writePlannedContent(
   previousContent: string,
   content: string,
   fileSystem: AgentsMdFileSystem,
-): Promise<void> {
+): Promise<'published' | 'recovery-required'> {
   const tempPath = join(
     dirname(plan.targetPath),
     `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.tmp`,
   );
-  const backupPath = join(
+  const recoveryPath = join(
     dirname(plan.targetPath),
-    `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.rollback`,
+    `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.recovery`,
   );
   let tempExists = false;
-  let backupExists = false;
+  let recoveryExists = false;
   let published = false;
   try {
     await fileSystem.writeFile(tempPath, content, {
@@ -454,81 +473,51 @@ async function writePlannedContent(
       await fileSystem.link(tempPath, plan.targetPath);
       await fileSystem.rm(tempPath, { force: true });
       tempExists = false;
-      return;
+      return 'published';
     }
 
-    // Node does not expose a conditional replace primitive. Move the planned
-    // inode aside first, publish with no-clobber link semantics, and retain a
-    // recoverable original until both sides have been revalidated.
-    await fileSystem.rename(plan.targetPath, backupPath);
-    backupExists = true;
-    try {
-      const backupStat = await fileSystem.lstat(backupPath);
-      if (
-        !backupStat.isFile() ||
-        backupStat.isSymbolicLink() ||
-        !hasIdentity(backupStat, plan.targetIdentity) ||
-        (await fileSystem.readFile(backupPath, 'utf8')) !== previousContent
-      ) {
-        throw new Error('AGENTS.md content changed before mutation.');
-      }
-
-      await fileSystem.link(tempPath, plan.targetPath);
-      published = true;
-      if ((await fileSystem.readFile(backupPath, 'utf8')) !== previousContent) {
-        throw new Error('AGENTS.md content changed during mutation.');
-      }
-      await assertPublishedPlan(plan, tempIdentity, content, fileSystem);
-      await fileSystem.rm(backupPath, { force: true });
-      backupExists = false;
-    } catch (error) {
-      let canRestore = true;
-      if (published) {
-        try {
-          const publishedStat = await fileSystem.lstat(plan.targetPath);
-          canRestore =
-            hasIdentity(publishedStat, tempIdentity) &&
-            (await fileSystem.readFile(plan.targetPath, 'utf8')) === content;
-        } catch {
-          canRestore = false;
-        }
-        if (canRestore) {
-          await fileSystem.rm(plan.targetPath, { force: true });
-          published = false;
-        }
-      } else {
-        try {
-          await fileSystem.lstat(plan.targetPath);
-          canRestore = false;
-        } catch (targetError) {
-          if (!isMissing(targetError)) canRestore = false;
-        }
-      }
-
-      if (canRestore && backupExists) {
-        await fileSystem.rename(backupPath, plan.targetPath);
-        backupExists = false;
-      }
-      if (backupExists) {
-        throw new Error(
-          `AGENTS.md changed during guarded publication; original content was preserved at ${backupPath}.`,
-          { cause: error },
-        );
-      }
-      throw error;
+    // Node does not expose a conditional replace primitive. Keep the live
+    // public path present, preserve the original inode under a private hard
+    // link, revalidate the one planned snapshot, and then replace the public
+    // path atomically. The preserved inode is never removed after publication:
+    // an editor may still hold a descriptor and write to it later.
+    await fileSystem.link(plan.targetPath, recoveryPath);
+    recoveryExists = true;
+    const recoveryStat = await fileSystem.lstat(recoveryPath);
+    if (
+      !recoveryStat.isFile() ||
+      recoveryStat.isSymbolicLink() ||
+      !hasIdentity(recoveryStat, plan.targetIdentity) ||
+      (await fileSystem.readFile(recoveryPath, 'utf8')) !== previousContent
+    ) {
+      throw new Error('AGENTS.md content changed before mutation.');
     }
+    await assertPlanUnchanged(plan, fileSystem, previousContent);
 
-    await fileSystem.rm(tempPath, { force: true });
+    await fileSystem.rename(tempPath, plan.targetPath);
     tempExists = false;
+    published = true;
+    try {
+      await assertPublishedPlan(plan, tempIdentity, content, fileSystem);
+    } catch (error) {
+      throw new Error(
+        'AGENTS.md was atomically updated, but its prior version was preserved beside it and requires recovery review.',
+        { cause: error },
+      );
+    }
+    return 'recovery-required';
   } finally {
     if (tempExists) {
       await fileSystem.rm(tempPath, { force: true });
+    }
+    if (recoveryExists && !published) {
+      await fileSystem.rm(recoveryPath, { force: true });
     }
   }
 }
 
 export interface UpsertSectionResult {
-  action: 'created' | 'updated' | 'no-change';
+  action: 'created' | 'updated' | 'no-change' | 'recovery-required';
 }
 
 /**
@@ -556,6 +545,10 @@ export async function upsertAgentsMdSection(
       return sectionToRemove ? [sectionToRemove] : [];
     },
   );
+  assertManagedSectionsAreDisjoint([
+    ...(managed ? [managed] : []),
+    ...removalSections,
+  ]);
 
   let updatedContent: string;
   if (managed) {
@@ -602,7 +595,15 @@ export async function upsertAgentsMdSection(
     }
   }
 
-  await writePlannedContent(plan, content, updatedContent, fileSystem);
+  const publication = await writePlannedContent(
+    plan,
+    content,
+    updatedContent,
+    fileSystem,
+  );
+  if (publication === 'recovery-required') {
+    return { action: 'recovery-required' };
+  }
   return { action: plan.kind === 'missing' ? 'created' : 'updated' };
 }
 
@@ -615,7 +616,7 @@ export async function removeAgentsMdSection(
   repoRoot: string,
   key: string,
   options: AgentsMdMutationOptions = {},
-): Promise<boolean> {
+): Promise<boolean | 'recovery-required'> {
   const fileSystem = options.fileSystem ?? defaultFileSystem;
   const plan = await planAgentsMd(repoRoot, fileSystem);
   if (plan.kind === 'missing') return false;
@@ -627,6 +628,11 @@ export async function removeAgentsMdSection(
   const before = content.slice(0, managed.start);
   const after = content.slice(managed.end);
   const cleaned = (before + after).replace(/\n{3,}/g, '\n\n');
-  await writePlannedContent(plan, content, cleaned, fileSystem);
-  return true;
+  const publication = await writePlannedContent(
+    plan,
+    content,
+    cleaned,
+    fileSystem,
+  );
+  return publication === 'recovery-required' ? 'recovery-required' : true;
 }

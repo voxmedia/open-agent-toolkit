@@ -213,7 +213,10 @@ export interface InitToolsDependencies {
     body: string,
     options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
-  removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
+  removeAgentsMdSection: (
+    repoRoot: string,
+    key: string,
+  ) => Promise<boolean | 'recovery-required'>;
   reconcilePacks?: (
     requests: readonly PackLifecycleRequest[],
     options?: { dryRun?: boolean },
@@ -859,6 +862,14 @@ async function applyProjectGuidance(
         ? { removeSectionKeys: ['workflows'] }
         : undefined,
     );
+    if (sectionResult.action === 'recovery-required') {
+      return {
+        ...plan,
+        action: 'blocked',
+        reason:
+          'Accepted project guidance was atomically updated, but its prior version was preserved beside AGENTS.md and requires recovery review. Capability placement and PJM adoption were unchanged.',
+      };
+    }
     return {
       ...plan,
       action:

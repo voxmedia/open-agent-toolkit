@@ -3,7 +3,9 @@ import {
   link,
   mkdir,
   mkdtemp,
+  open,
   readFile,
+  readdir,
   readlink,
   realpath,
   rename,
@@ -60,6 +62,10 @@ describe('upsertAgentsMdSection', () => {
     return readFile(join(root, 'AGENTS.md'), 'utf8');
   }
 
+  async function expectRecoveryRequired(operation: Promise<unknown>) {
+    await expect(operation).resolves.toEqual({ action: 'recovery-required' });
+  }
+
   it('creates AGENTS.md with the section when file does not exist', async () => {
     await setup();
 
@@ -79,13 +85,10 @@ describe('upsertAgentsMdSection', () => {
   it('appends section to existing AGENTS.md without markers', async () => {
     await setup('# My Project\n\nSome content.\n');
 
-    const result = await upsertAgentsMdSection(
-      root,
-      'docs',
-      '## Docs\nPath: docs/',
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'docs', '## Docs\nPath: docs/'),
     );
 
-    expect(result.action).toBe('updated');
     const content = await readAgentsMd();
     expect(content).toBe(
       '# My Project\n\nSome content.\n\n<!-- OAT docs -->\n## Docs\nPath: docs/\n<!-- END OAT docs -->\n',
@@ -97,9 +100,10 @@ describe('upsertAgentsMdSection', () => {
       '# Header\n\n<!-- OAT docs -->\nold content\n<!-- END OAT docs -->\n\n# Footer\n',
     );
 
-    const result = await upsertAgentsMdSection(root, 'docs', 'new content');
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'docs', 'new content'),
+    );
 
-    expect(result.action).toBe('updated');
     const content = await readAgentsMd();
     expect(content).toBe(
       '# Header\n\n<!-- OAT docs -->\nnew content\n<!-- END OAT docs -->\n\n# Footer\n',
@@ -119,13 +123,10 @@ describe('upsertAgentsMdSection', () => {
   it('handles different section keys independently', async () => {
     await setup('<!-- OAT docs -->\ndocs section\n<!-- END OAT docs -->\n');
 
-    const result = await upsertAgentsMdSection(
-      root,
-      'workflows',
-      'workflows section',
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'workflows', 'workflows section'),
     );
 
-    expect(result.action).toBe('updated');
     const content = await readAgentsMd();
     expect(content).toContain('<!-- OAT docs -->');
     expect(content).toContain('<!-- OAT workflows -->');
@@ -136,9 +137,10 @@ describe('upsertAgentsMdSection', () => {
   it('appends with double newline when file does not end with newline', async () => {
     await setup('# Header');
 
-    const result = await upsertAgentsMdSection(root, 'docs', 'content');
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'docs', 'content'),
+    );
 
-    expect(result.action).toBe('updated');
     const content = await readAgentsMd();
     expect(content).toBe(
       '# Header\n\n<!-- OAT docs -->\ncontent\n<!-- END OAT docs -->\n',
@@ -158,7 +160,9 @@ describe('upsertAgentsMdSection', () => {
       join(root, 'AGENTS.md'),
     );
 
-    await upsertAgentsMdSection(root, 'docs', 'new content');
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'docs', 'new content'),
+    );
 
     await expect(readFile(target, 'utf8')).resolves.toContain(
       '<!-- OAT docs -->\nnew content\n<!-- END OAT docs -->',
@@ -314,6 +318,115 @@ describe('upsertAgentsMdSection', () => {
   });
 
   it.each([
+    ['direct', 'publish'],
+    ['direct', 'validation'],
+    ['direct', 'cleanup'],
+    ['symlink', 'publish'],
+    ['symlink', 'validation'],
+    ['symlink', 'cleanup'],
+  ] as const)(
+    'preserves open-inode edits at the %s %s boundary without public-path absence',
+    async (kind, boundary) => {
+      await setup();
+      const agentsPath = join(root, 'AGENTS.md');
+      const targetPath =
+        kind === 'direct' ? agentsPath : join(root, 'shared-agents.md');
+      await writeFile(targetPath, '# Original\n', 'utf8');
+      if (kind === 'symlink') await symlink('shared-agents.md', agentsPath);
+      const plannedTargetPath = await realpath(targetPath);
+      const originalHandle = await open(targetPath, 'r+');
+      const lateBytes = `# Late ${boundary} edit\n`;
+      let published = false;
+      let injected = false;
+      let missingObserved = false;
+      let recoveryCleanupAttempted = false;
+
+      const writeLateBytes = async () => {
+        if (injected) return;
+        injected = true;
+        await originalHandle.truncate(0);
+        await originalHandle.writeFile(lateBytes, 'utf8');
+        await originalHandle.sync();
+      };
+      const observePublicPath = async () => {
+        try {
+          await readFile(agentsPath, 'utf8');
+        } catch (error) {
+          if (
+            typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            error.code === 'ENOENT'
+          ) {
+            missingObserved = true;
+          }
+        }
+      };
+      const isRecoveryPath = (path: unknown) =>
+        typeof path === 'string' &&
+        (path.includes('.rollback') || path.includes('.recovery'));
+      const fileSystem = withFileSystem({
+        link: vi.fn(async (...args) => {
+          await link(...args);
+          if (String(args[1]) === plannedTargetPath) {
+            published = true;
+            if (boundary === 'publish') await writeLateBytes();
+          }
+          await observePublicPath();
+        }) as AgentsMdFileSystem['link'],
+        rename: vi.fn(async (...args) => {
+          await rename(...args);
+          if (String(args[1]) === plannedTargetPath) {
+            published = true;
+            if (boundary === 'publish') await writeLateBytes();
+          }
+          await observePublicPath();
+        }) as AgentsMdFileSystem['rename'],
+        readFile: vi.fn(async (...args) => {
+          const value = await readFile(...args);
+          if (
+            boundary === 'validation' &&
+            published &&
+            String(args[0]) === plannedTargetPath
+          ) {
+            await writeLateBytes();
+          }
+          return value;
+        }) as AgentsMdFileSystem['readFile'],
+        rm: vi.fn(async (...args) => {
+          if (published && isRecoveryPath(args[0])) {
+            recoveryCleanupAttempted = true;
+            if (boundary === 'cleanup') await writeLateBytes();
+          }
+          await rm(...args);
+          await observePublicPath();
+        }) as AgentsMdFileSystem['rm'],
+      });
+
+      try {
+        await expect(
+          upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+        ).resolves.toEqual({ action: 'recovery-required' });
+        expect(missingObserved).toBe(false);
+
+        const recoveryNames = (await readdir(root)).filter(
+          (name) => name.includes('.rollback') || name.includes('.recovery'),
+        );
+        if (boundary === 'cleanup' && !recoveryCleanupAttempted) {
+          await writeLateBytes();
+        }
+        const survivingContents = await Promise.all([
+          readFile(targetPath, 'utf8'),
+          ...recoveryNames.map((name) => readFile(join(root, name), 'utf8')),
+        ]);
+        expect(survivingContents).toContain(lateBytes);
+      } finally {
+        await originalHandle.close();
+      }
+    },
+  );
+
+  it.each([
     '<!-- OAT workflows -->\nunterminated legacy\n',
     '<!-- OAT workflows -->\none\n<!-- END OAT workflows -->\n<!-- OAT workflows -->\ntwo\n<!-- END OAT workflows -->\n',
   ])(
@@ -330,16 +443,76 @@ describe('upsertAgentsMdSection', () => {
     },
   );
 
-  it('publishes a valid legacy migration as one section update', async () => {
+  it.each([
+    [
+      'tools containing workflows',
+      [
+        '# Prefix user text',
+        '<!-- OAT tools -->',
+        'old tools',
+        '<!-- OAT workflows -->',
+        'legacy',
+        '<!-- END OAT workflows -->',
+        'interstitial user text',
+        '<!-- END OAT tools -->',
+        '# Suffix user text',
+        '',
+      ].join('\n'),
+    ],
+    [
+      'workflows containing tools',
+      [
+        '# Prefix user text',
+        '<!-- OAT workflows -->',
+        'legacy',
+        '<!-- OAT tools -->',
+        'old tools',
+        '<!-- END OAT tools -->',
+        'interstitial user text',
+        '<!-- END OAT workflows -->',
+        '# Suffix user text',
+        '',
+      ].join('\n'),
+    ],
+    [
+      'crossed tools and workflows',
+      [
+        '# Prefix user text',
+        '<!-- OAT tools -->',
+        'old tools',
+        '<!-- OAT workflows -->',
+        'interstitial user text',
+        '<!-- END OAT tools -->',
+        '# Suffix user text',
+        '<!-- END OAT workflows -->',
+        '',
+      ].join('\n'),
+    ],
+  ])(
+    'rejects %s marker ranges without changing any bytes',
+    async (_case, content) => {
+      await setup(content);
+
+      await expect(
+        upsertAgentsMdSection(root, 'tools', 'replacement', {
+          removeSectionKeys: ['workflows'],
+        }),
+      ).rejects.toThrow(/overlap|cross|disjoint/i);
+      await expect(readAgentsMd()).resolves.toBe(content);
+    },
+  );
+
+  it('publishes a valid legacy migration with an explicit recovery result', async () => {
     await setup(
       '# User guidance\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
     );
 
-    const result = await upsertAgentsMdSection(root, 'tools', 'replacement', {
-      removeSectionKeys: ['workflows'],
-    });
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'tools', 'replacement', {
+        removeSectionKeys: ['workflows'],
+      }),
+    );
 
-    expect(result.action).toBe('updated');
     await expect(readAgentsMd()).resolves.toBe(
       '# User guidance\n\n<!-- OAT tools -->\nreplacement\n<!-- END OAT tools -->\n',
     );
@@ -374,7 +547,9 @@ describe('upsertAgentsMdSection', () => {
     ].join('\n');
     await setup(original);
 
-    await upsertAgentsMdSection(root, 'tools', 'Tool guidance');
+    await expectRecoveryRequired(
+      upsertAgentsMdSection(root, 'tools', 'Tool guidance'),
+    );
 
     const content = await readAgentsMd();
     expect(content).toContain('# User guidance');
@@ -405,6 +580,10 @@ describe('removeAgentsMdSection', () => {
     return readFile(join(root, 'AGENTS.md'), 'utf8');
   }
 
+  async function expectRecoveryRequired(operation: Promise<unknown>) {
+    await expect(operation).resolves.toBe('recovery-required');
+  }
+
   it('returns false when file does not exist', async () => {
     await setup();
     expect(await removeAgentsMdSection(root, 'workflows')).toBe(false);
@@ -420,9 +599,8 @@ describe('removeAgentsMdSection', () => {
       '# Header\n\n<!-- OAT workflows -->\nold content\n<!-- END OAT workflows -->\n\n# Footer\n',
     );
 
-    const removed = await removeAgentsMdSection(root, 'workflows');
+    await expectRecoveryRequired(removeAgentsMdSection(root, 'workflows'));
 
-    expect(removed).toBe(true);
     const content = await readAgentsMd();
     expect(content).not.toContain('OAT workflows');
     expect(content).not.toContain('old content');
@@ -435,7 +613,7 @@ describe('removeAgentsMdSection', () => {
       '<!-- OAT tools -->\nnew content\n<!-- END OAT tools -->\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
     );
 
-    await removeAgentsMdSection(root, 'workflows');
+    await expectRecoveryRequired(removeAgentsMdSection(root, 'workflows'));
 
     const content = await readAgentsMd();
     expect(content).toContain('<!-- OAT tools -->');

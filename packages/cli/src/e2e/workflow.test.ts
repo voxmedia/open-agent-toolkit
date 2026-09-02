@@ -273,7 +273,7 @@ describe('e2e workflow', () => {
     }
   });
 
-  it('applies opted-in aggregate guidance idempotently without changing PJM adoption', async () => {
+  it('reports existing aggregate guidance recovery explicitly and reruns idempotently', async () => {
     const root = await createWorkspace();
     const userRoot = await mkdtemp(
       join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
@@ -322,7 +322,11 @@ describe('e2e workflow', () => {
         '--no-sync',
       ]);
 
-      expect(first.exitCode).toBe(0);
+      expect(first.exitCode).toBe(1);
+      expect(`${first.stdout}\n${first.stderr}`).toMatch(
+        /requires recovery review/i,
+      );
+      expect(`${first.stdout}\n${first.stderr}`).not.toContain(root);
       expect(second.exitCode).toBe(0);
       const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
       expect(guidance).toContain('# User guidance');
@@ -330,6 +334,50 @@ describe('e2e workflow', () => {
       expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
       expect(guidance).toContain('### Installed Packs');
       expect(guidance).not.toContain('<!-- OAT decisions -->');
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('reports existing registered-workflows guidance as a redacted partial recovery', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    await writeFile(join(root, 'AGENTS.md'), '# Existing guidance\n', 'utf8');
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(
+        root,
+        [
+          'tools',
+          'install',
+          '--scope',
+          'project',
+          '--no-sync',
+          '--project-guidance',
+          'workflows',
+        ],
+        ['--json'],
+      );
+
+      expect(result.exitCode).toBe(1);
+      const payload = JSON.parse(result.stdout);
+      expect(payload).toMatchObject({
+        status: 'partial',
+        projectGuidance: {
+          action: 'blocked',
+          reason: expect.stringMatching(/requires recovery review/i),
+        },
+      });
+      expect(payload.projectGuidance.reason).not.toContain(root);
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toMatch(
+        /# Existing guidance[\s\S]*<!-- OAT tools -->/,
+      );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
@@ -545,6 +593,99 @@ describe('e2e workflow', () => {
         });
         await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
           legacy,
+        );
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it.each(
+    (['aggregate', 'registered workflows'] as const).flatMap((path) =>
+      [
+        {
+          shape: 'tools containing workflows',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- OAT workflows -->',
+            'legacy',
+            '<!-- END OAT workflows -->',
+            'interstitial user text',
+            '<!-- END OAT tools -->',
+            '# Suffix user text',
+            '',
+          ].join('\n'),
+        },
+        {
+          shape: 'workflows containing tools',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT workflows -->',
+            'legacy',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- END OAT tools -->',
+            'interstitial user text',
+            '<!-- END OAT workflows -->',
+            '# Suffix user text',
+            '',
+          ].join('\n'),
+        },
+        {
+          shape: 'crossed tools and workflows',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- OAT workflows -->',
+            'interstitial user text',
+            '<!-- END OAT tools -->',
+            '# Suffix user text',
+            '<!-- END OAT workflows -->',
+            '',
+          ].join('\n'),
+        },
+      ].map((fixture) => ({ path, ...fixture })),
+    ),
+  )(
+    'blocks $shape markers byte-for-byte on the $path path',
+    async ({ path, content }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      await writeFile(join(root, 'AGENTS.md'), content, 'utf8');
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const result = await runCli(
+          root,
+          [
+            'tools',
+            'install',
+            '--scope',
+            'project',
+            '--no-sync',
+            '--project-guidance',
+            ...(path === 'registered workflows' ? ['workflows'] : []),
+          ],
+          ['--json'],
+        );
+
+        expect(result.exitCode).toBe(1);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+          status: 'partial',
+          projectGuidance: {
+            action: 'blocked',
+            reason: expect.stringMatching(/overlap|cross|disjoint/i),
+          },
+        });
+        await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+          content,
         );
       } finally {
         if (previousHome === undefined) delete process.env.HOME;
