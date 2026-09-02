@@ -199,12 +199,49 @@ describe('createDecisionCommand', () => {
     expect(capture.jsonPayloads).toEqual([
       {
         status: 'error',
-        message:
-          'Decision index initialized at /tmp/workspace/repo/.oat/repo/reference/decisions, but AGENTS.md guidance could not be written: permission denied. Fix the guidance write error and rerun `oat decision init`.',
+        message: expect.stringMatching(/unexpected-failure/),
       },
     ]);
+    expect(JSON.stringify(capture.jsonPayloads)).not.toContain(
+      '/tmp/workspace',
+    );
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([false, true])(
+    'reports completed decision scaffold with recovery-required guidance in json=%s mode',
+    async (json) => {
+      const { command, capture, initializeDecisionAgentsGuidance } =
+        createHarness();
+      initializeDecisionAgentsGuidance.mockResolvedValueOnce({
+        root: 'recovery-required',
+        scoped: 'no-change',
+        recovery: {
+          root: {
+            code: 'recovery-required',
+            target: 'AGENTS.md',
+            identifiers: ['.AGENTS.md.oat-recovery-1-2'],
+            action:
+              'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+          },
+        },
+      });
+
+      await runCommand(command, 'init', json ? ['--json'] : []);
+
+      if (json) {
+        expect(capture.jsonPayloads).toHaveLength(1);
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          scaffold: { status: 'complete' },
+          guidance: { root: 'recovery-required', scoped: 'no-change' },
+        });
+      } else {
+        expect(capture.warn.join('\n')).toMatch(/requires recovery/i);
+      }
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('regenerates the managed decision index', async () => {
     const { command, capture, regenerateDecisionIndex } = createHarness();

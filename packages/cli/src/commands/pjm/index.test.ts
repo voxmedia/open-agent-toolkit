@@ -233,6 +233,58 @@ describe('oat pjm', () => {
     ).resolves.not.toContain('oat_template:');
   });
 
+  it.each([false, true])(
+    'reports completed adoption with both guidance outcomes in json=%s mode',
+    async (json) => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+      const result = await runCli(
+        root,
+        [...(json ? ['--json'] : []), 'pjm', 'init'],
+        (program) =>
+          program.addCommand(
+            createPjmCommand({
+              initializeRepoReference: async () => ({
+                repoRoot: join(root, '.oat', 'repo'),
+                created: ['README.md'],
+                skipped: [],
+                guidance: {
+                  projectManagement: {
+                    action: 'recovery-required',
+                    recovery: {
+                      code: 'recovery-required',
+                      target: 'AGENTS.md',
+                      identifiers: ['.AGENTS.md.oat-recovery-1-2'],
+                      action:
+                        'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+                    },
+                  },
+                  decisions: { action: 'no-change' },
+                },
+              }),
+            }),
+          ),
+      );
+
+      expect(result.exitCode).toBe(1);
+      if (json) {
+        expect(JSON.parse(result.stdout)).toMatchObject({
+          status: 'partial',
+          scaffold: { status: 'complete' },
+          adoption: { status: 'declared' },
+          guidance: {
+            projectManagement: { action: 'recovery-required' },
+            decisions: { action: 'no-change' },
+          },
+        });
+      } else {
+        expect(`${result.stdout}\n${result.stderr}`).toMatch(
+          /requires recovery/i,
+        );
+      }
+    },
+  );
+
   it('prints the instructions sync next-step hint after init', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

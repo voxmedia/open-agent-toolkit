@@ -1,4 +1,6 @@
 import {
+  chmod,
+  chown,
   lstat,
   link,
   mkdir,
@@ -25,9 +27,12 @@ import {
 } from './agents-md';
 
 const realFileSystem: AgentsMdFileSystem = {
+  chmod,
+  chown,
   link,
   lstat,
   readFile,
+  readdir,
   readlink,
   realpath,
   rename,
@@ -63,7 +68,27 @@ describe('upsertAgentsMdSection', () => {
   }
 
   async function expectRecoveryRequired(operation: Promise<unknown>) {
-    await expect(operation).resolves.toEqual({ action: 'recovery-required' });
+    await expect(operation).resolves.toMatchObject({
+      action: 'recovery-required',
+      recovery: {
+        code: 'recovery-required',
+        target: expect.any(String),
+        identifiers: [expect.stringContaining('oat-recovery-')],
+        action: expect.stringMatching(/review and remove.+rerun/i),
+      },
+    });
+  }
+
+  async function expectSafeFailure(
+    operation: Promise<unknown>,
+    code: string,
+  ): Promise<void> {
+    const error = await operation.catch((failure: unknown) => failure);
+    expect(String(error)).toContain(code);
+    expect(String(error)).not.toContain(root);
+    expect(String(error)).not.toMatch(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    );
   }
 
   it('creates AGENTS.md with the section when file does not exist', async () => {
@@ -241,8 +266,36 @@ describe('upsertAgentsMdSection', () => {
 
     await expect(
       upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-    ).rejects.toThrow(/identity changed/);
+    ).rejects.toThrow(/revalidation-failed/);
     await expect(readAgentsMd()).resolves.toBe('# Foreign replacement\n');
+  });
+
+  it('redacts temporary creation failures', async () => {
+    await setup('# Original\n');
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async () => {
+        throw new Error(`EPERM ${root}/.AGENTS.private-uuid.tmp`);
+      }) as AgentsMdFileSystem['writeFile'],
+    });
+
+    await expectSafeFailure(
+      upsertAgentsMdSection(root, 'docs', 'content', { fileSystem }),
+      'temp-create-failed',
+    );
+  });
+
+  it('redacts recovery link failures', async () => {
+    await setup('# Original\n');
+    const fileSystem = withFileSystem({
+      link: vi.fn(async () => {
+        throw new Error(`EPERM ${root}/.AGENTS.private-uuid.recovery`);
+      }) as AgentsMdFileSystem['link'],
+    });
+
+    await expectSafeFailure(
+      upsertAgentsMdSection(root, 'docs', 'content', { fileSystem }),
+      'recovery-link-failed',
+    );
   });
 
   it('fails closed and preserves a same-inode direct-file edit before publication', async () => {
@@ -261,7 +314,7 @@ describe('upsertAgentsMdSection', () => {
 
     await expect(
       upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-    ).rejects.toThrow(/content changed/);
+    ).rejects.toThrow(/revalidation-failed/);
     await expect(readAgentsMd()).resolves.toBe('# Late user edit\n');
   });
 
@@ -287,7 +340,7 @@ describe('upsertAgentsMdSection', () => {
 
     await expect(
       upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-    ).rejects.toThrow(/identity changed/);
+    ).rejects.toThrow(/revalidation-failed/);
     await expect(readFile(originalTarget, 'utf8')).resolves.toBe(
       '# Original\n',
     );
@@ -312,7 +365,7 @@ describe('upsertAgentsMdSection', () => {
 
     await expect(
       upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-    ).rejects.toThrow(/content changed/);
+    ).rejects.toThrow(/revalidation-failed/);
     await expect(readFile(target, 'utf8')).resolves.toBe('# Late user edit\n');
     expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(true);
   });
@@ -364,7 +417,9 @@ describe('upsertAgentsMdSection', () => {
       };
       const isRecoveryPath = (path: unknown) =>
         typeof path === 'string' &&
-        (path.includes('.rollback') || path.includes('.recovery'));
+        (path.includes('.rollback') ||
+          path.includes('.recovery') ||
+          path.includes('oat-recovery-'));
       const fileSystem = withFileSystem({
         link: vi.fn(async (...args) => {
           await link(...args);
@@ -406,11 +461,17 @@ describe('upsertAgentsMdSection', () => {
       try {
         await expect(
           upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-        ).resolves.toEqual({ action: 'recovery-required' });
+        ).resolves.toMatchObject({
+          action: 'recovery-required',
+          recovery: { code: 'recovery-required' },
+        });
         expect(missingObserved).toBe(false);
 
         const recoveryNames = (await readdir(root)).filter(
-          (name) => name.includes('.rollback') || name.includes('.recovery'),
+          (name) =>
+            name.includes('.rollback') ||
+            name.includes('.recovery') ||
+            name.includes('oat-recovery-'),
         );
         if (boundary === 'cleanup' && !recoveryCleanupAttempted) {
           await writeLateBytes();
@@ -502,6 +563,137 @@ describe('upsertAgentsMdSection', () => {
     },
   );
 
+  it.each(['direct', 'symlink'] as const)(
+    'keeps unresolved %s recovery actionable until explicit removal',
+    async (kind) => {
+      await setup();
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      await writeFile(target, '# Existing\n', 'utf8');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+
+      const first = await upsertAgentsMdSection(root, 'docs', 'content');
+      expect(first).toMatchObject({ action: 'recovery-required' });
+      const identifier = first.recovery?.identifiers[0];
+      expect(identifier).toMatch(/oat-recovery-/);
+      await expect(
+        upsertAgentsMdSection(root, 'docs', 'content'),
+      ).resolves.toEqual(first);
+
+      await rm(join(root, identifier ?? 'missing'));
+      await expect(
+        upsertAgentsMdSection(root, 'docs', 'content'),
+      ).resolves.toEqual({ action: 'no-change' });
+    },
+  );
+
+  it('skips foreign recovery-name collisions and rediscovers multiple valid recoveries', async () => {
+    await setup('# Existing\n');
+    let foreignPath: string | undefined;
+    let collided = false;
+    const fileSystem = withFileSystem({
+      link: vi.fn(async (...args) => {
+        if (!collided && String(args[1]).includes('oat-recovery-')) {
+          collided = true;
+          foreignPath = String(args[1]);
+          await writeFile(foreignPath, '# Foreign collision\n', 'utf8');
+          const error = new Error('collision') as Error & { code: string };
+          error.code = 'EEXIST';
+          throw error;
+        }
+        await link(...args);
+      }) as AgentsMdFileSystem['link'],
+    });
+
+    const first = await upsertAgentsMdSection(root, 'docs', 'content', {
+      fileSystem,
+    });
+    expect(first.recovery?.identifiers[0]).toMatch(/-2$/);
+    await expect(readFile(foreignPath ?? '', 'utf8')).resolves.toBe(
+      '# Foreign collision\n',
+    );
+
+    const validPath = join(root, first.recovery?.identifiers[0] ?? 'missing');
+    const secondPath = validPath.replace(/-2$/, '-3');
+    await link(validPath, secondPath);
+    const repeated = await upsertAgentsMdSection(root, 'docs', 'content');
+    expect(repeated.recovery?.identifiers).toHaveLength(2);
+  });
+
+  it.each([
+    ['direct', 'file'],
+    ['direct', 'symlink'],
+    ['symlink', 'file'],
+    ['symlink', 'symlink'],
+  ] as const)(
+    'preserves a foreign %s replacement at the %s recovery cleanup boundary',
+    async (kind, replacementKind) => {
+      await setup();
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      await writeFile(target, '# Existing\n', 'utf8');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+      const foreignTarget = join(root, 'foreign.md');
+      await writeFile(foreignTarget, '# Foreign\n', 'utf8');
+      let recoveryPath: string | undefined;
+      const fileSystem = withFileSystem({
+        link: vi.fn(async (...args) => {
+          await link(...args);
+          if (String(args[1]).includes('oat-recovery-')) {
+            recoveryPath = String(args[1]);
+            await rm(recoveryPath);
+            if (replacementKind === 'file') {
+              await writeFile(recoveryPath, '# Foreign replacement\n', 'utf8');
+            } else {
+              await symlink(foreignTarget, recoveryPath);
+            }
+          }
+        }) as AgentsMdFileSystem['link'],
+      });
+
+      await expect(
+        upsertAgentsMdSection(root, 'docs', 'content', { fileSystem }),
+      ).rejects.toThrow(/cleanup-conflict/);
+      await expect(readFile(target, 'utf8')).resolves.toBe('# Existing\n');
+      if (replacementKind === 'file') {
+        await expect(readFile(recoveryPath ?? '', 'utf8')).resolves.toBe(
+          '# Foreign replacement\n',
+        );
+      } else {
+        expect((await lstat(recoveryPath ?? '')).isSymbolicLink()).toBe(true);
+      }
+    },
+  );
+
+  it.each(['direct', 'symlink'] as const)(
+    'preserves unrelated bytes and mode for a %s managed update',
+    async (kind) => {
+      await setup();
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      const original =
+        'prefix\n\n\n\n<!-- OAT docs -->\nold\n<!-- END OAT docs -->\n\n\n\nsuffix\n';
+      await writeFile(target, original, { mode: 0o666 });
+      await chmod(target, 0o666);
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+
+      const previousUmask = process.umask(0o077);
+      try {
+        await upsertAgentsMdSection(root, 'docs', 'new');
+      } finally {
+        process.umask(previousUmask);
+      }
+
+      await expect(readFile(target, 'utf8')).resolves.toBe(
+        original.replace('\nold\n', '\nnew\n'),
+      );
+      expect((await lstat(target)).mode & 0o777).toBe(0o666);
+    },
+  );
+
   it('publishes a valid legacy migration with an explicit recovery result', async () => {
     await setup(
       '# User guidance\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
@@ -528,7 +720,7 @@ describe('upsertAgentsMdSection', () => {
 
     await expect(
       upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
-    ).rejects.toThrow('injected rename failure');
+    ).rejects.toThrow(/publish-failed/);
     await expect(readAgentsMd()).resolves.toBe('# Original\n');
   });
 

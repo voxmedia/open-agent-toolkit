@@ -1450,7 +1450,7 @@ describe('createInitToolsCommand', () => {
 
     expect(capture.info.join('\n')).toContain('Installed tool packs:');
     expect(capture.warn.join('\n')).toContain('Project guidance: blocked');
-    expect(capture.warn.join('\n')).toContain('identity changed');
+    expect(capture.warn.join('\n')).toContain('unexpected-failure');
     expect(process.exitCode).toBe(1);
   });
 
@@ -2132,7 +2132,7 @@ describe('createInitToolsCommand', () => {
       lifecycle: { status: 'complete' },
       projectGuidance: {
         action: 'blocked',
-        reason: expect.stringContaining('malformed legacy markers'),
+        reason: expect.stringContaining('unexpected-failure'),
       },
     });
     expect(process.exitCode).toBe(1);

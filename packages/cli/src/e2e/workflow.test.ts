@@ -4,6 +4,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rename,
   rm,
   symlink,
@@ -323,11 +324,12 @@ describe('e2e workflow', () => {
       ]);
 
       expect(first.exitCode).toBe(1);
-      expect(`${first.stdout}\n${first.stderr}`).toMatch(
-        /requires recovery review/i,
-      );
+      expect(`${first.stdout}\n${first.stderr}`).toMatch(/requires recovery/i);
       expect(`${first.stdout}\n${first.stderr}`).not.toContain(root);
-      expect(second.exitCode).toBe(0);
+      expect(second.exitCode).toBe(1);
+      expect(`${second.stdout}\n${second.stderr}`).toMatch(
+        /requires recovery/i,
+      );
       const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
       expect(guidance).toContain('# User guidance');
       expect(guidance).toContain('Existing PJM guidance');
@@ -371,7 +373,7 @@ describe('e2e workflow', () => {
         status: 'partial',
         projectGuidance: {
           action: 'blocked',
-          reason: expect.stringMatching(/requires recovery review/i),
+          reason: expect.stringMatching(/requires recovery/i),
         },
       });
       expect(payload.projectGuidance.reason).not.toContain(root);
@@ -430,6 +432,95 @@ describe('e2e workflow', () => {
       else process.env.HOME = previousHome;
     }
   });
+
+  it.each(
+    (['docs', 'pjm', 'decision'] as const).flatMap((consumer) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ consumer, targetKind, json })),
+      ),
+    ),
+  )(
+    'reports $consumer recovery truthfully for a $targetKind target in json=$json mode',
+    async ({ consumer, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-consumer-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      await writeFile(target, '# Existing guidance\n', 'utf8');
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      if (consumer === 'decision') {
+        await mkdir(join(root, '.oat', 'repo'), { recursive: true });
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            pjm: { initialized: true, schemaVersion: 1 },
+          }),
+          'utf8',
+        );
+      }
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args =
+          consumer === 'docs'
+            ? [
+                'docs',
+                'init',
+                '--framework',
+                'mkdocs',
+                '--app-name',
+                'docs',
+                '--target-dir',
+                'docs-app',
+                '--description',
+                'Test docs',
+                '--format',
+                'none',
+                '--no-root-patch',
+                '--yes',
+              ]
+            : consumer === 'pjm'
+              ? ['pjm', 'init']
+              : ['decision', 'init'];
+        const result = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(result.exitCode).toBe(1);
+        if (json) {
+          const payload = JSON.parse(result.stdout);
+          expect(payload.status).toBe('partial');
+          expect(result.stdout).not.toContain('"status": "ok"');
+        } else {
+          expect(`${result.stdout}\n${result.stderr}`).toMatch(
+            /requires recovery/i,
+          );
+        }
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(root);
+        const recoveryNames = (await readdir(join(target, '..'))).filter(
+          (name) => name.includes('oat-recovery-'),
+        );
+        expect(recoveryNames.length).toBeGreaterThan(0);
+
+        const config = JSON.parse(
+          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        );
+        if (consumer === 'docs') expect(config.pjm).toBeUndefined();
+        else expect(config.pjm.initialized).toBe(true);
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
 
   it.each([
     {

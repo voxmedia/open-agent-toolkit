@@ -12,6 +12,7 @@ import { addLocalPaths } from '@commands/local/manage';
 import {
   type AgentsMdMutationOptions,
   type UpsertSectionResult,
+  formatAgentsMdMutationFailure,
   removeAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
@@ -799,8 +800,25 @@ function reportSuccess(
 ): void {
   const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
+    if (projectGuidance.action === 'blocked') {
+      context.logger.json({
+        status: 'partial',
+        installedPacks: packs,
+        syncScopes,
+        lifecycle: lifecycle.map(({ selection, status }) => ({
+          pack: selection.pack,
+          status,
+        })),
+        projectGuidance: {
+          action: projectGuidance.action,
+          choice: projectGuidance.choice,
+          reason: projectGuidance.reason,
+        },
+      });
+      return;
+    }
     context.logger.json({
-      status: projectGuidance.action === 'blocked' ? 'partial' : 'ok',
+      status: 'ok',
       installedPacks: packs,
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
@@ -866,8 +884,7 @@ async function applyProjectGuidance(
       return {
         ...plan,
         action: 'blocked',
-        reason:
-          'Accepted project guidance was atomically updated, but its prior version was preserved beside AGENTS.md and requires recovery review. Capability placement and PJM adoption were unchanged.',
+        reason: `Accepted project guidance requires recovery. ${sectionResult.recovery?.action ?? 'Review retained recovery evidence and rerun.'} Capability placement and PJM adoption were unchanged.`,
       };
     }
     return {
@@ -881,11 +898,10 @@ async function applyProjectGuidance(
       reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
     return {
       ...plan,
       action: 'blocked',
-      reason: `Accepted project guidance was blocked: ${message}`,
+      reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
     };
   }
 }

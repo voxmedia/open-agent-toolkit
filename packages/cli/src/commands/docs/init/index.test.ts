@@ -170,12 +170,59 @@ describe('createDocsInitCommand', () => {
       '--yes',
     ]);
 
-    expect(capture.error.join('\n')).toContain(
-      'AGENTS.md identity changed before mutation.',
-    );
+    expect(capture.error.join('\n')).toMatch(/unexpected-failure/);
+    expect(capture.error.join('\n')).not.toContain('/tmp/workspace');
     expect(capture.info.join('\n')).not.toContain('AGENTS.md docs section');
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([false, true])(
+    'reports recovery-required guidance as one partial outcome in json=%s mode',
+    async (json) => {
+      const { command, capture, upsertAgentsMdSection } = createHarness({
+        interactive: false,
+      });
+      upsertAgentsMdSection.mockResolvedValueOnce({
+        action: 'recovery-required',
+        recovery: {
+          code: 'recovery-required',
+          target: 'AGENTS.md',
+          identifiers: ['.AGENTS.md.oat-recovery-1-2'],
+          action: 'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+        },
+      });
+
+      await runCommand(
+        command,
+        [
+          '--framework',
+          'mkdocs',
+          '--app-name',
+          'docs',
+          '--target-dir',
+          'apps/docs',
+          '--description',
+          '',
+          '--format',
+          'none',
+          '--yes',
+        ],
+        json ? ['--json'] : [],
+      );
+
+      if (json) {
+        expect(capture.jsonPayloads).toHaveLength(1);
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          scaffold: { status: 'complete' },
+          guidance: { action: 'recovery-required' },
+        });
+      } else {
+        expect(capture.warn.join('\n')).toMatch(/requires recovery/i);
+      }
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('prints single-package next steps when repo shape is single-package', async () => {
     const capture = createLoggerCapture();

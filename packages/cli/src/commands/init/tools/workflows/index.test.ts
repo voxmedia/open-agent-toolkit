@@ -386,7 +386,7 @@ describe('createInitToolsWorkflowsCommand', () => {
       scope: 'project',
       projectGuidance: {
         action: 'blocked',
-        reason: expect.stringContaining('unsafe AGENTS.md target'),
+        reason: expect.stringContaining('unexpected-failure'),
       },
     });
     expect(process.exitCode).toBe(1);

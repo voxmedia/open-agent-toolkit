@@ -167,12 +167,29 @@ export function createPjmCommand(
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
           home: context.home,
         });
+        const recoveryRequired = Object.values(result.guidance ?? {}).some(
+          ({ action }) => action === 'recovery-required',
+        );
 
         if (context.json) {
-          context.logger.json({ status: 'ok', ...result });
+          if (recoveryRequired) {
+            context.logger.json({
+              status: 'partial',
+              scaffold: { status: 'complete' },
+              adoption: { status: 'declared' },
+              created: result.created,
+              skipped: result.skipped,
+              guidance: result.guidance,
+            });
+          } else {
+            const { guidance: _guidance, ...completed } = result;
+            context.logger.json({ status: 'ok', ...completed });
+          }
         } else {
           context.logger.info(
-            `Initialized PJM repo reference scaffold at ${result.repoRoot}`,
+            recoveryRequired
+              ? 'Initialized PJM repo reference scaffold.'
+              : `Initialized PJM repo reference scaffold at ${result.repoRoot}`,
           );
           if (result.created.length > 0) {
             context.logger.info(`Created: ${result.created.join(', ')}`);
@@ -183,8 +200,13 @@ export function createPjmCommand(
             );
           }
           context.logger.info(INSTRUCTIONS_SYNC_HINT);
+          if (recoveryRequired) {
+            context.logger.warn(
+              'PJM scaffold and adoption completed; AGENTS.md guidance requires recovery. Review the reported retained artifacts and rerun.',
+            );
+          }
         }
-        process.exitCode = 0;
+        process.exitCode = recoveryRequired ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }
