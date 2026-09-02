@@ -144,7 +144,7 @@ describe('initializeRepoReference', () => {
     expect(rootGuidance).not.toContain('oat decision init');
   });
 
-  it('preserves unrelated tools guidance while adding adoption sections', async () => {
+  it('preserves an existing root file and returns an adoption guidance patch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
@@ -156,14 +156,21 @@ describe('initializeRepoReference', () => {
       'utf8',
     );
 
-    await initializeRepoReference({ assetsRoot, repoRoot });
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
 
     const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
-    expect(rootGuidance).toContain(
-      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->',
+    expect(rootGuidance).toBe(
+      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
     );
-    expect(rootGuidance).toContain('<!-- OAT project-management -->');
-    expect(rootGuidance).toContain('<!-- OAT decisions -->');
+    expect(result.guidance.projectManagement).toMatchObject({
+      action: 'manual-required',
+      manualPatch: {
+        managedBlock: expect.stringContaining('<!-- OAT decisions -->'),
+      },
+    });
+    expect(result.guidance.decisions).toEqual(
+      result.guidance.projectManagement,
+    );
   });
 
   it('emits the human README and the pjm handoffs README', async () => {

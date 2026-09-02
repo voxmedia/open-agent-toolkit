@@ -175,7 +175,8 @@ describe('help output snapshots', () => {
       Options:
         --scope <scope>        Limit execution scope (choices: "project", "user",
                                "all", default: "all")
-        --project-guidance     Create or refresh repository AGENTS.md tool guidance
+        --project-guidance     Create missing or print manual repository AGENTS.md
+                               tool guidance
         --no-project-guidance  Decline repository AGENTS.md tool guidance
         --hook                 Install optional pre-commit hook
         --no-hook              Skip optional pre-commit hook install
@@ -1372,8 +1373,8 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
-        --project-guidance            Create or refresh repository AGENTS.md tool
-                                      guidance
+        --project-guidance            Create missing or print manual repository
+                                      AGENTS.md tool guidance
         --no-project-guidance         Decline repository AGENTS.md tool guidance
         --scope <scope>               Limit execution scope (choices: "project",
                                       "user", "all", default: "all")

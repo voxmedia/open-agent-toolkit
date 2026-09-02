@@ -2,7 +2,10 @@ import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolvePjmAdoption } from '@commands/pjm/adoption';
-import { formatAgentsMdMutationFailure } from '@commands/shared/agents-md';
+import {
+  formatAgentsMdGuidanceResult,
+  formatAgentsMdMutationFailure,
+} from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -160,13 +163,13 @@ export function createDecisionCommand(
           );
         }
 
-        const recoveryRequired =
-          guidance.root === 'recovery-required' ||
-          guidance.scoped === 'recovery-required';
+        const guidanceIncomplete = [guidance.root, guidance.scoped].some(
+          ({ action }) => action === 'manual-required' || action === 'blocked',
+        );
 
         if (context.json) {
           context.logger.json(
-            recoveryRequired
+            guidanceIncomplete
               ? {
                   status: 'partial',
                   scaffold: { status: 'complete' },
@@ -178,7 +181,7 @@ export function createDecisionCommand(
           );
         } else {
           context.logger.info(
-            recoveryRequired
+            guidanceIncomplete
               ? 'Initialized decision scaffold.'
               : `Initialized decision scaffold at ${result.decisionsRoot}`,
           );
@@ -191,15 +194,20 @@ export function createDecisionCommand(
             );
           }
           context.logger.info(
-            `AGENTS.md guidance: root=${guidance.root}, decisions=${guidance.scoped}`,
+            `AGENTS.md guidance: root=${guidance.root.action}, decisions=${guidance.scoped.action}`,
           );
-          if (recoveryRequired) {
+          if (guidanceIncomplete) {
             context.logger.warn(
-              'Decision scaffold completed; AGENTS.md guidance requires recovery. Review the reported retained artifacts and rerun.',
+              'Decision scaffold completed; AGENTS.md guidance requires manual action.',
             );
+            for (const guidanceResult of [guidance.root, guidance.scoped]) {
+              for (const line of formatAgentsMdGuidanceResult(guidanceResult)) {
+                context.logger.info(line);
+              }
+            }
           }
         }
-        process.exitCode = recoveryRequired ? 1 : 0;
+        process.exitCode = guidanceIncomplete ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }

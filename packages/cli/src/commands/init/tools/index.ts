@@ -12,8 +12,8 @@ import { addLocalPaths } from '@commands/local/manage';
 import {
   type AgentsMdMutationOptions,
   type UpsertSectionResult,
+  formatAgentsMdGuidanceResult,
   formatAgentsMdMutationFailure,
-  removeAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -107,6 +107,7 @@ import {
   type PlanProjectGuidanceInput,
   planProjectGuidance,
   type ProjectGuidancePack,
+  reportableProjectGuidance,
   withProjectGuidanceOptions,
 } from './project-guidance';
 import { createInitToolsProjectManagementCommand } from './project-management';
@@ -214,10 +215,6 @@ export interface InitToolsDependencies {
     body: string,
     options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
-  removeAgentsMdSection: (
-    repoRoot: string,
-    key: string,
-  ) => Promise<boolean | 'recovery-required'>;
   reconcilePacks?: (
     requests: readonly PackLifecycleRequest[],
     options?: { dryRun?: boolean },
@@ -291,7 +288,6 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   writeOatConfig,
   resolveLocalPaths,
   upsertAgentsMdSection,
-  removeAgentsMdSection,
   reconcilePacks: reconcilePackLifecycles,
   inventoryPack,
 };
@@ -800,7 +796,10 @@ function reportSuccess(
 ): void {
   const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
-    if (projectGuidance.action === 'blocked') {
+    if (
+      projectGuidance.action === 'blocked' ||
+      projectGuidance.action === 'manual-required'
+    ) {
       context.logger.json({
         status: 'partial',
         installedPacks: packs,
@@ -809,11 +808,7 @@ function reportSuccess(
           pack: selection.pack,
           status,
         })),
-        projectGuidance: {
-          action: projectGuidance.action,
-          choice: projectGuidance.choice,
-          reason: projectGuidance.reason,
-        },
+        projectGuidance: reportableProjectGuidance(projectGuidance),
       });
       return;
     }
@@ -823,11 +818,7 @@ function reportSuccess(
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
       lifecycle,
-      projectGuidance: {
-        action: projectGuidance.action,
-        choice: projectGuidance.choice,
-        reason: projectGuidance.reason,
-      },
+      projectGuidance: reportableProjectGuidance(projectGuidance),
       ...(providerVisibility ? { providerVisibility } : {}),
     });
     return;
@@ -858,8 +849,19 @@ function reportSuccess(
     );
   }
   const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
-  if (projectGuidance.action === 'blocked') {
+  if (
+    projectGuidance.action === 'blocked' ||
+    projectGuidance.action === 'manual-required'
+  ) {
     context.logger.warn(guidanceMessage);
+    if (projectGuidance.manualPatch) {
+      for (const line of formatAgentsMdGuidanceResult({
+        action: 'manual-required',
+        manualPatch: projectGuidance.manualPatch,
+      })) {
+        context.logger.info(line);
+      }
+    }
   } else {
     context.logger.info(guidanceMessage);
   }
@@ -869,7 +871,7 @@ async function applyProjectGuidance(
   plan: AgentsGuidancePlan,
   dependencies: InitToolsDependencies,
 ): Promise<AgentsGuidancePlan> {
-  if (plan.action !== 'update' || !plan.repoRoot) return plan;
+  if (plan.action !== 'create' || !plan.repoRoot) return plan;
 
   try {
     const sectionResult = await dependencies.upsertAgentsMdSection(
@@ -880,21 +882,26 @@ async function applyProjectGuidance(
         ? { removeSectionKeys: ['workflows'] }
         : undefined,
     );
-    if (sectionResult.action === 'recovery-required') {
+    if (sectionResult.action === 'manual-required') {
+      return {
+        ...plan,
+        action: 'manual-required',
+        reason:
+          'Accepted project guidance requires the reported manual AGENTS.md patch. Capability placement and PJM adoption were unchanged.',
+        manualPatch: sectionResult.manualPatch,
+      };
+    }
+    if (sectionResult.action === 'blocked') {
       return {
         ...plan,
         action: 'blocked',
-        reason: `Accepted project guidance requires recovery. ${sectionResult.recovery?.action ?? 'Review retained recovery evidence and rerun.'} Capability placement and PJM adoption were unchanged.`,
+        reason:
+          `Accepted project guidance was blocked: ${sectionResult.blocked?.reason ?? 'AGENTS.md could not be planned safely.'} ${sectionResult.blocked?.action ?? ''}`.trim(),
       };
     }
     return {
       ...plan,
-      action:
-        sectionResult.action === 'created'
-          ? 'create'
-          : sectionResult.action === 'updated'
-            ? 'update'
-            : 'no-change',
+      action: sectionResult.action === 'created' ? 'create' : 'no-change',
       reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {
@@ -952,11 +959,10 @@ async function planAndApplyProjectGuidanceAfterInstall(
     });
     return applyProjectGuidance(completePlan, dependencies);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
     return {
       ...initialPlan,
       action: 'blocked',
-      reason: `Accepted project guidance was blocked: ${message}`,
+      reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
     };
   }
 }
@@ -1598,7 +1604,8 @@ export async function runInitTools(
     );
     process.exitCode =
       lifecycleOutcomes.some(({ status }) => status !== 'complete') ||
-      guidancePlan.action === 'blocked'
+      guidancePlan.action === 'blocked' ||
+      guidancePlan.action === 'manual-required'
         ? 1
         : 0;
     return selectedPacks;
@@ -1891,19 +1898,18 @@ function createReconciledPackCommand(
               )
             : null;
         if (context.json) {
+          const guidanceIncomplete =
+            projectGuidance?.action === 'blocked' ||
+            projectGuidance?.action === 'manual-required';
           context.logger.json({
-            status: projectGuidance?.action === 'blocked' ? 'partial' : 'ok',
+            status: guidanceIncomplete ? 'partial' : 'ok',
             pack,
             scopes,
             results,
             lifecycle: lifecycleOutcome,
             ...(projectGuidance
               ? {
-                  projectGuidance: {
-                    action: projectGuidance.action,
-                    choice: projectGuidance.choice,
-                    reason: projectGuidance.reason,
-                  },
+                  projectGuidance: reportableProjectGuidance(projectGuidance),
                 }
               : {}),
             ...(providerVisibility ? { providerVisibility } : {}),
@@ -1924,8 +1930,19 @@ function createReconciledPackCommand(
           }
           if (projectGuidance) {
             const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
-            if (projectGuidance.action === 'blocked') {
+            if (
+              projectGuidance.action === 'blocked' ||
+              projectGuidance.action === 'manual-required'
+            ) {
               context.logger.warn(guidanceMessage);
+              if (projectGuidance.manualPatch) {
+                for (const line of formatAgentsMdGuidanceResult({
+                  action: 'manual-required',
+                  manualPatch: projectGuidance.manualPatch,
+                })) {
+                  context.logger.info(line);
+                }
+              }
             } else {
               context.logger.info(guidanceMessage);
             }
@@ -1943,7 +1960,8 @@ function createReconciledPackCommand(
         }
         process.exitCode =
           lifecycleOutcome.status === 'complete' &&
-          projectGuidance?.action !== 'blocked'
+          projectGuidance?.action !== 'blocked' &&
+          projectGuidance?.action !== 'manual-required'
             ? 0
             : 1;
       } catch (error) {

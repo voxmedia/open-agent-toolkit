@@ -1,47 +1,25 @@
-import { randomUUID } from 'node:crypto';
 import {
-  chmod,
-  chown,
-  link,
   lstat,
   readFile,
-  readdir,
   readlink,
   realpath,
-  rename,
-  rm,
   writeFile,
 } from 'node:fs/promises';
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-  resolve,
-  sep,
-} from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 /**
- * Manages HTML-comment-delimited sections in AGENTS.md.
+ * Plans repository AGENTS.md guidance without replacing existing paths.
  *
- * Section markers follow the pattern:
- *   <!-- OAT <key> -->
- *   ... content ...
- *   <!-- END OAT <key> -->
+ * An absent root file may be created with one exclusive write. Existing files
+ * and contained symlinks are read only: matching content returns no-change and
+ * every required change is returned as a copy-pasteable manual patch.
  */
 
 export interface AgentsMdFileSystem {
-  chmod: typeof chmod;
-  chown: typeof chown;
-  link: typeof link;
   lstat: typeof lstat;
   readFile: typeof readFile;
-  readdir: typeof readdir;
   readlink: typeof readlink;
   realpath: typeof realpath;
-  rename: typeof rename;
-  rm: typeof rm;
   writeFile: typeof writeFile;
 }
 
@@ -51,16 +29,10 @@ export interface AgentsMdMutationOptions {
 }
 
 const defaultFileSystem: AgentsMdFileSystem = {
-  chmod,
-  chown,
-  link,
   lstat,
   readFile,
-  readdir,
   readlink,
   realpath,
-  rename,
-  rm,
   writeFile,
 };
 
@@ -74,13 +46,41 @@ interface AgentsMdPlan {
   repoIdentity: FileIdentity;
   agentsMdPath: string;
   targetPath: string;
-  targetMode?: number;
-  targetUid?: number;
-  targetGid?: number;
   kind: 'missing' | 'file' | 'symlink';
   agentsIdentity?: FileIdentity;
   targetIdentity?: FileIdentity;
   linkText?: string;
+}
+
+interface ManagedRange {
+  key: string;
+  start: number;
+  end: number;
+}
+
+export interface AgentsMdManualPatch {
+  target: string;
+  managedBlock: string;
+  legacyBlockAction: 'preserve' | 'remove-manually';
+  instructions: readonly string[];
+}
+
+export interface AgentsMdBlocked {
+  code: 'blocked';
+  target: string;
+  reason: string;
+  action: string;
+}
+
+export interface UpsertSectionResult {
+  action: 'created' | 'no-change' | 'manual-required' | 'blocked';
+  manualPatch?: AgentsMdManualPatch;
+  blocked?: AgentsMdBlocked;
+}
+
+export interface AgentsMdSectionInput {
+  key: string;
+  body: string;
 }
 
 function sectionStart(key: string): string {
@@ -110,13 +110,14 @@ function hasIdentity(
   );
 }
 
+function errorCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null && 'code' in error
+    ? String(error.code)
+    : undefined;
+}
+
 function isMissing(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'ENOENT'
-  );
+  return errorCode(error) === 'ENOENT';
 }
 
 function isContained(root: string, candidate: string): boolean {
@@ -127,6 +128,14 @@ function isContained(root: string, candidate: string): boolean {
       relativePath !== '..' &&
       !relativePath.startsWith(`..${sep}`))
   );
+}
+
+function portableRelative(root: string, path: string): string {
+  return relative(root, path).split(sep).join('/');
+}
+
+function targetIdentifier(plan: AgentsMdPlan): string {
+  return portableRelative(plan.repoRoot, plan.targetPath) || 'AGENTS.md';
 }
 
 function markerIndices(content: string, marker: string): number[] {
@@ -144,7 +153,7 @@ function markerIndices(content: string, marker: string): number[] {
 function findManagedSection(
   content: string,
   key: string,
-): { start: number; end: number } | undefined {
+): ManagedRange | undefined {
   const startMarker = sectionStart(key);
   const endMarker = sectionEnd(key);
   const starts = markerIndices(content, startMarker);
@@ -159,15 +168,19 @@ function findManagedSection(
     starts[0] + startMarker.length > ends[0]
   ) {
     throw new Error(
-      `AGENTS.md section "${key}" must contain exactly one ordered marker pair before OAT can mutate it.`,
+      `AGENTS.md section "${key}" must contain exactly one ordered marker pair before OAT can plan guidance.`,
     );
   }
 
-  return { start: starts[0], end: ends[0] + endMarker.length };
+  return {
+    key,
+    start: starts[0],
+    end: ends[0] + endMarker.length,
+  };
 }
 
 function assertManagedSectionsAreDisjoint(
-  sections: readonly { start: number; end: number }[],
+  sections: readonly ManagedRange[],
 ): void {
   const ordered = [...sections].sort((left, right) => left.start - right.start);
   for (let index = 1; index < ordered.length; index += 1) {
@@ -179,7 +192,7 @@ function assertManagedSectionsAreDisjoint(
       previous.end > current.start
     ) {
       throw new Error(
-        'AGENTS.md managed sections must be mutually disjoint and non-crossing before OAT can mutate them.',
+        'AGENTS.md managed sections must be mutually disjoint and non-crossing before OAT can plan guidance.',
       );
     }
   }
@@ -216,9 +229,6 @@ async function planAgentsMd(
       repoIdentity: identityOf(rootStat),
       agentsMdPath,
       targetPath: agentsMdPath,
-      targetMode: agentsStat.mode,
-      targetUid: agentsStat.uid,
-      targetGid: agentsStat.gid,
       kind: 'file',
       agentsIdentity: identityOf(agentsStat),
       targetIdentity: identityOf(agentsStat),
@@ -233,22 +243,15 @@ async function planAgentsMd(
 
   const linkText = await fileSystem.readlink(agentsMdPath);
   const lexicalTarget = resolve(dirname(agentsMdPath), linkText);
-
   let targetPath: string;
-  let targetStat: Awaited<ReturnType<typeof lstat>>;
   let directTargetStat: Awaited<ReturnType<typeof lstat>>;
+  let targetStat: Awaited<ReturnType<typeof lstat>>;
   try {
     directTargetStat = await fileSystem.lstat(lexicalTarget);
     targetPath = await fileSystem.realpath(lexicalTarget);
     targetStat = await fileSystem.lstat(targetPath);
   } catch (error) {
-    if (
-      isMissing(error) ||
-      (typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === 'ELOOP')
-    ) {
+    if (isMissing(error) || errorCode(error) === 'ELOOP') {
       throw new Error(
         'Repository-root AGENTS.md symlink target is broken or cyclic.',
         { cause: error },
@@ -278,9 +281,6 @@ async function planAgentsMd(
     repoIdentity: identityOf(rootStat),
     agentsMdPath,
     targetPath,
-    targetMode: targetStat.mode,
-    targetUid: targetStat.uid,
-    targetGid: targetStat.gid,
     kind: 'symlink',
     agentsIdentity: identityOf(agentsStat),
     targetIdentity: identityOf(targetStat),
@@ -293,23 +293,16 @@ async function assertPlanUnchanged(
   fileSystem: AgentsMdFileSystem,
   expectedContent?: string,
 ): Promise<void> {
-  let currentRoot: string;
-  let rootStat: Awaited<ReturnType<typeof lstat>>;
-  try {
-    currentRoot = await fileSystem.realpath(plan.repoRoot);
-    rootStat = await fileSystem.lstat(currentRoot);
-  } catch {
-    throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
+  const currentRoot = await fileSystem.realpath(plan.repoRoot);
+  const rootStat = await fileSystem.lstat(currentRoot);
   if (
     currentRoot !== plan.repoRoot ||
     !rootStat.isDirectory() ||
+    rootStat.isSymbolicLink() ||
     !hasIdentity(rootStat, plan.repoIdentity)
   ) {
     throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
+      'Repository or AGENTS.md identity changed during planning.',
     );
   }
 
@@ -321,473 +314,245 @@ async function assertPlanUnchanged(
       throw error;
     }
     throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
-
-  let agentsStat: Awaited<ReturnType<typeof lstat>>;
-  try {
-    agentsStat = await fileSystem.lstat(plan.agentsMdPath);
-  } catch {
-    throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
-  if (!hasIdentity(agentsStat, plan.agentsIdentity)) {
-    throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
-
-  if (plan.kind === 'file') {
-    if (!agentsStat.isFile() || agentsStat.isSymbolicLink()) {
-      throw new Error(
-        'Repository or AGENTS.md identity changed before mutation.',
-      );
-    }
-    if (
-      expectedContent !== undefined &&
-      (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
-    ) {
-      throw new Error('AGENTS.md content changed before mutation.');
-    }
-    return;
-  }
-
-  let currentLinkText: string;
-  let targetPath: string;
-  let targetStat: Awaited<ReturnType<typeof lstat>>;
-  try {
-    currentLinkText = await fileSystem.readlink(plan.agentsMdPath);
-    targetPath = await fileSystem.realpath(
-      resolve(dirname(plan.agentsMdPath), currentLinkText),
-    );
-    targetStat = await fileSystem.lstat(targetPath);
-  } catch {
-    throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
-  if (
-    !agentsStat.isSymbolicLink() ||
-    currentLinkText !== plan.linkText ||
-    targetPath !== plan.targetPath ||
-    !targetStat.isFile() ||
-    targetStat.isSymbolicLink() ||
-    !hasIdentity(targetStat, plan.targetIdentity)
-  ) {
-    throw new Error(
-      'Repository or AGENTS.md identity changed before mutation.',
-    );
-  }
-  if (
-    expectedContent !== undefined &&
-    (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
-  ) {
-    throw new Error('AGENTS.md content changed before mutation.');
-  }
-}
-
-async function readPlannedContent(
-  plan: AgentsMdPlan,
-  fileSystem: AgentsMdFileSystem,
-): Promise<string> {
-  if (plan.kind === 'missing') return '';
-  return fileSystem.readFile(plan.targetPath, 'utf8');
-}
-
-async function assertPublishedPlan(
-  plan: AgentsMdPlan,
-  publishedIdentity: FileIdentity,
-  expectedContent: string,
-  fileSystem: AgentsMdFileSystem,
-): Promise<void> {
-  if (plan.kind === 'missing') {
-    throw new Error('Missing AGENTS.md cannot use replacement publication.');
-  }
-  const currentRoot = await fileSystem.realpath(plan.repoRoot);
-  const rootStat = await fileSystem.lstat(currentRoot);
-  if (
-    currentRoot !== plan.repoRoot ||
-    !rootStat.isDirectory() ||
-    !hasIdentity(rootStat, plan.repoIdentity)
-  ) {
-    throw new Error(
-      'Repository or AGENTS.md identity changed during mutation.',
+      'Repository or AGENTS.md identity changed during planning.',
     );
   }
 
   const agentsStat = await fileSystem.lstat(plan.agentsMdPath);
+  if (!hasIdentity(agentsStat, plan.agentsIdentity)) {
+    throw new Error(
+      'Repository or AGENTS.md identity changed during planning.',
+    );
+  }
   if (plan.kind === 'file') {
-    if (
-      !agentsStat.isFile() ||
-      agentsStat.isSymbolicLink() ||
-      !hasIdentity(agentsStat, publishedIdentity)
-    ) {
+    if (!agentsStat.isFile() || agentsStat.isSymbolicLink()) {
       throw new Error(
-        'Repository or AGENTS.md identity changed during mutation.',
+        'Repository or AGENTS.md identity changed during planning.',
       );
     }
   } else {
     const currentLinkText = await fileSystem.readlink(plan.agentsMdPath);
-    const targetPath = await fileSystem.realpath(
+    const currentTarget = await fileSystem.realpath(
       resolve(dirname(plan.agentsMdPath), currentLinkText),
     );
-    const targetStat = await fileSystem.lstat(targetPath);
+    const targetStat = await fileSystem.lstat(currentTarget);
     if (
       !agentsStat.isSymbolicLink() ||
-      !hasIdentity(agentsStat, plan.agentsIdentity) ||
       currentLinkText !== plan.linkText ||
-      targetPath !== plan.targetPath ||
+      currentTarget !== plan.targetPath ||
       !targetStat.isFile() ||
       targetStat.isSymbolicLink() ||
-      !hasIdentity(targetStat, publishedIdentity)
+      !hasIdentity(targetStat, plan.targetIdentity)
     ) {
       throw new Error(
-        'Repository or AGENTS.md identity changed during mutation.',
+        'Repository or AGENTS.md identity changed during planning.',
       );
     }
   }
 
   if (
+    expectedContent !== undefined &&
     (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
   ) {
-    throw new Error('AGENTS.md publication changed during mutation.');
+    throw new Error('AGENTS.md content changed during planning.');
   }
 }
 
-export type AgentsMdMutationErrorCode =
-  | 'target-create-failed'
-  | 'temp-create-failed'
-  | 'metadata-restore-failed'
-  | 'recovery-link-failed'
-  | 'revalidation-failed'
-  | 'publish-failed'
-  | 'publish-validation-failed'
-  | 'cleanup-conflict';
-
-export interface AgentsMdRecovery {
-  code: 'recovery-required';
-  target: string;
-  identifiers: string[];
-  action: string;
-}
-
-export class AgentsMdMutationError extends Error {
-  readonly code: AgentsMdMutationErrorCode;
-  readonly target: string;
-  readonly action: string;
-
-  constructor(
-    code: AgentsMdMutationErrorCode,
-    target: string,
-    action: string,
-    options?: ErrorOptions,
-  ) {
-    super(
-      `AGENTS.md mutation blocked (${code}) for ${target}. ${action}`,
-      options,
-    );
-    this.name = 'AgentsMdMutationError';
-    this.code = code;
-    this.target = target;
-    this.action = action;
+function safeReason(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'AGENTS.md guidance could not be planned safely.';
   }
-}
-
-export function formatAgentsMdMutationFailure(error: unknown): string {
-  if (error instanceof AgentsMdMutationError) return error.message;
   if (
-    error instanceof Error &&
-    (/^AGENTS\.md section/.test(error.message) ||
-      /^AGENTS\.md managed sections/.test(error.message) ||
-      /^Repository-root AGENTS\.md/.test(error.message))
+    /^(Repository root|Repository-root AGENTS\.md|Repository or AGENTS\.md|AGENTS\.md section|AGENTS\.md managed sections|AGENTS\.md content)/.test(
+      error.message,
+    )
   ) {
     return error.message;
   }
-  return 'AGENTS.md mutation blocked (unexpected-failure) for AGENTS.md. Inspect repository permissions and retained OAT artifacts, then rerun.';
+  return 'AGENTS.md guidance could not be planned safely.';
 }
 
-function portableRelative(root: string, path: string): string {
-  return relative(root, path).split(sep).join('/');
-}
-
-function targetIdentifier(plan: AgentsMdPlan): string {
-  return portableRelative(plan.repoRoot, plan.targetPath) || 'AGENTS.md';
-}
-
-function mutationError(
-  plan: AgentsMdPlan,
-  code: AgentsMdMutationErrorCode,
-  action: string,
-  cause?: unknown,
-): AgentsMdMutationError {
-  return new AgentsMdMutationError(code, targetIdentifier(plan), action, {
-    cause,
-  });
-}
-
-function recoveryFilenamePrefix(plan: AgentsMdPlan): string {
-  return `.${basename(plan.targetPath)}.oat-recovery-`;
-}
-
-async function discoverRecoveries(
-  plan: AgentsMdPlan,
-  fileSystem: AgentsMdFileSystem,
-): Promise<string[]> {
-  if (plan.kind === 'missing') return [];
-  const directory = dirname(plan.targetPath);
-  const prefix = recoveryFilenamePrefix(plan);
-  let names: string[];
-  try {
-    names = await fileSystem.readdir(directory);
-  } catch (error) {
-    throw mutationError(
-      plan,
-      'revalidation-failed',
-      'Inspect repository permissions and rerun.',
-      error,
-    );
-  }
-
-  const recoveries: string[] = [];
-  for (const name of names.sort()) {
-    if (!name.startsWith(prefix)) continue;
-    const encoded = name.slice(prefix.length);
-    const match = /^(\d+)-(\d+)(?:-(\d+))?$/.exec(encoded);
-    if (!match) continue;
-    const path = join(directory, name);
-    try {
-      const stat = await fileSystem.lstat(path);
-      if (
-        stat.isFile() &&
-        !stat.isSymbolicLink() &&
-        String(stat.dev) === match[1] &&
-        String(stat.ino) === match[2]
-      ) {
-        recoveries.push(path);
-      }
-    } catch (error) {
-      if (!isMissing(error)) {
-        throw mutationError(
-          plan,
-          'revalidation-failed',
-          'Inspect retained recovery evidence and rerun.',
-          error,
-        );
-      }
-    }
-  }
-  return recoveries;
-}
-
-function recoveryResult(
-  plan: AgentsMdPlan,
-  recoveryPaths: readonly string[],
-): AgentsMdRecovery {
-  const identifiers = recoveryPaths.map((path) =>
-    portableRelative(plan.repoRoot, path),
-  );
+function blockedResult(
+  error: unknown,
+  target = 'AGENTS.md',
+): UpsertSectionResult {
   return {
-    code: 'recovery-required',
-    target: targetIdentifier(plan),
-    identifiers,
-    action: `Review and remove ${identifiers.join(', ')} after reconciling retained content, then rerun.`,
+    action: 'blocked',
+    blocked: {
+      code: 'blocked',
+      target,
+      reason: safeReason(error),
+      action:
+        'Resolve the reported AGENTS.md path or marker issue, then rerun.',
+    },
   };
 }
 
-async function createRecoveryLink(
-  plan: AgentsMdPlan,
-  fileSystem: AgentsMdFileSystem,
-): Promise<string> {
-  if (!plan.targetIdentity) {
-    throw mutationError(
-      plan,
-      'recovery-link-failed',
-      'Retry after confirming the target is unchanged.',
-    );
-  }
-  const base = `${recoveryFilenamePrefix(plan)}${plan.targetIdentity.device}-${plan.targetIdentity.inode}`;
-  for (let ordinal = 1; ordinal <= 100; ordinal += 1) {
-    const path = join(
-      dirname(plan.targetPath),
-      ordinal === 1 ? base : `${base}-${ordinal}`,
-    );
-    try {
-      await fileSystem.link(plan.targetPath, path);
-      return path;
-    } catch (error) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === 'EEXIST'
-      ) {
-        continue;
-      }
-      throw mutationError(
-        plan,
-        'recovery-link-failed',
-        'Inspect repository permissions and retry.',
-        error,
-      );
-    }
-  }
-  throw mutationError(
-    plan,
-    'recovery-link-failed',
-    'Resolve retained recovery collisions before retrying.',
-  );
+export function formatAgentsMdMutationFailure(error: unknown): string {
+  const reason = safeReason(error);
+  return `AGENTS.md guidance blocked for AGENTS.md. ${reason} Resolve the reported path or marker issue, then rerun.`;
 }
 
-async function writePlannedContent(
+export function formatAgentsMdGuidanceResult(
+  result: UpsertSectionResult,
+): readonly string[] {
+  if (result.action === 'manual-required' && result.manualPatch) {
+    return [
+      'Guidance status: manual-required',
+      `Target: ${result.manualPatch.target}`,
+      ...result.manualPatch.instructions,
+      'Managed block:',
+      result.manualPatch.managedBlock,
+      `Legacy block action: ${result.manualPatch.legacyBlockAction}`,
+    ];
+  }
+  if (result.action === 'blocked' && result.blocked) {
+    return [
+      'Guidance status: blocked',
+      `Target: ${result.blocked.target}`,
+      result.blocked.reason,
+      result.blocked.action,
+    ];
+  }
+  return [];
+}
+
+function createManualPatch(
   plan: AgentsMdPlan,
-  previousContent: string,
+  managedBlocks: readonly string[],
+  legacyKeys: readonly string[],
+): AgentsMdManualPatch {
+  const target = targetIdentifier(plan);
+  return {
+    target,
+    managedBlock: managedBlocks.join('\n\n'),
+    legacyBlockAction: legacyKeys.length > 0 ? 'remove-manually' : 'preserve',
+    instructions: [
+      `Open ${target}.`,
+      'Replace each matching OAT managed block, or append each absent block, exactly as shown.',
+      ...(legacyKeys.length > 0
+        ? [
+            `Remove the legacy ${legacyKeys.map((key) => `OAT ${key}`).join(', ')} managed block${legacyKeys.length === 1 ? '' : 's'} manually after applying the replacement block.`,
+          ]
+        : []),
+      'Review and save the file, then rerun the command to confirm no-change.',
+    ],
+  };
+}
+
+async function createMissingFile(
+  plan: AgentsMdPlan,
   content: string,
   fileSystem: AgentsMdFileSystem,
-): Promise<
-  | { status: 'published' }
-  | { status: 'recovery-required'; recovery: AgentsMdRecovery }
-> {
-  if (plan.kind === 'missing') {
-    try {
-      await assertPlanUnchanged(plan, fileSystem, previousContent);
-      await fileSystem.writeFile(plan.targetPath, content, {
-        encoding: 'utf8',
-        flag: 'wx',
-        mode: 0o666,
-      });
-      return { status: 'published' };
-    } catch (error) {
-      throw mutationError(
-        plan,
-        'target-create-failed',
-        'Inspect the repository target and retry.',
-        error,
-      );
-    }
-  }
-  const tempPath = join(
-    dirname(plan.targetPath),
-    `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.tmp`,
-  );
+): Promise<'created' | 'appeared' | 'blocked'> {
   try {
-    await fileSystem.writeFile(tempPath, content, {
+    await assertPlanUnchanged(plan, fileSystem);
+    await fileSystem.writeFile(plan.agentsMdPath, content, {
       encoding: 'utf8',
       flag: 'wx',
-      mode: plan.targetMode ?? 0o666,
+      mode: 0o666,
     });
+    return 'created';
   } catch (error) {
-    throw mutationError(
-      plan,
-      'temp-create-failed',
-      'Inspect repository permissions and retry.',
-      error,
-    );
+    if (errorCode(error) === 'EEXIST') return 'appeared';
+    return 'blocked';
   }
-  let tempStat: Awaited<ReturnType<typeof lstat>>;
-  try {
-    tempStat = await fileSystem.lstat(tempPath);
-    const tempIdentity = identityOf(tempStat);
-    await fileSystem.chmod(tempPath, (plan.targetMode ?? 0o666) & 0o7777);
-    if (plan.targetUid !== undefined && plan.targetGid !== undefined) {
-      await fileSystem.chown(tempPath, plan.targetUid, plan.targetGid);
-    }
-    tempStat = await fileSystem.lstat(tempPath);
-    if (!hasIdentity(tempStat, tempIdentity)) {
-      throw mutationError(
-        plan,
-        'cleanup-conflict',
-        'Preserved an ambiguous temporary artifact; inspect retained OAT artifacts before retrying.',
-      );
-    }
-  } catch (error) {
-    if (error instanceof AgentsMdMutationError) throw error;
-    throw mutationError(
-      plan,
-      'metadata-restore-failed',
-      'Preserved the temporary artifact; inspect target metadata before retrying.',
-      error,
-    );
-  }
-  const tempIdentity = identityOf(tempStat);
-  try {
-    await assertPlanUnchanged(plan, fileSystem, previousContent);
-  } catch (error) {
-    throw mutationError(
-      plan,
-      'revalidation-failed',
-      'Preserved the temporary artifact; reconcile concurrent changes and retry.',
-      error,
-    );
-  }
-
-  // Node does not expose a conditional replace primitive. Keep the live
-  // public path present, preserve the original inode under a private hard
-  // link, revalidate the one planned snapshot, and then replace the public
-  // path atomically. The preserved inode is never removed after publication:
-  // an editor may still hold a descriptor and write to it later.
-  const recoveryPath = await createRecoveryLink(plan, fileSystem);
-  let recoveryStat: Awaited<ReturnType<typeof lstat>>;
-  try {
-    recoveryStat = await fileSystem.lstat(recoveryPath);
-    if (
-      !recoveryStat.isFile() ||
-      recoveryStat.isSymbolicLink() ||
-      !hasIdentity(recoveryStat, plan.targetIdentity) ||
-      (await fileSystem.readFile(recoveryPath, 'utf8')) !== previousContent
-    ) {
-      throw mutationError(
-        plan,
-        'cleanup-conflict',
-        'Preserved the recovery pathname; inspect retained OAT artifacts before retrying.',
-      );
-    }
-    await assertPlanUnchanged(plan, fileSystem, previousContent);
-  } catch (error) {
-    if (error instanceof AgentsMdMutationError) throw error;
-    throw mutationError(
-      plan,
-      'revalidation-failed',
-      'Preserved recovery evidence; reconcile concurrent changes and retry.',
-      error,
-    );
-  }
-
-  try {
-    await fileSystem.rename(tempPath, plan.targetPath);
-  } catch (error) {
-    throw mutationError(
-      plan,
-      'publish-failed',
-      'Preserved recovery evidence and the temporary artifact; inspect both before retrying.',
-      error,
-    );
-  }
-  try {
-    await assertPublishedPlan(plan, tempIdentity, content, fileSystem);
-  } catch (error) {
-    throw mutationError(
-      plan,
-      'publish-validation-failed',
-      'Preserved recovery evidence; inspect the published target before retrying.',
-      error,
-    );
-  }
-  return {
-    status: 'recovery-required',
-    recovery: recoveryResult(plan, [recoveryPath]),
-  };
 }
 
-export interface UpsertSectionResult {
-  action: 'created' | 'updated' | 'no-change' | 'recovery-required';
-  recovery?: AgentsMdRecovery;
-}
+async function upsertSectionsInternal(
+  repoRoot: string,
+  sections: readonly AgentsMdSectionInput[],
+  removeSectionKeys: readonly string[],
+  fileSystem: AgentsMdFileSystem,
+  allowReplan: boolean,
+): Promise<Record<string, UpsertSectionResult>> {
+  let plan: AgentsMdPlan;
+  try {
+    plan = await planAgentsMd(repoRoot, fileSystem);
+  } catch (error) {
+    const blocked = blockedResult(error);
+    return Object.fromEntries(sections.map(({ key }) => [key, blocked]));
+  }
 
-export interface AgentsMdSectionInput {
-  key: string;
-  body: string;
+  const desired = sections.map(({ key, body }) => ({
+    key,
+    block: buildSection(key, body),
+  }));
+  if (plan.kind === 'missing') {
+    const content = `${desired.map(({ block }) => block).join('\n\n')}\n`;
+    const creation = await createMissingFile(plan, content, fileSystem);
+    if (creation === 'created') {
+      return Object.fromEntries(
+        desired.map(({ key }) => [key, { action: 'created' }]),
+      );
+    }
+    if (creation === 'appeared' && allowReplan) {
+      return upsertSectionsInternal(
+        repoRoot,
+        sections,
+        removeSectionKeys,
+        fileSystem,
+        false,
+      );
+    }
+    const blocked = blockedResult(
+      new Error('Repository or AGENTS.md identity changed during planning.'),
+      targetIdentifier(plan),
+    );
+    return Object.fromEntries(desired.map(({ key }) => [key, blocked]));
+  }
+
+  try {
+    const content = await fileSystem.readFile(plan.targetPath, 'utf8');
+    const managed = desired.map(({ key, block }) => ({
+      key,
+      block,
+      range: findManagedSection(content, key),
+    }));
+    const legacy = [...new Set(removeSectionKeys)]
+      .filter((key) => !desired.some((section) => section.key === key))
+      .map((key) => ({ key, range: findManagedSection(content, key) }))
+      .filter(
+        (entry): entry is { key: string; range: ManagedRange } =>
+          entry.range !== undefined,
+      );
+    assertManagedSectionsAreDisjoint([
+      ...managed.flatMap(({ range }) => (range ? [range] : [])),
+      ...legacy.map(({ range }) => range),
+    ]);
+    await assertPlanUnchanged(plan, fileSystem, content);
+
+    const changed = managed.filter(
+      ({ block, range }) =>
+        !range || content.slice(range.start, range.end) !== block,
+    );
+    if (changed.length === 0 && legacy.length === 0) {
+      return Object.fromEntries(
+        desired.map(({ key }) => [key, { action: 'no-change' }]),
+      );
+    }
+
+    const manualPatch = createManualPatch(
+      plan,
+      changed.length > 0
+        ? changed.map(({ block }) => block)
+        : desired.map(({ block }) => block),
+      legacy.map(({ key }) => key),
+    );
+    return Object.fromEntries(
+      managed.map(({ key, block, range }) => [
+        key,
+        range &&
+        content.slice(range.start, range.end) === block &&
+        legacy.length === 0
+          ? { action: 'no-change' }
+          : { action: 'manual-required', manualPatch },
+      ]),
+    );
+  } catch (error) {
+    const blocked = blockedResult(error, targetIdentifier(plan));
+    return Object.fromEntries(desired.map(({ key }) => [key, blocked]));
+  }
 }
 
 export async function upsertAgentsMdSections(
@@ -795,197 +560,46 @@ export async function upsertAgentsMdSections(
   sections: readonly AgentsMdSectionInput[],
   options: Pick<AgentsMdMutationOptions, 'fileSystem'> = {},
 ): Promise<Record<string, UpsertSectionResult>> {
-  const fileSystem = options.fileSystem ?? defaultFileSystem;
-  const plan = await planAgentsMd(repoRoot, fileSystem);
-  const content = await readPlannedContent(plan, fileSystem);
-  const unresolvedRecoveries = await discoverRecoveries(plan, fileSystem);
-  if (unresolvedRecoveries.length > 0) {
-    const result = {
-      action: 'recovery-required',
-      recovery: recoveryResult(plan, unresolvedRecoveries),
-    } satisfies UpsertSectionResult;
-    return Object.fromEntries(sections.map(({ key }) => [key, result]));
-  }
-
-  const planned = sections.map(({ key, body }) => ({
-    key,
-    section: buildSection(key, body),
-    managed: findManagedSection(content, key),
-  }));
-  assertManagedSectionsAreDisjoint(
-    planned.flatMap(({ managed }) => (managed ? [managed] : [])),
-  );
-  const edits = planned
-    .flatMap(({ section, managed }) =>
-      managed ? [{ ...managed, replacement: section }] : [],
-    )
-    .sort((left, right) => right.start - left.start);
-  let updatedContent = edits.reduce(
-    (current, edit) =>
-      `${current.slice(0, edit.start)}${edit.replacement}${current.slice(edit.end)}`,
-    content,
-  );
-  const additions = planned.filter(({ managed }) => !managed);
-  if (additions.length > 0) {
-    const addition = additions.map(({ section }) => section).join('\n\n');
-    if (updatedContent.length === 0) updatedContent = `${addition}\n`;
-    else {
-      const separator = updatedContent.endsWith('\n') ? '\n' : '\n\n';
-      updatedContent = `${updatedContent}${separator}${addition}\n`;
-    }
-  }
-  if (updatedContent === content) {
-    return Object.fromEntries(
-      planned.map(({ key }) => [key, { action: 'no-change' }]),
-    );
-  }
-  const publication = await writePlannedContent(
-    plan,
-    content,
-    updatedContent,
-    fileSystem,
-  );
-  const changedResult: UpsertSectionResult =
-    publication.status === 'recovery-required'
-      ? {
-          action: 'recovery-required',
-          recovery: publication.recovery,
-        }
-      : { action: plan.kind === 'missing' ? 'created' : 'updated' };
-  return Object.fromEntries(
-    planned.map(({ key, section, managed }) => [
-      key,
-      managed && content.slice(managed.start, managed.end) === section
-        ? { action: 'no-change' }
-        : changedResult,
-    ]),
+  if (sections.length === 0) return {};
+  return upsertSectionsInternal(
+    repoRoot,
+    sections,
+    [],
+    options.fileSystem ?? defaultFileSystem,
+    true,
   );
 }
 
-/**
- * Insert or replace a managed section in AGENTS.md.
- *
- * A repository-root symlink is followed only when it remains an unchanged,
- * contained direct link to a regular file. Existing files are replaced
- * atomically after their identities and marker structure are revalidated.
- */
 export async function upsertAgentsMdSection(
   repoRoot: string,
   key: string,
   body: string,
   options: AgentsMdMutationOptions = {},
 ): Promise<UpsertSectionResult> {
-  const fileSystem = options.fileSystem ?? defaultFileSystem;
-  const plan = await planAgentsMd(repoRoot, fileSystem);
-  const section = buildSection(key, body);
-  const content = await readPlannedContent(plan, fileSystem);
-  const unresolvedRecoveries = await discoverRecoveries(plan, fileSystem);
-  if (unresolvedRecoveries.length > 0) {
-    return {
-      action: 'recovery-required',
-      recovery: recoveryResult(plan, unresolvedRecoveries),
-    };
-  }
-  const managed = findManagedSection(content, key);
-  const removalSections = [...new Set(options.removeSectionKeys ?? [])].flatMap(
-    (removeKey) => {
-      if (removeKey === key) return [];
-      const sectionToRemove = findManagedSection(content, removeKey);
-      return sectionToRemove ? [sectionToRemove] : [];
-    },
+  const result = await upsertSectionsInternal(
+    repoRoot,
+    [{ key, body }],
+    options.removeSectionKeys ?? [],
+    options.fileSystem ?? defaultFileSystem,
+    true,
   );
-  assertManagedSectionsAreDisjoint([
-    ...(managed ? [managed] : []),
-    ...removalSections,
-  ]);
-
-  let updatedContent: string;
-  if (managed) {
-    const existingSection = content.slice(managed.start, managed.end);
-    if (existingSection === section && removalSections.length === 0) {
-      return { action: 'no-change' };
-    }
-    const edits = [
-      { ...managed, replacement: section },
-      ...removalSections.map((remove) => ({
-        ...remove,
-        replacement: '',
-      })),
-    ].sort((left, right) => right.start - left.start);
-    updatedContent = edits.reduce(
-      (current, edit) =>
-        `${current.slice(0, edit.start)}${edit.replacement}${current.slice(edit.end)}`,
-      content,
-    );
-  } else {
-    if (removalSections.length > 0) {
-      const [replacement, ...removals] = removalSections.sort(
-        (left, right) => left.start - right.start,
-      );
-      const edits = [
-        ...(replacement ? [{ ...replacement, replacement: section }] : []),
-        ...removals.map((remove) => ({ ...remove, replacement: '' })),
-      ].sort((left, right) => right.start - left.start);
-      updatedContent = edits.reduce(
-        (current, edit) =>
-          `${current.slice(0, edit.start)}${edit.replacement}${current.slice(edit.end)}`,
-        content,
-      );
-    } else if (plan.kind === 'missing') {
-      updatedContent = `${section}\n`;
-    } else if (content.length === 0) {
-      updatedContent = `${section}\n`;
-    } else {
-      const separator = content.endsWith('\n') ? '\n' : '\n\n';
-      updatedContent = `${content}${separator}${section}\n`;
-    }
-  }
-
-  const publication = await writePlannedContent(
-    plan,
-    content,
-    updatedContent,
-    fileSystem,
-  );
-  if (publication.status === 'recovery-required') {
-    return {
-      action: 'recovery-required',
-      recovery: publication.recovery,
-    };
-  }
-  return { action: plan.kind === 'missing' ? 'created' : 'updated' };
+  return result[key] ?? blockedResult(new Error('AGENTS.md guidance failed.'));
 }
 
-/**
- * Remove a managed section from AGENTS.md if it exists.
- *
- * Returns true if the section was found and removed, false otherwise.
- */
 export async function removeAgentsMdSection(
   repoRoot: string,
   key: string,
-  options: AgentsMdMutationOptions = {},
-): Promise<boolean | 'recovery-required'> {
+  options: Pick<AgentsMdMutationOptions, 'fileSystem'> = {},
+): Promise<boolean | 'manual-required' | 'blocked'> {
   const fileSystem = options.fileSystem ?? defaultFileSystem;
-  const plan = await planAgentsMd(repoRoot, fileSystem);
-  if (plan.kind === 'missing') return false;
-
-  const content = await readPlannedContent(plan, fileSystem);
-  const unresolvedRecoveries = await discoverRecoveries(plan, fileSystem);
-  if (unresolvedRecoveries.length > 0) return 'recovery-required';
-  const managed = findManagedSection(content, key);
-  if (!managed) return false;
-
-  const before = content.slice(0, managed.start);
-  const after = content.slice(managed.end);
-  const cleaned = before + after;
-  const publication = await writePlannedContent(
-    plan,
-    content,
-    cleaned,
-    fileSystem,
-  );
-  return publication.status === 'recovery-required'
-    ? 'recovery-required'
-    : true;
+  try {
+    const plan = await planAgentsMd(repoRoot, fileSystem);
+    if (plan.kind === 'missing') return false;
+    const content = await fileSystem.readFile(plan.targetPath, 'utf8');
+    const managed = findManagedSection(content, key);
+    await assertPlanUnchanged(plan, fileSystem, content);
+    return managed ? 'manual-required' : false;
+  } catch {
+    return 'blocked';
+  }
 }

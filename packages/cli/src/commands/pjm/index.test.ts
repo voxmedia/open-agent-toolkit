@@ -250,13 +250,13 @@ describe('oat pjm', () => {
                 skipped: [],
                 guidance: {
                   projectManagement: {
-                    action: 'recovery-required',
-                    recovery: {
-                      code: 'recovery-required',
+                    action: 'manual-required',
+                    manualPatch: {
                       target: 'AGENTS.md',
-                      identifiers: ['.AGENTS.md.oat-recovery-1-2'],
-                      action:
-                        'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+                      managedBlock:
+                        '<!-- OAT project-management -->\nPJM\n<!-- END OAT project-management -->',
+                      legacyBlockAction: 'preserve',
+                      instructions: ['Open AGENTS.md.', 'Apply the block.'],
                     },
                   },
                   decisions: { action: 'no-change' },
@@ -273,13 +273,13 @@ describe('oat pjm', () => {
           scaffold: { status: 'complete' },
           adoption: { status: 'declared' },
           guidance: {
-            projectManagement: { action: 'recovery-required' },
+            projectManagement: { action: 'manual-required' },
             decisions: { action: 'no-change' },
           },
         });
       } else {
         expect(`${result.stdout}\n${result.stderr}`).toMatch(
-          /requires recovery/i,
+          /requires manual action/i,
         );
       }
     },

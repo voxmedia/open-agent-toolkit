@@ -105,7 +105,7 @@ function createHarness(options: HarnessOptions = {}) {
       : []),
   ]);
   const guidanceWriteActions = [
-    ...(options.guidanceWriteActions ?? ['updated']),
+    ...(options.guidanceWriteActions ?? ['created']),
   ];
   const upsertAgentsMdSection = vi.fn(async () => {
     if (options.guidanceError) throw options.guidanceError;
@@ -303,7 +303,7 @@ describe('createInitToolsWorkflowsCommand', () => {
         { removeSectionKeys: ['workflows'] },
       );
       expect(removeAgentsMdSection).not.toHaveBeenCalled();
-      expect(capture.info.join('\n')).toContain('Project guidance: update');
+      expect(capture.info.join('\n')).toContain('Project guidance: create');
       expect(process.exitCode).toBe(0);
     },
   );
@@ -386,7 +386,7 @@ describe('createInitToolsWorkflowsCommand', () => {
       scope: 'project',
       projectGuidance: {
         action: 'blocked',
-        reason: expect.stringContaining('unexpected-failure'),
+        reason: expect.stringContaining('planned safely'),
       },
     });
     expect(process.exitCode).toBe(1);

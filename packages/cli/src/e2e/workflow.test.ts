@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
+  chmod,
   lstat,
   mkdir,
   mkdtemp,
@@ -274,7 +275,7 @@ describe('e2e workflow', () => {
     }
   });
 
-  it('reports existing aggregate guidance recovery explicitly and reruns idempotently', async () => {
+  it('reports the same existing aggregate guidance patch without writing on rerun', async () => {
     const root = await createWorkspace();
     const userRoot = await mkdtemp(
       join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
@@ -324,25 +325,27 @@ describe('e2e workflow', () => {
       ]);
 
       expect(first.exitCode).toBe(1);
-      expect(`${first.stdout}\n${first.stderr}`).toMatch(/requires recovery/i);
+      expect(`${first.stdout}\n${first.stderr}`).toMatch(/manual/i);
+      expect(`${first.stdout}\n${first.stderr}`).toContain(
+        '<!-- OAT tools -->',
+      );
       expect(`${first.stdout}\n${first.stderr}`).not.toContain(root);
       expect(second.exitCode).toBe(1);
-      expect(`${second.stdout}\n${second.stderr}`).toMatch(
-        /requires recovery/i,
+      expect(`${second.stdout}\n${second.stderr}`).toBe(
+        `${first.stdout}\n${first.stderr}`,
       );
       const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
-      expect(guidance).toContain('# User guidance');
-      expect(guidance).toContain('Existing PJM guidance');
-      expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
-      expect(guidance).toContain('### Installed Packs');
-      expect(guidance).not.toContain('<!-- OAT decisions -->');
+      expect(guidance).toBe(existingGuidance);
+      expect(await readdir(root)).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(/tmp|recovery/i)]),
+      );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
     }
   });
 
-  it('reports existing registered-workflows guidance as a redacted partial recovery', async () => {
+  it('reports existing registered-workflows guidance as a redacted manual patch', async () => {
     const root = await createWorkspace();
     const userRoot = await mkdtemp(
       join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
@@ -372,13 +375,16 @@ describe('e2e workflow', () => {
       expect(payload).toMatchObject({
         status: 'partial',
         projectGuidance: {
-          action: 'blocked',
-          reason: expect.stringMatching(/requires recovery/i),
+          action: 'manual-required',
+          manualPatch: {
+            target: 'AGENTS.md',
+            managedBlock: expect.stringContaining('<!-- OAT tools -->'),
+          },
         },
       });
-      expect(payload.projectGuidance.reason).not.toContain(root);
-      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toMatch(
-        /# Existing guidance[\s\S]*<!-- OAT tools -->/,
+      expect(JSON.stringify(payload.projectGuidance)).not.toContain(root);
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        '# Existing guidance\n',
       );
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
@@ -386,7 +392,120 @@ describe('e2e workflow', () => {
     }
   });
 
-  it('creates missing guidance and updates it through a contained symlink', async () => {
+  it.each(
+    (['aggregate', 'registered workflows'] as const).flatMap((entryPoint) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ entryPoint, targetKind, json })),
+      ),
+    ),
+  )(
+    'keeps $entryPoint $targetKind guidance manual-only in json=$json mode across reruns',
+    async ({ entryPoint, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-manual-guidance-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      const existing = [
+        '# Private operator guidance',
+        '<!-- OAT workflows -->',
+        'Legacy workflow guidance',
+        '<!-- END OAT workflows -->',
+        '# Private suffix',
+        '',
+      ].join('\n');
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      const before = await lstat(target);
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args = [
+          'tools',
+          'install',
+          '--scope',
+          'project',
+          '--no-sync',
+          '--project-guidance',
+          ...(entryPoint === 'registered workflows' ? ['workflows'] : []),
+        ];
+        const first = await runCli(root, args, json ? ['--json'] : []);
+        const second = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(first.exitCode).toBe(1);
+        expect(second.exitCode).toBe(1);
+        let firstPatch: {
+          target: string;
+          managedBlock: string;
+          legacyBlockAction: string;
+        };
+        let secondPatch: typeof firstPatch;
+        if (json) {
+          const firstGuidance = JSON.parse(first.stdout).projectGuidance;
+          const secondGuidance = JSON.parse(second.stdout).projectGuidance;
+          expect(firstGuidance.action).toBe('manual-required');
+          expect(secondGuidance.action).toBe('manual-required');
+          firstPatch = firstGuidance.manualPatch;
+          secondPatch = secondGuidance.manualPatch;
+          expect(JSON.stringify(firstGuidance)).not.toContain(root);
+        } else {
+          const extractPatch = (output: string) => {
+            const managedBlock = output.match(
+              /<!-- OAT tools -->[\s\S]*?<!-- END OAT tools -->/,
+            )?.[0];
+            return {
+              target: output.match(/Target: ([^\n]+)/)?.[1] ?? 'missing-target',
+              managedBlock: managedBlock ?? 'missing-block',
+              legacyBlockAction:
+                output.match(/Legacy block action: ([^\n]+)/)?.[1] ??
+                'missing-action',
+            };
+          };
+          firstPatch = extractPatch(`${first.stdout}\n${first.stderr}`);
+          secondPatch = extractPatch(`${second.stdout}\n${second.stderr}`);
+        }
+        expect(secondPatch).toEqual(firstPatch);
+        expect(firstPatch).toMatchObject({
+          target: targetKind === 'direct' ? 'AGENTS.md' : 'guidance/shared.md',
+          managedBlock: expect.stringContaining('<!-- OAT tools -->'),
+          legacyBlockAction: 'remove-manually',
+        });
+        expect(`${first.stdout}\n${first.stderr}`).not.toContain(
+          'Private operator guidance',
+        );
+        expect(`${first.stdout}\n${first.stderr}`).not.toContain(
+          'Private suffix',
+        );
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
+        );
+        const config = JSON.parse(
+          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        );
+        expect(config.pjm).toBeUndefined();
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it('creates missing guidance and recognizes exact content through a contained symlink', async () => {
     const root = await createWorkspace();
     const userRoot = await mkdtemp(
       join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
@@ -440,7 +559,7 @@ describe('e2e workflow', () => {
       ),
     ),
   )(
-    'reports $consumer recovery truthfully for a $targetKind target in json=$json mode',
+    'reports $consumer manual guidance truthfully for a $targetKind target in json=$json mode',
     async ({ consumer, targetKind, json }) => {
       const root = await createWorkspace();
       const userRoot = await mkdtemp(
@@ -452,7 +571,140 @@ describe('e2e workflow', () => {
           ? join(root, 'AGENTS.md')
           : join(root, 'guidance', 'shared.md');
       await mkdir(join(root, 'guidance'), { recursive: true });
-      await writeFile(target, '# Existing guidance\n', 'utf8');
+      const existing = '# Existing guidance\n';
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      const before = await lstat(target);
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      if (consumer === 'decision') {
+        await mkdir(join(root, '.oat', 'repo'), { recursive: true });
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            pjm: { initialized: true, schemaVersion: 1 },
+          }),
+          'utf8',
+        );
+      }
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args =
+          consumer === 'docs'
+            ? [
+                'docs',
+                'init',
+                '--framework',
+                'mkdocs',
+                '--app-name',
+                'docs',
+                '--target-dir',
+                'docs-app',
+                '--description',
+                'Test docs',
+                '--format',
+                'none',
+                '--no-root-patch',
+                '--yes',
+              ]
+            : consumer === 'pjm'
+              ? ['pjm', 'init']
+              : ['decision', 'init'];
+        const result = await runCli(root, args, json ? ['--json'] : []);
+        if (consumer === 'docs') {
+          await rm(join(root, 'docs-app'), { recursive: true, force: true });
+        }
+        const repeated = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(result.exitCode).toBe(1);
+        expect(repeated.exitCode).toBe(1);
+        if (json) {
+          const payload = JSON.parse(result.stdout);
+          const repeatedPayload = JSON.parse(repeated.stdout);
+          const manualGuidance =
+            consumer === 'docs'
+              ? payload.guidance
+              : consumer === 'pjm'
+                ? payload.guidance.projectManagement
+                : payload.guidance.root;
+          const repeatedManualGuidance =
+            consumer === 'docs'
+              ? repeatedPayload.guidance
+              : consumer === 'pjm'
+                ? repeatedPayload.guidance.projectManagement
+                : repeatedPayload.guidance.root;
+          expect(payload.status).toBe('partial');
+          expect(JSON.stringify(payload)).toContain('manual-required');
+          expect(JSON.stringify(payload)).toContain('managedBlock');
+          expect(repeatedManualGuidance).toEqual(manualGuidance);
+          expect(result.stdout).not.toContain('"status": "ok"');
+        } else {
+          expect(`${result.stdout}\n${result.stderr}`).toMatch(/manual/i);
+          expect(`${result.stdout}\n${result.stderr}`).toContain(
+            'Managed block:',
+          );
+          const extractBlocks = (output: string) =>
+            output.match(/<!-- OAT [^ ]+ -->[\s\S]*?<!-- END OAT [^ ]+ -->/g);
+          expect(
+            extractBlocks(`${repeated.stdout}\n${repeated.stderr}`),
+          ).toEqual(extractBlocks(`${result.stdout}\n${result.stderr}`));
+        }
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(root);
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
+        );
+
+        const config = JSON.parse(
+          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        );
+        if (consumer === 'docs') expect(config.pjm).toBeUndefined();
+        else expect(config.pjm.initialized).toBe(true);
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it.each(
+    (['docs', 'pjm', 'decision'] as const).flatMap((consumer) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ consumer, targetKind, json })),
+      ),
+    ),
+  )(
+    'blocks malformed $consumer guidance for a $targetKind target in json=$json mode',
+    async ({ consumer, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-blocked-guidance-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      const key =
+        consumer === 'docs'
+          ? 'docs'
+          : consumer === 'pjm'
+            ? 'project-management'
+            : 'decisions';
+      const existing = `# Private prefix\n<!-- OAT ${key} -->\nunterminated\n# Private suffix\n`;
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      const before = await lstat(target);
       if (targetKind === 'symlink') {
         await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
       }
@@ -498,23 +750,24 @@ describe('e2e workflow', () => {
         if (json) {
           const payload = JSON.parse(result.stdout);
           expect(payload.status).toBe('partial');
+          expect(JSON.stringify(payload)).toContain('blocked');
           expect(result.stdout).not.toContain('"status": "ok"');
         } else {
-          expect(`${result.stdout}\n${result.stderr}`).toMatch(
-            /requires recovery/i,
-          );
+          expect(`${result.stdout}\n${result.stderr}`).toMatch(/blocked/i);
         }
         expect(`${result.stdout}\n${result.stderr}`).not.toContain(root);
-        const recoveryNames = (await readdir(join(target, '..'))).filter(
-          (name) => name.includes('oat-recovery-'),
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(
+          'Private prefix',
         );
-        expect(recoveryNames.length).toBeGreaterThan(0);
-
-        const config = JSON.parse(
-          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
         );
-        if (consumer === 'docs') expect(config.pjm).toBeUndefined();
-        else expect(config.pjm.initialized).toBe(true);
       } finally {
         if (previousHome === undefined) delete process.env.HOME;
         else process.env.HOME = previousHome;

@@ -22,8 +22,8 @@ function createHarness(): {
 } {
   const capture = createLoggerCapture();
   const initializeDecisionAgentsGuidance = vi.fn(async () => ({
-    root: 'created' as const,
-    scoped: 'created' as const,
+    root: { action: 'created' as const },
+    scoped: { action: 'created' as const },
   }));
   const initializeDecisionRecords = vi.fn(async (decisionsRoot: string) => ({
     decisionsRoot,
@@ -156,8 +156,8 @@ describe('createDecisionCommand', () => {
       created: ['index.md'],
       skipped: [],
       guidance: {
-        root: 'created',
-        scoped: 'created',
+        root: { action: 'created' },
+        scoped: { action: 'created' },
       },
     });
     expect(process.exitCode).toBe(0);
@@ -199,7 +199,7 @@ describe('createDecisionCommand', () => {
     expect(capture.jsonPayloads).toEqual([
       {
         status: 'error',
-        message: expect.stringMatching(/unexpected-failure/),
+        message: expect.stringMatching(/planned safely/),
       },
     ]);
     expect(JSON.stringify(capture.jsonPayloads)).not.toContain(
@@ -209,22 +209,22 @@ describe('createDecisionCommand', () => {
   });
 
   it.each([false, true])(
-    'reports completed decision scaffold with recovery-required guidance in json=%s mode',
+    'reports completed decision scaffold with manual-required guidance in json=%s mode',
     async (json) => {
       const { command, capture, initializeDecisionAgentsGuidance } =
         createHarness();
       initializeDecisionAgentsGuidance.mockResolvedValueOnce({
-        root: 'recovery-required',
-        scoped: 'no-change',
-        recovery: {
-          root: {
-            code: 'recovery-required',
+        root: {
+          action: 'manual-required',
+          manualPatch: {
             target: 'AGENTS.md',
-            identifiers: ['.AGENTS.md.oat-recovery-1-2'],
-            action:
-              'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+            managedBlock:
+              '<!-- OAT decisions -->\nDecisions\n<!-- END OAT decisions -->',
+            legacyBlockAction: 'preserve',
+            instructions: ['Open AGENTS.md.', 'Apply the block.'],
           },
         },
+        scoped: { action: 'no-change' },
       });
 
       await runCommand(command, 'init', json ? ['--json'] : []);
@@ -234,10 +234,14 @@ describe('createDecisionCommand', () => {
         expect(capture.jsonPayloads[0]).toMatchObject({
           status: 'partial',
           scaffold: { status: 'complete' },
-          guidance: { root: 'recovery-required', scoped: 'no-change' },
+          guidance: {
+            root: { action: 'manual-required' },
+            scoped: { action: 'no-change' },
+          },
         });
       } else {
-        expect(capture.warn.join('\n')).toMatch(/requires recovery/i);
+        expect(capture.warn.join('\n')).toMatch(/requires manual action/i);
+        expect(capture.info.join('\n')).toContain('Managed block:');
       }
       expect(process.exitCode).toBe(1);
     },

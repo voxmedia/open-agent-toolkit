@@ -6,8 +6,8 @@ import {
 import {
   type AgentsMdMutationOptions,
   type UpsertSectionResult,
+  formatAgentsMdGuidanceResult,
   formatAgentsMdMutationFailure,
-  removeAgentsMdSection,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -33,6 +33,7 @@ import {
   commandProjectGuidanceChoice,
   planProjectGuidance,
   type ProjectGuidancePack,
+  reportableProjectGuidance,
   withProjectGuidanceOptions,
 } from '../project-guidance';
 import {
@@ -67,10 +68,6 @@ interface InitToolsWorkflowsDependencies {
     body: string,
     options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
-  removeAgentsMdSection: (
-    repoRoot: string,
-    key: string,
-  ) => Promise<boolean | 'recovery-required'>;
 }
 
 const DEFAULT_DEPENDENCIES: InitToolsWorkflowsDependencies = {
@@ -83,7 +80,6 @@ const DEFAULT_DEPENDENCIES: InitToolsWorkflowsDependencies = {
   scanTools,
   planProjectGuidance,
   upsertAgentsMdSection,
-  removeAgentsMdSection,
 };
 
 const ALL_TOOL_PACKS = [
@@ -121,7 +117,7 @@ async function applyProjectGuidance(
   plan: AgentsGuidancePlan,
   dependencies: InitToolsWorkflowsDependencies,
 ): Promise<AgentsGuidancePlan> {
-  if (plan.action !== 'update' || !plan.repoRoot) return plan;
+  if (plan.action !== 'create' || !plan.repoRoot) return plan;
 
   try {
     const result = await dependencies.upsertAgentsMdSection(
@@ -132,21 +128,26 @@ async function applyProjectGuidance(
         ? { removeSectionKeys: ['workflows'] }
         : undefined,
     );
-    if (result.action === 'recovery-required') {
+    if (result.action === 'manual-required') {
+      return {
+        ...plan,
+        action: 'manual-required',
+        reason:
+          'Accepted project guidance requires the reported manual AGENTS.md patch. Capability placement and PJM adoption were unchanged.',
+        manualPatch: result.manualPatch,
+      };
+    }
+    if (result.action === 'blocked') {
       return {
         ...plan,
         action: 'blocked',
-        reason: `Accepted project guidance requires recovery. ${result.recovery?.action ?? 'Review retained recovery evidence and rerun.'} Capability placement and PJM adoption were unchanged.`,
+        reason:
+          `Accepted project guidance was blocked: ${result.blocked?.reason ?? 'AGENTS.md could not be planned safely.'} ${result.blocked?.action ?? ''}`.trim(),
       };
     }
     return {
       ...plan,
-      action:
-        result.action === 'created'
-          ? 'create'
-          : result.action === 'updated'
-            ? 'update'
-            : 'no-change',
+      action: result.action === 'created' ? 'create' : 'no-change',
       reason: `Accepted project guidance ${result.action}. Capability placement and PJM adoption were unchanged.`,
     };
   } catch (error) {
@@ -167,7 +168,10 @@ function reportSuccess(
   projectGuidance: AgentsGuidancePlan,
 ): void {
   if (context.json) {
-    if (projectGuidance.action === 'blocked') {
+    if (
+      projectGuidance.action === 'blocked' ||
+      projectGuidance.action === 'manual-required'
+    ) {
       context.logger.json({
         status: 'partial',
         scope,
@@ -179,11 +183,7 @@ function reportSuccess(
             result.copiedTemplates.length + result.updatedTemplates.length,
           scripts: result.copiedScripts.length + result.updatedScripts.length,
         },
-        projectGuidance: {
-          action: projectGuidance.action,
-          choice: projectGuidance.choice,
-          reason: projectGuidance.reason,
-        },
+        projectGuidance: reportableProjectGuidance(projectGuidance),
       });
       return;
     }
@@ -193,14 +193,17 @@ function reportSuccess(
       targetRoot,
       assetsRoot,
       result,
-      projectGuidance,
+      projectGuidance: reportableProjectGuidance(projectGuidance),
     });
     return;
   }
 
   context.logger.info('Installed workflows tool pack.');
   context.logger.info(`Scope: ${scope}`);
-  if (projectGuidance.action !== 'blocked') {
+  if (
+    projectGuidance.action !== 'blocked' &&
+    projectGuidance.action !== 'manual-required'
+  ) {
     context.logger.info(`Target root: ${targetRoot}`);
   }
   context.logger.info(
@@ -219,8 +222,19 @@ function reportSuccess(
     `Projects root initialized: ${result.projectsRootInitialized ? 'yes' : 'no'}`,
   );
   const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
-  if (projectGuidance.action === 'blocked') {
+  if (
+    projectGuidance.action === 'blocked' ||
+    projectGuidance.action === 'manual-required'
+  ) {
     context.logger.warn(guidanceMessage);
+    if (projectGuidance.manualPatch) {
+      for (const line of formatAgentsMdGuidanceResult({
+        action: 'manual-required',
+        manualPatch: projectGuidance.manualPatch,
+      })) {
+        context.logger.info(line);
+      }
+    }
   } else {
     context.logger.info(guidanceMessage);
   }
@@ -277,11 +291,10 @@ async function planAndApplyProjectGuidance(
     });
     return applyProjectGuidance(completePlan, dependencies);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
     return {
       ...initialPlan,
       action: 'blocked',
-      reason: `Accepted project guidance was blocked: ${message}`,
+      reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
     };
   }
 }
@@ -340,7 +353,11 @@ async function runInitToolsWorkflows(
       result,
       projectGuidance,
     );
-    process.exitCode = projectGuidance.action === 'blocked' ? 1 : 0;
+    process.exitCode =
+      projectGuidance.action === 'blocked' ||
+      projectGuidance.action === 'manual-required'
+        ? 1
+        : 0;
     return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

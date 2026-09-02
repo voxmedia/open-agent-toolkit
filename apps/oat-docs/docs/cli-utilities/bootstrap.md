@@ -47,7 +47,7 @@ After core initialization completes, `oat init` can enter an interactive guided 
    - choose **Yes** to run the per-pack scope selector for every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`)
    - choose **No** to apply additive per-pack defaults without extra scope prompts
    - on a fresh install every pack defaults to **user** scope, so capabilities follow you across repositories; an existing install keeps its current placement
-   - after placement is chosen, repository `AGENTS.md` guidance is a separate opt-in. Accepting creates or refreshes the managed `OAT tools` section from the complete installed-pack inventory; declining leaves `AGENTS.md` unchanged
+   - after placement is chosen, repository `AGENTS.md` guidance is a separate opt-in. Accepting creates the managed `OAT tools` section only when the root file is absent. An existing file or symlink is never replaced: OAT prints a repository-relative, copy-pasteable managed-block patch instead. Declining leaves `AGENTS.md` unchanged
    - installing `project-management` installs the capability only. Adopting it for this repository is a third, separate choice made with `oat pjm init` — see [Install vs. initialize](tool-packs.md#install-vs-initialize)
 2. **Local paths** — multi-select from default gitignored artifact paths (analysis, PR, reviews, ideas). Pre-existing paths are pre-checked; only new paths are added.
 3. **Documentation** — detect or enter docs metadata for the repo when documentation exists.
@@ -65,7 +65,7 @@ Hook install note:
 # Explicit guided setup on an existing repo
 oat init --setup --scope project
 
-# Install capabilities and explicitly refresh repository guidance
+# Install capabilities and create or propose repository guidance
 oat init --setup --project-guidance
 
 # Fresh init — guided setup is offered automatically

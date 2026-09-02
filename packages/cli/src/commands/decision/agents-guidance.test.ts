@@ -60,8 +60,14 @@ describe('decision AGENTS guidance', () => {
       decisionsRoot,
     });
 
-    expect(first).toEqual({ root: 'created', scoped: 'created' });
-    expect(second).toEqual({ root: 'no-change', scoped: 'no-change' });
+    expect(first).toEqual({
+      root: { action: 'created' },
+      scoped: { action: 'created' },
+    });
+    expect(second).toEqual({
+      root: { action: 'no-change' },
+      scoped: { action: 'no-change' },
+    });
 
     const rootGuidance = await readFile(join(projectRoot, 'AGENTS.md'), 'utf8');
     expect(rootGuidance).toContain('<!-- OAT decisions -->');
@@ -87,7 +93,7 @@ describe('decision AGENTS guidance', () => {
     expect(rootGuidance).toContain('`architecture/decisions/index.md`');
   });
 
-  it('preserves project-management guidance at the root', async () => {
+  it('preserves project-management guidance and proposes the decision block', async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), 'oat-decision-agents-'));
     tempDirs.push(projectRoot);
     const decisionsRoot = join(projectRoot, 'architecture', 'decisions');
@@ -95,10 +101,19 @@ describe('decision AGENTS guidance', () => {
       '<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n';
     await writeFile(join(projectRoot, 'AGENTS.md'), pjmSection, 'utf8');
 
-    await initializeDecisionAgentsGuidance({ projectRoot, decisionsRoot });
+    const result = await initializeDecisionAgentsGuidance({
+      projectRoot,
+      decisionsRoot,
+    });
 
     const rootGuidance = await readFile(join(projectRoot, 'AGENTS.md'), 'utf8');
     expect(rootGuidance).toContain(pjmSection.trim());
-    expect(rootGuidance).toContain('<!-- OAT decisions -->');
+    expect(rootGuidance).not.toContain('<!-- OAT decisions -->');
+    expect(result.root).toMatchObject({
+      action: 'manual-required',
+      manualPatch: {
+        managedBlock: expect.stringContaining('<!-- OAT decisions -->'),
+      },
+    });
   });
 });

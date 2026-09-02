@@ -5,6 +5,7 @@ import {
 } from '@app/command-context';
 import {
   type UpsertSectionResult,
+  formatAgentsMdGuidanceResult,
   formatAgentsMdMutationFailure,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
@@ -283,7 +284,10 @@ async function runDocsInitCommand(
     } catch (error) {
       throw new Error(formatAgentsMdMutationFailure(error), { cause: error });
     }
-    if (sectionResult.action === 'recovery-required') {
+    if (
+      sectionResult.action === 'manual-required' ||
+      sectionResult.action === 'blocked'
+    ) {
       if (context.json) {
         context.logger.json({
           status: 'partial',
@@ -296,8 +300,11 @@ async function runDocsInitCommand(
         });
       } else {
         context.logger.warn(
-          `Docs scaffold completed; AGENTS.md guidance requires recovery. ${sectionResult.recovery?.action ?? 'Review retained recovery evidence and rerun.'}`,
+          `Docs scaffold completed; AGENTS.md guidance is ${sectionResult.action}.`,
         );
+        for (const line of formatAgentsMdGuidanceResult(sectionResult)) {
+          context.logger.info(line);
+        }
       }
       process.exitCode = 1;
       return;

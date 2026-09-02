@@ -13,7 +13,7 @@ function createHarness(options: { interactive?: boolean } = {}) {
 
   const runDocsInit = vi.fn(async () => {});
   const upsertAgentsMdSection = vi.fn(async () => ({
-    action: 'updated' as const,
+    action: 'created' as const,
   }));
 
   const command = createDocsInitCommand({
@@ -102,7 +102,7 @@ describe('createDocsInitCommand', () => {
     );
   });
 
-  it('logs AGENTS.md update when section is created or updated', async () => {
+  it('logs AGENTS.md creation when the missing file is created', async () => {
     const { command, capture } = createHarness({ interactive: false });
 
     await runCommand(command, [
@@ -120,7 +120,7 @@ describe('createDocsInitCommand', () => {
     ]);
 
     expect(capture.info.join('\n')).toContain(
-      'AGENTS.md docs section updated.',
+      'AGENTS.md docs section created.',
     );
   });
 
@@ -170,25 +170,25 @@ describe('createDocsInitCommand', () => {
       '--yes',
     ]);
 
-    expect(capture.error.join('\n')).toMatch(/unexpected-failure/);
+    expect(capture.error.join('\n')).toMatch(/planned safely/);
     expect(capture.error.join('\n')).not.toContain('/tmp/workspace');
     expect(capture.info.join('\n')).not.toContain('AGENTS.md docs section');
     expect(process.exitCode).toBe(1);
   });
 
   it.each([false, true])(
-    'reports recovery-required guidance as one partial outcome in json=%s mode',
+    'reports manual-required guidance as one partial outcome in json=%s mode',
     async (json) => {
       const { command, capture, upsertAgentsMdSection } = createHarness({
         interactive: false,
       });
       upsertAgentsMdSection.mockResolvedValueOnce({
-        action: 'recovery-required',
-        recovery: {
-          code: 'recovery-required',
+        action: 'manual-required',
+        manualPatch: {
           target: 'AGENTS.md',
-          identifiers: ['.AGENTS.md.oat-recovery-1-2'],
-          action: 'Review and remove .AGENTS.md.oat-recovery-1-2, then rerun.',
+          managedBlock: '<!-- OAT docs -->\nDocs\n<!-- END OAT docs -->',
+          legacyBlockAction: 'preserve',
+          instructions: ['Open AGENTS.md.', 'Apply the managed block.'],
         },
       });
 
@@ -215,10 +215,11 @@ describe('createDocsInitCommand', () => {
         expect(capture.jsonPayloads[0]).toMatchObject({
           status: 'partial',
           scaffold: { status: 'complete' },
-          guidance: { action: 'recovery-required' },
+          guidance: { action: 'manual-required' },
         });
       } else {
-        expect(capture.warn.join('\n')).toMatch(/requires recovery/i);
+        expect(capture.warn.join('\n')).toMatch(/manual-required/i);
+        expect(capture.info.join('\n')).toContain('Managed block:');
       }
       expect(process.exitCode).toBe(1);
     },
@@ -248,7 +249,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit: vi.fn(async () => {}),
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
     });
 
@@ -301,7 +302,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit: vi.fn(async () => {}),
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
       readOatConfig,
       confirmAction: vi.fn(async () => false),
@@ -354,7 +355,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit,
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
       readOatConfig,
       confirmAction: vi.fn(async () => false),

@@ -251,7 +251,7 @@ function createHarness(options: HarnessOptions = {}) {
       toolsByScope[scanOptions.scope] ?? [],
   );
   const upsertAgentsMdSection = vi.fn(async () => ({
-    action: 'updated' as const,
+    action: 'created' as const,
   }));
   const removeAgentsMdSection = vi.fn(async () => false);
   const reconcilePacks = vi.fn(
@@ -1450,7 +1450,7 @@ describe('createInitToolsCommand', () => {
 
     expect(capture.info.join('\n')).toContain('Installed tool packs:');
     expect(capture.warn.join('\n')).toContain('Project guidance: blocked');
-    expect(capture.warn.join('\n')).toContain('unexpected-failure');
+    expect(capture.warn.join('\n')).toContain('planned safely');
     expect(process.exitCode).toBe(1);
   });
 
@@ -2064,7 +2064,7 @@ describe('createInitToolsCommand', () => {
         status: 'ok',
         pack: 'workflows',
         scopes: [scope],
-        projectGuidance: { action: 'update' },
+        projectGuidance: { action: 'create' },
       });
       expect(process.exitCode).toBe(0);
     },
@@ -2132,7 +2132,7 @@ describe('createInitToolsCommand', () => {
       lifecycle: { status: 'complete' },
       projectGuidance: {
         action: 'blocked',
-        reason: expect.stringContaining('unexpected-failure'),
+        reason: expect.stringContaining('planned safely'),
       },
     });
     expect(process.exitCode).toBe(1);

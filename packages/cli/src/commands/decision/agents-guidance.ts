@@ -63,12 +63,8 @@ export interface InitializeDecisionAgentsGuidanceOptions {
 }
 
 export interface DecisionAgentsGuidanceResult {
-  root: UpsertSectionResult['action'];
-  scoped: UpsertSectionResult['action'];
-  recovery?: {
-    root?: UpsertSectionResult['recovery'];
-    scoped?: UpsertSectionResult['recovery'];
-  };
+  root: UpsertSectionResult;
+  scoped: UpsertSectionResult;
 }
 
 export async function initializeScopedDecisionAgentsGuidance(
@@ -96,13 +92,5 @@ export async function initializeDecisionAgentsGuidance(
     ),
   );
 
-  const recovery = {
-    ...(root.recovery ? { root: root.recovery } : {}),
-    ...(scoped.recovery ? { scoped: scoped.recovery } : {}),
-  };
-  return {
-    root: root.action,
-    scoped: scoped.action,
-    ...(Object.keys(recovery).length > 0 ? { recovery } : {}),
-  };
+  return { root, scoped };
 }

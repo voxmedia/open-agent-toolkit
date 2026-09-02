@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { AgentsMdManualPatch } from '@commands/shared/agents-md';
 import type { PromptContext } from '@commands/shared/shared.prompts';
 import type { PackName } from '@commands/tools/shared/types';
 import { CliError } from '@errors/index';
@@ -14,8 +15,8 @@ export type AgentsGuidanceAction =
   | 'declined'
   | 'not-requested'
   | 'create'
-  | 'update'
   | 'no-change'
+  | 'manual-required'
   | 'blocked';
 
 export interface ProjectGuidancePack {
@@ -32,6 +33,7 @@ export interface AgentsGuidancePlan {
   legacySectionAction: 'preserve' | 'remove';
   reason: string;
   choice: ProjectGuidanceChoice;
+  manualPatch?: AgentsMdManualPatch;
 }
 
 export interface PlanProjectGuidanceInput {
@@ -40,6 +42,15 @@ export interface PlanProjectGuidanceInput {
   explicitChoice?: boolean;
   interactive: boolean;
   confirmAction: (message: string, context: PromptContext) => Promise<boolean>;
+}
+
+export function reportableProjectGuidance(plan: AgentsGuidancePlan) {
+  return {
+    action: plan.action,
+    choice: plan.choice,
+    reason: plan.reason,
+    ...(plan.manualPatch ? { manualPatch: plan.manualPatch } : {}),
+  };
 }
 
 const PACK_DESCRIPTIONS: Record<PackName, string> = {
@@ -134,7 +145,7 @@ export function withProjectGuidanceOptions<TCommand extends Command>(
   if (!command.options.some(({ long }) => long === '--project-guidance')) {
     command.option(
       '--project-guidance',
-      'Create or refresh repository AGENTS.md tool guidance',
+      'Create missing or print manual repository AGENTS.md tool guidance',
     );
   }
   if (!command.options.some(({ long }) => long === '--no-project-guidance')) {
@@ -161,7 +172,7 @@ export async function planProjectGuidance(
     };
   } else {
     const accepted = await input.confirmAction(
-      'Create or refresh repository AGENTS.md tool guidance?',
+      'Create missing or propose manual repository AGENTS.md tool guidance?',
       { interactive: input.interactive },
     );
     choice = accepted
@@ -192,7 +203,7 @@ export async function planProjectGuidance(
       body,
       legacySectionAction: 'preserve',
       reason:
-        'Project guidance was not requested. Re-run with --project-guidance to create or refresh repository AGENTS.md.',
+        'Project guidance was not requested. Re-run with --project-guidance to create an absent AGENTS.md or print a manual patch for an existing one.',
       choice,
     };
   }
@@ -213,11 +224,12 @@ export async function planProjectGuidance(
   return {
     repoRoot: input.repoRoot,
     target: join(input.repoRoot, 'AGENTS.md'),
-    action: 'update',
+    action: 'create',
     sectionKey: 'tools',
     body,
     legacySectionAction: 'remove',
-    reason: 'Project guidance was accepted and is ready to apply.',
+    reason:
+      'Project guidance was accepted. An absent AGENTS.md may be created; an existing file requires a manual patch.',
     choice,
   };
 }

@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { formatAgentsMdGuidanceResult } from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
@@ -167,12 +168,12 @@ export function createPjmCommand(
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
           home: context.home,
         });
-        const recoveryRequired = Object.values(result.guidance ?? {}).some(
-          ({ action }) => action === 'recovery-required',
+        const guidanceIncomplete = Object.values(result.guidance ?? {}).some(
+          ({ action }) => action === 'manual-required' || action === 'blocked',
         );
 
         if (context.json) {
-          if (recoveryRequired) {
+          if (guidanceIncomplete) {
             context.logger.json({
               status: 'partial',
               scaffold: { status: 'complete' },
@@ -187,7 +188,7 @@ export function createPjmCommand(
           }
         } else {
           context.logger.info(
-            recoveryRequired
+            guidanceIncomplete
               ? 'Initialized PJM repo reference scaffold.'
               : `Initialized PJM repo reference scaffold at ${result.repoRoot}`,
           );
@@ -200,13 +201,18 @@ export function createPjmCommand(
             );
           }
           context.logger.info(INSTRUCTIONS_SYNC_HINT);
-          if (recoveryRequired) {
+          if (guidanceIncomplete) {
             context.logger.warn(
-              'PJM scaffold and adoption completed; AGENTS.md guidance requires recovery. Review the reported retained artifacts and rerun.',
+              'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action.',
             );
+            for (const guidance of Object.values(result.guidance ?? {})) {
+              for (const line of formatAgentsMdGuidanceResult(guidance)) {
+                context.logger.info(line);
+              }
+            }
           }
         }
-        process.exitCode = recoveryRequired ? 1 : 0;
+        process.exitCode = guidanceIncomplete ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }

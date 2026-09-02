@@ -30,7 +30,7 @@ describe('parseProjectGuidanceFlags', () => {
 });
 
 describe('planProjectGuidance', () => {
-  it('plans an explicit accepted update from complete realized pack evidence', async () => {
+  it('plans explicit accepted guidance from complete realized pack evidence', async () => {
     const confirmAction = vi.fn(async () => false);
 
     const plan = await planProjectGuidance({
@@ -44,7 +44,7 @@ describe('planProjectGuidance', () => {
     expect(plan).toMatchObject({
       repoRoot: '/repo',
       target: '/repo/AGENTS.md',
-      action: 'update',
+      action: 'create',
       sectionKey: 'tools',
       legacySectionAction: 'remove',
       choice: { choice: 'accepted', source: 'flag' },
