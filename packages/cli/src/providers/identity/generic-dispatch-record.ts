@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+/**
+ * Length bounds for caller-authored text. `identifier` covers names, selectors,
+ * routes, and statuses; `reason` covers a single explanatory sentence; `prose`
+ * covers the longest legitimate free-form field. Nothing in a dispatch record
+ * is a narrative document.
+ */
+const MAX_IDENTIFIER_LENGTH = 256;
+const MAX_REASON_LENGTH = 512;
+const MAX_PROSE_LENGTH = 1024;
+
+const identifier = () => z.string().min(1).max(MAX_IDENTIFIER_LENGTH);
+const reasonText = () => z.string().min(1).max(MAX_REASON_LENGTH);
+const proseText = () => z.string().min(1).max(MAX_PROSE_LENGTH);
+
 const requestIdSchema = z
   .string()
   .regex(
@@ -9,21 +23,21 @@ const requestIdSchema = z
 
 const catalogSnapshotSchema = z
   .object({
-    id: z.string().min(1),
-    source: z.string().min(1),
+    id: identifier(),
+    source: identifier(),
     observed_at: z.string().datetime(),
   })
   .strict();
 
 const genericFallbackSchema = z
   .object({
-    mode: z.string().min(1),
-    target: z.string().min(1).optional(),
+    mode: identifier(),
+    target: identifier().optional(),
     allow_below_task_class_floor: z.boolean().optional(),
   })
   .strict();
 
-const optionalSelector = z.string().min(1).nullable();
+const optionalSelector = identifier().nullable();
 
 /**
  * Every generic container field is validated as a closed, bounded JSON
@@ -32,6 +46,12 @@ const optionalSelector = z.string().min(1).nullable();
  * carries configured sandbox/tool controls; `configured_invocation_evidence`,
  * `continuation_events`, `diagnostics`, and `escalate_when` carry short
  * references and identifiers, not narrative text.
+ *
+ * The projection bounds four independent axes so that no single one can be
+ * defeated by trading against another: nesting depth, per-string length, node
+ * count (which closes chunking into many short strings), and serialized bytes
+ * per field. `assertBoundedDispatchRecordSize` adds a whole-record ceiling on
+ * top, so the sum of every bounded and unbounded field is capped too.
  */
 const BOUNDED_PROJECTION_FIELDS = [
   'payload',
@@ -40,8 +60,11 @@ const BOUNDED_PROJECTION_FIELDS = [
   'diagnostics',
   'escalate_when',
 ] as const;
-const MAX_PAYLOAD_DEPTH = 4;
-const MAX_PAYLOAD_STRING_LENGTH = 512;
+const MAX_PROJECTION_DEPTH = 4;
+const MAX_PROJECTION_STRING_LENGTH = 512;
+const MAX_PROJECTION_NODES = 512;
+const MAX_PROJECTION_BYTES = 16 * 1024;
+const MAX_RECORD_BYTES = 64 * 1024;
 
 function boundedProjectionViolation(
   value: unknown,
@@ -60,15 +83,15 @@ function boundedProjectionViolation(
     return null;
   }
   if (typeof value === 'string') {
-    return value.length > MAX_PAYLOAD_STRING_LENGTH
-      ? `${path} exceeds the ${MAX_PAYLOAD_STRING_LENGTH}-character control projection limit`
+    return value.length > MAX_PROJECTION_STRING_LENGTH
+      ? `${path} exceeds the ${MAX_PROJECTION_STRING_LENGTH}-character control projection limit`
       : null;
   }
   if (typeof value !== 'object') {
     return `${path} is not a JSON control value`;
   }
-  if (depth >= MAX_PAYLOAD_DEPTH) {
-    return `${path} exceeds the ${MAX_PAYLOAD_DEPTH}-level control projection depth`;
+  if (depth >= MAX_PROJECTION_DEPTH) {
+    return `${path} exceeds the ${MAX_PROJECTION_DEPTH}-level control projection depth`;
   }
   if (Array.isArray(value)) {
     for (const [index, entry] of value.entries()) {
@@ -92,6 +115,58 @@ function boundedProjectionViolation(
   return null;
 }
 
+function serializedByteLength(value: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(value) ?? 'null').length;
+}
+
+function projectionNodeCount(value: unknown): number {
+  if (value === null || typeof value !== 'object') return 1;
+  if (Array.isArray(value)) {
+    return value.reduce<number>(
+      (total, entry) => total + projectionNodeCount(entry),
+      1,
+    );
+  }
+  return Object.values(value).reduce<number>(
+    (total, entry) => total + projectionNodeCount(entry),
+    1,
+  );
+}
+
+/**
+ * Breadth and aggregate bound. Depth and per-string limits alone are defeated
+ * by chunking one large body into many small values, so a field is also capped
+ * by how many nodes it contains and how many bytes it serializes to.
+ */
+function projectionAggregateViolation(
+  value: unknown,
+  path: string,
+): string | null {
+  if (value === undefined) return null;
+  const nodes = projectionNodeCount(value);
+  if (nodes > MAX_PROJECTION_NODES) {
+    return `${path} holds ${nodes} values, above the ${MAX_PROJECTION_NODES}-value control projection limit`;
+  }
+  const bytes = serializedByteLength(value);
+  if (bytes > MAX_PROJECTION_BYTES) {
+    return `${path} serializes to ${bytes} bytes, above the ${MAX_PROJECTION_BYTES}-byte control projection limit`;
+  }
+  return null;
+}
+
+/**
+ * Whole-record ceiling, applied at every parse entry point so no combination
+ * of individually legal fields can produce an unbounded journal revision.
+ */
+export function assertBoundedDispatchRecordSize(value: unknown): void {
+  const bytes = serializedByteLength(value);
+  if (bytes > MAX_RECORD_BYTES) {
+    throw new Error(
+      `A dispatch record serializes to ${bytes} bytes, above the ${MAX_RECORD_BYTES}-byte record limit.`,
+    );
+  }
+}
+
 const TASK_CLASS_FIELDS = [
   'task_class',
   'model_class_floor',
@@ -103,34 +178,34 @@ const TASK_CLASS_FIELDS = [
 export const genericDispatchRecordSchema = z
   .object({
     request_id: requestIdSchema,
-    caller: z.string().min(1),
-    scope: z.string().min(1),
-    objective: z.string().min(1),
-    action: z.string().min(1),
-    role_name: z.string().min(1),
-    role_class: z.string().min(1),
-    provider: z.string().min(1),
-    dispatch_context: z.string().min(1),
-    dispatch_policy: z.string().min(1).nullable().optional(),
-    dispatch_ceiling: z.string().min(1).nullable().optional(),
+    caller: identifier(),
+    scope: identifier(),
+    objective: proseText(),
+    action: identifier(),
+    role_name: identifier(),
+    role_class: identifier(),
+    provider: identifier(),
+    dispatch_context: identifier(),
+    dispatch_policy: identifier().nullable().optional(),
+    dispatch_ceiling: identifier().nullable().optional(),
     catalog_snapshot: catalogSnapshotSchema,
-    authority: z.string().min(1),
+    authority: identifier(),
     role_selector: optionalSelector,
     model_selector: optionalSelector,
-    model_selector_granularity: z.string().min(1).nullable(),
+    model_selector_granularity: identifier().nullable(),
     effort_selector: optionalSelector,
     reasoning_mode_selector: optionalSelector.optional(),
     service_tier_selector: optionalSelector.optional(),
-    guidance_reference: z.string().min(1).optional(),
-    guidance_version: z.string().min(1).optional(),
-    guidance_verified_at: z.string().min(1).optional(),
+    guidance_reference: identifier().optional(),
+    guidance_version: identifier().optional(),
+    guidance_verified_at: identifier().optional(),
     guidance_status: z.enum(['fresh', 'review-required', 'stale']).optional(),
     selection_source: z.enum([
       'native-default',
       'policy-resolved',
       'explicit-user',
     ]),
-    candidates_considered: z.array(z.string().min(1)),
+    candidates_considered: z.array(identifier()),
     selection_reason: z.enum([
       'native-catalog',
       'native-catalog-unsatisfying',
@@ -138,14 +213,14 @@ export const genericDispatchRecordSchema = z
       'inherit',
       'gate-target',
     ]),
-    selected_route: z.string().min(1),
+    selected_route: identifier(),
     deadline_seconds: z.number().int().nonnegative(),
     retry_limit: z.number().int().nonnegative(),
     payload: z.record(z.unknown()),
     launch_status: z.enum(['planned', 'accepted', 'blocked-before-start']),
-    child_outcome: z.string().min(1).nullable(),
+    child_outcome: identifier().nullable(),
     configured_invocation_evidence: z.array(z.unknown()),
-    runtime_confirmation: z.string().min(1),
+    runtime_confirmation: identifier(),
     diagnostics: z.array(z.string()),
     continuation_events: z.array(z.unknown()),
     fallback: genericFallbackSchema.optional(),
@@ -158,14 +233,14 @@ export const genericDispatchRecordSchema = z
         'consequential',
       ])
       .optional(),
-    model_class_floor: z.string().min(1).optional(),
+    model_class_floor: identifier().optional(),
     classification_source: z.literal('caller').optional(),
-    classification_reason: z.string().min(1).optional(),
+    classification_reason: reasonText().optional(),
     floor_satisfaction: z.enum(['satisfied', 'unsatisfied']).optional(),
-    authorization_scope: z.string().min(1).optional(),
-    expected_output: z.string().min(1).optional(),
-    verification_evidence: z.string().min(1).optional(),
-    escalate_when: z.array(z.string().min(1)).optional(),
+    authorization_scope: identifier().optional(),
+    expected_output: proseText().optional(),
+    verification_evidence: proseText().optional(),
+    escalate_when: z.array(reasonText()).optional(),
   })
   .strict()
   .superRefine((record, context) => {
@@ -178,7 +253,9 @@ export const genericDispatchRecordSchema = z
     }
 
     for (const field of BOUNDED_PROJECTION_FIELDS) {
-      const violation = boundedProjectionViolation(record[field], field, 1);
+      const violation =
+        boundedProjectionViolation(record[field], field, 1) ??
+        projectionAggregateViolation(record[field], field);
       if (violation) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
@@ -428,5 +505,6 @@ export function parseGenericDispatchRecord(
   value: unknown,
 ): GenericDispatchRecord {
   assertNoSensitiveDispatchContent(value);
+  assertBoundedDispatchRecordSize(value);
   return genericDispatchRecordSchema.parse(value);
 }

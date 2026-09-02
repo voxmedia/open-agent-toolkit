@@ -263,6 +263,121 @@ describe('parseGenericDispatchRecord', () => {
     ).not.toThrow(/closed control projection/i);
   });
 
+  it.each([
+    'payload',
+    'configured_invocation_evidence',
+    'continuation_events',
+    'diagnostics',
+  ])('bounds breadth and aggregate size for %s', (field) => {
+    // Chunking one large body into many individually legal strings.
+    const chunked =
+      field === 'payload'
+        ? Object.fromEntries(
+            Array.from({ length: 4000 }, (_, index) => [
+              `k${index}`,
+              'x'.repeat(512),
+            ]),
+          )
+        : Array.from({ length: 4000 }, () => 'x'.repeat(512));
+    expect(() =>
+      parseGenericDispatchRecord({ ...genericRecord(), [field]: chunked }),
+    ).toThrow(/closed control projection|record limit/i);
+
+    // Many tiny values also exceed the node bound before the byte bound.
+    const many =
+      field === 'payload'
+        ? Object.fromEntries(
+            Array.from({ length: 600 }, (_, index) => [`k${index}`, 'v']),
+          )
+        : Array.from({ length: 600 }, () => 'v');
+    expect(() =>
+      parseGenericDispatchRecord({ ...genericRecord(), [field]: many }),
+    ).toThrow(/512-value control projection limit/i);
+
+    // A realistic field stays admissible.
+    const modest =
+      field === 'payload'
+        ? { sandbox: 'read-only', tools: ['Read', 'Grep'] }
+        : ['dispatch ceiling resolver'];
+    expect(() =>
+      parseGenericDispatchRecord({ ...genericRecord(), [field]: modest }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ['objective', 1024],
+    ['expected_output', 1024],
+    ['verification_evidence', 1024],
+    ['classification_reason', 512],
+    ['caller', 256],
+    ['scope', 256],
+    ['action', 256],
+    ['role_name', 256],
+    ['provider', 256],
+    ['selected_route', 256],
+    ['authority', 256],
+    ['authorization_scope', 256],
+    ['runtime_confirmation', 256],
+    ['model_selector', 256],
+    ['role_selector', 256],
+  ])('bounds the caller-authored field %s at %i characters', (field, max) => {
+    // `classification_reason` only exists alongside the rest of its set.
+    const classContext =
+      field === 'classification_reason'
+        ? {
+            task_class: 'intelligent-recon' as const,
+            model_class_floor: 'intelligent-recon',
+            classification_source: 'caller' as const,
+            floor_satisfaction: 'satisfied' as const,
+          }
+        : {};
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        ...classContext,
+        [field]: 'x'.repeat(max),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        ...classContext,
+        [field]: 'x'.repeat(max + 1),
+      }),
+    ).toThrow();
+  });
+
+  it('bounds candidates_considered and escalate_when entries', () => {
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        candidates_considered: ['x'.repeat(257)],
+      }),
+    ).toThrow();
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        escalate_when: ['x'.repeat(513)],
+      }),
+    ).toThrow();
+  });
+
+  it('caps the whole record even when every field is individually legal', () => {
+    const nearLimit = Array.from({ length: 30 }, () => 'x'.repeat(500));
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        diagnostics: nearLimit,
+        configured_invocation_evidence: nearLimit,
+        continuation_events: nearLimit,
+        payload: Object.fromEntries(
+          nearLimit.map((entry, index) => [`k${index}`, entry]),
+        ),
+        escalate_when: nearLimit,
+      }),
+    ).toThrow(/record limit/i);
+  });
+
   it('rejects a free-form prompt smuggled through continuation_events', () => {
     expect(() =>
       parseGenericDispatchRecord({

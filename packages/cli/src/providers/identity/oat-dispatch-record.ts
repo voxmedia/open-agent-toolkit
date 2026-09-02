@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 import {
+  assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
   genericDispatchRecordSchema,
   normalizeDispatchKey,
@@ -424,6 +425,7 @@ export function parsePersistedOatDispatchRecord(
   value: unknown,
 ): PersistedOatDispatchRecordV1 {
   assertNoSensitiveDispatchContent(value);
+  assertBoundedDispatchRecordSize(value);
   const parsed = persistedOatDispatchRecordSchema.parse(value);
   const { oat, ...generic } = parsed;
   return {
