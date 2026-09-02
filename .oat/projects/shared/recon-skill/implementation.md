@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: final-review
+    reason: operator-authorized fresh reviewer was interrupted by the parent session before inspection or artifact creation; another launch requires explicit authorization
+    since: 2026-09-02
 oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
@@ -974,6 +977,18 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Constraints: preserve the same exact high reviewer target and reviewed basis;
   this authorization permits one fresh launch only and does not waive review,
   gate, or approval boundaries
+
+#### Authorized final review relaunch — interrupted
+
+- Request ID: `recon-skill-final-review-relaunch-20260902`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed basis: `2c6005d64f45a19e8b9eedbc977959b066d3eda0..8574dffc8f7c2abfab25649b384abfb0aa738d15`
+- Launch/outcome: accepted / interrupted by the parent session before code
+  inspection, probes, synthesis, or artifact creation completed
+- Artifact: none written (`ARTIFACT_NOT_WRITTEN`)
+- Verdict: none; final review remains pending
+- Authorization accounting: the operator-authorized one fresh launch was used;
+  no further launch is authorized by this interruption
 
 <!-- orchestration-runs-end -->
 
