@@ -1,9 +1,14 @@
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
-import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
+import type {
+  SanitizedProviderObservation,
+  SemanticAction,
+} from '@commands/pjm/remote/provider';
 import { describe, expect, it } from 'vitest';
 
 import {
   classifyLinearReadObservation,
+  LINEAR_DISCUSSION_LIMITS,
+  linearAdapter,
   normalizeLinearIssueObservation,
   parseLinearIssueReference,
   planLinearDuplicateSearch,
@@ -803,5 +808,501 @@ describe('Linear duplicate-search observations', () => {
         }).accepted,
       ).toBe(false);
     }
+  });
+});
+
+describe('Linear review safety regressions', () => {
+  function plannedMutation(
+    operation: 'create' | 'update' | 'transition' | 'annotate',
+  ): SemanticAction {
+    const projection =
+      operation === 'transition'
+        ? { status: 'completed' }
+        : operation === 'annotate'
+          ? { annotation: 'Completed locally' }
+          : { title: `${operation} title` };
+    const outboundSafety = assessOutboundProjectionSafety(projection, {
+      assessedAt: '2026-09-02T12:00:00.000Z',
+    });
+    const input = {
+      operation,
+      context: linearContext,
+      hostCapability: linearCapability,
+      bindingId: 'binding_linear_review',
+      ...(operation === 'create'
+        ? {
+            provenance: {
+              bindingId: 'binding_linear_review',
+              origin: 'local:item-review',
+            },
+          }
+        : {
+            stableId:
+              'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+          }),
+      fieldMask: Object.keys(projection),
+      projection,
+      outboundSafety,
+    };
+    const preview = previewLinearMutation(input);
+    return planLinearMutation({
+      ...input,
+      approvedPreviewDigest: preview.previewDigest,
+    });
+  }
+
+  function mutationReadback(
+    action: SemanticAction,
+  ): SanitizedProviderObservation {
+    const projection = action.intent.projection as Record<string, unknown>;
+    return {
+      ...linearObservation,
+      fields: {
+        ...linearObservation.fields,
+        hostCapability: linearCapability,
+        ...(projection.title === undefined ? {} : { title: projection.title }),
+        ...(projection.description === undefined
+          ? {}
+          : { description: projection.description }),
+        ...(projection.priority === undefined
+          ? {}
+          : { priority: projection.priority }),
+        ...(projection.status === undefined
+          ? {}
+          : { state: projection.status }),
+        ...(projection.annotation === undefined
+          ? {}
+          : { annotations: [projection.annotation] }),
+        mutationEvidence: action.intent.executionEvidence,
+        ...(action.operation === 'create'
+          ? { createProvenance: action.intent.provenance }
+          : {}),
+      },
+    };
+  }
+
+  it.each(['create', 'update', 'transition', 'annotate'] as const)(
+    'rejects a post-plan %s projection substitution even with matching readback',
+    (operation) => {
+      const action = structuredClone(plannedMutation(operation));
+      const field = (action.intent.fieldMask as string[])[0]!;
+      action.intent.projection = { [field]: 'substituted' };
+      action.intent.postconditions = { [field]: 'substituted' };
+      const readback = mutationReadback(action);
+      expect(
+        verifyLinearMutationObservation({
+          action,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: linearCapability.evidenceDigest,
+          },
+          hostCapability: linearCapability,
+          readback,
+        }),
+      ).toMatchObject({
+        classification: 'uncertain',
+        reason: 'mutation-attribution-invalid',
+      });
+      expect(linearAdapter.validateObservation(action, readback).valid).toBe(
+        false,
+      );
+    },
+  );
+
+  it.each([
+    ['context', (action: SemanticAction) => (action.context.teamId = 'other')],
+    [
+      'identity',
+      (action: SemanticAction) =>
+        (action.intent.stableId =
+          'linear:workspace_01:9a8c5bc8-b2b5-4c75-9475-d112ca8f0150'),
+    ],
+    [
+      'field mask',
+      (action: SemanticAction) => (action.intent.fieldMask = ['priority']),
+    ],
+    [
+      'postconditions',
+      (action: SemanticAction) =>
+        (action.intent.postconditions = { title: 'other' }),
+    ],
+    [
+      'safety projection digest',
+      (action: SemanticAction) =>
+        ((
+          action.intent.outboundSafety as Record<string, unknown>
+        ).projectionDigest = 'sha256:other'),
+    ],
+    [
+      'safety result digest',
+      (action: SemanticAction) =>
+        ((
+          action.intent.outboundSafety as Record<string, unknown>
+        ).resultDigest = 'sha256:other'),
+    ],
+    [
+      'preview digest',
+      (action: SemanticAction) =>
+        (action.intent.previewDigest = 'sha256:other'),
+    ],
+    [
+      'approval digest',
+      (action: SemanticAction) =>
+        (action.intent.approvalDigest = 'sha256:other'),
+    ],
+    [
+      'action digest',
+      (action: SemanticAction) => (action.intent.actionDigest = 'sha256:other'),
+    ],
+    [
+      'capability evidence',
+      (action: SemanticAction) =>
+        (action.intent.capabilityEvidenceDigest = 'sha256:other'),
+    ],
+    [
+      'execution evidence',
+      (action: SemanticAction) =>
+        ((
+          action.intent.executionEvidence as Record<string, unknown>
+        ).projectionDigest = 'sha256:other'),
+    ],
+    [
+      'readback contract',
+      (action: SemanticAction) =>
+        ((action.intent.readbackContract as Record<string, unknown>).pinned =
+          false),
+    ],
+  ])('rejects independently altered mutation %s', (_name, alter) => {
+    const action = structuredClone(plannedMutation('update'));
+    alter(action);
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: String(
+            action.intent.capabilityEvidenceDigest,
+          ),
+        },
+        hostCapability: linearCapability,
+        readback: mutationReadback(action),
+      }).classification,
+    ).toBe('uncertain');
+  });
+
+  it.each([
+    [
+      'provenance binding',
+      (action: SemanticAction) =>
+        ((action.intent.provenance as Record<string, unknown>).bindingId =
+          'other'),
+    ],
+    [
+      'provenance origin',
+      (action: SemanticAction) =>
+        ((action.intent.provenance as Record<string, unknown>).origin =
+          'other'),
+    ],
+    [
+      'binding identity',
+      (action: SemanticAction) => (action.intent.bindingId = 'other'),
+    ],
+  ])('rejects independently altered create %s', (_name, alter) => {
+    const action = structuredClone(plannedMutation('create'));
+    alter(action);
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: mutationReadback(action),
+      }).classification,
+    ).toBe('uncertain');
+  });
+
+  it.each([
+    [
+      'uuid',
+      (action: SemanticAction) =>
+        (action.intent.uuid = '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150'),
+    ],
+    [
+      'stable identity',
+      (action: SemanticAction) =>
+        (action.intent.stableId =
+          'linear:workspace_01:9a8c5bc8-b2b5-4c75-9475-d112ca8f0150'),
+    ],
+    [
+      'identifier',
+      (action: SemanticAction) => (action.intent.currentIdentifier = 'BETA-7'),
+    ],
+    ['step', (action: SemanticAction) => (action.intent.stepId = 'other-step')],
+    ['context', (action: SemanticAction) => (action.context.teamId = 'other')],
+    [
+      'capability',
+      (action: SemanticAction) =>
+        (action.intent.capabilityEvidenceDigest = 'sha256:other'),
+    ],
+    [
+      'result contract',
+      (action: SemanticAction) =>
+        (action.intent.resultContract = { requireStableIdentity: true }),
+    ],
+    [
+      'action digest',
+      (action: SemanticAction) => (action.intent.actionDigest = 'sha256:other'),
+    ],
+  ])('rejects an altered read %s before classification', (_name, alter) => {
+    const action = structuredClone(
+      planLinearRead({
+        context: linearContext,
+        hostCapability: linearCapability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        currentIdentifier: 'ALPHA-42',
+        stepId: 'review-read',
+      }),
+    );
+    alter(action);
+    const candidate = {
+      ...linearObservation,
+      context: action.context,
+      identity: {
+        stableId: String(action.intent.uuid),
+        aliases: ['BETA-7'],
+      },
+      fields: {
+        ...linearObservation.fields,
+        hostCapability: linearCapability,
+        uuid: action.intent.uuid,
+        identifier: action.intent.currentIdentifier ?? 'ALPHA-42',
+        workspaceId: action.context.workspaceId,
+        teamId: action.context.teamId,
+      },
+      capabilityEvidenceDigest: String(action.intent.capabilityEvidenceDigest),
+    } as SanitizedProviderObservation;
+    expect(
+      classifyLinearReadObservation({
+        action,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:10:00.000Z',
+        outcome: 'found',
+        observation: candidate,
+      }).classification,
+    ).toBe('inaccessible');
+    expect(linearAdapter.validateObservation(action, candidate).valid).toBe(
+      false,
+    );
+  });
+
+  it('rejects a forged incomplete duplicate action even for zero results', () => {
+    const query = {};
+    const forged: SemanticAction = {
+      provider: 'linear',
+      operation: 'search-duplicates',
+      context: linearContext,
+      intent: {
+        query,
+        queryDigest: 'sha256:forged',
+        resultContract: { maxResults: 1 },
+        capabilityEvidenceDigest: linearCapability.evidenceDigest,
+      },
+    };
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action: forged,
+        hostCapability: linearCapability,
+        observation: {
+          provider: 'linear',
+          context: linearContext,
+          availability: 'available',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+          queryDigest: 'sha256:forged',
+          observedAt: '2026-09-02T12:10:00.000Z',
+          results: [],
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'invalid' });
+  });
+
+  it.each(['read-discussion', 'search-duplicates'] as const)(
+    'fails closed on generic %s issue validation and verification',
+    (operation) => {
+      const action =
+        operation === 'read-discussion'
+          ? planLinearDiscussionRead({
+              context: linearContext,
+              hostCapability: linearCapability,
+              stableId:
+                'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+              cursor: null,
+              limit: 1,
+            })
+          : planLinearDuplicateSearch({
+              context: linearContext,
+              hostCapability: linearCapability,
+              provenanceToken: 'origin:local:item-42',
+              reservedBindingId: 'binding_linear_42',
+              historicalIdentifiers: ['ALPHA-42'],
+              maxResults: 1,
+            });
+      const unrelated = {
+        ...linearObservation,
+        fields: {
+          ...linearObservation.fields,
+          hostCapability: linearCapability,
+        },
+      };
+      expect(linearAdapter.validateObservation(action, unrelated)).toEqual({
+        valid: false,
+        reasons: [`typed-validator-required:${operation}`],
+      });
+      expect(
+        linearAdapter.verify(
+          action,
+          normalizeLinearIssueObservation(unrelated),
+        ),
+      ).toEqual([{ field: `typed:${operation}`, status: 'unavailable' }]);
+    },
+  );
+
+  function discussionAction(limit = LINEAR_DISCUSSION_LIMITS.maxItems) {
+    return planLinearDiscussionRead({
+      context: linearContext,
+      hostCapability: linearCapability,
+      stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      cursor: null,
+      limit,
+    });
+  }
+
+  function discussionObservation(items: Array<{ id: string; body: string }>) {
+    const action = discussionAction();
+    return {
+      action,
+      input: {
+        action,
+        hostCapability: linearCapability,
+        observation: {
+          provider: 'linear' as const,
+          context: linearContext,
+          stableId: action.intent.stableId as string,
+          availability: 'available' as const,
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+          requestedCursor: null,
+          nextCursor: null,
+          items: items.map((item) => ({
+            ...item,
+            observedAt: '2026-09-02T12:10:00.000Z',
+          })),
+        },
+      },
+    };
+  }
+
+  it('enforces exact and over-limit UTF-8 discussion item bounds', () => {
+    const exact = discussionObservation([
+      {
+        id: 'i'.repeat(LINEAR_DISCUSSION_LIMITS.maxIdBytes),
+        body: 'é'.repeat(LINEAR_DISCUSSION_LIMITS.maxBodyBytes / 2),
+      },
+    ]);
+    expect(
+      validateLinearDiscussionReadObservation(exact.input).classification,
+    ).toBe('page');
+    for (const items of [
+      [{ id: 'i'.repeat(LINEAR_DISCUSSION_LIMITS.maxIdBytes + 1), body: '' }],
+      [
+        {
+          id: 'i',
+          body: `${'é'.repeat(LINEAR_DISCUSSION_LIMITS.maxBodyBytes / 2)}a`,
+        },
+      ],
+    ]) {
+      expect(
+        validateLinearDiscussionReadObservation(
+          discussionObservation(items).input,
+        ).classification,
+      ).toBe('invalid');
+    }
+  });
+
+  it('enforces exact and over-limit discussion item-count and cursor bounds', () => {
+    expect(
+      planLinearDiscussionRead({
+        context: linearContext,
+        hostCapability: linearCapability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        cursor: 'c'.repeat(LINEAR_DISCUSSION_LIMITS.maxCursorBytes),
+        limit: LINEAR_DISCUSSION_LIMITS.maxItems,
+      }),
+    ).toMatchObject({ operation: 'read-discussion' });
+    expect(() =>
+      planLinearDiscussionRead({
+        context: linearContext,
+        hostCapability: linearCapability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        cursor: `${'é'.repeat(LINEAR_DISCUSSION_LIMITS.maxCursorBytes / 2)}a`,
+        limit: 1,
+      }),
+    ).toThrow('bounds');
+    const exactItems = Array.from(
+      { length: LINEAR_DISCUSSION_LIMITS.maxItems },
+      (_, index) => ({ id: `i${index}`, body: '' }),
+    );
+    expect(
+      validateLinearDiscussionReadObservation(
+        discussionObservation(exactItems).input,
+      ).classification,
+    ).toBe('page');
+    expect(
+      validateLinearDiscussionReadObservation(
+        discussionObservation([...exactItems, { id: 'over', body: '' }]).input,
+      ).classification,
+    ).toBe('invalid');
+  });
+
+  it('enforces total-page bytes before returning or suppressing content', () => {
+    const exactItems = [
+      { id: 'a', body: 'x'.repeat(16_384) },
+      { id: 'b', body: 'x'.repeat(16_384) },
+      { id: 'c', body: 'x'.repeat(16_384) },
+      { id: 'd', body: 'x'.repeat(16_380) },
+    ];
+    expect(
+      validateLinearDiscussionReadObservation(
+        discussionObservation(exactItems).input,
+      ).classification,
+    ).toBe('page');
+    exactItems[3]!.body += 'x';
+    expect(
+      validateLinearDiscussionReadObservation(
+        discussionObservation(exactItems).input,
+      ).classification,
+    ).toBe('invalid');
+
+    const signaled = discussionObservation([
+      { id: 'signal', body: 'api key must not be retained' },
+    ]);
+    expect(
+      validateLinearDiscussionReadObservation(signaled.input),
+    ).toMatchObject({
+      classification: 'page',
+      persistable: false,
+      page: {
+        items: [
+          {
+            body: '[SUPPRESSED:SENSITIVE-CONTENT]',
+            contentSuppressed: true,
+          },
+        ],
+      },
+    });
   });
 });

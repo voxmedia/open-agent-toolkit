@@ -219,6 +219,15 @@ const URL_REFERENCE =
   /^https:\/\/([^/]+)\/[^/]+\/issue\/([A-Z][A-Z0-9]*-[1-9][0-9]*)(?:\/[^/?#]+)?(?:[?#].*)?$/;
 const LINEAR_EXTENSION_KEYS = ['estimate', 'cycleId', 'projectId'] as const;
 
+/** Absolute UTF-8 bounds for one non-persisted Linear discussion page. */
+export const LINEAR_DISCUSSION_LIMITS = {
+  maxItems: 100,
+  maxIdBytes: 256,
+  maxBodyBytes: 16_384,
+  maxCursorBytes: 512,
+  maxPageBytes: 65_536,
+} as const;
+
 export function parseLinearIssueReference(
   reference: string,
 ): LinearIssueReference | null {
@@ -359,9 +368,14 @@ export function validateLinearHostCapability(
 export function planLinearRead(input: LinearReadPlanInput): SemanticAction {
   if (
     !hasPinnedLinearContext(input.context) ||
-    !input.stableId ||
+    !validLinearStableIdForContext(input.stableId, input.context) ||
     !UUID.test(input.uuid) ||
-    !input.stepId
+    input.stableId !==
+      canonicalLinearStableId(input.context.workspaceId!, input.uuid) ||
+    (input.currentIdentifier !== null &&
+      !IDENTIFIER.test(input.currentIdentifier)) ||
+    !input.stepId ||
+    Buffer.byteLength(input.stepId, 'utf8') > 128
   ) {
     throw new Error('Linear read plan requires pinned identity and context.');
   }
@@ -429,29 +443,44 @@ export function planLinearDiscussionRead(
     throw new Error('Linear discussion read capability is unavailable.');
   }
   if (
-    !input.stableId ||
+    !validLinearStableIdForContext(input.stableId, input.context) ||
     !Number.isInteger(input.limit) ||
     input.limit < 1 ||
-    input.limit > 100 ||
+    input.limit > LINEAR_DISCUSSION_LIMITS.maxItems ||
     (input.cursor !== null &&
-      (typeof input.cursor !== 'string' || input.cursor.length > 512))
+      (typeof input.cursor !== 'string' ||
+        Buffer.byteLength(input.cursor, 'utf8') >
+          LINEAR_DISCUSSION_LIMITS.maxCursorBytes))
   ) {
     throw new Error('Linear discussion read bounds are invalid.');
   }
+  const intent = {
+    stableId: input.stableId,
+    cursor: input.cursor,
+    limit: input.limit,
+    resultContract: {
+      maxItems: input.limit,
+      maxIdBytes: LINEAR_DISCUSSION_LIMITS.maxIdBytes,
+      maxBodyBytes: LINEAR_DISCUSSION_LIMITS.maxBodyBytes,
+      maxCursorBytes: LINEAR_DISCUSSION_LIMITS.maxCursorBytes,
+      maxPageBytes: LINEAR_DISCUSSION_LIMITS.maxPageBytes,
+      persistable: false,
+      contentPolicy: 'sanitized-whole-field-suppression',
+    },
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+  };
   return {
     provider: 'linear',
     operation: 'read-discussion',
     context: input.context,
     intent: {
-      stableId: input.stableId,
-      cursor: input.cursor,
-      limit: input.limit,
-      resultContract: {
-        maxItems: input.limit,
-        persistable: false,
-        contentPolicy: 'sanitized-whole-field-suppression',
-      },
-      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+      ...intent,
+      actionDigest: semanticDigest({
+        provider: 'linear',
+        operation: 'read-discussion',
+        context: input.context,
+        intent,
+      }),
     },
   };
 }
@@ -480,8 +509,7 @@ export function previewLinearMutation(
     outboundSafetyResultDigest: input.outboundSafety.resultDigest,
   };
   return {
-    previewDigest: semanticDigest({
-      provider: 'linear',
+    previewDigest: linearMutationPreviewDigest({
       operation: input.operation,
       context: input.context,
       bindingId: input.bindingId,
@@ -489,7 +517,6 @@ export function previewLinearMutation(
       provenance: input.provenance ?? null,
       fieldMask,
       projection: input.projection,
-      postconditions: input.projection,
       executionEvidence,
     }),
     executionEvidence,
@@ -508,8 +535,7 @@ export function planLinearMutation(
     input.fieldMask,
     input.projection,
   );
-  const actionDigest = semanticDigest({
-    provider: 'linear',
+  const actionDigest = linearMutationActionDigest({
     operation: input.operation,
     context: input.context,
     bindingId: input.bindingId,
@@ -537,6 +563,7 @@ export function planLinearMutation(
         projectionDigest: input.outboundSafety.projectionDigest,
         resultDigest: input.outboundSafety.resultDigest,
       },
+      outboundSafetyEvidence: { ...input.outboundSafety },
       previewDigest: preview.previewDigest,
       approvalDigest: input.approvedPreviewDigest,
       actionDigest,
@@ -559,10 +586,8 @@ export function planLinearMutation(
 export function classifyLinearReadObservation(
   input: LinearReadObservationInput,
 ): LinearReadResult {
-  if (input.action.provider !== 'linear' || input.action.operation !== 'read') {
-    throw new Error(
-      'Linear read classification requires a Linear read action.',
-    );
+  if (!validLinearReadAction(input.action)) {
+    return unavailableLinearRead('inaccessible', ['read-action-invalid']);
   }
   if (!Number.isFinite(Date.parse(input.observedAt))) {
     throw new Error('Linear read classification requires a valid timestamp.');
@@ -657,8 +682,7 @@ export function validateLinearDiscussionReadObservation(
     reasons,
   });
   if (
-    input.action.provider !== 'linear' ||
-    input.action.operation !== 'read-discussion' ||
+    !validLinearDiscussionAction(input.action) ||
     !contextsEqual(input.action.context, input.observation.context) ||
     input.observation.provider !== 'linear' ||
     input.observation.stableId !== input.action.intent.stableId ||
@@ -673,7 +697,19 @@ export function validateLinearDiscussionReadObservation(
     input.action.context,
     input.hostCapability,
   );
-  if (!capability.valid) return invalid(capability.reasons);
+  if (
+    !capability.valid ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest
+  ) {
+    return invalid([
+      ...capability.reasons,
+      ...(input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest
+        ? ['capability-evidence-mismatch']
+        : []),
+    ]);
+  }
   if (input.observation.availability !== 'available') {
     return {
       classification: input.observation.availability,
@@ -682,22 +718,38 @@ export function validateLinearDiscussionReadObservation(
       reasons: [input.observation.availability],
     };
   }
-  const maxItems = Number(
-    (input.action.intent.resultContract as Record<string, unknown> | undefined)
-      ?.maxItems,
-  );
+  const contract = input.action.intent.resultContract as Record<
+    string,
+    unknown
+  >;
+  const maxItems = Number(contract.maxItems);
+  const pageBytes =
+    Buffer.byteLength(input.observation.nextCursor ?? '', 'utf8') +
+    input.observation.items.reduce(
+      (total, item) =>
+        total +
+        Buffer.byteLength(item.id, 'utf8') +
+        Buffer.byteLength(item.body, 'utf8'),
+      0,
+    );
   if (
     !Number.isInteger(maxItems) ||
     input.observation.items.length > maxItems ||
+    pageBytes > LINEAR_DISCUSSION_LIMITS.maxPageBytes ||
     input.observation.items.some(
       (item) =>
         !item.id ||
+        Buffer.byteLength(item.id, 'utf8') >
+          LINEAR_DISCUSSION_LIMITS.maxIdBytes ||
         typeof item.body !== 'string' ||
+        Buffer.byteLength(item.body, 'utf8') >
+          LINEAR_DISCUSSION_LIMITS.maxBodyBytes ||
         !Number.isFinite(Date.parse(item.observedAt)),
     ) ||
     (input.observation.nextCursor !== null &&
       (typeof input.observation.nextCursor !== 'string' ||
-        input.observation.nextCursor.length > 512))
+        Buffer.byteLength(input.observation.nextCursor, 'utf8') >
+          LINEAR_DISCUSSION_LIMITS.maxCursorBytes))
   ) {
     return invalid(['discussion-page-invalid']);
   }
@@ -741,7 +793,7 @@ export function verifyLinearMutationObservation(
     !['create', 'update', 'transition', 'annotate'].includes(
       input.action.operation,
     ) ||
-    !validLinearMutationActionEvidence(input.action) ||
+    !validLinearMutationAction(input.action) ||
     input.attempt.count !== 1 ||
     input.attempt.capabilityEvidenceDigest !==
       input.action.intent.capabilityEvidenceDigest
@@ -895,8 +947,7 @@ export function validateLinearDuplicateSearchObservation(
     reasons,
   });
   if (
-    input.action.provider !== 'linear' ||
-    input.action.operation !== 'search-duplicates' ||
+    !validLinearDuplicateAction(input.action) ||
     input.observation.provider !== 'linear' ||
     !contextsEqual(input.action.context, input.observation.context) ||
     input.observation.capabilityEvidenceDigest !==
@@ -1025,6 +1076,23 @@ export const linearAdapter: ProviderAdapter = {
     throw new Error(`Linear adapter does not support '${operation}' yet.`);
   },
   validateObservation(action, observation) {
+    if (isLinearSpecializedOperation(action.operation)) {
+      return {
+        valid: false,
+        reasons: [`typed-validator-required:${action.operation}`],
+      };
+    }
+    if (action.operation === 'read' && !validLinearReadAction(action)) {
+      return { valid: false, reasons: ['action-evidence-invalid'] };
+    }
+    if (
+      ['create', 'update', 'transition', 'annotate'].includes(
+        action.operation,
+      ) &&
+      !validLinearMutationAction(action)
+    ) {
+      return { valid: false, reasons: ['action-evidence-invalid'] };
+    }
     if (
       action.provider !== 'linear' ||
       observation.provider !== 'linear' ||
@@ -1057,9 +1125,6 @@ export const linearAdapter: ProviderAdapter = {
     if (
       ['create', 'update', 'transition', 'annotate'].includes(action.operation)
     ) {
-      if (!validLinearMutationActionEvidence(action)) {
-        return { valid: false, reasons: ['action-evidence-invalid'] };
-      }
       if (
         !semanticValuesEqual(
           observation.fields.mutationEvidence,
@@ -1083,12 +1148,23 @@ export const linearAdapter: ProviderAdapter = {
     return { valid: true, reasons: [] };
   },
   verificationFields(action) {
+    if (isLinearSpecializedOperation(action.operation)) {
+      return [`typed:${action.operation}`];
+    }
     return mutationVerificationFields(action);
   },
   verify(action, issue) {
+    if (isLinearSpecializedOperation(action.operation)) {
+      return [
+        {
+          field: `typed:${action.operation}`,
+          status: 'unavailable',
+        },
+      ];
+    }
     const fields = mutationVerificationFields(action);
     if (
-      !validLinearMutationActionEvidence(action) ||
+      !validLinearMutationAction(action) ||
       issue.provider !== 'linear' ||
       !contextsEqual(action.context, issue.context) ||
       (action.operation !== 'create' &&
@@ -1098,7 +1174,12 @@ export const linearAdapter: ProviderAdapter = {
       !semanticValuesEqual(
         issue.extensions.mutationEvidence,
         action.intent.executionEvidence,
-      )
+      ) ||
+      (action.operation === 'create' &&
+        !semanticValuesEqual(
+          issue.extensions.createProvenance,
+          action.intent.provenance,
+        ))
     ) {
       return fields.map((field) => ({
         field,
@@ -1306,22 +1387,370 @@ function mutationVerificationFields(action: SemanticAction): string[] {
     : [];
 }
 
-function validLinearMutationActionEvidence(action: SemanticAction): boolean {
-  const evidence = action.intent.executionEvidence;
+function validLinearMutationAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'linear' ||
+    !['create', 'update', 'transition', 'annotate'].includes(
+      action.operation,
+    ) ||
+    !hasPinnedLinearContext(action.context)
+  ) {
+    return false;
+  }
+  const operation = action.operation as LinearMutationPreviewInput['operation'];
+  const intent = action.intent;
+  const projection = intent.projection;
+  const postconditions = intent.postconditions;
+  const outboundSafety = intent.outboundSafety;
+  const outboundSafetyEvidence = intent.outboundSafetyEvidence;
+  const executionEvidence = intent.executionEvidence;
+  if (
+    typeof intent.bindingId !== 'string' ||
+    intent.bindingId.length === 0 ||
+    intent.bindingId.length > 128 ||
+    !Array.isArray(intent.fieldMask) ||
+    intent.fieldMask.some((field) => typeof field !== 'string') ||
+    !isRecord(projection) ||
+    !isRecord(postconditions) ||
+    !semanticValuesEqual(projection, postconditions) ||
+    typeof intent.capabilityEvidenceDigest !== 'string' ||
+    intent.capabilityEvidenceDigest.length === 0 ||
+    !isRecord(outboundSafety) ||
+    !isRecord(outboundSafetyEvidence) ||
+    !isRecord(executionEvidence) ||
+    typeof intent.previewDigest !== 'string' ||
+    intent.approvalDigest !== intent.previewDigest ||
+    typeof intent.actionDigest !== 'string'
+  ) {
+    return false;
+  }
+  const stableId = intent.stableId;
+  const provenance = intent.provenance;
+  if (operation === 'create') {
+    if (
+      stableId !== null ||
+      !isRecord(provenance) ||
+      provenance.bindingId !== intent.bindingId ||
+      typeof provenance.origin !== 'string' ||
+      provenance.origin.length === 0 ||
+      provenance.origin.length > 512 ||
+      Object.keys(provenance).length !== 2
+    ) {
+      return false;
+    }
+  } else if (
+    provenance !== null ||
+    typeof stableId !== 'string' ||
+    !validLinearStableIdForContext(stableId, action.context)
+  ) {
+    return false;
+  }
+  let fieldMask: LinearMutationField[];
+  try {
+    fieldMask = normalizeLinearMutationFieldMask(
+      operation,
+      intent.fieldMask as string[],
+      projection,
+    );
+    requireCurrentOutboundSafety(
+      projection,
+      outboundSafetyEvidence as unknown as OutboundProjectionSafetyResult,
+    );
+  } catch {
+    return false;
+  }
+  const safety =
+    outboundSafetyEvidence as unknown as OutboundProjectionSafetyResult;
+  if (
+    outboundSafety.projectionDigest !== safety.projectionDigest ||
+    outboundSafety.resultDigest !== safety.resultDigest ||
+    semanticDigest(projection) !== safety.projectionDigest
+  ) {
+    return false;
+  }
+  const baseExecutionEvidence = {
+    capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
+    projectionDigest: safety.projectionDigest,
+    outboundSafetyResultDigest: safety.resultDigest,
+  };
+  const expectedPreviewDigest = linearMutationPreviewDigest({
+    operation,
+    context: action.context,
+    bindingId: intent.bindingId,
+    stableId: stableId as string | null,
+    provenance: provenance as { bindingId: string; origin: string } | null,
+    fieldMask,
+    projection,
+    executionEvidence: baseExecutionEvidence,
+  });
+  if (intent.previewDigest !== expectedPreviewDigest) return false;
+  const expectedActionDigest = linearMutationActionDigest({
+    operation,
+    context: action.context,
+    bindingId: intent.bindingId,
+    stableId: stableId as string | null,
+    provenance: provenance as { bindingId: string; origin: string } | null,
+    fieldMask,
+    projection,
+    previewDigest: expectedPreviewDigest,
+    approvalDigest: intent.approvalDigest,
+    executionEvidence: baseExecutionEvidence,
+  });
+  const expectedExecutionEvidence = {
+    ...baseExecutionEvidence,
+    previewDigest: expectedPreviewDigest,
+    approvalDigest: intent.approvalDigest,
+    actionDigest: expectedActionDigest,
+  };
+  const expectedReadbackContract = {
+    pinned: true,
+    requireStableIdentity: true,
+    requireExactContext: true,
+    fields: fieldMask,
+  };
   return (
-    typeof action.intent.capabilityEvidenceDigest === 'string' &&
-    typeof action.intent.previewDigest === 'string' &&
-    action.intent.approvalDigest === action.intent.previewDigest &&
-    typeof action.intent.actionDigest === 'string' &&
-    isRecord(evidence) &&
-    evidence.capabilityEvidenceDigest ===
-      action.intent.capabilityEvidenceDigest &&
-    evidence.previewDigest === action.intent.previewDigest &&
-    evidence.approvalDigest === action.intent.approvalDigest &&
-    evidence.actionDigest === action.intent.actionDigest &&
-    isRecord(action.intent.postconditions) &&
-    mutationVerificationFields(action).length > 0
+    intent.actionDigest === expectedActionDigest &&
+    semanticValuesEqual(executionEvidence, expectedExecutionEvidence) &&
+    semanticValuesEqual(intent.readbackContract, expectedReadbackContract)
   );
+}
+
+function linearMutationPreviewDigest(input: {
+  operation: LinearMutationPreviewInput['operation'];
+  context: ProviderContext;
+  bindingId: string;
+  stableId: string | null;
+  provenance: { bindingId: string; origin: string } | null;
+  fieldMask: LinearMutationField[];
+  projection: OutboundProjection;
+  executionEvidence: {
+    capabilityEvidenceDigest: string;
+    projectionDigest: string;
+    outboundSafetyResultDigest: string;
+  };
+}): string {
+  return semanticDigest({
+    provider: 'linear',
+    operation: input.operation,
+    context: input.context,
+    bindingId: input.bindingId,
+    stableId: input.stableId,
+    provenance: input.provenance,
+    fieldMask: input.fieldMask,
+    projection: input.projection,
+    postconditions: input.projection,
+    executionEvidence: input.executionEvidence,
+  });
+}
+
+function linearMutationActionDigest(input: {
+  operation: LinearMutationPreviewInput['operation'];
+  context: ProviderContext;
+  bindingId: string;
+  stableId: string | null;
+  provenance: { bindingId: string; origin: string } | null;
+  fieldMask: LinearMutationField[];
+  projection: OutboundProjection;
+  previewDigest: string;
+  approvalDigest: unknown;
+  executionEvidence: {
+    capabilityEvidenceDigest: string;
+    projectionDigest: string;
+    outboundSafetyResultDigest: string;
+  };
+}): string {
+  return semanticDigest({
+    provider: 'linear',
+    operation: input.operation,
+    context: input.context,
+    bindingId: input.bindingId,
+    stableId: input.stableId,
+    provenance: input.provenance,
+    fieldMask: input.fieldMask,
+    projection: input.projection,
+    previewDigest: input.previewDigest,
+    approvalDigest: input.approvalDigest,
+    executionEvidence: input.executionEvidence,
+  });
+}
+
+function validLinearReadAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'linear' ||
+    action.operation !== 'read' ||
+    !hasPinnedLinearContext(action.context)
+  ) {
+    return false;
+  }
+  const intent = action.intent;
+  if (
+    typeof intent.uuid !== 'string' ||
+    !UUID.test(intent.uuid) ||
+    typeof intent.stableId !== 'string' ||
+    intent.stableId !==
+      canonicalLinearStableId(action.context.workspaceId!, intent.uuid) ||
+    (intent.currentIdentifier !== null &&
+      (typeof intent.currentIdentifier !== 'string' ||
+        !IDENTIFIER.test(intent.currentIdentifier))) ||
+    typeof intent.stepId !== 'string' ||
+    intent.stepId.length === 0 ||
+    Buffer.byteLength(intent.stepId, 'utf8') > 128 ||
+    typeof intent.capabilityEvidenceDigest !== 'string' ||
+    intent.capabilityEvidenceDigest.length === 0
+  ) {
+    return false;
+  }
+  const resultContract = {
+    requireStableIdentity: true,
+    requireExactContext: true,
+    allowedFields: [
+      'uuid',
+      'identifier',
+      'historicalIdentifiers',
+      'workspaceId',
+      'teamId',
+      'historicalTeamIds',
+      'title',
+      'description',
+      'state',
+      'priority',
+      'archived',
+      ...LINEAR_EXTENSION_KEYS,
+    ],
+  };
+  const readIntent = {
+    stableId: intent.stableId,
+    uuid: intent.uuid,
+    currentIdentifier: intent.currentIdentifier,
+    stepId: intent.stepId,
+    capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
+    resultContract,
+  };
+  const actionDigest = semanticDigest({
+    provider: 'linear',
+    operation: 'read',
+    context: action.context,
+    intent: readIntent,
+  });
+  return semanticValuesEqual(action.intent, { ...readIntent, actionDigest });
+}
+
+function validLinearDiscussionAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'linear' ||
+    action.operation !== 'read-discussion' ||
+    !hasPinnedLinearContext(action.context) ||
+    typeof action.intent.stableId !== 'string' ||
+    !validLinearStableIdForContext(action.intent.stableId, action.context) ||
+    !Number.isInteger(action.intent.limit) ||
+    Number(action.intent.limit) < 1 ||
+    Number(action.intent.limit) > LINEAR_DISCUSSION_LIMITS.maxItems ||
+    (action.intent.cursor !== null &&
+      (typeof action.intent.cursor !== 'string' ||
+        Buffer.byteLength(action.intent.cursor, 'utf8') >
+          LINEAR_DISCUSSION_LIMITS.maxCursorBytes)) ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    action.intent.capabilityEvidenceDigest.length === 0
+  ) {
+    return false;
+  }
+  const intent = {
+    stableId: action.intent.stableId,
+    cursor: action.intent.cursor,
+    limit: action.intent.limit,
+    resultContract: {
+      maxItems: action.intent.limit,
+      maxIdBytes: LINEAR_DISCUSSION_LIMITS.maxIdBytes,
+      maxBodyBytes: LINEAR_DISCUSSION_LIMITS.maxBodyBytes,
+      maxCursorBytes: LINEAR_DISCUSSION_LIMITS.maxCursorBytes,
+      maxPageBytes: LINEAR_DISCUSSION_LIMITS.maxPageBytes,
+      persistable: false,
+      contentPolicy: 'sanitized-whole-field-suppression',
+    },
+    capabilityEvidenceDigest: action.intent.capabilityEvidenceDigest,
+  };
+  const actionDigest = semanticDigest({
+    provider: 'linear',
+    operation: 'read-discussion',
+    context: action.context,
+    intent,
+  });
+  return semanticValuesEqual(action.intent, { ...intent, actionDigest });
+}
+
+function validLinearDuplicateAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'linear' ||
+    action.operation !== 'search-duplicates' ||
+    !hasPinnedLinearContext(action.context) ||
+    !isRecord(action.intent.query) ||
+    !isRecord(action.intent.resultContract) ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    action.intent.capabilityEvidenceDigest.length === 0
+  ) {
+    return false;
+  }
+  const query = action.intent.query;
+  const identifiers = query.historicalIdentifiers;
+  const maxResults = Number(action.intent.resultContract.maxResults);
+  if (
+    typeof query.provenanceToken !== 'string' ||
+    query.provenanceToken.length === 0 ||
+    query.provenanceToken.length > 512 ||
+    typeof query.reservedBindingId !== 'string' ||
+    query.reservedBindingId.length === 0 ||
+    query.reservedBindingId.length > 128 ||
+    !Array.isArray(identifiers) ||
+    identifiers.some(
+      (identifier) =>
+        typeof identifier !== 'string' || !IDENTIFIER.test(identifier),
+    ) ||
+    identifiers.length > 64 ||
+    new Set(identifiers).size !== identifiers.length ||
+    query.workspaceId !== action.context.workspaceId ||
+    query.teamId !== action.context.teamId ||
+    !Number.isInteger(maxResults) ||
+    maxResults < 1 ||
+    maxResults > 100
+  ) {
+    return false;
+  }
+  const expectedQuery = {
+    provenanceToken: query.provenanceToken,
+    reservedBindingId: query.reservedBindingId,
+    historicalIdentifiers: identifiers,
+    workspaceId: action.context.workspaceId,
+    teamId: action.context.teamId,
+  };
+  const expectedContract = {
+    maxResults,
+    classifications: ['no-match', 'one-match', 'ambiguous'],
+    requireStableUuid: true,
+    requireExactContext: true,
+    matchStatus: 'evidence-until-identity-and-context-verified',
+  };
+  return (
+    semanticValuesEqual(query, expectedQuery) &&
+    action.intent.queryDigest === semanticDigest(expectedQuery) &&
+    semanticValuesEqual(action.intent.resultContract, expectedContract)
+  );
+}
+
+function validLinearStableIdForContext(
+  stableId: string,
+  context: ProviderContext,
+): boolean {
+  if (typeof stableId !== 'string' || typeof context.workspaceId !== 'string') {
+    return false;
+  }
+  const prefix = `linear:${context.workspaceId}:`;
+  return (
+    stableId.startsWith(prefix) && UUID.test(stableId.slice(prefix.length))
+  );
+}
+
+function isLinearSpecializedOperation(operation: SemanticOperation): boolean {
+  return operation === 'read-discussion' || operation === 'search-duplicates';
 }
 
 function semanticValuesEqual(left: unknown, right: unknown): boolean {

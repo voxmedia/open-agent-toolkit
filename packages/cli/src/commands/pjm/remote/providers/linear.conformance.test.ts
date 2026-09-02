@@ -1,19 +1,15 @@
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type {
-  ProviderAdapter,
   SanitizedProviderObservation,
   SemanticAction,
 } from '@commands/pjm/remote/provider';
-import {
-  evaluateProviderConformance,
-  type ProviderConformanceFixture,
-} from '@commands/pjm/remote/provider-conformance';
+import { evaluateProviderConformance } from '@commands/pjm/remote/provider-conformance';
 import { describe, expect, it } from 'vitest';
 
 import {
   linearAdapter,
-  planLinearMutation,
   previewLinearMutation,
+  verifyLinearMutationObservation,
   type LinearHostCapabilityObservation,
 } from './linear';
 
@@ -69,23 +65,39 @@ const observation: SanitizedProviderObservation = {
   capabilityEvidenceDigest: capability.evidenceDigest,
 };
 
-function safeUpdate(title = 'Conformance issue'): SemanticAction {
-  const projection = { title };
+function safeMutation(
+  operation: 'create' | 'update' | 'transition' | 'annotate',
+): SemanticAction {
+  const projection =
+    operation === 'transition'
+      ? { status: 'completed' }
+      : operation === 'annotate'
+        ? { annotation: 'Completed locally' }
+        : { title: 'Conformance issue' };
   const outboundSafety = assessOutboundProjectionSafety(projection, {
     assessedAt: '2026-09-02T12:00:00.000Z',
   });
   const input = {
-    operation: 'update' as const,
+    operation,
     context,
     hostCapability: capability,
     bindingId: 'binding_linear_42',
-    stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
-    fieldMask: ['title'],
+    ...(operation === 'create'
+      ? {
+          provenance: {
+            bindingId: 'binding_linear_42',
+            origin: 'local:item-42',
+          },
+        }
+      : {
+          stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        }),
+    fieldMask: Object.keys(projection),
     projection,
     outboundSafety,
   };
   const preview = previewLinearMutation(input);
-  return planLinearMutation({
+  return linearAdapter.plan(operation, {
     ...input,
     approvedPreviewDigest: preview.previewDigest,
   });
@@ -100,35 +112,38 @@ function mutationObservation(
     ...patch,
     fields: {
       ...observation.fields,
+      hostCapability: capability,
+      ...((action.intent.projection as Record<string, unknown>).title ===
+      undefined
+        ? {}
+        : {
+            title: (action.intent.projection as Record<string, unknown>).title,
+          }),
+      ...((action.intent.projection as Record<string, unknown>).status ===
+      undefined
+        ? {}
+        : {
+            state: (action.intent.projection as Record<string, unknown>).status,
+          }),
+      ...((action.intent.projection as Record<string, unknown>).annotation ===
+      undefined
+        ? {}
+        : {
+            annotations: [
+              (action.intent.projection as Record<string, unknown>).annotation,
+            ],
+          }),
       mutationEvidence: action.intent.executionEvidence,
+      ...(action.operation === 'create'
+        ? { createProvenance: action.intent.provenance }
+        : {}),
       ...patch.fields,
     },
   };
 }
 
-const adapter: ProviderAdapter = {
-  ...linearAdapter,
-  plan(operation, input) {
-    if (operation === 'update') {
-      return safeUpdate(
-        String(
-          (input.fields as Record<string, unknown> | undefined)?.title ??
-            observation.fields.title,
-        ),
-      );
-    }
-    return linearAdapter.plan(operation, input);
-  },
-  validateObservation(action, candidate) {
-    return linearAdapter.validateObservation(
-      action,
-      mutationObservation(action, candidate),
-    );
-  },
-};
-
-const fixture: ProviderConformanceFixture = {
-  adapter,
+const fixture = {
+  adapter: linearAdapter,
   observation,
   expected: {
     stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
@@ -138,8 +153,10 @@ const fixture: ProviderConformanceFixture = {
 };
 
 describe('Linear provider conformance', () => {
-  it('passes the immutable shared normalization and semantic-action harness', () => {
-    expect(evaluateProviderConformance(fixture)).toEqual([]);
+  it('fails closed when the immutable generic harness omits mandatory mutation evidence', () => {
+    expect(() => evaluateProviderConformance(fixture)).toThrow(
+      'complete mutation input',
+    );
   });
 
   it('preserves priority, moved-team aliases, and allowlisted extensions', () => {
@@ -184,7 +201,7 @@ describe('Linear provider conformance', () => {
   });
 
   it('validates only exact-context sanitized semantic observations', () => {
-    const action = safeUpdate();
+    const action = safeMutation('update');
     expect(
       linearAdapter.validateObservation(action, mutationObservation(action)),
     ).toEqual({ valid: true, reasons: [] });
@@ -197,5 +214,80 @@ describe('Linear provider conformance', () => {
       ),
     ).toEqual({ valid: false, reasons: ['observation-context-mismatch'] });
     expect(JSON.stringify(action)).not.toMatch(/graphql|mcp|command|toolName/i);
+  });
+
+  it.each(['create', 'update', 'transition', 'annotate'] as const)(
+    'plans, publicly validates, and verifies real %s adapter actions',
+    (operation) => {
+      const action = safeMutation(operation);
+      const readback = mutationObservation(action);
+      expect(linearAdapter.validateObservation(action, readback)).toEqual({
+        valid: true,
+        reasons: [],
+      });
+      expect(
+        verifyLinearMutationObservation({
+          action,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: capability.evidenceDigest,
+          },
+          hostCapability: capability,
+          readback,
+        }).classification,
+      ).toBe('verified');
+      expect(
+        linearAdapter.verify(action, linearAdapter.normalize(readback)),
+      ).toEqual(
+        linearAdapter.verificationFields(action).map((field) => ({
+          field,
+          status: 'verified',
+        })),
+      );
+    },
+  );
+
+  it('rejects action integrity and UUID/context/evidence drift on the public path', () => {
+    const action = safeMutation('update');
+    for (const changed of [
+      {
+        action: {
+          ...action,
+          intent: { ...action.intent, actionDigest: 'sha256:changed' },
+        },
+        observation: mutationObservation(action),
+      },
+      {
+        action,
+        observation: mutationObservation(action, {
+          identity: {
+            stableId: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+            aliases: [],
+          },
+          fields: {
+            uuid: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+          },
+        }),
+      },
+      {
+        action,
+        observation: mutationObservation(action, {
+          context: { ...context, teamId: 'team_other' },
+        }),
+      },
+      {
+        action,
+        observation: {
+          ...mutationObservation(action),
+          capabilityEvidenceDigest: 'sha256:other',
+        },
+      },
+    ]) {
+      expect(
+        linearAdapter.validateObservation(changed.action, changed.observation)
+          .valid,
+      ).toBe(false);
+    }
   });
 });
