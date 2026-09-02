@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-01
-oat_current_task_id: p04-t01
+oat_last_updated: 2026-09-02
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: remote-project-management
 
 **Started:** 2026-03-15
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -29,7 +29,7 @@ oat_generated: false
 | Phase 1    | completed   | 10    | 10/10     |
 | Phase 2    | completed   | 10    | 10/10     |
 | Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | in_progress | 11    | 0/11      |
+| Phase 4    | in_progress | 11    | 11/11     |
 | Phase 5    | pending     | 9     | 0/9       |
 | Phase 6    | pending     | 10    | 0/10      |
 | Phase 7    | pending     | 10    | 0/10      |
@@ -37,7 +37,7 @@ oat_generated: false
 | Revision 1 | blocked     | 4     | 4/4       |
 | Revision 2 | completed   | 2     | 2/2       |
 
-**Total:** 38/84 tasks completed
+**Total:** 49/84 tasks completed
 
 ---
 
@@ -734,6 +734,60 @@ and final normal code review found one Critical and one Important issue.
   1 Critical and 1 Important; terminal normal-governance block.
 - Phase 4 is not authorized while this blocker remains. Any additional
   Revision 1 repair/review cycle requires explicit operator authorization.
+
+---
+
+## Phase 4: GitHub Semantic Adapter
+
+**Status:** in progress — all 11 planned tasks are implemented and verified;
+fresh root-owned code review is pending.
+**Started:** 2026-09-01
+**Implementation head:** 680424fe8f173fcbea7028f7bef63619574207c8
+
+### Phase Summary
+
+- Added stable GitHub issue identity, alias/transfer history, normalized
+  snapshots, and lifecycle classification from sanitized observations.
+- Added provider-neutral semantic plans and verification for reads, creates,
+  updates, transitions, annotations, duplicate searches, and bounded
+  discussion evidence.
+- Added an additional fail-closed public-repository publication policy that
+  consumes the exact shared outbound-safety evidence.
+- Added immutable shared-conformance coverage and generic-host lifecycle
+  integration without native tool schemas, captured catalogs, or GitHub CLI
+  dialects.
+
+### Task Commits
+
+- `p04-t01` — `656a513be002b0aca1b15cddfea2ee1341e4cfd0`
+- `p04-t02` — `30f78ae8b7d45d8c61893a320a90cf841f85c9a6`
+- `p04-t03` — `b1c9e5482c0373fd61df7c9dfb4578f3bfab0dc9`
+- `p04-t04` — `aaa4a6fd82bf5462f7df33909c76a885040b45a1`
+- `p04-t05` — `dd49a1c41c9a630bb8bb3b570811d613f152cabc`
+- `p04-t06` — `5d7fcccbb657415ffca50cf3b69e4772a61f6a1f`
+- `p04-t07` — `2b40105a3de12764d6bb7e09c0f6e70585fe9deb`
+- `p04-t08` — `724baf850854830839ce5896a622abc9454acaae`
+- `p04-t09` — `7668e3baeaa175b3e023c57e5d8cae192054bd7e`
+- `p04-t10` — `a49465e1c99fe75128b741d701c3b8d3f28f13ce`
+- `p04-t11` — `680424fe8f173fcbea7028f7bef63619574207c8`
+
+### Verification and Review Boundary
+
+- Root independently verified exactly 11 append-only commits in plan order,
+  exactly six declared GitHub files, clean diff integrity, and a clean
+  worktree.
+- The live GitHub phase suite passed 53/53 across adapter, conformance,
+  publication-safety, and integration coverage.
+- The implementer reported `pnpm check`, type-check, full tests, build,
+  `check:skill-bumps`, and docs build passing.
+- `release:check-versions` and `release:validate` remain expected failures
+  because the planned lockstep version bump belongs to `p08-t05`; all five
+  public packages remain at `0.2.50`. Phase 4 did not widen its immutable file
+  boundary or claim the complete release gate passed.
+- Recovery remained 0/10 with no pending attempt or recovery event. Two
+  provider-capacity interruptions resumed through the original accepted
+  handle at the exact same Sol/high target and request ID.
+- Fresh root-owned Phase 4 code review is next. Phase 5 has not started.
 
 ---
 
@@ -1449,6 +1503,71 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   loops. Recovery remained 0/10 with no pending attempt. Phase 4 is unblocked
   and `p04-t01` is next.
 
+### Run 7 — Phase p04
+
+```yaml
+request_id: p04-implementation-20260901-59998f8d
+caller: oat-project-implement
+scope: p04
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: native-default
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol/high
+  - gpt-5.6-sol/medium
+selected_route: native
+phase_base_head: 59998f8d170510a528730ed04b8f43976021e8ca
+phase_head: 680424fe8f173fcbea7028f7bef63619574207c8
+task_commits:
+  - 656a513be002b0aca1b15cddfea2ee1341e4cfd0
+  - 30f78ae8b7d45d8c61893a320a90cf841f85c9a6
+  - b1c9e5482c0373fd61df7c9dfb4578f3bfab0dc9
+  - aaa4a6fd82bf5462f7df33909c76a885040b45a1
+  - dd49a1c41c9a630bb8bb3b570811d613f152cabc
+  - 5d7fcccbb657415ffca50cf3b69e4772a61f6a1f
+  - 2b40105a3de12764d6bb7e09c0f6e70585fe9deb
+  - 724baf850854830839ce5896a622abc9454acaae
+  - 7668e3baeaa175b3e023c57e5d8cae192054bd7e
+  - a49465e1c99fe75128b741d701c3b8d3f28f13ce
+  - 680424fe8f173fcbea7028f7bef63619574207c8
+launch_status: accepted
+child_outcome: done_with_concerns
+continuation_events:
+  - same-handle resume after provider-capacity interruption during p04-t01
+  - same-handle resume after provider-capacity interruption during p04-t03
+recovery_usage: 0/10
+pending_attempt: null
+phase_outcome: implementation_passed_review_pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p04 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- All 11 planned tasks produced one ordered, declared-boundary commit each.
+- Root verified the six-file phase boundary and reran the live four-file phase
+  suite at 53/53. The worktree and diff checks were clean.
+- The implementer reported repository check, type-check, full test, build,
+  skill-bump check, and docs build passing. The two release gates remain
+  deferred to the planned `p08-t05` lockstep package bump and are not reported
+  as passing.
+- No optional nested dispatch occurred. Recovery remained 0/10 with no
+  pending attempt or event.
+- Fresh root-owned Phase 4 code review is pending; Phase 5 did not start.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1548,6 +1667,7 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 53/53; core checks passed              | 0      | root review pending        |
 
 ## Final Summary (for PR/docs)
 
