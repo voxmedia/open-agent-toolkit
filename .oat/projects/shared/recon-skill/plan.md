@@ -1498,6 +1498,58 @@ PR-scoped version bump relative to `origin/main`; do not bump it a second time.
 git commit -m "fix(prev4-t04): align packet preservation workflow"
 ```
 
+## Phase p-rev5: Revision 5 — Fail Closed on Split-Generation Publication
+
+Source: `reviews/archived/final-review-2026-09-02T134131Z.md`
+(2026-09-02). The authorized final re-review closed all four Revision 4 source
+findings, then found one adjacent Important split-generation defect and two
+Minor cleanup items. The user selected the bounded withdraw-on-failure policy
+and explicitly authorized one last fresh final re-review despite the standard
+final-scope review-cycle cap.
+
+### Task prev5-t01: (review) Withdraw a split-generation consumer entry point
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/SKILL.md`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+- Modify: `.oat/projects/shared/recon-skill/design.md`
+
+**Step 1: Reproduce the split-generation consumer view**
+
+Render a valid packet, persist an invalid replacement manifest or ledger, and
+prove validation leaves a readable old `packet.md` linked to the rejected
+canonical generation. Add the equivalent renderer-promotion failure control.
+
+**Step 2: Implement the minimum fail-closed policy**
+
+Withdraw `packet.md` whenever whole-packet candidate validation or renderer
+promotion fails. Do not preserve or restore the old Markdown view, stage
+immutable generations, add a publication state machine, or persist another
+artifact. Remove the obsolete no-op validation option from the renderer.
+
+**Step 3: Align the contract and exact workflow controls**
+
+Update the skill, packet contract, and design to say that a failure leaves the
+directory's canonical diagnostic artifacts available but no consumer entry
+point. Assert invalid replacement validation, promotion failure, valid fresh
+publication, and valid replacement behavior. Preserve the existing single
+PR-scoped `recon` skill version bump relative to `origin/main`.
+
+**Step 4: Verify and commit**
+
+Run the complete recon and dispatch suites plus repository checks required for
+the changed canonical skill, then commit with:
+
+```bash
+git commit -m "fix(prev5-t01): withdraw split-generation packet view"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
@@ -1516,6 +1568,7 @@ git commit -m "fix(prev4-t04): align packet preservation workflow"
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
+| final          | code     | fixes_added     | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
@@ -1561,8 +1614,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Revision 4: 4 tasks — bind incorporated evidence, enforce terminal receipt
   chronology, preserve rendered-object identity through promotion, and align
   the last-known-good packet policy.
+- Revision 5: 1 task — withdraw the consumer entry point when canonical packet
+  validation or Markdown promotion fails, without generation staging.
 
-**Total: 27 tasks**
+**Total: 28 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

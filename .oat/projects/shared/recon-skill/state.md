@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev5-t01
 oat_last_commit: a3ecc18369e4d32cc75f6e7574e8c7ba345392cb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T13:32:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T14:34:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,17 +94,19 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 4 implemented; final re-review pending
+**Status:** Revision 5 publication-policy correction ready
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
 ## Current Phase
 
-All 27 implementation tasks are complete. Revision 4 closes the fresh final
-review's three Important and one Medium correctness gaps with four linear task
-commits at `a3ecc18369e4d32cc75f6e7574e8c7ba345392cb`. The user authorized one
-fresh final re-review on this implementation basis despite the existing
-review-cycle count. PR #248 remains open.
+Revision 4 closes its four source findings, but the authorized final re-review
+found one adjacent Important split-generation defect: preserving only
+`packet.md` can leave it linked to canonical artifacts from a rejected
+replacement. The user selected the bounded fail-closed policy for Revision 5:
+withdraw the consumer entry point on validation or promotion failure, without
+adding immutable-generation infrastructure, and authorize one last final
+re-review. PR #248 remains open.
 
 ## Artifacts
 
@@ -112,7 +114,7 @@ review-cycle count. PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (27/27 tasks complete; final re-review pending)
+- **Implementation:** `implementation.md` (27/28 tasks complete; Revision 5 ready)
 
 ## Progress
 
@@ -210,7 +212,10 @@ review-cycle count. PR #248 remains open.
   Medium residual risks
 - ✓ Revision 4 tasks `prev4-t01` through `prev4-t04` implemented in four
   ordered commits with no recovery attempts
-- ⧗ One user-authorized fresh final re-review pending on the Revision 4 head
+- ✓ Authorized Revision 4 final re-review closed all four source findings
+- ! Re-review found one Important split-generation publication defect
+- ⧗ Revision 5 task `prev5-t01` ready with the user-selected minimal
+  withdraw-on-failure policy
 
 ## Blockers
 
@@ -218,5 +223,5 @@ None.
 
 ## Next Milestone
 
-Obtain the one authorized fresh final re-review, then rerun the configured exit
-gate and approval-aware closeout sequence on the new implementation basis.
+Implement Revision 5, run the one user-authorized last final re-review, then
+rerun the configured exit gate and approval-aware closeout sequence.

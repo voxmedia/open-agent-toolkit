@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: prev5-t01
 oat_generated: false
 oat_template: false
 ---
@@ -29,8 +29,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev3 | passed         | 1     | 1/1       |
 | Phase 5      | passed         | 6     | 6/6       |
 | Phase p-rev4 | review_pending | 4     | 4/4       |
+| Phase p-rev5 | active         | 1     | 0/1       |
 
-**Total:** 27/27 tasks completed
+**Total:** 27/28 tasks completed
 
 ## Task Status
 
@@ -106,6 +107,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | prev4-t03 | completed | `0218c3b63` |
 | prev4-t04 | completed | `a3ecc1836` |
 
+### Phase p-rev5: Revision 5 — Fail Closed on Split-Generation Publication
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev5-t01 | pending | —      |
+
 ## Remote Review Received
 
 - **Date:** 2026-09-01
@@ -132,6 +139,22 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   standard final artifacts currently recorded)
 - **Next:** Revision 4 is implemented at `a3ecc18369e4d32cc75f6e7574e8c7ba345392cb`;
   run the one authorized fresh final review
+
+## Final Review Received: Revision 5
+
+- **Date:** 2026-09-02
+- **Artifact:** `reviews/archived/final-review-2026-09-02T134131Z.md`
+- **Reviewed head:** `096936e035b38a884c0d5c619ee46833ca58a6ac`
+- **Findings:** 0 Critical, 1 Important, 0 Medium, 2 Minor
+- **Prior findings:** all four Revision 4 source findings closed in exact form
+- **New task:** `prev5-t01` converts Important I1 and folds in Minor m1
+- **Closeout correction:** Minor m2 will be resolved by refreshing the tracked
+  PR/docs final summary after implementation
+- **Disposition:** the user selected withdraw-on-failure instead of immutable
+  generation staging to keep v1 bounded and avoid a publication state machine
+- **Cycle override:** the user explicitly authorized one last fresh final
+  re-review after Revision 5 despite the standard final-scope review-cycle cap
+- **Next:** implement Revision 5 through `oat-project-implement`
 
 ## Orchestration Runs
 
