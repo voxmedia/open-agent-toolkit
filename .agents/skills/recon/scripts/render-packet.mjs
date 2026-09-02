@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { rename, rm, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import { link as hardLink, lstat, open, rename, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -166,6 +167,34 @@ function claimCounts(ledger) {
   );
 }
 
+async function hashOpenFile(file) {
+  const hash = createHash('sha256');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  let position = 0;
+  while (true) {
+    const { bytesRead } = await file.read(buffer, 0, buffer.length, position);
+    if (bytesRead === 0) break;
+    hash.update(buffer.subarray(0, bytesRead));
+    position += bytesRead;
+  }
+  return `sha256:${hash.digest('hex')}`;
+}
+
+async function assertFileIdentity(path, identity) {
+  const current = await lstat(path);
+  if (
+    current.isSymbolicLink() ||
+    !current.isFile() ||
+    current.dev !== identity.device ||
+    current.ino !== identity.inode
+  ) {
+    throw Object.assign(
+      new Error('Rendered packet file identity changed before publication'),
+      { code: 'PACKET_FILE_IDENTITY_CHANGED' },
+    );
+  }
+}
+
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
   const validation = await compileValidatedRun(packetRoot, {
@@ -186,15 +215,29 @@ export async function renderValidatedPacket(
   const run = assertValidatedRun(validatedRun);
   const { manifest, ledger, packetRoot } = run;
   const target = join(packetRoot, 'packet.md');
-  const temporary = join(packetRoot, `.packet.md.${process.pid}.tmp`);
+  const temporary = join(packetRoot, `.packet.md.${randomUUID()}.tmp`);
+  const backup = join(packetRoot, `.packet.md.${randomUUID()}.backup`);
+  let temporaryFile;
+  let backupCreated = false;
+  let publicationAttempted = false;
   try {
     const document = renderPacketDocument(run);
     await assertSafeOutputPath(packetRoot, temporary);
     await assertSafeOutputPath(packetRoot, target);
+    await assertSafeOutputPath(packetRoot, backup);
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
-    await writeFile(temporary, document, { encoding: 'utf8', flag: 'wx' });
+    temporaryFile = await open(temporary, 'wx+', 0o600);
+    const temporaryStat = await temporaryFile.stat();
+    const temporaryIdentity = {
+      device: temporaryStat.dev,
+      inode: temporaryStat.ino,
+    };
+    await temporaryFile.writeFile(document, 'utf8');
+    await temporaryFile.sync();
+    const digest = await hashOpenFile(temporaryFile);
+    await assertFileIdentity(temporary, temporaryIdentity);
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
@@ -214,13 +257,50 @@ export async function renderValidatedPacket(
           .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
           .map((gap) => gap.code),
       ],
-      digest: await hashFile(temporary),
+      digest,
     };
+    try {
+      await hardLink(target, backup);
+      backupCreated = true;
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    publicationAttempted = true;
     await promote(temporary, target);
+    await assertFileIdentity(target, temporaryIdentity);
+    const [promotedDigest, retainedDigest] = await Promise.all([
+      hashFile(target),
+      hashOpenFile(temporaryFile),
+    ]);
+    if (promotedDigest !== digest || retainedDigest !== digest) {
+      throw Object.assign(
+        new Error('Promoted packet digest differs from rendered bytes'),
+        { code: 'PACKET_DIGEST_MISMATCH' },
+      );
+    }
+    await Promise.all(
+      run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
+    );
     return result;
   } catch (error) {
-    await rm(temporary, { force: true });
+    try {
+      if (backupCreated) {
+        await rename(backup, target);
+        backupCreated = false;
+      } else if (publicationAttempted) {
+        await rm(target, { force: true });
+      }
+    } catch (restoreError) {
+      throw new Error(
+        `Packet promotion failed (${error instanceof Error ? error.message : error}) and the prior packet could not be restored`,
+        { cause: restoreError },
+      );
+    }
     throw error;
+  } finally {
+    await temporaryFile?.close();
+    await rm(temporary, { force: true });
+    await rm(backup, { force: true });
   }
 }
 

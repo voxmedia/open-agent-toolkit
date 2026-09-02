@@ -6,10 +6,12 @@ import {
   rename,
   rm,
   symlink,
+  writeFile,
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
+import { hashFile } from '../scripts/lib/canonical-json.mjs';
 import {
   renderPacket,
   renderPacketDocument,
@@ -401,6 +403,10 @@ test('renderer validates then atomically publishes stable bytes and digest', asy
   );
   assert.equal(first.digest, second.digest);
   assert.equal(firstBytes, secondBytes);
+  assert.equal(
+    second.digest,
+    await hashFile(join(fixture.packetRoot, 'packet.md')),
+  );
   assert.equal(first.directory, fixture.packetRoot);
   assert.equal(first.status, 'complete');
   assert.equal(first.requestedProfile, 'standard');
@@ -467,6 +473,41 @@ test('promotion failure after temporary creation preserves the published packet 
   );
   assert.equal(
     (await readdir(fixture.packetRoot)).some((name) => name.endsWith('.tmp')),
+    false,
+  );
+});
+
+test('temporary path replacement after hashing cannot promote different bytes or displace the last-known-good packet', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  const published = await readFile(
+    join(fixture.packetRoot, 'packet.md'),
+    'utf8',
+  );
+  fixture.ledger.synthesis.answer = 'A candidate synthesis.';
+  await fixture.persist();
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun, {
+      promote: async (temporary, target) => {
+        await rm(temporary);
+        await writeFile(temporary, 'replacement bytes', 'utf8');
+        await rename(temporary, target);
+      },
+    }),
+    /identity|digest/i,
+  );
+  assert.equal(
+    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    published,
+  );
+  assert.equal(
+    (await readdir(fixture.packetRoot)).some(
+      (name) => name.includes('.tmp') || name.includes('.backup'),
+    ),
     false,
   );
 });
