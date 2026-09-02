@@ -218,10 +218,13 @@ selection authoritative.
   - Sanitized metadata excludes prompts and message content.
   - A mismatch or absent observation cannot authorize replacement, retry, or
     fallback.
-  - A field the provider does not report observes as `not-reported`; an axis a
-    provider genuinely has no selectable control for observes as
-    `not-exposed`. Neither ever copies a requested value into observed state,
-    and both are excluded from comparison rather than compared as literals.
+  - An axis the provider does not report is **absent** from the observation
+    rather than carrying a placeholder value, and renders as `not-reported`.
+    `not-reported` is a whole-observation status, not a per-axis value.
+    `not-exposed` is reserved vocabulary for an axis a provider genuinely has
+    no selectable control for; no producer emits it today, and it is excluded
+    from comparison rather than compared as a literal.
+  - A requested value is never copied into observed state on any path.
 - **Priority:** P1
 
 **FR10: Baseline Compatibility**

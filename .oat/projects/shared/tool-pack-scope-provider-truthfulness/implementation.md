@@ -1639,6 +1639,45 @@ Corrections, all verified against real artifacts:
   parent chain in all 2,725 transcripts found `parentUuid` never crosses an
   `agentId` boundary, so no depth taxonomy is derivable and none was invented.
 
+### Review Round 2 and Its Critical
+
+- Artifact: `reviews/p07-review-2026-09-02T230419Z.md`; verdict blocked with
+  1 Critical, 2 Important, 3 Medium, 4 Minor.
+- The Critical was the live-verification defect a third time, one provider
+  over: the Claude projection retained `sessionId`/`session_id` and
+  synthesized a `message` key, all of which classify sensitive, so the assert
+  threw inside `parseDispatchRecordInput` and the **entire record write
+  aborted**. The reviewer measured 245 of 250 real transcripts refused and 0
+  reported, against 237/237 reported for Codex. The identical collision had
+  been fixed for Codex and not carried across.
+- This round's review was mandated to verify against real artifacts rather
+  than the repository's own fixtures, which is why it found what round 1 could
+  not. It independently recomputed every corpus statistic and all held.
+- The fix is structural rather than another key rename: projection now emits
+  `ObservedRuntimeFacts`, a flat closed six-key set (`lineage`, `role`,
+  `model`, `effort`, `serviceTier`, `correlation`) owned by
+  `runtime-observation.ts` and re-emitted through `OBSERVED_RUNTIME_FACT_KEYS`.
+  Provider key names no longer reach the classifier at all. A CI test runs
+  every projected key through `isSensitiveDispatchKey` and asserts `false`, so
+  a future colliding addition fails in CI rather than in production.
+  Independently verified by the orchestrator: all six keys non-sensitive,
+  `sessionId`/`session_id`/`message` all sensitive.
+- Full-corpus sweeps through the real input path afterwards: Codex 1,596 files
+  0 refused, Claude 2,730 files 0 refused. The 62 previously-aborting
+  over-bound files now persist as `not-reported`.
+- `source` and the capability gate are now derived at the write boundary:
+  a caller-supplied `source` is overwritten with `caller-asserted`
+  unconditionally, and a reported observation from a provider without
+  observation capability is refused.
+- A second defect surfaced from that fix: parsing was happening twice, so the
+  metadata path's own output was re-classified as caller-supplied. Parsing is
+  deliberately not idempotent and now happens exactly once, in
+  `recordProjectDispatch`.
+- The four never-observed Codex field paths are now labelled `UNVERIFIED`
+  with their corpus denominator, matching how the Claude stream-json path was
+  labelled, and the docs claims about a Codex service-tier axis were
+  corrected.
+
 ### Open Items for p07-t04
 
 - `BL-260826`'s Codex depth-2 integration criterion is now satisfied by the
