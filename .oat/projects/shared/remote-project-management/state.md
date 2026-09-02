@@ -1,7 +1,10 @@
 ---
 oat_current_task: null
 oat_last_commit: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
-oat_blockers: ['Phase 4 review round 3 is pending after fix loop 2']
+oat_blockers:
+  [
+    'Phase 4 normal review governance is exhausted with one Critical and one Important finding',
+  ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -40,7 +43,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T13:57:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T14:14:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -54,9 +57,9 @@ oat_generated: false
 
 Phase 4 — GitHub Semantic Adapter. All 11 planned tasks are implemented in
 ordered declared-boundary commits. Review-fix loop 2 resolved the three Critical
-and one Important round-2 findings in `77dd7afb4`; the expanded live phase
-suite passes 92/92 and the broader remote suite passes 427/427. Fresh review
-round 3 is pending. Phase 5 has not started.
+and one Important round-2 findings in `77dd7afb4`, but final normal review round
+3 found one Critical, one Important, and one Medium defect. Normal review
+governance is exhausted at 3/3. Phase 5 has not started.
 
 ## Artifacts
 
@@ -64,7 +67,7 @@ round 3 is pending. Phase 5 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 4 review round 3 pending)
+- **Implementation:** implementation.md (blocked; Phase 4 review governance exhausted)
 
 ## Progress
 
@@ -157,18 +160,21 @@ round 3 is pending. Phase 5 has not started.
 - ⚠ Phase 4 review round 2 blocked with 3 Critical and 1 Important finding
 - ✓ Phase 4 bounded fix loop 2/3 committed as `77dd7afb4` through the original implementer
 - ✓ Expanded Phase 4 live suite passed 92/92 and remote suite passed 427/427
-- ⧗ Fresh Phase 4 review round 3 pending
+- ⚠ Final Phase 4 review round 3 blocked with 1 Critical, 1 Important, and 1 Medium finding
+- ⛔ Normal Phase 4 review governance is exhausted at 3/3 reviews and 2/3 fix loops
 
 ## Blockers
 
-No active implementation defect is known after bounded fix loop 2, but Phase 4
-remains gated on fresh review round 3. Phase 5 is blocked until that review
-passes. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+Phase 4 still permits wrong-host/account duplicate recovery and generic
+specialized-action observation validation; unavailable-result attribution also
+has a Medium gap. Normal review governance is exhausted at 3/3 reviews and 2/3
+fix loops, so no third fix, fourth review, or Phase 5 dispatch is authorized
+without explicit operator direction. The branch-level lockstep version gate
+remains preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run fresh Phase 4 review round 3 over the full post-fix phase range ending at
-`77dd7afb444f1f5ef93397dacfbfc1eb96a50f67`, including explicit disposition of
-all prior findings. Do not begin Phase 5 until a review passes with zero
-Critical and zero Important findings.
+Obtain explicit operator direction for the exhausted Phase 4 review boundary:
+authorize a bounded operator-extension fix plus an additional independent
+review, create a separate corrective revision, or stop the project. Do not
+begin Phase 5 while Critical or Important findings remain.

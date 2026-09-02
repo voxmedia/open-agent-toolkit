@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | in_progress | 11    | 11/11     |
-| Phase 5    | pending     | 9     | 0/9       |
-| Phase 6    | pending     | 10    | 0/10      |
-| Phase 7    | pending     | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | blocked   | 11    | 11/11     |
+| Phase 5    | pending   | 9     | 0/9       |
+| Phase 6    | pending   | 10    | 0/10      |
+| Phase 7    | pending   | 10    | 0/10      |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
 
 **Total:** 49/84 tasks completed
 
@@ -739,8 +739,8 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** in progress — review-fix loop 2 resolved all three Critical and one
-Important round-2 findings; fresh review round 3 is pending.
+**Status:** blocked — final normal review round 3 found one Critical, one
+Important, and one Medium defect; normal review governance is exhausted.
 **Started:** 2026-09-01
 **Implementation head:** 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 
@@ -810,7 +810,14 @@ Important round-2 findings; fresh review round 3 is pending.
 - Root independently verified the exact four-file fix boundary, clean diff, and
   live focused suite at 92/92. The implementer also passed the broader remote
   suite at 427/427 plus CLI lint, type-check, format, diff, and build.
-- Fresh review round 3 is next. Phase 5 has not started.
+- Final normal review round 3 at
+  `reviews/p04-final-review-2026-09-02T140132Z.md` blocked with one Critical,
+  one Important, and one Medium finding. It reported
+  `Reconnaissance: not-attempted`, independently passed the focused suite at
+  92/92 and the remote suite at 427/427, and reproduced wrong-context duplicate
+  recovery plus generic specialized-action validation.
+- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops. No
+  third fix or fourth review is authorized. Phase 5 has not started.
 
 ---
 
@@ -1573,7 +1580,7 @@ continuation_events:
   - p04-review-fix-2-20260902-6659bf654
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 2/3
+review_rounds: 3/3
 fix_loops: 2/3
 review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
 review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
@@ -1587,7 +1594,11 @@ review_2_findings: 3 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 fix_2_commit: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 fix_2_outcome: done
-phase_outcome: fixes_completed_review_3_pending
+review_3_artifact: reviews/p04-final-review-2026-09-02T140132Z.md
+review_3_head: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
+review_3_findings: 1 critical, 1 important, 1 medium, 0 minor
+review_3_reconnaissance: not-attempted
+phase_outcome: blocked_review_governance_exhausted
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1627,7 +1638,13 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - The focused suite expanded to 92/92 and passed independently at the root; the
   broader remote suite passed 427/427, and lint, types, format, diff, and build
   passed.
-- Review round 3 is pending; Phase 5 did not start.
+- Final normal review round 3 blocked with one Critical, one Important, and one
+  Medium finding after reproducing wrong-host/account duplicate recovery and
+  generic specialized-action validation. Reconnaissance was not attempted, so
+  no review-orchestration section is required.
+- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops. No
+  further fix/review cycle, target change, or Phase 5 dispatch is authorized
+  without explicit operator direction.
 
 <!-- orchestration-runs-end -->
 
@@ -1728,7 +1745,7 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 92/92; remote 427/427; checks passed   | 0      | review round 3 pending     |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 92/92; remote 427/427; checks passed   | 0      | blocked; review 3/3        |
 
 ## Final Summary (for PR/docs)
 

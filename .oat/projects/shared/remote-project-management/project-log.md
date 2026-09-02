@@ -124,6 +124,10 @@ Operator-extension review 4 blocked with 1 Critical and 1 Medium after 3/3 fix l
 
 Phase p-rev2 passed root review round 3 after two bounded review-fix loops; see reviews/p-rev2-final-rereview-2026-09-01T213136Z.md; Phase 4 is unblocked.
 
+### 2026-09-02 · structural · oat-project-implement · p04
+
+Phase 4 blocked after review round 3/3 and fix loop 2/3; one Critical, one Important, and one Medium finding remain in reviews/p04-final-review-2026-09-02T140132Z.md; further corrective work requires operator authorization.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
