@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   chmod,
   copyFile,
@@ -13,7 +14,7 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { hostname as osHostname, tmpdir } from 'node:os';
 import { dirname, isAbsolute, join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -115,6 +116,7 @@ import {
   fileExists,
   publishContainedJsonRevision,
   removeCollectionSymlinkIfUnchanged,
+  withContainedWriterLock,
 } from './io';
 
 describe('fs/io', () => {
@@ -621,6 +623,112 @@ describe('fs/io', () => {
       ).resolves.toContain('"owner": "first"');
     },
   );
+
+  it('wraps a raw publication ENOENT without leaking an absolute path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
+    tempDirs.push(root);
+    const dispatchDir = join(root, 'dispatch');
+    await mkdir(dispatchDir, { recursive: true });
+    journalPublicationRace.beforePathBasedPublication = async () => {
+      const staged = (await readdir(dispatchDir)).find((name) =>
+        name.endsWith('.tmp'),
+      );
+      if (staged) await rm(join(dispatchDir, staged));
+    };
+
+    const error = await publishContainedJsonRevision(
+      join(dispatchDir, 'request-1.json'),
+      { owner: 'first' },
+      root,
+    ).catch((raised: Error) => raised);
+
+    expect(error).toMatchObject({ code: 'ENOENT' });
+    expect((error as Error).message).not.toContain(root);
+    expect((error as Error).message).toContain('dispatch/request-1.json');
+  });
+
+  const DEAD_PID = 999999;
+
+  function holderJson(pid: number) {
+    return `${JSON.stringify({
+      hostId: createHash('sha256')
+        .update(osHostname(), 'utf8')
+        .digest('hex')
+        .slice(0, 16),
+      pid,
+      processStartedAt: Date.now(),
+      acquiredAt: new Date().toISOString(),
+    })}\n`;
+  }
+
+  it('reclaims a lock whose recorded holder is no longer running', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+    await mkdir(lock);
+    await writeFile(join(lock, 'holder.json'), holderJson(DEAD_PID), 'utf8');
+
+    await expect(
+      withContainedWriterLock(lock, root, async () => 'ran', {
+        timeoutMs: 200,
+        minReclaimMs: 0,
+      }),
+    ).resolves.toBe('ran');
+    await expect(lstat(lock)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('reclaims a lock past the staleness cap when the holder is unknown', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+    await mkdir(lock);
+
+    await expect(
+      withContainedWriterLock(lock, root, async () => 'ran', {
+        timeoutMs: 200,
+        minReclaimMs: 0,
+        hardStaleMs: 0,
+      }),
+    ).resolves.toBe('ran');
+  });
+
+  it('never reclaims a live holder and reports a redacted lock path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+    await mkdir(lock);
+    await writeFile(join(lock, 'holder.json'), holderJson(process.pid), 'utf8');
+
+    const error = await withContainedWriterLock(lock, root, async () => 'ran', {
+      timeoutMs: 60,
+      minReclaimMs: 0,
+      hardStaleMs: 60_000,
+    }).catch((raised: Error) => raised);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('.dispatch-lock');
+    expect((error as Error).message).not.toContain(root);
+    expect((error as Error).message).not.toContain(tmpdir());
+    // The live holder's lock is left exactly as it was found.
+    await expect(
+      readFile(join(lock, 'holder.json'), 'utf8'),
+    ).resolves.toContain(`"pid":${process.pid}`);
+  });
+
+  it('records non-identifying holder evidence while the lock is held', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-lock-'));
+    tempDirs.push(root);
+    const lock = join(root, '.dispatch-lock');
+
+    const holder = await withContainedWriterLock(lock, root, async () =>
+      JSON.parse(await readFile(join(lock, 'holder.json'), 'utf8')),
+    );
+
+    expect(holder).toMatchObject({ pid: process.pid });
+    expect(holder.hostId).toMatch(/^[a-f0-9]{16}$/);
+    expect(JSON.stringify(holder)).not.toContain(osHostname());
+    await expect(lstat(lock)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
 
   it('ensureDir creates directory recursively', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));

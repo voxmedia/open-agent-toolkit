@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   mkdtemp,
   mkdir,
@@ -6,7 +7,7 @@ import {
   rm,
   writeFile,
 } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { GenericDispatchRecord } from '@providers/identity/generic-dispatch-record';
@@ -577,6 +578,43 @@ describe('recordProjectDispatch', () => {
     });
     expect(await readdir(projectPath)).toEqual(['state.md']);
   });
+
+  it('reports a redacted relative path when another writer holds the lock', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(
+      join(projectPath, 'state.md'),
+      '---\noat_status: active\n---\n',
+    );
+    const lock = join(projectPath, '.dispatch-lock');
+    await mkdir(lock);
+    await writeFile(
+      join(lock, 'holder.json'),
+      `${JSON.stringify({
+        hostId: createHash('sha256')
+          .update(hostname(), 'utf8')
+          .digest('hex')
+          .slice(0, 16),
+        pid: process.pid,
+        processStartedAt: Date.now(),
+        acquiredAt: new Date().toISOString(),
+      })}\n`,
+      'utf8',
+    );
+
+    const error = await recordProjectDispatch({
+      projectPath,
+      input: { record: genericRecord(), event: canonicalEvent() },
+    }).catch((raised: Error) => raised);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('.dispatch-lock');
+    expect((error as Error).message).not.toContain(projectPath);
+    expect((error as Error).message).not.toContain(tmpdir());
+    await expect(readdir(join(projectPath, 'dispatch'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  }, 20_000);
 
   it('does not adopt a pre-existing invalid journal', async () => {
     const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   chmod,
   lstat,
@@ -15,6 +15,7 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
+import { hostname } from 'node:os';
 import {
   basename,
   dirname,
@@ -302,19 +303,119 @@ interface FileIdentity {
   inode: string;
 }
 
-const DISPATCH_LOCK_RETRY_MS = 10;
-const DISPATCH_LOCK_TIMEOUT_MS = 5000;
+const WRITER_LOCK_RETRY_MS = 10;
+const WRITER_LOCK_TIMEOUT_MS = 5000;
+/** A lock younger than this is never reclaimed, so a writer that has not yet
+ * written its holder file is not mistaken for a crash. */
+const WRITER_LOCK_MIN_RECLAIM_MS = 1000;
+/** A lock older than this is reclaimed even when liveness cannot be decided. */
+const WRITER_LOCK_HARD_STALE_MS = 15 * 60 * 1000;
+
+const HOLDER_FILE = 'holder.json';
+
+interface WriterLockHolder {
+  hostId: string;
+  pid: number;
+  processStartedAt: number;
+  acquiredAt: string;
+}
+
+/**
+ * Non-identifying, stable-per-host token. Liveness of a recorded pid is only
+ * meaningful on the host that recorded it, and the raw hostname is never
+ * written into a project artifact or an error message.
+ */
+function hostId(): string {
+  return createHash('sha256')
+    .update(hostname(), 'utf8')
+    .digest('hex')
+    .slice(0, 16);
+}
+
+function processStartedAt(): number {
+  return Math.round(Date.now() - process.uptime() * 1000);
+}
+
+function holderIsRunning(holder: WriterLockHolder): boolean {
+  if (holder.hostId !== hostId()) {
+    // Another host's pid says nothing about this one; fall back to age alone.
+    return true;
+  }
+  try {
+    process.kill(holder.pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM means the process exists but is owned by somebody else.
+    return errorCode(error) !== 'ESRCH';
+  }
+}
+
+async function readWriterLockHolder(
+  lockPath: string,
+): Promise<WriterLockHolder | null> {
+  try {
+    const parsed: unknown = JSON.parse(
+      await readFile(join(lockPath, HOLDER_FILE), 'utf8'),
+    );
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      typeof (parsed as WriterLockHolder).pid !== 'number' ||
+      typeof (parsed as WriterLockHolder).hostId !== 'string'
+    ) {
+      return null;
+    }
+    return parsed as WriterLockHolder;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Bounded staleness policy. A lock is reclaimable when it is old enough that a
+ * live writer would have finished, and either its recorded holder is provably
+ * gone on this host or its age exceeds the hard cap. Returns the reason so the
+ * caller can report what it did.
+ */
+async function writerLockStaleReason(
+  lockPath: string,
+  minReclaimMs: number,
+  hardStaleMs: number,
+): Promise<string | null> {
+  let age: number;
+  try {
+    age = Date.now() - (await lstat(lockPath)).mtimeMs;
+  } catch {
+    return null;
+  }
+  if (age < minReclaimMs) return null;
+  const holder = await readWriterLockHolder(lockPath);
+  if (holder !== null && !holderIsRunning(holder)) {
+    return 'its recorded holder process is no longer running';
+  }
+  return age >= hardStaleMs ? 'it exceeded the staleness cap' : null;
+}
+
+export interface ContainedWriterLockOptions {
+  timeoutMs?: number;
+  minReclaimMs?: number;
+  hardStaleMs?: number;
+}
 
 /**
  * Exclusive contained writer lock. `mkdir` without `recursive` is the atomic
  * primitive: exactly one caller can create the directory, and every other
  * caller observes `EEXIST`. The lock is validated as a real directory so a
- * planted symlink fails closed instead of redirecting the guarded section.
+ * planted symlink fails closed instead of redirecting the guarded section, it
+ * records holder evidence so a crashed writer can be reclaimed rather than
+ * wedging the project forever, and no message it raises contains an absolute
+ * path.
  */
 export async function withContainedWriterLock<T>(
   lockPath: string,
   scopeRoot: string,
   run: () => Promise<T>,
+  options: ContainedWriterLockOptions = {},
 ): Promise<T> {
   const resolvedScope = resolve(scopeRoot);
   const resolvedLock = resolve(lockPath);
@@ -325,41 +426,79 @@ export async function withContainedWriterLock<T>(
   if (scopeStat.isSymbolicLink() || !scopeStat.isDirectory()) {
     throw new Error('Writer lock scope must be a real directory.');
   }
+  const reportedLock = scopeRelative(resolvedScope, resolvedLock);
+  const timeoutMs = options.timeoutMs ?? WRITER_LOCK_TIMEOUT_MS;
 
-  const deadline = Date.now() + DISPATCH_LOCK_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
+  let reclaimed = false;
   for (;;) {
     try {
       await mkdir(resolvedLock);
       break;
     } catch (error) {
-      if (
-        typeof error !== 'object' ||
-        error === null ||
-        !('code' in error) ||
-        error.code !== 'EEXIST'
-      ) {
+      if (errorCode(error) !== 'EEXIST') {
         throw error;
       }
+
+      if (!reclaimed) {
+        const stale = await writerLockStaleReason(
+          resolvedLock,
+          options.minReclaimMs ?? WRITER_LOCK_MIN_RECLAIM_MS,
+          options.hardStaleMs ?? WRITER_LOCK_HARD_STALE_MS,
+        );
+        if (stale !== null) {
+          const held = await lstat(resolvedLock);
+          if (held.isSymbolicLink() || !held.isDirectory()) {
+            throw new Error(
+              `Writer lock ${reportedLock} is not a real directory.`,
+              { cause: error },
+            );
+          }
+          await rm(resolvedLock, { recursive: true, force: true });
+          reclaimed = true;
+          continue;
+        }
+      }
+
       if (Date.now() >= deadline) {
         throw new Error(
-          `Another writer holds ${resolvedLock}. Remove it once no writer is running, then retry.`,
+          `Another writer holds ${reportedLock}. If no writer is running, remove ${reportedLock} inside the project and retry.`,
           { cause: error },
         );
       }
       await new Promise((resolveDelay) =>
-        setTimeout(resolveDelay, DISPATCH_LOCK_RETRY_MS),
+        setTimeout(resolveDelay, WRITER_LOCK_RETRY_MS),
       );
     }
   }
 
+  const holder: WriterLockHolder = {
+    hostId: hostId(),
+    pid: process.pid,
+    processStartedAt: processStartedAt(),
+    acquiredAt: new Date().toISOString(),
+  };
   try {
     const held = await lstat(resolvedLock);
     if (held.isSymbolicLink() || !held.isDirectory()) {
-      throw new Error('Writer lock is not a real directory.');
+      throw new Error(`Writer lock ${reportedLock} is not a real directory.`);
     }
+    await writeFile(
+      join(resolvedLock, HOLDER_FILE),
+      `${JSON.stringify(holder, null, 2)}\n`,
+      { encoding: 'utf8', flag: 'wx' },
+    );
     return await run();
   } finally {
-    await rm(resolvedLock, { recursive: true, force: true });
+    // Release only a lock this call still holds, so a lock already reclaimed
+    // and re-acquired by another writer is never removed from under it.
+    const current = await readWriterLockHolder(resolvedLock);
+    if (
+      current === null ||
+      (current.pid === holder.pid && current.acquiredAt === holder.acquiredAt)
+    ) {
+      await rm(resolvedLock, { recursive: true, force: true });
+    }
   }
 }
 
