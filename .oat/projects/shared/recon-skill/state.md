@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T19:16:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T19:29:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,7 +94,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 6 implemented; configured terminal gate pending
+**Status:** Revision 6 implemented; mandatory final review pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
@@ -104,8 +104,10 @@ All 29 implementation tasks are complete. Revision 6 makes withdrawal
 root-identity safe and binds promotion to the manifest, claim ledger, and
 validated referenced artifact bytes retained in `ValidatedRun`. Both direct
 review controls now fail closed, with no generation staging, lock, state
-machine, or persisted artifact added. The configured cross-family exit gate is
-the sole remaining independent terminal review. PR #248 remains open.
+machine, or persisted artifact added. The user authorized exactly one mandatory
+final lifecycle review on this basis; if it passes, the configured cross-family
+exit gate follows. A blocking result stops this run without another automatic
+fix/re-review cycle. PR #248 remains open.
 
 ## Artifacts
 
@@ -113,7 +115,7 @@ the sole remaining independent terminal review. PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (29/29 tasks complete; configured gate pending)
+- **Implementation:** `implementation.md` (29/29 tasks complete; mandatory final review pending)
 
 ## Progress
 
@@ -223,7 +225,8 @@ the sole remaining independent terminal review. PR #248 remains open.
   one Important successful-promotion continuity race
 - ✓ Revision 6 task `prev6-t01` closes both publication races in one bounded
   seven-file commit with 103/103 focused and 177/177 recon/dispatch tests
-- ⧗ Configured cross-family exit gate is the sole authorized terminal review
+- ⧗ One mandatory final lifecycle review is authorized on the Revision 6 basis
+- ⧗ Configured cross-family exit gate follows only if that review passes
 
 ## Blockers
 
@@ -231,5 +234,7 @@ None.
 
 ## Next Milestone
 
-Run the configured cross-family exit gate as the sole terminal review, then
-complete the approval-aware closeout sequence.
+Run the one authorized mandatory final lifecycle review. If it passes, run the
+configured cross-family exit gate and complete the approval-aware closeout
+sequence. If it reports blocking findings, stop without another automatic fix
+or re-review cycle.

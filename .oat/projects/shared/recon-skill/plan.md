@@ -1556,8 +1556,10 @@ Source: `reviews/archived/final-review-2026-09-02T185450Z.md`
 (2026-09-02). The replacement final review closed every Revision 4 and 5
 source finding, then reproduced one Critical root-replacement cleanup race and
 one Important successful-promotion continuity race. The user authorized one
-bounded corrective revision and selected the configured cross-family exit gate
-as the sole independent terminal review, without another manual review loop.
+bounded corrective revision. The terminal route was subsequently corrected to
+exactly one mandatory final lifecycle review on the Revision 6 basis, followed
+by the configured cross-family exit gate only if that review passes; blocking
+findings stop the run without another automatic fix/re-review cycle.
 
 ### Task prev6-t01: (review) Bind withdrawal and promotion to the validated generation
 

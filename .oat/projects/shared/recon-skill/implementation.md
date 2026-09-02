@@ -176,12 +176,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   canonical-byte continuity checks because both findings share the publication
   boundary
 - **Disposition:** all findings converted; no deferrals or dismissals
-- **Terminal route:** the user explicitly authorized one bounded Revision 6 and
-  selected the already-required configured cross-family exit gate as the sole
-  independent terminal review; no additional manual final-review launch is
-  authorized
-- **Next:** implement Revision 6 through `oat-project-implement`, then run the
-  configured exit gate
+- **Terminal route:** the user explicitly authorized one bounded Revision 6,
+  then exactly one mandatory final lifecycle review on the resulting basis. If
+  it passes, the configured cross-family exit gate follows; a blocking result
+  stops this run without another automatic fix/re-review cycle.
+- **Next:** run the one authorized mandatory final lifecycle review, then run
+  the configured exit gate only if it passes
 
 ## Orchestration Runs
 
@@ -1150,8 +1150,10 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Review artifact: `reviews/archived/final-review-2026-09-02T185450Z.md`
 - Review verdict: fixes required — 1 Critical root-replacement cleanup race,
   1 Important successful-promotion canonical-byte continuity race
-- Terminal route: user-authorized bounded Revision 6 followed by the configured
-  cross-family exit gate only; no additional manual final-review launch
+- Terminal route: user-authorized bounded Revision 6 followed by exactly one
+  mandatory final lifecycle review; if it passes, the configured cross-family
+  exit gate follows, while a blocking result stops without another automatic
+  fix/re-review cycle
 - Implementation request ID: `recon-skill-prev6-implementation-20260902`
 - Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Phase base/head: `e37eda51e715b1bfa4dce84dc2aee0102c6319b2` /
@@ -1162,7 +1164,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   repository, release, skill, lint, format, and docs gate sequence
 - Minimality: byte digests and identity-safe cleanup only; no generation
   staging, locks, state machine, transaction abstraction, or persisted artifact
-- Next: run the configured cross-family exit gate as the sole terminal review
+- Next: run the one authorized mandatory final lifecycle review, then the
+  configured cross-family exit gate only if it passes
+
+#### Terminal-route contract correction — 2026-09-02T19:29:42Z
+
+- The earlier gate-only route was invalid: the configured exit gate is
+  independent from and cannot satisfy the mandatory final lifecycle review.
+- The user explicitly authorized exactly one fresh mandatory final lifecycle
+  review on the Revision 6 basis.
+- A passing review advances to the configured cross-family exit gate. Blocking
+  findings stop this run without another automatic fix or re-review cycle.
 
 <!-- orchestration-runs-end -->
 
@@ -1947,5 +1959,6 @@ withdrawal cannot delete a replacement root, and promotion is bound to the
 validated canonical byte generation before and after the Markdown rename. It
 adds only retained digests and identity-safe cleanup. The branch is rebased onto
 current main and the five public packages validate at `0.2.52`. Closeout remains
-in progress until the configured cross-family gate—the selected sole terminal
-review—and approval-aware sequence complete on this basis.
+in progress until the authorized mandatory final lifecycle review passes, the
+configured cross-family gate passes, and the approval-aware sequence completes
+on this basis.
