@@ -96,6 +96,52 @@ export interface LinearMutationPreview {
   };
 }
 
+export type LinearReadClassification =
+  | 'current'
+  | 'moved'
+  | 'archived'
+  | 'partial'
+  | 'inaccessible'
+  | 'temporarily-unavailable';
+
+export interface LinearReadObservationInput {
+  action: SemanticAction;
+  hostCapability: LinearHostCapabilityObservation;
+  observedAt: string;
+  outcome: 'found' | 'not-found' | 'temporary-failure';
+  observation?: SanitizedProviderObservation;
+}
+
+export interface LinearReadResult {
+  classification: LinearReadClassification;
+  issue: NormalizedRemoteIssue | null;
+  preservePriorEvidence: boolean;
+  reasons: string[];
+}
+
+export interface LinearDiscussionItemObservation {
+  id: string;
+  body: string;
+  observedAt: string;
+}
+
+export interface LinearDiscussionReadObservation {
+  provider: 'linear';
+  context: ProviderContext;
+  stableId: string;
+  availability: 'available' | 'rate-limited' | 'permission-denied';
+  capabilityEvidenceDigest: string;
+  requestedCursor: string | null;
+  nextCursor: string | null;
+  items: LinearDiscussionItemObservation[];
+}
+
+export interface LinearDiscussionReadValidationInput {
+  action: SemanticAction;
+  hostCapability: LinearHostCapabilityObservation;
+  observation: LinearDiscussionReadObservation;
+}
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[A-Z][A-Z0-9]*-[1-9][0-9]*$/;
@@ -430,6 +476,169 @@ export function planLinearMutation(
   };
 }
 
+export function classifyLinearReadObservation(
+  input: LinearReadObservationInput,
+): LinearReadResult {
+  if (input.action.provider !== 'linear' || input.action.operation !== 'read') {
+    throw new Error(
+      'Linear read classification requires a Linear read action.',
+    );
+  }
+  if (!Number.isFinite(Date.parse(input.observedAt))) {
+    throw new Error('Linear read classification requires a valid timestamp.');
+  }
+  const capability = validateLinearHostCapability(
+    'read',
+    input.action.context,
+    input.hostCapability,
+    ['stable-identity', 'title', 'state', 'revision', 'team-context'],
+  );
+  if (
+    !capability.valid ||
+    input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+  ) {
+    return unavailableLinearRead('inaccessible', [
+      ...capability.reasons,
+      ...(input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+        ? ['capability-evidence-mismatch']
+        : []),
+    ]);
+  }
+  if (input.outcome === 'temporary-failure') {
+    return unavailableLinearRead('temporarily-unavailable', [
+      'temporary-host-failure',
+    ]);
+  }
+  if (input.outcome === 'not-found' || !input.observation) {
+    return unavailableLinearRead('inaccessible', [
+      input.outcome === 'not-found'
+        ? 'absence-not-authoritative'
+        : 'read-observation-missing',
+    ]);
+  }
+  const observation = input.observation;
+  if (
+    observation.provider !== 'linear' ||
+    !contextsEqual(input.action.context, observation.context) ||
+    observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    observation.fields.uuid !== input.action.intent.uuid
+  ) {
+    return unavailableLinearRead('inaccessible', [
+      'observation-attribution-mismatch',
+    ]);
+  }
+  let issue: NormalizedRemoteIssue;
+  try {
+    issue = normalizeLinearIssueObservation(observation);
+  } catch {
+    return unavailableLinearRead('partial', ['read-observation-incomplete']);
+  }
+  if (issue.stableId !== input.action.intent.stableId) {
+    return unavailableLinearRead('inaccessible', [
+      'observation-identity-mismatch',
+    ]);
+  }
+  const archived = observation.fields.archived === true;
+  const moved =
+    typeof input.action.intent.currentIdentifier === 'string' &&
+    observation.fields.identifier !== input.action.intent.currentIdentifier &&
+    Array.isArray(observation.fields.historicalIdentifiers) &&
+    observation.fields.historicalIdentifiers.includes(
+      input.action.intent.currentIdentifier,
+    );
+  return {
+    classification: archived ? 'archived' : moved ? 'moved' : 'current',
+    issue,
+    preservePriorEvidence: false,
+    reasons: [],
+  };
+}
+
+export function validateLinearDiscussionReadObservation(
+  input: LinearDiscussionReadValidationInput,
+): {
+  classification: 'page' | 'rate-limited' | 'permission-denied' | 'invalid';
+  page: {
+    items: Array<
+      LinearDiscussionItemObservation & { contentSuppressed: boolean }
+    >;
+    nextCursor: string | null;
+  } | null;
+  persistable: false;
+  reasons: string[];
+} {
+  const invalid = (reasons: string[]) => ({
+    classification: 'invalid' as const,
+    page: null,
+    persistable: false as const,
+    reasons,
+  });
+  if (
+    input.action.provider !== 'linear' ||
+    input.action.operation !== 'read-discussion' ||
+    !contextsEqual(input.action.context, input.observation.context) ||
+    input.observation.provider !== 'linear' ||
+    input.observation.stableId !== input.action.intent.stableId ||
+    input.observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.requestedCursor !== input.action.intent.cursor
+  ) {
+    return invalid(['discussion-observation-attribution-mismatch']);
+  }
+  const capability = validateLinearHostCapability(
+    'read-discussion',
+    input.action.context,
+    input.hostCapability,
+  );
+  if (!capability.valid) return invalid(capability.reasons);
+  if (input.observation.availability !== 'available') {
+    return {
+      classification: input.observation.availability,
+      page: null,
+      persistable: false,
+      reasons: [input.observation.availability],
+    };
+  }
+  const maxItems = Number(
+    (input.action.intent.resultContract as Record<string, unknown> | undefined)
+      ?.maxItems,
+  );
+  if (
+    !Number.isInteger(maxItems) ||
+    input.observation.items.length > maxItems ||
+    input.observation.items.some(
+      (item) =>
+        !item.id ||
+        typeof item.body !== 'string' ||
+        !Number.isFinite(Date.parse(item.observedAt)),
+    ) ||
+    (input.observation.nextCursor !== null &&
+      (typeof input.observation.nextCursor !== 'string' ||
+        input.observation.nextCursor.length > 512))
+  ) {
+    return invalid(['discussion-page-invalid']);
+  }
+  return {
+    classification: 'page',
+    page: {
+      items: input.observation.items.map((item) => {
+        const contentSuppressed = containsSensitiveContentSignal(item.body);
+        return {
+          ...item,
+          body: contentSuppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : item.body,
+          contentSuppressed,
+        };
+      }),
+      nextCursor: input.observation.nextCursor,
+    },
+    persistable: false,
+    reasons: [],
+  };
+}
+
 function canonicalLinearStableId(workspaceId: string, uuid: string): string {
   return `linear:${workspaceId}:${uuid.toLowerCase()}`;
 }
@@ -455,6 +664,21 @@ function assertLinearMutationIdentity(input: LinearMutationPreviewInput): void {
   } else if (!input.stableId) {
     throw new Error('Linear mutation requires a stable issue identity.');
   }
+}
+
+function unavailableLinearRead(
+  classification: Extract<
+    LinearReadClassification,
+    'partial' | 'inaccessible' | 'temporarily-unavailable'
+  >,
+  reasons: string[],
+): LinearReadResult {
+  return {
+    classification,
+    issue: null,
+    preservePriorEvidence: true,
+    reasons,
+  };
 }
 
 function normalizeLinearMutationFieldMask(

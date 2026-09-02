@@ -3,12 +3,14 @@ import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider
 import { describe, expect, it } from 'vitest';
 
 import {
+  classifyLinearReadObservation,
   normalizeLinearIssueObservation,
   parseLinearIssueReference,
   planLinearMutation,
   planLinearDiscussionRead,
   planLinearRead,
   previewLinearMutation,
+  validateLinearDiscussionReadObservation,
   type LinearHostCapabilityObservation,
 } from './linear';
 
@@ -325,5 +327,142 @@ describe('Linear semantic mutation intents', () => {
         approvedPreviewDigest: 'sha256:stale',
       }),
     ).toThrow('approval');
+  });
+});
+
+describe('Linear read observations', () => {
+  const readAction = planLinearRead({
+    context: linearContext,
+    hostCapability: linearCapability,
+    stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    currentIdentifier: 'ALPHA-42',
+    stepId: 'linear-read-observation',
+  });
+
+  it('accepts a sanitized exact-context observation and detects archive/move', () => {
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'found',
+        observation: linearObservation,
+      }),
+    ).toMatchObject({
+      classification: 'current',
+      preservePriorEvidence: false,
+    });
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...linearObservation,
+          fields: { ...linearObservation.fields, archived: true },
+        },
+      }).classification,
+    ).toBe('archived');
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...linearObservation,
+          fields: {
+            ...linearObservation.fields,
+            identifier: 'BETA-42',
+            historicalIdentifiers: ['ALPHA-42'],
+          },
+        },
+      }).classification,
+    ).toBe('moved');
+  });
+
+  it.each([
+    [
+      'unavailable',
+      { ...linearCapability, availability: 'unavailable' as const },
+    ],
+    [
+      'authorization-required',
+      { ...linearCapability, availability: 'authorization-required' as const },
+    ],
+    [
+      'context-mismatch',
+      { ...linearCapability, context: { ...linearContext, teamId: 'wrong' } },
+    ],
+  ])('fails closed for %s capability evidence', (_name, hostCapability) => {
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'found',
+        observation: linearObservation,
+      }),
+    ).toMatchObject({
+      classification: 'inaccessible',
+      preservePriorEvidence: true,
+    });
+  });
+
+  it('marks partial response and temporary failure without retaining native payloads', () => {
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...linearObservation,
+          fields: { ...linearObservation.fields, title: undefined },
+        },
+      }).classification,
+    ).toBe('partial');
+    expect(
+      classifyLinearReadObservation({
+        action: readAction,
+        hostCapability: linearCapability,
+        observedAt: '2026-09-02T12:01:00.000Z',
+        outcome: 'temporary-failure',
+      }).classification,
+    ).toBe('temporarily-unavailable');
+  });
+
+  it('validates a bounded sanitized discussion page as non-persistent evidence', () => {
+    const action = planLinearDiscussionRead({
+      context: linearContext,
+      hostCapability: linearCapability,
+      stableId: readAction.intent.stableId as string,
+      cursor: null,
+      limit: 2,
+    });
+    expect(
+      validateLinearDiscussionReadObservation({
+        action,
+        hostCapability: linearCapability,
+        observation: {
+          provider: 'linear',
+          context: linearContext,
+          stableId: readAction.intent.stableId as string,
+          availability: 'available',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+          requestedCursor: null,
+          nextCursor: 'cursor_2',
+          items: [
+            {
+              id: 'comment_1',
+              body: 'Discussion evidence',
+              observedAt: '2026-09-02T12:01:00.000Z',
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ classification: 'page', persistable: false });
   });
 });
