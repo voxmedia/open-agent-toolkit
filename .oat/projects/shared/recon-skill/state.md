@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev8-t01
-oat_last_commit: dbfeeede518556ed5678839bc18ab1342e381593
+oat_current_task: null
+oat_last_commit: 318e60ca78ebbb3706ecf5b4adbeab9d3a58edcc
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # p-rev8 implementation complete; inline phase review pending
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -106,19 +106,19 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Configured gate fixes queued in Revision 8
+**Status:** Revision 8 implemented; inline phase review pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
 ## Current Phase
 
-Revision 7 closes the remaining post-promotion continuity window by making the
-retained canonical-byte assertion the final awaited publication check. The
-bounded two-file change passed its independent phase review with zero findings.
-The single explicitly authorized mandatory final lifecycle review passed and
-was received durably. The configured cross-family gate then returned one
-Important, one Medium, and one Minor finding in a valid blocked envelope.
-Revision 8 converts all three findings; PR #248 remains open.
+Revision 8 converts all three configured-gate findings: non-publishable
+generations now withdraw the prior packet with a categorical diagnostic,
+negative review dispositions reconcile through the existing contested/removal
+contract, and the stale Cursor skill-view claim is corrected. All three
+committed tasks plus one recovery attempt pass root verification (183/183
+recon, 9/9 dispatch, 4754/4754 forced CLI tests). The phase is in inline root
+review under the user's no-subagent directive; PR #248 remains open.
 
 ## Artifacts
 
@@ -126,7 +126,7 @@ Revision 8 converts all three findings; PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (30/33 tasks complete; Revision 8 queued)
+- **Implementation:** `implementation.md` (33/33 tasks complete; Revision 8 review pending)
 
 ## Progress
 
@@ -246,7 +246,12 @@ Revision 8 converts all three findings; PR #248 remains open.
 - ✓ Final review event received and artifact archived with no deferred findings
 - ! Configured cross-family exit gate returned 1 Important, 1 Medium, and 1
   Minor finding with a receive-eligible blocked result
-- ⧗ Revision 8 tasks `prev8-t01` through `prev8-t03` are queued
+- ✓ Revision 8 tasks `prev8-t01` through `prev8-t03` implemented with one
+  bounded recovery attempt
+- ✓ Root verification passes 183/183 recon, 9/9 dispatch, 4754/4754 forced
+  CLI tests, 63/63 skill validation, and formatting checks
+- ⧗ p-rev8 independent phase review pending (inline root review per user
+  no-subagent directive)
 
 ## Blockers
 
@@ -255,6 +260,6 @@ the single-use manual final-review override remains consumed.
 
 ## Next Milestone
 
-Execute Revision 8 through `oat-project-implement`. After its phase review,
-rerun final verification and the configured gate within the remaining
-remediation budget.
+Complete the p-rev8 inline phase review, then rerun final verification and the
+configured gate using the user-selected `claude-fable-skip-permissions` target
+within the remaining remediation budget.

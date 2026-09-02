@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: prev8-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -32,9 +32,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev5 | passed         | 1     | 1/1       |
 | Phase p-rev6 | review_pending | 1     | 1/1       |
 | Phase p-rev7 | passed         | 1     | 1/1       |
-| Phase p-rev8 | pending        | 3     | 0/3       |
+| Phase p-rev8 | review_pending | 3     | 3/3       |
 
-**Total:** 30/33 tasks completed
+**Total:** 33/33 tasks completed
 
 ## Task Status
 
@@ -130,11 +130,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev8: Revision 8 — Close Configured-Gate Findings
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev8-t01 | pending | -      |
-| prev8-t02 | pending | -      |
-| prev8-t03 | pending | -      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev8-t01 | completed | `b69e1c56c` |
+| prev8-t02 | completed | `c83cac4fe` |
+| prev8-t03 | completed | `53d5ef8ef` |
+
+### Phase p-rev8: Recovery Attempt 1
+
+| Task              | Status    | Commit      |
+| ----------------- | --------- | ----------- |
+| p-rev8-recovery-1 | completed | `318e60ca7` |
 
 ## Remote Review Received
 
@@ -254,6 +260,21 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Next:** execute Revision 8, mark this gate event `fixes_completed`, then
   rerun final verification and the configured gate within its remaining
   remediation budget
+
+## Revision 8 Implemented
+
+- **Date:** 2026-09-02
+- **Commits:** `b69e1c56c`, `c83cac4fe`, `53d5ef8ef`
+- **Recovery:** one recovery attempt (`318e60ca7`) aligned the recon canonical
+  version assertion after the new `1.0.1` skill version invalidated it
+- **Verification (root):** 183/183 recon tests, 9/9 dispatch tests, 4754/4754
+  forced CLI tests, oat:validate-skills 63/63, and oxfmt checks on all
+  changed surfaces pass
+- **Tracking:** all three tasks marked completed; phase enters
+  `review_pending`
+- **Next:** run the p-rev8 independent phase review inline in root under the
+  user's no-subagent directive, then rerun the configured gate with the
+  user-selected `claude-fable-skip-permissions` target
 
 ## Orchestration Runs
 
