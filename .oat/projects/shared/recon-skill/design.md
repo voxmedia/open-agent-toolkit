@@ -680,11 +680,11 @@ worker or controller never declares it directly.
 
 Rendering accepts only an immutable `ValidatedRun`, writes to a temporary
 sibling, and promotes `packet.md` only after final validation. Candidate
-validation is non-destructive. If validation, rendering, or promotion fails,
-the previous validated consumer packet remains the last-known-good entry point;
-the failed candidate is reported separately and is never represented by those
-preserved bytes. When no previous packet exists, structural failure leaves no
-consumer entry point.
+validation remains non-destructive for canonical diagnostic artifacts. If
+validation, rendering, or promotion fails, `packet.md` is withdrawn so no
+consumer entry point can refer to a different canonical generation. The
+manifest, ledger, reviews, raw diagnostics, and safe failure record remain
+available for diagnosis.
 
 ### Diagnostics
 

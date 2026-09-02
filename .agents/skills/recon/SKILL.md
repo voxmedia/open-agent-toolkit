@@ -199,10 +199,11 @@ Run `scripts/validate-artifact.mjs` on every candidate, then
 `scripts/validate-packet.mjs` on the complete directory. Quarantine invalid
 candidates under `raw/`; never promote shared artifacts in place and never
 overwrite the last valid ledger. Candidate packet validation is
-non-destructive: when it fails, do not invoke the renderer, retain any existing
-validated `packet.md` as the last-known-good consumer entry point, and report
-the candidate failure separately. Only a valid candidate proceeds to
-`scripts/render-packet.mjs`.
+non-destructive for the canonical diagnostic artifacts: when it fails, do not
+invoke the renderer, withdraw any existing `packet.md`, and report the
+candidate failure separately. Only a valid candidate proceeds to
+`scripts/render-packet.mjs`; failure leaves no consumer entry point that could
+refer to a different canonical generation.
 
 Derive the achieved profile from completed stages whose required typed,
 digest-bound artifacts validate. Do not accept a worker or manifest assertion
@@ -216,10 +217,10 @@ manifest and ledger. Publish through a symlink-safe temporary sibling followed
 by atomic promotion. A complete run meets the requested profile and has no
 material gap. An honest partial records requested profile, achieved profile,
 failed or omitted passes, material coverage gaps, and claim downgrades; a
-same-profile partial is valid when a material gap remains. A structural failure
-with no prior packet publishes no `packet.md`; a failed replacement preserves
-the last-known-good packet and leaves a safe failure record without presenting
-the preserved bytes as the failed candidate.
+same-profile partial is valid when a material gap remains. Structural failure
+leaves no `packet.md`. Renderer promotion failure also withdraws that consumer
+entry point. Both retain the canonical manifest, ledger, reviews, raw
+diagnostics, and safe failure record for diagnosis.
 
 ### Step 8: Return the Directory-Only Handoff
 

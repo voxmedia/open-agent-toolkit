@@ -260,10 +260,10 @@ references, containment, hashes, source reopening, locators, the complete
 approval and receipt selection, exact topology, the one terminal
 reconciliation, legal transitions, secret-safe persistence, derived gaps,
 assurance, and requested vs achieved profile. Candidate validation is
-non-destructive: failure leaves any prior validated `packet.md` untouched and
-does not authorize rendering. With no prior packet, structural failure leaves
-no consumer entry point. Only a valid `complete` or honest `partial` candidate
-is publishable.
+non-destructive for canonical diagnostic artifacts, but failure withdraws any
+existing `packet.md` and does not authorize rendering. Only a valid `complete`
+or honest `partial` candidate is publishable, so a rejected canonical
+generation cannot retain a consumer entry point from another generation.
 
 `complete` requires the requested profile and no material gap. `partial` is
 valid when either a lower profile was achieved or at least one material gap is
@@ -273,9 +273,10 @@ Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
 render core accepts only that graph. It writes an exclusive unpredictable
 temporary sibling, retains that file's identity through hashing and atomic
-promotion, verifies the promoted digest, and preserves the last-known-good
-packet on any failure. Its result is the directory path plus a compact status
-summary and digest, never raw dossier content.
+promotion, and verifies the promoted digest. Rendering or promotion failure
+withdraws `packet.md` while leaving canonical diagnostics available. Its result
+is the directory path plus a compact status summary and digest, never raw
+dossier content.
 
 ## Version 1 Non-Goals
 

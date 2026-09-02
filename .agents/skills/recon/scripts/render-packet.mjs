@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from 'node:crypto';
-import { link as hardLink, lstat, open, rename, rm } from 'node:fs/promises';
+import { lstat, open, rename, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -197,9 +197,7 @@ async function assertFileIdentity(path, identity) {
 
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
-  const validation = await compileValidatedRun(packetRoot, {
-    removePublishedOnFailure: false,
-  });
+  const validation = await compileValidatedRun(packetRoot);
   if (!validation.valid || !validation.publishable) {
     throw new Error(
       `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
@@ -216,15 +214,11 @@ export async function renderValidatedPacket(
   const { manifest, ledger, packetRoot } = run;
   const target = join(packetRoot, 'packet.md');
   const temporary = join(packetRoot, `.packet.md.${randomUUID()}.tmp`);
-  const backup = join(packetRoot, `.packet.md.${randomUUID()}.backup`);
   let temporaryFile;
-  let backupCreated = false;
-  let publicationAttempted = false;
   try {
     const document = renderPacketDocument(run);
     await assertSafeOutputPath(packetRoot, temporary);
     await assertSafeOutputPath(packetRoot, target);
-    await assertSafeOutputPath(packetRoot, backup);
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
@@ -259,13 +253,6 @@ export async function renderValidatedPacket(
       ],
       digest,
     };
-    try {
-      await hardLink(target, backup);
-      backupCreated = true;
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-    }
-    publicationAttempted = true;
     await promote(temporary, target);
     await assertFileIdentity(target, temporaryIdentity);
     const [promotedDigest, retainedDigest] = await Promise.all([
@@ -284,23 +271,17 @@ export async function renderValidatedPacket(
     return result;
   } catch (error) {
     try {
-      if (backupCreated) {
-        await rename(backup, target);
-        backupCreated = false;
-      } else if (publicationAttempted) {
-        await rm(target, { force: true });
-      }
-    } catch (restoreError) {
+      await rm(target, { force: true });
+    } catch (withdrawalError) {
       throw new Error(
-        `Packet promotion failed (${error instanceof Error ? error.message : error}) and the prior packet could not be restored`,
-        { cause: restoreError },
+        `Packet rendering failed (${error instanceof Error ? error.message : error}) and the consumer entry point could not be withdrawn`,
+        { cause: withdrawalError },
       );
     }
     throw error;
   } finally {
     await temporaryFile?.close();
     await rm(temporary, { force: true });
-    await rm(backup, { force: true });
   }
 }
 

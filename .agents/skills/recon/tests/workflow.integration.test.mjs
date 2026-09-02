@@ -184,7 +184,7 @@ test('structural failure leaves diagnostics but no consumer packet', async () =>
   );
 });
 
-test('documented candidate validation preserves the last-known-good packet until successful promotion', async () => {
+test('documented candidate validation withdraws the consumer view until successful publication', async () => {
   const fixture = await createPacketFixture({ profile: 'quick' });
   tempRoots.push(fixture.tempRoot);
   await renderPacket(fixture.packetRoot);
@@ -201,15 +201,9 @@ test('documented candidate validation preserves the last-known-good packet until
     false,
     JSON.stringify(invalidCandidate, null, 2),
   );
-  assert.equal(
-    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
-    published,
-  );
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
   await assert.rejects(renderPacket(fixture.packetRoot));
-  assert.equal(
-    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
-    published,
-  );
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 
   fixture.manifest.schemaVersion = 1;
   fixture.ledger.synthesis.answer = 'A successfully promoted replacement.';

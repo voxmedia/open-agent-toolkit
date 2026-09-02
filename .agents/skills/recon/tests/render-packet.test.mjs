@@ -432,31 +432,25 @@ test('structural validation failure leaves no packet entry point', async () => {
   await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 });
 
-test('validation failure preserves a previously published packet', async () => {
+test('validation failure withdraws a previously published packet', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
   await renderPacket(fixture.packetRoot);
-  const published = await readFile(
-    join(fixture.packetRoot, 'packet.md'),
-    'utf8',
-  );
   fixture.ledger.synthesis.keyClaimIds = null;
   await fixture.persist();
   await assert.rejects(renderPacket(fixture.packetRoot));
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
   assert.equal(
-    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
-    published,
+    JSON.parse(await readFile(fixture.claimsPath, 'utf8')).synthesis
+      .keyClaimIds,
+    null,
   );
 });
 
-test('promotion failure after temporary creation preserves the published packet and removes only the temp file', async () => {
+test('promotion failure withdraws the published packet and removes the temp file', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
   await renderPacket(fixture.packetRoot);
-  const published = await readFile(
-    join(fixture.packetRoot, 'packet.md'),
-    'utf8',
-  );
   const validation = await compileValidatedRun(fixture.packetRoot);
 
   await assert.rejects(
@@ -467,24 +461,17 @@ test('promotion failure after temporary creation preserves the published packet 
     }),
     /injected promotion failure/,
   );
-  assert.equal(
-    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
-    published,
-  );
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
   assert.equal(
     (await readdir(fixture.packetRoot)).some((name) => name.endsWith('.tmp')),
     false,
   );
 });
 
-test('temporary path replacement after hashing cannot promote different bytes or displace the last-known-good packet', async () => {
+test('temporary path replacement after hashing cannot publish different bytes', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
   await renderPacket(fixture.packetRoot);
-  const published = await readFile(
-    join(fixture.packetRoot, 'packet.md'),
-    'utf8',
-  );
   fixture.ledger.synthesis.answer = 'A candidate synthesis.';
   await fixture.persist();
   const validation = await compileValidatedRun(fixture.packetRoot);
@@ -500,10 +487,7 @@ test('temporary path replacement after hashing cannot promote different bytes or
     }),
     /identity|digest/i,
   );
-  assert.equal(
-    await readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
-    published,
-  );
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
   assert.equal(
     (await readdir(fixture.packetRoot)).some(
       (name) => name.includes('.tmp') || name.includes('.backup'),

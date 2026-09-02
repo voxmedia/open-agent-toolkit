@@ -929,7 +929,7 @@ test('rejects an unredacted secret span without echoing it in diagnostics', asyn
   assert.doesNotMatch(JSON.stringify(result), /super-secret-value/);
 });
 
-test('candidate validation failure preserves the existing packet entry point', async () => {
+test('candidate validation failure withdraws the existing packet entry point', async () => {
   const packet = await makePacket();
   await writeFile(
     join(packet.packetRoot, 'packet.md'),
@@ -940,9 +940,10 @@ test('candidate validation failure preserves the existing packet entry point', a
   await writeJson(packet.manifestPath, packet.manifest);
   const result = await validatePacket(packet.packetRoot);
   assert.equal(result.valid, false);
+  await assert.rejects(readFile(join(packet.packetRoot, 'packet.md'), 'utf8'));
   assert.equal(
-    await readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
-    '# last known good\n',
+    JSON.parse(await readFile(packet.manifestPath, 'utf8')).schemaVersion,
+    99,
   );
   assert.equal(basename(result.packetRoot), basename(packet.packetRoot));
 });

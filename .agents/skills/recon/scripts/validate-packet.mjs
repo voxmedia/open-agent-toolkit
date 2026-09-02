@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFile, rm } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
@@ -2231,6 +2231,10 @@ export async function compileValidatedRun(packetDirectory) {
     }
 
     const valid = errors.length === 0;
+    if (!valid && packetRootIdentity) {
+      await assertUnchangedRoot(packetRootIdentity);
+      await rm(join(packetRoot, 'packet.md'), { force: true });
+    }
     return {
       valid,
       publishable:
@@ -2247,6 +2251,10 @@ export async function compileValidatedRun(packetDirectory) {
     };
   }
 
+  if (packetRootIdentity) {
+    await assertUnchangedRoot(packetRootIdentity);
+    await rm(join(packetRoot, 'packet.md'), { force: true });
+  }
   return {
     valid: false,
     publishable: false,
