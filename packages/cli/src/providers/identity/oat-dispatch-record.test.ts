@@ -255,6 +255,41 @@ describe('augmentDispatchRecord', () => {
     ).toThrow(message);
   });
 
+  it.each([
+    ['wrapper-launch-refused', true],
+    ['wrapper-launch-failure', false],
+  ])(
+    'treats the closed qualifying set as authoritative for %s',
+    (code, qualifying) => {
+      const blocked = genericRecord({
+        launch_status: 'blocked-before-start',
+        child_outcome: 'not-started',
+      });
+      const attest = () =>
+        augmentDispatchRecord({
+          record: blocked,
+          event: {
+            kind: 'pre-start-rejection-attestation',
+            requestId: blocked.request_id,
+            source: 'provider-wrapper',
+            expectedLaunchStatus: 'blocked-before-start',
+            rejection: {
+              code,
+              rejectedAt: '2026-09-02T00:00:01.000Z',
+              provesNoChildStarted: true,
+            },
+          },
+        });
+      if (qualifying) {
+        expect(attest().oat.preStartRejection).toMatchObject({ code });
+      } else {
+        // A "launch failure" can describe a post-spawn failure, so the name is
+        // no longer part of the pre-start set.
+        expect(attest).toThrow(/qualifying codes/i);
+      }
+    },
+  );
+
   it('rejects an unrecognized rejection code outside the closed qualifying set', () => {
     const blocked = genericRecord({
       launch_status: 'blocked-before-start',

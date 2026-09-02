@@ -158,11 +158,21 @@ Pre-start native-selection rejection is a closed event set, disjoint from
 terminal child-outcome codes. Use exactly one of `native-role-unavailable`,
 `native-target-unavailable`, `native-selector-unsupported`,
 `native-catalog-unsatisfying`, `capability-unresolved-or-unsupported`,
-`wrapper-payload-rejected`, or `wrapper-launch-failure`. The recorder rejects
+`wrapper-payload-rejected`, or `wrapper-launch-refused`. The recorder rejects
 every other code, and it names the prohibited outcome family when a terminal
 code such as `timeout` is submitted. A fallback additionally requires the
 trigger record to carry resolved canonical role evidence, and the fallback's
 role evidence must equal it exactly.
+
+`wrapper-launch-refused` covers only conditions in which the launch surface
+declined the request and no child process was ever created: a rejected or
+unsupported payload, a refused authorization scope, an unavailable or
+unregistered target, or a wrapper precondition failure raised before spawn. Any
+condition in which a child process was created — including spawn success
+followed by immediate exit, a crash, a broken handle, or a lost transport — is a
+terminal outcome, not a pre-start rejection, and must be recorded through
+`child_outcome`. If you cannot prove the child never existed, you cannot set
+`provesNoChildStarted: true`, and no fallback is authorized.
 
 Project-aware callers pass the validated record and event on standard input:
 

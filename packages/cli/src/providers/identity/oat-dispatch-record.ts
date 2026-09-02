@@ -23,7 +23,7 @@ export const QUALIFYING_PRE_START_REJECTION_CODES = [
   'native-catalog-unsatisfying',
   'capability-unresolved-or-unsupported',
   'wrapper-payload-rejected',
-  'wrapper-launch-failure',
+  'wrapper-launch-refused',
 ] as const;
 
 export type QualifyingPreStartRejectionCode =
@@ -68,24 +68,21 @@ const preStartRejectionCodeSchema = z
   .string()
   .min(1)
   .superRefine((code, context) => {
-    const prohibited = prohibitedRejectionCategory(code);
-    if (prohibited !== null) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `A ${prohibited} outcome is not a pre-start native-selection rejection and never authorizes fallback or replacement.`,
-      });
+    // The closed qualifying set is authoritative. Family classification only
+    // supplies a better diagnostic for a code that is already not qualifying.
+    if (
+      (QUALIFYING_PRE_START_REJECTION_CODES as readonly string[]).includes(code)
+    ) {
       return;
     }
-    if (
-      !(QUALIFYING_PRE_START_REJECTION_CODES as readonly string[]).includes(
-        code,
-      )
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Pre-start rejection code must be one of the qualifying codes: ${QUALIFYING_PRE_START_REJECTION_CODES.join(', ')}.`,
-      });
-    }
+    const prohibited = prohibitedRejectionCategory(code);
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        prohibited === null
+          ? `Pre-start rejection code must be one of the qualifying codes: ${QUALIFYING_PRE_START_REJECTION_CODES.join(', ')}.`
+          : `A ${prohibited} outcome is not a pre-start native-selection rejection and never authorizes fallback or replacement.`,
+    });
   });
 
 /**
