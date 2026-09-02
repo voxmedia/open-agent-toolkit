@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,14 +30,14 @@ oat_generated: false
 | Phase 2    | completed   | 10    | 10/10     |
 | Phase 3    | blocked     | 12    | 12/12     |
 | Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | in_progress | 9     | 0/9       |
+| Phase 5    | in_progress | 9     | 9/9       |
 | Phase 6    | pending     | 10    | 0/10      |
 | Phase 7    | pending     | 10    | 0/10      |
 | Phase 8    | pending     | 6     | 0/6       |
 | Revision 1 | blocked     | 4     | 4/4       |
 | Revision 2 | completed   | 2     | 2/2       |
 
-**Total:** 49/84 tasks completed
+**Total:** 58/84 tasks completed
 
 ---
 
@@ -834,6 +834,56 @@ findings after operator-extension fix loop 3/3.
   reproduced.
 - Phase 4 completed after 4/4 reviews and 3/3 fix loops. Recovery remained 0/10
   with no pending attempt. Phase 5 is unblocked and `p05-t01` is next.
+
+---
+
+## Phase 5: Linear Semantic Adapter
+
+**Status:** in progress — all 9 planned tasks are implemented and verified;
+fresh root-owned code review is pending.
+**Started:** 2026-09-02
+**Implementation head:** ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+
+### Phase Summary
+
+- Added durable Linear UUID identity, current and historical identifiers,
+  workspace/team context, moved-team evidence, normalized snapshots, and
+  provider extensions.
+- Added provider-neutral semantic read and mutation plans with exact normalized
+  projections, universal safety, preview, approval, action, capability, and
+  authoritative readback evidence.
+- Added sanitized read/mutation observation validation, bounded discussion and
+  duplicate-search behavior, immutable conformance coverage, and lifecycle
+  integration without native tool schemas, catalogs, or Linear CLI dialects.
+- Duplicate recovery accepts only exact provenance, reserved-binding, or
+  historical-identifier matches with verified durable UUID and context.
+
+### Task Commits
+
+- `p05-t01` — `2ae26d36c64e54ce577c7bc5c3cd3aead419bbea`
+- `p05-t02` — `b1c97664b8b9c5088c61cb31b565231b19e16073`
+- `p05-t03` — `8efb8d1c777a3a8f1b3ff33c15ef0196c9c2cbc5`
+- `p05-t04` — `8875b621e1d94d096ceb5094957c00151ca54f68`
+- `p05-t05` — `7611654d245f4df37f74e802a13b19903b93f643`
+- `p05-t06` — `7d17ca8caf1685681f8107a659f904d3df29a658`
+- `p05-t07` — `a183bd88c874c3a129b79a93ede75b2cf20c7ffc`
+- `p05-t08` — `b597073c59915974f8357597331efb2afced5402`
+- `p05-t09` — `ab94b6080a37b2b1bcdd80a51c93b5507c746fdd`
+
+### Verification and Review Boundary
+
+- Root independently verified exactly nine ordered task commits, exactly four
+  declared Linear files, clean diff integrity, and a clean worktree.
+- The live focused Linear suite passed 38/38 across unit, conformance, and
+  integration coverage.
+- The implementer reported the full remote suite passing 489/489, CLI lint with
+  zero warnings/errors, type-check, build, workspace format, diff check, and
+  provider-neutrality sweep passing.
+- Recovery remained 0/10 with no pending attempt or recovery event. No optional
+  nested dispatch occurred.
+- The planned lockstep version bump remains deferred to `p08-t05`; Phase 5 does
+  not claim the release gates pass at version `0.2.50`.
+- Fresh root-owned Phase 5 code review is next. Phase 6 has not started.
 
 ---
 
@@ -1686,6 +1736,66 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - Phase 4 completed after 4/4 reviews and 3/3 fix loops. Recovery remained 0/10
   with no pending attempt. Phase 5 is unblocked and `p05-t01` is next.
 
+### Run 8 — Phase p05
+
+```yaml
+request_id: p05-implementation-20260902-d5293b564
+caller: oat-project-implement
+scope: p05
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: native-default
+selection_reason: native-catalog exact managed candidate
+candidates_considered:
+  - gpt-5.6-sol/high
+  - gpt-5.6-sol/medium
+selected_route: native
+phase_base_head: d5293b5649dbb3dd46a5b14590fb8fc411a0fd16
+phase_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+task_commits:
+  - 2ae26d36c64e54ce577c7bc5c3cd3aead419bbea
+  - b1c97664b8b9c5088c61cb31b565231b19e16073
+  - 8efb8d1c777a3a8f1b3ff33c15ef0196c9c2cbc5
+  - 8875b621e1d94d096ceb5094957c00151ca54f68
+  - 7611654d245f4df37f74e802a13b19903b93f643
+  - 7d17ca8caf1685681f8107a659f904d3df29a658
+  - a183bd88c874c3a129b79a93ede75b2cf20c7ffc
+  - b597073c59915974f8357597331efb2afced5402
+  - ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+launch_status: accepted
+child_outcome: done
+continuation_events: []
+recovery_usage: 0/10
+pending_attempt: null
+phase_outcome: implementation_passed_review_pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p05 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- All nine planned tasks produced one ordered, declared-boundary commit each.
+- Root verified the four-file phase boundary and reran the live three-file
+  focused suite at 38/38. The worktree and diff checks were clean.
+- The implementer reported the full remote suite at 489/489 plus CLI lint,
+  type-check, build, workspace format, diff check, and provider-neutrality
+  passing.
+- No optional nested dispatch occurred. Recovery remained 0/10 with no pending
+  attempt or event.
+- Fresh root-owned Phase 5 code review is pending; Phase 6 did not start.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1785,7 +1895,8 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | extension review 4 pending |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 38/38; remote 489/489; checks passed   | 0      | root review pending        |
 
 ## Final Summary (for PR/docs)
 
