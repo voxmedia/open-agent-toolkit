@@ -119,6 +119,7 @@ describe('parseClaudeRuntimeObservation', () => {
       source: CLAUDE_OBSERVATION_SOURCE,
       observedAt: OBSERVED_AT,
       match: 'matching',
+      comparedAxes: ['role', 'model', 'serviceTier'],
     });
   });
 

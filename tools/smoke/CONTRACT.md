@@ -468,7 +468,9 @@ collector only projects it. Collection reads committed files and never launches
 a provider, so an observation exists in evidence solely because a launcher-owned
 record already carried one. It normalizes to `reported` only when the record
 names a `provider`, a `source`, an `observedAt` timestamp, and a `match` of
-`matching`, `mismatching`, or `not-comparable`; every other shape, including a
+`matching`, `mismatching`, or `not-comparable`. `comparedAxes` carries the axes
+the verdict rests on; a `matching` with an empty or narrow list is a weaker
+claim than the scalar alone suggests, so consumers must read both. every other shape, including a
 partially filled observation, becomes `not-reported` with all axes `null`.
 Nothing is ever promoted from `configuredInvocation`, and a `mismatching` or
 absent observation never fails a configured-invocation assertion.

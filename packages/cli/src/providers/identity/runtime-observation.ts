@@ -36,12 +36,24 @@ const OBSERVING_PROVIDERS: ReadonlySet<string> = new Set(['codex', 'claude']);
  * work at a durable-write boundary.
  */
 const MAX_ENVELOPE_ENTRIES = 5000;
+const MAX_ENVELOPE_BYTES = 16 * 1024 * 1024;
 
 const runtimeObservationEnvelopeSchema = z
   .object({
     provider: z.string().min(1).max(256),
     observedAt: z.string().datetime(),
-    entries: z.array(z.unknown()).max(MAX_ENVELOPE_ENTRIES),
+    entries: z
+      .array(z.unknown())
+      .max(MAX_ENVELOPE_ENTRIES)
+      // Entry count alone bounds breadth but not size, and the record ceiling
+      // does not apply because entries are never persisted. State the input
+      // bound in the same terms as every other dispatch bound.
+      .refine(
+        (entries) =>
+          new TextEncoder().encode(JSON.stringify(entries) ?? 'null').length <=
+          MAX_ENVELOPE_BYTES,
+        `Observation metadata must serialize to at most ${MAX_ENVELOPE_BYTES} bytes.`,
+      ),
   })
   .strict();
 

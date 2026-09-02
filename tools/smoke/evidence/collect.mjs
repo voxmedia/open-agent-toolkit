@@ -225,6 +225,7 @@ const OBSERVATION_MATCH_VALUES = new Set([
 
 const NOT_REPORTED_OBSERVATION = Object.freeze({
   childLineage: null,
+  comparedAxes: [],
   effort: null,
   match: null,
   model: null,
@@ -248,7 +249,7 @@ const NOT_REPORTED_OBSERVATION = Object.freeze({
  */
 export function normalizeRuntimeObservation(value) {
   if (!isPlainObject(value) || value.status !== 'reported') {
-    return { ...NOT_REPORTED_OBSERVATION };
+    return { ...NOT_REPORTED_OBSERVATION, comparedAxes: [] };
   }
   const provider = optionalString(value.provider);
   const source = optionalString(value.source);
@@ -264,6 +265,11 @@ export function normalizeRuntimeObservation(value) {
   }
   return {
     childLineage: optionalString(value.childLineage),
+    // The axes the verdict rests on. A `matching` with an empty or narrow list
+    // is a weaker claim than the scalar alone suggests.
+    comparedAxes: Array.isArray(value.comparedAxes)
+      ? value.comparedAxes.map((axis) => String(axis))
+      : [],
     effort: optionalString(value.effort),
     match,
     model: optionalString(value.model),

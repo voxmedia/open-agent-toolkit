@@ -284,6 +284,7 @@ describe('parseCodexRuntimeObservation against captured rollouts', () => {
       source: CODEX_OBSERVATION_SOURCE,
       observedAt: OBSERVED_AT,
       match: 'matching',
+      comparedAxes: ['role', 'model', 'effort'],
     });
   });
 

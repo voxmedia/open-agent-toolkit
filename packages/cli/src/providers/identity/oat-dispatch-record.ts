@@ -344,6 +344,14 @@ const MAX_OBSERVATION_VALUE_LENGTH = 256;
  */
 const OBSERVATION_IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
+/** The axes an observation and a configured invocation can be compared on. */
+const COMPARED_OBSERVATION_AXES = [
+  'role',
+  'model',
+  'effort',
+  'serviceTier',
+] as const;
+
 /**
  * The single canonical observation-value validator. Both the metadata path and
  * a caller-supplied observation resolve through it, so a value can never be
@@ -382,6 +390,17 @@ const runtimeObservationSchema = z.discriminatedUnion('status', [
       source: observationValue(),
       observedAt: z.string().datetime(),
       match: z.enum(['matching', 'mismatching', 'not-comparable']),
+      /**
+       * The axes the verdict actually rests on. Optional so a record written
+       * before this field existed still parses, but always written now: a
+       * `matching` that rests on one incidental axis is a materially weaker
+       * claim than one resting on model and role, and a consumer reading only
+       * the scalar `match` cannot tell them apart.
+       */
+      comparedAxes: z
+        .array(observationValue())
+        .max(COMPARED_OBSERVATION_AXES.length)
+        .optional(),
     })
     .strict(),
 ]);
@@ -461,13 +480,6 @@ const NON_COMPARABLE_OBSERVED_VALUES: ReadonlySet<string> = new Set([
   'unknown',
 ]);
 
-const COMPARED_OBSERVATION_AXES = [
-  'role',
-  'model',
-  'effort',
-  'serviceTier',
-] as const;
-
 function comparableValue(value: string | null | undefined): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
@@ -492,20 +504,28 @@ function comparableValues(axis: ConfiguredObservationAxis): string[] {
  * mismatch is evidence only — it never authorizes replacement, retry, or
  * fallback.
  */
+export function comparedObservationAxes(
+  metadata: ObservedRuntimeMetadata,
+  configured: ConfiguredInvocationForObservation | null | undefined,
+): string[] {
+  return COMPARED_OBSERVATION_AXES.filter(
+    (axis) =>
+      comparableValue(metadata[axis]) !== null &&
+      comparableValues(configured?.[axis]).length > 0,
+  );
+}
+
 export function compareObservedRuntimeMetadata(
   metadata: ObservedRuntimeMetadata,
   configured: ConfiguredInvocationForObservation | null | undefined,
 ): RuntimeObservationMatch {
-  let compared = 0;
-  let mismatched = false;
-  for (const axis of COMPARED_OBSERVATION_AXES) {
-    const observed = comparableValue(metadata[axis]);
-    const expected = comparableValues(configured?.[axis]);
-    if (observed === null || expected.length === 0) continue;
-    compared += 1;
-    if (!expected.includes(observed)) mismatched = true;
-  }
-  if (compared === 0) return 'not-comparable';
+  const compared = comparedObservationAxes(metadata, configured);
+  if (compared.length === 0) return 'not-comparable';
+  const mismatched = compared.some((axis) => {
+    const observed = comparableValue(metadata[axis as 'model']);
+    const expected = comparableValues(configured?.[axis as 'model']);
+    return observed === null || !expected.includes(observed);
+  });
   return mismatched ? 'mismatching' : 'matching';
 }
 
@@ -542,6 +562,7 @@ export function buildRuntimeObservation(input: {
     source: input.source,
     observedAt: input.observedAt,
     match: compareObservedRuntimeMetadata(metadata, input.configured),
+    comparedAxes: comparedObservationAxes(metadata, input.configured),
   };
   const parsed = runtimeObservationSchema.safeParse(candidate);
   return parsed.success ? parsed.data : { status: 'not-reported' };

@@ -14,6 +14,7 @@ import {
 import {
   augmentDispatchRecord,
   compareObservedRuntimeMetadata,
+  comparedObservationAxes,
   configuredInvocationForObservation,
   parsePersistedOatDispatchRecord,
   parseRuntimeObservation,
@@ -137,6 +138,11 @@ export interface DispatchRecordRuntimeIdentity {
     serviceTier: string | null;
   } | null;
   match: 'matching' | 'mismatching' | 'not-comparable' | null;
+  /**
+   * The axes `match` rests on. A `matching` verdict says nothing about an axis
+   * absent from this list.
+   */
+  comparedAxes: readonly string[];
   status: 'reported' | 'not-reported';
 }
 
@@ -205,6 +211,10 @@ function resolveObservationEvent(
     observation: parseRuntimeObservation({
       ...observation,
       match: compareObservedRuntimeMetadata(
+        observation as ObservedRuntimeMetadata,
+        configuredInvocationForObservation(record),
+      ),
+      comparedAxes: comparedObservationAxes(
         observation as ObservedRuntimeMetadata,
         configuredInvocationForObservation(record),
       ),
@@ -289,6 +299,8 @@ function runtimeIdentityFor(
           }
         : null,
     match: observation.status === 'reported' ? observation.match : null,
+    comparedAxes:
+      observation.status === 'reported' ? (observation.comparedAxes ?? []) : [],
     status: observation.status,
   };
 }

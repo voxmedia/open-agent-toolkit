@@ -191,7 +191,9 @@ current nested dispatcher. It does not imply a stable enum or authorize
 reconstruction of a materialized lifecycle variant.
 
 `role_selector` is the exact provider or harness agent-type selector, when that
-surface exists. Preserve opaque selectors byte-for-byte.
+surface exists. Preserve opaque selectors byte-for-byte, within the
+256-character identifier bound described under
+[Size and Content Bounds](#size-and-content-bounds).
 
 Use the stable selection reasons `native-catalog`,
 `native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`, and
@@ -295,7 +297,10 @@ partial token. Store references, identifiers, digests, and paths; never role
 content, message bodies, or credentials.
 
 Optional runtime observation is metadata-only and subject to the same
-identifier bound. It records what a provider reported about its own child and
+identifier bound, which admits letters, digits, `.`, `_`, and `-` only, so no
+observation value can carry a path or a URL. Its `match` and `comparedAxes` are
+always derived from the record's configured invocation rather than supplied by
+the caller, and `matching` covers only the axes listed in `comparedAxes`. It records what a provider reported about its own child and
 never restates the request: an axis a provider does not expose is
 `not-exposed`, an absent or unparseable observation is `not-reported`, and
 neither is ever filled in from `model_selector`, `effort_selector`,

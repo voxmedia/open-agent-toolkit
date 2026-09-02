@@ -132,12 +132,28 @@ working directories, and repository identity, is dropped before the record
 boundary. Requiring pre-sanitized input instead would push the stripper into
 every caller, which is a larger leak surface than the one it removes.
 
-Comparison covers only the axes both sides report. With no comparable axis the
-match is `not-comparable`, because silence is not agreement. An axis a provider
-does not expose (`not-exposed`) is excluded rather than compared as a literal.
-An axis the configured invocation names under two equally authoritative
-spellings — a canonical role name and its materialized native selector —
-matches either.
+Comparison covers only the axes both sides report, and `comparedAxes` records
+exactly which ones. This qualifier is load-bearing: `matching` means "every axis
+in `comparedAxes` agreed", never "the configured invocation was confirmed". An
+observation reporting only a service tier can be `matching` while model, role,
+and effort are all unknown, so read `comparedAxes` — or the `on role+model`
+qualifier in human output — before treating a match as corroboration. With no
+comparable axis the match is `not-comparable`, because silence is not agreement.
+
+An axis a provider does not expose (`not-exposed`) is excluded rather than
+compared as a literal. An axis the configured invocation names under two equally
+authoritative spellings — a canonical role name and its materialized native
+selector — matches either.
+
+`match` and `comparedAxes` are always derived at the durable-write boundary from
+the record's own configured invocation. A caller that submits a finished
+observation cannot assert its own verdict, and an observation naming a provider
+the record does not use is refused.
+
+Request correlation is verified only when the provider declares one: a session
+that names a different request is declined, and a session that declares none is
+attributed to the request the caller paired it with. Correlation is therefore
+provider-verified when available and caller-asserted otherwise.
 
 A parse failure, a declined request correlation, an unsupported provider, or an
 absent envelope all produce `not-reported`. None of them copies a requested

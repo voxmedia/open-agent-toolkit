@@ -885,6 +885,7 @@ describe('runtime observation integration', () => {
       source: 'codex-rollout-metadata',
       observedAt: '2026-09-02T12:00:00.000Z',
       match: 'matching',
+      comparedAxes: ['role', 'model', 'effort'],
     });
     const { oat: _oat, ...generic } = result.record;
     expect(generic).toEqual(configured);
@@ -965,6 +966,7 @@ describe('runtime observation integration', () => {
         serviceTier: null,
       },
       match: 'matching',
+      comparedAxes: ['role', 'model', 'effort'],
       status: 'reported',
     });
 
@@ -972,6 +974,7 @@ describe('runtime observation integration', () => {
     expect(absent.result.runtimeIdentity).toMatchObject({
       observed: null,
       match: null,
+      comparedAxes: [],
       status: 'not-reported',
     });
     expect(absent.result.runtimeIdentity.configured.model).toBe('gpt-5.6-sol');

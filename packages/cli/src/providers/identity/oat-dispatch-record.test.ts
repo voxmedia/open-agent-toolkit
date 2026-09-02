@@ -853,6 +853,7 @@ describe('runtime observation construction', () => {
       source: 'codex-rollout-metadata',
       observedAt: '2026-09-02T12:00:00.000Z',
       match: 'matching',
+      comparedAxes: ['model'],
     });
   });
 
@@ -882,6 +883,42 @@ describe('runtime observation construction', () => {
         metadata: { model: 'a'.repeat(300) },
       }),
     ).toEqual({ status: 'not-reported' });
+  });
+
+  it('records which axes the verdict actually rests on', () => {
+    // `matching` must never be read as agreement about an axis nobody reported.
+    expect(
+      buildRuntimeObservation({
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        metadata: { serviceTier: 'priority', effort: 'not-exposed' },
+        configured,
+      }),
+    ).toMatchObject({ match: 'matching', comparedAxes: ['serviceTier'] });
+
+    expect(
+      buildRuntimeObservation({
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        metadata: { model: 'gpt-5.6-sol', role: 'oat-phase-implementer' },
+        configured,
+      }),
+    ).toMatchObject({
+      match: 'matching',
+      comparedAxes: ['role', 'model'],
+    });
+
+    expect(
+      buildRuntimeObservation({
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        metadata: { childLineage: 'root' },
+        configured,
+      }),
+    ).toMatchObject({ match: 'not-comparable', comparedAxes: [] });
   });
 
   it('rejects an observation carrying sensitive content', () => {

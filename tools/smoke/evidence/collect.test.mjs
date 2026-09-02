@@ -284,6 +284,7 @@ test('runtime identity requires independently observed provenance', () => {
 test('runtime observation stays a projection and defaults to not-reported', () => {
   const notReported = {
     childLineage: null,
+    comparedAxes: [],
     effort: null,
     match: null,
     model: null,
@@ -328,10 +329,12 @@ test('runtime observation stays a projection and defaults to not-reported', () =
       observedAt: '2026-09-02T12:00:00.000Z',
       match: 'mismatching',
       childLineage: 'depth-1',
+      comparedAxes: ['model'],
       model: 'gpt-5.6-terra',
     }),
     {
       childLineage: 'depth-1',
+      comparedAxes: ['model'],
       effort: null,
       match: 'mismatching',
       model: 'gpt-5.6-terra',

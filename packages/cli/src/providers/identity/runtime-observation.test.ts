@@ -116,6 +116,21 @@ describe('parseRuntimeObservationEnvelope', () => {
     ).toHaveLength(2);
   });
 
+  it('bounds the envelope by serialized size as well as entry count', () => {
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries: [
+          {
+            type: 'session_meta',
+            payload: { id: 'x'.repeat(17 * 1024 * 1024) },
+          },
+        ],
+      }),
+    ).toThrow(/bytes|size/i);
+  });
+
   it('rejects unknown keys, bad shapes, and content-bearing envelopes', () => {
     expect(() =>
       parseRuntimeObservationEnvelope({

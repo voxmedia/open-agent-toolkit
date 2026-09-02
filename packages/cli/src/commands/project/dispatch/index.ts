@@ -82,15 +82,17 @@ function runtimeIdentityLines(
     ])}`,
     observed === null
       ? 'Observed runtime identity: not reported (corroboration only; the configured invocation is unchanged).'
-      : `Observed runtime identity (${observed.source}, ${identity.match}): ${axes(
-          [
-            ['lineage', observed.childLineage],
-            ['role', observed.role],
-            ['model', observed.model],
-            ['effort', observed.effort],
-            ['service_tier', observed.serviceTier],
-          ],
-        )}`,
+      : `Observed runtime identity (${observed.source}, ${identity.match} on ${
+          identity.comparedAxes.length === 0
+            ? 'no comparable axis'
+            : identity.comparedAxes.join('+')
+        }): ${axes([
+          ['lineage', observed.childLineage],
+          ['role', observed.role],
+          ['model', observed.model],
+          ['effort', observed.effort],
+          ['service_tier', observed.serviceTier],
+        ])}`,
   ];
 }
 
