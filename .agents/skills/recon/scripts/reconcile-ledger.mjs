@@ -7,6 +7,12 @@ const requiredDispositions = new Map([
   ['coverage', 'covered'],
 ]);
 
+const permittedDispositions = new Map([
+  ['semantic', new Set(['affirmed', 'rejected', 'uncertain'])],
+  ['adversarial', new Set(['unchallenged', 'challenged'])],
+  ['coverage', new Set(['covered', 'gap'])],
+]);
+
 const legalReconciliationTransitions = new Set([
   'provisional:verified',
   'provisional:contested',
@@ -58,15 +64,12 @@ export function reconcileLedger({
   const reviews = new Map(
     reviewResults.map((review) => [review.reviewKind, review]),
   );
-  for (const [kind, disposition] of requiredDispositions) {
+  for (const [kind] of requiredDispositions) {
     const review = reviews.get(kind);
     if (!review || review.runId !== runId || review.status !== 'complete') {
       throw new Error(`Reconciliation requires a complete ${kind} result`);
     }
-    const allowed =
-      kind === 'coverage'
-        ? new Set(['covered', 'gap'])
-        : new Set([disposition]);
+    const allowed = permittedDispositions.get(kind);
     if (!review.dispositions.every((item) => allowed.has(item.disposition))) {
       throw new Error(`Reconciliation received an invalid ${kind} disposition`);
     }
@@ -177,9 +180,29 @@ export function reconcileLedger({
     }
   }
   const transitions = [];
+  const removals = [];
+  const removalDispositions = [];
   for (const claim of ledger.claims) {
     const supporting = reviewResults.filter((review) =>
       review.dispositions.some((item) => item.claimId === claim.id),
+    );
+    const rejectedReview = supporting.find((review) =>
+      review.dispositions.some(
+        (item) => item.claimId === claim.id && item.disposition === 'rejected',
+      ),
+    );
+    const challenged = supporting.some(
+      (review) =>
+        review.reviewKind === 'adversarial' &&
+        review.dispositions.some(
+          (item) =>
+            item.claimId === claim.id && item.disposition === 'challenged',
+        ),
+    );
+    const uncertain = supporting.some((review) =>
+      review.dispositions.some(
+        (item) => item.claimId === claim.id && item.disposition === 'uncertain',
+      ),
     );
     const materialCoverageGap = reviewResults.some(
       (review) =>
@@ -208,6 +231,25 @@ export function reconcileLedger({
         ...supporting.map((review) => review.id),
       ]),
     ];
+    if (rejectedReview) {
+      removals.push(claim.id);
+      removalDispositions.push({
+        claimId: claim.id,
+        reviewId: rejectedReview.id,
+        disposition: 'rejected',
+      });
+      continue;
+    }
+    if (challenged) {
+      const from = claim.status;
+      const to = 'contested';
+      if (legalReconciliationTransitions.has(`${from}:${to}`)) {
+        claim.status = to;
+        if (from !== to) transitions.push({ claimId: claim.id, from, to });
+      }
+      continue;
+    }
+    if (uncertain) continue;
     if (!coreComplete) continue;
     const from = claim.status;
     const to = materialCoverageGap ? 'contested' : 'verified';
@@ -215,6 +257,10 @@ export function reconcileLedger({
     claim.status = to;
     if (from !== claim.status)
       transitions.push({ claimId: claim.id, from, to: claim.status });
+  }
+  if (removals.length > 0) {
+    const removed = new Set(removals);
+    ledger.claims = ledger.claims.filter((claim) => !removed.has(claim.id));
   }
   ledger.transitions = transitions;
   const coverageDispositions = (
@@ -237,8 +283,8 @@ export function reconcileLedger({
     incorporatedReviewIds: reviewResults.map((review) => review.id),
     transitions: exactClone(transitions),
     additions: [],
-    removals: [],
-    removalDispositions: [],
+    removals,
+    removalDispositions,
     coverageDispositions,
     permittedInputs: [
       priorReference,

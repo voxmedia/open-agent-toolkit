@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
+import { hashFile } from '../scripts/lib/canonical-json.mjs';
+import { reconcileLedger } from '../scripts/reconcile-ledger.mjs';
 import { renderPacket } from '../scripts/render-packet.mjs';
 import { validatePacket } from '../scripts/validate-packet.mjs';
 import { createPacketFixture } from './fixtures/packet-fixture.mjs';
@@ -30,6 +32,10 @@ async function roots() {
     assetsRoot: join(root, 'assets'),
     userRoot: join(root, 'user'),
   };
+}
+
+async function writeJson(path, value) {
+  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
 for (const profile of ['quick', 'standard', 'thorough']) {
@@ -336,6 +342,84 @@ test('standard workflow emits all typed review results and reconciles revision o
       'reviews/coverage.json',
       'reviews/semantic.json',
     ],
+  );
+});
+
+test('standard workflow retains a genuine adversarial contradiction as contested', async () => {
+  const injectedRoots = await roots();
+  await runFakeRecon({ profile: 'standard', roots: injectedRoots });
+  const manifestPath = join(injectedRoots.packetRoot, 'manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const adversarialPath = join(
+    injectedRoots.packetRoot,
+    'reviews',
+    'adversarial.json',
+  );
+  const adversarial = JSON.parse(await readFile(adversarialPath, 'utf8'));
+  adversarial.dispositions[0].disposition = 'challenged';
+  await writeJson(adversarialPath, adversarial);
+  manifest.artifacts.find(
+    (item) => item.path === 'reviews/adversarial.json',
+  ).digest = await hashFile(adversarialPath);
+
+  const priorReference = manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, priorReference.path), 'utf8'),
+  );
+  const reviewResults = await Promise.all(
+    ['semantic', 'adversarial', 'coverage'].map(async (kind) => {
+      const relative = `reviews/${kind}.json`;
+      return {
+        ...JSON.parse(
+          await readFile(join(injectedRoots.packetRoot, relative), 'utf8'),
+        ),
+        artifactReference: {
+          ...manifest.artifacts.find((item) => item.path === relative),
+        },
+      };
+    }),
+  );
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults,
+    priorReference,
+  });
+  const claimsPath = join(injectedRoots.packetRoot, 'claims.json');
+  await writeJson(claimsPath, ledger);
+  manifest.artifacts.find((item) => item.path === 'claims.json').digest =
+    await hashFile(claimsPath);
+  const reconciliationPath = join(
+    injectedRoots.packetRoot,
+    'reviews',
+    'reconciliation.json',
+  );
+  await writeJson(reconciliationPath, reconciliation);
+  manifest.artifacts.find(
+    (item) => item.path === 'reviews/reconciliation.json',
+  ).digest = await hashFile(reconciliationPath);
+  manifest.run.status = 'partial';
+  manifest.gaps.push({
+    id: 'gap-adversarial-challenge',
+    code: 'UNRESOLVED_CHALLENGE',
+    message: 'The adversarial review retained a material contradiction.',
+    material: true,
+    sourceIds: [],
+    claimIds: ['claim-1'],
+    coverageFindingIds: [],
+  });
+  await writeJson(manifestPath, manifest);
+
+  const result = await renderPacket(injectedRoots.packetRoot);
+  assert.equal(result.status, 'partial');
+  assert.equal(
+    JSON.parse(await readFile(claimsPath, 'utf8')).claims[0].status,
+    'contested',
+  );
+  assert.match(
+    await readFile(join(injectedRoots.packetRoot, 'packet.md'), 'utf8'),
+    /contested/i,
   );
 });
 
