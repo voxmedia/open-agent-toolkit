@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: final-review
-    reason: operator-authorized fresh reviewer was interrupted by the parent session before inspection or artifact creation; another launch requires explicit authorization
-    since: 2026-09-02
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
@@ -989,6 +986,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Verdict: none; final review remains pending
 - Authorization accounting: the operator-authorized one fresh launch was used;
   no further launch is authorized by this interruption
+
+#### Second final review relaunch authorization
+
+- Date: 2026-09-02
+- Authorization: explicit user approval for one additional fresh final-review
+  launch
+- Reason: the prior authorized relaunch was interrupted by the parent session
+  before inspection or artifact creation and produced no verdict
+- Constraints: preserve the exact high reviewer target and unchanged
+  implementation basis; this authorization permits one launch only
 
 <!-- orchestration-runs-end -->
 
