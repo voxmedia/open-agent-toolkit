@@ -19,6 +19,18 @@ oat_phase_recovery_policy:
     p05:
       used_attempts: 1
       pending_attempt: null
+    p-rev8:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: 6ad55f42-f535-46ed-b0c9-570cf5ea19d1
+        original_request_id: recon-skill-prev8-implementation-20260902T222500Z
+        original_task_id: prev8-t01
+        original_commit: b69e1c56c1d272b629f47e0b354f40855d9f4db6
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 53d5ef8ef700363d315e91ebea2d1b85c0075792
+        status: completed
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets

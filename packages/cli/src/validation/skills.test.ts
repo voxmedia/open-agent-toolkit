@@ -6611,7 +6611,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(skill).toMatch(/^version:\s*1\.0\.0$/m);
+    expect(skill).toMatch(/^version:\s*1\.0\.1$/m);
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
