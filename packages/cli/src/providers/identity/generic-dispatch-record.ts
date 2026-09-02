@@ -26,19 +26,32 @@ const genericFallbackSchema = z
 const optionalSelector = z.string().min(1).nullable();
 
 /**
- * `payload` carries configured sandbox/tool controls only. It is validated as a
- * closed, bounded JSON projection so that prompt bodies, transcripts, and other
- * free-form content cannot ride into a durable journal through an unbounded
- * `unknown` value.
+ * Every generic container field is validated as a closed, bounded JSON
+ * projection so prompt bodies, transcripts, and other free-form content cannot
+ * ride into a durable journal through an unbounded `unknown` value. `payload`
+ * carries configured sandbox/tool controls; `configured_invocation_evidence`,
+ * `continuation_events`, `diagnostics`, and `escalate_when` carry short
+ * references and identifiers, not narrative text.
  */
+const BOUNDED_PROJECTION_FIELDS = [
+  'payload',
+  'configured_invocation_evidence',
+  'continuation_events',
+  'diagnostics',
+  'escalate_when',
+] as const;
 const MAX_PAYLOAD_DEPTH = 4;
 const MAX_PAYLOAD_STRING_LENGTH = 512;
 
-function payloadProjectionViolation(
+function boundedProjectionViolation(
   value: unknown,
   path: string,
   depth: number,
 ): string | null {
+  if (value === undefined) {
+    // An absent optional field has nothing to project.
+    return null;
+  }
   if (
     value === null ||
     typeof value === 'boolean' ||
@@ -59,7 +72,7 @@ function payloadProjectionViolation(
   }
   if (Array.isArray(value)) {
     for (const [index, entry] of value.entries()) {
-      const violation = payloadProjectionViolation(
+      const violation = boundedProjectionViolation(
         entry,
         `${path}[${index}]`,
         depth + 1,
@@ -69,7 +82,7 @@ function payloadProjectionViolation(
     return null;
   }
   for (const [key, entry] of Object.entries(value)) {
-    const violation = payloadProjectionViolation(
+    const violation = boundedProjectionViolation(
       entry,
       `${path}.${key}`,
       depth + 1,
@@ -164,17 +177,15 @@ export const genericDispatchRecordSchema = z
       });
     }
 
-    const payloadViolation = payloadProjectionViolation(
-      record.payload,
-      'payload',
-      1,
-    );
-    if (payloadViolation) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Dispatch payload must stay inside the closed control projection: ${payloadViolation}.`,
-        path: ['payload'],
-      });
+    for (const field of BOUNDED_PROJECTION_FIELDS) {
+      const violation = boundedProjectionViolation(record[field], field, 1);
+      if (violation) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Dispatch ${field} must stay inside the closed control projection: ${violation}.`,
+          path: [field],
+        });
+      }
     }
 
     const presentClassFields = TASK_CLASS_FIELDS.filter(
@@ -217,13 +228,62 @@ export const genericDispatchRecordSchema = z
 export type GenericDispatchRecord = z.infer<typeof genericDispatchRecordSchema>;
 
 /**
- * Sensitive-key classification normalizes spelling, case, and separators before
- * matching so that `api_key`, `apiKey`, `API-KEY`, and `ApiKey` all collapse to
- * the same classified token. Matching is deliberately family-based rather than
- * an exact-spelling denylist.
+ * Latin look-alikes from other scripts. Stripping non-ASCII characters would
+ * silently delete a homoglyph and unmask nothing, so confusables are folded to
+ * their Latin counterpart before the strip.
+ */
+const CONFUSABLE_FOLDING: ReadonlyMap<string, string> = new Map([
+  ['\u0430', 'a'],
+  ['\u0432', 'b'],
+  ['\u0441', 'c'],
+  ['\u0501', 'd'],
+  ['\u0435', 'e'],
+  ['\u0433', 'r'],
+  ['\u043d', 'h'],
+  ['\u0456', 'i'],
+  ['\u0458', 'j'],
+  ['\u043a', 'k'],
+  ['\u043c', 'm'],
+  ['\u043e', 'o'],
+  ['\u0440', 'p'],
+  ['\u0455', 's'],
+  ['\u0442', 't'],
+  ['\u0443', 'y'],
+  ['\u0445', 'x'],
+  ['\u04bb', 'h'],
+  ['\u03b1', 'a'],
+  ['\u03b5', 'e'],
+  ['\u03b3', 'y'],
+  ['\u03b9', 'i'],
+  ['\u03ba', 'k'],
+  ['\u03bc', 'm'],
+  ['\u03bd', 'v'],
+  ['\u03bf', 'o'],
+  ['\u03c1', 'p'],
+  ['\u03c4', 't'],
+  ['\u03c7', 'x'],
+  ['\u0261', 'g'],
+  ['\u0131', 'i'],
+  ['\u026a', 'i'],
+  ['\u0269', 'i'],
+  ['\u2113', 'l'],
+  ['\u0578', 'n'],
+]);
+
+/**
+ * Sensitive-key classification folds compatibility forms (NFKC handles
+ * full-width and mathematical alphanumerics), case, cross-script confusables,
+ * and separators before matching, so `api_key`, `apiKey`, `API-KEY`,
+ * full-width `\uff41\uff50\uff49\uff2b\uff45\uff59`, and a Cyrillic-a
+ * `\u0430piKey` all collapse to the same classified token. Matching is
+ * deliberately family-based rather than an exact-spelling denylist.
  */
 export function normalizeDispatchKey(key: string): string {
-  return key.toLowerCase().replace(/[^a-z0-9]/g, '');
+  let folded = '';
+  for (const character of key.normalize('NFKC').toLowerCase()) {
+    folded += CONFUSABLE_FOLDING.get(character) ?? character;
+  }
+  return folded.replace(/[^a-z0-9]/g, '');
 }
 
 /**
@@ -260,7 +320,28 @@ const SENSITIVE_KEY_FAMILIES: readonly string[] = [
   'messagecontent',
   'instructiontext',
   'instructionbody',
+  'instruction',
+  'assistanttext',
+  'usertext',
+  'systemtext',
+  'pwd',
+  'privkey',
+  'sshkey',
+  'gpgkey',
+  'cred',
+  'oauth',
+  'session',
 ];
+
+/**
+ * Evidence keys that legitimately collide with a denied family. `roleInstructions`
+ * carries canonical role identity (dependency, tier, path, version, digest) and
+ * never role content, so it is admitted explicitly rather than by relying on the
+ * family list happening to miss it.
+ */
+const SENSITIVE_KEY_ALLOWLIST: ReadonlySet<string> = new Set([
+  'roleinstructions',
+]);
 
 /**
  * Generic content words that are only sensitive as a complete key. They are
@@ -269,6 +350,7 @@ const SENSITIVE_KEY_FAMILIES: readonly string[] = [
  */
 const SENSITIVE_KEY_EXACT: ReadonlySet<string> = new Set([
   'auth',
+  'pass',
   'authorization',
   'body',
   'content',
@@ -285,6 +367,10 @@ const SENSITIVE_KEY_EXACT: ReadonlySet<string> = new Set([
   'text',
 ]);
 
+/**
+ * Best-effort second layer only. Key-family classification above is the primary
+ * defence; value shapes change constantly and this list will never be complete.
+ */
 const SENSITIVE_VALUE_PATTERNS: readonly RegExp[] = [
   /authorization\s*:\s*bearer\s+\S+/i,
   /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----/i,
@@ -294,11 +380,17 @@ const SENSITIVE_VALUE_PATTERNS: readonly RegExp[] = [
   /\bxox[abprs]-[A-Za-z0-9-]{10,}/,
   /\bAKIA[0-9A-Z]{16}\b/,
   /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\./,
+  /\bAIzaSy[A-Za-z0-9_-]{20,}/,
+  /\bglpat-[A-Za-z0-9_-]{16,}/,
+  /\bdop_v1_[a-f0-9]{32,}/,
+  /\bnpm_[A-Za-z0-9]{30,}/,
+  /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/?#@]+:[^\s:/?#@]+@/i,
 ];
 
 export function isSensitiveDispatchKey(key: string): boolean {
   const normalized = normalizeDispatchKey(key);
   if (normalized === '') return false;
+  if (SENSITIVE_KEY_ALLOWLIST.has(normalized)) return false;
   if (SENSITIVE_KEY_EXACT.has(normalized)) return true;
   return SENSITIVE_KEY_FAMILIES.some((family) => normalized.includes(family));
 }
