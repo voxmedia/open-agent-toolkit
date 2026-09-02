@@ -145,6 +145,32 @@ function fallbackInput(fallbackRequestId: string) {
   };
 }
 
+/** Request IDs present in the append-only journal, latest revision per ID. */
+async function journalRequests(projectPath: string): Promise<string[]> {
+  const names = await readdir(join(projectPath, 'dispatch'));
+  return [
+    ...new Set(
+      names
+        .filter((name) => name.endsWith('.json'))
+        .map((name) => name.slice(0, -'.json'.length).split('@')[0]),
+    ),
+  ].sort();
+}
+
+async function latestRecord(projectPath: string, requestId: string) {
+  const names = (await readdir(join(projectPath, 'dispatch')))
+    .filter(
+      (name) =>
+        name.endsWith('.json') &&
+        name.slice(0, -'.json'.length).split('@')[0] === requestId,
+    )
+    .sort();
+  const newest = names[names.length - 1];
+  return JSON.parse(
+    await readFile(join(projectPath, 'dispatch', newest), 'utf8'),
+  );
+}
+
 async function seedRejectedTrigger() {
   const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
   roots.push(projectPath);
@@ -205,9 +231,22 @@ describe('recordProjectDispatch', () => {
     expect(updated.record.oat.canonicalRole).toEqual(
       created.record.oat.canonicalRole,
     );
-    expect(await readdir(join(projectPath, 'dispatch'))).toEqual([
+    // Append-only: the update publishes a new revision instead of replacing
+    // the first one, which stays byte-identical.
+    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
       'dispatch-native-1.json',
+      'dispatch-native-1@0002.json',
     ]);
+    expect(created.path).toBe('dispatch/dispatch-native-1.json');
+    expect(updated.path).toBe('dispatch/dispatch-native-1@0002.json');
+    expect(
+      JSON.parse(
+        await readFile(
+          join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+          'utf8',
+        ),
+      ).oat.runtimeObservation,
+    ).toEqual({ status: 'not-reported' });
   });
 
   it('preserves a prior record when generic fields are redefined', async () => {
@@ -331,19 +370,16 @@ describe('recordProjectDispatch', () => {
           },
         },
       }),
-    ).rejects.toThrow(/changed since it was read|already has a fallback/i);
+    ).rejects.toThrow(
+      /concurrent update was preserved|already has a fallback/i,
+    );
 
     expect(winner).toMatchObject({ status: 'persisted', created: true });
-    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
-      'dispatch-native-1.json',
-      'fallback-b.json',
+    expect(await journalRequests(projectPath)).toEqual([
+      'dispatch-native-1',
+      'fallback-b',
     ]);
-    const trigger = JSON.parse(
-      await readFile(
-        join(projectPath, 'dispatch', 'dispatch-native-1.json'),
-        'utf8',
-      ),
-    );
+    const trigger = await latestRecord(projectPath, 'dispatch-native-1');
     expect(trigger.oat.fallbackClaim).toMatchObject({
       fallbackRequestId: 'fallback-b',
     });
@@ -366,14 +402,13 @@ describe('recordProjectDispatch', () => {
 
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
-    const names = (await readdir(join(projectPath, 'dispatch'))).sort();
-    expect(names).toHaveLength(2);
-    expect(names).toContain('dispatch-native-1.json');
+    const requests = await journalRequests(projectPath);
+    expect(requests).toHaveLength(2);
+    expect(requests).toContain('dispatch-native-1');
   });
 
   it('fails a stale concurrent update instead of losing the winning event', async () => {
     const projectPath = await seedRejectedTrigger();
-    const path = join(projectPath, 'dispatch', 'dispatch-native-1.json');
 
     await expect(
       recordProjectDispatch({
@@ -410,9 +445,9 @@ describe('recordProjectDispatch', () => {
           },
         },
       }),
-    ).rejects.toThrow(/changed since it was read/i);
+    ).rejects.toThrow(/concurrent update was preserved/i);
 
-    const final = JSON.parse(await readFile(path, 'utf8'));
+    const final = await latestRecord(projectPath, 'dispatch-native-1');
     expect(final.oat.preStartRejection).toMatchObject({
       code: 'native-role-unavailable',
     });
@@ -425,7 +460,6 @@ describe('recordProjectDispatch', () => {
 
   it('preserves both events when two different events race for one request', async () => {
     const projectPath = await seedRejectedTrigger();
-    const path = join(projectPath, 'dispatch', 'dispatch-native-1.json');
 
     const results = await Promise.allSettled([
       recordProjectDispatch({
@@ -454,13 +488,45 @@ describe('recordProjectDispatch', () => {
 
     const fulfilled = results.filter((r) => r.status === 'fulfilled');
     expect(fulfilled.length).toBeGreaterThanOrEqual(1);
-    const final = JSON.parse(await readFile(path, 'utf8'));
+    const final = await latestRecord(projectPath, 'dispatch-native-1');
     // Whatever the interleaving, no accepted write may erase evidence that was
     // already published.
     expect(final.oat.preStartRejection).toMatchObject({
       code: 'native-role-unavailable',
     });
     expect(final.oat.canonicalRole).toMatchObject({ status: 'resolved' });
+  });
+
+  it('never leaks an absolute path when a stale write loses the revision race', async () => {
+    const projectPath = await seedRejectedTrigger();
+
+    const error = await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: blockedRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          observation: { status: 'not-reported' },
+        },
+      },
+      raceBarriers: {
+        afterRead: async () => {
+          await recordProjectDispatch({
+            projectPath,
+            input: { record: blockedRecord(), event: canonicalEvent() },
+          });
+        },
+      },
+    }).catch((raised: Error) => raised);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toMatch(
+      /concurrent update was preserved/i,
+    );
+    expect((error as Error).message).not.toContain(projectPath);
+    expect((error as Error).message).not.toContain(tmpdir());
   });
 
   it('does not adopt a pre-existing invalid journal', async () => {

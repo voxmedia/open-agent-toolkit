@@ -1,11 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import {
-  atomicWriteJsonContained,
-  jsonJournalDigest,
-  withContainedWriterLock,
-} from '@fs/io';
+import { publishContainedJsonRevision, withContainedWriterLock } from '@fs/io';
 import {
   assertNoSensitiveDispatchContent,
   parseGenericDispatchRecord,
@@ -31,9 +27,38 @@ export interface DispatchRecordRaceBarriers {
   afterRead?: () => Promise<void>;
 }
 
-interface PersistedRevision {
-  record: PersistedOatDispatchRecordV1;
-  digest: string;
+/**
+ * The journal is append-only. Revision 1 keeps the plain `<request-id>.json`
+ * name; every later revision is published create-only under
+ * `<request-id>@<NNNN>.json`. Publishing revision N+1 exclusively is the
+ * compare-and-swap: a caller that lost the race observes `EEXIST` instead of
+ * replacing the winner, and no publication can ever clobber an existing file.
+ * `@` is outside the request-ID character class, so the split is unambiguous.
+ */
+const REVISION_SEPARATOR = '@';
+const REVISION_SUFFIX_PATTERN = /^(.*)@(\d{4})$/;
+const MAX_REVISION = 9999;
+
+interface JournalEntry {
+  requestId: string;
+  revision: number;
+  fileName: string;
+}
+
+function revisionFileName(requestId: string, revision: number): string {
+  return revision === 1
+    ? `${requestId}.json`
+    : `${requestId}${REVISION_SEPARATOR}${String(revision).padStart(4, '0')}.json`;
+}
+
+function parseJournalEntry(fileName: string): JournalEntry | null {
+  if (!fileName.endsWith('.json')) return null;
+  const stem = fileName.slice(0, -'.json'.length);
+  const suffixed = REVISION_SUFFIX_PATTERN.exec(stem);
+  const requestId = suffixed?.[1] ?? stem;
+  const revision = suffixed ? Number(suffixed[2]) : 1;
+  if (!REQUEST_ID_PATTERN.test(requestId) || revision < 1) return null;
+  return { requestId, revision, fileName };
 }
 
 export interface DispatchRecordInput {
@@ -94,9 +119,9 @@ function isMissingError(error: unknown): boolean {
   );
 }
 
-async function readPersistedRevision(
+async function readPersistedRecord(
   path: string,
-): Promise<PersistedRevision | null> {
+): Promise<PersistedOatDispatchRecordV1 | null> {
   let content: string;
   try {
     content = await readFile(path, 'utf8');
@@ -106,37 +131,32 @@ async function readPersistedRevision(
     }
     throw error;
   }
-  return {
-    record: parsePersistedOatDispatchRecord(JSON.parse(content)),
-    digest: jsonJournalDigest(content),
-  };
+  return parsePersistedOatDispatchRecord(JSON.parse(content));
 }
 
-async function readPersistedRecord(
-  path: string,
-): Promise<PersistedOatDispatchRecordV1 | null> {
-  return (await readPersistedRevision(path))?.record ?? null;
-}
-
-async function readRelatedRecords(
+/** Highest published revision per request ID. */
+async function readLatestRevisions(
   dispatchDir: string,
-): Promise<PersistedOatDispatchRecordV1[]> {
+): Promise<Map<string, JournalEntry>> {
   let names: string[];
   try {
     names = await readdir(dispatchDir);
   } catch (error) {
     if (isMissingError(error)) {
-      return [];
+      return new Map();
     }
     throw error;
   }
-  const records: PersistedOatDispatchRecordV1[] = [];
+  const latest = new Map<string, JournalEntry>();
   for (const name of names.sort()) {
-    if (!name.endsWith('.json')) continue;
-    const record = await readPersistedRecord(join(dispatchDir, name));
-    if (record) records.push(record);
+    const entry = parseJournalEntry(name);
+    if (!entry) continue;
+    const known = latest.get(entry.requestId);
+    if (!known || entry.revision > known.revision) {
+      latest.set(entry.requestId, entry);
+    }
   }
-  return records;
+  return latest;
 }
 
 function fallbackTriggerRequestId(
@@ -148,6 +168,46 @@ function fallbackTriggerRequestId(
     throw new Error('Fallback trigger request ID is invalid.');
   }
   return requestId;
+}
+
+function isAlreadyPublished(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'EEXIST'
+  );
+}
+
+async function publishRevision(
+  projectPath: string,
+  dispatchDir: string,
+  requestId: string,
+  revision: number,
+  record: PersistedOatDispatchRecordV1,
+): Promise<string> {
+  if (revision > MAX_REVISION) {
+    throw new Error(
+      `Dispatch journal for ${requestId} reached its ${MAX_REVISION}-revision limit.`,
+    );
+  }
+  const fileName = revisionFileName(requestId, revision);
+  try {
+    await publishContainedJsonRevision(
+      join(dispatchDir, fileName),
+      record,
+      projectPath,
+    );
+  } catch (error) {
+    if (isAlreadyPublished(error)) {
+      throw new Error(
+        'The dispatch journal advanced to a newer revision while this write was prepared; the concurrent update was preserved and this stale write was refused.',
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  return `dispatch/${fileName}`;
 }
 
 export async function recordProjectDispatch(input: {
@@ -167,78 +227,98 @@ export async function recordProjectDispatch(input: {
 
   const projectPath = input.projectPath;
   const dispatchDir = join(projectPath, 'dispatch');
-  const recordPath = join(dispatchDir, `${parsedInput.record.request_id}.json`);
-  const existing = await readPersistedRevision(recordPath);
+  const requestId = parsedInput.record.request_id;
+  const latest = await readLatestRevisions(dispatchDir);
+
+  const existingEntry = latest.get(requestId) ?? null;
+  const existing = existingEntry
+    ? await readPersistedRecord(join(dispatchDir, existingEntry.fileName))
+    : null;
   if (
     existing &&
-    !sameGenericRecord(genericPart(existing.record), parsedInput.record)
+    !sameGenericRecord(genericPart(existing), parsedInput.record)
   ) {
     throw new Error(
       'Existing generic fields are immutable and cannot be redefined.',
     );
   }
 
-  const relatedRecords = await readRelatedRecords(dispatchDir);
+  const relatedRecords: PersistedOatDispatchRecordV1[] = [];
+  for (const [otherId, entry] of [...latest].sort(([left], [right]) =>
+    left < right ? -1 : 1,
+  )) {
+    if (otherId === requestId) continue;
+    const related = await readPersistedRecord(
+      join(dispatchDir, entry.fileName),
+    );
+    if (related) relatedRecords.push(related);
+  }
+
   const triggerRequestId = fallbackTriggerRequestId(parsedInput.event);
-  const triggerPath =
-    triggerRequestId === null
-      ? null
-      : join(dispatchDir, `${triggerRequestId}.json`);
-  const trigger = triggerPath ? await readPersistedRevision(triggerPath) : null;
-  if (triggerPath !== null && trigger === null) {
+  const triggerEntry = triggerRequestId
+    ? (latest.get(triggerRequestId) ?? null)
+    : null;
+  const trigger = triggerEntry
+    ? await readPersistedRecord(join(dispatchDir, triggerEntry.fileName))
+    : null;
+  if (triggerRequestId !== null && trigger === null) {
     throw new Error('Fallback requires the rejected trigger record.');
   }
 
   await input.raceBarriers?.afterRead?.();
 
-  // One shared, identity-bound transition. The lock serializes claim and
-  // publication; every write additionally compares and swaps the exact revision
-  // it was derived from, so a stale concurrent writer fails instead of silently
-  // discarding the winner's evidence.
+  // One shared, identity-bound transition. The lock serializes the trigger
+  // claim and the fallback publication; the exclusive revision name is the
+  // compare-and-swap, so a stale concurrent writer loses without any write
+  // being able to replace the winner's evidence.
   return withContainedWriterLock(
     join(projectPath, DISPATCH_LOCK_NAME),
     projectPath,
     async () => {
-      let triggerRecord = trigger?.record;
-      if (trigger && triggerPath && triggerRequestId) {
+      let triggerRecord = trigger ?? undefined;
+      if (trigger && triggerEntry && triggerRequestId) {
         const claimed = augmentDispatchRecord({
-          record: trigger.record,
+          record: trigger,
           event: {
             kind: 'fallback-claim',
             requestId: triggerRequestId,
             source: 'provider-wrapper',
             claim: {
-              fallbackRequestId: parsedInput.record.request_id,
+              fallbackRequestId: requestId,
               claimedAt: new Date().toISOString(),
             },
           },
         });
-        if (JSON.stringify(claimed) !== JSON.stringify(trigger.record)) {
-          await atomicWriteJsonContained(triggerPath, claimed, projectPath, {
-            expectedDigest: trigger.digest,
-          });
+        if (JSON.stringify(claimed) !== JSON.stringify(trigger)) {
+          await publishRevision(
+            projectPath,
+            dispatchDir,
+            triggerRequestId,
+            triggerEntry.revision + 1,
+            claimed,
+          );
         }
         triggerRecord = claimed;
       }
 
       const record = augmentDispatchRecord({
-        record: existing?.record ?? parsedInput.record,
+        record: existing ?? parsedInput.record,
         event: parsedInput.event,
         ...(triggerRecord ? { triggerRecord } : {}),
         relatedRecords,
       });
-      await atomicWriteJsonContained(
-        recordPath,
-        record,
+      const revision = (existingEntry?.revision ?? 0) + 1;
+      const path = await publishRevision(
         projectPath,
-        existing === null
-          ? { createOnly: true }
-          : { expectedDigest: existing.digest },
+        dispatchDir,
+        requestId,
+        revision,
+        record,
       );
       return {
         status: 'persisted' as const,
-        path: `dispatch/${parsedInput.record.request_id}.json`,
-        created: existing === null,
+        path,
+        created: revision === 1,
         record,
       };
     },

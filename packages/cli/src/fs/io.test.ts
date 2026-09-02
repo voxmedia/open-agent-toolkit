@@ -92,20 +92,6 @@ vi.mock('node:fs/promises', async (importOriginal) => {
       }
       return actual.link(...args);
     },
-    rename: async (...args: Parameters<typeof actual.rename>) => {
-      const [, destination] = args;
-      if (
-        journalPublicationRace.beforePathBasedPublication &&
-        typeof destination === 'string' &&
-        destination.endsWith('.json')
-      ) {
-        journalPublicationRace.publicationCalls += 1;
-        const barrier = journalPublicationRace.beforePathBasedPublication;
-        journalPublicationRace.beforePathBasedPublication = undefined;
-        await barrier();
-      }
-      return actual.rename(...args);
-    },
     unlink: async (...args: Parameters<typeof actual.unlink>) => {
       const [linkPath] = args;
       if (
@@ -120,7 +106,6 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 });
 
 import {
-  atomicWriteJsonContained,
   atomicWriteJson,
   copyDirectory,
   createCollectionSymlinkNoClobber,
@@ -128,6 +113,7 @@ import {
   dirExists,
   ensureDir,
   fileExists,
+  publishContainedJsonRevision,
   removeCollectionSymlinkIfUnchanged,
 } from './io';
 
@@ -441,20 +427,27 @@ describe('fs/io', () => {
     await expect(readFile(`${output}.tmp`, 'utf8')).rejects.toThrow();
   });
 
-  it('atomically replaces contained JSON and preserves the prior record on failure', async () => {
+  it('publishes immutable revisions and refuses to replace an existing name', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
     tempDirs.push(root);
-    const file = join(root, 'dispatch', 'request-1.json');
+    const first = join(root, 'dispatch', 'request-1.json');
+    const second = join(root, 'dispatch', 'request-1@0002.json');
 
-    await atomicWriteJsonContained(file, { version: 1 }, root);
-    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 1');
-    await atomicWriteJsonContained(file, { version: 2 }, root);
-    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 2');
+    await publishContainedJsonRevision(first, { version: 1 }, root);
+    await expect(readFile(first, 'utf8')).resolves.toContain('"version": 1');
+    await publishContainedJsonRevision(second, { version: 2 }, root);
+    await expect(readFile(second, 'utf8')).resolves.toContain('"version": 2');
+    // Revision 1 is immutable; publication never replaces a published name.
+    await expect(readFile(first, 'utf8')).resolves.toContain('"version": 1');
 
     await expect(
-      atomicWriteJsonContained(join(root, '..', 'outside.json'), {}, root),
+      publishContainedJsonRevision(first, { version: 99 }, root),
+    ).rejects.toMatchObject({ code: 'EEXIST' });
+    await expect(readFile(first, 'utf8')).resolves.toContain('"version": 1');
+
+    await expect(
+      publishContainedJsonRevision(join(root, '..', 'outside.json'), {}, root),
     ).rejects.toThrow(/outside/i);
-    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 2');
   });
 
   it('rejects a symlinked journal directory without writing outside scope', async () => {
@@ -464,7 +457,7 @@ describe('fs/io', () => {
     await symlink(outside, join(root, 'dispatch'), 'dir');
 
     await expect(
-      atomicWriteJsonContained(
+      publishContainedJsonRevision(
         join(root, 'dispatch', 'request-1.json'),
         { safe: true },
         root,
@@ -475,141 +468,159 @@ describe('fs/io', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('publishes a new journal without clobbering a concurrent target', async () => {
+  it('never emits an absolute path in a publication failure message', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
     tempDirs.push(root);
     const file = join(root, 'dispatch', 'request-1.json');
-    await atomicWriteJsonContained(file, { owner: 'first' }, root, {
-      createOnly: true,
-    });
+    await publishContainedJsonRevision(file, { owner: 'first' }, root);
 
-    await expect(
-      atomicWriteJsonContained(file, { owner: 'second' }, root, {
-        createOnly: true,
-      }),
-    ).rejects.toMatchObject({ code: 'EEXIST' });
-    await expect(readFile(file, 'utf8')).resolves.toContain('"owner": "first"');
+    const error = await publishContainedJsonRevision(
+      file,
+      { owner: 'second' },
+      root,
+    ).catch((raised: Error) => raised);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).not.toContain(root);
+    expect((error as Error).message).not.toContain(tmpdir());
+    expect((error as Error).message).toContain('dispatch/request-1.json');
   });
 
-  async function journalFixture(seed: 'absent' | 'present') {
+  const VICTIM = '{"victim":"unrelated user data"}';
+
+  async function journalFixture(options: { victim: boolean }) {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
     const outside = await mkdtemp(join(tmpdir(), 'oat-io-json-outside-'));
     tempDirs.push(root, outside);
     const dispatchDir = join(root, 'dispatch');
     const file = join(dispatchDir, 'request-1.json');
-    if (seed === 'present') {
-      await atomicWriteJsonContained(file, { owner: 'first' }, root);
-    } else {
-      await mkdir(dispatchDir, { recursive: true });
+    await mkdir(dispatchDir, { recursive: true });
+    await publishContainedJsonRevision(file, { owner: 'first' }, root);
+    await writeFile(join(outside, 'keep.txt'), 'keep', 'utf8');
+    if (options.victim) {
+      await writeFile(join(outside, 'request-1@0002.json'), VICTIM, 'utf8');
     }
     const swapDispatchDirectory = async () => {
       await rename(dispatchDir, join(root, 'dispatch-real'));
       await symlink(outside, dispatchDir, 'dir');
     };
-    return { root, outside, dispatchDir, file, swapDispatchDirectory };
+    return {
+      root,
+      outside,
+      dispatchDir,
+      // The next append-only revision, which is what an update publishes.
+      next: join(dispatchDir, 'request-1@0002.json'),
+      swapDispatchDirectory,
+    };
   }
 
-  it.each([
-    ['create-only link', true, 'absent'] as const,
-    ['update rename', false, 'present'] as const,
-  ])(
-    'fails closed when the journal directory is swapped right after the last ancestry check (%s)',
-    async (_label, createOnly, seed) => {
-      const fixture = await journalFixture(seed);
+  async function expectVictimIntact(outside: string) {
+    await expect(
+      readFile(join(outside, 'request-1@0002.json'), 'utf8'),
+    ).resolves.toBe(VICTIM);
+    await expect(readFile(join(outside, 'keep.txt'), 'utf8')).resolves.toBe(
+      'keep',
+    );
+  }
+
+  it.each([true, false])(
+    'fails closed when the journal directory is swapped right after the last ancestry check (victim: %s)',
+    async (victim) => {
+      const fixture = await journalFixture({ victim });
       journalPublicationRace.afterLastAncestryCheck =
         fixture.swapDispatchDirectory;
 
       await expect(
-        atomicWriteJsonContained(
-          fixture.file,
+        publishContainedJsonRevision(
+          fixture.next,
           { owner: 'second' },
           fixture.root,
-          {
-            createOnly,
-          },
         ),
       ).rejects.toThrow(/directory identity changed before publication/i);
 
       expect(journalPublicationRace.ancestryChecks).toBe(2);
-      expect(await readdir(fixture.outside)).toEqual([]);
-      if (seed === 'present') {
-        await expect(
-          readFile(
-            join(fixture.root, 'dispatch-real', 'request-1.json'),
-            'utf8',
-          ),
-        ).resolves.toContain('"owner": "first"');
-      }
+      if (victim) await expectVictimIntact(fixture.outside);
+      await expect(
+        readFile(join(fixture.root, 'dispatch-real', 'request-1.json'), 'utf8'),
+      ).resolves.toContain('"owner": "first"');
     },
   );
 
-  it.each([
-    ['create-only link', true, 'absent'] as const,
-    ['update rename', false, 'present'] as const,
-  ])(
-    'never writes outside scope when the swap lands immediately before publication (%s)',
-    async (_label, createOnly, seed) => {
-      const fixture = await journalFixture(seed);
+  it.each([true, false])(
+    'never destroys out-of-scope content when the swap lands immediately before publication (victim: %s)',
+    async (victim) => {
+      const fixture = await journalFixture({ victim });
       journalPublicationRace.beforePathBasedPublication =
         fixture.swapDispatchDirectory;
 
       await expect(
-        atomicWriteJsonContained(
-          fixture.file,
+        publishContainedJsonRevision(
+          fixture.next,
           { owner: 'second' },
           fixture.root,
-          {
-            createOnly,
-          },
         ),
       ).rejects.toThrow();
 
       expect(journalPublicationRace.publicationCalls).toBe(1);
-      expect(await readdir(fixture.outside)).toEqual([]);
-      if (seed === 'present') {
-        await expect(
-          readFile(
-            join(fixture.root, 'dispatch-real', 'request-1.json'),
-            'utf8',
-          ),
-        ).resolves.toContain('"owner": "first"');
-      }
+      if (victim) await expectVictimIntact(fixture.outside);
+      await expect(
+        readFile(join(fixture.root, 'dispatch-real', 'request-1.json'), 'utf8'),
+      ).resolves.toContain('"owner": "first"');
     },
   );
 
-  it('detects and reverts a publication that lands outside the validated directory', async () => {
-    const fixture = await journalFixture('absent');
-    journalPublicationRace.beforePathBasedPublication = async () => {
-      // Simulate a privileged process that both stages our exact temporary
-      // name inside its own directory and swaps the validated pathname, so the
-      // path-based `link` succeeds against foreign ancestry.
-      const staged = (await readdir(fixture.dispatchDir)).find((name) =>
-        name.endsWith('.tmp'),
-      );
-      if (staged) {
-        await copyFile(
-          join(fixture.dispatchDir, staged),
-          join(fixture.outside, staged),
+  it.each([true, false])(
+    'reports without removing anything when a publication lands outside the validated directory (victim: %s)',
+    async (victim) => {
+      const fixture = await journalFixture({ victim });
+      journalPublicationRace.beforePathBasedPublication = async () => {
+        // A privileged process that both stages this call's exact temporary
+        // name inside a directory it controls and swaps the validated pathname,
+        // so the create-only publication can succeed against foreign ancestry.
+        const staged = (await readdir(fixture.dispatchDir)).find((name) =>
+          name.endsWith('.tmp'),
         );
-      }
-      await fixture.swapDispatchDirectory();
-    };
+        if (staged) {
+          await copyFile(
+            join(fixture.dispatchDir, staged),
+            join(fixture.outside, staged),
+          );
+        }
+        await fixture.swapDispatchDirectory();
+      };
 
-    await expect(
-      atomicWriteJsonContained(
-        fixture.file,
+      const error = await publishContainedJsonRevision(
+        fixture.next,
         { owner: 'second' },
         fixture.root,
-        {
-          createOnly: true,
-        },
-      ),
-    ).rejects.toThrow(/not identity-bound to the validated directory/i);
+      ).catch((raised: Error) => raised);
 
-    await expect(
-      readFile(join(fixture.outside, 'request-1.json'), 'utf8'),
-    ).rejects.toMatchObject({ code: 'ENOENT' });
-  });
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).not.toContain(fixture.root);
+      expect((error as Error).message).not.toContain(fixture.outside);
+      if (victim) {
+        // `link` cannot clobber, so the foreign file survives byte-for-byte.
+        expect((error as Error).message).toMatch(/publication failed/i);
+        await expectVictimIntact(fixture.outside);
+      } else {
+        // Documented residual: an unreferenced create outside the validated
+        // directory. It is never removed, because this call cannot prove it
+        // owns a name under ancestry it no longer controls.
+        expect((error as Error).message).toMatch(
+          /removed and replaced nothing/i,
+        );
+        await expect(
+          readFile(join(fixture.outside, 'request-1@0002.json'), 'utf8'),
+        ).resolves.toContain('"owner": "second"');
+      }
+      await expect(
+        readFile(join(fixture.outside, 'keep.txt'), 'utf8'),
+      ).resolves.toBe('keep');
+      await expect(
+        readFile(join(fixture.root, 'dispatch-real', 'request-1.json'), 'utf8'),
+      ).resolves.toContain('"owner": "first"');
+    },
+  );
 
   it('ensureDir creates directory recursively', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-io-'));

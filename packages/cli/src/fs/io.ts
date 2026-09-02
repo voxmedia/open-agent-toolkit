@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import {
   chmod,
   lstat,
@@ -302,15 +302,6 @@ interface FileIdentity {
   inode: string;
 }
 
-/**
- * Revision identity for a JSON journal. Callers read a record, keep its digest,
- * and hand it back so publication can compare and swap atomically under a
- * writer lock rather than blindly replacing a concurrent winner.
- */
-export function jsonJournalDigest(content: string): string {
-  return `sha256:${createHash('sha256').update(content, 'utf8').digest('hex')}`;
-}
-
 const DISPATCH_LOCK_RETRY_MS = 10;
 const DISPATCH_LOCK_TIMEOUT_MS = 5000;
 
@@ -394,12 +385,46 @@ async function assertUnchangedIdentity(
 }
 
 /**
- * Node exposes no `openat`/`renameat`/`linkat`, so the final `link`/`rename`
- * cannot be bound to a directory file descriptor. This is the fail-closed
- * substitute: after the path-based publication, prove that the published name
- * is the exact inode written to the staging file, that its parent is still the
- * validated directory inode, and that the parent still resolves inside scope.
- * Any deviation is reverted and reported; nothing is ever silently published.
+ * Scope-relative rendering for any path this module reports. NFR1 requires that
+ * home paths and user-specific absolute paths stay out of durable output, so no
+ * error raised below may carry an absolute path.
+ */
+function scopeRelative(resolvedScope: string, target: string): string {
+  const rendered = relative(resolvedScope, resolve(target));
+  return rendered === '' ? '.' : rendered.split(sep).join('/');
+}
+
+function errorCode(error: unknown): string | null {
+  return typeof error === 'object' && error !== null && 'code' in error
+    ? String((error as { code: unknown }).code)
+    : null;
+}
+
+/**
+ * Re-raise a filesystem error without Node's absolute-path message text while
+ * preserving its `code` so callers can still branch on `EEXIST`/`ENOENT`.
+ */
+function redactedFsError(
+  error: unknown,
+  operation: string,
+  relativeTarget: string,
+): Error {
+  const code = errorCode(error);
+  const raised = new Error(
+    `Journal ${operation} failed for ${relativeTarget}${code === null ? '' : ` (${code})`}.`,
+    { cause: error },
+  );
+  return code === null ? raised : Object.assign(raised, { code });
+}
+
+/**
+ * Node exposes no `openat`/`renameat`/`linkat`, so a path-based final operation
+ * cannot be bound to a directory file descriptor. Publication is therefore
+ * append-only and create-only: the destination must not already exist, the only
+ * publishing syscall is `link`, and this module never issues `rename`, `rm`, or
+ * `unlink` against a publication destination. A pathname swapped after the last
+ * check can therefore cause at most an unreferenced create, never a replacement
+ * or a deletion of content this call did not create.
  */
 async function publicationIsMisplaced(
   resolvedFile: string,
@@ -443,64 +468,53 @@ async function publicationIsMisplaced(
   return null;
 }
 
-async function revertMisplacedPublication(
-  resolvedFile: string,
-  tempIdentity: FileIdentity,
-  parentIdentity: FileIdentity,
-  publishedContent: string,
-): Promise<void> {
-  try {
-    const parentNow = identityOf(await lstat(dirname(resolvedFile)));
-    if (sameIdentity(parentNow, parentIdentity)) {
-      // The file landed in the validated directory. Never remove a journal
-      // that is where it belongs.
-      return;
-    }
-    const published = await lstat(resolvedFile);
-    if (published.isSymbolicLink() || !published.isFile()) {
-      return;
-    }
-    const ownedByThisWrite =
-      sameIdentity(identityOf(published), tempIdentity) ||
-      (await readFile(resolvedFile, 'utf8')) === publishedContent;
-    if (!ownedByThisWrite) {
-      // Somebody else owns this name. Leave foreign content untouched.
-      return;
-    }
-    await rm(resolvedFile, { force: true });
-  } catch {
-    // Best-effort revert; the caller always raises the explicit failure.
-  }
-}
-
 /**
  * Remove the staging file only when the name still resolves to the exact inode
- * this write created, so a directory swap can never turn cleanup into deletion
- * of an unrelated file.
+ * this call created. A swapped directory pathname therefore strands the staged
+ * file rather than deleting an unrelated one. Returns whether the staged data
+ * was provably removed, so callers can report the outcome accurately.
  */
 async function removeStagedFile(
   tempPath: string,
   tempIdentity: FileIdentity | null,
-): Promise<void> {
+): Promise<'removed' | 'stranded'> {
   try {
     if (tempIdentity === null) {
       await rm(tempPath, { force: true });
-      return;
+      return 'removed';
     }
     const current = await lstat(tempPath);
-    if (sameIdentity(identityOf(current), tempIdentity)) {
-      await rm(tempPath, { force: true });
+    if (!sameIdentity(identityOf(current), tempIdentity)) {
+      return 'stranded';
     }
+    await rm(tempPath, { force: true });
+    return 'removed';
   } catch {
-    // Already gone, or unreachable after a privileged directory move.
+    return 'stranded';
   }
 }
 
-export async function atomicWriteJsonContained(
+/**
+ * Publish one immutable JSON journal revision.
+ *
+ * Guarantees, stated as what the code does:
+ * - The destination is created with `link` only. An occupied destination raises
+ *   `EEXIST`; the destination is never renamed onto, removed, or truncated.
+ * - After publication the destination is proven to be the exact staged inode,
+ *   inside the same directory inode validated before staging, still resolving
+ *   inside `scopeRoot`. Failure raises and removes nothing.
+ * - Staging cleanup removes only the inode this call created.
+ * - No raised message contains an absolute path.
+ *
+ * Residual, unchanged by this design: a privileged concurrent process that
+ * swaps the validated directory pathname can cause the `link` to create an
+ * unreferenced file under a directory it controls, and can strand the staged
+ * file. Neither outcome replaces or deletes pre-existing content.
+ */
+export async function publishContainedJsonRevision(
   filePath: string,
   data: unknown,
   scopeRoot: string,
-  options: { createOnly?: boolean; expectedDigest?: string } = {},
 ): Promise<void> {
   const resolvedScope = resolve(scopeRoot);
   const resolvedFile = resolve(filePath);
@@ -512,6 +526,7 @@ export async function atomicWriteJsonContained(
   ) {
     throw new Error('JSON journal destination is outside its allowed scope.');
   }
+  const reportedFile = scopeRelative(resolvedScope, resolvedFile);
 
   const scopeStat = await lstat(resolvedScope);
   if (scopeStat.isSymbolicLink() || !scopeStat.isDirectory()) {
@@ -531,12 +546,7 @@ export async function atomicWriteJsonContained(
         );
       }
     } catch (error) {
-      if (
-        typeof error !== 'object' ||
-        error === null ||
-        !('code' in error) ||
-        error.code !== 'ENOENT'
-      ) {
+      if (errorCode(error) !== 'ENOENT') {
         throw error;
       }
       await mkdir(current);
@@ -555,33 +565,36 @@ export async function atomicWriteJsonContained(
     );
   }
 
+  // Publication is create-only, so an already-published revision is a lost
+  // compare-and-swap rather than something to overwrite.
   try {
-    const targetStat = await lstat(resolvedFile);
-    if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
-      throw new Error('JSON journal target must be a regular file.');
-    }
+    await lstat(resolvedFile);
+    throw Object.assign(
+      new Error(`Journal revision ${reportedFile} already exists.`),
+      { code: 'EEXIST' },
+    );
   } catch (error) {
-    if (
-      typeof error !== 'object' ||
-      error === null ||
-      !('code' in error) ||
-      error.code !== 'ENOENT'
-    ) {
+    if (errorCode(error) !== 'ENOENT') {
       throw error;
     }
   }
 
   const parentIdentity = identityOf(await lstat(dirname(resolvedFile)));
-
   const content = `${JSON.stringify(data, null, 2)}\n`;
   const tempPath = join(
     dirname(resolvedFile),
     `.${basename(resolvedFile)}.${randomUUID()}.tmp`,
   );
+  const reportedTemp = scopeRelative(resolvedScope, tempPath);
   let tempCreated = false;
   let stagedIdentity: FileIdentity | null = null;
   try {
-    const handle = await open(tempPath, 'wx');
+    let handle;
+    try {
+      handle = await open(tempPath, 'wx');
+    } catch (error) {
+      throw redactedFsError(error, 'staging', reportedTemp);
+    }
     let tempIdentity: FileIdentity;
     try {
       tempCreated = true;
@@ -592,7 +605,7 @@ export async function atomicWriteJsonContained(
       await handle.close();
     }
 
-    // Last ancestry check, then the identity binding that closes the window
+    // Last ancestry check, then the identity binding that narrows the window
     // between that check and the path-based publication below.
     if ((await realpath(dirname(resolvedFile))) !== realParent) {
       throw new Error('JSON journal ancestry changed before publication.');
@@ -607,24 +620,11 @@ export async function atomicWriteJsonContained(
       tempIdentity,
       'JSON journal staging file identity changed before publication.',
     );
-    if (options.expectedDigest !== undefined) {
-      // Compare-and-swap: the revision this write is based on must still be
-      // the published revision, so a concurrent winner is never overwritten.
-      const currentDigest = jsonJournalDigest(
-        await readFile(resolvedFile, 'utf8'),
-      );
-      if (currentDigest !== options.expectedDigest) {
-        throw new Error(
-          'JSON journal changed since it was read; the concurrent update was preserved and this stale write was refused.',
-        );
-      }
-    }
 
-    if (options.createOnly) {
+    try {
       await link(tempPath, resolvedFile);
-    } else {
-      await rename(tempPath, resolvedFile);
-      tempCreated = false;
+    } catch (error) {
+      throw redactedFsError(error, 'publication', reportedFile);
     }
 
     const misplaced = await publicationIsMisplaced(
@@ -634,21 +634,21 @@ export async function atomicWriteJsonContained(
       realScope,
     );
     if (misplaced) {
-      await revertMisplacedPublication(
-        resolvedFile,
-        tempIdentity,
-        parentIdentity,
-        content,
-      );
+      // Never remove the destination: under a swapped pathname it may name
+      // content this call did not create.
+      const staged = await removeStagedFile(tempPath, tempIdentity);
+      tempCreated = false;
       throw new Error(
-        `JSON journal publication is not identity-bound to the validated directory (${misplaced}); the write was reverted and nothing was published.`,
+        `Journal revision ${reportedFile} could not be verified inside the validated directory (${misplaced}). It was not published to the project journal, and this call removed and replaced nothing. ${
+          staged === 'removed'
+            ? 'Staged data was removed.'
+            : 'A staged copy may remain outside the validated directory.'
+        }`,
       );
     }
 
-    if (options.createOnly) {
-      await removeStagedFile(tempPath, tempIdentity);
-      tempCreated = false;
-    }
+    await removeStagedFile(tempPath, tempIdentity);
+    tempCreated = false;
   } finally {
     if (tempCreated) {
       await removeStagedFile(tempPath, stagedIdentity);
