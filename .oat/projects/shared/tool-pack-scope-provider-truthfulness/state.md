@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-review-r1-fix
-oat_last_commit: 61a1ea59083d3d9987a24c0a07ae349924e39cf9
+oat_current_task: p05-review-r2-fix
+oat_last_commit: 89d71d78d652e439abe9804f04b520047fe8c79c
 oat_blockers:
-  - Phase 5 review found two Critical and one Important defect: the registered workflows leaf bypasses project guidance, concurrent in-place edits can be clobbered, and malformed legacy markers can partially mutate AGENTS.md.
+  - Phase 5 review round 2 found two Critical defects: the guarded publisher is observably non-atomic and still loses open-inode edits, while crossed or nested new/legacy marker ranges can delete user text.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T04:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T04:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - all four Phase 5 tasks are committed through `61a1ea590`, but
-the first independent review reproduced two Critical and one Important defect.
-The original Phase 5 implementer owns the bounded correction before Phase 6.
+Implementation - Phase 5 review round 1's production registration defect is
+resolved at `89d71d78d`, but round 2 reproduced two remaining Critical safety
+defects. The original implementer owns the second bounded correction.
 
 ## Artifacts
 
@@ -152,16 +152,17 @@ The original Phase 5 implementer owns the bounded correction before Phase 6.
 - ✓ Phase 4 code safety verified at 414/414
 - ✓ Phase 4 design alignment accepted by explicit operator disposition
 - ✓ Phase 5 four-task implementation and 331/331 union completed
-- ⧗ Phase 5 review fixes required for production leaf registration, concurrent-edit no-clobber, and malformed-legacy atomicity
+- ✓ Phase 5 production workflows registration corrected
+- ⧗ Phase 5 review fixes required for atomic public-path publication/open-inode preservation and crossed/nested marker rejection
 
 ## Blockers
 
-- The registered production workflows leaf does not execute the accepted
-  project-guidance path.
-- Same-inode concurrent edits can be overwritten during managed-file publish.
-- Malformed legacy markers can reject after a partial managed-section write.
+- The rollback publication protocol creates an observable public-path absence
+  and can delete edits written through an already-open original descriptor.
+- Crossed or nested target/legacy marker pairs can be accepted and delete
+  unrelated user text.
 
 ## Next Milestone
 
-Apply the bounded Phase 5 review fixes through the original implementer, rerun
-the full phase union, and require a fresh independent Phase 5 review.
+Apply the second bounded Phase 5 review fix through the original implementer,
+rerun the full phase union, and require a fresh independent Phase 5 review.

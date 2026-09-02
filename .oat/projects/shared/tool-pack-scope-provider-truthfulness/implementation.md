@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 5 review found two Critical and one Important defect: the registered workflows leaf bypasses project guidance, concurrent in-place edits can be clobbered, and malformed legacy markers can partially mutate AGENTS.md.
+  - Phase 5 review round 2 found two Critical defects: the guarded publisher is observably non-atomic and still loses open-inode edits, while crossed or nested new/legacy marker ranges can delete user text.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-review-r1-fix
+oat_current_task_id: p05-review-r2-fix
 oat_generated: false
 ---
 
@@ -1270,6 +1270,34 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - The original exact-High Phase 5 implementer owns the bounded fix. Phase 6
   remains gated pending a clean fix report and fresh independent review.
 
+### Review Round 1 Fix
+
+- Commit: `89d71d78d652e439abe9804f04b520047fe8c79c`
+- The registered production workflows command now executes the shared guidance
+  path for both option positions, both capability scopes, consent/default
+  states, human/JSON output, and blocked partial outcomes.
+- The first no-clobber repair added content checks and a rollback protocol; the
+  first malformed-marker repair moved migration to one snapshot and one
+  publish.
+- Focused verification passed 169/169 and the Phase 5 union passed 351/351.
+  Recovery remains 0/10 with no pending attempt.
+
+### Review Round 2 — Atomic Publication and Combined Marker Structure
+
+- Artifact: `reviews/p05-review-2026-09-02T045435Z.md`
+- Reviewed head: `89d71d78d652e439abe9804f04b520047fe8c79c`
+- Verdict: changes requested; 2 Critical, 0 Important, 0 Medium, 0 Minor.
+- The production registration finding is resolved.
+- Moving the live inode to a rollback path creates an observable public-path
+  absence, and an editor holding the original descriptor can still write after
+  the last content check before cleanup; those bytes are lost while the helper
+  returns success.
+- Target and legacy marker pairs are valid individually but not checked for
+  crossing or nesting, allowing unrelated user prefix/interstitial/suffix text
+  to be deleted.
+- Reconnaissance was not attempted. The original exact-High implementer owns a
+  second bounded fix round; Phase 6 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1877,6 +1905,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: changes requested; 2 Critical and 1 Important findings. The
   production leaf bypass, same-inode concurrent-edit clobber, and partial
   malformed-legacy mutation are assigned to the original Phase 5 implementer.
+- Reconnaissance: not attempted.
+- Selection reason: `review-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review round 1 fix — guidance safety gaps
+
+- Continuation event: `p05-review-r1-fix-20260902T043800Z`
+- Original request: `dispatch-p05-20260902T021900Z-01454ec32`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `f9a9788bcb0a644217423f2783948f6a7aac276f`
+- Commit: `89d71d78d652e439abe9804f04b520047fe8c79c`
+- Outcome: production leaf registration is corrected; initial content-race and
+  malformed-marker fixes pass focused 169/169 and Phase 5 union 351/351.
+- Dispatch: scope=p05-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 2 — atomic publication and combined marker structure
+
+- Reviewed head: `89d71d78d652e439abe9804f04b520047fe8c79c`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p05-review-2026-09-02T045435Z.md`
+- Outcome: changes requested; 2 Critical findings. The production leaf bypass
+  is resolved, but the rollback publisher remains non-atomic and can lose
+  open-inode edits, while crossed/nested markers can delete user text.
 - Reconnaissance: not attempted.
 - Selection reason: `review-target`; candidates considered:
   `gpt-5.6-sol/high`.
