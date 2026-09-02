@@ -88,6 +88,29 @@ class InspectableLinearStore {
   discussionWrites = 0;
 }
 
+function continueRead(
+  store: InspectableLinearStore,
+  action: SemanticAction,
+  readback: SanitizedProviderObservation,
+) {
+  const publicValidation = linearAdapter.validateObservation(action, readback);
+  const verification = linearAdapter.verify(
+    action,
+    linearAdapter.normalize(readback),
+  );
+  if (
+    !publicValidation.valid ||
+    verification.some((field) => field.status !== 'verified')
+  ) {
+    return { publicValidation, verification, persisted: false };
+  }
+  store.records.set(
+    String(action.intent.actionDigest),
+    linearAdapter.normalize(readback),
+  );
+  return { publicValidation, verification, persisted: true };
+}
+
 function planMutation(
   operation: 'create' | 'update' | 'transition' | 'annotate',
 ): SemanticAction {
@@ -211,6 +234,39 @@ describe('Linear remote lifecycle integration', () => {
     ).toMatchObject({ classification: 'current', issue: intaken });
   });
 
+  it('does not persist an intact read action paired with another issue identity', () => {
+    const store = new InspectableLinearStore();
+    const action = linearAdapter.plan('read', {
+      context,
+      hostCapability: capability,
+      stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      uuid: observation.fields.uuid,
+      currentIdentifier: observation.fields.identifier,
+      stepId: 'linear-wrong-readback',
+    });
+    const unrelated = {
+      ...observation,
+      identity: {
+        stableId: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        aliases: ['BETA-7'],
+      },
+      fields: {
+        ...observation.fields,
+        uuid: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        identifier: 'BETA-7',
+      },
+    };
+    expect(continueRead(store, action, unrelated)).toMatchObject({
+      publicValidation: {
+        valid: false,
+        reasons: ['observation-identity-mismatch'],
+      },
+      verification: [{ field: 'stable-identity', status: 'mismatch' }],
+      persisted: false,
+    });
+    expect(store.records).toHaveLength(0);
+  });
+
   it.each(['create', 'update', 'transition', 'annotate'] as const)(
     'persists only after real public and typed %s verification',
     (operation) => {
@@ -243,6 +299,27 @@ describe('Linear remote lifecycle integration', () => {
     ).toMatchObject({
       publicValidation: { valid: false },
       verification: { classification: 'uncertain' },
+      persisted: false,
+    });
+    expect(store.records).toHaveLength(0);
+  });
+
+  it('does not persist a create result with forged planned provenance', () => {
+    const store = new InspectableLinearStore();
+    const action = planMutation('create');
+    const readback = mutationReadback(action, {
+      fields: {
+        createProvenance: {
+          bindingId: action.intent.bindingId,
+          origin: 'local:other',
+        },
+      },
+    });
+    expect(continueMutation(store, action, readback)).toMatchObject({
+      publicValidation: {
+        valid: false,
+        reasons: ['create-provenance-mismatch'],
+      },
       persisted: false,
     });
     expect(store.records).toHaveLength(0);

@@ -65,9 +65,9 @@ const observation: SanitizedProviderObservation = {
   capabilityEvidenceDigest: capability.evidenceDigest,
 };
 
-function safeMutation(
+function safeMutationInput(
   operation: 'create' | 'update' | 'transition' | 'annotate',
-): SemanticAction {
+) {
   const projection =
     operation === 'transition'
       ? { status: 'completed' }
@@ -97,10 +97,16 @@ function safeMutation(
     outboundSafety,
   };
   const preview = previewLinearMutation(input);
-  return linearAdapter.plan(operation, {
+  return {
     ...input,
     approvedPreviewDigest: preview.previewDigest,
-  });
+  };
+}
+
+function safeMutation(
+  operation: 'create' | 'update' | 'transition' | 'annotate',
+): SemanticAction {
+  return linearAdapter.plan(operation, safeMutationInput(operation));
 }
 
 function mutationObservation(
@@ -216,6 +222,52 @@ describe('Linear provider conformance', () => {
     expect(JSON.stringify(action)).not.toMatch(/graphql|mcp|command|toolName/i);
   });
 
+  it('rejects every public mutation selector and input operation mismatch', () => {
+    const operations = ['create', 'update', 'transition', 'annotate'] as const;
+    for (const inputOperation of operations) {
+      const input = safeMutationInput(inputOperation);
+      for (const selector of operations) {
+        if (selector === inputOperation) continue;
+        expect(() => linearAdapter.plan(selector, input)).toThrow(
+          'operation selector',
+        );
+      }
+    }
+  });
+
+  it('binds public read validation and verification to the planned identity', () => {
+    const action = linearAdapter.plan('read', {
+      context,
+      hostCapability: capability,
+      stableId: fixture.expected.stableId,
+      uuid: observation.fields.uuid,
+      currentIdentifier: observation.fields.identifier,
+      stepId: 'linear-public-read',
+    });
+    const unrelated = {
+      ...observation,
+      identity: {
+        stableId: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        aliases: ['BETA-7'],
+      },
+      fields: {
+        ...observation.fields,
+        uuid: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        identifier: 'BETA-7',
+      },
+    };
+    expect(linearAdapter.validateObservation(action, unrelated)).toEqual({
+      valid: false,
+      reasons: ['observation-identity-mismatch'],
+    });
+    expect(linearAdapter.verificationFields(action)).toEqual([
+      'stable-identity',
+    ]);
+    expect(
+      linearAdapter.verify(action, linearAdapter.normalize(unrelated)),
+    ).toEqual([{ field: 'stable-identity', status: 'mismatch' }]);
+  });
+
   it.each(['create', 'update', 'transition', 'annotate'] as const)(
     'plans, publicly validates, and verifies real %s adapter actions',
     (operation) => {
@@ -247,6 +299,26 @@ describe('Linear provider conformance', () => {
       );
     },
   );
+
+  it('rejects forged, missing, and misattributed create provenance publicly', () => {
+    const action = safeMutation('create');
+    const readback = mutationObservation(action);
+    for (const createProvenance of [
+      undefined,
+      { bindingId: action.intent.bindingId, origin: 'local:other' },
+      { bindingId: 'binding_other', origin: 'local:item-42' },
+    ]) {
+      expect(
+        linearAdapter.validateObservation(action, {
+          ...readback,
+          fields: { ...readback.fields, createProvenance },
+        }),
+      ).toEqual({
+        valid: false,
+        reasons: ['create-provenance-mismatch'],
+      });
+    }
+  });
 
   it('rejects action integrity and UUID/context/evidence drift on the public path', () => {
     const action = safeMutation('update');

@@ -1044,7 +1044,15 @@ export const linearAdapter: ProviderAdapter = {
   normalize: normalizeLinearIssueObservation,
   plan(operation, input) {
     if (['create', 'update', 'transition', 'annotate'].includes(operation)) {
-      if (!isCompleteLinearMutationInput(input)) {
+      if (typeof input.operation !== 'string') {
+        throw new Error('Linear adapter requires complete mutation input.');
+      }
+      if (input.operation !== operation) {
+        throw new Error(
+          'Linear mutation operation selector does not match input operation.',
+        );
+      }
+      if (!isCompleteLinearMutationInput(input, operation)) {
         throw new Error('Linear adapter requires complete mutation input.');
       }
       return planLinearMutation(input as unknown as LinearMutationPlanInput);
@@ -1122,6 +1130,19 @@ export const linearAdapter: ProviderAdapter = {
     ) {
       return { valid: false, reasons: ['capability-evidence-mismatch'] };
     }
+    if (action.operation === 'read') {
+      try {
+        const issue = normalizeLinearIssueObservation(observation);
+        if (
+          issue.extensions.uuid !== String(action.intent.uuid).toLowerCase() ||
+          issue.stableId !== action.intent.stableId
+        ) {
+          return { valid: false, reasons: ['observation-identity-mismatch'] };
+        }
+      } catch {
+        return { valid: false, reasons: ['observation-invalid'] };
+      }
+    }
     if (
       ['create', 'update', 'transition', 'annotate'].includes(action.operation)
     ) {
@@ -1132,6 +1153,15 @@ export const linearAdapter: ProviderAdapter = {
         )
       ) {
         return { valid: false, reasons: ['mutation-evidence-mismatch'] };
+      }
+      if (
+        action.operation === 'create' &&
+        !semanticValuesEqual(
+          observation.fields.createProvenance,
+          action.intent.provenance,
+        )
+      ) {
+        return { valid: false, reasons: ['create-provenance-mismatch'] };
       }
       try {
         const issue = normalizeLinearIssueObservation(observation);
@@ -1151,6 +1181,7 @@ export const linearAdapter: ProviderAdapter = {
     if (isLinearSpecializedOperation(action.operation)) {
       return [`typed:${action.operation}`];
     }
+    if (action.operation === 'read') return ['stable-identity'];
     return mutationVerificationFields(action);
   },
   verify(action, issue) {
@@ -1159,6 +1190,22 @@ export const linearAdapter: ProviderAdapter = {
         {
           field: `typed:${action.operation}`,
           status: 'unavailable',
+        },
+      ];
+    }
+    if (action.operation === 'read') {
+      if (
+        !validLinearReadAction(action) ||
+        issue.provider !== 'linear' ||
+        !contextsEqual(action.context, issue.context)
+      ) {
+        return [{ field: 'stable-identity', status: 'unavailable' }];
+      }
+      return [
+        {
+          field: 'stable-identity',
+          status:
+            issue.stableId === action.intent.stableId ? 'verified' : 'mismatch',
         },
       ];
     }
@@ -1787,9 +1834,10 @@ function parseLinearHostCapability(
 
 function isCompleteLinearMutationInput(
   input: Record<string, unknown>,
+  operation: SemanticOperation,
 ): boolean {
   return (
-    typeof input.operation === 'string' &&
+    input.operation === operation &&
     isRecord(input.context) &&
     isRecord(input.hostCapability) &&
     typeof input.bindingId === 'string' &&

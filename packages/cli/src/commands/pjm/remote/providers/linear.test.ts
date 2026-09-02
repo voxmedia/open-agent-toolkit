@@ -1101,6 +1101,40 @@ describe('Linear review safety regressions', () => {
     );
   });
 
+  it('rejects an intact read action paired with a different public observation identity', () => {
+    const action = planLinearRead({
+      context: linearContext,
+      hostCapability: linearCapability,
+      stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      currentIdentifier: 'ALPHA-42',
+      stepId: 'review-public-read',
+    });
+    const unrelated = {
+      ...linearObservation,
+      identity: {
+        stableId: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        aliases: ['BETA-7'],
+      },
+      fields: {
+        ...linearObservation.fields,
+        uuid: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+        identifier: 'BETA-7',
+        hostCapability: linearCapability,
+      },
+    };
+    expect(linearAdapter.validateObservation(action, unrelated)).toEqual({
+      valid: false,
+      reasons: ['observation-identity-mismatch'],
+    });
+    expect(linearAdapter.verificationFields(action)).toEqual([
+      'stable-identity',
+    ]);
+    expect(
+      linearAdapter.verify(action, linearAdapter.normalize(unrelated)),
+    ).toEqual([{ field: 'stable-identity', status: 'mismatch' }]);
+  });
+
   it('rejects a forged incomplete duplicate action even for zero results', () => {
     const query = {};
     const forged: SemanticAction = {
