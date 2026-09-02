@@ -1,5 +1,9 @@
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
-import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
+import {
+  semanticDigest,
+  type SanitizedProviderObservation,
+  type SemanticAction,
+} from '@commands/pjm/remote/provider';
 import { WHOLE_FIELD_SUPPRESSION_MARKER } from '@commands/pjm/remote/schema';
 import { describe, expect, it } from 'vitest';
 
@@ -11,12 +15,18 @@ import {
   planDuplicateSearch,
   planDiscussionRead,
   planGitHubMutation,
+  previewGitHubMutation,
   validateDuplicateSearchObservation,
   validateDiscussionReadObservation,
   validateGitHubHostCapability,
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
+  type GitHubMutationField,
 } from './github';
+import {
+  assessGitHubPublicationSafety,
+  observeGitHubRepositoryVisibility,
+} from './github-publication-safety';
 
 const observation: SanitizedProviderObservation = {
   provider: 'github',
@@ -54,7 +64,7 @@ const observation: SanitizedProviderObservation = {
     updatedAt: '2026-09-01T12:00:00.000Z',
     contentDigest: 'sha256:remote',
   },
-  capabilityEvidenceDigest: 'sha256:capability',
+  capabilityEvidenceDigest: 'sha256:bounded-capability',
 };
 
 describe('GitHub semantic adapter', () => {
@@ -83,7 +93,7 @@ describe('GitHub semantic adapter', () => {
     expect(normalizeGitHubIssueObservation(observation)).toEqual({
       provider: 'github',
       context: observation.context,
-      stableId: 'github:github.example:repo_123:issue_node_42',
+      stableId: 'github:github.example:issue_node_42',
       aliases: [
         'acme/widgets#42',
         'https://github.example/acme/widgets/issues/42',
@@ -97,17 +107,29 @@ describe('GitHub semantic adapter', () => {
       extensions: {
         databaseId: 4200,
         nodeId: 'issue_node_42',
+        repositoryId: 'repo_123',
+        historicalRepositoryIds: [],
         pullRequests: ['https://github.example/acme/widgets/pull/99'],
       },
     });
   });
 
-  it('keeps stable identity unchanged when display aliases move', () => {
+  it('keeps stable identity and aliases when repository ID, owner, name, number, and URL move', () => {
     const moved = normalizeGitHubIssueObservation({
       ...observation,
-      context: { ...observation.context, owner: 'new-owner', name: 'new-name' },
+      context: {
+        ...observation.context,
+        repositoryId: 'repo_456',
+        owner: 'new-owner',
+        name: 'new-name',
+      },
+      identity: {
+        ...observation.identity,
+        aliases: [...observation.identity.aliases, 'acme/widgets#42'],
+      },
       fields: {
         ...observation.fields,
+        historicalRepositoryIds: ['repo_123'],
         owner: 'new-owner',
         name: 'new-name',
         number: 84,
@@ -117,6 +139,11 @@ describe('GitHub semantic adapter', () => {
     expect(moved.stableId).toBe(githubAdapter.normalize(observation).stableId);
     expect(moved.aliases).toContain('new-owner/new-name#84');
     expect(moved.aliases).toContain('legacy/widgets#7');
+    expect(moved.aliases).toContain('acme/widgets#42');
+    expect(moved.extensions).toMatchObject({
+      repositoryId: 'repo_456',
+      historicalRepositoryIds: ['repo_123'],
+    });
   });
 
   it.each([
@@ -183,6 +210,7 @@ describe('GitHub semantic adapter', () => {
         outcome: 'found' as const,
         observation: {
           ...observation,
+          context: { ...observation.context, name: 'renamed' },
           fields: {
             ...observation.fields,
             name: 'renamed',
@@ -208,6 +236,7 @@ describe('GitHub semantic adapter', () => {
             owner: 'other',
             number: 84,
             url: 'https://github.example/other/widgets/issues/84',
+            transferEvidence: transferEvidence('repo_123', 'repo_456'),
           },
         },
       },
@@ -227,8 +256,7 @@ describe('GitHub semantic adapter', () => {
       name: 'deleted',
       input: {
         outcome: 'not-found' as const,
-        authoritativeDeletion: true,
-        deletionEvidenceDigest: 'sha256:deletion',
+        structuredDeletion: true,
       },
       classification: 'deleted',
     },
@@ -240,15 +268,33 @@ describe('GitHub semantic adapter', () => {
   ])(
     'classifies $name without discarding prior binding evidence',
     ({ input, classification }) => {
+      const action = githubAdapter.plan('read', {
+        context: hostCapability.context,
+        currentAlias: 'acme/widgets#42',
+        stableNodeId: 'issue_node_42',
+        stableId: 'github:github.example:issue_node_42',
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      });
+      const deletionBase = {
+        provider: 'github' as const,
+        stableId: 'github:github.example:issue_node_42',
+        context: hostCapability.context,
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        observedAt: '2026-09-01T12:01:00.000Z',
+      };
       const result = classifyGitHubReadObservation({
-        action: githubAdapter.plan('read', {
-          context: hostCapability.context,
-          currentAlias: 'acme/widgets#42',
-          stableNodeId: 'issue_node_42',
-        }),
+        action,
         hostCapability,
         observedAt: '2026-09-01T12:01:00.000Z',
-        ...input,
+        ...('structuredDeletion' in input
+          ? {
+              outcome: input.outcome,
+              deletionEvidence: {
+                ...deletionBase,
+                evidenceDigest: semanticDigest(deletionBase),
+              },
+            }
+          : input),
       });
       expect(result.classification).toBe(classification);
       expect(result.preservePriorEvidence).toBe(
@@ -265,6 +311,158 @@ describe('GitHub semantic adapter', () => {
     },
   );
 
+  it.each([
+    ['create', { title: 'Normalize GitHub issues' }],
+    ['update', { title: 'Normalize GitHub issues' }],
+    ['transition', { status: 'closed' }],
+    ['annotate', { annotation: 'Completed locally' }],
+  ] as const)(
+    'fails closed for missing, blocked, stale, mismatched, and altered %s evidence',
+    (operation, projection) => {
+      const base = mutationInput(operation, projection);
+      expect(() =>
+        previewGitHubMutation({ ...base, publicationSafety: null as never }),
+      ).toThrow();
+      expect(() =>
+        previewGitHubMutation({
+          ...base,
+          outboundSafety: { ...base.outboundSafety, verdict: 'blocked' },
+        }),
+      ).toThrow('blocks execution');
+      expect(() =>
+        previewGitHubMutation({
+          ...base,
+          projection: { ...projection, sourceRevision: 'changed' },
+        }),
+      ).toThrow();
+      const preview = previewGitHubMutation(base);
+      expect(() =>
+        planGitHubMutation({
+          ...base,
+          approvedPreviewDigest: 'sha256:mismatched-approval',
+        }),
+      ).toThrow('approval');
+      const action = planGitHubMutation({
+        ...base,
+        approvedPreviewDigest: preview.previewDigest,
+      });
+      const altered = {
+        ...action,
+        intent: {
+          ...action.intent,
+          projection: { ...projection, sourceRevision: 'altered' },
+        },
+      };
+      expect(
+        verifyGitHubMutationObservation({
+          action: altered,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          },
+          hostCapability,
+          readback: mutationReadback(action, observation),
+        }),
+      ).toMatchObject({
+        classification: 'uncertain',
+        reason: 'action-evidence-invalid',
+      });
+    },
+  );
+
+  it.each([
+    {
+      name: 'declared stable identity',
+      patch: {
+        identity: { ...observation.identity, stableId: 'wrong_identity' },
+      },
+      reason: 'observation-identity-mismatch',
+    },
+    {
+      name: 'capability surface',
+      patch: { capabilityEvidenceDigest: 'sha256:other-surface' },
+      reason: 'observation-capability-mismatch',
+    },
+    {
+      name: 'account context',
+      patch: {
+        context: { ...observation.context, accountId: 'account_other' },
+      },
+      reason: 'observation-account-mismatch',
+    },
+  ])('rejects a read with mismatched $name', ({ patch, reason }) => {
+    const result = classifyGitHubReadObservation({
+      action: githubAdapter.plan('read', {
+        context: hostCapability.context,
+        currentAlias: 'acme/widgets#42',
+        stableNodeId: 'issue_node_42',
+        stableId: 'github:github.example:issue_node_42',
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      }),
+      hostCapability,
+      observedAt: '2026-09-01T12:01:00.000Z',
+      outcome: 'found',
+      observation: { ...observation, ...patch },
+    });
+    expect(result).toMatchObject({
+      classification: 'inaccessible',
+      issue: null,
+      reasons: [reason],
+    });
+  });
+
+  it('requires structured transfer evidence before accepting moved repository context', () => {
+    const action = githubAdapter.plan('read', {
+      context: hostCapability.context,
+      currentAlias: 'acme/widgets#42',
+      stableNodeId: 'issue_node_42',
+      stableId: 'github:github.example:issue_node_42',
+      capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    });
+    const moved = {
+      ...observation,
+      context: {
+        ...observation.context,
+        repositoryId: 'repo_456',
+        owner: 'platform',
+      },
+      fields: {
+        ...observation.fields,
+        owner: 'platform',
+        number: 84,
+        url: 'https://github.example/platform/widgets/issues/84',
+      },
+    };
+    expect(
+      classifyGitHubReadObservation({
+        action,
+        hostCapability,
+        observedAt: '2026-09-01T12:01:00.000Z',
+        outcome: 'found',
+        observation: moved,
+      }),
+    ).toMatchObject({
+      classification: 'inaccessible',
+      reasons: ['transfer-evidence-missing-or-invalid'],
+    });
+    expect(
+      classifyGitHubReadObservation({
+        action,
+        hostCapability,
+        observedAt: '2026-09-01T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...moved,
+          fields: {
+            ...moved.fields,
+            transferEvidence: transferEvidence('repo_123', 'repo_456'),
+          },
+        },
+      }),
+    ).toMatchObject({ classification: 'transferred' });
+  });
+
   it('plans create provenance and exact title/managed-body postconditions from a safe projection', () => {
     const projection = {
       title: 'Published title',
@@ -278,22 +476,39 @@ describe('GitHub semantic adapter', () => {
         assessedAt: '2026-09-02T12:00:00.000Z',
       },
     );
+    const base = {
+      operation: 'create',
+      context: hostCapability.context,
+      bindingId: 'binding_123',
+      provenance: {
+        bindingId: 'binding_123',
+        origin: 'local-project:item-42',
+      },
+      fieldMask: ['title', 'description'],
+      descriptionMode: 'managed-section',
+      currentBody: 'Remote-owned introduction.',
+      projection,
+      outboundSafety: safety,
+      hostCapability,
+      publicationSafety: assessGitHubPublicationSafety({
+        visibilityObservation: observeGitHubRepositoryVisibility({
+          context: hostCapability.context,
+          visibility: 'public',
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          observedAt: '2026-09-02T12:00:00.000Z',
+        }),
+        projection: { ...projection, description: managedBody },
+        outboundSafety: safety,
+        assessedAt: '2026-09-02T12:00:00.000Z',
+      }),
+    } as const;
+    const preview = previewGitHubMutation(base);
     expect(
       planGitHubMutation({
-        operation: 'create',
-        context: hostCapability.context,
-        bindingId: 'binding_123',
-        provenance: {
-          bindingId: 'binding_123',
-          origin: 'local-project:item-42',
-        },
-        fieldMask: ['title', 'description'],
-        descriptionMode: 'managed-section',
-        currentBody: 'Remote-owned introduction.',
-        projection,
-        outboundSafety: safety,
+        ...base,
+        approvedPreviewDigest: preview.previewDigest,
       }),
-    ).toEqual({
+    ).toMatchObject({
       provider: 'github',
       operation: 'create',
       context: hostCapability.context,
@@ -317,6 +532,8 @@ describe('GitHub semantic adapter', () => {
           projectionDigest: safety.projectionDigest,
           resultDigest: safety.resultDigest,
         },
+        previewDigest: preview.previewDigest,
+        approvalDigest: preview.previewDigest,
       },
     });
   });
@@ -326,53 +543,21 @@ describe('GitHub semantic adapter', () => {
       description: 'Approved complete body',
       priority: 'high',
     };
-    const action = planGitHubMutation({
-      operation: 'update',
-      context: hostCapability.context,
-      bindingId: 'binding_123',
-      stableId: 'github:github.example:repo_123:issue_node_42',
-      fieldMask: ['description', 'priority'],
-      descriptionMode: 'replace',
-      projection,
-      outboundSafety: assessOutboundProjectionSafety(projection, {
-        assessedAt: '2026-09-02T12:00:00.000Z',
-      }),
-    });
+    const action = mutationAction('update', projection);
     expect(action.intent.projection).toEqual(projection);
     expect(action.intent.postconditions).toEqual(projection);
   });
 
   it('rejects unsupported masks and unsafe priority extensions', () => {
-    const safe = assessOutboundProjectionSafety(
-      { title: 'Safe' },
-      { assessedAt: '2026-09-02T12:00:00.000Z' },
-    );
     expect(() =>
-      planGitHubMutation({
-        operation: 'update',
-        context: hostCapability.context,
-        bindingId: 'binding_123',
-        stableId: 'stable',
+      previewGitHubMutation({
+        ...mutationInput('update', { title: 'Safe' }),
         fieldMask: ['labels' as 'title'],
-        descriptionMode: 'none',
-        projection: { title: 'Safe' },
-        outboundSafety: safe,
       }),
     ).toThrow('Unsupported GitHub mutation field');
     const priorityProjection = { priority: 'critical' };
     expect(() =>
-      planGitHubMutation({
-        operation: 'update',
-        context: hostCapability.context,
-        bindingId: 'binding_123',
-        stableId: 'stable',
-        fieldMask: ['priority'],
-        descriptionMode: 'none',
-        projection: priorityProjection,
-        outboundSafety: assessOutboundProjectionSafety(priorityProjection, {
-          assessedAt: '2026-09-02T12:00:00.000Z',
-        }),
-      }),
+      previewGitHubMutation(mutationInput('update', priorityProjection)),
     ).toThrow('Unsupported GitHub priority');
   });
 
@@ -407,11 +592,7 @@ describe('GitHub semantic adapter', () => {
   ])(
     'verifies one-attempt $name postconditions through pinned readback',
     ({ operation, postconditions, fields }) => {
-      const action = githubAdapter.plan(operation, {
-        context: hostCapability.context,
-        stableId: observation.identity.stableId,
-        postconditions,
-      });
+      const action = mutationAction(operation, postconditions);
       expect(
         verifyGitHubMutationObservation({
           action,
@@ -421,22 +602,21 @@ describe('GitHub semantic adapter', () => {
             capabilityEvidenceDigest: hostCapability.evidenceDigest,
           },
           hostCapability,
-          readback: {
+          readback: mutationReadback(action, {
             ...observation,
             context: hostCapability.context,
             fields: fields ?? observation.fields,
             capabilityEvidenceDigest: hostCapability.evidenceDigest,
-          },
+          }),
         }),
       ).toMatchObject({ classification: 'verified', retryAllowed: false });
     },
   );
 
   it('classifies silently dropped fields as partial and blocks retry', () => {
-    const action = githubAdapter.plan('update', {
-      context: hostCapability.context,
-      stableId: observation.identity.stableId,
-      postconditions: { title: 'Normalize GitHub issues', priority: 'urgent' },
+    const action = mutationAction('update', {
+      title: 'Normalize GitHub issues',
+      priority: 'urgent',
     });
     expect(
       verifyGitHubMutationObservation({
@@ -447,11 +627,11 @@ describe('GitHub semantic adapter', () => {
           capabilityEvidenceDigest: hostCapability.evidenceDigest,
         },
         hostCapability,
-        readback: {
+        readback: mutationReadback(action, {
           ...observation,
           context: hostCapability.context,
           capabilityEvidenceDigest: hostCapability.evidenceDigest,
-        },
+        }),
       }),
     ).toMatchObject({
       classification: 'partial',
@@ -468,11 +648,7 @@ describe('GitHub semantic adapter', () => {
     { outcome: 'unknown' as const, classification: 'uncertain' },
   ])('stops after a $outcome attempt', ({ outcome, classification }) => {
     const result = verifyGitHubMutationObservation({
-      action: githubAdapter.plan('update', {
-        context: hostCapability.context,
-        stableId: observation.identity.stableId,
-        postconditions: { title: 'Normalize GitHub issues' },
-      }),
+      action: mutationAction('update', { title: 'Normalize GitHub issues' }),
       attempt: {
         count: 1,
         outcome,
@@ -485,23 +661,22 @@ describe('GitHub semantic adapter', () => {
   });
 
   it('rejects readback from a capability other than the attempted pinned surface', () => {
+    const action = mutationAction('update', {
+      title: 'Normalize GitHub issues',
+    });
     const result = verifyGitHubMutationObservation({
-      action: githubAdapter.plan('update', {
-        context: hostCapability.context,
-        stableId: observation.identity.stableId,
-        postconditions: { title: 'Normalize GitHub issues' },
-      }),
+      action,
       attempt: {
         count: 1,
         outcome: 'accepted',
         capabilityEvidenceDigest: hostCapability.evidenceDigest,
       },
       hostCapability,
-      readback: {
+      readback: mutationReadback(action, {
         ...observation,
         context: hostCapability.context,
         capabilityEvidenceDigest: 'sha256:different-surface',
-      },
+      }),
     });
     expect(result).toMatchObject({
       classification: 'uncertain',
@@ -509,6 +684,85 @@ describe('GitHub semantic adapter', () => {
       retryAllowed: false,
     });
   });
+
+  it.each(['create', 'update', 'transition', 'annotate'] as const)(
+    'rejects an incomplete generic %s intent that bypasses safety planning',
+    (operation) => {
+      expect(() =>
+        githubAdapter.plan(operation, {
+          context: hostCapability.context,
+          stableId: observation.identity.stableId,
+          postconditions: { title: 'Unsafe bypass' },
+        }),
+      ).toThrow('complete GitHub mutation input');
+    },
+  );
+
+  it.each([
+    ['create', { title: 'Normalize GitHub issues' }],
+    ['update', { title: 'Normalize GitHub issues' }],
+    ['transition', { status: 'closed' }],
+    ['annotate', { annotation: 'Completed locally' }],
+  ] as const)(
+    'binds %s projection, capability, safety, publication, approval, identity, and readback evidence',
+    (operation, projection) => {
+      const action = mutationAction(operation, projection);
+      expect(action.intent).toMatchObject({
+        projection,
+        postconditions: projection,
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        previewDigest: expect.stringMatching(/^sha256:/),
+        approvalDigest: expect.stringMatching(/^sha256:/),
+        actionDigest: expect.stringMatching(/^sha256:/),
+      });
+      const exact = mutationReadback(action, {
+        ...observation,
+        fields: {
+          ...observation.fields,
+          ...(operation === 'transition' ? { state: 'closed' } : {}),
+          ...(operation === 'annotate'
+            ? { annotations: ['Completed locally'] }
+            : {}),
+        },
+      });
+      expect(
+        verifyGitHubMutationObservation({
+          action,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          },
+          hostCapability,
+          readback: exact,
+        }),
+      ).toMatchObject({ classification: 'verified' });
+      expect(
+        verifyGitHubMutationObservation({
+          action,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          },
+          hostCapability,
+          readback: {
+            ...exact,
+            fields: {
+              ...exact.fields,
+              mutationEvidence: {
+                ...(exact.fields.mutationEvidence as Record<string, unknown>),
+                publicationSafetyResultDigest: 'sha256:altered',
+              },
+            },
+          },
+        }),
+      ).toMatchObject({
+        classification: 'uncertain',
+        reason: 'readback-action-evidence-mismatch',
+      });
+    },
+  );
 
   it('plans a bounded duplicate search from provenance, reserved binding ID, aliases, and exact context', () => {
     expect(
@@ -540,6 +794,7 @@ describe('GitHub semantic adapter', () => {
             name: 'widgets',
           },
         },
+        queryDigest: expect.stringMatching(/^sha256:/),
         resultContract: {
           maxResults: 10,
           classifications: ['no-match', 'one-match', 'ambiguous'],
@@ -589,6 +844,7 @@ describe('GitHub semantic adapter', () => {
             aliases: ['acme/widgets#42'],
             context: hostCapability.context,
             matchedBy: 'provenance',
+            matchedProvenanceToken: 'origin:local-project:item-42',
             stableIdentityVerified: true,
             contextVerified: true,
             historicalRepositoryIds: [],
@@ -618,6 +874,7 @@ describe('GitHub semantic adapter', () => {
               owner: 'platform',
             },
             matchedBy: 'alias',
+            matchedAlias: 'legacy/widgets#7',
             stableIdentityVerified: true,
             contextVerified: true,
             historicalRepositoryIds: ['repo_123'],
@@ -687,6 +944,47 @@ describe('GitHub semantic adapter', () => {
     },
   );
 
+  it.each([
+    {
+      name: 'planned capability',
+      mutate: (value: ReturnType<typeof duplicateObservation>) => ({
+        ...value,
+        capabilityEvidenceDigest: 'sha256:other-capability',
+      }),
+    },
+    {
+      name: 'planned query',
+      mutate: (value: ReturnType<typeof duplicateObservation>) => ({
+        ...value,
+        queryDigest: 'sha256:other-query',
+      }),
+    },
+    {
+      name: 'reserved binding evidence',
+      mutate: (value: ReturnType<typeof duplicateObservation>) => ({
+        ...value,
+        results: [
+          {
+            ...duplicateCandidate('issue_1'),
+            matchedBy: 'reserved-binding' as const,
+            matchedAlias: undefined,
+            matchedReservedBindingId: 'binding_other',
+          },
+        ],
+      }),
+    },
+  ])('rejects duplicate evidence mismatched to the $name', ({ mutate }) => {
+    expect(
+      validateDuplicateSearchObservation({
+        action: duplicateSearchAction(),
+        hostCapability,
+        observation: mutate(
+          duplicateObservation([duplicateCandidate('issue_1')]),
+        ),
+      }),
+    ).toMatchObject({ accepted: false });
+  });
+
   it('plans a bounded semantic discussion read with a sanitized cursor contract', () => {
     expect(
       planDiscussionRead({
@@ -741,6 +1039,7 @@ describe('GitHub semantic adapter', () => {
         observation: {
           provider: 'github',
           context: hostCapability.context,
+          stableId: observation.identity.stableId,
           availability: 'available',
           capabilityEvidenceDigest: hostCapability.evidenceDigest,
           requestedCursor: 'cursor_1',
@@ -809,6 +1108,7 @@ describe('GitHub semantic adapter', () => {
         observation: {
           provider: 'github',
           context: hostCapability.context,
+          stableId: observation.identity.stableId,
           availability,
           capabilityEvidenceDigest: hostCapability.evidenceDigest,
           requestedCursor: null,
@@ -823,7 +1123,125 @@ describe('GitHub semantic adapter', () => {
       });
     },
   );
+
+  it('rejects discussion evidence for another action capability or issue', () => {
+    const action = planDiscussionRead({
+      context: hostCapability.context,
+      hostCapability,
+      stableId: observation.identity.stableId,
+      evidenceKind: 'comments',
+      cursor: null,
+      limit: 10,
+    });
+    const base = {
+      provider: 'github' as const,
+      context: hostCapability.context,
+      stableId: observation.identity.stableId,
+      availability: 'available' as const,
+      capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      requestedCursor: null,
+      nextCursor: null,
+      items: [],
+    };
+    expect(
+      validateDiscussionReadObservation({
+        action,
+        hostCapability,
+        observation: { ...base, stableId: 'issue_other' },
+      }),
+    ).toMatchObject({ classification: 'invalid' });
+    expect(
+      validateDiscussionReadObservation({
+        action,
+        hostCapability,
+        observation: {
+          ...base,
+          capabilityEvidenceDigest: 'sha256:other-capability',
+        },
+      }),
+    ).toMatchObject({ classification: 'invalid' });
+  });
 });
+
+function mutationInput(
+  operation: 'create' | 'update' | 'transition' | 'annotate',
+  projection: Record<string, string | null>,
+) {
+  const outboundSafety = assessOutboundProjectionSafety(projection, {
+    assessedAt: '2026-09-02T12:00:00.000Z',
+  });
+  const publicationSafety = assessGitHubPublicationSafety({
+    visibilityObservation: observeGitHubRepositoryVisibility({
+      context: hostCapability.context,
+      visibility: 'public',
+      capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      observedAt: '2026-09-02T12:00:00.000Z',
+    }),
+    projection,
+    outboundSafety,
+    assessedAt: '2026-09-02T12:00:00.000Z',
+  });
+  return {
+    operation,
+    context: hostCapability.context,
+    bindingId: 'binding_123',
+    stableId:
+      operation === 'create'
+        ? undefined
+        : 'github:github.example:issue_node_42',
+    provenance:
+      operation === 'create'
+        ? { bindingId: 'binding_123', origin: 'local-project:item-42' }
+        : undefined,
+    fieldMask: Object.keys(projection) as GitHubMutationField[],
+    descriptionMode: 'replace' as const,
+    projection,
+    outboundSafety,
+    hostCapability,
+    publicationSafety,
+  };
+}
+
+function transferEvidence(fromRepositoryId: string, toRepositoryId: string) {
+  const content = {
+    provider: 'github' as const,
+    stableId: 'github:github.example:issue_node_42',
+    fromRepositoryId,
+    toRepositoryId,
+    capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    observedAt: '2026-09-01T12:01:00.000Z',
+  };
+  return { ...content, evidenceDigest: semanticDigest(content) };
+}
+
+function mutationAction(
+  operation: 'create' | 'update' | 'transition' | 'annotate',
+  projection: Record<string, string | null>,
+) {
+  const input = mutationInput(operation, projection);
+  const preview = previewGitHubMutation(input);
+  return planGitHubMutation({
+    ...input,
+    approvedPreviewDigest: preview.previewDigest,
+  });
+}
+
+function mutationReadback(
+  action: SemanticAction,
+  source: SanitizedProviderObservation,
+): SanitizedProviderObservation {
+  return {
+    ...source,
+    context: hostCapability.context,
+    fields: {
+      ...source.fields,
+      mutationEvidence: action.intent.executionEvidence,
+      ...(action.operation === 'create'
+        ? { createProvenance: action.intent.provenance }
+        : {}),
+    },
+  };
+}
 
 function duplicateSearchAction() {
   return planDuplicateSearch({
@@ -842,6 +1260,7 @@ function duplicateCandidate(stableId: string) {
     aliases: ['acme/widgets#42'],
     context: hostCapability.context,
     matchedBy: 'alias' as const,
+    matchedAlias: 'acme/widgets#42',
     stableIdentityVerified: true,
     contextVerified: true,
     historicalRepositoryIds: [] as string[],
@@ -856,6 +1275,7 @@ function duplicateObservation(
     context: hostCapability.context,
     availability: 'available' as const,
     capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    queryDigest: duplicateSearchAction().intent.queryDigest as string,
     results,
   };
 }

@@ -23,6 +23,11 @@ import {
 } from '@commands/pjm/remote/provider';
 import { WHOLE_FIELD_SUPPRESSION_MARKER } from '@commands/pjm/remote/schema';
 
+import {
+  requireCurrentGitHubPublicationSafety,
+  type GitHubPublicationSafetyResult,
+} from './github-publication-safety';
+
 export interface GitHubIssueReference {
   host?: string;
   owner: string;
@@ -87,14 +92,25 @@ export interface GitHubReadObservationInput {
   outcome: 'found' | 'not-found' | 'temporary-failure';
   observation?: SanitizedProviderObservation;
   archived?: boolean;
-  authoritativeDeletion?: boolean;
-  deletionEvidenceDigest?: string;
+  deletionEvidence?: {
+    provider: 'github';
+    stableId: string;
+    context: ProviderContext;
+    capabilityEvidenceDigest: string;
+    observedAt: string;
+    evidenceDigest: string;
+  };
 }
 
-export type GitHubMutationField = 'title' | 'description' | 'priority';
+export type GitHubMutationField =
+  | 'title'
+  | 'description'
+  | 'priority'
+  | 'status'
+  | 'annotation';
 
-export interface GitHubMutationPlanInput {
-  operation: 'create' | 'update';
+export interface GitHubMutationPreviewInput {
+  operation: 'create' | 'update' | 'transition' | 'annotate';
   context: ProviderContext;
   bindingId: string;
   stableId?: string;
@@ -104,6 +120,23 @@ export interface GitHubMutationPlanInput {
   currentBody?: string;
   projection: OutboundProjection;
   outboundSafety: OutboundProjectionSafetyResult;
+  hostCapability: GitHubHostCapabilityObservation;
+  publicationSafety: GitHubPublicationSafetyResult;
+}
+
+export interface GitHubMutationPlanInput extends GitHubMutationPreviewInput {
+  approvedPreviewDigest: string;
+}
+
+export interface GitHubMutationPreview {
+  previewDigest: string;
+  executionEvidence: {
+    capabilityEvidenceDigest: string;
+    projectionDigest: string;
+    outboundSafetyResultDigest: string;
+    publicationSafetyResultDigest: string;
+    visibilityEvidenceDigest: string;
+  };
 }
 
 export type GitHubMutationVerificationClassification =
@@ -144,6 +177,9 @@ export interface GitHubDuplicateCandidate {
   aliases: string[];
   context: ProviderContext;
   matchedBy: 'provenance' | 'reserved-binding' | 'alias';
+  matchedProvenanceToken?: string;
+  matchedReservedBindingId?: string;
+  matchedAlias?: string;
   stableIdentityVerified: boolean;
   contextVerified: boolean;
   historicalRepositoryIds: string[];
@@ -154,6 +190,7 @@ export interface GitHubDuplicateSearchObservation {
   context: ProviderContext;
   availability: 'available' | 'unavailable';
   capabilityEvidenceDigest: string;
+  queryDigest: string;
   results: GitHubDuplicateCandidate[];
 }
 
@@ -194,6 +231,7 @@ export interface GitHubDiscussionItemObservation {
 export interface GitHubDiscussionReadObservation {
   provider: 'github';
   context: ProviderContext;
+  stableId: string;
   availability: 'available' | 'rate-limited' | 'permission-denied';
   capabilityEvidenceDigest: string;
   requestedCursor: string | null;
@@ -264,12 +302,15 @@ export function normalizeGitHubIssueObservation(
   const status = requiredString(observation.fields, 'state');
   const databaseId = requiredPositiveInteger(observation.fields, 'databaseId');
   const pullRequests = uniqueStrings(observation.fields.pullRequests);
+  const historicalRepositoryIds = optionalStringArray(
+    observation.fields.historicalRepositoryIds,
+  );
   const currentShortAlias = `${owner}/${name}#${number}`;
 
   return {
     provider: 'github',
     context: observation.context,
-    stableId: `github:${host}:${repositoryId}:${nodeId}`,
+    stableId: canonicalGitHubStableId(host, nodeId),
     aliases: uniqueStrings([
       currentShortAlias,
       url,
@@ -280,7 +321,13 @@ export function normalizeGitHubIssueObservation(
     priority,
     status,
     revisionDigest: semanticDigest(observation.revision),
-    extensions: { databaseId, nodeId, pullRequests },
+    extensions: {
+      databaseId,
+      nodeId,
+      repositoryId,
+      historicalRepositoryIds,
+      pullRequests,
+    },
   };
 }
 
@@ -352,14 +399,30 @@ export function classifyGitHubReadObservation(
       capability.reasons,
     );
   }
+  const plannedCapabilityDigest = input.action.intent.capabilityEvidenceDigest;
+  const plannedStableId = input.action.intent.stableId;
+  const plannedNodeId = input.action.intent.stableNodeId;
+  if (
+    typeof plannedCapabilityDigest !== 'string' ||
+    plannedCapabilityDigest !== input.hostCapability.evidenceDigest ||
+    typeof plannedStableId !== 'string' ||
+    typeof plannedNodeId !== 'string'
+  ) {
+    return unavailableReadResult('inaccessible', [
+      'planned-read-evidence-missing-or-mismatched',
+    ]);
+  }
   if (input.outcome === 'temporary-failure') {
     return unavailableReadResult('temporarily-unavailable', [
       'temporary-host-failure',
     ]);
   }
   if (input.outcome === 'not-found') {
-    const deleted =
-      input.authoritativeDeletion === true && !!input.deletionEvidenceDigest;
+    const deleted = validDeletionEvidence(
+      input.deletionEvidence,
+      input.action,
+      input.hostCapability.evidenceDigest,
+    );
     return unavailableReadResult(deleted ? 'deleted' : 'inaccessible', [
       deleted ? 'authoritative-deletion' : 'absence-not-authoritative',
     ]);
@@ -369,17 +432,73 @@ export function classifyGitHubReadObservation(
       'read-observation-missing',
     ]);
   }
-
-  const issue = normalizeGitHubIssueObservation(input.observation);
-  const expectedNodeId = input.action.intent.stableNodeId;
+  const observedNodeId = input.observation.fields.nodeId;
+  const observedHost = input.observation.context.host;
+  if (input.observation.provider !== 'github') {
+    return unavailableReadResult('inaccessible', [
+      'observation-provider-mismatch',
+    ]);
+  }
+  if (input.observation.capabilityEvidenceDigest !== plannedCapabilityDigest) {
+    return unavailableReadResult('inaccessible', [
+      'observation-capability-mismatch',
+    ]);
+  }
+  if (observedHost !== input.action.context.host) {
+    return unavailableReadResult('inaccessible', ['observation-host-mismatch']);
+  }
   if (
-    typeof expectedNodeId === 'string' &&
-    input.observation.fields.nodeId !== expectedNodeId
+    input.observation.context.owner !== input.observation.fields.owner ||
+    input.observation.context.name !== input.observation.fields.name
   ) {
-    return unavailableReadResult('inaccessible', ['stable-identity-mismatch']);
+    return unavailableReadResult('inaccessible', [
+      'observation-context-mismatch',
+    ]);
+  }
+  if (
+    input.observation.context.accountId !== undefined &&
+    input.observation.context.accountId !== input.action.context.accountId
+  ) {
+    return unavailableReadResult('inaccessible', [
+      'observation-account-mismatch',
+    ]);
+  }
+  if (
+    observedNodeId !== plannedNodeId ||
+    !observationIdentityMatches(
+      input.observation.identity.stableId,
+      plannedStableId,
+      plannedNodeId,
+    )
+  ) {
+    return unavailableReadResult('inaccessible', [
+      'observation-identity-mismatch',
+    ]);
   }
   const expectedRepositoryId = input.action.context.repositoryId;
   const observedRepositoryId = input.observation.context.repositoryId;
+  if (
+    expectedRepositoryId &&
+    observedRepositoryId !== expectedRepositoryId &&
+    !validTransferEvidence(
+      input.observation.fields.transferEvidence,
+      plannedStableId,
+      expectedRepositoryId,
+      observedRepositoryId,
+      plannedCapabilityDigest,
+      input.observedAt,
+    )
+  ) {
+    return unavailableReadResult('inaccessible', [
+      'transfer-evidence-missing-or-invalid',
+    ]);
+  }
+  let issue: NormalizedRemoteIssue;
+  try {
+    issue = normalizeGitHubIssueObservation(input.observation);
+  } catch {
+    return unavailableReadResult('inaccessible', ['read-observation-invalid']);
+  }
   const currentAlias = `${requiredString(input.observation.fields, 'owner')}/${requiredString(input.observation.fields, 'name')}#${requiredPositiveInteger(input.observation.fields, 'number')}`;
   const expectedAlias = input.action.intent.currentAlias;
   const classification: GitHubReadLifecycle = input.archived
@@ -401,13 +520,73 @@ export function classifyGitHubReadObservation(
   };
 }
 
+export function previewGitHubMutation(
+  input: GitHubMutationPreviewInput,
+): GitHubMutationPreview {
+  assertMutationIdentity(input);
+  const capability = validateGitHubHostCapability(
+    { operation: input.operation, context: input.context, requiredFields: [] },
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('GitHub mutation capability is unavailable.');
+  }
+  const fieldMask = normalizeMutationFieldMask(
+    input.operation,
+    input.fieldMask,
+  );
+  const projection = buildMutationProjection(input, fieldMask);
+  requireCurrentOutboundSafety(projection, input.outboundSafety);
+  requireCurrentGitHubPublicationSafety({
+    context: input.context,
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    projection,
+    outboundSafety: input.outboundSafety,
+    result: input.publicationSafety,
+  });
+  const executionEvidence = {
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    projectionDigest: input.outboundSafety.projectionDigest,
+    outboundSafetyResultDigest: input.outboundSafety.resultDigest,
+    publicationSafetyResultDigest: input.publicationSafety.resultDigest,
+    visibilityEvidenceDigest:
+      input.publicationSafety.preview.visibilityEvidenceDigest,
+  };
+  const previewDigest = semanticDigest({
+    provider: 'github',
+    operation: input.operation,
+    context: input.context,
+    bindingId: input.bindingId,
+    stableId: input.stableId ?? null,
+    provenance: input.provenance ?? null,
+    fieldMask,
+    projection,
+    postconditions: projection,
+    executionEvidence,
+  });
+  return { previewDigest, executionEvidence };
+}
+
 export function planGitHubMutation(
   input: GitHubMutationPlanInput,
 ): SemanticAction {
-  assertMutationIdentity(input);
-  const fieldMask = normalizeMutationFieldMask(input.fieldMask);
+  const preview = previewGitHubMutation(input);
+  if (input.approvedPreviewDigest !== preview.previewDigest) {
+    throw new Error('GitHub mutation approval does not match its preview.');
+  }
+  const fieldMask = normalizeMutationFieldMask(
+    input.operation,
+    input.fieldMask,
+  );
   const projection = buildMutationProjection(input, fieldMask);
-  requireCurrentOutboundSafety(projection, input.outboundSafety);
+  const actionDigest = semanticDigest({
+    provider: 'github',
+    operation: input.operation,
+    context: input.context,
+    previewDigest: preview.previewDigest,
+    approvalDigest: input.approvedPreviewDigest,
+    executionEvidence: preview.executionEvidence,
+  });
   return {
     provider: 'github',
     operation: input.operation,
@@ -419,9 +598,24 @@ export function planGitHubMutation(
       fieldMask,
       projection,
       postconditions: { ...projection },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
       outboundSafety: {
         projectionDigest: input.outboundSafety.projectionDigest,
         resultDigest: input.outboundSafety.resultDigest,
+      },
+      publicationSafety: {
+        resultDigest: input.publicationSafety.resultDigest,
+        visibilityEvidenceDigest:
+          input.publicationSafety.preview.visibilityEvidenceDigest,
+      },
+      previewDigest: preview.previewDigest,
+      approvalDigest: input.approvedPreviewDigest,
+      actionDigest,
+      executionEvidence: {
+        ...preview.executionEvidence,
+        previewDigest: preview.previewDigest,
+        approvalDigest: input.approvedPreviewDigest,
+        actionDigest,
       },
     },
   };
@@ -443,6 +637,9 @@ export function verifyGitHubMutationObservation(
       'GitHub mutation verification accepts exactly one attempt.',
     );
   }
+  if (!validMutationActionEvidence(input.action)) {
+    return mutationResult('uncertain', 'action-evidence-invalid');
+  }
   const capability = validateGitHubHostCapability(
     {
       operation: input.action.operation,
@@ -453,6 +650,8 @@ export function verifyGitHubMutationObservation(
   );
   if (
     !capability.valid ||
+    input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest ||
     input.attempt.capabilityEvidenceDigest !==
       input.hostCapability.evidenceDigest
   ) {
@@ -479,11 +678,44 @@ export function verifyGitHubMutationObservation(
   ) {
     return mutationResult('uncertain', 'readback-context-mismatch');
   }
+  if (
+    !semanticValuesEqual(
+      input.readback.fields.mutationEvidence,
+      input.action.intent.executionEvidence,
+    )
+  ) {
+    return mutationResult('uncertain', 'readback-action-evidence-mismatch');
+  }
+  if (
+    input.action.operation === 'create' &&
+    !semanticValuesEqual(
+      input.readback.fields.createProvenance,
+      input.action.intent.provenance,
+    )
+  ) {
+    return mutationResult('uncertain', 'readback-create-provenance-mismatch');
+  }
+  let normalizedReadback: NormalizedRemoteIssue;
+  try {
+    normalizedReadback = normalizeGitHubIssueObservation(input.readback);
+  } catch {
+    return mutationResult('uncertain', 'readback-invalid');
+  }
+  const readbackNodeId = String(input.readback.fields.nodeId ?? '');
+  if (
+    !observationIdentityMatches(
+      input.readback.identity.stableId,
+      normalizedReadback.stableId,
+      readbackNodeId,
+    )
+  ) {
+    return mutationResult('uncertain', 'readback-identity-mismatch');
+  }
   const stableId = input.action.intent.stableId;
   if (
     typeof stableId === 'string' &&
     stableId !== input.readback.identity.stableId &&
-    stableId !== normalizeGitHubIssueObservation(input.readback).stableId
+    stableId !== normalizedReadback.stableId
   ) {
     return mutationResult('uncertain', 'readback-identity-mismatch');
   }
@@ -530,22 +762,24 @@ export function planDuplicateSearch(
   ) {
     throw new Error('GitHub duplicate search bounds are invalid.');
   }
+  const query = {
+    provenanceToken: input.provenanceToken,
+    reservedBindingId: input.reservedBindingId,
+    historicalAliases: uniqueStrings(input.historicalAliases),
+    repository: {
+      host: requiredContextValue(input.context, 'host'),
+      repositoryId: requiredContextValue(input.context, 'repositoryId'),
+      owner: requiredContextValue(input.context, 'owner'),
+      name: requiredContextValue(input.context, 'name'),
+    },
+  };
   return {
     provider: 'github',
     operation: 'search-duplicates',
     context: input.context,
     intent: {
-      query: {
-        provenanceToken: input.provenanceToken,
-        reservedBindingId: input.reservedBindingId,
-        historicalAliases: uniqueStrings(input.historicalAliases),
-        repository: {
-          host: requiredContextValue(input.context, 'host'),
-          repositoryId: requiredContextValue(input.context, 'repositoryId'),
-          owner: requiredContextValue(input.context, 'owner'),
-          name: requiredContextValue(input.context, 'name'),
-        },
-      },
+      query,
+      queryDigest: semanticDigest(query),
       resultContract: {
         maxResults: input.maxResults,
         classifications: ['no-match', 'one-match', 'ambiguous'],
@@ -582,10 +816,13 @@ export function validateDuplicateSearchObservation(
     ]);
   }
   if (
+    input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest ||
     input.observation.provider !== 'github' ||
     !contextsEqual(input.action.context, input.observation.context) ||
     input.observation.capabilityEvidenceDigest !==
-      input.hostCapability.evidenceDigest
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.queryDigest !== input.action.intent.queryDigest
   ) {
     return duplicateValidationResult(false, 'invalid', null, [
       'observation-context-or-capability-mismatch',
@@ -632,8 +869,13 @@ export function validateDuplicateSearchObservation(
     candidate.context.repositoryId === expectedRepositoryId ||
     candidate.historicalRepositoryIds.includes(expectedRepositoryId);
   const matchEvidenceValid =
-    candidate.matchedBy !== 'alias' ||
-    candidate.aliases.some((alias) => aliases.includes(alias));
+    candidate.matchedBy === 'provenance'
+      ? candidate.matchedProvenanceToken === query.provenanceToken
+      : candidate.matchedBy === 'reserved-binding'
+        ? candidate.matchedReservedBindingId === query.reservedBindingId
+        : typeof candidate.matchedAlias === 'string' &&
+          aliases.includes(candidate.matchedAlias) &&
+          candidate.aliases.includes(candidate.matchedAlias);
   if (
     !candidate.stableId ||
     !candidate.stableIdentityVerified ||
@@ -722,10 +964,13 @@ export function validateDiscussionReadObservation(
     ]);
   }
   if (
+    input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest ||
     input.observation.provider !== 'github' ||
     !contextsEqual(input.action.context, input.observation.context) ||
     input.observation.capabilityEvidenceDigest !==
-      input.hostCapability.evidenceDigest ||
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.stableId !== input.action.intent.stableId ||
     input.observation.requestedCursor !== input.action.intent.cursor
   ) {
     return discussionResult('invalid', null, [
@@ -778,7 +1023,27 @@ export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
   plan(operation, input) {
+    if (['create', 'update', 'transition', 'annotate'].includes(operation)) {
+      if (!isCompleteMutationInput(operation, input)) {
+        throw new Error(
+          'GitHub adapter requires complete GitHub mutation input.',
+        );
+      }
+      return planGitHubMutation(input as unknown as GitHubMutationPlanInput);
+    }
     const { context, ...intent } = input;
+    if (operation === 'read') {
+      if (
+        !isProviderContext(context) ||
+        typeof intent.stableId !== 'string' ||
+        typeof intent.stableNodeId !== 'string' ||
+        typeof intent.capabilityEvidenceDigest !== 'string'
+      ) {
+        throw new Error(
+          'GitHub read plan requires pinned identity and capability.',
+        );
+      }
+    }
     return {
       provider: 'github',
       operation,
@@ -793,7 +1058,7 @@ export const githubAdapter: ProviderAdapter = {
     if (!hostCapability) {
       return { valid: false, reasons: ['capability-evidence-missing'] };
     }
-    return validateGitHubHostCapability(
+    const capability = validateGitHubHostCapability(
       {
         operation: action.operation,
         context: action.context,
@@ -802,12 +1067,50 @@ export const githubAdapter: ProviderAdapter = {
       },
       hostCapability,
     );
+    if (!capability.valid) return capability;
+    if (
+      typeof action.intent.capabilityEvidenceDigest === 'string' &&
+      (observation.capabilityEvidenceDigest !==
+        action.intent.capabilityEvidenceDigest ||
+        hostCapability.evidenceDigest !==
+          action.intent.capabilityEvidenceDigest)
+    ) {
+      return { valid: false, reasons: ['capability-evidence-mismatch'] };
+    }
+    return { valid: true, reasons: [] };
   },
-  verificationFields() {
-    return [];
+  verificationFields(action) {
+    return Object.keys(parsePostconditions(action.intent.postconditions));
   },
-  verify() {
-    return [];
+  verify(action, issue) {
+    if (!validMutationActionEvidence(action)) {
+      return this.verificationFields(action).map((field) => ({
+        field,
+        status: 'unavailable' as const,
+      }));
+    }
+    const postconditions = parsePostconditions(action.intent.postconditions);
+    return Object.entries(postconditions).map(([field, expected]) => {
+      const observed =
+        field === 'description'
+          ? issue.description
+          : field === 'status'
+            ? issue.status
+            : field === 'annotation'
+              ? issue.extensions.annotations
+              : issue[field as 'title' | 'priority'];
+      return {
+        field,
+        status:
+          field === 'annotation' && Array.isArray(observed)
+            ? observed.includes(expected)
+              ? 'verified'
+              : 'mismatch'
+            : observed === expected
+              ? 'verified'
+              : 'mismatch',
+      } satisfies FieldVerification;
+    });
   },
 };
 
@@ -831,7 +1134,7 @@ function unavailableReadResult(
   };
 }
 
-function assertMutationIdentity(input: GitHubMutationPlanInput): void {
+function assertMutationIdentity(input: GitHubMutationPreviewInput): void {
   if (!input.bindingId)
     throw new Error('GitHub mutation requires a binding ID.');
   if (input.operation === 'create') {
@@ -842,7 +1145,7 @@ function assertMutationIdentity(input: GitHubMutationPlanInput): void {
       throw new Error('GitHub create requires explicit binding provenance.');
     }
   } else if (!input.stableId) {
-    throw new Error('GitHub update requires stable identity.');
+    throw new Error('GitHub mutation requires stable identity.');
   }
 }
 
@@ -901,13 +1204,20 @@ function verifyMutationField(
 }
 
 function normalizeMutationFieldMask(
+  operation: GitHubMutationPreviewInput['operation'],
   fieldMask: readonly GitHubMutationField[],
 ): GitHubMutationField[] {
-  const allowed = new Set<GitHubMutationField>([
-    'title',
-    'description',
-    'priority',
-  ]);
+  const fieldsByOperation: Record<
+    GitHubMutationPreviewInput['operation'],
+    GitHubMutationField[]
+  > = {
+    create: ['title', 'description', 'priority'],
+    update: ['title', 'description', 'priority'],
+    transition: ['status'],
+    annotate: ['annotation'],
+  };
+  const ordered = fieldsByOperation[operation];
+  const allowed = new Set<GitHubMutationField>(ordered);
   if (
     fieldMask.length === 0 ||
     new Set(fieldMask).size !== fieldMask.length ||
@@ -915,13 +1225,11 @@ function normalizeMutationFieldMask(
   ) {
     throw new Error('Unsupported GitHub mutation field.');
   }
-  return ['title', 'description', 'priority'].filter((field) =>
-    fieldMask.includes(field as GitHubMutationField),
-  ) as GitHubMutationField[];
+  return ordered.filter((field) => fieldMask.includes(field));
 }
 
 function buildMutationProjection(
-  input: GitHubMutationPlanInput,
+  input: GitHubMutationPreviewInput,
   fieldMask: readonly GitHubMutationField[],
 ): OutboundProjection {
   const projectionKeys = Object.keys(input.projection);
@@ -955,11 +1263,26 @@ function buildMutationProjection(
   if (fieldMask.includes('description')) {
     projection.description = buildDescriptionProjection(input);
   }
+  if (fieldMask.includes('status')) {
+    if (!['open', 'closed'].includes(String(input.projection.status))) {
+      throw new Error('Unsupported GitHub status transition.');
+    }
+    projection.status = input.projection.status;
+  }
+  if (fieldMask.includes('annotation')) {
+    if (
+      typeof input.projection.annotation !== 'string' ||
+      input.projection.annotation.length === 0
+    ) {
+      throw new Error('GitHub annotation projection must be text.');
+    }
+    projection.annotation = input.projection.annotation;
+  }
   return projection;
 }
 
 function buildDescriptionProjection(
-  input: GitHubMutationPlanInput,
+  input: GitHubMutationPreviewInput,
 ): string | null {
   if (input.descriptionMode === 'none') {
     throw new Error('GitHub description updates are disabled by policy.');
@@ -986,6 +1309,216 @@ function buildDescriptionProjection(
     throw new Error(`GitHub managed body requires choice: ${update.reason}.`);
   }
   return update.body;
+}
+
+function isCompleteMutationInput(
+  operation: SemanticOperation,
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    ['create', 'update', 'transition', 'annotate'].includes(operation) &&
+    input.operation === operation &&
+    isProviderContext(input.context) &&
+    typeof input.bindingId === 'string' &&
+    Array.isArray(input.fieldMask) &&
+    !!input.projection &&
+    typeof input.projection === 'object' &&
+    !!input.outboundSafety &&
+    typeof input.outboundSafety === 'object' &&
+    !!input.hostCapability &&
+    typeof input.hostCapability === 'object' &&
+    !!input.publicationSafety &&
+    typeof input.publicationSafety === 'object' &&
+    typeof input.approvedPreviewDigest === 'string'
+  );
+}
+
+function validMutationActionEvidence(action: SemanticAction): boolean {
+  try {
+    const fieldMask = action.intent.fieldMask;
+    const projection = recordValue(
+      action.intent.projection,
+      'GitHub action projection is missing.',
+    );
+    const postconditions = recordValue(
+      action.intent.postconditions,
+      'GitHub action postconditions are missing.',
+    );
+    const execution = recordValue(
+      action.intent.executionEvidence,
+      'GitHub action execution evidence is missing.',
+    );
+    if (
+      !['create', 'update', 'transition', 'annotate'].includes(
+        action.operation,
+      ) ||
+      typeof action.intent.bindingId !== 'string'
+    ) {
+      return false;
+    }
+    const operation =
+      action.operation as GitHubMutationPreviewInput['operation'];
+    const normalizedMask = normalizeMutationFieldMask(
+      operation,
+      fieldMask as GitHubMutationField[],
+    );
+    if (
+      !semanticValuesEqual(normalizedMask, fieldMask) ||
+      !semanticValuesEqual(Object.keys(projection), fieldMask)
+    ) {
+      return false;
+    }
+    if (operation === 'create') {
+      const provenance = recordValue(
+        action.intent.provenance,
+        'GitHub create provenance is missing.',
+      );
+      if (
+        action.intent.stableId !== null ||
+        provenance.bindingId !== action.intent.bindingId ||
+        typeof provenance.origin !== 'string' ||
+        provenance.origin.length === 0
+      ) {
+        return false;
+      }
+    } else if (typeof action.intent.stableId !== 'string') {
+      return false;
+    }
+    parsePostconditions(postconditions);
+    if (
+      !Array.isArray(fieldMask) ||
+      !semanticValuesEqual(projection, postconditions) ||
+      action.intent.previewDigest !== action.intent.approvalDigest ||
+      action.intent.previewDigest !== execution.previewDigest ||
+      action.intent.approvalDigest !== execution.approvalDigest ||
+      action.intent.actionDigest !== execution.actionDigest ||
+      action.intent.capabilityEvidenceDigest !==
+        execution.capabilityEvidenceDigest
+    ) {
+      return false;
+    }
+    const outboundSafety = recordValue(
+      action.intent.outboundSafety,
+      'GitHub outbound evidence is missing.',
+    );
+    const publicationSafety = recordValue(
+      action.intent.publicationSafety,
+      'GitHub publication evidence is missing.',
+    );
+    if (
+      outboundSafety.projectionDigest !== execution.projectionDigest ||
+      outboundSafety.resultDigest !== execution.outboundSafetyResultDigest ||
+      publicationSafety.resultDigest !==
+        execution.publicationSafetyResultDigest ||
+      publicationSafety.visibilityEvidenceDigest !==
+        execution.visibilityEvidenceDigest ||
+      semanticDigest(projection) !== execution.projectionDigest
+    ) {
+      return false;
+    }
+    const executionBase = {
+      capabilityEvidenceDigest: execution.capabilityEvidenceDigest,
+      projectionDigest: execution.projectionDigest,
+      outboundSafetyResultDigest: execution.outboundSafetyResultDigest,
+      publicationSafetyResultDigest: execution.publicationSafetyResultDigest,
+      visibilityEvidenceDigest: execution.visibilityEvidenceDigest,
+    };
+    const expectedPreview = semanticDigest({
+      provider: 'github',
+      operation: action.operation,
+      context: action.context,
+      bindingId: action.intent.bindingId,
+      stableId: action.intent.stableId,
+      provenance: action.intent.provenance,
+      fieldMask,
+      projection,
+      postconditions,
+      executionEvidence: executionBase,
+    });
+    if (expectedPreview !== action.intent.previewDigest) return false;
+    return (
+      semanticDigest({
+        provider: 'github',
+        operation: action.operation,
+        context: action.context,
+        previewDigest: action.intent.previewDigest,
+        approvalDigest: action.intent.approvalDigest,
+        executionEvidence: executionBase,
+      }) === action.intent.actionDigest
+    );
+  } catch {
+    return false;
+  }
+}
+
+function observationIdentityMatches(
+  declared: string,
+  canonical: string,
+  nodeId: string,
+): boolean {
+  return declared === canonical || declared === nodeId;
+}
+
+function canonicalGitHubStableId(host: string, nodeId: string): string {
+  return `github:${host.toLowerCase()}:${nodeId}`;
+}
+
+function validTransferEvidence(
+  value: unknown,
+  stableId: string,
+  fromRepositoryId: string,
+  toRepositoryId: string | undefined,
+  capabilityEvidenceDigest: string,
+  observedAt: string,
+): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const evidence = value as Record<string, unknown>;
+  if (
+    evidence.provider !== 'github' ||
+    evidence.stableId !== stableId ||
+    evidence.fromRepositoryId !== fromRepositoryId ||
+    evidence.toRepositoryId !== toRepositoryId ||
+    evidence.capabilityEvidenceDigest !== capabilityEvidenceDigest ||
+    evidence.observedAt !== observedAt
+  ) {
+    return false;
+  }
+  const { evidenceDigest, ...content } = evidence;
+  return evidenceDigest === semanticDigest(content);
+}
+
+function validDeletionEvidence(
+  value: GitHubReadObservationInput['deletionEvidence'],
+  action: SemanticAction,
+  capabilityEvidenceDigest: string,
+): boolean {
+  if (!value || value.provider !== 'github') return false;
+  if (
+    value.stableId !== action.intent.stableId ||
+    !contextsEqual(value.context, action.context) ||
+    value.capabilityEvidenceDigest !== capabilityEvidenceDigest ||
+    !Number.isFinite(Date.parse(value.observedAt))
+  ) {
+    return false;
+  }
+  return (
+    semanticDigest({
+      provider: value.provider,
+      stableId: value.stableId,
+      context: value.context,
+      capabilityEvidenceDigest: value.capabilityEvidenceDigest,
+      observedAt: value.observedAt,
+    }) === value.evidenceDigest
+  );
+}
+
+function semanticValuesEqual(left: unknown, right: unknown): boolean {
+  if (left === undefined || right === undefined) return false;
+  try {
+    return semanticDigest(left) === semanticDigest(right);
+  } catch {
+    return false;
+  }
 }
 
 function isProviderContext(value: unknown): value is ProviderContext {
@@ -1119,4 +1652,8 @@ function uniqueStrings(value: unknown): string[] {
     throw new Error('GitHub aliases and pull requests must be string arrays.');
   }
   return [...new Set(value)];
+}
+
+function optionalStringArray(value: unknown): string[] {
+  return value === undefined ? [] : uniqueStrings(value);
 }

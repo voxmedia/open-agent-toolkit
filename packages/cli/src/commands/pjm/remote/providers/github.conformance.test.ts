@@ -1,3 +1,4 @@
+import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type {
   ProviderAdapter,
   SanitizedProviderObservation,
@@ -9,7 +10,17 @@ import {
 import { composePurposePolicies } from '@commands/pjm/remote/purpose-policy';
 import { describe, expect, it } from 'vitest';
 
-import { githubAdapter } from './github';
+import {
+  githubAdapter,
+  planGitHubMutation,
+  previewGitHubMutation,
+  type GitHubHostCapabilityObservation,
+  type GitHubMutationField,
+} from './github';
+import {
+  assessGitHubPublicationSafety,
+  observeGitHubRepositoryVisibility,
+} from './github-publication-safety';
 
 const context = {
   host: 'github.example',
@@ -53,9 +64,63 @@ const observation: SanitizedProviderObservation = {
   capabilityEvidenceDigest: 'sha256:bounded-capability',
 };
 
+const capability = observation.fields
+  .hostCapability as GitHubHostCapabilityObservation;
+
+function safeMutation(
+  operation: 'create' | 'update' | 'transition' | 'annotate',
+  projection: Record<string, string>,
+) {
+  const outboundSafety = assessOutboundProjectionSafety(projection, {
+    assessedAt: '2026-09-02T12:00:00.000Z',
+  });
+  const base = {
+    operation,
+    context,
+    bindingId: 'binding_42',
+    stableId:
+      operation === 'create'
+        ? undefined
+        : 'github:github.example:issue_node_42',
+    provenance:
+      operation === 'create'
+        ? { bindingId: 'binding_42', origin: 'local-project:item-42' }
+        : undefined,
+    fieldMask: Object.keys(projection) as GitHubMutationField[],
+    descriptionMode: 'replace' as const,
+    projection,
+    outboundSafety,
+    hostCapability: capability,
+    publicationSafety: assessGitHubPublicationSafety({
+      visibilityObservation: observeGitHubRepositoryVisibility({
+        context,
+        visibility: 'public',
+        capabilityEvidenceDigest: capability.evidenceDigest,
+        observedAt: '2026-09-02T12:00:00.000Z',
+      }),
+      projection,
+      outboundSafety,
+      assessedAt: '2026-09-02T12:00:00.000Z',
+    }),
+  };
+  const preview = previewGitHubMutation(base);
+  return planGitHubMutation({
+    ...base,
+    approvedPreviewDigest: preview.previewDigest,
+  });
+}
+
 const adapter: ProviderAdapter = {
   ...githubAdapter,
   plan(operation, input) {
+    if (operation === 'update') {
+      return safeMutation('update', {
+        title: String(
+          (input.fields as Record<string, unknown> | undefined)?.title ??
+            observation.fields.title,
+        ),
+      });
+    }
     return githubAdapter.plan(operation, { ...input, context });
   },
 };
@@ -64,12 +129,12 @@ const fixture: ProviderConformanceFixture = {
   adapter,
   observation,
   expected: {
-    stableId: 'github:github.example:repo_123:issue_node_42',
+    stableId: 'github:github.example:issue_node_42',
     aliases: [
       'acme/widgets#42',
       'https://github.example/acme/widgets/issues/42',
     ],
-    verificationFields: [],
+    verificationFields: ['title'],
   },
 };
 
@@ -93,28 +158,40 @@ describe('GitHub provider conformance', () => {
     ).toHaveLength(1);
   });
 
-  it('plans annotations and transitions as semantic actions only', () => {
+  it('plans annotations and transitions only through gated projections', () => {
     expect(
-      adapter.plan('annotate', {
-        stableId: observation.identity.stableId,
-        annotation: 'Completed locally',
-      }),
-    ).toMatchObject({ provider: 'github', operation: 'annotate', context });
-    expect(
-      adapter.plan('transition', {
-        stableId: observation.identity.stableId,
-        status: 'closed',
-      }),
-    ).toMatchObject({ provider: 'github', operation: 'transition', context });
+      safeMutation('annotate', { annotation: 'Completed locally' }),
+    ).toMatchObject({
+      provider: 'github',
+      operation: 'annotate',
+      context,
+      intent: { fieldMask: ['annotation'] },
+    });
+    expect(safeMutation('transition', { status: 'closed' })).toMatchObject({
+      provider: 'github',
+      operation: 'transition',
+      context,
+      intent: { fieldMask: ['status'] },
+    });
+    expect(() => adapter.plan('transition', { status: 'closed' })).toThrow(
+      'complete GitHub mutation input',
+    );
   });
 
   it('retains bounded GitHub-native extensions without exposing a native invocation', () => {
     expect(adapter.normalize(observation).extensions).toEqual({
       databaseId: 4200,
       nodeId: 'issue_node_42',
+      repositoryId: 'repo_123',
+      historicalRepositoryIds: [],
       pullRequests: ['https://github.example/acme/widgets/pull/99'],
     });
-    expect(adapter.plan('read', {})).not.toHaveProperty('tool');
-    expect(adapter.plan('read', {})).not.toHaveProperty('command');
+    const read = adapter.plan('read', {
+      stableId: 'github:github.example:issue_node_42',
+      stableNodeId: 'issue_node_42',
+      capabilityEvidenceDigest: capability.evidenceDigest,
+    });
+    expect(read).not.toHaveProperty('tool');
+    expect(read).not.toHaveProperty('command');
   });
 });
