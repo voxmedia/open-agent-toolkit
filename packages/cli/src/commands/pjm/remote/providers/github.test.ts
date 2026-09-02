@@ -7,6 +7,7 @@ import {
   githubAdapter,
   normalizeGitHubIssueObservation,
   parseGitHubIssueReference,
+  planDuplicateSearch,
   planGitHubMutation,
   validateGitHubHostCapability,
   verifyGitHubMutationObservation,
@@ -504,6 +505,74 @@ describe('GitHub semantic adapter', () => {
       retryAllowed: false,
     });
   });
+
+  it('plans a bounded duplicate search from provenance, reserved binding ID, aliases, and exact context', () => {
+    expect(
+      planDuplicateSearch({
+        context: hostCapability.context,
+        hostCapability,
+        provenanceToken: 'origin:local-project:item-42',
+        reservedBindingId: 'binding_reserved_42',
+        historicalAliases: [
+          'acme/widgets#42',
+          'legacy/widgets#7',
+          'acme/widgets#42',
+        ],
+        maxResults: 10,
+      }),
+    ).toEqual({
+      provider: 'github',
+      operation: 'search-duplicates',
+      context: hostCapability.context,
+      intent: {
+        query: {
+          provenanceToken: 'origin:local-project:item-42',
+          reservedBindingId: 'binding_reserved_42',
+          historicalAliases: ['acme/widgets#42', 'legacy/widgets#7'],
+          repository: {
+            host: 'github.example',
+            repositoryId: 'repo_123',
+            owner: 'acme',
+            name: 'widgets',
+          },
+        },
+        resultContract: {
+          maxResults: 10,
+          classifications: ['no-match', 'one-match', 'ambiguous'],
+          matchStatus: 'evidence-until-identity-and-context-verified',
+        },
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      },
+    });
+  });
+
+  it('fails closed when duplicate search is unsupported or unbounded', () => {
+    expect(() =>
+      planDuplicateSearch({
+        context: hostCapability.context,
+        hostCapability: {
+          ...hostCapability,
+          operations: hostCapability.operations.filter(
+            (operation) => operation !== 'search-duplicates',
+          ),
+        },
+        provenanceToken: 'origin:local-project:item-42',
+        reservedBindingId: 'binding_reserved_42',
+        historicalAliases: [],
+        maxResults: 10,
+      }),
+    ).toThrow('GitHub duplicate search capability is unavailable');
+    expect(() =>
+      planDuplicateSearch({
+        context: hostCapability.context,
+        hostCapability,
+        provenanceToken: 'origin:local-project:item-42',
+        reservedBindingId: 'binding_reserved_42',
+        historicalAliases: [],
+        maxResults: 101,
+      }),
+    ).toThrow('GitHub duplicate search bounds are invalid');
+  });
 });
 
 const hostCapability: GitHubHostCapabilityObservation = {
@@ -518,7 +587,14 @@ const hostCapability: GitHubHostCapabilityObservation = {
   availability: 'available',
   accountId: 'account_123',
   repositoryId: 'repo_123',
-  operations: ['read', 'create', 'update', 'transition', 'annotate'],
+  operations: [
+    'read',
+    'create',
+    'update',
+    'transition',
+    'annotate',
+    'search-duplicates',
+  ],
   observableFields: ['stable-identity', 'title', 'state', 'revision'],
   evidenceDigest: 'sha256:bounded-capability',
 };

@@ -128,6 +128,15 @@ export interface GitHubMutationVerificationResult {
   retryAllowed: false;
 }
 
+export interface GitHubDuplicateSearchPlanInput {
+  context: ProviderContext;
+  hostCapability: GitHubHostCapabilityObservation;
+  provenanceToken: string;
+  reservedBindingId: string;
+  historicalAliases: string[];
+  maxResults: number;
+}
+
 const URL_REFERENCE =
   /^https:\/\/([^/]+)\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:[/?#].*)?$/;
 const SHORT_REFERENCE = /^([^/\s]+)\/([^#\s]+)#(\d+)$/;
@@ -415,6 +424,56 @@ export function verifyGitHubMutationObservation(
   return mutationResult('uncertain', 'postconditions-unverified', fields);
 }
 
+export function planDuplicateSearch(
+  input: GitHubDuplicateSearchPlanInput,
+): SemanticAction {
+  const capability = validateGitHubHostCapability(
+    {
+      operation: 'search-duplicates',
+      context: input.context,
+      requiredFields: [],
+    },
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('GitHub duplicate search capability is unavailable.');
+  }
+  if (
+    !input.provenanceToken ||
+    !input.reservedBindingId ||
+    !Number.isInteger(input.maxResults) ||
+    input.maxResults < 1 ||
+    input.maxResults > 100 ||
+    input.historicalAliases.length > 64
+  ) {
+    throw new Error('GitHub duplicate search bounds are invalid.');
+  }
+  return {
+    provider: 'github',
+    operation: 'search-duplicates',
+    context: input.context,
+    intent: {
+      query: {
+        provenanceToken: input.provenanceToken,
+        reservedBindingId: input.reservedBindingId,
+        historicalAliases: uniqueStrings(input.historicalAliases),
+        repository: {
+          host: requiredContextValue(input.context, 'host'),
+          repositoryId: requiredContextValue(input.context, 'repositoryId'),
+          owner: requiredContextValue(input.context, 'owner'),
+          name: requiredContextValue(input.context, 'name'),
+        },
+      },
+      resultContract: {
+        maxResults: input.maxResults,
+        classifications: ['no-match', 'one-match', 'ambiguous'],
+        matchStatus: 'evidence-until-identity-and-context-verified',
+      },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    },
+  };
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -678,6 +737,12 @@ function requiredContext(
   key: string,
 ): string {
   const value = observation.context[key];
+  if (!value) throw new Error(`GitHub context requires '${key}'.`);
+  return value;
+}
+
+function requiredContextValue(context: ProviderContext, key: string): string {
+  const value = context[key];
   if (!value) throw new Error(`GitHub context requires '${key}'.`);
   return value;
 }
