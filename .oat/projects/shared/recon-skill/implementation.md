@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: final-review
+    reason: fresh final review found three Important and one Medium correctness gaps requiring review-receive and bounded fixes
+    since: 2026-09-02
 oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
@@ -996,6 +999,22 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   before inspection or artifact creation and produced no verdict
 - Constraints: preserve the exact high reviewer target and unchanged
   implementation basis; this authorization permits one launch only
+
+#### Second authorized final review relaunch — completed
+
+- Request ID: `recon-skill-final-review-second-relaunch-20260902`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed basis: `2c6005d64f45a19e8b9eedbc977959b066d3eda0..8574dffc8f7c2abfab25649b384abfb0aa738d15`
+- Launch/outcome: accepted / completed
+- Reconnaissance: not-attempted
+- Artifact: `reviews/final-review-2026-09-02T121146Z.md`
+- Findings: 0 Critical, 3 Important, 1 Medium, 0 Minor
+- Verdict: fixes required; implementation closeout remains blocked
+- Verification: recon/dispatch 167/167, focused CLI 400/400, CLI
+  type-check, check, lint, format, skill bumps, release validation, and diff
+  check passed; four bounded negative controls reproduced the findings
+- Next: process the artifact through `oat-project-review-receive`, add bounded
+  fix tasks, implement them, and obtain a fresh passing final review
 
 <!-- orchestration-runs-end -->
 

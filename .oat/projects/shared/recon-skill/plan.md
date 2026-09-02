@@ -1373,7 +1373,7 @@ git commit -m "fix(p05-t06): scan array strings in review briefs"
 | final          | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                   |
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                   |
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
-| final          | code     | pending         | 2026-09-02 | -                                                                      | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
+| final          | code     | received        | 2026-09-02 | `reviews/final-review-2026-09-02T121146Z.md`                           | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
