@@ -185,6 +185,18 @@ export interface GitHubDuplicateCandidate {
   stableIdentityVerified: boolean;
   contextVerified: boolean;
   historicalRepositoryIds: string[];
+  transferEvidence?: GitHubDuplicateTransferEvidence;
+}
+
+export interface GitHubDuplicateTransferEvidence {
+  provider: 'github';
+  stableId: string;
+  fromContext: ProviderContext;
+  toContext: ProviderContext;
+  capabilityEvidenceDigest: string;
+  queryDigest: string;
+  observedAt: string;
+  evidenceDigest: string;
 }
 
 export interface GitHubDuplicateSearchObservation {
@@ -193,6 +205,7 @@ export interface GitHubDuplicateSearchObservation {
   availability: 'available' | 'unavailable';
   capabilityEvidenceDigest: string;
   queryDigest: string;
+  observedAt: string;
   results: GitHubDuplicateCandidate[];
 }
 
@@ -835,25 +848,30 @@ export function validateDuplicateSearchObservation(
     },
     input.hostCapability,
   );
+  if (!duplicateObservationAttributedToAction(input)) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      'observation-context-or-capability-mismatch',
+    ]);
+  }
+  const availabilityReasons = new Set([
+    'access-unavailable',
+    'authorization-required',
+    'rate-limited',
+  ]);
+  const capabilityAttributionReasons = capability.reasons.filter(
+    (reason) => !availabilityReasons.has(reason),
+  );
+  if (capabilityAttributionReasons.length > 0) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      ...capabilityAttributionReasons,
+    ]);
+  }
   if (!capability.valid || input.observation.availability === 'unavailable') {
     return duplicateValidationResult(false, 'unavailable', null, [
       ...capability.reasons,
       ...(input.observation.availability === 'unavailable'
         ? ['search-unavailable']
         : []),
-    ]);
-  }
-  if (
-    input.action.intent.capabilityEvidenceDigest !==
-      input.hostCapability.evidenceDigest ||
-    input.observation.provider !== 'github' ||
-    !contextsEqual(input.action.context, input.observation.context) ||
-    input.observation.capabilityEvidenceDigest !==
-      input.action.intent.capabilityEvidenceDigest ||
-    input.observation.queryDigest !== input.action.intent.queryDigest
-  ) {
-    return duplicateValidationResult(false, 'invalid', null, [
-      'observation-context-or-capability-mismatch',
     ]);
   }
   const resultContract = recordValue(
@@ -893,19 +911,11 @@ export function validateDuplicateSearchObservation(
     input.action.intent.query,
     'GitHub duplicate query contract is missing.',
   );
-  const repository = recordValue(
-    query.repository,
-    'GitHub duplicate repository contract is missing.',
-  );
-  const expectedRepositoryId = String(repository.repositoryId ?? '');
   const aliases = Array.isArray(query.historicalAliases)
     ? query.historicalAliases.filter(
         (alias): alias is string => typeof alias === 'string',
       )
     : [];
-  const contextMatches =
-    candidate.context.repositoryId === expectedRepositoryId ||
-    candidate.historicalRepositoryIds.includes(expectedRepositoryId);
   const matchEvidenceValid =
     candidate.matchedBy === 'provenance'
       ? candidate.matchedProvenanceToken === query.provenanceToken
@@ -918,7 +928,7 @@ export function validateDuplicateSearchObservation(
     !candidate.stableId ||
     !candidate.stableIdentityVerified ||
     !candidate.contextVerified ||
-    !contextMatches ||
+    !duplicateCandidateAttributedToAction(candidate, input) ||
     !matchEvidenceValid
   ) {
     return duplicateValidationResult(false, 'ambiguous', null, [
@@ -997,14 +1007,6 @@ export function validateDiscussionReadObservation(
     },
     input.hostCapability,
   );
-  if (!capability.valid) {
-    return discussionResult('invalid', null, capability.reasons);
-  }
-  if (input.observation.availability !== 'available') {
-    return discussionResult(input.observation.availability, null, [
-      input.observation.availability,
-    ]);
-  }
   if (
     input.action.intent.capabilityEvidenceDigest !==
       input.hostCapability.evidenceDigest ||
@@ -1018,6 +1020,25 @@ export function validateDiscussionReadObservation(
     return discussionResult('invalid', null, [
       'discussion-context-or-cursor-mismatch',
     ]);
+  }
+  const availabilityReasons = new Set([
+    'access-unavailable',
+    'authorization-required',
+    'rate-limited',
+  ]);
+  const capabilityAttributionReasons = capability.reasons.filter(
+    (reason) => !availabilityReasons.has(reason),
+  );
+  if (capabilityAttributionReasons.length > 0) {
+    return discussionResult('invalid', null, capabilityAttributionReasons);
+  }
+  if (input.observation.availability !== 'available') {
+    return discussionResult(input.observation.availability, null, [
+      input.observation.availability,
+    ]);
+  }
+  if (!capability.valid) {
+    return discussionResult('invalid', null, capability.reasons);
   }
   const contract = recordValue(
     input.action.intent.resultContract,
@@ -1143,6 +1164,12 @@ export const githubAdapter: ProviderAdapter = {
     };
   },
   validateObservation(action, observation) {
+    if (isSpecializedObservationOperation(action.operation)) {
+      return {
+        valid: false,
+        reasons: [specializedObservationValidatorReason(action.operation)],
+      };
+    }
     if (
       action.provider !== 'github' ||
       observation.provider !== 'github' ||
@@ -1235,9 +1262,20 @@ export const githubAdapter: ProviderAdapter = {
     return { valid: true, reasons: [] };
   },
   verificationFields(action) {
+    if (isSpecializedObservationOperation(action.operation)) {
+      return [specializedObservationValidationField(action.operation)];
+    }
     return Object.keys(parsePostconditions(action.intent.postconditions));
   },
   verify(action, issue) {
+    if (isSpecializedObservationOperation(action.operation)) {
+      return [
+        {
+          field: specializedObservationValidationField(action.operation),
+          status: 'unavailable',
+        },
+      ];
+    }
     const fields = safeVerificationFields(action);
     if (
       !validMutationActionEvidence(action) ||
@@ -1289,6 +1327,28 @@ export const githubAdapter: ProviderAdapter = {
 
 function requiredFieldsForRead(): GitHubSemanticField[] {
   return ['stable-identity', 'title', 'state', 'revision'];
+}
+
+function isSpecializedObservationOperation(
+  operation: SemanticOperation,
+): boolean {
+  return ['search-duplicates', 'read-discussion'].includes(operation);
+}
+
+function specializedObservationValidatorReason(
+  operation: SemanticOperation,
+): string {
+  return operation === 'search-duplicates'
+    ? 'duplicate-search-observation-validator-required'
+    : 'discussion-read-observation-validator-required';
+}
+
+function specializedObservationValidationField(
+  operation: SemanticOperation,
+): string {
+  return operation === 'search-duplicates'
+    ? 'duplicate-search-observation-validation'
+    : 'discussion-read-observation-validation';
 }
 
 function unavailableReadResult(
@@ -1762,6 +1822,77 @@ function validDuplicateCandidateBounds(
         typeof repositoryId === 'string' && repositoryId.length > 0,
     )
   );
+}
+
+function duplicateObservationAttributedToAction(
+  input: GitHubDuplicateSearchValidationInput,
+): boolean {
+  return (
+    input.action.intent.capabilityEvidenceDigest ===
+      input.hostCapability.evidenceDigest &&
+    input.observation.provider === 'github' &&
+    contextsEqual(input.action.context, input.observation.context) &&
+    input.observation.capabilityEvidenceDigest ===
+      input.action.intent.capabilityEvidenceDigest &&
+    input.observation.queryDigest === input.action.intent.queryDigest &&
+    Number.isFinite(Date.parse(input.observation.observedAt))
+  );
+}
+
+function duplicateCandidateAttributedToAction(
+  candidate: GitHubDuplicateCandidate,
+  input: GitHubDuplicateSearchValidationInput,
+): boolean {
+  const planned = input.action.context;
+  const current = candidate.context;
+  const plannedHost = planned.host;
+  if (
+    !hasPinnedGitHubContext(current) ||
+    typeof plannedHost !== 'string' ||
+    current.host !== plannedHost ||
+    current.accountId !== planned.accountId ||
+    !candidate.stableId.startsWith(`github:${plannedHost.toLowerCase()}:`) ||
+    candidate.stableId === `github:${plannedHost.toLowerCase()}:`
+  ) {
+    return false;
+  }
+  if (current.repositoryId === planned.repositoryId) {
+    return current.owner === planned.owner && current.name === planned.name;
+  }
+  return validDuplicateTransferEvidence(candidate.transferEvidence, {
+    stableId: candidate.stableId,
+    fromContext: planned,
+    toContext: current,
+    capabilityEvidenceDigest: String(
+      input.action.intent.capabilityEvidenceDigest,
+    ),
+    queryDigest: String(input.action.intent.queryDigest),
+    observedAt: input.observation.observedAt,
+  });
+}
+
+function validDuplicateTransferEvidence(
+  value: GitHubDuplicateTransferEvidence | undefined,
+  expected: Omit<
+    GitHubDuplicateTransferEvidence,
+    'provider' | 'evidenceDigest'
+  >,
+): boolean {
+  if (
+    !value ||
+    value.provider !== 'github' ||
+    value.stableId !== expected.stableId ||
+    !contextsEqual(value.fromContext, expected.fromContext) ||
+    !contextsEqual(value.toContext, expected.toContext) ||
+    value.capabilityEvidenceDigest !== expected.capabilityEvidenceDigest ||
+    value.queryDigest !== expected.queryDigest ||
+    value.observedAt !== expected.observedAt ||
+    !Number.isFinite(Date.parse(value.observedAt))
+  ) {
+    return false;
+  }
+  const { evidenceDigest, ...content } = value;
+  return evidenceDigest === semanticDigest(content);
 }
 
 function validDiscussionReadAction(action: SemanticAction): boolean {

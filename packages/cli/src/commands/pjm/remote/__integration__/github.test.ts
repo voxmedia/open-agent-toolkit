@@ -337,6 +337,7 @@ class GitHubLifecycleFixture {
         availability: 'available',
         capabilityEvidenceDigest: capability.evidenceDigest,
         queryDigest: String(action.intent.queryDigest),
+        observedAt: '2026-09-02T12:02:00.000Z',
         results: [
           {
             stableId: 'github:github.example:issue_node_42',

@@ -971,7 +971,7 @@ describe('GitHub semantic adapter', () => {
         hostCapability,
         observation: duplicateObservation([
           {
-            stableId: 'issue_node_42',
+            stableId: 'github:github.example:issue_node_42',
             aliases: ['acme/widgets#42'],
             context: hostCapability.context,
             matchedBy: 'provenance',
@@ -985,39 +985,191 @@ describe('GitHub semantic adapter', () => {
     ).toEqual({
       accepted: true,
       classification: 'one-verified-match',
-      stableId: 'issue_node_42',
+      stableId: 'github:github.example:issue_node_42',
       reasons: [],
     });
   });
 
-  it('accepts a transferred alias only with verified identity and historical repository context', () => {
+  it('accepts a transferred alias only with verified structured transfer evidence', () => {
+    const action = duplicateSearchAction();
+    const stableId = 'github:github.example:issue_node_42';
+    const movedContext = {
+      ...hostCapability.context,
+      repositoryId: 'repo_456',
+      owner: 'platform',
+    };
     expect(
       validateDuplicateSearchObservation({
-        action: duplicateSearchAction(),
+        action,
         hostCapability,
         observation: duplicateObservation([
           {
-            stableId: 'issue_node_42',
+            stableId,
             aliases: ['legacy/widgets#7'],
-            context: {
-              ...hostCapability.context,
-              repositoryId: 'repo_456',
-              owner: 'platform',
-            },
+            context: movedContext,
             matchedBy: 'alias',
             matchedAlias: 'legacy/widgets#7',
             stableIdentityVerified: true,
             contextVerified: true,
             historicalRepositoryIds: ['repo_123'],
+            transferEvidence: duplicateTransferEvidence(
+              action,
+              stableId,
+              movedContext,
+            ),
           },
         ]),
       }),
     ).toMatchObject({
       accepted: true,
       classification: 'one-verified-match',
-      stableId: 'issue_node_42',
+      stableId,
     });
   });
+
+  it.each([
+    {
+      name: 'wrong host',
+      stableId: 'github:evil.example:issue_node_42',
+      context: { ...hostCapability.context, host: 'evil.example' },
+      historicalRepositoryIds: [],
+    },
+    {
+      name: 'wrong account',
+      stableId: 'github:github.example:issue_node_42',
+      context: { ...hostCapability.context, accountId: 'account_attacker' },
+      historicalRepositoryIds: [],
+    },
+    {
+      name: 'wrong owner',
+      stableId: 'github:github.example:issue_node_42',
+      context: { ...hostCapability.context, owner: 'attacker' },
+      historicalRepositoryIds: [],
+    },
+    {
+      name: 'wrong repository name',
+      stableId: 'github:github.example:issue_node_42',
+      context: { ...hostCapability.context, name: 'other' },
+      historicalRepositoryIds: [],
+    },
+    {
+      name: 'wrong stable identity host namespace',
+      stableId: 'github:evil.example:issue_node_42',
+      context: hostCapability.context,
+      historicalRepositoryIds: [],
+    },
+    {
+      name: 'forged historical repository list',
+      stableId: 'github:github.example:issue_node_42',
+      context: {
+        ...hostCapability.context,
+        repositoryId: 'repo_456',
+        owner: 'platform',
+      },
+      historicalRepositoryIds: ['repo_123'],
+    },
+  ])(
+    'rejects duplicate candidate with $name',
+    ({ stableId, context, historicalRepositoryIds }) => {
+      expect(
+        validateDuplicateSearchObservation({
+          action: duplicateSearchAction(),
+          hostCapability,
+          observation: duplicateObservation([
+            {
+              ...duplicateCandidate(stableId),
+              context,
+              historicalRepositoryIds,
+            },
+          ]),
+        }),
+      ).toMatchObject({ accepted: false });
+    },
+  );
+
+  it('accepts a moved duplicate only with exact structured transfer evidence', () => {
+    const action = duplicateSearchAction();
+    const stableId = 'github:github.example:issue_node_42';
+    const movedContext = {
+      ...hostCapability.context,
+      repositoryId: 'repo_456',
+      owner: 'platform',
+    };
+    const moved = {
+      ...duplicateCandidate(stableId),
+      context: movedContext,
+      historicalRepositoryIds: ['repo_123'],
+      transferEvidence: duplicateTransferEvidence(
+        action,
+        stableId,
+        movedContext,
+      ),
+    };
+    expect(
+      validateDuplicateSearchObservation({
+        action,
+        hostCapability,
+        observation: duplicateObservation([moved]),
+      }),
+    ).toMatchObject({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId,
+    });
+  });
+
+  it.each([
+    {
+      name: 'stable identity',
+      patch: { stableId: 'github:github.example:issue_other' },
+    },
+    {
+      name: 'planned context',
+      patch: {
+        fromContext: { ...hostCapability.context, repositoryId: 'repo_other' },
+      },
+    },
+    {
+      name: 'current context',
+      patch: { toContext: hostCapability.context },
+    },
+    {
+      name: 'capability digest',
+      patch: { capabilityEvidenceDigest: 'sha256:other-capability' },
+    },
+    {
+      name: 'query digest',
+      patch: { queryDigest: 'sha256:other-query' },
+    },
+    {
+      name: 'observation time',
+      patch: { observedAt: '2026-09-02T12:04:00.000Z' },
+    },
+  ])(
+    'rejects transferred duplicate with mismatched $name evidence even when self-digested',
+    ({ patch }) => {
+      const action = duplicateSearchAction();
+      const stableId = 'github:github.example:issue_node_42';
+      const movedContext = {
+        ...hostCapability.context,
+        repositoryId: 'repo_456',
+        owner: 'platform',
+      };
+      const exact = duplicateTransferEvidence(action, stableId, movedContext);
+      const moved = {
+        ...duplicateCandidate(stableId),
+        context: movedContext,
+        transferEvidence: alterDuplicateTransferEvidence(exact, patch),
+      };
+      expect(
+        validateDuplicateSearchObservation({
+          action,
+          hostCapability,
+          observation: duplicateObservation([moved]),
+        }),
+      ).toMatchObject({ accepted: false });
+    },
+  );
 
   it.each([
     {
@@ -1115,6 +1267,36 @@ describe('GitHub semantic adapter', () => {
       }),
     ).toMatchObject({ accepted: false });
   });
+
+  it.each([
+    { name: 'provider', patch: { provider: 'linear' as never } },
+    {
+      name: 'context',
+      patch: {
+        context: { ...hostCapability.context, repositoryId: 'repo_other' },
+      },
+    },
+    {
+      name: 'capability',
+      patch: { capabilityEvidenceDigest: 'sha256:other-capability' },
+    },
+    { name: 'query', patch: { queryDigest: 'sha256:other-query' } },
+  ])(
+    'rejects an unavailable duplicate observation before attributing mismatched $name evidence',
+    ({ patch }) => {
+      expect(
+        validateDuplicateSearchObservation({
+          action: duplicateSearchAction(),
+          hostCapability,
+          observation: {
+            ...duplicateObservation([]),
+            availability: 'unavailable',
+            ...patch,
+          },
+        }),
+      ).toMatchObject({ classification: 'invalid' });
+    },
+  );
 
   it('plans a bounded semantic discussion read with a sanitized cursor contract', () => {
     expect(
@@ -1356,6 +1538,97 @@ describe('GitHub semantic adapter', () => {
       }),
     ).toMatchObject({ classification: 'invalid' });
   });
+
+  it.each([
+    { name: 'provider', patch: { provider: 'linear' as never } },
+    {
+      name: 'context',
+      patch: {
+        context: { ...hostCapability.context, repositoryId: 'repo_other' },
+      },
+    },
+    {
+      name: 'capability',
+      patch: { capabilityEvidenceDigest: 'sha256:other-capability' },
+    },
+    {
+      name: 'stable identity',
+      patch: { stableId: 'github:github.example:issue_other' },
+    },
+    { name: 'cursor', patch: { requestedCursor: 'cursor_other' } },
+  ])(
+    'rejects a rate-limited discussion observation before attributing mismatched $name evidence',
+    ({ patch }) => {
+      const action = planDiscussionRead({
+        context: hostCapability.context,
+        hostCapability,
+        stableId: 'github:github.example:issue_node_42',
+        evidenceKind: 'comments',
+        cursor: 'cursor_1',
+        limit: 10,
+      });
+      expect(
+        validateDiscussionReadObservation({
+          action,
+          hostCapability,
+          observation: {
+            provider: 'github',
+            context: hostCapability.context,
+            stableId: 'github:github.example:issue_node_42',
+            availability: 'rate-limited',
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+            requestedCursor: 'cursor_1',
+            nextCursor: null,
+            items: [],
+            ...patch,
+          },
+        }),
+      ).toMatchObject({ classification: 'invalid' });
+    },
+  );
+
+  it.each(['search-duplicates', 'read-discussion'] as const)(
+    'fails closed for generic issue validation of specialized %s evidence',
+    (operation) => {
+      const action =
+        operation === 'search-duplicates'
+          ? duplicateSearchAction()
+          : planDiscussionRead({
+              context: hostCapability.context,
+              hostCapability,
+              stableId: 'github:github.example:issue_node_42',
+              evidenceKind: 'comments',
+              cursor: null,
+              limit: 10,
+            });
+      const issueObservation = {
+        ...observation,
+        context: hostCapability.context,
+        fields: { ...observation.fields, hostCapability },
+      };
+      const validationKind =
+        operation === 'search-duplicates'
+          ? 'duplicate-search'
+          : 'discussion-read';
+      expect(
+        githubAdapter.validateObservation(action, issueObservation),
+      ).toEqual({
+        valid: false,
+        reasons: [`${validationKind}-observation-validator-required`],
+      });
+      expect(githubAdapter.verificationFields(action)).toEqual([
+        `${validationKind}-observation-validation`,
+      ]);
+      expect(
+        githubAdapter.verify(action, githubAdapter.normalize(issueObservation)),
+      ).toEqual([
+        {
+          field: `${validationKind}-observation-validation`,
+          status: 'unavailable',
+        },
+      ]);
+    },
+  );
 });
 
 function mutationInput(
@@ -1499,7 +1772,9 @@ function duplicateSearchAction() {
 
 function duplicateCandidate(stableId: string) {
   return {
-    stableId,
+    stableId: stableId.startsWith('github:')
+      ? stableId
+      : `github:github.example:${stableId}`,
     aliases: ['acme/widgets#42'],
     context: hostCapability.context,
     matchedBy: 'alias' as const,
@@ -1519,8 +1794,37 @@ function duplicateObservation(
     availability: 'available' as const,
     capabilityEvidenceDigest: hostCapability.evidenceDigest,
     queryDigest: duplicateSearchAction().intent.queryDigest as string,
+    observedAt: '2026-09-02T12:05:00.000Z',
     results,
   };
+}
+
+function duplicateTransferEvidence(
+  action: SemanticAction,
+  stableId: string,
+  toContext: typeof hostCapability.context,
+) {
+  const content = {
+    provider: 'github' as const,
+    stableId,
+    fromContext: action.context,
+    toContext,
+    capabilityEvidenceDigest: action.intent.capabilityEvidenceDigest as string,
+    queryDigest: action.intent.queryDigest as string,
+    observedAt: '2026-09-02T12:05:00.000Z',
+  };
+  return { ...content, evidenceDigest: semanticDigest(content) };
+}
+
+function alterDuplicateTransferEvidence(
+  evidence: ReturnType<typeof duplicateTransferEvidence>,
+  patch: Record<string, unknown>,
+) {
+  const content: Record<string, unknown> = { ...evidence, ...patch };
+  delete content.evidenceDigest;
+  return { ...content, evidenceDigest: semanticDigest(content) } as ReturnType<
+    typeof duplicateTransferEvidence
+  >;
 }
 
 const hostCapability: GitHubHostCapabilityObservation = {
