@@ -12,7 +12,6 @@ import { resolveProjectRoot, validateRealPathWithinScope } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
-  parseDispatchRecordInput,
   recordProjectDispatch,
   redactDispatchMessage,
   type DispatchRecordRuntimeIdentity,
@@ -110,8 +109,12 @@ async function runRecordCommand(
       options.eventFile === '-'
         ? await dependencies.readStdin()
         : await dependencies.readFile(options.eventFile);
-    const input = parseDispatchRecordInput(JSON.parse(content));
-    const result = await recordProjectDispatch({ projectPath, input });
+    // Hand the raw event to the recorder; it owns the single authoritative
+    // parse, and parsing twice would relabel the provenance of its own output.
+    const result = await recordProjectDispatch({
+      projectPath,
+      input: JSON.parse(content),
+    });
     if (context.json) {
       context.logger.json(result);
     } else {

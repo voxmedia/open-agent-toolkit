@@ -1149,6 +1149,70 @@ describe('runtime observation integration', () => {
     ).rejects.toThrow(/capabilit/i);
   });
 
+  it('keeps the parser source through the command layer', async () => {
+    // Provenance is not idempotent under re-parsing: a resolved observation
+    // looks caller-supplied. This pins that the command layer parses once.
+    const json = vi.fn();
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    const previousExitCode = process.exitCode;
+    try {
+      const command = createProjectDispatchCommand({
+        buildCommandContext: () => ({
+          scope: 'all',
+          dryRun: false,
+          verbose: false,
+          json: true,
+          cwd: projectPath,
+          home: projectPath,
+          interactive: false,
+          logger: {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            success: vi.fn(),
+            json,
+          },
+        }),
+        resolveProjectRoot: async () => projectPath,
+        readFile: async () => '',
+        readStdin: async () =>
+          JSON.stringify({
+            record: genericRecord(),
+            event: {
+              kind: 'runtime-observation',
+              requestId: 'dispatch-native-1',
+              source: 'runtime-observer',
+              metadata: {
+                provider: 'codex',
+                observedAt: '2026-09-02T12:00:00.000Z',
+                entries: codexEntries,
+              },
+            },
+          }),
+      });
+      await command.parseAsync(['record', '--event-file', '-'], {
+        from: 'user',
+      });
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          runtimeIdentity: expect.objectContaining({ status: 'reported' }),
+          record: expect.objectContaining({
+            oat: expect.objectContaining({
+              runtimeObservation: expect.objectContaining({
+                source: 'codex-rollout-metadata',
+              }),
+            }),
+          }),
+        }),
+      );
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+
   it('never lets a caller borrow a parser source string', async () => {
     const result = await recordProjectDispatch({
       projectPath: null,

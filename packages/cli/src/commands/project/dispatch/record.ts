@@ -459,9 +459,16 @@ async function publishRevision(
   return `dispatch/${fileName}`;
 }
 
+/**
+ * Parse once, here. An earlier revision parsed in the command layer and again
+ * here; because the metadata path resolves to a finished observation, the second
+ * parse saw its own output as caller-supplied and overwrote the parser source
+ * with `caller-asserted`. Parsing is not idempotent by design — provenance
+ * depends on which input form arrived — so it must happen exactly once.
+ */
 export async function recordProjectDispatch(input: {
   projectPath: string | null;
-  input: DispatchRecordInput;
+  input: unknown;
   raceBarriers?: DispatchRecordRaceBarriers;
 }): Promise<ProjectDispatchRecordResult> {
   const parsedInput = parseDispatchRecordInput(input.input);
