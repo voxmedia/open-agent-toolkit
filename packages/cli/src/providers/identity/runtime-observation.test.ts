@@ -53,18 +53,36 @@ function genericRecord(
   };
 }
 
-const codexEntries = [
-  {
+// Real Codex 0.152.1 shapes; see codex-runtime-observation.fixtures.ts.
+function codexSessionMeta(agentRole: string) {
+  return {
+    ordinal: 0,
     type: 'session_meta',
-    payload: { id: 'sess-root', role: 'oat-phase-implementer' },
-  },
-  {
-    type: 'turn_context',
     payload: {
-      model: 'gpt-5.6-sol',
-      effort: 'high',
-      service_tier: 'priority',
+      session_id: '01a06402-2861-7421-821a-137187a03f7f',
+      id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+      parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+      thread_source: 'subagent',
+      agent_role: agentRole,
+      source: {
+        subagent: {
+          thread_spawn: {
+            parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+            depth: 1,
+            agent_role: agentRole,
+          },
+        },
+      },
     },
+  };
+}
+
+const codexEntries = [
+  codexSessionMeta('oat-phase-implementer'),
+  {
+    ordinal: 7,
+    type: 'turn_context',
+    payload: { model: 'gpt-5.6-sol', effort: 'high' },
   },
 ];
 
@@ -147,7 +165,7 @@ describe('normalizeRuntimeObservation', () => {
       provider: 'codex',
       match: 'matching',
       model: 'gpt-5.6-sol',
-      childLineage: 'root',
+      childLineage: 'depth-1',
     });
   });
 
@@ -210,15 +228,7 @@ describe('normalizeRuntimeObservation', () => {
         envelope: {
           provider: 'codex',
           observedAt: OBSERVED_AT,
-          entries: [
-            {
-              type: 'session_meta',
-              payload: {
-                id: 'sess-root',
-                role: 'oat-phase-implementer-gpt-5-6-sol-high',
-              },
-            },
-          ],
+          entries: [codexSessionMeta('oat-phase-implementer-gpt-5-6-sol-high')],
         },
       }),
     ).toMatchObject({ match: 'matching' });
@@ -228,12 +238,7 @@ describe('normalizeRuntimeObservation', () => {
         envelope: {
           provider: 'codex',
           observedAt: OBSERVED_AT,
-          entries: [
-            {
-              type: 'session_meta',
-              payload: { id: 'sess-root', role: 'oat-reviewer' },
-            },
-          ],
+          entries: [codexSessionMeta('oat-reviewer')],
         },
       }),
     ).toMatchObject({ match: 'mismatching' });
@@ -267,18 +272,35 @@ describe('normalizeRuntimeObservation', () => {
         observedAt: OBSERVED_AT,
         entries: [
           {
+            ordinal: 0,
             type: 'session_meta',
             payload: {
-              id: 'sess-root',
-              instructions: 'SECRET-SYSTEM-PROMPT',
-              role: 'oat-phase-implementer',
+              session_id: '01a06402-2861-7421-821a-137187a03f7f',
+              id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+              parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+              thread_source: 'subagent',
+              base_instructions: 'SECRET-SYSTEM-PROMPT',
+              agent_role: 'oat-phase-implementer',
+              source: {
+                subagent: {
+                  thread_spawn: {
+                    parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+                    depth: 1,
+                  },
+                },
+              },
             },
           },
           {
+            ordinal: 3,
             type: 'response_item',
             payload: { content: 'SECRET-USER-MESSAGE' },
           },
-          { type: 'turn_context', payload: { model: 'gpt-5.6-sol' } },
+          {
+            ordinal: 7,
+            type: 'turn_context',
+            payload: { model: 'gpt-5.6-sol' },
+          },
         ],
       },
     });

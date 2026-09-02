@@ -7,6 +7,13 @@ import {
 /**
  * Codex rollout metadata parsing.
  *
+ * Field paths here are taken from captured Codex 0.152.1 rollouts, not from
+ * assumption; see `codex-runtime-observation.fixtures.ts` for the sanitized
+ * captures the tests run against. An earlier revision of this parser read
+ * `payload.parent_id` and `payload.role`, which Codex does not emit, so every
+ * subagent was misreported as a root with no role while hand-written fixtures
+ * agreed with the parser instead of with the world.
+ *
  * The parser reads session and turn metadata only. Entries are classified by
  * their `type` discriminator alone, and the payload of any entry outside
  * {@link CODEX_METADATA_ENTRY_TYPES} is never touched, so conversation content,
@@ -28,22 +35,18 @@ export const CODEX_METADATA_ENTRY_TYPES = [
 
 type CodexMetadataEntryType = (typeof CODEX_METADATA_ENTRY_TYPES)[number];
 
-function metadataEntryType(entry: unknown): CodexMetadataEntryType | null {
-  const type = entryType(entry);
-  return (CODEX_METADATA_ENTRY_TYPES as readonly string[]).includes(type ?? '')
-    ? (type as CodexMetadataEntryType)
-    : null;
-}
-
 export const CODEX_OBSERVATION_SOURCE = 'codex-rollout-metadata';
 
 const MAX_OBSERVED_VALUE_LENGTH = 256;
+const MAX_AGENT_PATH_LENGTH = 1024;
+const MAX_AGENT_PATH_SEGMENTS = 64;
 
 /**
  * Provider identifiers only: letters, digits, and the separators real Codex
- * model, effort, tier, and role names use. Anything else — newlines, control
- * characters, prose punctuation, or an over-long value — is dropped rather
- * than stored, because it is not an identifier this layer can attest to.
+ * model, effort, tier, role, and thread-id values use. Anything else —
+ * newlines, control characters, prose punctuation, or an over-long value — is
+ * dropped rather than stored, because it is not an identifier this layer can
+ * attest to.
  */
 const OBSERVED_VALUE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
 
@@ -55,16 +58,32 @@ export interface CodexRuntimeMetadata {
   serviceTier: string | null;
   /** Request correlation declared by the session itself, when present. */
   requestId: string | null;
-  /** True when the applicable session was forked from an earlier history. */
-  forked: boolean;
+  /** Raw `thread_source`; `user` for a root session, `subagent` for a child. */
+  threadSource: string | null;
+  /**
+   * Raw `forked_from_id`. Recorded without interpretation: a subagent commonly
+   * carries it alongside `parent_thread_id`, so it does not by itself identify
+   * a user fork. See the module tests for what could and could not be
+   * established about fork shapes.
+   */
+  forkedFromId: string | null;
 }
 
 interface SessionFrame {
   id: string | null;
-  parentId: string | null;
+  parentThreadId: string | null;
+  forkedFromId: string | null;
+  threadSource: string | null;
+  subagentSource: boolean;
+  declaredDepth: number | null;
+  agentPathSegments: number | null;
   role: string | null;
   requestId: string | null;
-  forked: boolean;
+  historyStartOrdinal: number | null;
+}
+
+interface TurnMetadata {
+  ordinal: number | null;
   model: string | null;
   effort: string | null;
   serviceTier: string | null;
@@ -84,10 +103,19 @@ function observedValue(value: unknown): string | null {
   return OBSERVED_VALUE_PATTERN.test(trimmed) ? trimmed : null;
 }
 
-function entryType(entry: unknown): string | null {
+function nonNegativeInteger(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0
+    ? value
+    : null;
+}
+
+function metadataEntryType(entry: unknown): CodexMetadataEntryType | null {
   if (!isRecord(entry)) return null;
   const type = entry.type;
-  return typeof type === 'string' ? type : null;
+  return typeof type === 'string' &&
+    (CODEX_METADATA_ENTRY_TYPES as readonly string[]).includes(type)
+    ? (type as CodexMetadataEntryType)
+    : null;
 }
 
 function metadataPayload(
@@ -97,86 +125,174 @@ function metadataPayload(
   return isRecord(payload) ? payload : null;
 }
 
-function isForkSource(payload: Record<string, unknown>): boolean {
+/**
+ * `source` is either a plain string for a user-started session (`exec`, `cli`,
+ * `vscode`) or a tagged object for a spawned one. Only the tagged object form
+ * carries spawn metadata.
+ */
+function threadSpawn(
+  payload: Record<string, unknown>,
+): Record<string, unknown> | null {
   const source = payload.source;
-  return isRecord(source) && source.type === 'fork';
+  if (!isRecord(source)) return null;
+  const subagent = source.subagent;
+  if (!isRecord(subagent)) return null;
+  const spawn = subagent.thread_spawn;
+  return isRecord(spawn) ? spawn : null;
 }
 
 /**
- * Lineage from the session's own parent chain.
+ * Depth implied by `agent_path`, whose first segment is the root. Used only to
+ * corroborate a declared depth; it is never stored and never stands alone.
+ */
+function agentPathDepth(value: unknown): number | null {
+  if (typeof value !== 'string') return null;
+  if (value.length === 0 || value.length > MAX_AGENT_PATH_LENGTH) return null;
+  const segments = value.split('/').filter((segment) => segment.length > 0);
+  if (segments.length === 0 || segments.length > MAX_AGENT_PATH_SEGMENTS) {
+    return null;
+  }
+  return segments.length - 1;
+}
+
+function sessionFrame(payload: Record<string, unknown>): SessionFrame {
+  const spawn = threadSpawn(payload);
+  return {
+    id: observedValue(payload.id),
+    parentThreadId:
+      observedValue(payload.parent_thread_id) ??
+      observedValue(spawn?.parent_thread_id),
+    forkedFromId: observedValue(payload.forked_from_id),
+    threadSource: observedValue(payload.thread_source),
+    subagentSource: spawn !== null,
+    declaredDepth: nonNegativeInteger(spawn?.depth),
+    agentPathSegments:
+      agentPathDepth(payload.agent_path) ?? agentPathDepth(spawn?.agent_path),
+    role: observedValue(payload.agent_role) ?? observedValue(spawn?.agent_role),
+    requestId: observedValue(payload.request_id),
+    historyStartOrdinal: nonNegativeInteger(
+      payload.subagent_history_start_ordinal,
+    ),
+  };
+}
+
+/**
+ * A session is a child when it says so, when it carries spawn metadata, or when
+ * it names a parent thread. Root is the absence of all three — never the
+ * presence of a `session_id`, which on a subagent holds the *root's* id and
+ * would classify every child as a root.
+ */
+function isChildSession(frame: SessionFrame): boolean {
+  return (
+    frame.threadSource === 'subagent' ||
+    frame.subagentSource ||
+    frame.parentThreadId !== null
+  );
+}
+
+/**
+ * Resolve lineage for the applicable session.
  *
- * A fork's embedded parent records are prior history, not dispatch ancestry, so
- * only declared `parent_id` links contribute depth. A parent that is named but
- * absent from this metadata yields `depth-unknown` rather than a guessed depth.
+ * The provider-declared `depth` is authoritative: it is a fact the runtime
+ * states about itself, so it is used rather than re-derived. When `agent_path`
+ * is also present the two are reconciled, and a disagreement yields
+ * `depth-unknown` rather than a choice between two contradictory sources. The
+ * parent-thread chain walk is only a fallback for a child that declares no
+ * depth, and a parent named but absent from this rollout stays `depth-unknown`.
  */
 function childLineage(
   frame: SessionFrame,
   byId: ReadonlyMap<string, SessionFrame>,
 ): string {
-  if (frame.parentId === null) return 'root';
+  if (!isChildSession(frame)) return 'root';
+
+  if (frame.declaredDepth !== null) {
+    if (
+      frame.agentPathSegments !== null &&
+      frame.agentPathSegments !== frame.declaredDepth
+    ) {
+      return 'depth-unknown';
+    }
+    return frame.declaredDepth === 0 ? 'root' : `depth-${frame.declaredDepth}`;
+  }
+
+  if (frame.parentThreadId === null) return 'depth-unknown';
   let depth = 0;
-  let current: SessionFrame | undefined = frame;
+  let current: SessionFrame = frame;
   const visited = new Set<string>();
-  while (current && current.parentId !== null) {
+  while (current.parentThreadId !== null) {
     if (current.id !== null) {
       if (visited.has(current.id)) return 'depth-unknown';
       visited.add(current.id);
     }
-    const parent = byId.get(current.parentId);
+    const parent = byId.get(current.parentThreadId);
     depth += 1;
-    if (!parent) return 'depth-unknown';
+    if (!parent || depth > MAX_AGENT_PATH_SEGMENTS) return 'depth-unknown';
     current = parent;
   }
   return `depth-${depth}`;
 }
 
 /**
+ * Select the turn contexts that belong to the applicable session.
+ *
+ * A subagent rollout embeds its parent's history, including the parent's turn
+ * context. `subagent_history_start_ordinal` marks where the session's own
+ * records begin, which is how a depth-1 rollout is kept from reporting its
+ * parent's model. Confirmed against the captured depth-1 rollout, whose
+ * embedded parent turn context sits below that ordinal and whose own turn
+ * context sits above it.
+ */
+function applicableTurns(
+  turns: readonly TurnMetadata[],
+  historyStartOrdinal: number | null,
+): readonly TurnMetadata[] {
+  if (historyStartOrdinal === null) return turns;
+  const own = turns.filter(
+    (turn) => turn.ordinal !== null && turn.ordinal >= historyStartOrdinal,
+  );
+  return own.length > 0 ? own : turns;
+}
+
+/**
  * Extract the applicable child's metadata from Codex rollout entries.
  *
- * The applicable session is the last one declared: in a forked history the
- * embedded parent records come first, so the trailing frame is the child that
- * actually ran. Each turn context binds to the session it follows, and a later
- * turn context supersedes an earlier one within the same session.
+ * The applicable session is the *first* `session_meta`: a rollout's own header
+ * is written at ordinal 0, and any embedded parent history follows it.
  */
 export function extractCodexRuntimeMetadata(
   entries: readonly unknown[],
 ): CodexRuntimeMetadata | null {
   if (!Array.isArray(entries)) return null;
   const frames: SessionFrame[] = [];
+  const turns: TurnMetadata[] = [];
 
   for (const entry of entries) {
     // Classification is by discriminator alone. A conversation entry's payload
     // is never read.
     const type = metadataEntryType(entry);
     if (type === null) continue;
-    const payload = metadataPayload(entry as Record<string, unknown>);
+    const record = entry as Record<string, unknown>;
+    const payload = metadataPayload(record);
     if (payload === null) continue;
 
     if (type === 'session_meta') {
-      frames.push({
-        id: observedValue(payload.id),
-        parentId: observedValue(payload.parent_id),
-        role: observedValue(payload.role),
-        requestId: observedValue(payload.request_id),
-        forked: isForkSource(payload),
-        model: null,
-        effort: null,
-        serviceTier: null,
-      });
+      frames.push(sessionFrame(payload));
       continue;
     }
-
-    const frame = frames.at(-1);
-    if (!frame) continue;
-    frame.model = observedValue(payload.model) ?? frame.model;
-    frame.effort =
-      observedValue(payload.effort ?? payload.reasoning_effort) ?? frame.effort;
-    frame.serviceTier =
-      observedValue(payload.service_tier ?? payload.serviceTier) ??
-      frame.serviceTier;
+    turns.push({
+      ordinal: nonNegativeInteger(record.ordinal),
+      model: observedValue(payload.model),
+      effort:
+        observedValue(payload.effort) ??
+        observedValue(payload.reasoning_effort),
+      serviceTier:
+        observedValue(payload.service_tier) ??
+        observedValue(payload.serviceTier),
+    });
   }
 
-  const applicable = frames.at(-1);
+  const applicable = frames[0];
   if (!applicable) return null;
 
   const byId = new Map<string, SessionFrame>();
@@ -184,14 +300,24 @@ export function extractCodexRuntimeMetadata(
     if (frame.id !== null && !byId.has(frame.id)) byId.set(frame.id, frame);
   }
 
+  let model: string | null = null;
+  let effort: string | null = null;
+  let serviceTier: string | null = null;
+  for (const turn of applicableTurns(turns, applicable.historyStartOrdinal)) {
+    model = turn.model ?? model;
+    effort = turn.effort ?? effort;
+    serviceTier = turn.serviceTier ?? serviceTier;
+  }
+
   return {
     childLineage: childLineage(applicable, byId),
     role: applicable.role,
-    model: applicable.model,
-    effort: applicable.effort,
-    serviceTier: applicable.serviceTier,
+    model,
+    effort,
+    serviceTier,
     requestId: applicable.requestId,
-    forked: applicable.forked,
+    threadSource: applicable.threadSource,
+    forkedFromId: applicable.forkedFromId,
   };
 }
 

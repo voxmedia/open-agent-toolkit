@@ -1573,24 +1573,46 @@ describe('dispatch runtime observation', () => {
             observedAt: '2026-09-02T12:00:00.000Z',
             entries: [
               {
-                type: 'session_meta',
-                payload: { id: 'sess-parent' },
-              },
-              {
+                ordinal: 0,
                 type: 'session_meta',
                 payload: {
-                  id: 'sess-child',
-                  parent_id: 'sess-parent',
-                  role: 'oat-phase-implementer',
+                  id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+                  parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+                  thread_source: 'subagent',
+                  agent_role: 'oat-phase-implementer',
+                  agent_path: '/root/phase_7',
+                  subagent_history_start_ordinal: 10,
+                  source: {
+                    subagent: {
+                      thread_spawn: {
+                        parent_thread_id:
+                          '01a06402-2861-7421-821a-137187a03f7f',
+                        depth: 1,
+                        agent_path: '/root/phase_7',
+                        agent_role: 'oat-phase-implementer',
+                      },
+                    },
+                  },
                 },
               },
               {
+                ordinal: 1,
+                type: 'session_meta',
+                payload: {
+                  id: '01a06402-2861-7421-821a-137187a03f7f',
+                  thread_source: 'user',
+                  source: 'exec',
+                },
+              },
+              {
+                ordinal: 6,
                 type: 'turn_context',
-                payload: {
-                  model: 'gpt-5.6-sol',
-                  effort: 'high',
-                  service_tier: 'priority',
-                },
+                payload: { model: 'gpt-5.6-terra', effort: 'medium' },
+              },
+              {
+                ordinal: 15,
+                type: 'turn_context',
+                payload: { model: 'gpt-5.6-sol', effort: 'high' },
               },
             ],
           },

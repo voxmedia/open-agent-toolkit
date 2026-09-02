@@ -807,18 +807,34 @@ describe('recordProjectDispatch', () => {
 });
 
 describe('runtime observation integration', () => {
+  // Real Codex 0.152.1 depth-1 subagent shape. Note that no real turn_context
+  // carries a service tier, so that axis stays unreported.
   const codexEntries = [
     {
+      ordinal: 0,
       type: 'session_meta',
-      payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+      payload: {
+        id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+        parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+        thread_source: 'subagent',
+        agent_role: 'oat-phase-implementer',
+        agent_path: '/root/phase_7',
+        source: {
+          subagent: {
+            thread_spawn: {
+              parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+              depth: 1,
+              agent_path: '/root/phase_7',
+              agent_role: 'oat-phase-implementer',
+            },
+          },
+        },
+      },
     },
     {
+      ordinal: 7,
       type: 'turn_context',
-      payload: {
-        model: 'gpt-5.6-sol',
-        effort: 'high',
-        service_tier: 'priority',
-      },
+      payload: { model: 'gpt-5.6-sol', effort: 'high' },
     },
   ];
 
@@ -859,11 +875,10 @@ describe('runtime observation integration', () => {
     expect(result.record.oat.runtimeObservation).toEqual({
       status: 'reported',
       provider: 'codex',
-      childLineage: 'root',
+      childLineage: 'depth-1',
       role: 'oat-phase-implementer',
       model: 'gpt-5.6-sol',
       effort: 'high',
-      serviceTier: 'priority',
       source: 'codex-rollout-metadata',
       observedAt: '2026-09-02T12:00:00.000Z',
       match: 'matching',
@@ -876,8 +891,20 @@ describe('runtime observation integration', () => {
 
   it('records a mismatch as evidence without changing launch or controls', async () => {
     const { result } = await record([
-      { type: 'session_meta', payload: { id: 'sess-root' } },
-      { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
+      {
+        ordinal: 0,
+        type: 'session_meta',
+        payload: {
+          id: '01a06402-2861-7421-821a-137187a03f7f',
+          thread_source: 'user',
+          source: 'exec',
+        },
+      },
+      {
+        ordinal: 7,
+        type: 'turn_context',
+        payload: { model: 'gpt-5.6-terra' },
+      },
     ]);
 
     expect(result.record.oat.runtimeObservation).toMatchObject({
@@ -928,11 +955,11 @@ describe('runtime observation integration', () => {
         provider: 'codex',
         source: 'codex-rollout-metadata',
         observedAt: '2026-09-02T12:00:00.000Z',
-        childLineage: 'root',
+        childLineage: 'depth-1',
         role: 'oat-phase-implementer',
         model: 'gpt-5.6-sol',
         effort: 'high',
-        serviceTier: 'priority',
+        serviceTier: null,
       },
       match: 'matching',
       status: 'reported',
