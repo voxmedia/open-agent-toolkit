@@ -48,6 +48,18 @@ oat_phase_recovery_policy:
     p04:
       used_attempts: 1
       pending_attempt: null
+    p07:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: recovery-p07-20260902T160500Z-a6a131e80
+        original_request_id: dispatch-p07-20260902-fff0e9ca3
+        original_task_id: p07-t03
+        original_commit: a6a131e8008451f6e93e97dda83ed23d784084a2
+        discovered_by: pnpm exec turbo run test --force (src/validation/autonomy-gate-inventory.test.ts)
+        dispatch_target: unspecified-by-launcher
+        reservation_head: a6a131e8008451f6e93e97dda83ed23d784084a2
+        status: completed
 oat_dispatch_policy:
   mode: managed
   policy: high
