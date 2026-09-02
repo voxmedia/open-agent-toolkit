@@ -469,7 +469,9 @@ describe('recordProjectDispatch', () => {
     });
     expect(final.oat.runtimeObservation).toMatchObject({
       status: 'reported',
-      match: 'matching',
+      // Derived, not caller-asserted: this observation reports no comparable
+      // axis, so it can only be `not-comparable`.
+      match: 'not-comparable',
     });
     expect(await readdir(projectPath)).not.toContain('.dispatch-lock');
   });
@@ -998,6 +1000,100 @@ describe('runtime observation integration', () => {
         },
       }),
     ).toThrow();
+  });
+
+  it('recomputes a caller-asserted match instead of trusting it', () => {
+    // A caller cannot declare agreement it does not have: match is derived at
+    // the durable-write boundary from the observation's own axes.
+    const parsed = parseDispatchRecordInput({
+      record: genericRecord(),
+      event: {
+        kind: 'runtime-observation',
+        requestId: 'dispatch-native-1',
+        source: 'runtime-observer',
+        observation: {
+          status: 'reported',
+          provider: 'codex',
+          model: 'wrong-model',
+          source: 'attacker',
+          observedAt: '2026-09-02T12:00:00.000Z',
+          match: 'matching',
+        },
+      },
+    });
+    expect(parsed.event).toMatchObject({
+      observation: { match: 'mismatching', model: 'wrong-model' },
+    });
+
+    const agreeing = parseDispatchRecordInput({
+      record: genericRecord(),
+      event: {
+        kind: 'runtime-observation',
+        requestId: 'dispatch-native-1',
+        source: 'runtime-observer',
+        observation: {
+          status: 'reported',
+          provider: 'codex',
+          model: 'gpt-5.6-sol',
+          source: 'codex-rollout-metadata',
+          observedAt: '2026-09-02T12:00:00.000Z',
+          match: 'mismatching',
+        },
+      },
+    });
+    expect(agreeing.event).toMatchObject({
+      observation: { match: 'matching' },
+    });
+  });
+
+  it('refuses an observation claiming a provider the record does not name', () => {
+    expect(() =>
+      parseDispatchRecordInput({
+        record: genericRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          observation: {
+            status: 'reported',
+            provider: 'claude',
+            source: 'attacker',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            match: 'matching',
+          },
+        },
+      }),
+    ).toThrow(/provider/i);
+  });
+
+  it('refuses observation values that are not provider identifiers', () => {
+    for (const model of [
+      'a model chosen by the child',
+      '/Users/someone/secret',
+      'C:/Users/someone/secret',
+      'https://evil.example/x',
+    ]) {
+      expect(
+        () =>
+          parseDispatchRecordInput({
+            record: genericRecord(),
+            event: {
+              kind: 'runtime-observation',
+              requestId: 'dispatch-native-1',
+              source: 'runtime-observer',
+              observation: {
+                status: 'reported',
+                provider: 'codex',
+                model,
+                source: 'codex-rollout-metadata',
+                observedAt: '2026-09-02T12:00:00.000Z',
+                match: 'matching',
+              },
+            },
+          }),
+        model,
+      ).toThrow();
+    }
   });
 
   it('keeps a finished observation event working unchanged', () => {

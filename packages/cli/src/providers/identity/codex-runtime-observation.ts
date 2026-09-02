@@ -1,5 +1,6 @@
 import {
   buildRuntimeObservation,
+  observationIdentifier as observedValue,
   type ConfiguredInvocationForObservation,
   type RuntimeObservation,
 } from './oat-dispatch-record';
@@ -37,18 +38,8 @@ type CodexMetadataEntryType = (typeof CODEX_METADATA_ENTRY_TYPES)[number];
 
 export const CODEX_OBSERVATION_SOURCE = 'codex-rollout-metadata';
 
-const MAX_OBSERVED_VALUE_LENGTH = 256;
 const MAX_AGENT_PATH_LENGTH = 1024;
 const MAX_AGENT_PATH_SEGMENTS = 64;
-
-/**
- * Provider identifiers only: letters, digits, and the separators real Codex
- * model, effort, tier, role, and thread-id values use. Anything else —
- * newlines, control characters, prose punctuation, or an over-long value — is
- * dropped rather than stored, because it is not an identifier this layer can
- * attest to.
- */
-const OBSERVED_VALUE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
 
 export interface CodexRuntimeMetadata {
   childLineage: string;
@@ -91,16 +82,6 @@ interface TurnMetadata {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** A bounded identifier, or `null` when the value cannot be attested to. */
-function observedValue(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > MAX_OBSERVED_VALUE_LENGTH) {
-    return null;
-  }
-  return OBSERVED_VALUE_PATTERN.test(trimmed) ? trimmed : null;
 }
 
 function nonNegativeInteger(value: unknown): number | null {

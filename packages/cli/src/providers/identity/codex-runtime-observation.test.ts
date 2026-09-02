@@ -237,6 +237,26 @@ describe('codex lineage resolution', () => {
     ]);
     expect(metadata).toMatchObject({ role: null, model: null, effort: 'high' });
   });
+
+  it('drops paths and URLs in every spelling', () => {
+    // NFR1 holds for all of these, not only the POSIX absolute spelling.
+    for (const model of [
+      '/Users/someone/secret',
+      'C:/Users/someone/secret',
+      'c:/windows/system32',
+      'https://evil.example/x',
+      'file:///Users/someone/secret',
+      'Users/someone/secret/deeply/nested/path/segment/chain/that/keeps/going',
+    ]) {
+      expect(
+        extractCodexRuntimeMetadata([
+          subagentMeta(),
+          turnContext({ model, effort: 'high' }),
+        ])?.model,
+        model,
+      ).toBeNull();
+    }
+  });
 });
 
 describe('parseCodexRuntimeObservation against captured rollouts', () => {

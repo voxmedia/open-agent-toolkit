@@ -334,8 +334,39 @@ const fallbackSchema = z.discriminatedUnion('status', [
  * optional metadata field.
  */
 const MAX_OBSERVATION_VALUE_LENGTH = 256;
+
+/**
+ * Provider identifiers only. Neither `/` nor `:` appears in any observed model,
+ * effort, tier, role, lineage, or source value, and admitting them let absolute
+ * paths (`C:/Users/...`), relative path-ish values, and URLs through in some
+ * spellings while NFR1 only ever intended none. Excluding both separators
+ * closes every spelling at once rather than denying them one at a time.
+ */
+const OBSERVATION_IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+/**
+ * The single canonical observation-value validator. Both the metadata path and
+ * a caller-supplied observation resolve through it, so a value can never be
+ * stored on one path that would be refused on the other.
+ */
+export function observationIdentifier(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > MAX_OBSERVATION_VALUE_LENGTH) {
+    return null;
+  }
+  return OBSERVATION_IDENTIFIER_PATTERN.test(trimmed) ? trimmed : null;
+}
+
 const observationValue = () =>
-  z.string().min(1).max(MAX_OBSERVATION_VALUE_LENGTH);
+  z
+    .string()
+    .min(1)
+    .max(MAX_OBSERVATION_VALUE_LENGTH)
+    .regex(
+      OBSERVATION_IDENTIFIER_PATTERN,
+      'Observation values must be provider identifiers.',
+    );
 
 const runtimeObservationSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('not-reported') }).strict(),
@@ -545,6 +576,15 @@ export const persistedOatDispatchRecordSchema = genericDispatchRecordSchema
   .innerType()
   .extend({ oat: oatRecordSchema })
   .strict();
+
+/**
+ * Strict observation parse. Used where a caller supplied the observation
+ * directly, so a malformed value is refused rather than quietly degraded to
+ * `not-reported` — absent evidence and a bad claim are different facts.
+ */
+export function parseRuntimeObservation(value: unknown): RuntimeObservation {
+  return runtimeObservationSchema.parse(value);
+}
 
 export type CanonicalFallbackEvidence = z.infer<typeof fallbackSchema>;
 export type RuntimeObservation = z.infer<typeof runtimeObservationSchema>;

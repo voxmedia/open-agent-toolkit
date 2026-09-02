@@ -1,5 +1,6 @@
 import {
   buildRuntimeObservation,
+  observationIdentifier as observedValue,
   NOT_EXPOSED_OBSERVATION_VALUE,
   type ConfiguredInvocationForObservation,
   type RuntimeObservation,
@@ -25,11 +26,6 @@ export const CLAUDE_METADATA_ENTRY_TYPES = ['system', 'result'] as const;
 
 export const CLAUDE_OBSERVATION_SOURCE = 'claude-session-metadata';
 
-const MAX_OBSERVED_VALUE_LENGTH = 256;
-
-/** Provider identifiers only; see the Codex parser for the same reasoning. */
-const OBSERVED_VALUE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
-
 export interface ClaudeRuntimeMetadata {
   role: string | null;
   model: string | null;
@@ -41,15 +37,6 @@ export interface ClaudeRuntimeMetadata {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function observedValue(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > MAX_OBSERVED_VALUE_LENGTH) {
-    return null;
-  }
-  return OBSERVED_VALUE_PATTERN.test(trimmed) ? trimmed : null;
 }
 
 function firstModelUsage(

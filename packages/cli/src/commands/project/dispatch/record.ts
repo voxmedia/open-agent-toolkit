@@ -13,8 +13,12 @@ import {
 } from '@providers/identity/generic-dispatch-record';
 import {
   augmentDispatchRecord,
+  compareObservedRuntimeMetadata,
+  configuredInvocationForObservation,
   parsePersistedOatDispatchRecord,
+  parseRuntimeObservation,
   type OatDispatchEvidenceEvent,
+  type ObservedRuntimeMetadata,
   type PersistedOatDispatchRecordV1,
   type RuntimeObservation,
 } from '@providers/identity/oat-dispatch-record';
@@ -150,29 +154,60 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Resolve a post-launch observation event.
  *
- * A caller may submit either a finished `observation` or the sanitized
- * provider `metadata` it was derived from. Metadata is normalized here, against
- * this record's own immutable configured invocation, so the comparison happens
- * once at the durable-write boundary instead of in each producer. Submitting
- * both is ambiguous and is refused rather than silently preferring one.
+ * A caller may submit either a finished `observation` or the sanitized provider
+ * `metadata` it was derived from. Submitting both is ambiguous and is refused
+ * rather than silently preferring one.
+ *
+ * Both forms are validated here, at the durable-write boundary, rather than
+ * being trusted from the producer. An earlier revision normalized only the
+ * metadata form, which left the finished-observation form able to assert its
+ * own `match`, name a provider the record does not use, and store values the
+ * metadata path would have refused. That is the per-producer-obligation class
+ * this boundary exists to prevent, so `match` is always derived and never read
+ * from the caller, and the provider is always bound to the record's own.
+ *
+ * Value shape is enforced once more in `runtimeObservationSchema`, so both
+ * forms converge on the same identifier rules without either path carrying its
+ * own copy of them.
  */
 function resolveObservationEvent(
   record: GenericDispatchRecord,
   event: Record<string, unknown>,
 ): Record<string, unknown> {
-  if (event.kind !== 'runtime-observation' || !('metadata' in event)) {
-    return event;
-  }
-  if ('observation' in event) {
+  if (event.kind !== 'runtime-observation') return event;
+  if ('metadata' in event && 'observation' in event) {
     throw new Error(
       'A runtime observation event carries either observation or metadata, not both.',
     );
   }
-  const { metadata, ...rest } = event;
-  const envelope = parseRuntimeObservationEnvelope(metadata);
+
+  if ('metadata' in event) {
+    const { metadata, ...rest } = event;
+    const envelope = parseRuntimeObservationEnvelope(metadata);
+    return {
+      ...rest,
+      observation: normalizeRuntimeObservation({ record, envelope }),
+    };
+  }
+
+  const observation = event.observation;
+  if (!isRecord(observation) || observation.status !== 'reported') {
+    return event;
+  }
+  if (observation.provider !== record.provider) {
+    throw new Error(
+      'A runtime observation must name the same provider as its dispatch record.',
+    );
+  }
   return {
-    ...rest,
-    observation: normalizeRuntimeObservation({ record, envelope }),
+    ...event,
+    observation: parseRuntimeObservation({
+      ...observation,
+      match: compareObservedRuntimeMetadata(
+        observation as ObservedRuntimeMetadata,
+        configuredInvocationForObservation(record),
+      ),
+    }),
   };
 }
 
