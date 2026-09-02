@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
-oat_blockers: []
+oat_blockers:
+  ['Phase 5 review round 1 has three Critical and three Important findings']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -43,7 +44,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:03:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:17:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,8 +58,8 @@ oat_generated: false
 
 Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented in
 ordered declared-boundary commits through `ab94b6080`; the live focused suite
-passes 38/38 and fresh root-owned code review is pending. Phase 6 has not
-started.
+passes 38/38, but review round 1 blocked with three Critical and three Important
+findings. Bounded fix loop 1/3 is next. Phase 6 has not started.
 
 ## Artifacts
 
@@ -66,7 +67,7 @@ started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 review pending)
+- **Implementation:** implementation.md (in progress; Phase 5 review fixes pending)
 
 ## Progress
 
@@ -169,17 +170,20 @@ started.
 - ✓ Phase 5 tasks `p05-t01` through `p05-t09` completed in 9 ordered commits
 - ✓ Phase 5 live Linear suite passed 38/38 with clean declared file boundaries
 - ✓ Phase 5 full remote suite passed 489/489
-- ⧗ Fresh root-owned Phase 5 code review pending
+- ⚠ Phase 5 review round 1 blocked with 3 Critical and 3 Important findings
+- ⧗ Phase 5 bounded fix loop 1/3 pending through the original implementer
 
 ## Blockers
 
-No active implementation blocker. Phase 5 implementation is complete and
-awaits its standard root-owned code review. The branch-level lockstep version
-gate remains preserved for planned `p08-t05` release work.
+Phase 5 review round 1 found altered mutation/read action integrity, forged
+duplicate-search no-match, generic specialized-operation validation, unbounded
+discussion evidence, and incomplete lifecycle proof. Phase 6 is blocked until
+bounded fixes pass a fresh review. The branch-level lockstep version gate
+remains preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run fresh root-owned Phase 5 code review over
-`d5293b5649dbb3dd46a5b14590fb8fc411a0fd16..ab94b6080a37b2b1bcdd80a51c93b5507c746fdd`.
-Do not begin Phase 6 until the review passes with zero Critical and zero
-Important findings.
+Run bounded Phase 5 fix loop 1/3 through the original accepted implementer,
+limited to the findings in `reviews/p05-review-2026-09-02T210533Z.md`, then run
+a fresh exact-range review. Do not begin Phase 6 until a review passes with
+zero Critical and zero Important findings.
