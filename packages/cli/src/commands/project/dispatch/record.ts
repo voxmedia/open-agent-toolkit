@@ -1,7 +1,11 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { publishContainedJsonRevision, withContainedWriterLock } from '@fs/io';
+import {
+  publishContainedJsonRevision,
+  redactedFsError,
+  withContainedWriterLock,
+} from '@fs/io';
 import {
   assertNoSensitiveDispatchContent,
   parseGenericDispatchRecord,
@@ -59,6 +63,38 @@ function parseJournalEntry(fileName: string): JournalEntry | null {
   const revision = suffixed ? Number(suffixed[2]) : 1;
   if (!REQUEST_ID_PATTERN.test(requestId) || revision < 1) return null;
   return { requestId, revision, fileName };
+}
+
+/**
+ * Hard redaction boundary. Producers redact their own messages, but this is the
+ * last stop before a message reaches `--json`, so a future call site that
+ * forgets cannot regress NFR1. Known roots become stable labels; anything else
+ * that still looks like an absolute path is scrubbed.
+ */
+const ABSOLUTE_PATH_PATTERN =
+  /(?<=^|[\s'"([])(?:[A-Za-z]:)?[\\/](?:[^\s'"`;,)\]]+[\\/])+[^\s'"`;,)\]]*/g;
+
+export function redactDispatchMessage(
+  message: string,
+  roots: {
+    project?: string | null;
+    repo?: string | null;
+    home?: string | null;
+  } = {},
+): string {
+  let redacted = message;
+  const labelled: readonly (readonly [string, string | null | undefined])[] = [
+    ['<project>', roots.project],
+    ['<repo>', roots.repo],
+    ['<home>', roots.home],
+  ];
+  // Longest root first so a nested project path is not masked by its repo.
+  for (const [label, root] of [...labelled].sort(
+    ([, left], [, right]) => (right?.length ?? 0) - (left?.length ?? 0),
+  )) {
+    if (root) redacted = redacted.split(root).join(label);
+  }
+  return redacted.replace(ABSOLUTE_PATH_PATTERN, '<redacted-path>');
 }
 
 export interface DispatchRecordInput {
@@ -121,6 +157,7 @@ function isMissingError(error: unknown): boolean {
 
 async function readPersistedRecord(
   path: string,
+  reportedPath: string,
 ): Promise<PersistedOatDispatchRecordV1 | null> {
   let content: string;
   try {
@@ -129,7 +166,9 @@ async function readPersistedRecord(
     if (isMissingError(error)) {
       return null;
     }
-    throw error;
+    // A damaged or unreadable journal must not put an absolute project path
+    // into durable output; NFR1 treats that as a P0 disclosure.
+    throw redactedFsError(error, 'read', reportedPath);
   }
   return parsePersistedOatDispatchRecord(JSON.parse(content));
 }
@@ -145,7 +184,7 @@ async function readLatestRevisions(
     if (isMissingError(error)) {
       return new Map();
     }
-    throw error;
+    throw redactedFsError(error, 'scan', 'dispatch/');
   }
   const latest = new Map<string, JournalEntry>();
   for (const name of names.sort()) {
@@ -232,7 +271,10 @@ export async function recordProjectDispatch(input: {
 
   const existingEntry = latest.get(requestId) ?? null;
   const existing = existingEntry
-    ? await readPersistedRecord(join(dispatchDir, existingEntry.fileName))
+    ? await readPersistedRecord(
+        join(dispatchDir, existingEntry.fileName),
+        `dispatch/${existingEntry.fileName}`,
+      )
     : null;
   if (
     existing &&
@@ -250,6 +292,7 @@ export async function recordProjectDispatch(input: {
     if (otherId === requestId) continue;
     const related = await readPersistedRecord(
       join(dispatchDir, entry.fileName),
+      `dispatch/${entry.fileName}`,
     );
     if (related) relatedRecords.push(related);
   }
@@ -259,7 +302,10 @@ export async function recordProjectDispatch(input: {
     ? (latest.get(triggerRequestId) ?? null)
     : null;
   const trigger = triggerEntry
-    ? await readPersistedRecord(join(dispatchDir, triggerEntry.fileName))
+    ? await readPersistedRecord(
+        join(dispatchDir, triggerEntry.fileName),
+        `dispatch/${triggerEntry.fileName}`,
+      )
     : null;
   if (triggerRequestId !== null && trigger === null) {
     throw new Error('Fallback requires the rejected trigger record.');

@@ -533,6 +533,10 @@ function scopeRelative(resolvedScope: string, target: string): string {
   return rendered === '' ? '.' : rendered.split(sep).join('/');
 }
 
+export function journalErrorCode(error: unknown): string | null {
+  return errorCode(error);
+}
+
 function errorCode(error: unknown): string | null {
   return typeof error === 'object' && error !== null && 'code' in error
     ? String((error as { code: unknown }).code)
@@ -542,8 +546,10 @@ function errorCode(error: unknown): string | null {
 /**
  * Re-raise a filesystem error without Node's absolute-path message text while
  * preserving its `code` so callers can still branch on `EEXIST`/`ENOENT`.
+ * Exported so every journal producer redacts identically instead of each one
+ * re-deriving the rule.
  */
-function redactedFsError(
+export function redactedFsError(
   error: unknown,
   operation: string,
   relativeTarget: string,

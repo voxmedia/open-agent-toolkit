@@ -11,7 +11,11 @@ import { fileExists } from '@fs/io';
 import { resolveProjectRoot, validateRealPathWithinScope } from '@fs/paths';
 import { Command } from 'commander';
 
-import { parseDispatchRecordInput, recordProjectDispatch } from './record';
+import {
+  parseDispatchRecordInput,
+  recordProjectDispatch,
+  redactDispatchMessage,
+} from './record';
 
 interface DispatchRecordCommandOptions {
   project?: string;
@@ -56,9 +60,11 @@ async function runRecordCommand(
   context: CommandContext,
   dependencies: ProjectDispatchCommandDependencies,
 ): Promise<void> {
+  let repoRoot: string | null = null;
+  let projectPath: string | null = null;
   try {
-    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-    const projectPath = await resolveProjectPath(repoRoot, options.project);
+    repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    projectPath = await resolveProjectPath(repoRoot, options.project);
     const content =
       options.eventFile === '-'
         ? await dependencies.readStdin()
@@ -76,7 +82,11 @@ async function runRecordCommand(
     }
     process.exitCode = 0;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    // Single redaction boundary for every failure this command can surface.
+    const message = redactDispatchMessage(
+      error instanceof Error ? error.message : String(error),
+      { project: projectPath, repo: repoRoot, home: context.home },
+    );
     if (context.json) {
       context.logger.json({ status: 'error', message });
     } else {

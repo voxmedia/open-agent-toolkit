@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import {
+  chmod,
   mkdtemp,
   mkdir,
   readFile,
@@ -14,7 +15,11 @@ import type { GenericDispatchRecord } from '@providers/identity/generic-dispatch
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createProjectDispatchCommand } from './index';
-import { parseDispatchRecordInput, recordProjectDispatch } from './record';
+import {
+  parseDispatchRecordInput,
+  recordProjectDispatch,
+  redactDispatchMessage,
+} from './record';
 
 const roots: string[] = [];
 
@@ -615,6 +620,128 @@ describe('recordProjectDispatch', () => {
       code: 'ENOENT',
     });
   }, 20_000);
+
+  it('redacts a damaged journal directory instead of leaking its absolute path', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(
+      join(projectPath, 'state.md'),
+      '---\noat_status: active\n---\n',
+    );
+    // `dispatch` occupied by a regular file: readdir raises ENOTDIR.
+    await writeFile(join(projectPath, 'dispatch'), 'not a directory', 'utf8');
+
+    const error = await recordProjectDispatch({
+      projectPath,
+      input: { record: genericRecord(), event: canonicalEvent() },
+    }).catch((raised: Error) => raised);
+
+    expect(error).toMatchObject({ code: 'ENOTDIR' });
+    expect((error as Error).message).toContain('dispatch/');
+    expect((error as Error).message).not.toContain(projectPath);
+    expect((error as Error).message).not.toContain(tmpdir());
+  });
+
+  it('redacts an unreadable revision file instead of leaking its absolute path', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(
+      join(projectPath, 'state.md'),
+      '---\noat_status: active\n---\n',
+    );
+    await recordProjectDispatch({
+      projectPath,
+      input: { record: genericRecord(), event: canonicalEvent() },
+    });
+    const published = join(projectPath, 'dispatch', 'dispatch-native-1.json');
+    await chmod(published, 0o000);
+    try {
+      const error = await recordProjectDispatch({
+        projectPath,
+        input: { record: genericRecord(), event: canonicalEvent() },
+      }).catch((raised: Error) => raised);
+
+      expect(error).toMatchObject({ code: 'EACCES' });
+      expect((error as Error).message).toContain(
+        'dispatch/dispatch-native-1.json',
+      );
+      expect((error as Error).message).not.toContain(projectPath);
+      expect((error as Error).message).not.toContain(tmpdir());
+    } finally {
+      await chmod(published, 0o644);
+    }
+  });
+
+  it('scrubs absolute paths at the command boundary regardless of producer', () => {
+    expect(
+      redactDispatchMessage(
+        "ENOTDIR: not a directory, scandir '/home/u/repo/proj/dispatch'",
+        { project: '/home/u/repo/proj', repo: '/home/u/repo', home: '/home/u' },
+      ),
+    ).toBe("ENOTDIR: not a directory, scandir '<project>/dispatch'");
+    // A producer this boundary has never seen still cannot leak.
+    expect(
+      redactDispatchMessage('EACCES: permission denied, open /var/x/y/z.json'),
+    ).toBe('EACCES: permission denied, open <redacted-path>');
+    expect(redactDispatchMessage('Another writer holds .dispatch-lock.')).toBe(
+      'Another writer holds .dispatch-lock.',
+    );
+    expect(
+      redactDispatchMessage('Journal revision dispatch/request-1.json exists.'),
+    ).toBe('Journal revision dispatch/request-1.json exists.');
+  });
+
+  it('emits no absolute path through the JSON command surface', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(
+      join(projectPath, 'state.md'),
+      '---\noat_status: active\n---\n',
+    );
+    await writeFile(join(projectPath, 'dispatch'), 'not a directory', 'utf8');
+
+    const json = vi.fn();
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    try {
+      const command = createProjectDispatchCommand({
+        buildCommandContext: () => ({
+          scope: 'all',
+          dryRun: false,
+          verbose: false,
+          json: true,
+          cwd: projectPath,
+          home: projectPath,
+          interactive: false,
+          logger: {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            success: vi.fn(),
+            json,
+          },
+        }),
+        resolveProjectRoot: async () => projectPath,
+        readFile: async () => {
+          throw new Error('event file should not be read');
+        },
+        readStdin: async () =>
+          JSON.stringify({ record: genericRecord(), event: canonicalEvent() }),
+      });
+      await command.parseAsync(
+        ['record', '--project', '.', '--event-file', '-'],
+        { from: 'user' },
+      );
+
+      const payload = json.mock.calls.at(-1)?.[0] as { message?: string };
+      expect(payload.message).toBeDefined();
+      expect(payload.message).not.toContain(projectPath);
+      expect(payload.message).not.toContain(tmpdir());
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
 
   it('does not adopt a pre-existing invalid journal', async () => {
     const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
