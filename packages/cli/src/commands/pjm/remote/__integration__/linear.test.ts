@@ -5,6 +5,7 @@ import {
   normalizeLinearIssueObservation,
   planLinearDuplicateSearch,
   planLinearRead,
+  validateLinearDuplicateSearchObservation,
   type LinearHostCapabilityObservation,
 } from '../providers/linear';
 import {
@@ -227,6 +228,37 @@ describe('Linear remote lifecycle integration', () => {
           requireExactContext: true,
         },
       },
+    });
+    const stableId = 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa';
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: capability,
+        observation: {
+          provider: 'linear',
+          context,
+          availability: 'available',
+          capabilityEvidenceDigest: capability.evidenceDigest,
+          queryDigest: action.intent.queryDigest as string,
+          observedAt: '2026-09-02T12:05:00.000Z',
+          results: [
+            {
+              uuid: observation.fields.uuid,
+              stableId,
+              identifiers: ['ALPHA-42'],
+              context,
+              matchedBy: 'reserved-binding',
+              matchedReservedBindingId: 'binding_linear_42',
+              stableIdentityVerified: true,
+              contextVerified: true,
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId,
     });
   });
 });

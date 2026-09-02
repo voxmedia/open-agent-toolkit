@@ -171,6 +171,47 @@ export interface LinearDuplicateSearchPlanInput {
   maxResults: number;
 }
 
+export interface LinearDuplicateCandidate {
+  uuid: string;
+  stableId: string;
+  identifiers: string[];
+  context: ProviderContext;
+  matchedBy: 'provenance' | 'reserved-binding' | 'identifier';
+  matchedProvenanceToken?: string;
+  matchedReservedBindingId?: string;
+  matchedIdentifier?: string;
+  stableIdentityVerified: boolean;
+  contextVerified: boolean;
+}
+
+export interface LinearDuplicateSearchObservation {
+  provider: 'linear';
+  context: ProviderContext;
+  availability: 'available' | 'unavailable';
+  capabilityEvidenceDigest: string;
+  queryDigest: string;
+  observedAt: string;
+  results: LinearDuplicateCandidate[];
+}
+
+export interface LinearDuplicateSearchValidationInput {
+  action: SemanticAction;
+  hostCapability: LinearHostCapabilityObservation;
+  observation: LinearDuplicateSearchObservation;
+}
+
+export interface LinearDuplicateSearchValidationResult {
+  accepted: boolean;
+  classification:
+    | 'no-match'
+    | 'one-verified-match'
+    | 'ambiguous'
+    | 'unavailable'
+    | 'invalid';
+  stableId: string | null;
+  reasons: string[];
+}
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[A-Z][A-Z0-9]*-[1-9][0-9]*$/;
@@ -839,6 +880,114 @@ export function planLinearDuplicateSearch(
   };
 }
 
+export function validateLinearDuplicateSearchObservation(
+  input: LinearDuplicateSearchValidationInput,
+): LinearDuplicateSearchValidationResult {
+  const result = (
+    accepted: boolean,
+    classification: LinearDuplicateSearchValidationResult['classification'],
+    stableId: string | null,
+    reasons: string[],
+  ): LinearDuplicateSearchValidationResult => ({
+    accepted,
+    classification,
+    stableId,
+    reasons,
+  });
+  if (
+    input.action.provider !== 'linear' ||
+    input.action.operation !== 'search-duplicates' ||
+    input.observation.provider !== 'linear' ||
+    !contextsEqual(input.action.context, input.observation.context) ||
+    input.observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.queryDigest !== input.action.intent.queryDigest ||
+    !Number.isFinite(Date.parse(input.observation.observedAt))
+  ) {
+    return result(false, 'invalid', null, ['observation-attribution-mismatch']);
+  }
+  const capability = validateLinearHostCapability(
+    'search-duplicates',
+    input.action.context,
+    input.hostCapability,
+  );
+  if (
+    input.hostCapability.evidenceDigest !==
+    input.action.intent.capabilityEvidenceDigest
+  ) {
+    return result(false, 'invalid', null, ['capability-evidence-mismatch']);
+  }
+  if (
+    input.observation.availability === 'unavailable' ||
+    input.hostCapability.availability !== 'available'
+  ) {
+    return result(false, 'unavailable', null, [
+      ...capability.reasons,
+      'search-unavailable',
+    ]);
+  }
+  if (!capability.valid) {
+    return result(false, 'invalid', null, capability.reasons);
+  }
+  const resultContract = input.action.intent.resultContract;
+  const query = input.action.intent.query;
+  if (!isRecord(resultContract) || !isRecord(query)) {
+    return result(false, 'invalid', null, ['action-contract-invalid']);
+  }
+  const maxResults = Number(resultContract.maxResults);
+  if (
+    !Number.isInteger(maxResults) ||
+    maxResults < 1 ||
+    maxResults > 100 ||
+    input.observation.results.length > maxResults
+  ) {
+    return result(false, 'invalid', null, ['result-bound-exceeded']);
+  }
+  if (input.observation.results.length === 0) {
+    return result(true, 'no-match', null, []);
+  }
+  if (
+    input.observation.results.some(
+      (candidate) => !validLinearDuplicateCandidateBounds(candidate),
+    )
+  ) {
+    return result(false, 'invalid', null, ['candidate-bound-invalid']);
+  }
+  if (input.observation.results.length > 1) {
+    return result(false, 'ambiguous', null, ['multiple-candidates']);
+  }
+  const candidate = input.observation.results[0]!;
+  const historicalIdentifiers = Array.isArray(query.historicalIdentifiers)
+    ? query.historicalIdentifiers.filter(
+        (identifier): identifier is string => typeof identifier === 'string',
+      )
+    : [];
+  const matchEvidenceValid =
+    candidate.matchedBy === 'provenance'
+      ? candidate.matchedProvenanceToken === query.provenanceToken
+      : candidate.matchedBy === 'reserved-binding'
+        ? candidate.matchedReservedBindingId === query.reservedBindingId
+        : typeof candidate.matchedIdentifier === 'string' &&
+          historicalIdentifiers.includes(candidate.matchedIdentifier) &&
+          candidate.identifiers.includes(candidate.matchedIdentifier);
+  const expectedStableId = canonicalLinearStableId(
+    String(query.workspaceId),
+    candidate.uuid,
+  );
+  if (
+    !candidate.stableIdentityVerified ||
+    !candidate.contextVerified ||
+    candidate.stableId !== expectedStableId ||
+    !contextsEqual(candidate.context, input.action.context) ||
+    candidate.context.workspaceId !== query.workspaceId ||
+    candidate.context.teamId !== query.teamId ||
+    !matchEvidenceValid
+  ) {
+    return result(false, 'ambiguous', null, ['candidate-not-fully-verified']);
+  }
+  return result(true, 'one-verified-match', candidate.stableId, []);
+}
+
 export const linearAdapter: ProviderAdapter = {
   provider: 'linear',
   normalize: normalizeLinearIssueObservation,
@@ -1254,5 +1403,21 @@ function isCompleteLinearDuplicateSearchInput(
     typeof input.reservedBindingId === 'string' &&
     Array.isArray(input.historicalIdentifiers) &&
     Number.isInteger(input.maxResults)
+  );
+}
+
+function validLinearDuplicateCandidateBounds(
+  candidate: LinearDuplicateCandidate,
+): boolean {
+  return (
+    UUID.test(candidate.uuid) &&
+    candidate.stableId.length > 0 &&
+    candidate.stableId.length <= 512 &&
+    candidate.identifiers.length <= 64 &&
+    new Set(candidate.identifiers).size === candidate.identifiers.length &&
+    candidate.identifiers.every((identifier) => IDENTIFIER.test(identifier)) &&
+    ['provenance', 'reserved-binding', 'identifier'].includes(
+      candidate.matchedBy,
+    )
   );
 }

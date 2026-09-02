@@ -12,6 +12,7 @@ import {
   planLinearRead,
   previewLinearMutation,
   validateLinearDiscussionReadObservation,
+  validateLinearDuplicateSearchObservation,
   verifyLinearMutationObservation,
   type LinearHostCapabilityObservation,
 } from './linear';
@@ -660,5 +661,147 @@ describe('Linear duplicate-search intents', () => {
         historicalIdentifiers: ['ALPHA-42', 'ALPHA-42'],
       }),
     ).toThrow('bounds');
+  });
+});
+
+describe('Linear duplicate-search observations', () => {
+  const action = planLinearDuplicateSearch({
+    context: linearContext,
+    hostCapability: linearCapability,
+    provenanceToken: 'origin:local:item-42',
+    reservedBindingId: 'binding_linear_42',
+    historicalIdentifiers: ['ALPHA-42', 'OLD-19'],
+    maxResults: 10,
+  });
+  const candidate = {
+    uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    identifiers: ['ALPHA-42'],
+    context: linearContext,
+    matchedBy: 'provenance' as const,
+    matchedProvenanceToken: 'origin:local:item-42',
+    stableIdentityVerified: true,
+    contextVerified: true,
+  };
+  const observation = {
+    provider: 'linear' as const,
+    context: linearContext,
+    availability: 'available' as const,
+    capabilityEvidenceDigest: linearCapability.evidenceDigest,
+    queryDigest: action.intent.queryDigest as string,
+    observedAt: '2026-09-02T12:05:00.000Z',
+    results: [candidate],
+  };
+
+  it('accepts exactly one stable UUID/context match from provenance', () => {
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: linearCapability,
+        observation,
+      }),
+    ).toEqual({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: candidate.stableId,
+      reasons: [],
+    });
+  });
+
+  it('accepts one exact historical-identifier match but not an unplanned alias', () => {
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: linearCapability,
+        observation: {
+          ...observation,
+          results: [
+            {
+              ...candidate,
+              matchedBy: 'identifier',
+              matchedProvenanceToken: undefined,
+              matchedIdentifier: 'OLD-19',
+              identifiers: ['ALPHA-42', 'OLD-19'],
+            },
+          ],
+        },
+      }).accepted,
+    ).toBe(true);
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: linearCapability,
+        observation: {
+          ...observation,
+          results: [
+            {
+              ...candidate,
+              matchedBy: 'identifier',
+              matchedProvenanceToken: undefined,
+              matchedIdentifier: 'OTHER-7',
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'ambiguous' });
+  });
+
+  it('returns no-match, unavailable, and bounded ambiguity explicitly', () => {
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: linearCapability,
+        observation: { ...observation, results: [] },
+      }),
+    ).toMatchObject({ accepted: true, classification: 'no-match' });
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: { ...linearCapability, availability: 'unavailable' },
+        observation: {
+          ...observation,
+          availability: 'unavailable',
+          results: [],
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'unavailable' });
+    expect(
+      validateLinearDuplicateSearchObservation({
+        action,
+        hostCapability: linearCapability,
+        observation: {
+          ...observation,
+          results: [
+            candidate,
+            {
+              ...candidate,
+              uuid: '9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+              stableId:
+                'linear:workspace_01:9a8c5bc8-b2b5-4c75-9475-d112ca8f0150',
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'ambiguous' });
+  });
+
+  it('rejects mismatched context, query, capability, and unverified identity', () => {
+    for (const changed of [
+      { ...observation, context: { ...linearContext, teamId: 'wrong' } },
+      { ...observation, queryDigest: 'sha256:wrong' },
+      { ...observation, capabilityEvidenceDigest: 'sha256:wrong' },
+      {
+        ...observation,
+        results: [{ ...candidate, stableIdentityVerified: false }],
+      },
+    ]) {
+      expect(
+        validateLinearDuplicateSearchObservation({
+          action,
+          hostCapability: linearCapability,
+          observation: changed,
+        }).accepted,
+      ).toBe(false);
+    }
   });
 });
