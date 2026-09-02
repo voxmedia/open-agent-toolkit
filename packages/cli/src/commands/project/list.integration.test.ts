@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -12,6 +13,10 @@ interface CliResult {
   stdout: string;
   stderr: string;
   exitCode: number;
+}
+
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
 async function createWorkspace(): Promise<string> {
@@ -150,8 +155,9 @@ describe('oat project list coordination integration', () => {
   });
 
   it('lists materialized and recorded-absent projects across all scopes', async () => {
-    const root = await createWorkspace();
-    tempDirs.push(root);
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const root = fixture.cloneA;
     await writeStateFile(root, 'shared-project', {
       oat_phase: 'plan',
       oat_phase_status: 'complete',
@@ -321,5 +327,111 @@ describe('oat project list coordination integration', () => {
         phase: null,
       }),
     );
+  });
+
+  it('keeps matching terminal aliases out of remote active discovery and exposes mismatches', async () => {
+    const fixture = await createSyncedFixture({ secondClone: true });
+    tempDirs.push(fixture.rootDir);
+    for (const slug of [
+      'completed-only',
+      'matching-terminal',
+      'invalid-terminal',
+    ]) {
+      const created = await runCli(fixture.cloneA, [
+        'project',
+        'new',
+        slug,
+        '--no-dashboard',
+        '--json',
+      ]);
+      expect(created.exitCode).toBe(0);
+      const activeSha = git(fixture.cloneA, [
+        'ls-remote',
+        'origin',
+        `refs/oat/projects/${slug}`,
+      ]).split(/\s+/)[0]!;
+      git(fixture.cloneA, [
+        'push',
+        '-q',
+        'origin',
+        `${activeSha}:refs/oat/completed/${slug}`,
+      ]);
+      if (slug === 'completed-only') {
+        git(fixture.cloneA, [
+          'push',
+          '-q',
+          'origin',
+          '--delete',
+          `refs/oat/projects/${slug}`,
+        ]);
+      }
+    }
+    const mainSha = git(fixture.cloneA, ['rev-parse', 'HEAD']);
+    git(fixture.cloneA, [
+      'push',
+      '-q',
+      '--force',
+      'origin',
+      `${mainSha}:refs/oat/completed/invalid-terminal`,
+    ]);
+
+    const remote = await runCli(fixture.cloneB!, [
+      'project',
+      'list',
+      '--remote',
+      '--json',
+    ]);
+    expect(remote.exitCode).toBe(0);
+    const payload = JSON.parse(remote.stdout) as {
+      projects: Array<Record<string, unknown>>;
+    };
+    expect(payload.projects).not.toContainEqual(
+      expect.objectContaining({ name: 'matching-terminal' }),
+    );
+    expect(payload.projects).not.toContainEqual(
+      expect.objectContaining({ name: 'completed-only' }),
+    );
+    expect(payload.projects).toContainEqual(
+      expect.objectContaining({
+        kind: 'terminal-invalid',
+        name: 'invalid-terminal',
+        terminalState: 'ref-sha-mismatch',
+      }),
+    );
+  });
+
+  it('fails closed instead of listing an active synced checkout when terminal lookup is unreachable', async () => {
+    const fixture = await createSyncedFixture();
+    tempDirs.push(fixture.rootDir);
+    const slug = 'unreachable-terminal-lookup';
+    const created = await runCli(fixture.cloneA, [
+      'project',
+      'new',
+      slug,
+      '--no-dashboard',
+      '--json',
+    ]);
+    expect(created.exitCode).toBe(0);
+    git(fixture.cloneA, [
+      'remote',
+      'set-url',
+      'origin',
+      join(fixture.rootDir, 'missing-origin.git'),
+    ]);
+
+    const listed = await runCli(fixture.cloneA, ['project', 'list', '--json']);
+
+    expect(listed.exitCode).toBe(2);
+    const payload = JSON.parse(listed.stdout) as {
+      status: string;
+      message: string;
+      projects?: unknown[];
+    };
+    expect(payload.status).toBe('error');
+    expect(payload.message).toContain(
+      `Unable to verify whether origin/refs/oat/completed/${slug} exists`,
+    );
+    expect(payload.message).toContain('missing-origin.git');
+    expect(payload.projects).toBeUndefined();
   });
 });

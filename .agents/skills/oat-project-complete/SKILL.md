@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.5
+version: 1.7.6
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -49,6 +49,10 @@ COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
+SYNCED_ARCHIVE_ENTRY_SCRIPT="$SKILL_DIR/scripts/resolve-synced-archive-entry.mjs"
+SYNCED_ARCHIVE_EXECUTE_SCRIPT="$SKILL_DIR/scripts/execute-synced-archive-entry.mjs"
+SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-synced-archive-resume-fields.mjs"
+SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
   exit 1
@@ -65,10 +69,56 @@ test -f "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" || {
   echo "Missing non-archive lifecycle receipt validator: $NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" >&2
   exit 1
 }
+test -f "$SYNCED_ARCHIVE_ENTRY_SCRIPT" || {
+  echo "Missing synced archive entry router: $SYNCED_ARCHIVE_ENTRY_SCRIPT" >&2
+  exit 1
+}
+test -f "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" || {
+  echo "Missing synced archive entry executor: $SYNCED_ARCHIVE_EXECUTE_SCRIPT" >&2
+  exit 1
+}
+test -f "$SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" || {
+  echo "Missing synced archive resume field parser: $SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" >&2
+  exit 1
+}
+test -f "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" || {
+  echo "Missing synced archive finalizer: $SYNCED_ARCHIVE_FINALIZE_SCRIPT" >&2
+  exit 1
+}
 
 PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2; exit 1; }
+SYNCED_ARCHIVE_RESUME="false"
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
-  oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }
+  SYNCED_RECORD_PATH="${PROJECT_PATH}.json"
+  REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+  SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT" \
+    --repo-root "$REPO_ROOT" \
+    --record-path "$SYNCED_RECORD_PATH" \
+    --project-name "$PROJECT_NAME" \
+    --project-path "$PROJECT_PATH") || exit 1
+  SYNCED_ARCHIVE_ENTRY_ROUTE=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (value.status !== "ok" || !["continue-active", "archive-resumed"].includes(value.route)) process.exit(1);
+process.stdout.write(value.route);
+' "$SYNCED_ARCHIVE_ENTRY") || exit 1
+  if [[ "$SYNCED_ARCHIVE_ENTRY_ROUTE" == "archive-resumed" ]]; then
+    printf '%s\n' "$SYNCED_ARCHIVE_ENTRY"
+    SYNCED_ARCHIVE_RESUME_ASSIGNMENTS=$(node \
+      "$SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" \
+      "$SYNCED_ARCHIVE_ENTRY") || exit 1
+    eval "$SYNCED_ARCHIVE_RESUME_ASSIGNMENTS" || exit 1
+    ARCHIVED_PROJECT_STATUS_ASSIGNMENTS=$(oat project status \
+      --project-path "$ARCHIVE_PATH" --shell \
+      oat_pr_status=project.prStatus \
+      oat_pr_url=project.prUrl) || exit 1
+    eval "$ARCHIVED_PROJECT_STATUS_ASSIGNMENTS" || exit 1
+    WAS_PR_OPEN_AT_START="false"
+    if [[ "${oat_pr_status:-}" == "open" ]]; then
+      WAS_PR_OPEN_AT_START="true"
+    fi
+    echo "Verified synced archive terminal receipt; active pointer retained until closeout succeeds."
+    echo "Steps 2-8 will not replay; continuing at Step 8.5."
+  fi
 fi
 PROJECT_RETAINED_REF=""
 if [[ "$PROJECT_SCOPE" == "synced" ]]; then
@@ -79,6 +129,14 @@ if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
   IS_DURABLE_PROJECT="true"
 fi
 ```
+
+When `SYNCED_ARCHIVE_RESUME="true"`, continue directly at **Step 8.5**. Do not
+execute Steps 2 through 8, ask the upfront questions again, read or mutate the
+retired active checkout, regenerate active artifacts, or invoke archive a
+second time. The executor result and the archived project status have already
+initialized every resume-safe downstream receipt and choice. A resume never
+opens a new PR from an unpersisted prior answer; `SHOULD_OPEN_PR="false"`, while
+an already-tracked open PR is updated by Step 11.5.
 
 ### Step 2: Upfront User Questions (Batched)
 
@@ -641,13 +699,20 @@ project push.
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
 
-### Step 6: Clear Active Project Pointer
+### Step 6: Clear or Defer the Active Project Pointer
 
-Clear the active project pointer immediately. If the user is completing a project, clearing the pointer is implicit — no confirmation needed.
+Clearing the active project pointer is implicit and requires no confirmation.
+For a synced archive, defer the clear until Step 8 has validated the full
+terminal report. Every archive or configured-S3 failure therefore exits with
+the original pointer intact and the completion remains directly resumable.
 
 ```bash
-oat config set activeProject ""
-echo "Active project pointer cleared."
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  echo "Active project pointer retained until synced archive terminal receipt validation."
+else
+  oat config set activeProject ""
+  echo "Active project pointer cleared."
+fi
 ```
 
 ### Step 7: Generate PR Description
@@ -869,7 +934,10 @@ source.
 This conditional skips archive movement only; it does not skip the Step 3.7
 seal append for an existing project log.
 
-Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
+Archive happens after PR description generation. For a synced project, the
+archive command owns the exact lifecycle commit that deletes the discovery
+record together with tracked archive exports; later bookkeeping must reuse its
+receipt rather than creating a second lifecycle commit.
 
 The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.
 
@@ -894,14 +962,22 @@ printf '%s\n' "$ARCHIVE_OUTPUT"
 
 Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
 `status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
-`s3Path`, `summaryExportFile`, `lifecycleCommit`, and `warnings` fields for later reporting. Set
+`s3Path`, `summaryExportFile`, `lifecycleCommit`, `completedRef`,
+`verifiedSourceSha`, `activeAliasDisposition`, `recordRetired`, and `warnings`
+fields for later reporting. Set
 `ARCHIVE_PATH` from `archivePath`, set `SUMMARY_EXPORT_FILE` from
 `summaryExportFile` (empty when null), then set `PROJECT_PATH="$ARCHIVE_PATH"`.
 
 For a synced project, require a full `lifecycleCommit` SHA in the archive
-report and set `LIFECYCLE_COMMIT` to it. This is the parent-branch record and
-summary-export commit owned by archive; do not replace it with
-`git rev-parse HEAD` and do not create another lifecycle commit.
+report, require `completedRef` to equal
+`refs/oat/completed/${PROJECT_NAME}`, require a full `verifiedSourceSha`,
+require `activeAliasDisposition` to be `removed` or `retained`, and require
+`recordRetired` to be exactly `true`. Set `LIFECYCLE_COMMIT` to the reported
+commit. This is the parent-branch record-deletion and archive-export commit
+owned by archive; do not replace it with `git rev-parse HEAD` and do not create
+another lifecycle commit. `removed` is the completed-only terminal shape;
+`retained` is the equally terminal same-SHA active alias shape. A differing-SHA
+state is never a successful report.
 
 When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
 `projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
@@ -925,9 +1001,28 @@ The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
 `--json` added only to select the machine-readable report.
 Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.
 
+Only after every applicable synced terminal and recap-export field above has
+passed validation may the workflow continue. Keep the pointer through the
+required link, dashboard, bookkeeping, push, and PR-closeout work below so a
+failure after record retirement can retry through the recordless archive path.
+
 #### Step 8.5: Finalize Archive-Aware Recap Links
 
-Run this only when archive returned a `projectRecapExport`.
+The recap-link rewrite in this subsection runs only when archive returned a
+`projectRecapExport`. A synced archive resume with no recap export performs no
+recap-link rewrite, then still continues at Step 8.6.
+
+This is the explicit rejoin point when `SYNCED_ARCHIVE_RESUME="true"`. Use
+`ARCHIVE_OUTPUT` and `PROJECT_RECAP_EXPORT_JSON` from the validated executor
+result; use its `ARCHIVE_PATH`, `SUMMARY_EXPORT_FILE`, `LIFECYCLE_COMMIT`,
+`ARCHIVE_S3_PATH`, and `SELECTED_PROJECT_RECAP_RUN` assignments for all later
+steps. Do not infer any receipt from the deleted checkout and do not rerun the
+Step 8 archive command—the executor already validated the terminal report.
+Keep the active pointer until post-archive closeout succeeds, then run the
+finalizer once before confirmation. Continue through Steps 8.5–12, including
+final synced links,
+dashboard refresh, the required bookkeeping push, tracked-PR closeout when
+applicable, and final confirmation.
 
 Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport.exportRoot`; do not derive them from the local archive.
 Use a repository-relative path under
@@ -1068,7 +1163,8 @@ Expected changes may include:
 - `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
-- Shared-project deletions or synced-project record updates (if archived)
+- Shared-project deletions; synced archive record deletion is already sealed by
+  the archive-owned lifecycle commit
 - The complete tracked recap export and tracked summary export reported by
   archive (if present)
 
@@ -1122,9 +1218,11 @@ Rules:
 
 Skip when no final recap was selected, for local-scope projects, when the
 selected recap is already durable solely through independently verified publish
-evidence, or when Step 7.5 restored an exact `EVIDENCE_COMMIT`. In the recovered
-evidence case, verify the selected run's manifest and build record are the two
-exact paths in that commit and continue without re-attesting or rewriting them.
+evidence, or when Step 7.5 or the synced archive-resume executor restored an
+exact `EVIDENCE_COMMIT`. In the recovered evidence case, the recovery primitive
+has already verified the selected run's manifest and build record as the two
+exact paths in that commit, with `LIFECYCLE_COMMIT` as its immediate parent.
+Continue without re-attesting or rewriting either record.
 
 For an archived recap, consume the exact `projectRecapExport` values recorded
 in Step 8. Plan finalization through
@@ -1171,7 +1269,8 @@ details, and continue to the evidence commit.
 
 ### Step 10.6: Commit Evidence + Push
 
-When Step 10.5 ran and Step 7.5 did not restore `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
+When Step 10.5 ran and neither Step 7.5 nor the synced archive-resume executor
+restored `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
 `verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
 commit parent/order, exact evidence paths, attestation outcome, and unchanged
 unrelated-change snapshots.
@@ -1198,6 +1297,7 @@ git commit --only -m "chore(oat): attest final project recap" -- \
 EVIDENCE_COMMIT=$(git rev-parse HEAD)
 test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
 test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"
+EVIDENCE_PUSH_REQUIRED="true"
 ```
 
 Verify the evidence commit contains exactly those two paths, the lifecycle
@@ -1233,12 +1333,51 @@ test "$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)" = \
   "$UNRELATED_PROJECT_STAGE_BEFORE"
 ```
 
-When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records
-again. Require the retained remote ref to equal that exact evidence SHA, keep
-its immediate parent equal to `PROJECT_REF_COMMIT`, and preserve the recovered
-`PROJECT_LINKS_PIN_COMMIT`. The parent discovery-record commit remains confined
-to its one canonical path, and all unrelated staged-state snapshots must remain
-byte-for-byte unchanged.
+When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not
+stage or commit recap records again. Require the retained remote ref to equal
+that exact evidence SHA, keep its immediate parent equal to
+`PROJECT_REF_COMMIT`, and preserve the recovered `PROJECT_LINKS_PIN_COMMIT`.
+When the synced archive-resume executor restored `EVIDENCE_COMMIT`, likewise do
+not re-attest, stage, or commit: it already required the evidence commit to
+change exactly `EXPORTED_MANIFEST_PATH` and `EXPORTED_BUILD_RECORD_PATH`, with
+`LIFECYCLE_COMMIT` as its immediate parent. Its `EVIDENCE_PUSH_REQUIRED`
+receipt determines whether the one parent-branch push remains pending. All
+unrelated staged-state snapshots must remain byte-for-byte unchanged.
+
+For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
+push the parent branch exactly once after the lifecycle receipt and any recap
+evidence commit are final. Verify the pushed upstream contains the exact final
+bookkeeping commit before continuing to PR closeout or claiming completion:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  BOOKKEEPING_PUSH_COMMIT="${EVIDENCE_COMMIT:-$LIFECYCLE_COMMIT}"
+  test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
+  git merge-base --is-ancestor "$LIFECYCLE_COMMIT" \
+    "$BOOKKEEPING_PUSH_COMMIT" || exit 1
+  if [[ -n "$EVIDENCE_COMMIT" ]]; then
+    test "$(git rev-parse "$EVIDENCE_COMMIT^")" = \
+      "$LIFECYCLE_COMMIT" || exit 1
+    if [[ "$EVIDENCE_PUSH_REQUIRED" != "true" && \
+      "$EVIDENCE_PUSH_REQUIRED" != "false" ]]; then
+      exit 1
+    fi
+    case "$EVIDENCE_PUSH_REQUIRED" in
+      true) git push || exit 1 ;;
+      false) echo "Reusing published recap evidence receipt: $EVIDENCE_COMMIT" ;;
+    esac
+  else
+    git push || exit 1
+  fi
+  BOOKKEEPING_UPSTREAM=$(git rev-parse --abbrev-ref \
+    --symbolic-full-name '@{u}') || exit 1
+  BOOKKEEPING_UPSTREAM_COMMIT=$(git rev-parse \
+    "$BOOKKEEPING_UPSTREAM^{commit}") || exit 1
+  test "$BOOKKEEPING_UPSTREAM_COMMIT" = \
+    "$BOOKKEEPING_PUSH_COMMIT" || exit 1
+  echo "Completion bookkeeping pushed: $BOOKKEEPING_PUSH_COMMIT"
+fi
+```
 
 ### Step 11: Open PR in GitHub (Conditional)
 
@@ -1304,19 +1443,47 @@ Steps:
 4. Push the updated body:
 
    ```bash
-   gh pr edit "$PR_REF" --body-file "$TMP_BODY"
+   if ! command -v gh >/dev/null 2>&1; then
+     echo "GitHub CLI is unavailable; update the tracked PR manually from $TMP_BODY." >&2
+     if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+       exit 1
+     fi
+   elif ! gh pr edit "$PR_REF" --body-file "$TMP_BODY"; then
+     echo "PR description update failed; update it manually from $TMP_BODY." >&2
+     if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+       exit 1
+     fi
+   fi
    ```
 
 5. Clean up the temp file.
 
 Failure handling:
 
-- If `gh` is missing, warn and print the path to the regenerated artifact body so the user can paste it into the PR manually. Do not fail the skill.
-- If `gh pr edit` fails (e.g. PR was merged between Step 2 and now, or the auth token lacks edit permission), warn and continue. Step 12's completion summary should call out that the PR body was not updated and surface the artifact path so the user can update it manually.
+- If `gh` is missing or `gh pr edit` fails, always print the manual-update path.
+  For a synced archive completion this tracked-PR update is required: stop
+  before Step 12, retain the active pointer, and let the next invocation resume
+  recordlessly. Other completion shapes retain their existing warning-only
+  behavior and Step 12 summary guidance.
 - Never re-archive or re-commit on failure here — the lifecycle bookkeeping
   and any recap evidence update in Step 10.6 already shipped.
 
 ### Step 12: Confirm to User
+
+Immediately before confirmation, clear the deferred synced archive pointer.
+The finalizer validates the terminal receipt again before changing
+configuration. This ordering keeps every failure before final confirmation
+directly retryable, including a retry after record retirement:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
+  SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+    node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
+      --project-name "$PROJECT_NAME") || exit 1
+  printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
+  echo "Synced archive terminal receipt verified; active project pointer cleared."
+fi
+```
 
 Show user:
 

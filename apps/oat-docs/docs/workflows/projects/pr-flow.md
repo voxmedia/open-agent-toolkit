@@ -76,9 +76,11 @@ Both completion orderings are supported:
 
 An open PR is not a completion blocker. When completion archives project
 artifacts, the archive-aware flow regenerates and synchronizes the open PR body
-so its artifact links remain valid. Synced completion retains the project ref,
-which keeps its SHA-pinned links resolvable after the nested checkout is
-removed.
+so its artifact links remain valid. Synced completion makes
+`refs/oat/completed/<project>` authoritative at the verified source SHA. A
+same-SHA `refs/oat/projects/<project>` ref may remain only as an inert alias;
+the completed ref keeps the SHA-pinned links resolvable after the nested
+checkout and tracked record are removed.
 
 ## Reference artifacts
 
