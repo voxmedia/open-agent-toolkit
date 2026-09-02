@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'Phase 4 code safety passes, but the terminal fresh review found one Important design mismatch: two passages still specify the removed automatic directory-transition release; the one-use correction/review authorization is exhausted.'
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: p05-t01
 oat_generated: false
@@ -30,7 +29,7 @@ oat_generated: false
 | Phase 1 | complete | 1     | 1/1       |
 | Phase 2 | complete | 7     | 7/7       |
 | Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | review   | 5     | 5/5       |
+| Phase 4 | complete | 5     | 5/5       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
@@ -736,7 +735,7 @@ high confidence. The original commit remains the source authority.
 
 ## Phase 4: Safe Collection-Directory Aliases
 
-**Status:** blocked at terminal review governance boundary
+**Status:** completed by operator disposition after design-only alignment
 **Started:** 2026-08-31
 
 ### Phase Summary
@@ -1211,6 +1210,23 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - This review consumes the one authorized fresh review. No design correction
   or further review is authorized by the verdict, and Phase 5 remains gated
   pending explicit operator direction.
+
+### Operator Disposition — Design Alignment Accepted Without Re-Review
+
+- Thomas explicitly directed the two `design.md` passages to be aligned with
+  the already verified fail-closed implementation and stated that this
+  artifact-only correction did not require another review.
+- Commit `6e58771901d222dc64ee0ecacadf510808a69c97` now states that a later absent
+  proof does not release deferred directory publication, the supported release
+  is provider disablement plus sync-owned detachment and verified
+  manual/external disposition, and automatic publication requires an
+  identity-bound, non-following primitive. Separately safe file behavior stays
+  under its existing destination-policy/no-clobber rules.
+- The round-9 review had already passed the complete Phase 4 production safety
+  surface with 0 Critical findings, 414/414 tests, and green scoped static
+  checks. The operator accepted the design-only correction as resolving its
+  sole Important finding and waived another review.
+- Phase 4 is complete. Phase 5 may begin at `p05-t01`.
 
 ---
 
@@ -1790,6 +1806,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Operator disposition — design alignment accepted without re-review
+
+- Direction: Thomas instructed root to fix the two stale `design.md` passages,
+  explicitly waived another review for the artifact-only correction, and
+  directed implementation to continue from Phase 5.
+- Commit: `6e58771901d222dc64ee0ecacadf510808a69c97`
+- Outcome: the approved design now matches the verified fail-closed directory
+  transition policy. The sole round-9 Important finding is resolved by
+  operator disposition; Phase 4 passes and `p05-t01` is next.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1912,6 +1938,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                | Mechanically derived full-suite fixture | p03-t01 behavior       | recovery attempt 1/10 reserved    |
 | p03 review r2 | plan file union  | p03-t04 named command source/tests only  | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                       | Mechanically derived docs reference     | Round-2 review finding | recorded; no production expansion |
 | p03 review r2 | plan file union  | provider help source changed             | Added adjacent `packages/cli/src/commands/help-snapshots.test.ts` for the two mechanically stale provider-set inline snapshots                                          | Mechanically derived snapshot fixture   | Full test gate         | recorded; no production expansion |
+| p04 review r9 | design           | absent proof releases directory work     | Aligned two stale passages to the verified fail-closed implementation and accepted the correction without another review                                                | Explicit operator disposition           | implementation/docs    | none                              |
 
 ## Test Results
 
