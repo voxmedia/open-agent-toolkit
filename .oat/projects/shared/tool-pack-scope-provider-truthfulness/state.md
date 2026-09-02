@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-fail-closed-redesign
-oat_last_commit: 19198457148de815415304c620db39e78b41ef2c
+oat_current_task: p05-parent-identity-decision
+oat_last_commit: 52d2e69addd6ca17b421f48de9a858a9a31a0366
 oat_blockers:
-  - Phase 5 is implementing the operator-selected fail-closed redesign: existing AGENTS.md files and symlinks become zero-write manual patches; one fresh review is authorized before Phase 6.
+  - Phase 5 redesign review found a Critical parent-identity race in absent-file creation; the one-review authorization is exhausted and operator direction is required before another fix/review cycle or Phase 6.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Thomas selected a safer Phase 5 design after the terminal
-review: create an absent `AGENTS.md` exclusively, but never automatically
-replace an existing file or symlink. One bounded redesign and review are active.
+Implementation - the safer Phase 5 redesign protects every existing
+`AGENTS.md`, but its absent-file exclusive create can be redirected if the
+repository parent is swapped after validation. Operator direction is required.
 
 ## Artifacts
 
@@ -122,7 +122,7 @@ replace an existing file or symlink. One bounded redesign and review are active.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p05 review fixes in progress)
+- **Implementation:** `implementation.md` (blocked — p05 parent-identity decision required)
 
 ## Progress
 
@@ -158,16 +158,17 @@ replace an existing file or symlink. One bounded redesign and review are active.
 - ✓ Expanded Phase 5 verification passed 430/430 plus uncached root checks
 - ⧗ Authorized post-cap review blocked with 2 Critical and 3 Important findings
 - ✓ Fail-closed existing-file manual-patch redesign selected
-- ⧗ Bounded redesign implementation and one fresh review authorized
+- ✓ Bounded redesign implementation completed at `52d2e69add`
+- ⧗ Fresh review blocked with 1 Critical parent-identity race
 
 ## Blockers
 
-- Existing-file replacement remains disabled until the fail-closed redesign
-  removes the recovery publication path and passes a fresh review.
-- Phase 6 remains gated.
+- A repository-directory swap immediately before the absent-file `writeFile(wx)`
+  can redirect creation outside the validated root while reporting success.
+- The one authorized redesign review is exhausted; Phase 6 remains gated.
 
 ## Next Milestone
 
-Implement exclusive absent-file creation plus zero-write existing-file/symlink
-patch output through the original implementer, then run one fresh Phase 5
-review.
+Choose either an identity-bound parent-relative exclusive-create capability or
+a fully manual-only absent-file policy, then explicitly authorize any bounded
+Phase 5 fix/review continuation.

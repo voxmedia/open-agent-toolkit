@@ -2,16 +2,16 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 5 is implementing the operator-selected fail-closed redesign: existing AGENTS.md files and symlinks become zero-write manual patches; one fresh review is authorized before Phase 6.
+  - Phase 5 redesign review found a Critical parent-identity race in absent-file creation; the one-review authorization is exhausted and operator direction is required before another fix/review cycle or Phase 6.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-fail-closed-redesign
+oat_current_task_id: p05-parent-identity-decision
 oat_generated: false
 ---
 
 # Implementation: tool-pack-scope-provider-truthfulness
 
 **Started:** 2026-08-31
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -2084,6 +2084,35 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   consumers/tests/docs with one zero-write manual-patch contract.
 - Boundary: one bounded exact-target implementation and one fresh independent
   Phase 5 review. Phase 6 remains gated until that review passes.
+
+#### Fail-closed redesign implementation
+
+- Continuation event: `p05-fail-closed-redesign-20260902T130400Z`
+- Original request: `dispatch-p05-20260902T021900Z-01454ec32`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `6bee1a9977f850e84972a10123d967d24229f25b`
+- Commit: `52d2e69addd6ca17b421f48de9a858a9a31a0366`
+- Outcome: existing direct files and symlinks are read-only; missing targets use
+  exclusive creation; consumers return consistent manual/blocked partial state;
+  focused 427/427 and uncached root checks passed.
+- Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Fresh redesign review — terminal governance boundary
+
+- Reviewed head: `52d2e69addd6ca17b421f48de9a858a9a31a0366`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p05-review-2026-09-02T134849Z.md`
+- Outcome: blocked with 1 Critical finding. A repository-directory swap after
+  final validation but before pathname-based `writeFile(wx)` can redirect the
+  new `AGENTS.md` outside the validated root while the helper reports `created`.
+- Verification: 427/427 Phase 5 tests, CLI lint/type/format, uncached root
+  check, and range diff-check passed; two injected parent-swap reproductions
+  demonstrated the untested containment failure.
+- Reconnaissance: not attempted.
+- Governance: the one fresh redesign review authorization is exhausted.
+  Phase 6 remains gated pending an operator choice between identity-bound
+  parent-relative creation and a fully manual-only absent-file policy.
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

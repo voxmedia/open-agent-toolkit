@@ -1754,7 +1754,8 @@ gates exit 0 at the final reviewed head.
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T043143Z.md                      | 61a1ea59083d3d9987a24c0a07ae349924e39cf9 | manual     | -                            |
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T045435Z.md                      | 89d71d78d652e439abe9804f04b520047fe8c79c | manual     | -                            |
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T052445Z.md                      | 9eab2dc3ea99026ef00ff649f320057df51537b6 | manual     | operator-override-granted    |
-| p05    | code     | fixes_added     | 2026-09-02 | reviews/p05-review-2026-09-02T124148Z.md                      | 19198457148de815415304c620db39e78b41ef2c | manual     | operator-redesign-authorized |
+| p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T124148Z.md                      | 19198457148de815415304c620db39e78b41ef2c | manual     | operator-redesign-authorized |
+| p05    | code     | received        | 2026-09-02 | reviews/p05-review-2026-09-02T134849Z.md                      | 52d2e69addd6ca17b421f48de9a858a9a31a0366 | manual     | operator-governance-required |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -                            |
 | p07    | code     | pending         | -          | -                                                             | -                                        | -          | -                            |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                            |
