@@ -9,6 +9,7 @@ import {
   parseGitHubIssueReference,
   planGitHubMutation,
   validateGitHubHostCapability,
+  verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from './github';
 
@@ -369,6 +370,140 @@ describe('GitHub semantic adapter', () => {
       }),
     ).toThrow('Unsupported GitHub priority');
   });
+
+  it.each([
+    {
+      name: 'create',
+      operation: 'create' as const,
+      postconditions: { title: 'Normalize GitHub issues' },
+    },
+    {
+      name: 'edit',
+      operation: 'update' as const,
+      postconditions: { title: 'Normalize GitHub issues' },
+    },
+    {
+      name: 'close',
+      operation: 'transition' as const,
+      postconditions: { status: 'closed' },
+      fields: { ...observation.fields, state: 'closed' },
+    },
+    {
+      name: 'reopen',
+      operation: 'transition' as const,
+      postconditions: { status: 'open' },
+    },
+    {
+      name: 'comment',
+      operation: 'annotate' as const,
+      postconditions: { annotation: 'Completed locally' },
+      fields: { ...observation.fields, annotations: ['Completed locally'] },
+    },
+  ])(
+    'verifies one-attempt $name postconditions through pinned readback',
+    ({ operation, postconditions, fields }) => {
+      const action = githubAdapter.plan(operation, {
+        context: hostCapability.context,
+        stableId: observation.identity.stableId,
+        postconditions,
+      });
+      expect(
+        verifyGitHubMutationObservation({
+          action,
+          attempt: {
+            count: 1,
+            outcome: 'accepted',
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          },
+          hostCapability,
+          readback: {
+            ...observation,
+            context: hostCapability.context,
+            fields: fields ?? observation.fields,
+            capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          },
+        }),
+      ).toMatchObject({ classification: 'verified', retryAllowed: false });
+    },
+  );
+
+  it('classifies silently dropped fields as partial and blocks retry', () => {
+    const action = githubAdapter.plan('update', {
+      context: hostCapability.context,
+      stableId: observation.identity.stableId,
+      postconditions: { title: 'Normalize GitHub issues', priority: 'urgent' },
+    });
+    expect(
+      verifyGitHubMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        },
+        hostCapability,
+        readback: {
+          ...observation,
+          context: hostCapability.context,
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+        },
+      }),
+    ).toMatchObject({
+      classification: 'partial',
+      retryAllowed: false,
+      fields: [
+        { field: 'title', status: 'verified' },
+        { field: 'priority', status: 'mismatch' },
+      ],
+    });
+  });
+
+  it.each([
+    { outcome: 'rejected' as const, classification: 'rejected' },
+    { outcome: 'unknown' as const, classification: 'uncertain' },
+  ])('stops after a $outcome attempt', ({ outcome, classification }) => {
+    const result = verifyGitHubMutationObservation({
+      action: githubAdapter.plan('update', {
+        context: hostCapability.context,
+        stableId: observation.identity.stableId,
+        postconditions: { title: 'Normalize GitHub issues' },
+      }),
+      attempt: {
+        count: 1,
+        outcome,
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      },
+      hostCapability,
+      readback: null,
+    });
+    expect(result).toMatchObject({ classification, retryAllowed: false });
+  });
+
+  it('rejects readback from a capability other than the attempted pinned surface', () => {
+    const result = verifyGitHubMutationObservation({
+      action: githubAdapter.plan('update', {
+        context: hostCapability.context,
+        stableId: observation.identity.stableId,
+        postconditions: { title: 'Normalize GitHub issues' },
+      }),
+      attempt: {
+        count: 1,
+        outcome: 'accepted',
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      },
+      hostCapability,
+      readback: {
+        ...observation,
+        context: hostCapability.context,
+        capabilityEvidenceDigest: 'sha256:different-surface',
+      },
+    });
+    expect(result).toMatchObject({
+      classification: 'uncertain',
+      reason: 'readback-surface-mismatch',
+      retryAllowed: false,
+    });
+  });
 });
 
 const hostCapability: GitHubHostCapabilityObservation = {
@@ -383,7 +518,7 @@ const hostCapability: GitHubHostCapabilityObservation = {
   availability: 'available',
   accountId: 'account_123',
   repositoryId: 'repo_123',
-  operations: ['read', 'create', 'update'],
+  operations: ['read', 'create', 'update', 'transition', 'annotate'],
   observableFields: ['stable-identity', 'title', 'state', 'revision'],
   evidenceDigest: 'sha256:bounded-capability',
 };

@@ -13,6 +13,7 @@ import {
   semanticDigest,
   type NormalizedRemoteIssue,
   type ObservationValidation,
+  type FieldVerification,
   type ProviderAdapter,
   type ProviderContext,
   type SanitizedProviderObservation,
@@ -101,6 +102,30 @@ export interface GitHubMutationPlanInput {
   currentBody?: string;
   projection: OutboundProjection;
   outboundSafety: OutboundProjectionSafetyResult;
+}
+
+export type GitHubMutationVerificationClassification =
+  | 'verified'
+  | 'partial'
+  | 'rejected'
+  | 'uncertain';
+
+export interface GitHubMutationVerificationInput {
+  action: SemanticAction;
+  attempt: {
+    count: number;
+    outcome: 'accepted' | 'rejected' | 'unknown';
+    capabilityEvidenceDigest: string;
+  };
+  hostCapability: GitHubHostCapabilityObservation;
+  readback: SanitizedProviderObservation | null;
+}
+
+export interface GitHubMutationVerificationResult {
+  classification: GitHubMutationVerificationClassification;
+  reason: string;
+  fields: FieldVerification[];
+  retryAllowed: false;
 }
 
 const URL_REFERENCE =
@@ -311,6 +336,85 @@ export function planGitHubMutation(
   };
 }
 
+export function verifyGitHubMutationObservation(
+  input: GitHubMutationVerificationInput,
+): GitHubMutationVerificationResult {
+  if (
+    input.action.provider !== 'github' ||
+    !['create', 'update', 'transition', 'annotate'].includes(
+      input.action.operation,
+    )
+  ) {
+    throw new Error('GitHub mutation verification requires a mutation action.');
+  }
+  if (input.attempt.count !== 1) {
+    throw new Error(
+      'GitHub mutation verification accepts exactly one attempt.',
+    );
+  }
+  const capability = validateGitHubHostCapability(
+    {
+      operation: input.action.operation,
+      context: input.action.context,
+      requiredFields: [],
+    },
+    input.hostCapability,
+  );
+  if (
+    !capability.valid ||
+    input.attempt.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+  ) {
+    return mutationResult('uncertain', 'attempt-capability-mismatch');
+  }
+  if (input.attempt.outcome === 'rejected') {
+    return mutationResult('rejected', 'provider-rejected');
+  }
+  if (input.attempt.outcome === 'unknown') {
+    return mutationResult('uncertain', 'unknown-after-attempt');
+  }
+  if (!input.readback) {
+    return mutationResult('uncertain', 'readback-missing');
+  }
+  if (
+    input.readback.capabilityEvidenceDigest !==
+    input.attempt.capabilityEvidenceDigest
+  ) {
+    return mutationResult('uncertain', 'readback-surface-mismatch');
+  }
+  if (
+    input.readback.provider !== 'github' ||
+    !contextsEqual(input.action.context, input.readback.context)
+  ) {
+    return mutationResult('uncertain', 'readback-context-mismatch');
+  }
+  const stableId = input.action.intent.stableId;
+  if (
+    typeof stableId === 'string' &&
+    stableId !== input.readback.identity.stableId &&
+    stableId !== normalizeGitHubIssueObservation(input.readback).stableId
+  ) {
+    return mutationResult('uncertain', 'readback-identity-mismatch');
+  }
+  const postconditions = parsePostconditions(
+    input.action.intent.postconditions,
+  );
+  const fields = Object.entries(postconditions).map(([field, expected]) => ({
+    field,
+    status: verifyMutationField(input.readback!, field, expected),
+  })) satisfies FieldVerification[];
+  const verifiedCount = fields.filter(
+    (field) => field.status === 'verified',
+  ).length;
+  if (verifiedCount === fields.length) {
+    return mutationResult('verified', 'postconditions-verified', fields);
+  }
+  if (verifiedCount > 0) {
+    return mutationResult('partial', 'postconditions-partial', fields);
+  }
+  return mutationResult('uncertain', 'postconditions-unverified', fields);
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -381,6 +485,60 @@ function assertMutationIdentity(input: GitHubMutationPlanInput): void {
   } else if (!input.stableId) {
     throw new Error('GitHub update requires stable identity.');
   }
+}
+
+function mutationResult(
+  classification: GitHubMutationVerificationClassification,
+  reason: string,
+  fields: FieldVerification[] = [],
+): GitHubMutationVerificationResult {
+  return { classification, reason, fields, retryAllowed: false };
+}
+
+function parsePostconditions(value: unknown): Record<string, string | null> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('GitHub mutation requires explicit postconditions.');
+  }
+  const entries = Object.entries(value);
+  const allowed = new Set([
+    'title',
+    'description',
+    'priority',
+    'status',
+    'annotation',
+  ]);
+  if (
+    entries.length === 0 ||
+    entries.some(
+      ([field, expected]) =>
+        !allowed.has(field) ||
+        (expected !== null && typeof expected !== 'string'),
+    )
+  ) {
+    throw new Error('GitHub mutation postconditions are unsupported.');
+  }
+  return Object.fromEntries(entries) as Record<string, string | null>;
+}
+
+function verifyMutationField(
+  observation: SanitizedProviderObservation,
+  field: string,
+  expected: string | null,
+): FieldVerification['status'] {
+  const observed =
+    field === 'description'
+      ? observation.fields.body
+      : field === 'status'
+        ? observation.fields.state
+        : field === 'annotation'
+          ? observation.fields.annotations
+          : observation.fields[field];
+  if (field === 'annotation') {
+    if (!Array.isArray(observed)) return 'unavailable';
+    return observed.includes(expected) ? 'verified' : 'mismatch';
+  }
+  if (observed === undefined) return 'unavailable';
+  return observed === expected ? 'verified' : 'mismatch';
 }
 
 function normalizeMutationFieldMask(
