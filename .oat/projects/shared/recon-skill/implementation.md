@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: final-review
-    reason: accepted final reviewer was interrupted by a platform content filter before writing an artifact; a fresh launch requires explicit authorization
-    since: 2026-09-02
+oat_blockers: []
 oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
@@ -966,6 +963,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   model_axis=selected:gpt-5.6-sol effort_axis=selected:high
   dispatch_policy=high dispatch_ceiling=high
   target=oat-reviewer-gpt-5-6-sol-high
+
+#### Final review relaunch authorization
+
+- Date: 2026-09-02
+- Authorization: explicit user approval for one fresh final-review launch
+- Reason: the accepted prior reviewer was interrupted by a platform content
+  filter before writing an artifact; two same-handle terminal-return attempts
+  failed and no review verdict exists
+- Constraints: preserve the same exact high reviewer target and reviewed basis;
+  this authorization permits one fresh launch only and does not waive review,
+  gate, or approval boundaries
 
 <!-- orchestration-runs-end -->
 
