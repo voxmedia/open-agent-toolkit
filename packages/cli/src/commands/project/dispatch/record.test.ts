@@ -816,6 +816,7 @@ describe('runtime observation integration', () => {
       ordinal: 0,
       type: 'session_meta',
       payload: {
+        session_id: '01a06402-2861-7421-821a-137187a03f7f',
         id: '01a06402-4d66-74f1-a706-f69cde1516f6',
         parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
         thread_source: 'subagent',
@@ -1000,6 +1001,131 @@ describe('runtime observation integration', () => {
         },
       }),
     ).toThrow();
+  });
+
+  it('accepts a raw captured rollout and stores none of its content', async () => {
+    // Real rollouts carry `session_id` (which classifies as sensitive),
+    // `base_instructions`, and conversation entries. The allowlist projection
+    // is the guarantee: they are dropped before anything is asserted or
+    // persisted, so a caller never has to hand-roll a stripper.
+    const { projectPath, result } = await record([
+      {
+        ordinal: 0,
+        type: 'session_meta',
+        payload: {
+          session_id: '01a06402-2861-7421-821a-137187a03f7f',
+          id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+          parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+          thread_source: 'subagent',
+          agent_role: 'oat-phase-implementer',
+          agent_path: '/root/phase_7',
+          base_instructions: 'SECRET-SYSTEM-PROMPT',
+          cwd: '/Users/someone/secret-workspace',
+          git: { repository_url: 'git@example.com:private/repo.git' },
+          source: {
+            subagent: {
+              thread_spawn: {
+                parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+                depth: 1,
+                agent_path: '/root/phase_7',
+                agent_role: 'oat-phase-implementer',
+              },
+            },
+          },
+        },
+      },
+      {
+        ordinal: 3,
+        type: 'response_item',
+        payload: { content: 'SECRET-USER-MESSAGE' },
+      },
+      {
+        ordinal: 7,
+        type: 'turn_context',
+        payload: {
+          model: 'gpt-5.6-sol',
+          effort: 'high',
+          cwd: '/Users/someone/secret-workspace',
+        },
+      },
+    ]);
+
+    expect(result.record.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      childLineage: 'depth-1',
+      role: 'oat-phase-implementer',
+      model: 'gpt-5.6-sol',
+    });
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    for (const secret of [
+      'SECRET-SYSTEM-PROMPT',
+      'SECRET-USER-MESSAGE',
+      '/Users/someone/secret-workspace',
+      'git@example.com',
+      'base_instructions',
+      'session_id',
+      'entries',
+    ]) {
+      expect(journal, secret).not.toContain(secret);
+    }
+  });
+
+  it('drops a Claude result answer instead of merely ignoring it', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const result = await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: genericRecord({
+          provider: 'claude',
+          model_selector: 'claude-opus-5',
+          role_selector: 'oat-phase-implementer',
+          service_tier_selector: 'standard',
+        }),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'claude',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              {
+                type: 'system',
+                subtype: 'init',
+                session_id: 'sess-claude-1',
+                model: 'claude-opus-5',
+                service_tier: 'standard',
+                agent: 'oat-phase-implementer',
+              },
+              {
+                type: 'result',
+                subtype: 'success',
+                result: 'SECRET-ASSISTANT-ANSWER in full prose form.',
+                modelUsage: { 'claude-opus-5': { serviceTier: 'standard' } },
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    expect(result.record.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      provider: 'claude',
+      model: 'claude-opus-5',
+    });
+    expect(JSON.stringify(result.record)).not.toContain(
+      'SECRET-ASSISTANT-ANSWER',
+    );
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    expect(journal).not.toContain('SECRET-ASSISTANT-ANSWER');
   });
 
   it('recomputes a caller-asserted match instead of trusting it', () => {

@@ -121,9 +121,16 @@ The channel is metadata-only and capability-gated:
 
 Parsers classify entries by their `type` discriminator alone, so a conversation
 entry's body is never read, and only bounded provider identifiers are extracted.
-Prompts, messages, credentials, and transcript bodies are refused at the input
-boundary rather than filtered out of a stored record; a raw, unsanitized
-transcript is rejected instead of being partially accepted.
+
+The guarantee is the allowlist, not caller discipline. `entries` are projected
+through the owning parser's allowlist before anything is validated, and the
+projection — never the raw input — is what the sensitive-content boundary
+inspects and what the parsers read. `entries` are never persisted in any form.
+A caller may therefore hand over an unmodified rollout or session log: every
+field outside the allowlist, including instruction text, conversation bodies,
+working directories, and repository identity, is dropped before the record
+boundary. Requiring pre-sanitized input instead would push the stripper into
+every caller, which is a larger leak surface than the one it removes.
 
 Comparison covers only the axes both sides report. With no comparable axis the
 match is `not-comparable`, because silence is not agreement. An axis a provider

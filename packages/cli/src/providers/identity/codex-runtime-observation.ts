@@ -235,6 +235,83 @@ function applicableTurns(
   return own.length > 0 ? own : turns;
 }
 
+/** Payload keys the Codex parser can read. Nothing else survives projection. */
+const CODEX_SESSION_META_KEYS = [
+  'id',
+  'parent_thread_id',
+  'forked_from_id',
+  'thread_source',
+  'agent_role',
+  'agent_path',
+  'request_id',
+  'subagent_history_start_ordinal',
+] as const;
+const CODEX_TURN_CONTEXT_KEYS = [
+  'model',
+  'effort',
+  'reasoning_effort',
+  'service_tier',
+  'serviceTier',
+] as const;
+const CODEX_THREAD_SPAWN_KEYS = [
+  'parent_thread_id',
+  'depth',
+  'agent_path',
+  'agent_role',
+] as const;
+
+function pick(
+  source: Record<string, unknown>,
+  keys: readonly string[],
+): Record<string, unknown> {
+  const projected: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (source[key] !== undefined) projected[key] = source[key];
+  }
+  return projected;
+}
+
+/**
+ * Project raw rollout entries down to exactly what this parser reads.
+ *
+ * This is the guarantee behind "no conversation content is stored": a caller
+ * may hand over an unmodified rollout, and everything outside the allowlist —
+ * `base_instructions`, `cwd`, `git`, every conversation entry's payload, and
+ * `session_id`, which is the root's id rather than this session's — is dropped
+ * before the record boundary asserts anything. Projecting here rather than
+ * requiring pre-sanitized input keeps the stripper inside reviewed code
+ * instead of in each caller.
+ */
+export function projectCodexMetadataEntries(
+  entries: readonly unknown[],
+): unknown[] {
+  if (!Array.isArray(entries)) return [];
+  return entries.map((entry) => {
+    const type = metadataEntryType(entry);
+    const record = isRecord(entry) ? entry : {};
+    const base: Record<string, unknown> = { type: record.type };
+    if (typeof record.ordinal === 'number') base.ordinal = record.ordinal;
+    // A non-metadata entry keeps its discriminator and nothing else; its
+    // payload is never read, so it is never carried.
+    if (type === null) return base;
+    const payload = metadataPayload(record);
+    if (payload === null) return base;
+    if (type === 'turn_context') {
+      return { ...base, payload: pick(payload, CODEX_TURN_CONTEXT_KEYS) };
+    }
+    const projected = pick(payload, CODEX_SESSION_META_KEYS);
+    const spawn = threadSpawn(payload);
+    if (typeof payload.source === 'string') {
+      projected.source = payload.source;
+    } else if (spawn !== null) {
+      projected.source = {
+        subagent: { thread_spawn: pick(spawn, CODEX_THREAD_SPAWN_KEYS) },
+      };
+    }
+    return { ...base, payload: projected };
+  });
+}
+
 /**
  * Extract the applicable child's metadata from Codex rollout entries.
  *

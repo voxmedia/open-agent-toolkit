@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
-import { parseClaudeRuntimeObservation } from './claude-runtime-observation';
-import { parseCodexRuntimeObservation } from './codex-runtime-observation';
+import {
+  parseClaudeRuntimeObservation,
+  projectClaudeMetadataEntries,
+} from './claude-runtime-observation';
+import {
+  parseCodexRuntimeObservation,
+  projectCodexMetadataEntries,
+} from './codex-runtime-observation';
 import type { GenericDispatchRecord } from './generic-dispatch-record';
 import {
   configuredInvocationForObservation,
@@ -42,6 +48,24 @@ const runtimeObservationEnvelopeSchema = z
 export type RuntimeObservationEnvelope = z.infer<
   typeof runtimeObservationEnvelopeSchema
 >;
+
+/**
+ * Project raw provider metadata through the owning parser's allowlist.
+ *
+ * Callers may hand over unmodified provider output; only the fields a parser
+ * can actually read survive, and an unsupported provider yields nothing at all.
+ * The record boundary asserts the projection rather than the raw input, so the
+ * allowlist — not caller discipline — is what keeps conversation content out.
+ */
+export function projectRuntimeMetadataEntries(
+  provider: string,
+  entries: readonly unknown[],
+): unknown[] {
+  if (!providerSupportsRuntimeObservation(provider)) return [];
+  return provider === 'codex'
+    ? projectCodexMetadataEntries(entries)
+    : projectClaudeMetadataEntries(entries);
+}
 
 export function providerSupportsRuntimeObservation(provider: string): boolean {
   return OBSERVING_PROVIDERS.has(provider);

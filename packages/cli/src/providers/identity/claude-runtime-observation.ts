@@ -54,6 +54,69 @@ function firstModelUsage(
   };
 }
 
+/** Entry keys the Claude parser can read. Nothing else survives projection. */
+const CLAUDE_INIT_KEYS = [
+  'type',
+  'subtype',
+  'model',
+  'service_tier',
+  'serviceTier',
+  'agent',
+  'subagent_type',
+  'reasoning_effort',
+  'effort',
+  'request_id',
+] as const;
+const CLAUDE_RESULT_KEYS = ['type', 'subtype'] as const;
+const CLAUDE_MODEL_USAGE_KEYS = ['serviceTier', 'service_tier'] as const;
+
+function pick(
+  source: Record<string, unknown>,
+  keys: readonly string[],
+): Record<string, unknown> {
+  const projected: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (source[key] !== undefined) projected[key] = source[key];
+  }
+  return projected;
+}
+
+/**
+ * Project raw Claude entries down to exactly what this parser reads.
+ *
+ * A real `result` record carries the entire final assistant answer under the
+ * key `result`, which matches no sensitive-key family and would otherwise be
+ * accepted and merely ignored. Projection drops it outright, so the
+ * conversation body is refused rather than tolerated.
+ */
+export function projectClaudeMetadataEntries(
+  entries: readonly unknown[],
+): unknown[] {
+  if (!Array.isArray(entries)) return [];
+  return entries.map((entry) => {
+    if (!isRecord(entry)) return {};
+    const type = entry.type;
+    if (type === 'system' && entry.subtype === 'init') {
+      return pick(entry, CLAUDE_INIT_KEYS);
+    }
+    if (type === 'result') {
+      const projected = pick(entry, CLAUDE_RESULT_KEYS);
+      const usage = entry.modelUsage;
+      if (isRecord(usage)) {
+        projected.modelUsage = Object.fromEntries(
+          Object.entries(usage).map(([model, detail]) => [
+            model,
+            isRecord(detail) ? pick(detail, CLAUDE_MODEL_USAGE_KEYS) : {},
+          ]),
+        );
+      }
+      return projected;
+    }
+    // A conversation entry keeps its discriminator and nothing else.
+    return { type: typeof type === 'string' ? type : null };
+  });
+}
+
 /**
  * Extract the child's metadata from Claude session entries.
  *

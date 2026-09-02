@@ -119,8 +119,10 @@ recorded as `not-exposed` rather than blank or copied from the request. Cursor
 exposes no metadata channel and stays explicitly `not-reported`.
 
 Observation is metadata-only. Parsers select entries by type and never read
-conversation content, and prompts, messages, credentials, and transcript bodies
-are refused at the input boundary. A missing, unparseable, or uncorrelated
+conversation content, and raw provider output is projected through the owning
+parser's allowlist before validation, so instruction text, conversation bodies,
+and working directories are dropped rather than merely ignored. A missing,
+unparseable, or uncorrelated
 observation is `not-reported`, never a copy of the requested arguments or the
 materialized pin. An observed mismatch is evidence for a human to read; it is
 not a fallback trigger and cannot authorize replacement or retry.

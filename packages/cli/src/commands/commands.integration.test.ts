@@ -1353,7 +1353,7 @@ describe('CLI command integration', () => {
     });
   });
 
-  it('project dispatch record refuses a content-bearing observation envelope', async () => {
+  it('project dispatch record drops content from a raw observation envelope', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
@@ -1399,16 +1399,19 @@ describe('CLI command integration', () => {
       ['--json'],
     );
 
-    // The observation channel is metadata-only. A transcript body is refused at
-    // the input boundary rather than filtered out of a persisted record.
-    expect(result.exitCode).toBe(1);
+    // The observation channel is metadata-only, enforced by the allowlist
+    // projection rather than by caller discipline: a raw envelope is accepted
+    // and its conversation content never reaches the journal or stdout.
+    expect(result.exitCode).toBe(0);
     const payload = JSON.parse(result.stdout);
-    expect(payload.status).toBe('error');
-    expect(payload.message).toMatch(/sensitive dispatch content/i);
+    expect(payload.status).toBe('persisted');
     expect(result.stdout).not.toContain('SECRET-USER-MESSAGE');
     expect(result.stdout).not.toContain(root);
-    await expect(
-      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
-    ).rejects.toMatchObject({ code: 'ENOENT' });
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    expect(journal).not.toContain('SECRET-USER-MESSAGE');
+    expect(journal).not.toContain('entries');
   });
 });

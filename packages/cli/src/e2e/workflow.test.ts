@@ -1576,6 +1576,7 @@ describe('dispatch runtime observation', () => {
                 ordinal: 0,
                 type: 'session_meta',
                 payload: {
+                  session_id: '01a06402-2861-7421-821a-137187a03f7f',
                   id: '01a06402-4d66-74f1-a706-f69cde1516f6',
                   parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
                   thread_source: 'subagent',
@@ -1599,6 +1600,7 @@ describe('dispatch runtime observation', () => {
                 ordinal: 1,
                 type: 'session_meta',
                 payload: {
+                  session_id: '01a06402-2861-7421-821a-137187a03f7f',
                   id: '01a06402-2861-7421-821a-137187a03f7f',
                   thread_source: 'user',
                   source: 'exec',

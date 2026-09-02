@@ -25,6 +25,7 @@ import {
 import {
   normalizeRuntimeObservation,
   parseRuntimeObservationEnvelope,
+  projectRuntimeMetadataEntries,
 } from '@providers/identity/runtime-observation';
 
 const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
@@ -212,7 +213,6 @@ function resolveObservationEvent(
 }
 
 export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
-  assertNoSensitiveDispatchContent(value);
   if (!isRecord(value)) {
     throw new Error('Dispatch record input must be a JSON object.');
   }
@@ -220,16 +220,46 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
   if (keys.length !== 2 || keys[0] !== 'event' || keys[1] !== 'record') {
     throw new Error('Dispatch record input accepts only record and event.');
   }
-  const record = parseGenericDispatchRecord(value.record);
   if (!isRecord(value.event)) {
     throw new Error('Dispatch record event must be a JSON object.');
   }
+
+  // Raw provider metadata is the one input a caller may legitimately supply
+  // unmodified, so it is projected through the owning parser's allowlist and
+  // asserted as the projection. Everything else is asserted exactly as given.
+  // Asserting the raw entries instead would refuse real rollouts outright —
+  // a Codex `session_id` alone classifies as sensitive — which is what pushed
+  // sanitization onto callers and invited a hand-rolled stripper.
+  const rawMetadata = isRecord(value.event.metadata)
+    ? value.event.metadata
+    : null;
+  assertNoSensitiveDispatchContent(
+    rawMetadata === null
+      ? value
+      : {
+          ...value,
+          event: {
+            ...value.event,
+            metadata: { ...rawMetadata, entries: null },
+          },
+        },
+  );
+
+  const record = parseGenericDispatchRecord(value.record);
+  let event: Record<string, unknown> = value.event;
+  if (rawMetadata !== null) {
+    const envelope = parseRuntimeObservationEnvelope(rawMetadata);
+    const entries = projectRuntimeMetadataEntries(
+      envelope.provider,
+      envelope.entries,
+    );
+    assertNoSensitiveDispatchContent(entries, '<observation-metadata>');
+    event = { ...value.event, metadata: { ...envelope, entries } };
+  }
+
   return {
     record,
-    event: resolveObservationEvent(
-      record,
-      value.event,
-    ) as OatDispatchEvidenceEvent,
+    event: resolveObservationEvent(record, event) as OatDispatchEvidenceEvent,
   };
 }
 
