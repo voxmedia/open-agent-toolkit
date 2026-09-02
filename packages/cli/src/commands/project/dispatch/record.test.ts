@@ -176,6 +176,60 @@ describe('recordProjectDispatch', () => {
     ).toThrow(/sensitive dispatch content/i);
   });
 
+  it.each([
+    'apiKey',
+    'api_key',
+    'password',
+    'systemPrompt',
+    'transcriptBody',
+    'accessToken',
+    'clientSecret',
+    'messageContent',
+    'content',
+  ])(
+    'refuses to persist %s and leaves no journal or temporary file',
+    async (key) => {
+      const projectPath = await mkdtemp(
+        join(tmpdir(), 'oat-dispatch-project-'),
+      );
+      roots.push(projectPath);
+      await writeFile(
+        join(projectPath, 'state.md'),
+        '---\noat_status: active\n---\n',
+      );
+
+      expect(() =>
+        parseDispatchRecordInput({
+          record: genericRecord({ payload: { nested: { [key]: 'value' } } }),
+          event: canonicalEvent(),
+        }),
+      ).toThrow(/sensitive dispatch content/i);
+      await expect(
+        recordProjectDispatch({
+          projectPath,
+          input: {
+            record: genericRecord({ payload: { nested: { [key]: 'value' } } }),
+            event: canonicalEvent(),
+          },
+        }),
+      ).rejects.toThrow(/sensitive dispatch content/i);
+      await expect(
+        recordProjectDispatch({
+          projectPath,
+          input: {
+            record: genericRecord(),
+            event: { ...canonicalEvent(), [key]: 'value' },
+          },
+        }),
+      ).rejects.toThrow(/sensitive dispatch content/i);
+
+      await expect(
+        readdir(join(projectPath, 'dispatch')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      expect(await readdir(projectPath)).toEqual(['state.md']);
+    },
+  );
+
   it('does not adopt a pre-existing invalid journal', async () => {
     const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
     roots.push(projectPath);
