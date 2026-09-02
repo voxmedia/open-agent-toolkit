@@ -119,10 +119,11 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 `BL-260830-*` identities:
 
 - Ready for bounded `oat-repo-improve` verification and planning when unowned:
-  quick-mode resume routing, config unset, live brainstorm dogfood, live
-  project-split dogfood, persisted instruction-sync strategy, strict YAML skill
-  validation, remote respond/summarize skills, and the provide-remote helper
-  CLI wiring.
+  quick-mode resume routing, config unset, live brainstorm dogfood,
+  persisted instruction-sync strategy, strict YAML skill validation, remote
+  respond/summarize skills, and the provide-remote helper CLI wiring. (The
+  project-split dogfood item was closed on 2026-09-02 after the operator ran
+  both entry paths repeatedly with no defects.)
 - Plan now when scope is coherent, even if execution is dependency-blocked:
   per-CLAUDE adoption opt-out (soft-depends on persisted strategy) and the
   documentation-aware discovery policy from #205. Record dependency links,
@@ -151,6 +152,7 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 
 | Date       | Update                                                                                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-02 | Archived `BL-260830-live-dogfood-oat-project-split` as closed without implementation; the operator already exercised both split entry paths.                                                                               |
 | 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                              |
 | 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.    |
 | 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items. |

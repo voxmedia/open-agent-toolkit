@@ -1,7 +1,7 @@
 ---
 id: BL-260830-live-dogfood-oat-project-split
 title: Live dogfood oat-project-split entry paths
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:51.258Z
-updated: 2026-08-30T22:30:51.258Z
+updated: '2026-09-02T23:41:10Z'
 associated_issues: []
 external_plans: []
 ---
