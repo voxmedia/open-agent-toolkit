@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: prev6-t01
 oat_generated: false
 oat_template: false
 ---
@@ -18,20 +18,21 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | passed         | 1     | 1/1       |
-| Phase 2      | passed         | 4     | 4/4       |
-| Phase 3      | passed         | 4     | 4/4       |
-| Phase 4      | passed         | 2     | 2/2       |
-| Phase p-rev1 | passed         | 2     | 2/2       |
-| Phase p-rev2 | passed         | 3     | 3/3       |
-| Phase p-rev3 | passed         | 1     | 1/1       |
-| Phase 5      | passed         | 6     | 6/6       |
-| Phase p-rev4 | passed         | 4     | 4/4       |
-| Phase p-rev5 | review_pending | 1     | 1/1       |
+| Phase        | Status | Tasks | Completed |
+| ------------ | ------ | ----- | --------- |
+| Phase 1      | passed | 1     | 1/1       |
+| Phase 2      | passed | 4     | 4/4       |
+| Phase 3      | passed | 4     | 4/4       |
+| Phase 4      | passed | 2     | 2/2       |
+| Phase p-rev1 | passed | 2     | 2/2       |
+| Phase p-rev2 | passed | 3     | 3/3       |
+| Phase p-rev3 | passed | 1     | 1/1       |
+| Phase 5      | passed | 6     | 6/6       |
+| Phase p-rev4 | passed | 4     | 4/4       |
+| Phase p-rev5 | passed | 1     | 1/1       |
+| Phase p-rev6 | active | 1     | 0/1       |
 
-**Total:** 28/28 tasks completed
+**Total:** 28/29 tasks completed
 
 ## Task Status
 
@@ -113,6 +114,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | --------- | --------- | ----------- |
 | prev5-t01 | completed | `ff51e593c` |
 
+### Phase p-rev6: Revision 6 — Bind Publication Cleanup and Canonical Bytes
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev6-t01 | pending | —      |
+
 ## Remote Review Received
 
 - **Date:** 2026-09-01
@@ -156,6 +163,25 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   re-review after Revision 5 despite the standard final-scope review-cycle cap
 - **Next:** Revision 5 is implemented on the rebased branch; run the one
   authorized last final re-review
+
+## Final Review Received: Revision 6
+
+- **Date:** 2026-09-02
+- **Artifact:** `reviews/archived/final-review-2026-09-02T185450Z.md`
+- **Reviewed head:** `9203eec1226bf8a68cdff61d5acbe5b439652b8e`
+- **Findings:** 1 Critical, 1 Important, 0 Medium, 0 Minor
+- **Prior findings:** Revision 5 source I1 and both Minors closed; all four
+  Revision 4 findings remain closed
+- **New task:** `prev6-t01` combines root-identity-safe withdrawal with
+  canonical-byte continuity checks because both findings share the publication
+  boundary
+- **Disposition:** all findings converted; no deferrals or dismissals
+- **Terminal route:** the user explicitly authorized one bounded Revision 6 and
+  selected the already-required configured cross-family exit gate as the sole
+  independent terminal review; no additional manual final-review launch is
+  authorized
+- **Next:** implement Revision 6 through `oat-project-implement`, then run the
+  configured exit gate
 
 ## Orchestration Runs
 

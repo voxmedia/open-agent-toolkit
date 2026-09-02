@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev6-t01
 oat_last_commit: 1f6fb25ee7fc6898bc0e008f628a7a39a7b10859
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T15:05:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T19:02:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,20 +94,18 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 5 implemented; last final re-review pending
+**Status:** Revision 6 terminal publication fix ready
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
 ## Current Phase
 
-All 28 implementation tasks are complete. Revision 5 implements the selected
-bounded fail-closed policy: invalid candidate validation or renderer promotion
-withdraws `packet.md`, while canonical diagnostics remain available. The branch
-is rebased onto current `origin/main` at
-`49aeb5075971180b48c131bbd2b21b82d455bfc9`, and the five lockstep public
-packages are now `0.2.52`, strictly above main's `0.2.51`. One user-authorized
-last final re-review remains before the configured exit gate. PR #248 remains
-open.
+Revision 5 closes its source finding and preserves the chosen bounded
+withdraw-on-failure policy, but the replacement final review found a Critical
+root-replacement cleanup race and an Important canonical-byte continuity race.
+The user authorized one bounded Revision 6 task and selected the configured
+cross-family exit gate as the sole independent terminal review, with no further
+manual final-review loop. PR #248 remains open.
 
 ## Artifacts
 
@@ -115,7 +113,7 @@ open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (28/28 tasks complete; final re-review pending)
+- **Implementation:** `implementation.md` (28/29 tasks complete; Revision 6 ready)
 
 ## Progress
 
@@ -221,7 +219,10 @@ open.
   preserved both current-main and recon-skill records
 - ✓ Five lockstep public packages bumped to `0.2.52`; release version and
   package validation gates pass
-- ⧗ One user-authorized last final re-review pending on the rebased head
+- ! Replacement final review found one Critical destructive cleanup race and
+  one Important successful-promotion continuity race
+- ⧗ Revision 6 task `prev6-t01` ready; the configured cross-family exit gate
+  is the only authorized terminal review after implementation
 
 ## Blockers
 
@@ -229,5 +230,5 @@ None.
 
 ## Next Milestone
 
-Run the one user-authorized last final re-review, then rerun the configured exit
-gate and approval-aware closeout sequence on the rebased implementation basis.
+Implement Revision 6, then run the configured cross-family exit gate as the
+sole terminal review before the approval-aware closeout sequence.

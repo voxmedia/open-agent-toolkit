@@ -1550,6 +1550,60 @@ the changed canonical skill, then commit with:
 git commit -m "fix(prev5-t01): withdraw split-generation packet view"
 ```
 
+## Phase p-rev6: Revision 6 — Bind Publication Cleanup and Canonical Bytes
+
+Source: `reviews/archived/final-review-2026-09-02T185450Z.md`
+(2026-09-02). The replacement final review closed every Revision 4 and 5
+source finding, then reproduced one Critical root-replacement cleanup race and
+one Important successful-promotion continuity race. The user authorized one
+bounded corrective revision and selected the configured cross-family exit gate
+as the sole independent terminal review, without another manual review loop.
+
+### Task prev6-t01: (review) Bind withdrawal and promotion to the validated generation
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/validated-run.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.oat/projects/shared/recon-skill/design.md`
+
+**Step 1: Reproduce both publication races**
+
+Compile a valid run, replace the real packet directory at its path, trigger a
+render failure, and prove cleanup deletes an unrelated replacement-root
+`packet.md`. Separately mutate canonical `claims.json` during promotion and
+prove the renderer currently reports success with a view and ledger from
+different validated generations.
+
+**Step 2: Make withdrawal root-identity safe**
+
+Before following or unlinking the consumer entry-point path, verify the retained
+packet-root identity. If it changed, preserve the original identity failure and
+do not touch the replacement root. Cover real-directory replacement and
+symlink-retarget controls plus ordinary unchanged-root withdrawal.
+
+**Step 3: Bind promotion to validated canonical bytes**
+
+Retain byte digests for the canonical manifest, claim ledger, and validated
+referenced packet artifacts in `ValidatedRun`. Verify those bytes immediately
+before and after Markdown promotion. On mismatch, withdraw `packet.md` through
+the identity-safe cleanup path and return a categorical integrity failure. Do
+not add immutable generations, locks, a publication state machine, or another
+persisted artifact.
+
+**Step 4: Align contract, verify, and commit**
+
+Document the bounded byte-continuity invariant and run the complete recon and
+dispatch suites plus proportional repository gates. Commit with:
+
+```bash
+git commit -m "fix(prev6-t01): bind packet publication generation"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
@@ -1569,6 +1623,7 @@ git commit -m "fix(prev5-t01): withdraw split-generation packet view"
 | final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                   |
+| final          | code     | fixes_added     | 2026-09-02 | `reviews/archived/final-review-2026-09-02T185450Z.md`                  | 9203eec1226bf8a68cdff61d5acbe5b439652b8e | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
@@ -1616,8 +1671,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
   the last-known-good packet policy.
 - Revision 5: 1 task — withdraw the consumer entry point when canonical packet
   validation or Markdown promotion fails, without generation staging.
+- Revision 6: 1 task — make withdrawal root-identity safe and bind successful
+  publication to the canonical bytes retained by `ValidatedRun`.
 
-**Total: 28 tasks**
+**Total: 29 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
