@@ -1411,14 +1411,12 @@ describe('createInitToolsCommand', () => {
       '/tmp/workspace',
       'tools',
       expect.stringContaining('**docs**'),
+      { removeSectionKeys: ['workflows'] },
     );
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toContain('**core**');
     expect(body).toContain('**workflows**');
-    expect(removeAgentsMdSection).toHaveBeenCalledWith(
-      '/tmp/workspace',
-      'workflows',
-    );
+    expect(removeAgentsMdSection).not.toHaveBeenCalled();
     expect(writeOatConfig).not.toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({ pjm: expect.anything() }),
@@ -2012,6 +2010,132 @@ describe('createInitToolsCommand', () => {
       expect.objectContaining({ pack: 'project-management', scope: 'project' }),
     ]);
     expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      position: 'before',
+      scope: 'project' as const,
+      args: ['--project-guidance', 'workflows'],
+    },
+    {
+      position: 'after',
+      scope: 'project' as const,
+      args: ['workflows', '--project-guidance'],
+    },
+    {
+      position: 'before',
+      scope: 'user' as const,
+      args: ['--project-guidance', 'workflows'],
+    },
+    {
+      position: 'after',
+      scope: 'user' as const,
+      args: ['workflows', '--project-guidance'],
+    },
+  ])(
+    'applies registered workflows guidance with the option $position the subcommand at $scope scope',
+    async ({ args, scope }) => {
+      const {
+        command,
+        capture,
+        reconcilePacks,
+        upsertAgentsMdSection,
+        removeAgentsMdSection,
+      } = createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+
+      await runCommand(command, args, ['--json', '--scope', scope]);
+
+      expect(reconcilePacks).toHaveBeenCalledWith([
+        expect.objectContaining({ pack: 'workflows', scope }),
+      ]);
+      expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+        '/tmp/workspace',
+        'tools',
+        expect.stringContaining('**workflows**'),
+        { removeSectionKeys: ['workflows'] },
+      );
+      expect(removeAgentsMdSection).not.toHaveBeenCalled();
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'ok',
+        pack: 'workflows',
+        scopes: [scope],
+        projectGuidance: { action: 'update' },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('reports registered workflows decline without changing capability success', async () => {
+    const { command, capture, reconcilePacks, upsertAgentsMdSection } =
+      createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+
+    await runCommand(
+      command,
+      ['workflows', '--no-project-guidance'],
+      ['--scope', 'project'],
+    );
+
+    expect(reconcilePacks).toHaveBeenCalledTimes(1);
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('Installed workflows tool pack');
+    expect(capture.info.join('\n')).toContain('Project guidance: declined');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports registered workflows non-interactive guidance default without writing', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['workflows'], ['--json', '--scope', 'project']);
+
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'ok',
+      projectGuidance: { action: 'not-requested' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unsafe registered workflows guidance as partial after capability success', async () => {
+    const { command, capture, reconcilePacks, upsertAgentsMdSection } =
+      createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('malformed legacy markers'),
+    );
+
+    await runCommand(
+      command,
+      ['workflows', '--project-guidance'],
+      ['--json', '--scope', 'project'],
+    );
+
+    expect(reconcilePacks).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'partial',
+      pack: 'workflows',
+      lifecycle: { status: 'complete' },
+      projectGuidance: {
+        action: 'blocked',
+        reason: expect.stringContaining('malformed legacy markers'),
+      },
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('installs a direct user-eligible pack completely at both explicit scopes', async () => {

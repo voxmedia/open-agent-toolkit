@@ -241,6 +241,26 @@ describe('upsertAgentsMdSection', () => {
     await expect(readAgentsMd()).resolves.toBe('# Foreign replacement\n');
   });
 
+  it('fails closed and preserves a same-inode direct-file edit before publication', async () => {
+    await setup('# Original\n');
+    const agentsPath = join(root, 'AGENTS.md');
+    let edited = false;
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async (...args) => {
+        await writeFile(...args);
+        if (!edited) {
+          edited = true;
+          await writeFile(agentsPath, '# Late user edit\n', 'utf8');
+        }
+      }) as AgentsMdFileSystem['writeFile'],
+    });
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+    ).rejects.toThrow(/content changed/);
+    await expect(readAgentsMd()).resolves.toBe('# Late user edit\n');
+  });
+
   it('fails closed when a contained symlink changes before commit', async () => {
     await setup();
     const originalTarget = join(root, 'original.md');
@@ -268,6 +288,61 @@ describe('upsertAgentsMdSection', () => {
       '# Original\n',
     );
     await expect(readFile(foreignTarget, 'utf8')).resolves.toBe('# Foreign\n');
+  });
+
+  it('fails closed and preserves a same-inode contained-symlink target edit before publication', async () => {
+    await setup();
+    const target = join(root, 'shared.md');
+    await writeFile(target, '# Original\n', 'utf8');
+    await symlink('shared.md', join(root, 'AGENTS.md'));
+    let edited = false;
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async (...args) => {
+        await writeFile(...args);
+        if (!edited) {
+          edited = true;
+          await writeFile(target, '# Late user edit\n', 'utf8');
+        }
+      }) as AgentsMdFileSystem['writeFile'],
+    });
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+    ).rejects.toThrow(/content changed/);
+    await expect(readFile(target, 'utf8')).resolves.toBe('# Late user edit\n');
+    expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(true);
+  });
+
+  it.each([
+    '<!-- OAT workflows -->\nunterminated legacy\n',
+    '<!-- OAT workflows -->\none\n<!-- END OAT workflows -->\n<!-- OAT workflows -->\ntwo\n<!-- END OAT workflows -->\n',
+  ])(
+    'preflights malformed legacy markers before an atomic section migration',
+    async (content) => {
+      await setup(content);
+
+      await expect(
+        upsertAgentsMdSection(root, 'tools', 'replacement', {
+          removeSectionKeys: ['workflows'],
+        }),
+      ).rejects.toThrow(/exactly one ordered marker pair/);
+      await expect(readAgentsMd()).resolves.toBe(content);
+    },
+  );
+
+  it('publishes a valid legacy migration as one section update', async () => {
+    await setup(
+      '# User guidance\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
+    );
+
+    const result = await upsertAgentsMdSection(root, 'tools', 'replacement', {
+      removeSectionKeys: ['workflows'],
+    });
+
+    expect(result.action).toBe('updated');
+    await expect(readAgentsMd()).resolves.toBe(
+      '# User guidance\n\n<!-- OAT tools -->\nreplacement\n<!-- END OAT tools -->\n',
+    );
   });
 
   it('preserves the original file when the atomic rename fails', async () => {

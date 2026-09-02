@@ -300,11 +300,9 @@ describe('createInitToolsWorkflowsCommand', () => {
         expect.stringMatching(
           /\*\*core\*\*[\s\S]*\*\*docs\*\*[\s\S]*\*\*workflows\*\*/,
         ),
+        { removeSectionKeys: ['workflows'] },
       );
-      expect(removeAgentsMdSection).toHaveBeenCalledWith(
-        '/tmp/workspace',
-        'workflows',
-      );
+      expect(removeAgentsMdSection).not.toHaveBeenCalled();
       expect(capture.info.join('\n')).toContain('Project guidance: update');
       expect(process.exitCode).toBe(0);
     },

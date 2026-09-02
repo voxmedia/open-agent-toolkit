@@ -41,6 +41,7 @@ export interface AgentsMdFileSystem {
 
 export interface AgentsMdMutationOptions {
   fileSystem?: AgentsMdFileSystem;
+  removeSectionKeys?: readonly string[];
 }
 
 const defaultFileSystem: AgentsMdFileSystem = {
@@ -256,6 +257,7 @@ async function planAgentsMd(
 async function assertPlanUnchanged(
   plan: AgentsMdPlan,
   fileSystem: AgentsMdFileSystem,
+  expectedContent?: string,
 ): Promise<void> {
   let currentRoot: string;
   let rootStat: Awaited<ReturnType<typeof lstat>>;
@@ -309,6 +311,12 @@ async function assertPlanUnchanged(
         'Repository or AGENTS.md identity changed before mutation.',
       );
     }
+    if (
+      expectedContent !== undefined &&
+      (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
+    ) {
+      throw new Error('AGENTS.md content changed before mutation.');
+    }
     return;
   }
 
@@ -338,6 +346,12 @@ async function assertPlanUnchanged(
       'Repository or AGENTS.md identity changed before mutation.',
     );
   }
+  if (
+    expectedContent !== undefined &&
+    (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
+  ) {
+    throw new Error('AGENTS.md content changed before mutation.');
+  }
 }
 
 async function readPlannedContent(
@@ -348,8 +362,69 @@ async function readPlannedContent(
   return fileSystem.readFile(plan.targetPath, 'utf8');
 }
 
+async function assertPublishedPlan(
+  plan: AgentsMdPlan,
+  publishedIdentity: FileIdentity,
+  expectedContent: string,
+  fileSystem: AgentsMdFileSystem,
+): Promise<void> {
+  if (plan.kind === 'missing') {
+    throw new Error('Missing AGENTS.md cannot use replacement publication.');
+  }
+  const currentRoot = await fileSystem.realpath(plan.repoRoot);
+  const rootStat = await fileSystem.lstat(currentRoot);
+  if (
+    currentRoot !== plan.repoRoot ||
+    !rootStat.isDirectory() ||
+    !hasIdentity(rootStat, plan.repoIdentity)
+  ) {
+    throw new Error(
+      'Repository or AGENTS.md identity changed during mutation.',
+    );
+  }
+
+  const agentsStat = await fileSystem.lstat(plan.agentsMdPath);
+  if (plan.kind === 'file') {
+    if (
+      !agentsStat.isFile() ||
+      agentsStat.isSymbolicLink() ||
+      !hasIdentity(agentsStat, publishedIdentity)
+    ) {
+      throw new Error(
+        'Repository or AGENTS.md identity changed during mutation.',
+      );
+    }
+  } else {
+    const currentLinkText = await fileSystem.readlink(plan.agentsMdPath);
+    const targetPath = await fileSystem.realpath(
+      resolve(dirname(plan.agentsMdPath), currentLinkText),
+    );
+    const targetStat = await fileSystem.lstat(targetPath);
+    if (
+      !agentsStat.isSymbolicLink() ||
+      !hasIdentity(agentsStat, plan.agentsIdentity) ||
+      currentLinkText !== plan.linkText ||
+      targetPath !== plan.targetPath ||
+      !targetStat.isFile() ||
+      targetStat.isSymbolicLink() ||
+      !hasIdentity(targetStat, publishedIdentity)
+    ) {
+      throw new Error(
+        'Repository or AGENTS.md identity changed during mutation.',
+      );
+    }
+  }
+
+  if (
+    (await fileSystem.readFile(plan.targetPath, 'utf8')) !== expectedContent
+  ) {
+    throw new Error('AGENTS.md publication changed during mutation.');
+  }
+}
+
 async function writePlannedContent(
   plan: AgentsMdPlan,
+  previousContent: string,
   content: string,
   fileSystem: AgentsMdFileSystem,
 ): Promise<void> {
@@ -357,7 +432,13 @@ async function writePlannedContent(
     dirname(plan.targetPath),
     `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.tmp`,
   );
+  const backupPath = join(
+    dirname(plan.targetPath),
+    `.${basename(plan.targetPath)}.${process.pid}.${randomUUID()}.rollback`,
+  );
   let tempExists = false;
+  let backupExists = false;
+  let published = false;
   try {
     await fileSystem.writeFile(tempPath, content, {
       encoding: 'utf8',
@@ -365,7 +446,9 @@ async function writePlannedContent(
       mode: plan.targetMode ?? 0o666,
     });
     tempExists = true;
-    await assertPlanUnchanged(plan, fileSystem);
+    const tempStat = await fileSystem.lstat(tempPath);
+    const tempIdentity = identityOf(tempStat);
+    await assertPlanUnchanged(plan, fileSystem, previousContent);
 
     if (plan.kind === 'missing') {
       await fileSystem.link(tempPath, plan.targetPath);
@@ -374,7 +457,68 @@ async function writePlannedContent(
       return;
     }
 
-    await fileSystem.rename(tempPath, plan.targetPath);
+    // Node does not expose a conditional replace primitive. Move the planned
+    // inode aside first, publish with no-clobber link semantics, and retain a
+    // recoverable original until both sides have been revalidated.
+    await fileSystem.rename(plan.targetPath, backupPath);
+    backupExists = true;
+    try {
+      const backupStat = await fileSystem.lstat(backupPath);
+      if (
+        !backupStat.isFile() ||
+        backupStat.isSymbolicLink() ||
+        !hasIdentity(backupStat, plan.targetIdentity) ||
+        (await fileSystem.readFile(backupPath, 'utf8')) !== previousContent
+      ) {
+        throw new Error('AGENTS.md content changed before mutation.');
+      }
+
+      await fileSystem.link(tempPath, plan.targetPath);
+      published = true;
+      if ((await fileSystem.readFile(backupPath, 'utf8')) !== previousContent) {
+        throw new Error('AGENTS.md content changed during mutation.');
+      }
+      await assertPublishedPlan(plan, tempIdentity, content, fileSystem);
+      await fileSystem.rm(backupPath, { force: true });
+      backupExists = false;
+    } catch (error) {
+      let canRestore = true;
+      if (published) {
+        try {
+          const publishedStat = await fileSystem.lstat(plan.targetPath);
+          canRestore =
+            hasIdentity(publishedStat, tempIdentity) &&
+            (await fileSystem.readFile(plan.targetPath, 'utf8')) === content;
+        } catch {
+          canRestore = false;
+        }
+        if (canRestore) {
+          await fileSystem.rm(plan.targetPath, { force: true });
+          published = false;
+        }
+      } else {
+        try {
+          await fileSystem.lstat(plan.targetPath);
+          canRestore = false;
+        } catch (targetError) {
+          if (!isMissing(targetError)) canRestore = false;
+        }
+      }
+
+      if (canRestore && backupExists) {
+        await fileSystem.rename(backupPath, plan.targetPath);
+        backupExists = false;
+      }
+      if (backupExists) {
+        throw new Error(
+          `AGENTS.md changed during guarded publication; original content was preserved at ${backupPath}.`,
+          { cause: error },
+        );
+      }
+      throw error;
+    }
+
+    await fileSystem.rm(tempPath, { force: true });
     tempExists = false;
   } finally {
     if (tempExists) {
@@ -405,20 +549,60 @@ export async function upsertAgentsMdSection(
   const section = buildSection(key, body);
   const content = await readPlannedContent(plan, fileSystem);
   const managed = findManagedSection(content, key);
+  const removalSections = [...new Set(options.removeSectionKeys ?? [])].flatMap(
+    (removeKey) => {
+      if (removeKey === key) return [];
+      const sectionToRemove = findManagedSection(content, removeKey);
+      return sectionToRemove ? [sectionToRemove] : [];
+    },
+  );
 
   let updatedContent: string;
   if (managed) {
     const existingSection = content.slice(managed.start, managed.end);
-    if (existingSection === section) return { action: 'no-change' };
-    updatedContent = `${content.slice(0, managed.start)}${section}${content.slice(managed.end)}`;
-  } else if (plan.kind === 'missing') {
-    updatedContent = `${section}\n`;
+    if (existingSection === section && removalSections.length === 0) {
+      return { action: 'no-change' };
+    }
+    const edits = [
+      { ...managed, replacement: section },
+      ...removalSections.map((remove) => ({
+        ...remove,
+        replacement: '',
+      })),
+    ].sort((left, right) => right.start - left.start);
+    updatedContent = edits
+      .reduce(
+        (current, edit) =>
+          `${current.slice(0, edit.start)}${edit.replacement}${current.slice(edit.end)}`,
+        content,
+      )
+      .replace(/\n{3,}/g, '\n\n');
   } else {
-    const separator = content.endsWith('\n') ? '\n' : '\n\n';
-    updatedContent = `${content}${separator}${section}\n`;
+    const removedContent = removalSections
+      .sort((left, right) => right.start - left.start)
+      .reduce(
+        (current, remove) =>
+          `${current.slice(0, remove.start)}${current.slice(remove.end)}`,
+        content,
+      )
+      .replace(/\n{3,}/g, '\n\n');
+    const migratedContent =
+      removalSections.length === 0
+        ? removedContent
+        : removedContent.trim().length === 0
+          ? ''
+          : removedContent.replace(/\n+$/g, '\n');
+    if (plan.kind === 'missing') {
+      updatedContent = `${section}\n`;
+    } else if (migratedContent.length === 0) {
+      updatedContent = `${section}\n`;
+    } else {
+      const separator = migratedContent.endsWith('\n') ? '\n' : '\n\n';
+      updatedContent = `${migratedContent}${separator}${section}\n`;
+    }
   }
 
-  await writePlannedContent(plan, updatedContent, fileSystem);
+  await writePlannedContent(plan, content, updatedContent, fileSystem);
   return { action: plan.kind === 'missing' ? 'created' : 'updated' };
 }
 
@@ -443,6 +627,6 @@ export async function removeAgentsMdSection(
   const before = content.slice(0, managed.start);
   const after = content.slice(managed.end);
   const cleaned = (before + after).replace(/\n{3,}/g, '\n\n');
-  await writePlannedContent(plan, cleaned, fileSystem);
+  await writePlannedContent(plan, content, cleaned, fileSystem);
   return true;
 }

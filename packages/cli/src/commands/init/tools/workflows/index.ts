@@ -4,6 +4,7 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  type AgentsMdMutationOptions,
   type UpsertSectionResult,
   removeAgentsMdSection,
   upsertAgentsMdSection,
@@ -63,6 +64,7 @@ interface InitToolsWorkflowsDependencies {
     repoRoot: string,
     key: string,
     body: string,
+    options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
   removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
 }
@@ -122,10 +124,10 @@ async function applyProjectGuidance(
       plan.repoRoot,
       plan.sectionKey,
       plan.body,
+      plan.legacySectionAction === 'remove'
+        ? { removeSectionKeys: ['workflows'] }
+        : undefined,
     );
-    if (plan.legacySectionAction === 'remove') {
-      await dependencies.removeAgentsMdSection(plan.repoRoot, 'workflows');
-    }
     return {
       ...plan,
       action:

@@ -10,6 +10,7 @@ import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
 import {
+  type AgentsMdMutationOptions,
   type UpsertSectionResult,
   removeAgentsMdSection,
   upsertAgentsMdSection,
@@ -210,6 +211,7 @@ export interface InitToolsDependencies {
     repoRoot: string,
     key: string,
     body: string,
+    options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
   removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
   reconcilePacks?: (
@@ -853,10 +855,10 @@ async function applyProjectGuidance(
       plan.repoRoot,
       plan.sectionKey,
       plan.body,
+      plan.legacySectionAction === 'remove'
+        ? { removeSectionKeys: ['workflows'] }
+        : undefined,
     );
-    if (plan.legacySectionAction === 'remove') {
-      await dependencies.removeAgentsMdSection(plan.repoRoot, 'workflows');
-    }
     return {
       ...plan,
       action:
@@ -871,6 +873,61 @@ async function applyProjectGuidance(
     const message = error instanceof Error ? error.message : String(error);
     return {
       ...plan,
+      action: 'blocked',
+      reason: `Accepted project guidance was blocked: ${message}`,
+    };
+  }
+}
+
+async function planAndApplyProjectGuidanceAfterInstall(
+  context: CommandContext,
+  assetsRoot: string,
+  installedProjectRoot: string | null,
+  explicitChoice: boolean | undefined,
+  dependencies: InitToolsDependencies,
+): Promise<AgentsGuidancePlan> {
+  const initialPlan = await dependencies.planProjectGuidance({
+    repoRoot: installedProjectRoot,
+    packs: [],
+    explicitChoice,
+    interactive: context.interactive,
+    confirmAction: dependencies.confirmAction,
+  });
+  if (initialPlan.choice.choice !== 'accepted') return initialPlan;
+
+  try {
+    const repoRoot =
+      installedProjectRoot ??
+      (await dependencies.resolveProjectRoot(context.cwd));
+    const userRoot = dependencies.resolveScopeRoot(
+      'user',
+      context.cwd,
+      context.home,
+    );
+    const finalPackStates = await loadInstalledPackStates(
+      repoRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
+    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
+      const scope = finalPackStates[pack].location;
+      return scope === 'not-installed'
+        ? []
+        : [{ pack, scope } satisfies ProjectGuidancePack];
+    });
+    const completePlan = await dependencies.planProjectGuidance({
+      repoRoot,
+      packs: realizedPacks,
+      explicitChoice: true,
+      interactive: false,
+      confirmAction: dependencies.confirmAction,
+    });
+    return applyProjectGuidance(completePlan, dependencies);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ...initialPlan,
       action: 'blocked',
       reason: `Accepted project guidance was blocked: ${message}`,
     };
@@ -1658,7 +1715,11 @@ function createReconciledPackCommand(
       'Install OAT brainstorm skill (always-on entry point with visual companion)',
   };
   const base = new Command(pack).description(descriptions[pack]);
-  const packCommand = pack === 'core' ? base : withScopeOption(base);
+  const scopedCommand = pack === 'core' ? base : withScopeOption(base);
+  const packCommand =
+    pack === 'workflows'
+      ? withProjectGuidanceOptions(scopedCommand)
+      : scopedCommand;
   return packCommand
     .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
@@ -1668,6 +1729,10 @@ function createReconciledPackCommand(
       let lifecycleOutcome: PackLifecycleOutcome | null = null;
       let selection: PackLifecycleOutcome['selection'] | null = null;
       try {
+        const explicitProjectGuidance =
+          pack === 'workflows'
+            ? commandProjectGuidanceChoice(command)
+            : undefined;
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
           command.getOptionValueSourceWithGlobals('scope') === 'cli';
@@ -1787,13 +1852,33 @@ function createReconciledPackCommand(
             .filter(({ plan }) => plan.operations.length > 0)
             .map(({ request }) => request.scope),
         );
+        const projectGuidance =
+          pack === 'workflows'
+            ? await planAndApplyProjectGuidanceAfterInstall(
+                context,
+                assetsRoot,
+                requests.find(({ scope }) => scope === 'project')?.scopeRoot ??
+                  null,
+                explicitProjectGuidance,
+                dependencies,
+              )
+            : null;
         if (context.json) {
           context.logger.json({
-            status: 'ok',
+            status: projectGuidance?.action === 'blocked' ? 'partial' : 'ok',
             pack,
             scopes,
             results,
             lifecycle: lifecycleOutcome,
+            ...(projectGuidance
+              ? {
+                  projectGuidance: {
+                    action: projectGuidance.action,
+                    choice: projectGuidance.choice,
+                    reason: projectGuidance.reason,
+                  },
+                }
+              : {}),
             ...(providerVisibility ? { providerVisibility } : {}),
             ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
           });
@@ -1810,6 +1895,14 @@ function createReconciledPackCommand(
               `Provider catalog visibility: ${providerVisibility.state} — ${providerVisibility.reason}`,
             );
           }
+          if (projectGuidance) {
+            const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
+            if (projectGuidance.action === 'blocked') {
+              context.logger.warn(guidanceMessage);
+            } else {
+              context.logger.info(guidanceMessage);
+            }
+          }
           for (const result of results) {
             context.logger.info(`Scope: ${result.request.scope}`);
             context.logger.info(`Target root: ${result.request.scopeRoot}`);
@@ -1821,7 +1914,11 @@ function createReconciledPackCommand(
             );
           }
         }
-        process.exitCode = lifecycleOutcome.status === 'complete' ? 0 : 1;
+        process.exitCode =
+          lifecycleOutcome.status === 'complete' &&
+          projectGuidance?.action !== 'blocked'
+            ? 0
+            : 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         lifecycleOutcome ??= {
