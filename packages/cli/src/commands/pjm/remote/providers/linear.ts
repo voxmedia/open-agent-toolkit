@@ -1,8 +1,13 @@
 import { containsSensitiveContentSignal } from '@commands/pjm/remote/credential-safety';
 import {
+  contextsEqual,
   semanticDigest,
   type NormalizedRemoteIssue,
+  type ObservationValidation,
+  type ProviderContext,
   type SanitizedProviderObservation,
+  type SemanticAction,
+  type SemanticOperation,
 } from '@commands/pjm/remote/provider';
 import { WHOLE_FIELD_SUPPRESSION_MARKER } from '@commands/pjm/remote/schema';
 
@@ -10,6 +15,48 @@ export interface LinearIssueReference {
   host?: string;
   identifier: string;
   alias: string;
+}
+
+export type LinearSemanticField =
+  | 'stable-identity'
+  | 'title'
+  | 'description'
+  | 'state'
+  | 'priority'
+  | 'revision'
+  | 'team-context';
+
+export interface LinearHostCapabilityObservation {
+  provider: 'linear';
+  context: ProviderContext;
+  availability:
+    | 'available'
+    | 'unavailable'
+    | 'authorization-required'
+    | 'rate-limited';
+  accountId: string;
+  workspaceId: string;
+  teamId: string;
+  operations: SemanticOperation[];
+  observableFields: LinearSemanticField[];
+  evidenceDigest: string;
+}
+
+export interface LinearReadPlanInput {
+  context: ProviderContext;
+  hostCapability: LinearHostCapabilityObservation;
+  stableId: string;
+  uuid: string;
+  currentIdentifier: string | null;
+  stepId: string;
+}
+
+export interface LinearDiscussionReadPlanInput {
+  context: ProviderContext;
+  hostCapability: LinearHostCapabilityObservation;
+  stableId: string;
+  cursor: string | null;
+  limit: number;
 }
 
 const UUID =
@@ -110,8 +157,150 @@ export function normalizeLinearIssueObservation(
   };
 }
 
+export function validateLinearHostCapability(
+  operation: SemanticOperation,
+  context: ProviderContext,
+  observed: LinearHostCapabilityObservation,
+  requiredFields: LinearSemanticField[] = [],
+): ObservationValidation {
+  const reasons: string[] = [];
+  if (observed.provider !== 'linear') reasons.push('provider-mismatch');
+  if (observed.availability === 'unavailable')
+    reasons.push('access-unavailable');
+  if (observed.availability === 'authorization-required')
+    reasons.push('authorization-required');
+  if (observed.availability === 'rate-limited') reasons.push('rate-limited');
+  if (
+    !hasPinnedLinearContext(context) ||
+    !contextsEqual(context, observed.context)
+  ) {
+    reasons.push('context-mismatch');
+  }
+  if (context.accountId !== observed.accountId)
+    reasons.push('account-mismatch');
+  if (context.workspaceId !== observed.workspaceId)
+    reasons.push('workspace-mismatch');
+  if (context.teamId !== observed.teamId) reasons.push('team-mismatch');
+  if (!observed.operations.includes(operation)) {
+    reasons.push(`capability-missing:${operation}`);
+  }
+  for (const field of requiredFields) {
+    if (!observed.observableFields.includes(field)) {
+      reasons.push(`semantic-field-missing:${field}`);
+    }
+  }
+  if (!observed.evidenceDigest) reasons.push('capability-evidence-missing');
+  return { valid: reasons.length === 0, reasons };
+}
+
+export function planLinearRead(input: LinearReadPlanInput): SemanticAction {
+  if (
+    !hasPinnedLinearContext(input.context) ||
+    !input.stableId ||
+    !UUID.test(input.uuid) ||
+    !input.stepId
+  ) {
+    throw new Error('Linear read plan requires pinned identity and context.');
+  }
+  const capability = validateLinearHostCapability(
+    'read',
+    input.context,
+    input.hostCapability,
+    ['stable-identity', 'title', 'state', 'revision', 'team-context'],
+  );
+  if (!capability.valid) {
+    throw new Error(
+      `Linear read capability is unavailable: ${capability.reasons.join(',')}`,
+    );
+  }
+  const intent = {
+    stableId: input.stableId,
+    uuid: input.uuid.toLowerCase(),
+    currentIdentifier: input.currentIdentifier,
+    stepId: input.stepId,
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    resultContract: {
+      requireStableIdentity: true,
+      requireExactContext: true,
+      allowedFields: [
+        'uuid',
+        'identifier',
+        'historicalIdentifiers',
+        'workspaceId',
+        'teamId',
+        'historicalTeamIds',
+        'title',
+        'description',
+        'state',
+        'priority',
+        'archived',
+        ...LINEAR_EXTENSION_KEYS,
+      ],
+    },
+  };
+  return {
+    provider: 'linear',
+    operation: 'read',
+    context: input.context,
+    intent: {
+      ...intent,
+      actionDigest: semanticDigest({
+        provider: 'linear',
+        operation: 'read',
+        context: input.context,
+        intent,
+      }),
+    },
+  };
+}
+
+export function planLinearDiscussionRead(
+  input: LinearDiscussionReadPlanInput,
+): SemanticAction {
+  const capability = validateLinearHostCapability(
+    'read-discussion',
+    input.context,
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('Linear discussion read capability is unavailable.');
+  }
+  if (
+    !input.stableId ||
+    !Number.isInteger(input.limit) ||
+    input.limit < 1 ||
+    input.limit > 100 ||
+    (input.cursor !== null &&
+      (typeof input.cursor !== 'string' || input.cursor.length > 512))
+  ) {
+    throw new Error('Linear discussion read bounds are invalid.');
+  }
+  return {
+    provider: 'linear',
+    operation: 'read-discussion',
+    context: input.context,
+    intent: {
+      stableId: input.stableId,
+      cursor: input.cursor,
+      limit: input.limit,
+      resultContract: {
+        maxItems: input.limit,
+        persistable: false,
+        contentPolicy: 'sanitized-whole-field-suppression',
+      },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    },
+  };
+}
+
 function canonicalLinearStableId(workspaceId: string, uuid: string): string {
   return `linear:${workspaceId}:${uuid.toLowerCase()}`;
+}
+
+function hasPinnedLinearContext(context: ProviderContext): boolean {
+  return ['accountId', 'workspaceId', 'teamId'].every(
+    (key) => typeof context[key] === 'string' && context[key]!.length > 0,
+  );
 }
 
 function assertLinearObservation(

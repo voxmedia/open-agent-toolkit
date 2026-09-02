@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeLinearIssueObservation,
   parseLinearIssueReference,
+  planLinearDiscussionRead,
+  planLinearRead,
+  type LinearHostCapabilityObservation,
 } from './linear';
 
 export const linearContext = {
@@ -41,6 +44,24 @@ export const linearObservation: SanitizedProviderObservation = {
     contentDigest: 'sha256:linear-content',
   },
   capabilityEvidenceDigest: 'sha256:linear-capability',
+};
+
+export const linearCapability: LinearHostCapabilityObservation = {
+  provider: 'linear',
+  context: linearContext,
+  availability: 'available',
+  accountId: 'acct_linear',
+  workspaceId: 'workspace_01',
+  teamId: 'team_alpha',
+  operations: ['read', 'read-discussion'],
+  observableFields: [
+    'stable-identity',
+    'title',
+    'state',
+    'revision',
+    'team-context',
+  ],
+  evidenceDigest: 'sha256:linear-capability',
 };
 
 describe('Linear identity and normalization', () => {
@@ -103,5 +124,85 @@ describe('Linear identity and normalization', () => {
         context: { ...linearContext, teamId: 'team_other' },
       }),
     ).toThrow('context');
+  });
+});
+
+describe('Linear semantic read intents', () => {
+  it('plans a provider-neutral pinned lookup without a native invocation', () => {
+    const action = planLinearRead({
+      context: linearContext,
+      hostCapability: linearCapability,
+      stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      currentIdentifier: 'ALPHA-42',
+      stepId: 'linear-read-01',
+    });
+    expect(action).toMatchObject({
+      provider: 'linear',
+      operation: 'read',
+      context: linearContext,
+      intent: {
+        uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        currentIdentifier: 'ALPHA-42',
+        capabilityEvidenceDigest: 'sha256:linear-capability',
+        resultContract: {
+          requireStableIdentity: true,
+          requireExactContext: true,
+        },
+      },
+    });
+    expect(action).not.toHaveProperty('tool');
+    expect(action).not.toHaveProperty('command');
+    expect(JSON.stringify(action)).not.toMatch(/graphql|mcp|linear-cli/i);
+  });
+
+  it('fails closed on workspace/team ambiguity and missing capability', () => {
+    expect(() =>
+      planLinearRead({
+        context: { ...linearContext, teamId: undefined },
+        hostCapability: linearCapability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        currentIdentifier: 'ALPHA-42',
+        stepId: 'linear-read-02',
+      }),
+    ).toThrow('context');
+    expect(() =>
+      planLinearRead({
+        context: linearContext,
+        hostCapability: { ...linearCapability, operations: [] },
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        uuid: '8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        currentIdentifier: 'ALPHA-42',
+        stepId: 'linear-read-03',
+      }),
+    ).toThrow('capability');
+  });
+
+  it('plans bounded, non-persistent discussion evidence', () => {
+    const action = planLinearDiscussionRead({
+      context: linearContext,
+      hostCapability: linearCapability,
+      stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+      cursor: null,
+      limit: 25,
+    });
+    expect(action).toMatchObject({
+      operation: 'read-discussion',
+      intent: {
+        cursor: null,
+        limit: 25,
+        resultContract: { maxItems: 25, persistable: false },
+      },
+    });
+    expect(() =>
+      planLinearDiscussionRead({
+        context: linearContext,
+        hostCapability: linearCapability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        cursor: null,
+        limit: 101,
+      }),
+    ).toThrow('bounds');
   });
 });
