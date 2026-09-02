@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: ef806735359899afd7b720055a776045ec93dca7
-oat_blockers:
-  ['Phase 5 review round 2 has one Critical and two Important findings']
+oat_last_commit: e75f1d8e99edad72aa52442e31be9eec6116ae28
+oat_blockers: ['Phase 5 review round 3 is pending after fix loop 2']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -44,7 +43,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:42:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:49:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -56,10 +55,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented in
-ordered declared-boundary commits. Review round 2 passed the focused and remote
-suites at 81/81 and 532/532 but blocked with one Critical and two Important
-public-adapter findings. Bounded fix loop 2/3 is next. Phase 6 has not started.
+Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented. Fix loop
+2 resolved the one Critical and two Important round-2 findings in `e75f1d8e9`;
+the focused and remote suites pass 87/87 and 538/538. Final normal review round
+3 is pending. Phase 6 has not started.
 
 ## Artifacts
 
@@ -67,7 +66,7 @@ public-adapter findings. Bounded fix loop 2/3 is next. Phase 6 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 review fixes pending)
+- **Implementation:** implementation.md (in progress; Phase 5 review round 3 pending)
 
 ## Progress
 
@@ -174,19 +173,20 @@ public-adapter findings. Bounded fix loop 2/3 is next. Phase 6 has not started.
 - ✓ Phase 5 bounded fix loop 1/3 committed as `ef8067353` through the original implementer
 - ✓ Expanded Phase 5 live suite passed 81/81 and remote suite passed 532/532
 - ⚠ Phase 5 review round 2 blocked with 1 Critical and 2 Important findings
-- ⧗ Phase 5 bounded fix loop 2/3 pending through the original implementer
+- ✓ Phase 5 bounded fix loop 2/3 committed as `e75f1d8e9` through the original implementer
+- ✓ Expanded Phase 5 live suite passed 87/87 and remote suite passed 538/538
+- ⧗ Final normal Phase 5 review round 3 pending
 
 ## Blockers
 
-Phase 5 review round 2 found a wrong-UUID public read acceptance, a public
-mutation selector/input mismatch, and forged create provenance accepted by
-public validation. Phase 6 is blocked until bounded fixes pass a fresh review.
-The branch-level lockstep version gate remains preserved for planned `p08-t05`
-release work.
+No active implementation defect is known after bounded fix loop 2, but Phase 5
+remains gated on final normal review round 3. Phase 6 is blocked until that
+review passes. The branch-level lockstep version gate remains preserved for
+planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run bounded Phase 5 fix loop 2/3 through the original accepted implementer,
-limited to the findings in `reviews/p05-review-2026-09-02T214026Z.md`, then run
-a fresh exact-range review. Do not begin Phase 6 until a review passes with
-zero Critical and zero Important findings.
+Run final normal Phase 5 review round 3 over the full post-fix phase range ending
+at `e75f1d8e99edad72aa52442e31be9eec6116ae28`, including explicit disposition
+of all findings in both prior Phase 5 review artifacts. Do not begin Phase 6
+until the review passes with zero Critical and zero Important findings.
