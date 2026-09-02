@@ -9,9 +9,13 @@ import {
  * Claude runtime metadata parsing.
  *
  * Field paths here are taken from real on-disk transcripts under
- * `~/.claude/projects/`, not from assumption. An earlier revision read only
- * `system`/`init` and `result` records; a scan of all 2,725 local transcripts
- * found `"subtype":"init"` in zero of them, so that parser returned
+ * `~/.claude/projects/`, not from assumption. Every corpus figure in this file
+ * is an operator-environment observation as of 2026-09-02 on the capturing
+ * operator's machine, not a provider guarantee: a later mismatch means the
+ * corpus moved, not that the claim was wrong.
+ *
+ * An earlier revision read only `system`/`init` and `result` records; a scan of
+ * all 2,725 local transcripts found `"subtype":"init"` in zero of them, so that parser returned
  * `not-reported` against every real transcript while its hand-written fixtures
  * agreed with it. The on-disk `assistant` entry is now the primary shape.
  *
@@ -37,7 +41,7 @@ import {
  *
  * `attributionAgent` is the role identifier and is the same class of signal
  * Codex carries as `agent_role`: a bounded enum-like name, not conversation
- * content. Across 2,725 captured transcripts it takes 8 distinct values, all
+ * content. Across 2,725 captured transcripts it took 8 distinct values, all
  * of which pass the shared identifier validator, with a longest value of 21
  * characters against the 256 bound. It appears on subagent turns only, so a
  * main session reports no role rather than a synthesized one.
@@ -56,7 +60,7 @@ export const CLAUDE_ASSISTANT_KEYS = [
  * Stream-json entry keys, for `claude -p --output-format stream-json`.
  *
  * UNVERIFIED: no captured artifact of that format was available, and zero of
- * the 2,725 local transcripts contain a `system`/`init` record. This path is
+ * the 2,725 observed local transcripts contained a `system`/`init` record. This path is
  * retained as a secondary shape and must not be presented as equally grounded
  * with the on-disk shape above.
  */
@@ -80,8 +84,8 @@ export interface ClaudeRuntimeMetadata {
    * `root` for a main session, `depth-unknown` for a subagent turn.
    *
    * `isSidechain` is the only lineage signal Claude emits and it is binary. No
-   * depth, nesting, level, or ancestry key appears on any of the 141,078
-   * captured assistant entries, and `parentUuid` never crosses an `agentId`
+   * depth, nesting, level, or ancestry key appeared on any of the 141,078
+   * observed assistant entries, and `parentUuid` never crosses an `agentId`
    * boundary, so it chains messages within one agent rather than agents to
    * each other. A depth number is therefore not derivable and is not invented.
    */
