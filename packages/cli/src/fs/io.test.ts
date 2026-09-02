@@ -1,11 +1,13 @@
 import {
   chmod,
+  copyFile,
   lstat,
   mkdir,
   mkdtemp,
   readdir,
   readFile,
   readlink,
+  rename,
   rm,
   stat,
   symlink,
@@ -23,6 +25,12 @@ const collectionCreationRace = vi.hoisted(() => ({
 const collectionRemovalRace = vi.hoisted(() => ({
   afterIdentityRead: undefined as undefined | (() => Promise<void>),
   pathBasedRemovalCalls: 0,
+}));
+const journalPublicationRace = vi.hoisted(() => ({
+  afterLastAncestryCheck: undefined as undefined | (() => Promise<void>),
+  beforePathBasedPublication: undefined as undefined | (() => Promise<void>),
+  ancestryChecks: 0,
+  publicationCalls: 0,
 }));
 
 vi.mock('node:fs/promises', async (importOriginal) => {
@@ -55,6 +63,48 @@ vi.mock('node:fs/promises', async (importOriginal) => {
         await afterIdentityRead();
       }
       return linkText;
+    },
+    realpath: async (...args: Parameters<typeof actual.realpath>) => {
+      const resolved = await actual.realpath(...args);
+      const [target] = args;
+      if (
+        journalPublicationRace.afterLastAncestryCheck &&
+        typeof target === 'string' &&
+        target.endsWith('/dispatch')
+      ) {
+        journalPublicationRace.ancestryChecks += 1;
+        // The first call establishes `realParent`; the second is the final
+        // ancestry check immediately before path-based publication.
+        if (journalPublicationRace.ancestryChecks === 2) {
+          const barrier = journalPublicationRace.afterLastAncestryCheck;
+          journalPublicationRace.afterLastAncestryCheck = undefined;
+          await barrier();
+        }
+      }
+      return resolved;
+    },
+    link: async (...args: Parameters<typeof actual.link>) => {
+      if (journalPublicationRace.beforePathBasedPublication) {
+        journalPublicationRace.publicationCalls += 1;
+        const barrier = journalPublicationRace.beforePathBasedPublication;
+        journalPublicationRace.beforePathBasedPublication = undefined;
+        await barrier();
+      }
+      return actual.link(...args);
+    },
+    rename: async (...args: Parameters<typeof actual.rename>) => {
+      const [, destination] = args;
+      if (
+        journalPublicationRace.beforePathBasedPublication &&
+        typeof destination === 'string' &&
+        destination.endsWith('.json')
+      ) {
+        journalPublicationRace.publicationCalls += 1;
+        const barrier = journalPublicationRace.beforePathBasedPublication;
+        journalPublicationRace.beforePathBasedPublication = undefined;
+        await barrier();
+      }
+      return actual.rename(...args);
     },
     unlink: async (...args: Parameters<typeof actual.unlink>) => {
       const [linkPath] = args;
@@ -89,6 +139,10 @@ describe('fs/io', () => {
     collectionCreationRace.pathBasedCreationCalls = 0;
     collectionRemovalRace.afterIdentityRead = undefined;
     collectionRemovalRace.pathBasedRemovalCalls = 0;
+    journalPublicationRace.afterLastAncestryCheck = undefined;
+    journalPublicationRace.beforePathBasedPublication = undefined;
+    journalPublicationRace.ancestryChecks = 0;
+    journalPublicationRace.publicationCalls = 0;
     await Promise.all(
       tempDirs.map(async (dir) => {
         await rm(dir, { recursive: true, force: true });
@@ -435,6 +489,126 @@ describe('fs/io', () => {
       }),
     ).rejects.toMatchObject({ code: 'EEXIST' });
     await expect(readFile(file, 'utf8')).resolves.toContain('"owner": "first"');
+  });
+
+  async function journalFixture(seed: 'absent' | 'present') {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-io-json-outside-'));
+    tempDirs.push(root, outside);
+    const dispatchDir = join(root, 'dispatch');
+    const file = join(dispatchDir, 'request-1.json');
+    if (seed === 'present') {
+      await atomicWriteJsonContained(file, { owner: 'first' }, root);
+    } else {
+      await mkdir(dispatchDir, { recursive: true });
+    }
+    const swapDispatchDirectory = async () => {
+      await rename(dispatchDir, join(root, 'dispatch-real'));
+      await symlink(outside, dispatchDir, 'dir');
+    };
+    return { root, outside, dispatchDir, file, swapDispatchDirectory };
+  }
+
+  it.each([
+    ['create-only link', true, 'absent'] as const,
+    ['update rename', false, 'present'] as const,
+  ])(
+    'fails closed when the journal directory is swapped right after the last ancestry check (%s)',
+    async (_label, createOnly, seed) => {
+      const fixture = await journalFixture(seed);
+      journalPublicationRace.afterLastAncestryCheck =
+        fixture.swapDispatchDirectory;
+
+      await expect(
+        atomicWriteJsonContained(
+          fixture.file,
+          { owner: 'second' },
+          fixture.root,
+          {
+            createOnly,
+          },
+        ),
+      ).rejects.toThrow(/directory identity changed before publication/i);
+
+      expect(journalPublicationRace.ancestryChecks).toBe(2);
+      expect(await readdir(fixture.outside)).toEqual([]);
+      if (seed === 'present') {
+        await expect(
+          readFile(
+            join(fixture.root, 'dispatch-real', 'request-1.json'),
+            'utf8',
+          ),
+        ).resolves.toContain('"owner": "first"');
+      }
+    },
+  );
+
+  it.each([
+    ['create-only link', true, 'absent'] as const,
+    ['update rename', false, 'present'] as const,
+  ])(
+    'never writes outside scope when the swap lands immediately before publication (%s)',
+    async (_label, createOnly, seed) => {
+      const fixture = await journalFixture(seed);
+      journalPublicationRace.beforePathBasedPublication =
+        fixture.swapDispatchDirectory;
+
+      await expect(
+        atomicWriteJsonContained(
+          fixture.file,
+          { owner: 'second' },
+          fixture.root,
+          {
+            createOnly,
+          },
+        ),
+      ).rejects.toThrow();
+
+      expect(journalPublicationRace.publicationCalls).toBe(1);
+      expect(await readdir(fixture.outside)).toEqual([]);
+      if (seed === 'present') {
+        await expect(
+          readFile(
+            join(fixture.root, 'dispatch-real', 'request-1.json'),
+            'utf8',
+          ),
+        ).resolves.toContain('"owner": "first"');
+      }
+    },
+  );
+
+  it('detects and reverts a publication that lands outside the validated directory', async () => {
+    const fixture = await journalFixture('absent');
+    journalPublicationRace.beforePathBasedPublication = async () => {
+      // Simulate a privileged process that both stages our exact temporary
+      // name inside its own directory and swaps the validated pathname, so the
+      // path-based `link` succeeds against foreign ancestry.
+      const staged = (await readdir(fixture.dispatchDir)).find((name) =>
+        name.endsWith('.tmp'),
+      );
+      if (staged) {
+        await copyFile(
+          join(fixture.dispatchDir, staged),
+          join(fixture.outside, staged),
+        );
+      }
+      await fixture.swapDispatchDirectory();
+    };
+
+    await expect(
+      atomicWriteJsonContained(
+        fixture.file,
+        { owner: 'second' },
+        fixture.root,
+        {
+          createOnly: true,
+        },
+      ),
+    ).rejects.toThrow(/not identity-bound to the validated directory/i);
+
+    await expect(
+      readFile(join(fixture.outside, 'request-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('ensureDir creates directory recursively', async () => {

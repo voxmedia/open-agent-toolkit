@@ -4,6 +4,7 @@ import {
   lstat,
   link,
   mkdir,
+  open,
   readdir,
   readFile,
   readlink,
@@ -296,6 +297,135 @@ export async function atomicWriteJson(
   await rename(tempPath, filePath);
 }
 
+interface FileIdentity {
+  device: string;
+  inode: string;
+}
+
+function identityOf(entry: {
+  dev: bigint | number;
+  ino: bigint | number;
+}): FileIdentity {
+  return { device: String(entry.dev), inode: String(entry.ino) };
+}
+
+function sameIdentity(left: FileIdentity, right: FileIdentity): boolean {
+  return left.device === right.device && left.inode === right.inode;
+}
+
+async function assertUnchangedIdentity(
+  path: string,
+  expected: FileIdentity,
+  message: string,
+): Promise<void> {
+  if (!sameIdentity(identityOf(await lstat(path)), expected)) {
+    throw new Error(message);
+  }
+}
+
+/**
+ * Node exposes no `openat`/`renameat`/`linkat`, so the final `link`/`rename`
+ * cannot be bound to a directory file descriptor. This is the fail-closed
+ * substitute: after the path-based publication, prove that the published name
+ * is the exact inode written to the staging file, that its parent is still the
+ * validated directory inode, and that the parent still resolves inside scope.
+ * Any deviation is reverted and reported; nothing is ever silently published.
+ */
+async function publicationIsMisplaced(
+  resolvedFile: string,
+  tempIdentity: FileIdentity,
+  parentIdentity: FileIdentity,
+  realScope: string,
+): Promise<string | null> {
+  let published;
+  try {
+    published = await lstat(resolvedFile);
+  } catch {
+    return 'the published name disappeared';
+  }
+  if (published.isSymbolicLink() || !published.isFile()) {
+    return 'the published name is not a regular file';
+  }
+  if (!sameIdentity(identityOf(published), tempIdentity)) {
+    return 'the published name is not the staged file';
+  }
+  try {
+    if (
+      !sameIdentity(
+        identityOf(await lstat(dirname(resolvedFile))),
+        parentIdentity,
+      )
+    ) {
+      return 'the parent directory identity changed';
+    }
+    const currentRealParent = await realpath(dirname(resolvedFile));
+    const currentRelative = relative(realScope, currentRealParent);
+    if (
+      currentRelative === '..' ||
+      currentRelative.startsWith(`..${sep}`) ||
+      isAbsolute(currentRelative)
+    ) {
+      return 'the parent directory resolves outside the allowed scope';
+    }
+  } catch {
+    return 'the parent directory could not be re-validated';
+  }
+  return null;
+}
+
+async function revertMisplacedPublication(
+  resolvedFile: string,
+  tempIdentity: FileIdentity,
+  parentIdentity: FileIdentity,
+  publishedContent: string,
+): Promise<void> {
+  try {
+    const parentNow = identityOf(await lstat(dirname(resolvedFile)));
+    if (sameIdentity(parentNow, parentIdentity)) {
+      // The file landed in the validated directory. Never remove a journal
+      // that is where it belongs.
+      return;
+    }
+    const published = await lstat(resolvedFile);
+    if (published.isSymbolicLink() || !published.isFile()) {
+      return;
+    }
+    const ownedByThisWrite =
+      sameIdentity(identityOf(published), tempIdentity) ||
+      (await readFile(resolvedFile, 'utf8')) === publishedContent;
+    if (!ownedByThisWrite) {
+      // Somebody else owns this name. Leave foreign content untouched.
+      return;
+    }
+    await rm(resolvedFile, { force: true });
+  } catch {
+    // Best-effort revert; the caller always raises the explicit failure.
+  }
+}
+
+/**
+ * Remove the staging file only when the name still resolves to the exact inode
+ * this write created, so a directory swap can never turn cleanup into deletion
+ * of an unrelated file.
+ */
+async function removeStagedFile(
+  tempPath: string,
+  tempIdentity: FileIdentity | null,
+): Promise<void> {
+  try {
+    if (tempIdentity === null) {
+      await rm(tempPath, { force: true });
+      return;
+    }
+    const current = await lstat(tempPath);
+    if (sameIdentity(identityOf(current), tempIdentity)) {
+      await rm(tempPath, { force: true });
+    }
+  } catch {
+    // Already gone, or unreachable after a privileged directory move.
+  }
+}
+
 export async function atomicWriteJsonContained(
   filePath: string,
   data: unknown,
@@ -371,31 +501,75 @@ export async function atomicWriteJsonContained(
     }
   }
 
+  const parentIdentity = identityOf(await lstat(dirname(resolvedFile)));
+
+  const content = `${JSON.stringify(data, null, 2)}\n`;
   const tempPath = join(
     dirname(resolvedFile),
     `.${basename(resolvedFile)}.${randomUUID()}.tmp`,
   );
   let tempCreated = false;
+  let stagedIdentity: FileIdentity | null = null;
   try {
-    await writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, {
-      encoding: 'utf8',
-      flag: 'wx',
-    });
-    tempCreated = true;
+    const handle = await open(tempPath, 'wx');
+    let tempIdentity: FileIdentity;
+    try {
+      tempCreated = true;
+      await handle.writeFile(content, 'utf8');
+      tempIdentity = identityOf(await handle.stat());
+      stagedIdentity = tempIdentity;
+    } finally {
+      await handle.close();
+    }
+
+    // Last ancestry check, then the identity binding that closes the window
+    // between that check and the path-based publication below.
     if ((await realpath(dirname(resolvedFile))) !== realParent) {
       throw new Error('JSON journal ancestry changed before publication.');
     }
+    await assertUnchangedIdentity(
+      dirname(resolvedFile),
+      parentIdentity,
+      'JSON journal directory identity changed before publication.',
+    );
+    await assertUnchangedIdentity(
+      tempPath,
+      tempIdentity,
+      'JSON journal staging file identity changed before publication.',
+    );
+
     if (options.createOnly) {
       await link(tempPath, resolvedFile);
-      await rm(tempPath);
-      tempCreated = false;
     } else {
       await rename(tempPath, resolvedFile);
       tempCreated = false;
     }
+
+    const misplaced = await publicationIsMisplaced(
+      resolvedFile,
+      tempIdentity,
+      parentIdentity,
+      realScope,
+    );
+    if (misplaced) {
+      await revertMisplacedPublication(
+        resolvedFile,
+        tempIdentity,
+        parentIdentity,
+        content,
+      );
+      throw new Error(
+        `JSON journal publication is not identity-bound to the validated directory (${misplaced}); the write was reverted and nothing was published.`,
+      );
+    }
+
+    if (options.createOnly) {
+      await removeStagedFile(tempPath, tempIdentity);
+      tempCreated = false;
+    }
   } finally {
     if (tempCreated) {
-      await rm(tempPath, { force: true });
+      await removeStagedFile(tempPath, stagedIdentity);
     }
   }
 }
