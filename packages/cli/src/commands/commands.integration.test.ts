@@ -98,7 +98,7 @@ async function runCli(
       !(topLevelCommand === 'tools' && args[1] === 'migrate') &&
       // An explicit caller-supplied scope always wins; injecting a second
       // `--scope` would make the effective scope depend on argument order.
-      !args.includes('--scope');
+      !args.some((arg) => arg === '--scope' || arg.startsWith('--scope='));
 
     let finalArgs: string[];
     if (isConsumer) {
@@ -1129,7 +1129,7 @@ describe('CLI command integration', () => {
     const previousHome = process.env.HOME;
     process.env.HOME = userRoot;
     try {
-      await runCli(root, ['init', '--scope', 'user']);
+      await runCli(root, ['init', '--scope=user']);
       const sync = await runCli(root, ['sync', '--scope', 'user']);
       expect(sync.exitCode).toBe(0);
 

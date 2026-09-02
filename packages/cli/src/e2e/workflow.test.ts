@@ -88,11 +88,13 @@ async function runCli(
     // it when the top-level command is a scope consumer so that non-consumer
     // commands do not receive an unrecognised flag. Insert after the subcommand
     // tokens (all tokens before the first flag) so it is parsed on the right
-    // command.
+    // command. An explicit caller-supplied scope in either supported syntax
+    // always wins.
     const topLevelCommand = args[0];
     const isConsumer =
       topLevelCommand !== undefined &&
-      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand);
+      SCOPE_CONSUMER_COMMANDS.has(topLevelCommand) &&
+      !args.some((arg) => arg === '--scope' || arg.startsWith('--scope='));
 
     let finalArgs: string[];
     if (isConsumer) {
@@ -220,6 +222,34 @@ describe('e2e workflow', () => {
 
     if (stdinDescriptor) {
       Object.defineProperty(process.stdin, 'isTTY', stdinDescriptor);
+    }
+  });
+
+  it.each([
+    ['separate', ['--scope', 'user']],
+    ['joined', ['--scope=user']],
+  ])('respects an explicit %s user scope', async (_syntax, scopeArgs) => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(join(tmpdir(), 'oat-cli-e2e-user-scope-'));
+    tempDirs.push(root, userRoot);
+    await mkdir(join(userRoot, '.claude'), { recursive: true });
+    await seedCanonical(userRoot);
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(root, ['sync', ...scopeArgs]);
+
+      expect(result.exitCode).toBe(0);
+      await expect(
+        lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
+      ).resolves.toBeDefined();
+      await expect(
+        lstat(join(root, '.claude', 'skills', 'skill-one')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
     }
   });
 
@@ -601,21 +631,88 @@ describe('synced project lifecycle', () => {
         expect(
           execFileSync(
             'git',
-            ['ls-remote', 'origin', 'refs/oat/projects/demo'],
+            [
+              'ls-remote',
+              'origin',
+              'refs/oat/projects/demo',
+              'refs/oat/completed/demo',
+            ],
             { cwd: fixture.cloneA, encoding: 'utf8' },
           ),
-        ).toContain('refs/oat/projects/demo');
+        ).toMatch(/^[a-f0-9]{40}\s+refs\/oat\/completed\/demo\s*$/);
+        await expect(
+          lstat(join(fixture.cloneA, '.oat/projects/synced/demo.json')),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+
+        const terminalList = await runCli(
+          fixture.cloneA,
+          ['project', 'list', '--remote'],
+          ['--json'],
+        );
+        expect(terminalList.exitCode).toBe(0);
         expect(
-          JSON.parse(
-            await readFile(
-              join(fixture.cloneA, '.oat/projects/synced/demo.json'),
-              'utf8',
-            ),
-          ),
-        ).toMatchObject({
-          status: 'complete',
-          archiveSnapshot: expect.stringMatching(/^\d{8}-demo$/),
+          (JSON.parse(terminalList.stdout) as { projects: unknown[] }).projects,
+        ).not.toContainEqual(expect.objectContaining({ name: 'demo' }));
+
+        const terminalPull = await runCli(
+          fixture.cloneA,
+          ['project', 'pull', 'demo'],
+          ['--json'],
+        );
+        expect(terminalPull.exitCode).not.toBe(0);
+        expect(JSON.parse(terminalPull.stdout)).toMatchObject({
+          status: 'error',
+          message: expect.stringMatching(/already archived.*cannot be pulled/i),
         });
+
+        const terminalOpen = await runCli(
+          fixture.cloneA,
+          ['project', 'open', 'demo'],
+          ['--json'],
+        );
+        expect(terminalOpen.exitCode).not.toBe(0);
+        expect(JSON.parse(terminalOpen.stdout)).toMatchObject({
+          status: 'error',
+          message: expect.stringMatching(/already archived.*cannot be opened/i),
+        });
+
+        const terminalLinks = await runCli(fixture.cloneA, [
+          'project',
+          'links',
+          'demo',
+          '--format',
+          'json',
+        ]);
+        expect(terminalLinks.exitCode).toBe(0);
+        expect(JSON.parse(terminalLinks.stdout)).toMatchObject({
+          slug: 'demo',
+          ref: 'refs/oat/completed/demo',
+          sha: archivedPayload.verifiedSourceSha,
+        });
+
+        const terminalPrune = await runCli(fixture.cloneA, [
+          'project',
+          'prune',
+          'demo',
+          '--force',
+          '--no-commit',
+        ]);
+        expect(terminalPrune.exitCode).toBe(0);
+        expect(
+          execFileSync(
+            'git',
+            [
+              'ls-remote',
+              'origin',
+              'refs/oat/projects/demo',
+              'refs/oat/completed/demo',
+            ],
+            { cwd: fixture.cloneA, encoding: 'utf8' },
+          ).trim(),
+        ).toBe('');
+        await expect(
+          readFile(join(archivedPayload.archivePath, 'state.md'), 'utf8'),
+        ).resolves.toContain('# Updated remotely');
 
         const legacy = await runCli(
           fixture.cloneA,

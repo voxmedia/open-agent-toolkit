@@ -4,7 +4,8 @@
     "root": ".worktrees"
   },
   "projects": {
-    "root": ".oat/projects/shared"
+    "root": ".oat/projects/shared",
+    "defaultScope": "shared"
   },
   "archive": {
     "s3Uri": "s3://vox-media-open-agent-toolkit/repositories",

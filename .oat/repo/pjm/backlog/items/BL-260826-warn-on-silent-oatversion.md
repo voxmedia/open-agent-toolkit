@@ -12,9 +12,10 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:18.952Z
-updated: 2026-08-26T22:57:18.952Z
+updated: 2026-08-30T23:49:30Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-warn-on-non-sync-manifest-restamps.md
 ---
 
 ## Description

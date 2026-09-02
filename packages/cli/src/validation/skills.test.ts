@@ -1875,7 +1875,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.1',
+        version: '2.2.2',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1884,7 +1884,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.1',
+        version: '2.3.2',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -1894,7 +1894,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.5',
+        version: '1.4.6',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1902,7 +1902,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.6',
+        version: '2.3.7',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2082,6 +2082,7 @@ describe('validateOatSkills', () => {
         'ok',
         'blocked',
         'review_failed',
+        'artifact_missing',
         'artifact_validation_failed',
         'targeting_correlation_failed',
       ]) {
@@ -2100,6 +2101,13 @@ describe('validateOatSkills', () => {
         /artifact_validation_failed[\s\S]{0,800}(?:correct|fix)[\s\S]{0,300}revalidat/i,
       );
     }
+
+    expect(workflowGates, 'artifact-missing recovery contract').toMatch(
+      /`artifact_missing`[\s\S]{0,300}`receiveEligible: false`[\s\S]{0,500}synchronously awaited child[\s\S]{0,100}start\s+a new gate run[\s\S]{0,150}(?:do not|without).*review-receive/i,
+    );
+    expect(cliReference, 'artifact-missing recovery guidance').toMatch(
+      /`artifact_missing`[\s\S]{0,300}fix synchronous review\/artifact completion and start a new run, without review-receive or same-run remediation/i,
+    );
 
     expect(projectReviews, 'phase gate conjunctive eligibility').toMatch(
       /all three eligibility conditions:.*status.*`ok`.*`blocked`.*`receiveEligible` is `true`.*`handoff` is\s+non-null/is,
@@ -2134,6 +2142,37 @@ describe('validateOatSkills', () => {
         gateSection,
         `${skillName} executes the stored command unchanged`,
       ).toMatch(/execute[\s\S]{0,160}exactly as configured/i);
+      expect(gateSection, `${skillName} forbids reusable target pins`).toMatch(
+        /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
+      );
+    }
+  });
+
+  it('requires every gate-aware lifecycle skill to use canonical structured review commands', async () => {
+    for (const skillName of [
+      'oat-project-discover',
+      'oat-project-design',
+      'oat-project-plan',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
+
+      expect(gateSection, `${skillName} canonical review command`).toContain(
+        'oat --json gate review --project "$PROJECT_PATH" ...',
+      );
+      expect(gateSection, `${skillName} global JSON placement`).toMatch(
+        /global `--json`[\s\S]{0,100}before `gate review`/i,
+      );
+      expect(gateSection, `${skillName} rejects legacy placement`).toMatch(
+        /reject[\s\S]{0,100}`oat gate review \.\.\.`/i,
+      );
+      expect(gateSection, `${skillName} forbids argv injection`).toMatch(
+        /never inject or append execution-time argv/i,
+      );
       expect(gateSection, `${skillName} forbids reusable target pins`).toMatch(
         /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
       );
@@ -2798,7 +2837,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.1'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.0'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.6'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.7'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -4023,7 +4062,7 @@ describe('validateOatSkills', () => {
       ['oat-project-implement', '2.3.2'],
       ['oat-project-pr-final', '1.6.0'],
       ['oat-project-pr-progress', '1.3.0'],
-      ['oat-project-complete', '1.7.5'],
+      ['oat-project-complete', '1.7.6'],
       ['oat-project-next', '1.0.12'],
     ] as const;
 
@@ -5091,9 +5130,9 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.20'],
-      ['oat-project-plan', '1.4.5'],
-      ['oat-project-quick-start', '2.3.6'],
-      ['oat-project-import-plan', '1.4.10'],
+      ['oat-project-plan', '1.4.6'],
+      ['oat-project-quick-start', '2.3.7'],
+      ['oat-project-import-plan', '1.4.11'],
       ['oat-project-review-provide', '1.5.3'],
     ] as const;
 
@@ -6094,7 +6133,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.7');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -6147,7 +6186,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.3\.1$/m);
+    ).toMatch(/^version:\s*2\.3\.2$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',

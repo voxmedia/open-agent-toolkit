@@ -84,14 +84,26 @@ On completion, OAT treats archive handling as an explicit closeout choice:
 - For a synced project, closeout first finalizes the project artifacts and
   pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
   fully pushed checkout; copies it without the `.git` pointer or `reviews/`;
-  marks the tracked record complete; commits the record and configured durable
-  exports on the parent branch; removes the nested checkout; and retains the
-  ref. This order keeps SHA-pinned PR links valid after completion.
-- If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion also attempts an S3 upload for a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
+  seals configured durable exports; transitions terminal reachability to
+  `refs/oat/completed/<project>`; removes the nested checkout; and deletes the
+  tracked JSON record in the parent lifecycle commit. This order keeps
+  SHA-pinned PR links valid without leaving active discovery state behind.
+- A completed-only ref and a completed ref plus same-SHA active alias are both
+  valid terminal shapes. The active alias is inert: list omits it and pull/open
+  reject it. Differing SHAs are a hard mismatch with recovery guidance.
+- If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion requires the S3 upload of a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/` to succeed before terminal record/ref cleanup. A failed configured upload leaves retry identity intact and does not claim closeout.
 - If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
-- Missing or unusable AWS CLI configuration produces warnings during completion instead of blocking closeout.
+- Missing or unusable AWS CLI configuration blocks synced terminal cleanup when S3 durability is configured; when S3 sync is not configured, it is not part of the durability requirement.
 - `oat repo archive sync` can later sync all archived projects, or one named archived project, back down from S3; it selects the latest dated remote snapshot and materializes it into the local bare archive tree.
+- Persisted archive metadata binds the snapshot to the source-ref SHA, allowing
+  an interrupted closeout or legacy complete record to resume without
+  rematerializing an active project. Dashboard and list surfaces omit fully
+  retired projects and report precise cleanup or ref-mismatch diagnoses for
+  remaining legacy state.
+- `oat project links` continues to render full-SHA links through the completed
+  ref. `oat project prune` is a separate destructive choice that removes
+  terminal ref reachability but preserves local and S3 archive snapshots.
 
 ### Phase status: `pr_open`
 

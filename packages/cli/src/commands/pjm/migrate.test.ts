@@ -8,12 +8,13 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { runPjmDoctorChecks } from './doctor';
+import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
 import { migratePjmRepo } from './migrate';
 
 const TEMPLATE_NAMES = [
@@ -148,6 +149,14 @@ async function seedLegacyPjm(repoRoot: string): Promise<void> {
   );
 }
 
+async function seedCanonicalPjm(repoRoot: string): Promise<void> {
+  for (const relativePath of CANONICAL_REPO_REFERENCE_PATHS) {
+    const filePath = join(repoRoot, relativePath);
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(filePath, '', 'utf8');
+  }
+}
+
 describe('migratePjmRepo', () => {
   const tempDirs: string[] = [];
 
@@ -158,21 +167,28 @@ describe('migratePjmRepo', () => {
     tempDirs.length = 0;
   });
 
-  it('reports a no-op when project-management is disabled', async () => {
+  it('reports a no-op when repository adoption is incomplete', async () => {
     const { assetsRoot, repoRoot, root } = await createWorkspace();
     tempDirs.push(root);
-    await seedLegacyPjm(repoRoot);
+    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
+    await writeFile(join(repoRoot, 'pjm', 'roadmap.md'), '# Roadmap\n', 'utf8');
+    const before = await snapshotTree(repoRoot);
 
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: false,
+      adoption: {
+        state: 'partial-initialization',
+        repoRoot,
+        recovery: 'oat pjm init',
+      },
       apply: true,
     });
 
     expect(result.status).toBe('skipped');
-    expect(result.reason).toBe('project-management pack is disabled');
-    await expect(pathExists(join(repoRoot, 'pjm'))).resolves.toBe(false);
+    expect(result.reason).toMatch(/partial/i);
+    expect(result.reason).toContain('oat pjm init');
+    await expect(snapshotTree(repoRoot)).resolves.toEqual(before);
   });
 
   it('dry-runs migration inventory without writing files', async () => {
@@ -183,7 +199,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: false,
     });
 
@@ -225,18 +241,66 @@ describe('migratePjmRepo', () => {
   it('short-circuits already migrated repos', async () => {
     const { assetsRoot, repoRoot, root } = await createWorkspace();
     tempDirs.push(root);
-    await mkdir(join(repoRoot, 'pjm'), { recursive: true });
-    await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+    await seedCanonicalPjm(repoRoot);
 
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
     expect(result.status).toBe('already-migrated');
     expect(result.actions).toEqual([]);
+  });
+
+  it.each([
+    'reference/backlog.md',
+    'reference/backlog-completed.md',
+    'reference/legacy-roadmap.md',
+  ])(
+    'does not treat judgment-only leftover %s as migration input for a canonical repo',
+    async (leftoverPath) => {
+      const { assetsRoot, repoRoot, root } = await createWorkspace();
+      tempDirs.push(root);
+      await seedCanonicalPjm(repoRoot);
+      await writeFile(join(repoRoot, leftoverPath), '# Judgment required\n');
+      const before = await snapshotTree(root);
+
+      const result = await migratePjmRepo({
+        repoRoot,
+        assetsRoot,
+        adoption: { state: 'declared', repoRoot, recovery: null },
+        apply: true,
+      });
+
+      expect(result.status).toBe('already-migrated');
+      expect(result.actions).toEqual([]);
+      await expect(snapshotTree(root)).resolves.toEqual(before);
+    },
+  );
+
+  it('skips an incomplete repo with only judgment leftovers without writing', async () => {
+    const { assetsRoot, repoRoot, root } = await createWorkspace();
+    tempDirs.push(root);
+    await mkdir(join(repoRoot, 'reference'), { recursive: true });
+    await writeFile(
+      join(repoRoot, 'reference', 'backlog.md'),
+      '# Judgment required\n',
+    );
+    const before = await snapshotTree(root);
+
+    const result = await migratePjmRepo({
+      repoRoot,
+      assetsRoot,
+      adoption: { state: 'none', repoRoot, recovery: 'oat pjm init' },
+      apply: true,
+    });
+
+    expect(result.status).toBe('skipped');
+    expect(result.actions).toEqual([]);
+    expect(result.reason).toContain('No recognized PJM migration input');
+    await expect(snapshotTree(root)).resolves.toEqual(before);
   });
 
   it('applies mechanical moves, backlog re-id, decision split, and scaffold docs', async () => {
@@ -247,7 +311,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
@@ -331,7 +395,7 @@ describe('migratePjmRepo', () => {
     const result = await migratePjmRepo({
       repoRoot,
       assetsRoot,
-      projectManagementEnabled: true,
+      adoption: { state: 'declared', repoRoot, recovery: null },
       apply: true,
     });
 
@@ -388,7 +452,7 @@ describe('migratePjmRepo', () => {
       migratePjmRepo({
         repoRoot,
         assetsRoot,
-        projectManagementEnabled: true,
+        adoption: { state: 'declared', repoRoot, recovery: null },
         apply: true,
       }),
     ).rejects.toThrow(/decision/i);

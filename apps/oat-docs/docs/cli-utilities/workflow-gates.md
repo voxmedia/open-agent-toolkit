@@ -51,6 +51,17 @@ Fields:
 - `description` - optional context for the agent running the gate.
 - `maxAttempts` - retry bound for `block`; defaults to `2`.
 
+When `oat gate set` recognizes a direct lifecycle `oat gate review` command,
+it requires the canonical global option placement `oat --json gate review`.
+Missing, late, repeated, or subcommand-scoped `--json` is rejected with exit 1
+before the selected shared, local, or user config layer is changed. Arbitrary
+wrappers, unrelated gate commands, and provider exec-target `baseCommand`
+arrays remain outside this validator.
+
+A valid command is stored byte-for-byte. `oat gate resolve` returns that exact
+string, and the lifecycle executes it unchanged; OAT does not inject, reorder,
+or rewrite its shell arguments.
+
 `oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`, and
 `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
 in skill frontmatter with `oat_gateable: true`, and
@@ -305,6 +316,7 @@ and disambiguate re-gate rounds:
 | `ok`                           | 0    | Review completed; gate passed at the threshold.              |
 | `blocked`                      | 1    | Review completed; findings at/above the threshold.           |
 | `review_failed`                | ≠0   | The provider target exited non-zero; no verdict.             |
+| `artifact_missing`             | 1    | The child exited cleanly without producing an artifact.      |
 | `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid. |
 | `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.       |
 
@@ -316,6 +328,13 @@ the exit code. `review_failed` has no validated verdict and is not eligible.
 For `artifact_validation_failed`, correct the artifact and rerun the gate; do
 not invoke review-receive until the gate successfully revalidates it as `ok` or
 `blocked`.
+
+`artifact_missing` means the accepted headless child completed without any
+review artifact. It sets `receiveEligible: false`, `remediable: false`, and
+`handoff: null`. Fix the reviewer so review work, artifact creation, and
+bookkeeping finish inline or through a synchronously awaited child, then start
+a new gate run. Do not use review-fix retries or review-receive for the failed
+run.
 
 `ok` and `blocked` also include `receiveEligible: true`, `outcome`,
 `artifactPath`, `counts`, `scope`, `handoff`, `gateInvocation`, and

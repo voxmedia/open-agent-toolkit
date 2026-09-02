@@ -37,7 +37,64 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.47` (agent-provider-root, branch pending merge) makes canonical
+- CLI `0.2.51` (retire-archived-synced-project, implementation complete;
+  pending PR/release) retires a successfully archived synced project from its
+  active JSON-record and discovery-ref namespaces only after local and every
+  configured remote durability target succeed. `refs/oat/completed/<slug>`
+  preserves terminal identity and source-commit reachability; a same-SHA active
+  ref may remain as an inert alias, while differing SHAs and remote lookup
+  failures remain precise fail-closed diagnoses. List, dashboard, pull, open,
+  links, prune, archive recovery, and the completion skill now share this
+  recordless terminal contract. Uncached CLI 4721/4721 and control-plane 78/78
+  tests and the full repository/release/docs gate sequence passed. Follow-up
+  task p04-t06 also made recordless archive resume accept explicit `null` as a
+  no-recap receipt without weakening validation of present recap evidence. The
+  authenticated Claude Fable gate run
+  `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head
+  `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87` and passed the configured
+  Important threshold; its Medium and Minor findings are dispositioned.
+- CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
+  migration eligibility depend on recognized legacy evidence rather than pack
+  intent or adoption labels alone. User-agent reachability now follows
+  config-aware active Codex/Cursor adapters, shared-owner inventory findings
+  name only applicable packs, and doctor/status render inventory failures as an
+  explicit unavailable state. The focused suite passed 417/417, the exact full
+  test command passed 4,599/4,599 with a four-worker CLI Vitest cap, all eight
+  repository gates passed, and the independent Cursor Fable closeout review
+  reported zero findings. The broader provider-by-scope model, directory
+  symlinks, restart guidance, `AGENTS.md` behavior, picker truthfulness, catalog
+  visibility, and dispatch provenance remain with
+  `tool-pack-scope-provider-truthfulness`.
+- CLI `0.2.49` (gate-execution-contract-hardening, implementation complete;
+  pending PR/release) enforces the configured lifecycle gate contract from
+  configuration through headless completion. Recognized direct review commands
+  must use canonical `oat --json gate review` placement before any shared,
+  local, or user config write, while unknown wrappers and provider
+  `baseCommand` values remain outside the conservative classifier. A clean
+  accepted child that produces no artifact now returns the fail-closed
+  `artifact_missing` diagnosis instead of a correlation mismatch; observed
+  wrong-run or otherwise mismatched artifacts retain
+  `targeting_correlation_failed`, and neither path is receive-eligible or
+  remediable in the accepted run. Five lifecycle skills and the runner prompt
+  require synchronous completion, and a configuration-driven subprocess suite
+  proves exact stored-command success, missing-artifact failure, and wrong-run
+  mismatch. Both owned backlog items are closed, public docs are updated, and
+  the complete repository gate sequence plus configured exit-gate review
+  passed.
+- CLI `0.2.48` (PJM reference-layout cleanup) recognizes generated
+  `CLAUDE.md` instruction pointers as valid PJM layout companions while leaving
+  pointer correctness to `oat instructions validate`. The repository's 23
+  legacy ADRs are now file-per-record decisions, 18 residual legacy backlog
+  records have canonical `BL-260830-*` identities, and shipped, absorbed, or
+  obsolete residue is recorded in completed history instead of a parallel
+  backlog tree. The durable program recap moved byte-for-byte under
+  `reference/explainers/`, and wave recap callers now target that canonical
+  destination. The 74 obsolete `.cursor/skills` mirrors were also removed:
+  portable skills remain canonical in native-read `.agents/skills`, while
+  `.cursor/skills` stays reserved for genuinely Cursor-only packages. The
+  source PJM doctor reports declared adoption with every check passing, and
+  project provider status is clean with zero drift, missing entries, or strays.
+- CLI `0.2.47` (agent-provider-root, merged as PR #242 and released) makes canonical
   skill-to-agent reads portable without changing provider-native dispatch.
   Seven live reviewer and implementer reads now bind their workflows dependency
   locally and resolve exact canonical Markdown through loaded, user, then
@@ -50,12 +107,12 @@ copying their content here. -->
   Mutation, provider-sync, HOME-isolated uncached, release, docs, lint, format,
   and the full Definition-of-Done gates passed; final lifecycle and configured
   exit-gate reviews reported zero findings.
-- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240; pending release) completes
+- CLI `0.2.46` (tool-pack-cleanup, merged as PR #240 and released) completes
   the tool-pack lifecycle/config cleanup with content-aware inventory, exact
   adoption reporting, rejection of unsupported `tools.<pack> = false` writes,
   and removal of the inert per-pack install `--force` option. Compatibility
   guidance now directs operators to scoped update and remove commands. The
-  lifecycle/config backlog item is closed; `0.2.46` has not yet been published.
+  lifecycle/config backlog item is closed.
 - CLI `0.2.45` (synced-project-scope, merged as PR #227 and released) adds a Git-native
   `synced` project scope that keeps lifecycle artifacts off feature branches
   while publishing them to retained `refs/oat/projects/<slug>` histories.
@@ -82,10 +139,8 @@ copying their content here. -->
   historical entries. This closes the residual agent-surface and
   cross-skill `references/*.md` deferral recorded against `0.2.39`. Mutation
   testing twice confirmed the ratchet is live; the full CI gate list passed
-  uncached and HOME-isolated. One direction remains unenforced and is tracked as
-  `BL-260829-unified-agent-provider-root`: skills reading canonical _agent_
-  definitions still use bare `.agents/agents/<name>.md` paths, a path shape the
-  matcher structurally cannot see.
+  uncached and HOME-isolated. The remaining canonical-agent read direction was
+  subsequently closed by CLI `0.2.47` in PR #242.
 - CLI `0.2.39` (portable-skill-references, merged as PR #226) makes the
   identified packaged sibling-skill reads portable across loaded, user, and
   project scopes. Idea, implementation, plan-writing, and brainstorm handoff
@@ -106,9 +161,10 @@ copying their content here. -->
   and preserves shared assets and repository customizations. Provider sync
   keeps user scope skills-only where required and reports unmaterialized agents
   explicitly. All eleven repository gates and a zero-finding final closeout
-  review passed. Closed `BL-260818-make-the-project-management`; scope/adoption
-  diagnostics remain as an implementation-ready follow-up, while the
-  lifecycle/config cleanup is complete on the pending-release `0.2.46` branch.
+  review passed. Closed `BL-260818-make-the-project-management`; the
+  lifecycle/config cleanup shipped in `0.2.46` through PR #240, and the bounded
+  scope/adoption diagnostics follow-up is complete in the staged `0.2.50`
+  release unit.
 - CLI `0.2.31` (explainer-improvements-v2, merged as PR #196 and released) hardens the
   Explainer Kit publication boundary end to end: publication-root and receipt
   screening is version-agnostic (a future contract version cannot silently
@@ -407,17 +463,20 @@ bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
 
-The `agent-provider-root` branch closes the remaining unenforced portable-read
-direction with a dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
-exact-canonical-identity rule. After merge, the
-`tool-pack-scope-provider-truthfulness` project can consume that contract for
-canonical fallback provenance while retaining ownership of provider
-materialization, reachability diagnostics, restart visibility, and dispatch
-truthfulness.
+PR #242 closes the remaining unenforced portable-read direction with a
+dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
+exact-canonical-identity rule. The completed scope/adoption diagnostics slice
+adds the bounded active-adapter and inventory/rendering inputs. The
+`tool-pack-scope-provider-truthfulness` project should rebase after diagnostics
+merges and retain ownership of the broader provider materialization model,
+catalog and picker visibility, collection symlinks, restart guidance,
+`AGENTS.md` behavior, and dispatch provenance.
 
-The canonical PJM operating files are current, but `oat pjm doctor` still
-reports four pre-existing layout warning classes from older reference
-generations. `BL-260830-migrate-the-legacy-pjm` (Migrate the legacy PJM
-reference layout) and its kickoff handoff isolate the lossless reconciliation
-and cleanup in a dedicated branch after PR #240 merges; this branch does not
-delete or restructure the legacy material.
+The legacy PJM reference-layout migration is complete: all four warning classes
+are cleared, source doctor is clean, 13 actionable residual records are active
+canonical backlog items, and five product-direction records are canonical
+`needs-discussion` ideas. Six shipped, absorbed, or obsolete records were folded
+into completed history. No parallel legacy PJM tree remains. The verifying
+11-issue triage ledger records proposed GitHub dispositions without mutating
+issue state; its #205 recommendation now points to the promoted canonical
+discovery-policy item.

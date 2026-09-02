@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "slug": "gate-execution-contract-hardening",
+  "scope": "synced",
+  "ref": "refs/oat/projects/gate-execution-contract-hardening",
+  "remote": "origin",
+  "status": "complete",
+  "createdAt": "2026-08-30T21:57:48.570Z",
+  "completedAt": "2026-08-31T03:07:36.382Z",
+  "archiveSnapshot": "20260831-gate-execution-contract-hardening",
+  "archiveSourceRefSha": "9705189eac977bd10545135cddc855cd59526df6"
+}

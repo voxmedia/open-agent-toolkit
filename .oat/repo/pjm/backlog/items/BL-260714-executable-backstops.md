@@ -8,13 +8,14 @@ scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [skill-authoring, contract-tests, guidance]
 assignee: null
 created: '2026-07-14T02:50:00Z'
-updated: '2026-07-14T02:50:00Z'
+updated: '2026-08-31T00:11:26Z'
 associated_issues:
   [
     { type: project, ref: 'cursor-cloud-autonomous-projects' },
     { type: project, ref: 'orchestration-run-log' },
   ]
-external_plans: [] # repo-relative .oat/repo/reference/external-plans/*.md paths
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-require-executable-backstops-for-contract-claims.md
 ---
 
 ## Description

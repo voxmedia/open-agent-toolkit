@@ -41,6 +41,7 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
   type InventoryPackInput,
@@ -101,7 +102,7 @@ import {
 } from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
-  getActiveAdapters,
+  getConfigAwareAdapters,
   getSyncMappings,
   type PathMapping,
   type MaterializationPlan,
@@ -160,10 +161,58 @@ interface StatusPjmState {
   recovery: string | null;
 }
 
+interface StatusPackAvailability {
+  status: 'available' | 'unavailable';
+  diagnostic?: {
+    code: 'packs:inventory';
+    message: string;
+    recovery: string;
+  };
+}
+
 interface StatusPackReport {
+  availability: StatusPackAvailability;
   states: StatusPackState[];
   unavailableScopes: ConcreteScope[];
   pjm: StatusPjmState | null;
+}
+
+function unavailablePackReport(
+  error: unknown,
+  roots: PackPathRoots,
+  unavailableScopes: ConcreteScope[],
+): StatusPackReport {
+  let detail = error instanceof Error ? error.message : 'Unknown error.';
+  const replacements: Array<[string, string]> = [
+    ...(roots.projectRoot
+      ? ([
+          [`${roots.projectRoot}/`, ''],
+          [roots.projectRoot, '.'],
+        ] satisfies Array<[string, string]>)
+      : []),
+    ...(roots.userRoot
+      ? ([
+          [`${roots.userRoot}/`, '~/'],
+          [roots.userRoot, '~'],
+        ] satisfies Array<[string, string]>)
+      : []),
+  ].sort(([left], [right]) => right.length - left.length);
+  for (const [root, replacement] of replacements) {
+    detail = detail.replaceAll(root, replacement);
+  }
+  return {
+    availability: {
+      status: 'unavailable',
+      diagnostic: {
+        code: 'packs:inventory',
+        message: `Unable to inventory managed packs: ${detail}`,
+        recovery: 'Run `pnpm build` and rerun `oat status`.',
+      },
+    },
+    states: [],
+    unavailableScopes,
+    pjm: null,
+  };
 }
 
 interface StatusJsonPayload {
@@ -190,10 +239,11 @@ interface StatusDependencies {
   ) => Promise<CanonicalEntry[]>;
   scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
-  getActiveAdapters: (
+  getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
     scopeRoot: string,
-  ) => Promise<ProviderAdapter[]>;
+    config: SyncConfig,
+  ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
   getAdoptionSources: (
     adapter: ProviderAdapter,
@@ -320,7 +370,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
       geminiAdapter,
     ];
   },
-  getActiveAdapters,
+  getConfigAwareAdapters,
   getSyncMappings,
   getAdoptionSources,
   detectDrift,
@@ -560,6 +610,7 @@ function shouldReportPjmAdoption(
 async function collectPackReport(
   scopeRoots: Map<ConcreteScope, string>,
   unavailableScopes: ConcreteScope[],
+  userManagedRoleMaterialization: boolean,
   dependencies: StatusDependencies,
 ): Promise<StatusPackReport> {
   const roots: PackPathRoots = {
@@ -569,22 +620,46 @@ async function collectPackReport(
     ...(scopeRoots.has('user') ? { userRoot: scopeRoots.get('user')! } : {}),
   };
   if (scopeRoots.size === 0) {
-    return { states: [], unavailableScopes, pjm: null };
+    return {
+      availability: { status: 'available' },
+      states: [],
+      unavailableScopes,
+      pjm: null,
+    };
   }
 
-  const assetsRoot = await dependencies.resolveAssetsRoot();
-  const inventories = await Promise.all(
-    PACK_NAMES.map((pack) =>
-      dependencies.inventoryPack({ pack, assetsRoot, ...roots }),
-    ),
-  );
+  let inventories: PackInventory[];
+  try {
+    const assetsRoot = await dependencies.resolveAssetsRoot();
+    inventories = attributeSharedOwnerDiagnostics(
+      await Promise.all(
+        PACK_NAMES.map((pack) =>
+          dependencies.inventoryPack({
+            pack,
+            assetsRoot,
+            ...roots,
+            ...(scopeRoots.has('user')
+              ? { userManagedRoleMaterialization }
+              : {}),
+          }),
+        ),
+      ),
+    );
+  } catch (error) {
+    return unavailablePackReport(error, roots, unavailableScopes);
+  }
   const states = inventories
     .map((inventory) => toStatusPackState(inventory, roots))
     .filter((state): state is StatusPackState => state !== null);
 
   const projectRoot = scopeRoots.get('project');
   if (!projectRoot) {
-    return { states, unavailableScopes, pjm: null };
+    return {
+      availability: { status: 'available' },
+      states,
+      unavailableScopes,
+      pjm: null,
+    };
   }
 
   const adoption = await dependencies.resolvePjmAdoption({
@@ -592,6 +667,7 @@ async function collectPackReport(
     repoRoot: join(projectRoot, '.oat', 'repo'),
   });
   return {
+    availability: { status: 'available' },
     states,
     unavailableScopes,
     pjm: {
@@ -621,6 +697,13 @@ function describePackScope(state: StatusPackScopeState): string {
 function formatPackReport(report: StatusPackReport): string | null {
   const lines: string[] = [];
 
+  if (report.availability.diagnostic) {
+    lines.push(
+      `${report.availability.diagnostic.code}: ${report.availability.diagnostic.message}`,
+      `  Fix: ${report.availability.diagnostic.recovery}`,
+    );
+  }
+
   if (report.states.length > 0) {
     lines.push('Pack state:');
     for (const state of report.states) {
@@ -635,6 +718,11 @@ function formatPackReport(report: StatusPackReport): string | null {
         }
         for (const diagnostic of scope.diagnostics) {
           lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+          if (diagnostic.paths.length > 0) {
+            lines.push(
+              `    Affected: ${formatPackPaths(diagnostic.paths, {})}`,
+            );
+          }
           if (diagnostic.recovery) {
             lines.push(`    Fix: ${diagnostic.recovery}`);
           }
@@ -645,6 +733,9 @@ function formatPackReport(report: StatusPackReport): string | null {
       }
       for (const diagnostic of state.diagnostics) {
         lines.push(`    ${diagnostic.code}: ${diagnostic.message}`);
+        if (diagnostic.paths.length > 0) {
+          lines.push(`    Affected: ${formatPackPaths(diagnostic.paths, {})}`);
+        }
         if (diagnostic.recovery) {
           lines.push(`    Fix: ${diagnostic.recovery}`);
         }
@@ -689,9 +780,10 @@ async function collectScopeReports(
       dependencies.resolveUserSyncConfig(userConfigDir),
     ]);
   const adapters = dependencies.getAdapters();
-  const activeAdapters = await dependencies.getActiveAdapters(
+  const { activeAdapters } = await dependencies.getConfigAwareAdapters(
     adapters,
     scopeRoot,
+    scope === 'user' ? userSyncConfig : syncConfig,
   );
   const reports: DriftReport[] = [];
   const strayCandidates: StatusStrayCandidate[] = [];
@@ -973,6 +1065,13 @@ async function runStatusCommand(
   const packReport = await collectPackReport(
     scopeRoots,
     unavailableScopes,
+    scopeCollections.some(
+      ({ scope, activeAdapterNames }) =>
+        scope === 'user' &&
+        activeAdapterNames.some(
+          (name) => name === 'codex' || name === 'cursor',
+        ),
+    ),
     dependencies,
   );
 

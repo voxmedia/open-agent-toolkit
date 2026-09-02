@@ -48,12 +48,14 @@ The linked backlog items are:
 - [`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto
   companion skill for autonomous closeouts](../../../repo/pjm/backlog/items/BL-260720-add-oat-project-complete-auto.md)
 
-The structured-output support item is intentionally a separate quick-start
-project for now:
+The bounded structured-output and headless no-yield items were delivered by
+the completed combined project `gate-execution-contract-hardening`:
 [`BL-260726-validate-structured-output` — Validate structured-output contract
-in gate skill commands](../../../repo/pjm/backlog/items/BL-260726-validate-structured-output.md).
-PR #190 may already subsume part of that item, so it must be reconciled before
-the quick project is planned.
+in gate skill commands](../../../repo/pjm/backlog/archived/BL-260726-validate-structured-output.md)
+and [`BL-260826-gate-targets-must-not-yield` — Gate targets must not yield on
+background work in headless mode](../../../repo/pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md).
+PR #190 was reconciled as compatibility input there; this project retains only
+the broader review/gate integrity scope.
 
 ## Problem Statement
 
@@ -191,22 +193,24 @@ validation primitives.
 **Q:** Should the structured-output and correlation work be treated as landed
 baseline, new work, or a conditional follow-up?
 
-**A:** Conditional follow-up. Dogfood and reconcile the unmerged PR first; do
-not assume its branch is part of current main.
+**A:** The completed combined gate-execution project reconciled PR #190 as
+compatibility input rather than assuming its branch was part of main.
 
-**Decision:** PR #190 is a hard compatibility boundary and the structured-output
-quick project requires a post-merge disposition.
+**Decision:** PR #190 remains a historical compatibility boundary; the
+structured-output slice was delivered by `gate-execution-contract-hardening`
+and requires no separate future disposition.
 
 ### Question 4: Is no-yield a standalone defect?
 
 **Q:** Should the headless gate child’s background/waiter behavior remain a
 quick-start project even though it changes gate surfaces used here?
 
-**A:** Yes, if the defect remains after PR #190. It is independently testable
-and can ship as a narrow diagnostic/contract correction.
+**A:** It was independently testable and shipped as the runtime phase of the
+combined `gate-execution-contract-hardening` project after PR #190
+reconciliation.
 
-**Decision:** Keep it as a linked quick project with a reconciliation gate, not
-as an uncoordinated duplicate.
+**Decision:** Treat the delivered no-yield slice as part of the sole combined
+owner, not as an independently tracked duplicate.
 
 ## Solution Space
 
@@ -271,7 +275,7 @@ exemptions are not acceptable.
 Use a two-layer defense provisionally: a clear headless contract plus runner
 classification, without authorizing replacement after child acceptance.
 Prompt-only enforcement is easy to bypass; runtime-only rejection can be
-opaque. The standalone quick project will validate the smallest safe slice.
+opaque. The completed combined project validated the smallest safe slice.
 
 ## Key Decisions
 
@@ -290,8 +294,9 @@ opaque. The standalone quick project will validate the smallest safe slice.
    distinct from an artifact correlation mismatch.
 7. PR #190 is compatibility input, not current main; reconcile before
    overlapping implementation.
-8. Keep `BL-260726-validate-structured-output` as a separate quick project
-   until PR #190 coverage is verified.
+8. Treat the completed combined `gate-execution-contract-hardening` project as
+   the sole owner of `BL-260726` and `BL-260826`; retain PR #190 only as
+   compatibility input and do not recreate the superseded quick scaffolds.
 9. This discovery is non-exhaustive and must be revalidated before design.
 
 ## Constraints
@@ -345,7 +350,8 @@ opaque. The standalone quick project will validate the smallest safe slice.
 - Automatically replacing an accepted worker or route after timeout/failure.
 - Provider-specific tool-pack scope/provider visibility work; that belongs to
   `tool-pack-scope-provider-truthfulness`.
-- Implementing the structured-output quick project before PR #190 disposition.
+- Reopening the delivered structured-output or no-yield slices, or recreating
+  their superseded scaffolds; the completed combined project owns them.
 - Finalizing design or starting implementation from this unvalidated dossier.
 
 ## Deferred Ideas
@@ -437,11 +443,10 @@ opaque. The standalone quick project will validate the smallest safe slice.
   is the baseline and is not duplicated here.
 - [PR #190 — ReviewPlan Stage A compatibility release](https://github.com/voxmedia/open-agent-toolkit/pull/190)
   is the direct compatibility boundary.
-- [`gate-headless-no-yield` — Headless Gate Targets Must Not Yield](../gate-headless-no-yield/)
-  is the bounded quick follow-up.
-- [`gate-structured-output-contract` — Structured Output Contract for Gate
-  Configuration](../gate-structured-output-contract/) is the bounded quick
-  follow-up pending PR #190 disposition.
+- `gate-execution-contract-hardening` is the combined bounded quick follow-up
+  for configured structured output and headless no-yield execution. It owns
+  only the configuration/runtime/integration seam and remains outside this
+  project's broader integrity model.
 - The scope/provider project owns provider role visibility, not review receipts;
   coordination is needed only at the dispatch-provenance seam.
 

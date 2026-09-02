@@ -296,12 +296,18 @@ describe('runPjmDoctorChecks', () => {
     expect(templateCheck?.status).toBe('pass');
   });
 
-  it('allows a top-level README.md but still flags genuinely-unknown top-level files (F5)', async () => {
+  it('allows documented layout companions but still flags genuinely-unknown top-level files (F5)', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-doctor-'));
     tempDirs.push(root);
     const repoRoot = await createCanonicalRepo(root);
     // A human-facing README at the repo-reference root is benign.
     await writeFile(join(repoRoot, 'README.md'), '# Repo reference');
+    await writeFile(join(repoRoot, 'CLAUDE.md'), '@AGENTS.md');
+    await writeFile(join(repoRoot, 'reference', 'CLAUDE.md'), '@AGENTS.md');
+    await writeFile(
+      join(repoRoot, 'reference', 'project-observations.md'),
+      '# Project Observations',
+    );
 
     const passingChecks = await runPjmDoctorChecks(repoRoot);
     const passingLayout = passingChecks.find(
@@ -309,6 +315,15 @@ describe('runPjmDoctorChecks', () => {
     );
     expect(passingLayout?.status).toBe('pass');
     expect(passingLayout?.message).not.toContain('README.md');
+    expect(passingLayout?.message).not.toContain('CLAUDE.md');
+    expect(
+      passingChecks.find((check) => check.name === 'pjm:loose_reference_files')
+        ?.status,
+    ).toBe('pass');
+    expect(
+      passingChecks.find((check) => check.name === 'pjm:loose_reference_files')
+        ?.message,
+    ).not.toContain('project-observations.md');
 
     // An actually-unknown top-level file still trips the layout check, even
     // alongside the now-allowed README.md.
@@ -327,6 +342,7 @@ describe('runPjmDoctorChecks', () => {
     );
     // The allowed README.md is NOT listed among the unknown entries.
     expect(failingLayout?.message).not.toContain('README.md');
+    expect(failingLayout?.message).not.toContain('CLAUDE.md');
   });
 
   async function writeBacklogItem(

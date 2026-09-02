@@ -12,9 +12,10 @@ labels:
   - doctor
 assignee: null
 created: 2026-08-19T23:14:55.849Z
-updated: 2026-08-19T23:14:55.849Z
+updated: 2026-08-30T23:49:30Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-08-30-repair-bundled-skill-contract-drift.md
 ---
 
 ## Description

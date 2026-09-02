@@ -39,6 +39,7 @@ import type { CursorExtensionPlan } from '@providers/cursor/codec/sync-extension
 import type { ProviderAdapter } from '@providers/shared';
 import {
   getAdoptionSources,
+  getConfigAwareAdapters,
   getSyncMappings,
 } from '@providers/shared/adapter.utils';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -56,6 +57,8 @@ interface TestHarnessOptions {
   codexRoleStrays?: CodexRoleStray[];
   syncConfigKnownStrays?: string[];
   userKnownStrays?: string[];
+  syncConfigProviders?: SyncConfig['providers'];
+  userSyncConfigProviders?: SyncConfig['providers'];
   codexExtensionPlan?: CodexExtensionPlan;
   cursorExtensionPlan?: CursorExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
@@ -70,6 +73,8 @@ interface TestHarnessOptions {
   packInventories?: PackInventory[];
   pjmAdoption?: PjmAdoption;
   projectScopeUnavailable?: boolean;
+  resolveAssetsRootError?: Error;
+  inventoryPackError?: { pack: PackName; error: Error };
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -196,6 +201,20 @@ function createCopilotAdapter(): ProviderAdapter {
   };
 }
 
+function createDetectedAdapter(
+  name: string,
+  detected: boolean,
+): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'auto',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => detected,
+  };
+}
+
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
@@ -242,6 +261,16 @@ function packAsset(
     installedVersion: null,
     bundledVersion: null,
   };
+}
+
+function sharedPackAsset(
+  destination: string,
+  status: PackAssetStatus,
+  scope: 'project' | 'user',
+): PackAssetInventory {
+  const asset = packAsset(destination, status, scope);
+  asset.definition.sharedOwner = 'resolve-tracking';
+  return asset;
 }
 
 function scopedInventory(
@@ -299,6 +328,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   detectStrays: ReturnType<typeof vi.fn>;
   inventoryPack: ReturnType<typeof vi.fn>;
+  resolveAssetsRoot: ReturnType<typeof vi.fn>;
   resolvePjmAdoption: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
@@ -344,10 +374,12 @@ function createHarness(options: TestHarnessOptions = {}): {
   const syncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.syncConfigKnownStrays ?? [],
+    providers: options.syncConfigProviders ?? {},
   };
   const userSyncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.userKnownStrays ?? [],
+    providers: options.userSyncConfigProviders ?? {},
   };
   const detectCodexRoleStrays = vi.fn(
     async () => options.codexRoleStrays ?? [],
@@ -382,6 +414,9 @@ function createHarness(options: TestHarnessOptions = {}): {
     ]),
   );
   const inventoryPack = vi.fn(async ({ pack }: { pack: PackName }) => {
+    if (options.inventoryPackError?.pack === pack) {
+      throw options.inventoryPackError.error;
+    }
     return (
       inventoriesByPack.get(pack) ?? {
         pack,
@@ -418,6 +453,12 @@ function createHarness(options: TestHarnessOptions = {}): {
     failed: 0,
     skipped: 0,
   }));
+  const resolveAssetsRoot = vi.fn(async () => {
+    if (options.resolveAssetsRootError) {
+      throw options.resolveAssetsRootError;
+    }
+    return '/tmp/assets';
+  });
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -446,9 +487,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanCanonical,
     scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
-    getActiveAdapters: vi.fn(
-      async (activeAdapters: ProviderAdapter[]) => activeAdapters,
-    ),
+    getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
     getSyncMappings: vi.fn(getSyncMappings),
     getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {
@@ -468,7 +507,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     adoptStray,
     applyNativeSkillDisposition,
     formatStatusTable: formatReports,
-    resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
+    resolveAssetsRoot,
     inventoryPack,
     resolvePjmAdoption,
   });
@@ -487,6 +526,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     computeCodexProjectExtensionPlan,
     detectStrays,
     inventoryPack,
+    resolveAssetsRoot,
     resolvePjmAdoption,
   };
 }
@@ -1699,6 +1739,157 @@ describe('createStatusCommand', () => {
   });
 
   describe('managed pack state', () => {
+    it.each([
+      {
+        label: 'Claude-only detection',
+        adapters: [createDetectedAdapter('claude', true)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'Codex configured enabled without detection',
+        adapters: [createDetectedAdapter('codex', false)],
+        providers: { codex: { enabled: true } },
+        expected: true,
+      },
+      {
+        label: 'Codex configured disabled with detection',
+        adapters: [createDetectedAdapter('codex', true)],
+        providers: { codex: { enabled: false } },
+        expected: false,
+      },
+      {
+        label: 'Codex detected with unset config',
+        adapters: [createDetectedAdapter('codex', true)],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'Codex absent with unset config',
+        adapters: [createDetectedAdapter('codex', false)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'Cursor configured enabled without detection',
+        adapters: [createDetectedAdapter('cursor', false)],
+        providers: { cursor: { enabled: true } },
+        expected: true,
+      },
+      {
+        label: 'Cursor configured disabled with detection',
+        adapters: [createDetectedAdapter('cursor', true)],
+        providers: { cursor: { enabled: false } },
+        expected: false,
+      },
+      {
+        label: 'Cursor detected with unset config',
+        adapters: [createDetectedAdapter('cursor', true)],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'Cursor absent with unset config',
+        adapters: [createDetectedAdapter('cursor', false)],
+        providers: {},
+        expected: false,
+      },
+      {
+        label: 'mixed Claude and Cursor detection',
+        adapters: [
+          createDetectedAdapter('claude', true),
+          createDetectedAdapter('cursor', true),
+        ],
+        providers: {},
+        expected: true,
+      },
+      {
+        label: 'no providers',
+        adapters: [],
+        providers: {},
+        expected: false,
+      },
+    ])(
+      'uses config-aware user managed-role capability for $label',
+      async ({ adapters, providers, expected }) => {
+        const { command, inventoryPack } = createHarness({
+          adapters,
+          userSyncConfigProviders: providers,
+          driftReports: [],
+        });
+
+        await runStatusCommand(command, ['--scope', 'user']);
+
+        expect(inventoryPack).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pack: 'core',
+            userManagedRoleMaterialization: expected,
+          }),
+        );
+      },
+    );
+
+    it('reports the same redacted affected agents in human and JSON output', async () => {
+      const affected = [
+        '/tmp/home/.agents/agents/oat-codebase-mapper.md',
+        '/tmp/home/.agents/agents/skeptical-evaluator.md',
+      ];
+      const inventories = [
+        packInventory('research', [
+          scopedInventory(
+            'research',
+            'user',
+            'complete',
+            [packAsset('.agents/skills/analyze', 'current', 'user')],
+            {
+              diagnostics: [
+                {
+                  code: 'user-agent-unmaterialized',
+                  message:
+                    'Native provider-role materialization is unavailable for the affected user agents; canonical instruction reads are unaffected.',
+                  paths: affected,
+                },
+              ],
+            },
+          ),
+        ]),
+      ];
+      const human = createHarness({
+        driftReports: [],
+        packInventories: inventories,
+      });
+      const json = createHarness({
+        driftReports: [],
+        packInventories: inventories,
+      });
+
+      await runStatusCommand(human.command, ['--scope', 'user']);
+      await runStatusCommand(json.command, ['--scope', 'user', '--json']);
+
+      const humanOutput = human.capture.info.join('\n');
+      const payload = json.capture.jsonPayloads[0] as {
+        packs: {
+          states: Array<{
+            scopes: Array<{
+              diagnostics: Array<{ code: string; paths: string[] }>;
+            }>;
+          }>;
+        };
+      };
+      const jsonAffected = payload.packs.states
+        .flatMap(({ scopes }) => scopes)
+        .flatMap(({ diagnostics }) => diagnostics)
+        .find(({ code }) => code === 'user-agent-unmaterialized')?.paths;
+      expect(jsonAffected).toEqual([
+        '~/.agents/agents/oat-codebase-mapper.md',
+        '~/.agents/agents/skeptical-evaluator.md',
+      ]);
+      for (const path of jsonAffected ?? []) {
+        expect(humanOutput).toContain(path);
+      }
+      expect(humanOutput).not.toContain('/tmp/home/.agents');
+    });
+
     it('reports partial pack completeness with a scoped recovery command', async () => {
       const { capture, command } = createHarness({
         driftReports: [],
@@ -1726,6 +1917,50 @@ describe('createStatusCommand', () => {
       expect(packSection).toContain(
         'oat tools update --pack docs --scope project',
       );
+    });
+
+    it('renders one shared-owner observation for the applicable pack only', async () => {
+      const sharedPath = '.oat/scripts/resolve-tracking.sh';
+      const { capture, command } = createHarness({
+        driftReports: [],
+        packInventories: [
+          packInventory('docs', [
+            scopedInventory(
+              'docs',
+              'user',
+              'absent',
+              [sharedPackAsset(sharedPath, 'current', 'user')],
+              {
+                intent: {
+                  pack: 'docs',
+                  scope: 'user',
+                  enabled: false,
+                  source: 'none',
+                  configPath: '/tmp/home/.oat/config.json',
+                  diagnostics: [],
+                },
+              },
+            ),
+          ]),
+          packInventory('workflows', [
+            scopedInventory('workflows', 'user', 'complete', [
+              packAsset('.agents/skills/oat-project-new', 'current', 'user'),
+              sharedPackAsset(sharedPath, 'current', 'user'),
+            ]),
+          ]),
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'user']);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('workflows');
+      expect(output).toContain('shared-owner-observation');
+      expect(output).toContain(
+        'installed or intended pack owner(s): workflows',
+      );
+      expect(output.match(/shared-owner-observation/g)).toHaveLength(1);
+      expect(output).not.toContain('docs: no installed scope');
     });
 
     it('emits structured pack state in JSON mode', async () => {
@@ -1906,6 +2141,7 @@ describe('createStatusCommand', () => {
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
+        userManagedRoleMaterialization: false,
       });
     });
 
@@ -1926,7 +2162,70 @@ describe('createStatusCommand', () => {
         pack: 'core',
         assetsRoot: '/tmp/assets',
         userRoot: '/tmp/home',
+        userManagedRoleMaterialization: false,
       });
+    });
+
+    it('degrades asset-resolution failures to a redacted human inventory warning', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+        resolveAssetsRootError: new Error(
+          'bundle metadata unavailable under /tmp/home/private-assets',
+        ),
+      });
+
+      await expect(
+        runStatusCommand(command, ['--scope', 'all']),
+      ).resolves.toBeUndefined();
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('packs:inventory');
+      expect(output).toContain(
+        'bundle metadata unavailable under ~/private-assets',
+      );
+      expect(output).toContain('project scope is unavailable');
+      expect(output).not.toContain('/tmp/home');
+    });
+
+    it('degrades one-pack inventory failures to structured JSON', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [],
+        projectScopeUnavailable: true,
+        inventoryPackError: {
+          pack: 'workflows',
+          error: new Error(
+            'cannot read /tmp/home/.agents/skills/oat-project-new',
+          ),
+        },
+      });
+
+      await expect(
+        runStatusCommand(command, ['--scope', 'all', '--json']),
+      ).resolves.toBeUndefined();
+
+      const payload = capture.jsonPayloads[0] as {
+        packs: {
+          availability: {
+            status: string;
+            diagnostic?: { code: string; message: string; recovery: string };
+          };
+          states: unknown[];
+          unavailableScopes: string[];
+        };
+      };
+      expect(payload.packs.availability).toMatchObject({
+        status: 'unavailable',
+        diagnostic: {
+          code: 'packs:inventory',
+          message:
+            'Unable to inventory managed packs: cannot read ~/.agents/skills/oat-project-new',
+          recovery: 'Run `pnpm build` and rerun `oat status`.',
+        },
+      });
+      expect(payload.packs.states).toEqual([]);
+      expect(payload.packs.unavailableScopes).toEqual(['project']);
+      expect(JSON.stringify(payload)).not.toContain('/tmp/home');
     });
 
     it('fails when an explicitly requested project scope is unavailable', async () => {
@@ -2010,13 +2309,13 @@ describe('createStatusCommand', () => {
     });
 
     it('skips managed pack inventory in hook mode', async () => {
-      const { command, inventoryPack, resolvePjmAdoption } = createHarness({
-        driftReports: [],
-      });
+      const { command, inventoryPack, resolveAssetsRoot, resolvePjmAdoption } =
+        createHarness({ driftReports: [] });
 
       await runStatusCommand(command, ['--scope', 'project', '--hook']);
 
       expect(inventoryPack).not.toHaveBeenCalled();
+      expect(resolveAssetsRoot).not.toHaveBeenCalled();
       expect(resolvePjmAdoption).not.toHaveBeenCalled();
     });
   });

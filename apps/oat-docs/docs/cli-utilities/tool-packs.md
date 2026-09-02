@@ -189,23 +189,30 @@ creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
 `workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
 and the project `.gitkeep` files — are pinned to project scope.
 
-#### User-scope agents reach no provider
+#### User-scope agents have limited native materialization
 
-Canonical **agents** are installed at either scope, but only project scope
-materializes a provider view for them. At user scope the sync pipeline
-enumerates skills only, and the sole user-scope agent materialization is the
-bundled managed role file set (`oat-phase-implementer.md` and
-`oat-reviewer.md`). A pack installed at user scope therefore writes its agents
-to `~/.agents/agents/` where no provider can see them — for example
-`oat tools install workflows --scope user` leaves `oat-codebase-mapper` without
-a provider agent, and `oat tools install research --scope user` does the same
-for `skeptical-evaluator`.
+Canonical **agents** are installed at either scope. At user scope, native
+Codex or Cursor role materialization is active only when that adapter is active
+under the resolved sync config: explicit enablement wins without filesystem
+detection, explicit disablement wins despite detection, and an unset adapter
+follows detection. That native materialization supplies the bundled managed
+role files (`oat-phase-implementer.md` and `oat-reviewer.md`); it does not
+materialize other pack-owned user agents. For example, a user-scope workflows
+install leaves `oat-codebase-mapper` without a native provider role, and a
+user-scope research install does the same for `skeptical-evaluator`. When no
+Codex or Cursor adapter is active, even the bundled managed roles lack native
+materialization.
+
+This diagnostic concerns native provider roles only. Providers may read
+canonical agent instructions through a separate loaded, user, and project
+lookup contract; that read availability does not establish native
+materialization and does not suppress this finding.
 
 `oat status` and `oat doctor` name the affected agents with a
 `user-agent-unmaterialized` finding rather than reporting the pack as complete
 without qualification. Install the pack at **project scope** when you need its
-agents; `oat tools update` cannot repair this, because it is a scope limitation
-rather than drift.
+native provider roles; `oat tools update` cannot repair this, because it is a
+scope limitation rather than drift.
 
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
@@ -299,12 +306,14 @@ The canonical surface splits active operational state (under `pjm/`) from durabl
 
 Decisions are now file-per-record under `reference/decisions/` (created and indexed with the [`oat decision`](config-and-local-state.md#oat-decision-) command group), replacing the legacy single `decision-record.md`. Repos still on the old `reference/` layout can migrate with `oat pjm migrate`.
 
-> **Current migration prerequisite:** In CLI `0.2.37`, `oat pjm migrate` still
-> requires project-scope `tools.project-management: true` in `.oat/config.json`;
-> a user-only pack install does not satisfy that gate. In an adopted legacy
-> repository, run `oat config set tools.project-management true` before the
-> migration preview. Removing this temporary coupling is tracked by
-> `BL-260827-correct-scope-and-adoption`.
+Migration eligibility is independent of where the `project-management` pack is
+installed. `oat pjm migrate` resolves the repository's adoption state for
+diagnostic context, then inventories recognized legacy sources before writing.
+A complete current layout returns `already-migrated`; recognized legacy input
+can be previewed or applied from any adoption state; and a repository with
+neither recognized legacy input nor a complete current layout is skipped with
+an `oat pjm init` recovery. `--print-prompt` only reads the bundled prompt and
+does not inspect adoption or modify the repository.
 
 Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
 
@@ -322,11 +331,13 @@ repository-mutating PJM command checks it before writing anything:
 | `partial-initialization` | Some canonical scaffold files exist but the surface is incomplete | `oat pjm init` |
 | `none`                   | The repository has not adopted PJM                                | `oat pjm init` |
 
-`oat pjm`, `oat backlog`, and `oat decision` mutations **fail closed** for
-`partial-initialization` and `none`. They write nothing and return an error
-naming the repository path and `oat pjm init` as the recovery. `oat backlog
-init` and `oat decision init` are no longer alternate adoption paths for the
-full PJM surface.
+Normal `oat pjm`, `oat backlog`, and `oat decision` mutations **fail closed**
+for `partial-initialization` and `none`. They write nothing and return an error
+naming the repository path and `oat pjm init` as the recovery. The explicit
+`oat pjm migrate` command is the bounded exception: recognized legacy sources
+authorize that migration regardless of the adoption label. `oat backlog init`
+and `oat decision init` are no longer alternate adoption paths for the full PJM
+surface.
 
 Run `oat pjm doctor` to inspect an existing surface. It is read-only, reports
 missing canonical files, leftover template frontmatter, and
