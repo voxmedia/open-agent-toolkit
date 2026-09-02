@@ -1,8 +1,7 @@
 ---
-oat_current_task: p05-parent-identity-decision
+oat_current_task: p06-t01
 oat_last_commit: 52d2e69addd6ca17b421f48de9a858a9a31a0366
-oat_blockers:
-  - Phase 5 redesign review found a Critical parent-identity race in absent-file creation; the one-review authorization is exhausted and operator direction is required before another fix/review cycle or Phase 6.
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -112,9 +111,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the safer Phase 5 redesign protects every existing
-`AGENTS.md`, but its absent-file exclusive create can be redirected if the
-repository parent is swapped after validation. Operator direction is required.
+Implementation - Phase 5 passes by explicit operator acceptance of the narrow
+absent-file parent-swap residual risk. Existing `AGENTS.md` files and symlinks
+remain zero-write. Phase 6 begins at `p06-t01`.
 
 ## Artifacts
 
@@ -122,7 +121,7 @@ repository parent is swapped after validation. Operator direction is required.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p05 parent-identity decision required)
+- **Implementation:** `implementation.md` (in progress — p06-t01 next)
 
 ## Progress
 
@@ -160,15 +159,14 @@ repository parent is swapped after validation. Operator direction is required.
 - ✓ Fail-closed existing-file manual-patch redesign selected
 - ✓ Bounded redesign implementation completed at `52d2e69add`
 - ⧗ Fresh review blocked with 1 Critical parent-identity race
+- ✓ Parent-swap residual risk explicitly accepted by operator
+- ✓ Phase 5 passed by operator disposition
 
 ## Blockers
 
-- A repository-directory swap immediately before the absent-file `writeFile(wx)`
-  can redirect creation outside the validated root while reporting success.
-- The one authorized redesign review is exhausted; Phase 6 remains gated.
+- None.
 
 ## Next Milestone
 
-Choose either an identity-bound parent-relative exclusive-create capability or
-a fully manual-only absent-file policy, then explicitly authorize any bounded
-Phase 5 fix/review continuation.
+Implement Phase 6 native dispatch and fallback provenance beginning with the
+canonical role resolver in `p06-t01`.

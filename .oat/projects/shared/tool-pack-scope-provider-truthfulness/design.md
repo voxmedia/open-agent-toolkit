@@ -1015,7 +1015,10 @@ separate.
   symlink target.
 - Marker pairs must be unique and ordered; malformed duplicate markers block
   automatic modification.
-- Missing targets may use exclusive creation. Existing files and symlinks may
+- Missing targets may use pathname-based exclusive creation after final
+  containment and identity revalidation. The operator explicitly accepts the
+  residual local race in which a privileged concurrent process swaps the
+  validated repository parent before creation. Existing files and symlinks may
   return `no-change`, `manual-required`, or `blocked`, but never an automatic
   update. Manual results include only the managed block, legacy-block action,
   redacted target, and copy-pasteable instructions; they never echo unrelated
@@ -1308,6 +1311,12 @@ values are never inspected or persisted by evidence collection.
   the identity-bound conditional replacement needed by this contract.
   Automatic guidance therefore creates absent files exclusively and converts
   every existing-file or symlink update into a zero-write manual patch.
+- **Absent `AGENTS.md` parent swap:** Exclusive creation prevents target
+  overwrite but cannot bind the previously validated parent directory through
+  the create. The operator accepts this narrow residual risk because exploiting
+  it requires a privileged concurrent local process to replace the repository
+  pathname in the final validation-to-create interval. This exception does not
+  permit automatic mutation of existing files or symlinks.
 - **Unmanaged-content loss:** Provider divergence falls back to per-entry sync.
   Existing real directories are never converted in the first release.
 - **Canonical deletion through alias:** No child remove/update operation is

@@ -247,7 +247,10 @@ selection authoritative.
   - No broad delete/recreate fallback is used for provider directories or
     `AGENTS.md`.
   - Broken, escaping, foreign, or apply-time-swapped paths fail closed before
-    mutation.
+    mutation, except for the explicitly accepted residual race on exclusive
+    creation of an absent root `AGENTS.md`: a privileged concurrent local
+    process can swap the validated repository parent before pathname-based
+    creation. Existing files and symlinks remain zero-write.
   - Home paths and user-specific absolute paths remain redacted in durable
     output.
 - **Priority:** P0

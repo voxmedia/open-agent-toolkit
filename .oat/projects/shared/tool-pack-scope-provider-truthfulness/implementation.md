@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase 5 redesign review found a Critical parent-identity race in absent-file creation; the one-review authorization is exhausted and operator direction is required before another fix/review cycle or Phase 6.
+oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-parent-identity-decision
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -31,7 +30,7 @@ oat_generated: false
 | Phase 2 | complete | 7     | 7/7       |
 | Phase 3 | complete | 5     | 5/5       |
 | Phase 4 | complete | 5     | 5/5       |
-| Phase 5 | blocked  | 4     | 4/4       |
+| Phase 5 | complete | 4     | 4/4       |
 | Phase 6 | pending  | 4     | 0/4       |
 | Phase 7 | pending  | 4     | 0/4       |
 
@@ -1233,7 +1232,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ## Phase 5: Independent Project AGENTS.md Guidance
 
-**Status:** blocked pending review fixes
+**Status:** completed by operator disposition after 4/4 tasks and review
 **Started:** 2026-09-02
 
 ### Task Outcomes
@@ -1378,6 +1377,22 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   adding another pathname race check.
 - The original exact-High Phase 5 implementer owns one bounded redesign fix,
   followed by one fresh independent review. Phase 6 remains gated.
+
+### Operator Disposition — Accept Absent-File Parent-Swap Residual Risk
+
+- Review artifact: `reviews/p05-review-2026-09-02T134849Z.md`
+- Reviewed head: `52d2e69addd6ca17b421f48de9a858a9a31a0366`
+- The redesign review passed all 427 Phase 5 tests and static checks but
+  reproduced one narrow race: a privileged concurrent local process can swap
+  the validated repository directory before pathname-based `writeFile(wx)`,
+  redirecting creation of an otherwise absent `AGENTS.md`.
+- Thomas explicitly accepted this residual risk on 2026-09-02. The decision is
+  based on the extreme local timing and permission prerequisites, the absence
+  of any existing-file overwrite, and the retained user value of automatic
+  first-time guidance creation.
+- `spec.md` and `design.md` now record the accepted exception. No code change or
+  additional Phase 5 review is required. Phase 5 passes by operator disposition
+  and `p06-t01` is next.
 
 ---
 
@@ -2114,6 +2129,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   parent-relative creation and a fully manual-only absent-file policy.
 - Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+#### Operator disposition — residual race accepted
+
+- Direction: Thomas accepted the absent-file parent-swap residual risk and
+  instructed implementation to proceed.
+- Scope: exclusive creation of a missing root `AGENTS.md` only. Existing files
+  and symlinks remain zero-write manual guidance.
+- Outcome: the lifecycle artifacts record the exception; no Phase 5 code change
+  or re-review is required. Phase 5 passes and Phase 6 begins at `p06-t01`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -2237,6 +2261,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p03 review r2 | plan file union  | p03-t04 named command source/tests only  | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                       | Mechanically derived docs reference     | Round-2 review finding | recorded; no production expansion |
 | p03 review r2 | plan file union  | provider help source changed             | Added adjacent `packages/cli/src/commands/help-snapshots.test.ts` for the two mechanically stale provider-set inline snapshots                                          | Mechanically derived snapshot fixture   | Full test gate         | recorded; no production expansion |
 | p04 review r9 | design           | absent proof releases directory work     | Aligned two stale passages to the verified fail-closed implementation and accepted the correction without another review                                                | Explicit operator disposition           | implementation/docs    | none                              |
+| p05 review r5 | spec/design      | all apply-time-swapped paths fail closed | Accepted the narrow privileged-local parent-swap race for pathname-based exclusive creation of an absent root `AGENTS.md`; existing targets remain zero-write           | Explicit operator risk acceptance       | implementation/code    | documented residual risk          |
 
 ## Test Results
 
