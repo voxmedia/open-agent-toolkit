@@ -4,7 +4,12 @@ import {
   CLAUDE_OBSERVATION_SOURCE,
   extractClaudeRuntimeMetadata,
   parseClaudeRuntimeObservation,
+  projectClaudeMetadataEntries,
 } from './claude-runtime-observation';
+import {
+  MAIN_SESSION_TRANSCRIPT,
+  SIDECHAIN_TRANSCRIPT,
+} from './claude-runtime-observation.fixtures';
 
 const OBSERVED_AT = '2026-09-02T12:00:00.000Z';
 
@@ -15,152 +20,239 @@ const configured = {
   serviceTier: 'standard',
 };
 
-function initEntry(fields: Record<string, unknown> = {}) {
-  return {
-    type: 'system',
-    subtype: 'init',
-    session_id: 'sess-claude-1',
+/** A real-shaped assistant entry. `message` is built by the caller. */
+function assistantEntry(
+  overrides: Record<string, unknown> = {},
+  message: Record<string, unknown> | null = {
     model: 'claude-opus-5',
-    service_tier: 'standard',
-    agent: 'oat-phase-implementer',
-    ...fields,
+    usage: { service_tier: 'standard' },
+  },
+) {
+  const entry: Record<string, unknown> = {
+    type: 'assistant',
+    isSidechain: true,
+    effort: 'high',
+    sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
+    requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
+    uuid: '0f106449-eeb9-475c-8186-d70b9d14a82c',
+    parentUuid: '95017f46-0284-49e3-9a7c-597ad4364042',
+    ...overrides,
   };
-}
-
-/**
- * A conversation entry whose `message` throws the moment it is read. The parser
- * must classify by `type` alone, so touching it is a test failure.
- */
-function conversationEntry(type: string) {
-  const entry = { type };
-  Object.defineProperty(entry, 'message', {
-    enumerable: true,
-    get() {
-      throw new Error(`Conversation content was read from a ${type} entry.`);
-    },
-  });
+  if (message !== null) entry.message = message;
   return entry;
 }
 
-describe('extractClaudeRuntimeMetadata', () => {
-  it('reads init metadata without touching conversation content', () => {
-    expect(
-      extractClaudeRuntimeMetadata([
-        conversationEntry('user'),
-        initEntry(),
-        conversationEntry('assistant'),
-      ]),
-    ).toEqual({
-      role: 'oat-phase-implementer',
-      model: 'claude-opus-5',
-      effort: 'not-exposed',
+/**
+ * An assistant entry whose `message.content` throws the moment it is read.
+ * The parser must reach `message.model` and `message.usage.service_tier` by
+ * explicit key path, so it must never spread, enumerate, or filter `message`.
+ */
+function contentTrapEntry(overrides: Record<string, unknown> = {}) {
+  const message: Record<string, unknown> = {
+    model: 'claude-opus-5',
+    usage: { service_tier: 'standard' },
+    id: 'msg_01',
+    role: 'assistant',
+  };
+  Object.defineProperty(message, 'content', {
+    enumerable: true,
+    get() {
+      throw new Error('Conversation content was read from message.content.');
+    },
+  });
+  return assistantEntry(overrides, message);
+}
+
+/** A conversation entry whose whole body throws if touched. */
+function conversationEntry(type: string) {
+  const entry = { type };
+  for (const key of ['message', 'content', 'toolUseResult']) {
+    Object.defineProperty(entry, key, {
+      enumerable: true,
+      get() {
+        throw new Error(`Conversation content was read from a ${type} entry.`);
+      },
+    });
+  }
+  return entry;
+}
+
+describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
+  it('reads a real main-session transcript as root', () => {
+    expect(extractClaudeRuntimeMetadata(MAIN_SESSION_TRANSCRIPT)).toEqual({
+      childLineage: 'root',
+      role: null,
+      model: 'claude-fable-5',
+      effort: 'high',
       serviceTier: 'standard',
       requestId: null,
+      sessionId: '7f9d5ab4-3b08-4a21-adb5-405c04af2d89',
     });
   });
 
-  it('retains not-exposed for the unselectable native effort axis', () => {
-    expect(extractClaudeRuntimeMetadata([initEntry()])?.effort).toBe(
-      'not-exposed',
+  it('reads a real sidechain transcript as a child of undetermined depth', () => {
+    // `isSidechain` proves this is a subagent turn. No depth, nesting, or
+    // ancestry field exists on any of 141,078 captured assistant entries, so
+    // depth is reported unknown rather than invented.
+    expect(extractClaudeRuntimeMetadata(SIDECHAIN_TRANSCRIPT)).toMatchObject({
+      childLineage: 'depth-unknown',
+      model: 'claude-opus-5',
+      effort: 'high',
+      serviceTier: 'standard',
+    });
+  });
+
+  it('reports the real effort axis instead of claiming it is unexposed', () => {
+    expect(extractClaudeRuntimeMetadata([assistantEntry()])?.effort).toBe(
+      'high',
     );
     expect(
-      extractClaudeRuntimeMetadata([initEntry({ reasoning_effort: 'high' })])
+      extractClaudeRuntimeMetadata([assistantEntry({ effort: 'xhigh' })])
         ?.effort,
-    ).toBe('high');
+    ).toBe('xhigh');
+    // Absent means unknown, not "the provider has no such axis".
+    expect(
+      extractClaudeRuntimeMetadata([assistantEntry({ effort: undefined })])
+        ?.effort,
+    ).toBeNull();
+    expect(
+      JSON.stringify(extractClaudeRuntimeMetadata([assistantEntry()])),
+    ).not.toContain('not-exposed');
   });
 
-  it('falls back to result model usage when init omits a field', () => {
+  it('never reads message.content while reaching model and service tier', () => {
+    expect(extractClaudeRuntimeMetadata([contentTrapEntry()])).toMatchObject({
+      model: 'claude-opus-5',
+      serviceTier: 'standard',
+      effort: 'high',
+    });
+  });
+
+  it('never opens a conversation entry of another type', () => {
     expect(
       extractClaudeRuntimeMetadata([
-        initEntry({ model: undefined, service_tier: undefined }),
-        {
-          type: 'result',
-          subtype: 'success',
-          modelUsage: { 'claude-opus-5': { serviceTier: 'standard' } },
-        },
+        conversationEntry('user'),
+        conversationEntry('attachment'),
+        contentTrapEntry(),
+        conversationEntry('file-history-snapshot'),
+      ])?.model,
+    ).toBe('claude-opus-5');
+  });
+
+  it('uses the most recent turn and fills gaps from earlier ones', () => {
+    expect(
+      extractClaudeRuntimeMetadata([
+        assistantEntry({ effort: 'medium' }),
+        assistantEntry({ effort: 'xhigh' }, { model: 'claude-sonnet-5' }),
       ]),
-    ).toMatchObject({ model: 'claude-opus-5', serviceTier: 'standard' });
+    ).toMatchObject({
+      effort: 'xhigh',
+      model: 'claude-sonnet-5',
+      // Carried from the earlier turn, which is the only one that reported it.
+      serviceTier: 'standard',
+    });
   });
 
-  it('returns null when no Claude metadata entry is present', () => {
-    expect(extractClaudeRuntimeMetadata([])).toBeNull();
+  it('declines a transcript that mixes sessions', () => {
+    // Every captured transcript carries exactly one sessionId, so more than one
+    // means the envelope was assembled from several sessions and no single
+    // applicable child exists.
     expect(
       extractClaudeRuntimeMetadata([
-        conversationEntry('assistant'),
-        { type: 'system', subtype: 'compact_boundary' },
+        assistantEntry(),
+        assistantEntry({ sessionId: '00000000-0000-4000-8000-000000000000' }),
       ]),
     ).toBeNull();
   });
 
-  it('drops values that fail the bounded identifier shape', () => {
+  it('drops values that are not provider identifiers', () => {
     expect(
       extractClaudeRuntimeMetadata([
-        initEntry({ model: 'x'.repeat(300), agent: 'role with spaces' }),
+        assistantEntry({}, { model: '<synthetic>' }),
+      ])?.model,
+    ).toBeNull();
+    expect(
+      extractClaudeRuntimeMetadata([
+        assistantEntry({}, { model: 'a'.repeat(300) }),
+      ])?.model,
+    ).toBeNull();
+  });
+
+  it('returns null when no assistant metadata is present', () => {
+    expect(extractClaudeRuntimeMetadata([])).toBeNull();
+    expect(
+      extractClaudeRuntimeMetadata([
+        conversationEntry('user'),
+        conversationEntry('queue-operation'),
       ]),
-    ).toMatchObject({ model: null, role: null, serviceTier: 'standard' });
+    ).toBeNull();
   });
 });
 
-describe('parseClaudeRuntimeObservation', () => {
-  it('reports a source-qualified matching observation', () => {
+describe('projectClaudeMetadataEntries', () => {
+  it('reaches message by two explicit key paths and nothing else', () => {
+    const [projected] = projectClaudeMetadataEntries([contentTrapEntry()]) as [
+      Record<string, unknown>,
+    ];
+    expect(projected.message).toEqual({
+      model: 'claude-opus-5',
+      usage: { service_tier: 'standard' },
+    });
+    // Unread entry-level keys are dropped, not carried through.
+    expect(projected).not.toHaveProperty('uuid');
+    expect(projected).not.toHaveProperty('parentUuid');
+    expect(JSON.stringify(projected)).not.toContain('msg_01');
+  });
+
+  it('drops the body of a conversation entry entirely', () => {
+    expect(projectClaudeMetadataEntries([conversationEntry('user')])).toEqual([
+      { type: 'user' },
+    ]);
+  });
+});
+
+describe('parseClaudeRuntimeObservation against captured transcripts', () => {
+  it('reports a source-qualified observation from a real sidechain', () => {
     expect(
       parseClaudeRuntimeObservation({
-        entries: [initEntry()],
+        entries: SIDECHAIN_TRANSCRIPT,
         observedAt: OBSERVED_AT,
         configured,
       }),
     ).toEqual({
       status: 'reported',
       provider: 'claude',
-      role: 'oat-phase-implementer',
+      childLineage: 'depth-unknown',
       model: 'claude-opus-5',
-      effort: 'not-exposed',
+      effort: 'high',
       serviceTier: 'standard',
       source: CLAUDE_OBSERVATION_SOURCE,
       observedAt: OBSERVED_AT,
       match: 'matching',
-      comparedAxes: ['role', 'model', 'serviceTier'],
+      comparedAxes: ['model', 'effort', 'serviceTier'],
     });
-  });
-
-  it('never turns an unexposed effort axis into a mismatch', () => {
-    expect(
-      parseClaudeRuntimeObservation({
-        entries: [initEntry()],
-        observedAt: OBSERVED_AT,
-        configured: { ...configured, effort: 'low' },
-      }),
-    ).toMatchObject({ match: 'matching', effort: 'not-exposed' });
   });
 
   it('reports a mismatching model without authorizing anything', () => {
     expect(
       parseClaudeRuntimeObservation({
-        entries: [initEntry({ model: 'claude-haiku-5' })],
+        entries: [assistantEntry({}, { model: 'claude-haiku-4-5-20251001' })],
         observedAt: OBSERVED_AT,
         configured,
       }),
-    ).toMatchObject({ match: 'mismatching', model: 'claude-haiku-5' });
+    ).toMatchObject({
+      match: 'mismatching',
+      model: 'claude-haiku-4-5-20251001',
+    });
   });
 
   it('never copies requested values when parsing finds nothing', () => {
     const observation = parseClaudeRuntimeObservation({
-      entries: [conversationEntry('assistant')],
+      entries: [conversationEntry('user')],
       observedAt: OBSERVED_AT,
       configured,
     });
     expect(observation).toEqual({ status: 'not-reported' });
     expect(JSON.stringify(observation)).not.toContain('claude-opus-5');
-  });
-
-  it('declines correlation when the session names a different request', () => {
-    expect(
-      parseClaudeRuntimeObservation({
-        entries: [initEntry({ request_id: 'dispatch-other' })],
-        observedAt: OBSERVED_AT,
-        requestId: 'dispatch-native-1',
-        configured,
-      }),
-    ).toEqual({ status: 'not-reported' });
   });
 });

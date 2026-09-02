@@ -408,7 +408,10 @@ const runtimeObservationSchema = z.discriminatedUnion('status', [
 /**
  * The comparable axes a provider may report about its own child. Every field is
  * optional: a provider that does not expose an axis reports nothing for it, and
- * an axis it exposes but cannot select reports the literal `not-exposed`.
+ * an axis a provider genuinely does not have reports the literal `not-exposed`.
+ * That value is reserved for a truly absent axis: an axis that simply went
+ * unreported on a given run is left absent instead, so the two cases stay
+ * distinguishable.
  * Nothing here is ever populated from the configured invocation.
  */
 export interface ObservedRuntimeMetadata {

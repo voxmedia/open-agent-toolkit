@@ -113,10 +113,15 @@ child, so a configured selection and an observed identity stay independently
 readable.
 
 Codex reports child lineage, role, model, effort, and service tier through its
-session and turn metadata. Claude reports role, model, and service tier; it
-exposes no selectable reasoning-effort axis for a native child, so that axis is
-recorded as `not-exposed` rather than blank or copied from the request. Cursor
-exposes no metadata channel and stays explicitly `not-reported`.
+session and turn metadata. Claude reports model, effort, and service tier from
+its on-disk transcript metadata, and lineage only as root-or-child: it emits no
+depth field, so a subagent turn is recorded as `depth-unknown` rather than given
+an invented depth. Cursor exposes no metadata channel and stays explicitly
+`not-reported`.
+
+`not-exposed` is reserved for an axis a provider genuinely does not have. It is
+not a stand-in for an axis that simply went unreported on a given run, and it is
+never written in place of a value the provider did report.
 
 Observation is metadata-only. Parsers select entries by type and never read
 conversation content, and raw provider output is projected through the owning

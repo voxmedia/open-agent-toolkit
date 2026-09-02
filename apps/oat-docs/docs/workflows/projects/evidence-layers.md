@@ -113,14 +113,24 @@ invocation. The result is stored under the record's `oat.runtimeObservation`.
 
 The channel is metadata-only and capability-gated:
 
-| Provider | Observed axes                                      | Notes                                                                 |
-| -------- | -------------------------------------------------- | --------------------------------------------------------------------- |
-| Codex    | child lineage, role, model, effort, service tier   | Read from `session_meta` and `turn_context` metadata entries.         |
-| Claude   | role, model, service tier; effort is `not-exposed` | Read from the `system`/`init` and `result` metadata entries.          |
-| Cursor   | none                                               | Explicitly `not-reported`; requested values are never copied into it. |
+| Provider | Observed axes                                         | Notes                                                                                               |
+| -------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Codex    | child lineage, role, model, effort, service tier      | Read from `session_meta` and `turn_context` metadata entries.                                       |
+| Claude   | model, effort, service tier; lineage is root-or-child | Read from on-disk `assistant` entry metadata plus `message.model` and `message.usage.service_tier`. |
+| Cursor   | none                                                  | Explicitly `not-reported`; requested values are never copied into it.                               |
 
 Parsers classify entries by their `type` discriminator alone, so a conversation
 entry's body is never read, and only bounded provider identifiers are extracted.
+The Claude parser reads `assistant` entry metadata, which is not the same as
+reading a conversation: it reaches inside `message` by exactly two explicit key
+paths and never spreads, enumerates, or filters that object, so
+`message.content` is never touched rather than being dropped afterwards.
+
+Claude reports lineage only as a binary: `root` for a main session and
+`depth-unknown` for a subagent turn. No depth, nesting, or ancestry field exists
+on any captured assistant entry and `parentUuid` links messages within one agent
+rather than agents to each other, so a depth number is reported unknown rather
+than derived.
 
 The guarantee is the allowlist, not caller discipline. `entries` are projected
 through the owning parser's allowlist before anything is validated, and the
@@ -140,8 +150,10 @@ and effort are all unknown, so read `comparedAxes` — or the `on role+model`
 qualifier in human output — before treating a match as corroboration. With no
 comparable axis the match is `not-comparable`, because silence is not agreement.
 
-An axis a provider does not expose (`not-exposed`) is excluded rather than
-compared as a literal. An axis the configured invocation names under two equally
+An axis a provider genuinely does not expose (`not-exposed`) is excluded rather
+than compared as a literal. That value is reserved for a truly absent axis: an
+axis a provider does report is recorded with its observed value, and an axis it
+simply did not mention on a given run is left unreported. An axis the configured invocation names under two equally
 authoritative spellings — a canonical role name and its materialized native
 selector — matches either.
 

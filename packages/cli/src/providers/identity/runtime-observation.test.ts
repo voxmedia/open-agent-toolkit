@@ -86,13 +86,19 @@ const codexEntries = [
   },
 ];
 
+// Real on-disk Claude transcript shape; see
+// claude-runtime-observation.fixtures.ts.
 const claudeEntries = [
   {
-    type: 'system',
-    subtype: 'init',
-    model: 'claude-opus-5',
-    service_tier: 'standard',
-    agent: 'oat-phase-implementer',
+    type: 'assistant',
+    isSidechain: true,
+    effort: 'high',
+    sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
+    requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
+    message: {
+      model: 'claude-opus-5',
+      usage: { service_tier: 'standard' },
+    },
   },
 ];
 
@@ -184,12 +190,15 @@ describe('normalizeRuntimeObservation', () => {
     });
   });
 
-  it('routes Claude metadata and keeps the effort axis not-exposed', () => {
+  it('routes Claude metadata and reports its real effort axis', () => {
+    // Claude exposes a selectable effort axis on a real transcript, so the
+    // observation carries the observed value rather than `not-exposed`.
     expect(
       normalizeRuntimeObservation({
         record: genericRecord({
           provider: 'claude',
           model_selector: 'claude-opus-5',
+          effort_selector: 'high',
           service_tier_selector: 'standard',
           role_selector: 'oat-phase-implementer',
         }),
@@ -202,8 +211,10 @@ describe('normalizeRuntimeObservation', () => {
     ).toMatchObject({
       status: 'reported',
       provider: 'claude',
-      effort: 'not-exposed',
+      effort: 'high',
+      childLineage: 'depth-unknown',
       match: 'matching',
+      comparedAxes: ['model', 'effort', 'serviceTier'],
     });
   });
 

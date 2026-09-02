@@ -300,7 +300,10 @@ Optional runtime observation is metadata-only and subject to the same
 identifier bound, which admits letters, digits, `.`, `_`, and `-` only, so no
 observation value can carry a path or a URL. Its `match` and `comparedAxes` are
 always derived from the record's configured invocation rather than supplied by
-the caller, and `matching` covers only the axes listed in `comparedAxes`. It records what a provider reported about its own child and
+the caller, and `matching` covers only the axes listed in `comparedAxes`.
+`not-exposed` names an axis a provider genuinely does not have; an axis that
+went unreported on a given run is simply absent, and neither is ever filled in
+from the request. It records what a provider reported about its own child and
 never restates the request: an axis a provider does not expose is
 `not-exposed`, an absent or unparseable observation is `not-reported`, and
 neither is ever filled in from `model_selector`, `effort_selector`,
