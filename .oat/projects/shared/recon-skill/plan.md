@@ -1364,6 +1364,7 @@ git commit -m "fix(p05-t06): scan array strings in review briefs"
 | p02            | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
 | p03            | code     | passed          | 2026-08-31 | `reviews/archived/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                   |
 | p04            | code     | passed          | 2026-08-31 | `reviews/archived/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                   |
+| p05            | code     | passed          | 2026-09-02 | `reviews/p05-review-2026-09-02T001430Z.md`                             | 79f344ce97b15037b0a09d5a066bc928b7393ec8 | manual     | -                   |
 | p-rev1         | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                   |
 | final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`                  | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                   |
 | final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                   |
@@ -1377,7 +1378,7 @@ git commit -m "fix(p05-t06): scan array strings in review briefs"
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
 | plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                   |
 | plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                   |
-| github-pr #248 | remote   | fixes_added     | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                   |
+| github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                   |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate

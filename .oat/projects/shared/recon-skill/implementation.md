@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-01
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -27,9 +27,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev1 | passed | 2     | 2/2       |
 | Phase p-rev2 | passed | 3     | 3/3       |
 | Phase p-rev3 | passed | 1     | 1/1       |
-| Phase 5      | active | 6     | 0/6       |
+| Phase 5      | passed | 6     | 6/6       |
 
-**Total:** 17/23 tasks completed
+**Total:** 23/23 tasks completed
 
 ## Task Status
 
@@ -87,14 +87,14 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 5: Remote PR Review Fixes
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p05-t01 | pending | —      |
-| p05-t02 | pending | —      |
-| p05-t03 | pending | —      |
-| p05-t04 | pending | —      |
-| p05-t05 | pending | —      |
-| p05-t06 | pending | —      |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p05-t01 | completed | `f9996cbea` |
+| p05-t02 | completed | `ca971d0e3` |
+| p05-t03 | completed | `07f5e38ee` |
+| p05-t04 | completed | `e47466edd` |
+| p05-t05 | completed | `fc21fa920` |
+| p05-t06 | completed | `ac8d8273e` |
 
 ## Remote Review Received
 
@@ -876,6 +876,70 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Terminal review: `reviews/archived/final-review-2026-08-31T232924Z.md`
 - Overengineering assessment: passed; all corrections remain at the existing
   canonical projection and validated-run boundary
+
+### Run 2 — 2026-09-02
+
+#### Dispatch p05 implementation
+
+- Request ID: `recon-skill-p05-implementation-20260901T232205Z`
+- Role/class: `oat-phase-implementer` / hard reasoning
+- Provider/context: Codex / root-native phase agent
+- Authority: execute all six Phase 5 remote-review tasks in plan order, one
+  verified commit per task; no nested dispatch
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Task commits: `f9996cbea049c4cb9b24f23787548388244d7467`,
+  `ca971d0e3ad3ac2e0f758fdbd4847a5adf73e224`,
+  `07f5e38ee12e1ec9eaed98ba37a0f42ea790d0f3`,
+  `e47466edd974a25056fa913a1230818f5dc8b554`,
+  `fc21fa92009d430a4675f05ffb74908e93c1452b`, and
+  `ac8d8273efca9df5d4504cbdd7a0ce28810afb66`
+- Recovery: attempt 1/10 corrected one stale bundled-skill assertion in
+  `79f344ce97b15037b0a09d5a066bc928b7393ec8`; the authoritative ledger is
+  settled with no pending attempt
+- Verification: recon 158/158, CLI 4681/4681, repository check, type-check,
+  test, build, skill bump, release versions, release validation, lint, format,
+  canonical skill validation, and docs build passed
+- Optional nested dispatches: none
+- Dispatch: scope=p05 action=implementation role=implementer
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Dispatch p05 review
+
+- Request ID: `recon-skill-p05-review-20260901T2359Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / fresh root-native session
+- Authority: review the exact Phase 5 code and recovery range; write one review
+  artifact only
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Launch/outcome: accepted / completed
+- Reconnaissance: not-attempted
+- Artifact: `reviews/p05-review-2026-09-02T001430Z.md`
+- Reviewed head: `79f344ce97b15037b0a09d5a066bc928b7393ec8`
+- Findings: 0 Critical, 0 Important, 2 Medium, 0 Minor
+- Disposition: passed by the implementation review threshold; both Medium
+  findings remain recorded for final whole-project review
+- Dispatch: scope=p05 action=review role=reviewer
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase p05 outcome
+
+- Status: passed
+- Planned task commits: 6
+- Recovery attempts: 1/10, settled
+- Review-fix iterations: 0/3
+- Optional nested dispatches: none
+- Review: `reviews/p05-review-2026-09-02T001430Z.md`
+- Residual Medium findings: incorporated review evidence is not yet exercised
+  through final packet validation; documented prevalidation can still remove a
+  prior published packet before the renderer's preservation path
+- External per-phase review gate: disabled
 
 <!-- orchestration-runs-end -->
 
