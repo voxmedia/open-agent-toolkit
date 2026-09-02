@@ -1,7 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
-oat_blockers: []
+oat_last_commit: 97ca0ed13b0fc76689989e4a49f3e638a9701915
+oat_blockers: ['Phase 4 operator-extension review 4/4 is pending']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -40,7 +40,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T14:33:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T14:48:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -57,7 +57,9 @@ ordered declared-boundary commits. Review-fix loop 2 resolved the three Critical
 and one Important round-2 findings in `77dd7afb4`, but final normal review round
 3 found one Critical, one Important, and one Medium defect. Normal review
 governance is exhausted at 3/3; the operator authorized bounded extension fix
-3/3 and independent review 4/4. Phase 5 has not started.
+3/3 and independent review 4/4. The fix is committed as `97ca0ed13`; focused
+and remote suites pass 116/116 and 451/451. Review 4/4 is pending. Phase 5 has
+not started.
 
 ## Artifacts
 
@@ -65,7 +67,7 @@ governance is exhausted at 3/3; the operator authorized bounded extension fix
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 4 operator extension authorized)
+- **Implementation:** implementation.md (in progress; Phase 4 extension review 4/4 pending)
 
 ## Progress
 
@@ -161,20 +163,20 @@ governance is exhausted at 3/3; the operator authorized bounded extension fix
 - ⚠ Final Phase 4 review round 3 blocked with 1 Critical, 1 Important, and 1 Medium finding
 - ⛔ Normal Phase 4 review governance is exhausted at 3/3 reviews and 2/3 fix loops
 - ✓ Operator authorized bounded Phase 4 fix loop 3/3 and independent review 4/4
-- ⧗ Phase 4 operator-extension fix loop 3/3 pending
+- ✓ Phase 4 operator-extension fix loop 3/3 committed as `97ca0ed13`
+- ✓ Expanded Phase 4 live suite passed 116/116 and remote suite passed 451/451
+- ⧗ Independent Phase 4 operator-extension review 4/4 pending
 
 ## Blockers
 
-No active execution blocker. The operator authorized one bounded extension to
-fix the remaining wrong-context duplicate recovery, generic specialized-action
-validation, and unavailable-result attribution findings, followed by one
-additional independent review. Phase 5 remains blocked until that review
-passes. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+No active implementation defect is known after operator-extension fix loop 3/3,
+but Phase 4 remains gated on independent review 4/4. Phase 5 remains blocked
+until that review passes. The branch-level lockstep version gate remains
+preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run Phase 4 operator-extension fix loop 3/3 through the original accepted
-implementer, limited to the findings in
-`reviews/p04-final-review-2026-09-02T140132Z.md`, then run independent review
-4/4. Do not begin Phase 5 while Critical or Important findings remain.
+Run independent Phase 4 operator-extension review 4/4 over the full post-fix
+phase range ending at `97ca0ed13b0fc76689989e4a49f3e638a9701915`,
+including explicit disposition of all prior findings. Do not begin Phase 5
+unless the review passes with zero Critical and zero Important findings.

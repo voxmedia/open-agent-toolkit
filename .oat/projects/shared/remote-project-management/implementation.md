@@ -739,10 +739,10 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** in progress — the operator authorized one bounded extension fix and
-one additional independent review after normal review governance exhausted.
+**Status:** in progress — the authorized operator-extension fix resolved all
+round-3 findings; independent review 4/4 is pending.
 **Started:** 2026-09-01
-**Implementation head:** 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
+**Implementation head:** 97ca0ed13b0fc76689989e4a49f3e638a9701915
 
 ### Phase Summary
 
@@ -819,7 +819,14 @@ one additional independent review after normal review governance exhausted.
 - Normal review governance exhausted at 3/3 reviews and 2/3 fix loops. The
   operator explicitly authorized one bounded extension: fix loop 3/3 followed
   by independent review 4/4 on the same accepted handles and targets.
-- Operator-extension fix loop 3/3 is next. Phase 5 has not started.
+- Operator-extension fix loop 3/3 resumed the original Phase 4 implementer
+  through continuation event `p04-operator-fix-3-20260902-925335642` and
+  committed the three-file fix as
+  `97ca0ed13b0fc76689989e4a49f3e638a9701915`.
+- Root independently verified the exact three-file boundary, clean diff, and
+  live focused suite at 116/116. The implementer also passed the full remote
+  suite at 451/451 plus CLI lint, type-check, format, diff, and build.
+- Independent operator-extension review 4/4 is next. Phase 5 has not started.
 
 ---
 
@@ -1560,7 +1567,7 @@ candidates_considered:
   - gpt-5.6-sol/medium
 selected_route: native
 phase_base_head: 59998f8d170510a528730ed04b8f43976021e8ca
-phase_head: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
+phase_head: 97ca0ed13b0fc76689989e4a49f3e638a9701915
 task_commits:
   - 656a513be002b0aca1b15cddfea2ee1341e4cfd0
   - 30f78ae8b7d45d8c61893a320a90cf841f85c9a6
@@ -1580,10 +1587,11 @@ continuation_events:
   - same-handle resume after provider-capacity interruption during p04-t03
   - p04-review-fix-1-20260902-c818a9e83
   - p04-review-fix-2-20260902-6659bf654
+  - p04-operator-fix-3-20260902-925335642
 recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 3/3
-fix_loops: 2/3
+fix_loops: 3/3
 review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
 review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
 review_1_findings: 5 critical, 1 important, 0 medium, 0 minor
@@ -1603,7 +1611,9 @@ review_3_reconnaissance: not-attempted
 operator_extension_authorized: true
 operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
-phase_outcome: operator_extension_fix_3_pending
+fix_3_commit: 97ca0ed13b0fc76689989e4a49f3e638a9701915
+fix_3_outcome: done
+phase_outcome: operator_extension_review_4_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1652,6 +1662,13 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - The operator authorized one bounded extension: fix loop 3/3 and independent
   review 4/4 through the original accepted implementer and reviewer. No target
   change or additional extension is authorized.
+- Operator-extension fix loop 3/3 resumed the original accepted implementer
+  under event `p04-operator-fix-3-20260902-925335642` and committed
+  `97ca0ed13b0fc76689989e4a49f3e638a9701915` within a three-file subset of the
+  immutable Phase 4 boundary.
+- The focused suite expanded to 116/116 and passed independently at the root;
+  the full remote suite passed 451/451, and lint, types, format, diff, and build
+  passed. Independent review 4/4 is pending; Phase 5 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1752,7 +1769,7 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 92/92; remote 427/427; checks passed   | 0      | blocked; review 3/3        |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | extension review 4 pending |
 
 ## Final Summary (for PR/docs)
 
