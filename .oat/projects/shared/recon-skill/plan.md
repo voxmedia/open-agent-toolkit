@@ -1606,6 +1606,53 @@ dispatch suites plus proportional repository gates. Commit with:
 git commit -m "fix(prev6-t01): bind packet publication generation"
 ```
 
+## Phase p-rev7: Revision 7 — Close the Final Canonical Continuity Window
+
+Source: `reviews/archived/final-review-2026-09-02T194356Z.md`
+(2026-09-02). The mandatory Revision 6 final review closed the destructive
+cleanup race and verified the retained-digest design, then reproduced one
+remaining Important window after the current post-promotion continuity check.
+The user explicitly resumed the stopped run for this bounded correction.
+
+### Task prev7-t01: (review) Make canonical continuity the final publication check
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+
+**Step 1: Reproduce the final publication window**
+
+Add deterministic controls that complete canonical mutation during the awaited
+post-promotion target identity, digest, and root checks. Cover `claims.json`,
+`manifest.json`, and one validated referenced artifact without relying on a
+sleep-only race.
+
+**Step 2: Make canonical continuity the final awaited validation**
+
+Run the retained canonical-byte assertion after every target identity, digest,
+and filesystem-root check and immediately before returning success. Preserve
+the existing categorical `PACKET_CANONICAL_BYTES_CHANGED` failure and
+identity-safe withdrawal behavior. Do not add generation staging, locks, a
+state machine, a transaction abstraction, or persisted artifacts.
+
+**Step 3: Verify valid and invalid publication paths**
+
+Prove all three post-promotion mutation controls fail categorically and remove
+only the unchanged-root consumer entry point. Preserve successful fresh and
+replacement publication, the prior during-promotion mutation control, and the
+root-replacement cleanup controls.
+
+**Step 4: Format, verify, and commit**
+
+Run `pnpm exec oxfmt --write` for the two changed files, the focused renderer
+tests, and the complete recon/dispatch suite. Run proportional repository gates
+and commit with:
+
+```bash
+git commit -m "fix(prev7-t01): finalize packet continuity check"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target         |
@@ -1626,7 +1673,7 @@ git commit -m "fix(prev6-t01): bind packet publication generation"
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                   |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T185450Z.md`                  | 9203eec1226bf8a68cdff61d5acbe5b439652b8e | manual     | -                   |
-| final          | code     | received        | 2026-09-02 | reviews/final-review-2026-09-02T194356Z.md                             | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                   |
+| final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T194356Z.md                    | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
@@ -1676,8 +1723,10 @@ the first diagnostic suspect. No plan change or implementation task is needed.
   validation or Markdown promotion fails, without generation staging.
 - Revision 6: 1 task — make withdrawal root-identity safe and bind successful
   publication to the canonical bytes retained by `ValidatedRun`.
+- Revision 7: 1 task — make retained canonical-byte continuity the final
+  awaited validation before publication returns success.
 
-**Total: 29 tasks**
+**Total: 30 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

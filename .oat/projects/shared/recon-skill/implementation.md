@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: prev7-t01
 oat_generated: false
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: recon-skill
 
 **Initialized:** 2026-08-31
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 This document tracks resumable execution of the reviewed quick-workflow plan.
 `oat_current_task_id` always identifies the next incomplete plan task.
@@ -31,8 +31,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev4 | passed         | 4     | 4/4       |
 | Phase p-rev5 | passed         | 1     | 1/1       |
 | Phase p-rev6 | review_pending | 1     | 1/1       |
+| Phase p-rev7 | pending        | 1     | 0/1       |
 
-**Total:** 29/29 tasks completed
+**Total:** 29/30 tasks completed
 
 ## Task Status
 
@@ -120,6 +121,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | --------- | --------- | ----------- |
 | prev6-t01 | completed | `e8a53e5ae` |
 
+### Phase p-rev7: Revision 7 — Close the Final Canonical Continuity Window
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev7-t01 | pending | -      |
+
 ## Remote Review Received
 
 - **Date:** 2026-09-01
@@ -182,6 +189,23 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   stops this run without another automatic fix/re-review cycle.
 - **Next:** run the one authorized mandatory final lifecycle review, then run
   the configured exit gate only if it passes
+
+## Final Review Received: Revision 7
+
+- **Date:** 2026-09-02
+- **Artifact:** `reviews/archived/final-review-2026-09-02T194356Z.md`
+- **Reviewed head:** `97e97ffae43ffdbcb9a876b8e24763f0979f0d60`
+- **Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
+- **Prior findings:** the destructive cleanup race is closed and all earlier
+  Revision 4/5 findings remain closed; successful publication still has one
+  adjacent post-continuity-check mutation window
+- **New task:** `prev7-t01` makes canonical-byte continuity the final awaited
+  publication check and adds deterministic claims, manifest, and referenced
+  artifact mutation controls
+- **Disposition:** I1 converted; no deferrals or dismissals
+- **Authorization:** after the previously authorized stop boundary, the user
+  explicitly resumed the run for this bounded correction
+- **Next:** execute `prev7-t01` through `oat-project-implement`
 
 ## Orchestration Runs
 
