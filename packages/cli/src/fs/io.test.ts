@@ -70,6 +70,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 });
 
 import {
+  atomicWriteJsonContained,
   atomicWriteJson,
   copyDirectory,
   createCollectionSymlinkNoClobber,
@@ -384,6 +385,56 @@ describe('fs/io', () => {
     const parsed = JSON.parse(await readFile(output, 'utf8'));
     expect(parsed).toEqual({ ok: true, count: 1 });
     await expect(readFile(`${output}.tmp`, 'utf8')).rejects.toThrow();
+  });
+
+  it('atomically replaces contained JSON and preserves the prior record on failure', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
+    tempDirs.push(root);
+    const file = join(root, 'dispatch', 'request-1.json');
+
+    await atomicWriteJsonContained(file, { version: 1 }, root);
+    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 1');
+    await atomicWriteJsonContained(file, { version: 2 }, root);
+    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 2');
+
+    await expect(
+      atomicWriteJsonContained(join(root, '..', 'outside.json'), {}, root),
+    ).rejects.toThrow(/outside/i);
+    await expect(readFile(file, 'utf8')).resolves.toContain('"version": 2');
+  });
+
+  it('rejects a symlinked journal directory without writing outside scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
+    const outside = await mkdtemp(join(tmpdir(), 'oat-io-json-outside-'));
+    tempDirs.push(root, outside);
+    await symlink(outside, join(root, 'dispatch'), 'dir');
+
+    await expect(
+      atomicWriteJsonContained(
+        join(root, 'dispatch', 'request-1.json'),
+        { safe: true },
+        root,
+      ),
+    ).rejects.toThrow(/outside|symlink/i);
+    await expect(
+      readFile(join(outside, 'request-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('publishes a new journal without clobbering a concurrent target', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-json-'));
+    tempDirs.push(root);
+    const file = join(root, 'dispatch', 'request-1.json');
+    await atomicWriteJsonContained(file, { owner: 'first' }, root, {
+      createOnly: true,
+    });
+
+    await expect(
+      atomicWriteJsonContained(file, { owner: 'second' }, root, {
+        createOnly: true,
+      }),
+    ).rejects.toMatchObject({ code: 'EEXIST' });
+    await expect(readFile(file, 'utf8')).resolves.toContain('"owner": "first"');
   });
 
   it('ensureDir creates directory recursively', async () => {

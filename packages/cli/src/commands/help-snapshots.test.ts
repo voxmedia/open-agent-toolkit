@@ -1085,6 +1085,7 @@ describe('help output snapshots', () => {
         archive [options] [project-path]             Manage archived project data
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        dispatch                                     Validate and persist project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
@@ -1104,6 +1105,20 @@ describe('help output snapshots', () => {
         help [command]                               display help for command
       "
     `);
+  });
+
+  it('project dispatch record --help documents project and stdin recording', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'dispatch',
+      'record',
+    ]).helpInformation();
+
+    expect(help).toContain('--project <project-path>');
+    expect(help).toContain('--event-file <json-file-or-dash>');
+    expect(help).toMatch(/or -\s+for standard input/);
+    expect(help).not.toMatch(/launch/i);
   });
 
   it('dispatch-ceiling resolve help documents the ephemeral named ceiling tier', () => {

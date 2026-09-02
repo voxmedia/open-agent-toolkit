@@ -1,17 +1,28 @@
+import { randomUUID } from 'node:crypto';
 import {
   chmod,
   lstat,
+  link,
   mkdir,
   readdir,
   readFile,
   readlink,
+  realpath,
   rename,
   rm,
   stat,
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 export async function fileExists(path: string): Promise<boolean> {
   try {
@@ -283,4 +294,108 @@ export async function atomicWriteJson(
   await ensureDir(dirname(filePath));
   await writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
   await rename(tempPath, filePath);
+}
+
+export async function atomicWriteJsonContained(
+  filePath: string,
+  data: unknown,
+  scopeRoot: string,
+  options: { createOnly?: boolean } = {},
+): Promise<void> {
+  const resolvedScope = resolve(scopeRoot);
+  const resolvedFile = resolve(filePath);
+  const relativeFile = relative(resolvedScope, resolvedFile);
+  if (
+    relativeFile === '..' ||
+    relativeFile.startsWith(`..${sep}`) ||
+    isAbsolute(relativeFile)
+  ) {
+    throw new Error('JSON journal destination is outside its allowed scope.');
+  }
+
+  const scopeStat = await lstat(resolvedScope);
+  if (scopeStat.isSymbolicLink() || !scopeStat.isDirectory()) {
+    throw new Error('JSON journal scope must be a real directory.');
+  }
+  const realScope = await realpath(resolvedScope);
+  const parentRelative = relative(resolvedScope, dirname(resolvedFile));
+  const segments = parentRelative === '' ? [] : parentRelative.split(sep);
+  let current = resolvedScope;
+  for (const segment of segments) {
+    current = join(current, segment);
+    try {
+      const currentStat = await lstat(current);
+      if (currentStat.isSymbolicLink() || !currentStat.isDirectory()) {
+        throw new Error(
+          'JSON journal ancestry must not contain symlinks and must contain only real directories.',
+        );
+      }
+    } catch (error) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 'ENOENT'
+      ) {
+        throw error;
+      }
+      await mkdir(current);
+    }
+  }
+
+  const realParent = await realpath(dirname(resolvedFile));
+  const relativeParent = relative(realScope, realParent);
+  if (
+    relativeParent === '..' ||
+    relativeParent.startsWith(`..${sep}`) ||
+    isAbsolute(relativeParent)
+  ) {
+    throw new Error(
+      'JSON journal ancestry resolves outside its allowed scope.',
+    );
+  }
+
+  try {
+    const targetStat = await lstat(resolvedFile);
+    if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
+      throw new Error('JSON journal target must be a regular file.');
+    }
+  } catch (error) {
+    if (
+      typeof error !== 'object' ||
+      error === null ||
+      !('code' in error) ||
+      error.code !== 'ENOENT'
+    ) {
+      throw error;
+    }
+  }
+
+  const tempPath = join(
+    dirname(resolvedFile),
+    `.${basename(resolvedFile)}.${randomUUID()}.tmp`,
+  );
+  let tempCreated = false;
+  try {
+    await writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+    });
+    tempCreated = true;
+    if ((await realpath(dirname(resolvedFile))) !== realParent) {
+      throw new Error('JSON journal ancestry changed before publication.');
+    }
+    if (options.createOnly) {
+      await link(tempPath, resolvedFile);
+      await rm(tempPath);
+      tempCreated = false;
+    } else {
+      await rename(tempPath, resolvedFile);
+      tempCreated = false;
+    }
+  } finally {
+    if (tempCreated) {
+      await rm(tempPath, { force: true });
+    }
+  }
 }
