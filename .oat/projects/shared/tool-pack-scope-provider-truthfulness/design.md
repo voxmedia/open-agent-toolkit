@@ -742,10 +742,14 @@ resolver, and atomic JSON file utilities.
 - The existing `Dispatch:` compatibility stamp remains unchanged and derives
   only from `DispatchReportV1`.
 - The one persistence surface is
-  `.oat/projects/<scope>/<project>/dispatch/<request-id>.json`, containing the
-  complete generic record plus its namespaced augmentation. Non-project
-  callers return the same record to their caller but do not invent another
-  durable surface.
+  `.oat/projects/<scope>/<project>/dispatch/`, containing the complete generic
+  record plus its namespaced augmentation. Publication is append-only: the
+  first revision is `<request-id>.json` and each later revision is
+  `<request-id>@<NNNN>.json`, because a non-destructive `link`-only publication
+  is what keeps an apply-time directory swap from replacing or deleting any
+  pre-existing file. Superseded revisions are never pruned; readers resolve the
+  highest revision. Non-project callers return the same record to their caller
+  but do not invent another durable surface.
 - Gate workflows may store only the stable dispatch request ID or path as a
   reference. Gate receipt shape, creation, and validation remain out of scope.
 - The recorder validates evidence but never claims to observe a host launch.

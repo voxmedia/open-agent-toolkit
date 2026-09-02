@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-review-r3
-oat_last_commit: bb93fa12a
+oat_last_commit: bb93fa12a3155dfc41591f39d40df0c583aceb92
 oat_blockers:
   - Phase 6 review rounds 1 and 2 are fixed at `bb93fa12a`; Phase 7 remains gated until the round 3 independent review passes.
 associated_issues:
@@ -124,7 +124,7 @@ non-destructive by operator direction. Round 3 review is pending.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (blocked — p06 review round 1 fix active)
+- **Implementation:** `implementation.md` (in progress — p06 review round 3 fix active)
 
 ## Progress
 
