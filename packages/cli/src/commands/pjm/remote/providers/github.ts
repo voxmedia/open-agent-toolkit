@@ -137,6 +137,42 @@ export interface GitHubDuplicateSearchPlanInput {
   maxResults: number;
 }
 
+export interface GitHubDuplicateCandidate {
+  stableId: string;
+  aliases: string[];
+  context: ProviderContext;
+  matchedBy: 'provenance' | 'reserved-binding' | 'alias';
+  stableIdentityVerified: boolean;
+  contextVerified: boolean;
+  historicalRepositoryIds: string[];
+}
+
+export interface GitHubDuplicateSearchObservation {
+  provider: 'github';
+  context: ProviderContext;
+  availability: 'available' | 'unavailable';
+  capabilityEvidenceDigest: string;
+  results: GitHubDuplicateCandidate[];
+}
+
+export interface GitHubDuplicateSearchValidationInput {
+  action: SemanticAction;
+  hostCapability: GitHubHostCapabilityObservation;
+  observation: GitHubDuplicateSearchObservation;
+}
+
+export interface GitHubDuplicateSearchValidationResult {
+  accepted: boolean;
+  classification:
+    | 'no-match'
+    | 'one-verified-match'
+    | 'ambiguous'
+    | 'unavailable'
+    | 'invalid';
+  stableId: string | null;
+  reasons: string[];
+}
+
 const URL_REFERENCE =
   /^https:\/\/([^/]+)\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:[/?#].*)?$/;
 const SHORT_REFERENCE = /^([^/\s]+)\/([^#\s]+)#(\d+)$/;
@@ -474,6 +510,103 @@ export function planDuplicateSearch(
   };
 }
 
+export function validateDuplicateSearchObservation(
+  input: GitHubDuplicateSearchValidationInput,
+): GitHubDuplicateSearchValidationResult {
+  if (
+    input.action.provider !== 'github' ||
+    input.action.operation !== 'search-duplicates'
+  ) {
+    throw new Error('GitHub duplicate validation requires a search action.');
+  }
+  const capability = validateGitHubHostCapability(
+    {
+      operation: 'search-duplicates',
+      context: input.action.context,
+      requiredFields: [],
+    },
+    input.hostCapability,
+  );
+  if (!capability.valid || input.observation.availability === 'unavailable') {
+    return duplicateValidationResult(false, 'unavailable', null, [
+      ...capability.reasons,
+      ...(input.observation.availability === 'unavailable'
+        ? ['search-unavailable']
+        : []),
+    ]);
+  }
+  if (
+    input.observation.provider !== 'github' ||
+    !contextsEqual(input.action.context, input.observation.context) ||
+    input.observation.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+  ) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      'observation-context-or-capability-mismatch',
+    ]);
+  }
+  const resultContract = recordValue(
+    input.action.intent.resultContract,
+    'GitHub duplicate result contract is missing.',
+  );
+  const maxResults = resultContract.maxResults;
+  if (
+    !Number.isInteger(maxResults) ||
+    Number(maxResults) < 1 ||
+    input.observation.results.length > Number(maxResults)
+  ) {
+    return duplicateValidationResult(false, 'invalid', null, [
+      'result-bound-exceeded',
+    ]);
+  }
+  if (input.observation.results.length === 0) {
+    return duplicateValidationResult(true, 'no-match', null, []);
+  }
+  if (input.observation.results.length > 1) {
+    return duplicateValidationResult(false, 'ambiguous', null, [
+      'multiple-candidates',
+    ]);
+  }
+  const candidate = input.observation.results[0]!;
+  const query = recordValue(
+    input.action.intent.query,
+    'GitHub duplicate query contract is missing.',
+  );
+  const repository = recordValue(
+    query.repository,
+    'GitHub duplicate repository contract is missing.',
+  );
+  const expectedRepositoryId = String(repository.repositoryId ?? '');
+  const aliases = Array.isArray(query.historicalAliases)
+    ? query.historicalAliases.filter(
+        (alias): alias is string => typeof alias === 'string',
+      )
+    : [];
+  const contextMatches =
+    candidate.context.repositoryId === expectedRepositoryId ||
+    candidate.historicalRepositoryIds.includes(expectedRepositoryId);
+  const matchEvidenceValid =
+    candidate.matchedBy !== 'alias' ||
+    candidate.aliases.some((alias) => aliases.includes(alias));
+  if (
+    !candidate.stableId ||
+    !candidate.stableIdentityVerified ||
+    !candidate.contextVerified ||
+    !contextMatches ||
+    !matchEvidenceValid
+  ) {
+    return duplicateValidationResult(false, 'ambiguous', null, [
+      'candidate-not-fully-verified',
+    ]);
+  }
+  return duplicateValidationResult(
+    true,
+    'one-verified-match',
+    candidate.stableId,
+    [],
+  );
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -745,6 +878,22 @@ function requiredContextValue(context: ProviderContext, key: string): string {
   const value = context[key];
   if (!value) throw new Error(`GitHub context requires '${key}'.`);
   return value;
+}
+
+function duplicateValidationResult(
+  accepted: boolean,
+  classification: GitHubDuplicateSearchValidationResult['classification'],
+  stableId: string | null,
+  reasons: string[],
+): GitHubDuplicateSearchValidationResult {
+  return { accepted, classification, stableId, reasons };
+}
+
+function recordValue(value: unknown, message: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(message);
+  }
+  return value as Record<string, unknown>;
 }
 
 function requiredString(fields: Record<string, unknown>, key: string): string {

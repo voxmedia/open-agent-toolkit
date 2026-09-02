@@ -10,6 +10,7 @@ import {
   planDuplicateSearch,
   planGitHubMutation,
   validateGitHubHostCapability,
+  validateDuplicateSearchObservation,
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from './github';
@@ -573,7 +574,151 @@ describe('GitHub semantic adapter', () => {
       }),
     ).toThrow('GitHub duplicate search bounds are invalid');
   });
+
+  it('accepts one exact-repository provenance match only after stable identity verification', () => {
+    expect(
+      validateDuplicateSearchObservation({
+        action: duplicateSearchAction(),
+        hostCapability,
+        observation: duplicateObservation([
+          {
+            stableId: 'issue_node_42',
+            aliases: ['acme/widgets#42'],
+            context: hostCapability.context,
+            matchedBy: 'provenance',
+            stableIdentityVerified: true,
+            contextVerified: true,
+            historicalRepositoryIds: [],
+          },
+        ]),
+      }),
+    ).toEqual({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: 'issue_node_42',
+      reasons: [],
+    });
+  });
+
+  it('accepts a transferred alias only with verified identity and historical repository context', () => {
+    expect(
+      validateDuplicateSearchObservation({
+        action: duplicateSearchAction(),
+        hostCapability,
+        observation: duplicateObservation([
+          {
+            stableId: 'issue_node_42',
+            aliases: ['legacy/widgets#7'],
+            context: {
+              ...hostCapability.context,
+              repositoryId: 'repo_456',
+              owner: 'platform',
+            },
+            matchedBy: 'alias',
+            stableIdentityVerified: true,
+            contextVerified: true,
+            historicalRepositoryIds: ['repo_123'],
+          },
+        ]),
+      }),
+    ).toMatchObject({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: 'issue_node_42',
+    });
+  });
+
+  it.each([
+    {
+      name: 'no match',
+      observation: duplicateObservation([]),
+      classification: 'no-match',
+      accepted: true,
+    },
+    {
+      name: 'ambiguous matches',
+      observation: duplicateObservation([
+        duplicateCandidate('issue_1'),
+        duplicateCandidate('issue_2'),
+      ]),
+      classification: 'ambiguous',
+      accepted: false,
+    },
+    {
+      name: 'unverified stable identity',
+      observation: duplicateObservation([
+        { ...duplicateCandidate('issue_1'), stableIdentityVerified: false },
+      ]),
+      classification: 'ambiguous',
+      accepted: false,
+    },
+    {
+      name: 'unavailable capability',
+      observation: {
+        ...duplicateObservation([]),
+        availability: 'unavailable' as const,
+      },
+      classification: 'unavailable',
+      accepted: false,
+    },
+    {
+      name: 'result bound exceeded',
+      observation: duplicateObservation(
+        Array.from({ length: 11 }, (_, index) =>
+          duplicateCandidate(`issue_${index}`),
+        ),
+      ),
+      classification: 'invalid',
+      accepted: false,
+    },
+  ])(
+    'classifies $name without accepting ambiguous evidence',
+    ({ observation: result, classification, accepted }) => {
+      expect(
+        validateDuplicateSearchObservation({
+          action: duplicateSearchAction(),
+          hostCapability,
+          observation: result,
+        }),
+      ).toMatchObject({ classification, accepted });
+    },
+  );
 });
+
+function duplicateSearchAction() {
+  return planDuplicateSearch({
+    context: hostCapability.context,
+    hostCapability,
+    provenanceToken: 'origin:local-project:item-42',
+    reservedBindingId: 'binding_reserved_42',
+    historicalAliases: ['acme/widgets#42', 'legacy/widgets#7'],
+    maxResults: 10,
+  });
+}
+
+function duplicateCandidate(stableId: string) {
+  return {
+    stableId,
+    aliases: ['acme/widgets#42'],
+    context: hostCapability.context,
+    matchedBy: 'alias' as const,
+    stableIdentityVerified: true,
+    contextVerified: true,
+    historicalRepositoryIds: [] as string[],
+  };
+}
+
+function duplicateObservation(
+  results: ReturnType<typeof duplicateCandidate>[],
+) {
+  return {
+    provider: 'github' as const,
+    context: hostCapability.context,
+    availability: 'available' as const,
+    capabilityEvidenceDigest: hostCapability.evidenceDigest,
+    results,
+  };
+}
 
 const hostCapability: GitHubHostCapabilityObservation = {
   provider: 'github',

@@ -3,6 +3,8 @@ import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider
 import {
   classifyGitHubReadObservation,
   githubAdapter,
+  planDuplicateSearch,
+  validateDuplicateSearchObservation,
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from '@commands/pjm/remote/providers/github';
@@ -25,7 +27,7 @@ const capability: GitHubHostCapabilityObservation = {
   availability: 'available',
   accountId: 'account_123',
   repositoryId: 'repo_123',
-  operations: ['read', 'update', 'transition', 'annotate'],
+  operations: ['read', 'update', 'transition', 'annotate', 'search-duplicates'],
   observableFields: ['stable-identity', 'title', 'state', 'revision'],
   evidenceDigest: 'sha256:github-capability',
 };
@@ -160,6 +162,38 @@ class GitHubLifecycleFixture {
     };
   }
 
+  duplicateSearch() {
+    const action = planDuplicateSearch({
+      context,
+      hostCapability: capability,
+      provenanceToken: 'origin:local-project:item-42',
+      reservedBindingId: 'binding_ready',
+      historicalAliases: ['acme/widgets#42'],
+      maxResults: 10,
+    });
+    return validateDuplicateSearchObservation({
+      action,
+      hostCapability: capability,
+      observation: {
+        provider: 'github',
+        context,
+        availability: 'available',
+        capabilityEvidenceDigest: capability.evidenceDigest,
+        results: [
+          {
+            stableId: issue.identity.stableId,
+            aliases: ['acme/widgets#42'],
+            context,
+            matchedBy: 'provenance',
+            stableIdentityVerified: true,
+            contextVerified: true,
+            historicalRepositoryIds: [],
+          },
+        ],
+      },
+    });
+  }
+
   closeout() {
     const ready = verifyGitHubMutationObservation({
       action: githubAdapter.plan('transition', {
@@ -212,6 +246,11 @@ describe('GitHub remote lifecycle integration', () => {
     expect(await fixture.reconcile()).toEqual({
       classification: 'verified',
       readbackVerified: true,
+    });
+    expect(fixture.duplicateSearch()).toMatchObject({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: 'issue_node_42',
     });
   });
 
