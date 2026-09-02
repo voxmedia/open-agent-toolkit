@@ -1,8 +1,12 @@
 import {
+  contextsEqual,
   semanticDigest,
   type NormalizedRemoteIssue,
+  type ObservationValidation,
   type ProviderAdapter,
+  type ProviderContext,
   type SanitizedProviderObservation,
+  type SemanticOperation,
 } from '@commands/pjm/remote/provider';
 
 export interface GitHubIssueReference {
@@ -11,6 +15,35 @@ export interface GitHubIssueReference {
   name: string;
   number: number;
   alias: string;
+}
+
+export type GitHubSemanticField =
+  | 'stable-identity'
+  | 'title'
+  | 'body'
+  | 'state'
+  | 'priority'
+  | 'revision';
+
+export interface GitHubHostCapabilityObservation {
+  provider: 'github';
+  context: ProviderContext;
+  availability:
+    | 'available'
+    | 'unavailable'
+    | 'authorization-required'
+    | 'rate-limited';
+  accountId: string;
+  repositoryId: string;
+  operations: SemanticOperation[];
+  observableFields: GitHubSemanticField[];
+  evidenceDigest: string;
+}
+
+export interface GitHubCapabilityExpectation {
+  operation: SemanticOperation;
+  context: ProviderContext;
+  requiredFields?: GitHubSemanticField[];
 }
 
 const URL_REFERENCE =
@@ -78,14 +111,75 @@ export function normalizeGitHubIssueObservation(
   };
 }
 
+export function validateGitHubHostCapability(
+  expected: GitHubCapabilityExpectation,
+  observed: GitHubHostCapabilityObservation,
+): ObservationValidation {
+  const reasons: string[] = [];
+  if (observed.provider !== 'github') reasons.push('provider-mismatch');
+  if (observed.availability === 'unavailable')
+    reasons.push('access-unavailable');
+  if (observed.availability === 'authorization-required')
+    reasons.push('authorization-required');
+  if (observed.availability === 'rate-limited') reasons.push('rate-limited');
+  if (
+    expected.context.accountId &&
+    observed.accountId !== expected.context.accountId
+  ) {
+    reasons.push('account-mismatch');
+  }
+  if (
+    expected.context.repositoryId &&
+    observed.repositoryId !== expected.context.repositoryId
+  ) {
+    reasons.push('repository-mismatch');
+  }
+  if (!contextsEqual(expected.context, observed.context)) {
+    const accountOrRepositoryMismatch = reasons.some((reason) =>
+      ['account-mismatch', 'repository-mismatch'].includes(reason),
+    );
+    if (!accountOrRepositoryMismatch) reasons.push('context-mismatch');
+  }
+  if (!observed.operations.includes(expected.operation)) {
+    reasons.push(`capability-missing:${expected.operation}`);
+  }
+  for (const field of expected.requiredFields ?? requiredFieldsForRead()) {
+    if (!observed.observableFields.includes(field)) {
+      reasons.push(`semantic-field-missing:${field}`);
+    }
+  }
+  if (!observed.evidenceDigest) reasons.push('capability-evidence-missing');
+  return { valid: reasons.length === 0, reasons };
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
   plan(operation, input) {
-    return { provider: 'github', operation, context: {}, intent: input };
+    const { context, ...intent } = input;
+    return {
+      provider: 'github',
+      operation,
+      context: isProviderContext(context) ? context : {},
+      intent,
+    };
   },
-  validateObservation() {
-    return { valid: true, reasons: [] };
+  validateObservation(action, observation) {
+    const hostCapability = parseHostCapability(
+      observation.fields.hostCapability,
+    );
+    if (!hostCapability) {
+      return { valid: false, reasons: ['capability-evidence-missing'] };
+    }
+    return validateGitHubHostCapability(
+      {
+        operation: action.operation,
+        context: action.context,
+        requiredFields:
+          action.operation === 'read' ? requiredFieldsForRead() : [],
+      },
+      hostCapability,
+    );
   },
   verificationFields() {
     return [];
@@ -94,6 +188,46 @@ export const githubAdapter: ProviderAdapter = {
     return [];
   },
 };
+
+function requiredFieldsForRead(): GitHubSemanticField[] {
+  return ['stable-identity', 'title', 'state', 'revision'];
+}
+
+function isProviderContext(value: unknown): value is ProviderContext {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.values(value).every(
+      (entry) => entry === undefined || typeof entry === 'string',
+    )
+  );
+}
+
+function parseHostCapability(
+  value: unknown,
+): GitHubHostCapabilityObservation | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<GitHubHostCapabilityObservation>;
+  if (
+    candidate.provider !== 'github' ||
+    !isProviderContext(candidate.context) ||
+    ![
+      'available',
+      'unavailable',
+      'authorization-required',
+      'rate-limited',
+    ].includes(String(candidate.availability)) ||
+    typeof candidate.accountId !== 'string' ||
+    typeof candidate.repositoryId !== 'string' ||
+    !Array.isArray(candidate.operations) ||
+    !Array.isArray(candidate.observableFields) ||
+    typeof candidate.evidenceDigest !== 'string'
+  ) {
+    return null;
+  }
+  return candidate as GitHubHostCapabilityObservation;
+}
 
 function assertGitHubObservation(
   observation: SanitizedProviderObservation,

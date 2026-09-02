@@ -5,6 +5,8 @@ import {
   githubAdapter,
   normalizeGitHubIssueObservation,
   parseGitHubIssueReference,
+  validateGitHubHostCapability,
+  type GitHubHostCapabilityObservation,
 } from './github';
 
 const observation: SanitizedProviderObservation = {
@@ -107,4 +109,73 @@ describe('GitHub semantic adapter', () => {
     expect(moved.aliases).toContain('new-owner/new-name#84');
     expect(moved.aliases).toContain('legacy/widgets#7');
   });
+
+  it.each([
+    {
+      name: 'unavailable access',
+      patch: { availability: 'unavailable' as const },
+      reasons: ['access-unavailable'],
+    },
+    {
+      name: 'authorization mismatch',
+      patch: { accountId: 'account_other' },
+      reasons: ['account-mismatch'],
+    },
+    {
+      name: 'repository mismatch',
+      patch: { repositoryId: 'repo_other' },
+      reasons: ['repository-mismatch'],
+    },
+    {
+      name: 'missing semantic fields',
+      patch: { observableFields: ['stable-identity', 'title', 'state'] },
+      reasons: ['semantic-field-missing:revision'],
+    },
+    {
+      name: 'rate limiting',
+      patch: { availability: 'rate-limited' as const },
+      reasons: ['rate-limited'],
+    },
+    {
+      name: 'missing capability',
+      patch: { operations: [] },
+      reasons: ['capability-missing:read'],
+    },
+  ])('rejects $name using bounded semantic evidence', ({ patch, reasons }) => {
+    expect(
+      validateGitHubHostCapability(
+        { operation: 'read', context: hostCapability.context },
+        { ...hostCapability, ...patch },
+      ),
+    ).toEqual({ valid: false, reasons });
+  });
+
+  it('accepts sufficient capability evidence without persisting auth or a tool catalog', () => {
+    expect(
+      validateGitHubHostCapability(
+        { operation: 'read', context: hostCapability.context },
+        hostCapability,
+      ),
+    ).toEqual({ valid: true, reasons: [] });
+    expect(hostCapability).not.toHaveProperty('auth');
+    expect(hostCapability).not.toHaveProperty('tools');
+    expect(hostCapability).not.toHaveProperty('schema');
+  });
 });
+
+const hostCapability: GitHubHostCapabilityObservation = {
+  provider: 'github',
+  context: {
+    host: 'github.example',
+    accountId: 'account_123',
+    repositoryId: 'repo_123',
+    owner: 'acme',
+    name: 'widgets',
+  },
+  availability: 'available',
+  accountId: 'account_123',
+  repositoryId: 'repo_123',
+  operations: ['read', 'create', 'update'],
+  observableFields: ['stable-identity', 'title', 'state', 'revision'],
+  evidenceDigest: 'sha256:bounded-capability',
+};
