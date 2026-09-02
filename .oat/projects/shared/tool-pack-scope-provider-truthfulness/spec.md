@@ -163,12 +163,16 @@ selection authoritative.
   must remain independent choices surfaced consistently by init and standalone
   workflow installation.
 - **Acceptance Criteria:**
-  - Interactive flows explicitly offer to create or refresh one managed OAT
-    section in repository-root `AGENTS.md`; declining makes no change.
-  - Existing user-authored content is preserved, repeated runs are idempotent,
-    and ownership is shared across all entry points without duplicate blocks.
-  - Non-interactive flows do not mutate `AGENTS.md` without explicit opt-in and
-    emit an actionable notice instead.
+  - Interactive flows explicitly offer repository guidance. When root
+    `AGENTS.md` is absent, accepted guidance may create it exclusively; when it
+    already exists or is a symlink, OAT emits an actionable managed-block patch
+    and never automatically replaces the file.
+  - Existing user-authored content is preserved by zero-write manual fallback,
+    repeated runs are idempotent, and ownership is shared across all entry
+    points without duplicate blocks.
+  - Non-interactive flows do not mutate `AGENTS.md` without explicit opt-in.
+    Explicit opt-in may create an absent file, but an existing file always
+    yields the same actionable manual patch instead of automatic mutation.
   - The guidance choice never changes tool-pack scope or implies PJM adoption.
 - **Priority:** P0
 
@@ -380,8 +384,9 @@ _Detailed schemas, interfaces, and ownership transitions are resolved in
 - Directory alias tests cover exact adoption, divergence fallback, unsafe links,
   repeated sync, provider disablement, and canonical add/remove behavior with
   zero unmanaged-content loss.
-- Guidance tests cover absent/existing/symlinked `AGENTS.md`, opt-in/decline,
-  non-interactive behavior, and repeated runs with unrelated content preserved.
+- Guidance tests cover exclusive absent-file creation and existing/symlinked
+  zero-write patch output, opt-in/decline, non-interactive behavior, and
+  repeated runs with unrelated content preserved byte-for-byte.
 - Dispatch tests prove native-first selection, rejection-only fallback,
   immutable target controls, canonical identity, approximation labeling, and
   post-acceptance no-replacement behavior.

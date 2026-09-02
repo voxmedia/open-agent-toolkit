@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-review-governance
+oat_current_task: p05-fail-closed-redesign
 oat_last_commit: 19198457148de815415304c620db39e78b41ef2c
 oat_blockers:
-  - The single operator-authorized post-cap Phase 5 review found two Critical and three Important filesystem identity, recovery ownership, metadata, and consumer-reporting defects; the override is exhausted.
+  - Phase 5 is implementing the operator-selected fail-closed redesign: existing AGENTS.md files and symlinks become zero-write manual patches; one fresh review is authorized before Phase 6.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T12:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T13:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the authorized Phase 5 recovery-lifecycle fix is committed at
-`191984571`, but its single post-cap review found two Critical and three
-Important adjacent defects. The one-use override is exhausted.
+Implementation - Thomas selected a safer Phase 5 design after the terminal
+review: create an absent `AGENTS.md` exclusively, but never automatically
+replace an existing file or symlink. One bounded redesign and review are active.
 
 ## Artifacts
 
@@ -157,16 +157,17 @@ Important adjacent defects. The one-use override is exhausted.
 - ✓ One additional bounded Phase 5 fix/review cycle executed
 - ✓ Expanded Phase 5 verification passed 430/430 plus uncached root checks
 - ⧗ Authorized post-cap review blocked with 2 Critical and 3 Important findings
+- ✓ Fail-closed existing-file manual-patch redesign selected
+- ⧗ Bounded redesign implementation and one fresh review authorized
 
 ## Blockers
 
-- Publication still lacks identity-bound conditional protection for its
-  temporary source, final destination, and retained original.
-- Recovery ownership evidence is not independent, special mode bits can be
-  lost, and some post-scaffold failures still obscure partial completion.
-- The one-use post-cap fix/review override is exhausted. Phase 6 remains gated.
+- Existing-file replacement remains disabled until the fail-closed redesign
+  removes the recovery publication path and passes a fresh review.
+- Phase 6 remains gated.
 
 ## Next Milestone
 
-Obtain operator direction: authorize another bounded remediation/review cycle,
-choose a different fail-closed design, or stop with the recorded findings.
+Implement exclusive absent-file creation plus zero-write existing-file/symlink
+patch output through the original implementer, then run one fresh Phase 5
+review.

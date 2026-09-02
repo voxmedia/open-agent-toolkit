@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - The single operator-authorized post-cap Phase 5 review found two Critical and three Important filesystem identity, recovery ownership, metadata, and consumer-reporting defects; the override is exhausted.
+  - Phase 5 is implementing the operator-selected fail-closed redesign: existing AGENTS.md files and symlinks become zero-write manual patches; one fresh review is authorized before Phase 6.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-review-governance
+oat_current_task_id: p05-fail-closed-redesign
 oat_generated: false
 ---
 
@@ -1365,6 +1365,20 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - The one-use operator override is exhausted. Phase 5 and Phase 6 stop pending
   a new operator decision; no further automated fix/review cycle is authorized.
 
+### Operator Design Decision — Existing AGENTS.md Is Manual-Only
+
+- Thomas accepted the safer fail-closed redesign after reviewing why OAT was
+  replacing existing `AGENTS.md` files.
+- Automatic guidance mutation is now limited to exclusive creation when root
+  `AGENTS.md` is absent. Any existing file or symlink receives a zero-write,
+  actionable managed-block patch; no recovery or temporary publication
+  artifacts are created.
+- This decision supersedes the existing-file replacement/recovery protocol and
+  directly addresses the review's identity-bound commit limitation rather than
+  adding another pathname race check.
+- The original exact-High Phase 5 implementer owns one bounded redesign fix,
+  followed by one fresh independent review. Phase 6 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -2060,6 +2074,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `review-target`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator design decision — existing AGENTS.md is manual-only
+
+- Direction: Thomas selected the safer fail-closed redesign after the terminal
+  review: create only an absent target; emit an actionable managed-block patch
+  for every existing file or symlink without modifying it.
+- Scope: remove the recovery-artifact publisher and align all Phase 5
+  consumers/tests/docs with one zero-write manual-patch contract.
+- Boundary: one bounded exact-target implementation and one fresh independent
+  Phase 5 review. Phase 6 remains gated until that review passes.
 
 <!-- orchestration-runs-end -->
 

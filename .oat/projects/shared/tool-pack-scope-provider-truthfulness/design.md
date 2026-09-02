@@ -625,8 +625,8 @@ type AgentsGuidanceAction =
   | 'declined'
   | 'not-requested'
   | 'create'
-  | 'update'
   | 'no-change'
+  | 'manual-required'
   | 'blocked';
 
 interface AgentsGuidancePlan {
@@ -637,6 +637,11 @@ interface AgentsGuidancePlan {
   body: string;
   legacySectionAction: 'preserve' | 'remove';
   reason: string;
+  manualPatch?: {
+    managedBlock: string;
+    legacyBlockAction: 'preserve' | 'remove-manually';
+    instructions: readonly string[];
+  };
 }
 
 type ProjectGuidanceChoice =
@@ -656,7 +661,8 @@ async function applyProjectGuidance(
 ```
 
 **Dependencies:** Existing tool-pack section renderer and managed-section
-helper, enhanced with no-follow validation and atomic write support.
+parser. Automatic mutation uses exclusive absent-file creation only; existing
+files use a zero-write manual-patch result.
 
 **Design Decisions:**
 
@@ -664,9 +670,15 @@ helper, enhanced with no-follow validation and atomic write support.
   intent and no PJM marker.
 - Interactive prompt defaults to decline; non-interactive execution never
   writes without `--project-guidance`.
-- A regular root file is supported. A symlink is supported only when it
-  resolves to a regular file inside the repository and remains unchanged at
-  apply. Broken, external, cyclic, or race-swapped links fail closed.
+- An absent root file may be created with an exclusive, no-replace operation.
+  Any existing root file or symlink is read only for marker/no-change planning;
+  a required update returns a managed-block patch and manual instructions.
+  Broken, external, cyclic, directory, or changing links fail closed without
+  mutation.
+- The first release assumes no supported Node filesystem primitive can bind
+  temporary-source, destination, and retained-original identities through one
+  conditional replacement. It therefore never automatically replaces an
+  existing `AGENTS.md`, even after explicit opt-in.
 - PJM and decision managed sections are never read as evidence for this choice
   and are never modified.
 
@@ -1003,9 +1015,15 @@ separate.
   symlink target.
 - Marker pairs must be unique and ordered; malformed duplicate markers block
   automatic modification.
+- Missing targets may use exclusive creation. Existing files and symlinks may
+  return `no-change`, `manual-required`, or `blocked`, but never an automatic
+  update. Manual results include only the managed block, legacy-block action,
+  redacted target, and copy-pasteable instructions; they never echo unrelated
+  file content.
 
-**Storage:** The managed section persists in repository `AGENTS.md`; no
-separate choice flag is stored.
+**Storage:** A newly created managed section persists in repository
+`AGENTS.md`. Existing-file proposals are returned in human/JSON output only;
+no patch or recovery artifact is written and no separate choice flag is stored.
 
 ### Namespaced Dispatch Provenance
 
@@ -1286,6 +1304,10 @@ values are never inspected or persisted by evidence collection.
   additionally requires a parent-relative, no-follow guarded primitive; when
   the runtime cannot provide one, creation is disabled rather than relying on
   a final path-based `symlink` window.
+- **Existing `AGENTS.md` replacement:** Current Node path APIs do not provide
+  the identity-bound conditional replacement needed by this contract.
+  Automatic guidance therefore creates absent files exclusively and converts
+  every existing-file or symlink update into a zero-write manual patch.
 - **Unmanaged-content loss:** Provider divergence falls back to per-entry sync.
   Existing real directories are never converted in the first release.
 - **Canonical deletion through alias:** No child remove/update operation is
@@ -1651,12 +1673,14 @@ disablement, repeated sync, race rejection, and zero unmanaged loss.
 **Tasks:**
 
 - Add prompt/flag resolution shared by init and workflows installation.
-- Harden managed-section path/marker/atomicity behavior.
+- Create an absent file exclusively; render existing-file and symlink updates
+  as zero-write manual patches because conditional replacement is unavailable.
 - Reuse the tools section and handle legacy workflows only on opt-in.
 - Add CLI and docs coverage for scope versus guidance versus adoption.
 
-**Verification:** All entry points produce one idempotent section; decline and
-non-interactive default produce zero writes.
+**Verification:** All entry points exclusively create an absent target or emit
+the same actionable existing-file patch; decline and non-interactive default
+produce zero writes.
 
 ### Phase 5: Dispatch Provenance Child
 
@@ -1773,9 +1797,11 @@ tooling are sufficient.
 
 - **Guidance update follows an unsafe symlink or malformed marker:** Probability
   Low | Impact High
-  - **Mitigation:** Containment, no-follow/apply-time checks, unique markers,
-    atomic writes, and explicit opt-in.
-  - **Contingency:** Emit a manual recovery block without changing the file.
+  - **Mitigation:** Containment and unique-marker validation remain read-only
+    for existing paths; automatic mutation is limited to exclusive absent-file
+    creation after explicit opt-in.
+  - **Contingency:** Emit an actionable managed-block patch without changing
+    the file.
 
 - **Fallback record legitimizes a different target:** Probability Medium |
   Impact High
