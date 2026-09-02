@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | in_progress | 11    | 11/11     |
-| Phase 5    | pending     | 9     | 0/9       |
-| Phase 6    | pending     | 10    | 0/10      |
-| Phase 7    | pending     | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | blocked   | 11    | 11/11     |
+| Phase 5    | pending   | 9     | 0/9       |
+| Phase 6    | pending   | 10    | 0/10      |
+| Phase 7    | pending   | 10    | 0/10      |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
 
 **Total:** 49/84 tasks completed
 
@@ -739,8 +739,8 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** in progress — review-fix loop 1 resolved all five Critical and one
-Important round-1 findings; fresh review round 2 is pending.
+**Status:** blocked — review round 2 found three Critical and one Important
+residual defect requiring bounded fix loop 2/3.
 **Started:** 2026-09-01
 **Implementation head:** 407d82524dabe5590306f40286375c00ab38b9c3
 
@@ -799,7 +799,13 @@ Important round-1 findings; fresh review round 2 is pending.
   focused suite at 76/76. The implementer also passed CLI lint, type-check,
   format, and build. The broader CLI suite passed 5,090/5,091; the only failure
   was a repeated out-of-scope doctor/defaultScope timeout.
-- Fresh review round 2 is next. Phase 5 has not started.
+- Review round 2 at `reviews/p04-rereview-2026-09-02T132440Z.md` blocked with
+  three Critical and one Important finding. It reported
+  `Reconnaissance: not-attempted`, independently passed the focused suite at
+  76/76, and reproduced wrong-issue public verification, forged/unbounded
+  search and discussion actions, and stale authoritative deletion evidence.
+- Bounded fix loop 2/3 through the original Phase 4 implementer is next. Phase
+  5 has not started.
 
 ---
 
@@ -1561,7 +1567,7 @@ continuation_events:
   - p04-review-fix-1-20260902-c818a9e83
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 1/3
+review_rounds: 2/3
 fix_loops: 1/3
 review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
 review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
@@ -1569,7 +1575,11 @@ review_1_findings: 5 critical, 1 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 fix_1_commit: 407d82524dabe5590306f40286375c00ab38b9c3
 fix_1_outcome: done_with_concerns
-phase_outcome: fixes_completed_review_2_pending
+review_2_artifact: reviews/p04-rereview-2026-09-02T132440Z.md
+review_2_head: 407d82524dabe5590306f40286375c00ab38b9c3
+review_2_findings: 3 critical, 1 important, 0 medium, 0 minor
+review_2_reconnaissance: not-attempted
+phase_outcome: review_2_blocked_fixes_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1597,7 +1607,13 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - The focused suite expanded to 76/76 and passed independently at the root;
   lint, types, format, diff, and build passed. The full CLI run passed
   5,090/5,091, with one repeated out-of-scope doctor/defaultScope timeout.
-- Review round 2 is pending; Phase 5 did not start.
+- Review round 2 blocked with three Critical and one Important finding after
+  reproducing wrong-issue public verification, generic search/discussion
+  planner bypass, and stale deletion authority. Reconnaissance was not
+  attempted, so no review-orchestration section or project-log orchestration
+  entry is required at this boundary.
+- Fix loop 2/3 is pending through the original accepted Phase 4 implementer;
+  Phase 5 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1698,7 +1714,7 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 76/76; core checks passed              | 0      | review round 2 pending     |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 76/76; core checks passed              | 0      | blocked by review round 2  |
 
 ## Final Summary (for PR/docs)
 
