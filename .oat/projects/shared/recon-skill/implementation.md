@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: final-review
+    reason: accepted final reviewer was interrupted by a platform content filter before writing an artifact; a fresh launch requires explicit authorization
+    since: 2026-09-02
 oat_last_updated: 2026-09-01
 oat_current_task_id: null
 oat_generated: false
@@ -940,6 +943,29 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   through final packet validation; documented prevalidation can still remove a
   prior published packet before the renderer's preservation path
 - External per-phase review gate: disabled
+
+#### Dispatch final review — interrupted
+
+- Request ID: `recon-skill-final-review-20260902T0020Z`
+- Role/class: fresh `oat-reviewer` / reviewer
+- Provider/context: Codex / fresh root-native session
+- Authority: review the complete implementation range and write one final review
+  artifact only
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
+- Reviewed basis: `2c6005d64f45a19e8b9eedbc977959b066d3eda0..8574dffc8f7c2abfab25649b384abfb0aa738d15`
+- Launch/outcome: accepted / operationally interrupted before artifact
+- Evidence: the reviewer bound the exact range and reproduced both Phase 5
+  residuals as tentative Medium findings, then the platform content filter
+  rejected its terminal response twice on the same accepted handle
+- Artifact: none written
+- Verdict: none; final review remains pending
+- Continuation: no replacement launch is authorized by the interruption; a
+  fresh final-review launch requires explicit operator authorization
+- Dispatch: scope=final action=review role=reviewer
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
