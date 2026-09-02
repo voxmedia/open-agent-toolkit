@@ -1,5 +1,10 @@
 import { containsSensitiveContentSignal } from '@commands/pjm/remote/credential-safety';
 import {
+  requireCurrentOutboundSafety,
+  type OutboundProjection,
+  type OutboundProjectionSafetyResult,
+} from '@commands/pjm/remote/outbound-projection-safety';
+import {
   contextsEqual,
   semanticDigest,
   type NormalizedRemoteIssue,
@@ -57,6 +62,38 @@ export interface LinearDiscussionReadPlanInput {
   stableId: string;
   cursor: string | null;
   limit: number;
+}
+
+export type LinearMutationField =
+  | 'title'
+  | 'description'
+  | 'priority'
+  | 'status'
+  | 'annotation';
+
+export interface LinearMutationPreviewInput {
+  operation: 'create' | 'update' | 'transition' | 'annotate';
+  context: ProviderContext;
+  hostCapability: LinearHostCapabilityObservation;
+  bindingId: string;
+  stableId?: string;
+  provenance?: { bindingId: string; origin: string };
+  fieldMask: readonly string[];
+  projection: OutboundProjection;
+  outboundSafety: OutboundProjectionSafetyResult;
+}
+
+export interface LinearMutationPlanInput extends LinearMutationPreviewInput {
+  approvedPreviewDigest: string;
+}
+
+export interface LinearMutationPreview {
+  previewDigest: string;
+  executionEvidence: {
+    capabilityEvidenceDigest: string;
+    projectionDigest: string;
+    outboundSafetyResultDigest: string;
+  };
 }
 
 const UUID =
@@ -293,6 +330,106 @@ export function planLinearDiscussionRead(
   };
 }
 
+export function previewLinearMutation(
+  input: LinearMutationPreviewInput,
+): LinearMutationPreview {
+  const capability = validateLinearHostCapability(
+    input.operation,
+    input.context,
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('Linear mutation capability is unavailable.');
+  }
+  assertLinearMutationIdentity(input);
+  const fieldMask = normalizeLinearMutationFieldMask(
+    input.operation,
+    input.fieldMask,
+    input.projection,
+  );
+  requireCurrentOutboundSafety(input.projection, input.outboundSafety);
+  const executionEvidence = {
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    projectionDigest: input.outboundSafety.projectionDigest,
+    outboundSafetyResultDigest: input.outboundSafety.resultDigest,
+  };
+  return {
+    previewDigest: semanticDigest({
+      provider: 'linear',
+      operation: input.operation,
+      context: input.context,
+      bindingId: input.bindingId,
+      stableId: input.stableId ?? null,
+      provenance: input.provenance ?? null,
+      fieldMask,
+      projection: input.projection,
+      postconditions: input.projection,
+      executionEvidence,
+    }),
+    executionEvidence,
+  };
+}
+
+export function planLinearMutation(
+  input: LinearMutationPlanInput,
+): SemanticAction {
+  const preview = previewLinearMutation(input);
+  if (input.approvedPreviewDigest !== preview.previewDigest) {
+    throw new Error('Linear mutation approval does not match its preview.');
+  }
+  const fieldMask = normalizeLinearMutationFieldMask(
+    input.operation,
+    input.fieldMask,
+    input.projection,
+  );
+  const actionDigest = semanticDigest({
+    provider: 'linear',
+    operation: input.operation,
+    context: input.context,
+    bindingId: input.bindingId,
+    stableId: input.stableId ?? null,
+    provenance: input.provenance ?? null,
+    fieldMask,
+    projection: input.projection,
+    previewDigest: preview.previewDigest,
+    approvalDigest: input.approvedPreviewDigest,
+    executionEvidence: preview.executionEvidence,
+  });
+  return {
+    provider: 'linear',
+    operation: input.operation,
+    context: input.context,
+    intent: {
+      bindingId: input.bindingId,
+      stableId: input.stableId ?? null,
+      provenance: input.provenance ?? null,
+      fieldMask,
+      projection: { ...input.projection },
+      postconditions: { ...input.projection },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+      outboundSafety: {
+        projectionDigest: input.outboundSafety.projectionDigest,
+        resultDigest: input.outboundSafety.resultDigest,
+      },
+      previewDigest: preview.previewDigest,
+      approvalDigest: input.approvedPreviewDigest,
+      actionDigest,
+      executionEvidence: {
+        ...preview.executionEvidence,
+        previewDigest: preview.previewDigest,
+        approvalDigest: input.approvedPreviewDigest,
+        actionDigest,
+      },
+      readbackContract: {
+        pinned: true,
+        requireStableIdentity: true,
+        requireExactContext: true,
+        fields: fieldMask,
+      },
+    },
+  };
+}
+
 function canonicalLinearStableId(workspaceId: string, uuid: string): string {
   return `linear:${workspaceId}:${uuid.toLowerCase()}`;
 }
@@ -301,6 +438,52 @@ function hasPinnedLinearContext(context: ProviderContext): boolean {
   return ['accountId', 'workspaceId', 'teamId'].every(
     (key) => typeof context[key] === 'string' && context[key]!.length > 0,
   );
+}
+
+function assertLinearMutationIdentity(input: LinearMutationPreviewInput): void {
+  if (!hasPinnedLinearContext(input.context) || !input.bindingId) {
+    throw new Error('Linear mutation requires a binding and pinned context.');
+  }
+  if (input.operation === 'create') {
+    if (
+      input.stableId !== undefined ||
+      input.provenance?.bindingId !== input.bindingId ||
+      !input.provenance.origin
+    ) {
+      throw new Error('Linear create requires exact creation provenance.');
+    }
+  } else if (!input.stableId) {
+    throw new Error('Linear mutation requires a stable issue identity.');
+  }
+}
+
+function normalizeLinearMutationFieldMask(
+  operation: LinearMutationPreviewInput['operation'],
+  fieldMask: readonly string[],
+  projection: OutboundProjection,
+): LinearMutationField[] {
+  const allowedByOperation: Record<
+    LinearMutationPreviewInput['operation'],
+    LinearMutationField[]
+  > = {
+    create: ['title', 'description', 'priority'],
+    update: ['title', 'description', 'priority'],
+    transition: ['status'],
+    annotate: ['annotation'],
+  };
+  if (
+    fieldMask.length === 0 ||
+    new Set(fieldMask).size !== fieldMask.length ||
+    fieldMask.some(
+      (field) =>
+        !allowedByOperation[operation].includes(field as LinearMutationField),
+    ) ||
+    Object.keys(projection).length !== fieldMask.length ||
+    Object.keys(projection).some((field) => !fieldMask.includes(field))
+  ) {
+    throw new Error('Linear mutation projection or field mask is invalid.');
+  }
+  return [...fieldMask] as LinearMutationField[];
 }
 
 function assertLinearObservation(

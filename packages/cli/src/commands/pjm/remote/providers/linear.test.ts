@@ -1,11 +1,14 @@
+import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
 import { describe, expect, it } from 'vitest';
 
 import {
   normalizeLinearIssueObservation,
   parseLinearIssueReference,
+  planLinearMutation,
   planLinearDiscussionRead,
   planLinearRead,
+  previewLinearMutation,
   type LinearHostCapabilityObservation,
 } from './linear';
 
@@ -53,7 +56,14 @@ export const linearCapability: LinearHostCapabilityObservation = {
   accountId: 'acct_linear',
   workspaceId: 'workspace_01',
   teamId: 'team_alpha',
-  operations: ['read', 'read-discussion'],
+  operations: [
+    'read',
+    'read-discussion',
+    'create',
+    'update',
+    'transition',
+    'annotate',
+  ],
   observableFields: [
     'stable-identity',
     'title',
@@ -204,5 +214,116 @@ describe('Linear semantic read intents', () => {
         limit: 101,
       }),
     ).toThrow('bounds');
+  });
+});
+
+describe('Linear semantic mutation intents', () => {
+  const mutationInput = {
+    operation: 'update' as const,
+    context: linearContext,
+    hostCapability: linearCapability,
+    bindingId: 'binding_linear_42',
+    stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    fieldMask: ['title', 'priority'] as const,
+    projection: { title: 'Updated title', priority: 'urgent' },
+    outboundSafety: assessOutboundProjectionSafety(
+      { title: 'Updated title', priority: 'urgent' },
+      { assessedAt: '2026-09-02T12:00:00.000Z' },
+    ),
+  };
+
+  it('binds projection, safety, preview, approval, action, and readback evidence', () => {
+    const preview = previewLinearMutation(mutationInput);
+    const action = planLinearMutation({
+      ...mutationInput,
+      approvedPreviewDigest: preview.previewDigest,
+    });
+    expect(action).toMatchObject({
+      provider: 'linear',
+      operation: 'update',
+      context: linearContext,
+      intent: {
+        bindingId: 'binding_linear_42',
+        fieldMask: ['title', 'priority'],
+        projection: { title: 'Updated title', priority: 'urgent' },
+        postconditions: { title: 'Updated title', priority: 'urgent' },
+        previewDigest: preview.previewDigest,
+        approvalDigest: preview.previewDigest,
+        readbackContract: {
+          pinned: true,
+          requireStableIdentity: true,
+          requireExactContext: true,
+        },
+      },
+    });
+    expect(action.intent).toHaveProperty('actionDigest');
+    expect(action).not.toHaveProperty('tool');
+    expect(action).not.toHaveProperty('command');
+  });
+
+  it.each([
+    ['create', { title: 'New Linear issue' }],
+    ['transition', { status: 'completed' }],
+    ['annotate', { annotation: 'Completed locally' }],
+  ] as const)(
+    'plans %s only from an explicit normalized projection',
+    (operation, projection) => {
+      const outboundSafety = assessOutboundProjectionSafety(projection, {
+        assessedAt: '2026-09-02T12:00:00.000Z',
+      });
+      const input = {
+        operation,
+        context: linearContext,
+        hostCapability: linearCapability,
+        bindingId: 'binding_linear_42',
+        ...(operation === 'create'
+          ? {
+              provenance: {
+                bindingId: 'binding_linear_42',
+                origin: 'local:item-42',
+              },
+            }
+          : {
+              stableId:
+                'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+            }),
+        fieldMask: Object.keys(projection),
+        projection,
+        outboundSafety,
+      };
+      const preview = previewLinearMutation(input);
+      expect(
+        planLinearMutation({
+          ...input,
+          approvedPreviewDigest: preview.previewDigest,
+        }),
+      ).toMatchObject({ operation, intent: { projection } });
+    },
+  );
+
+  it('blocks missing capability, blocked safety, and stale approval before an attempt', () => {
+    expect(() =>
+      previewLinearMutation({
+        ...mutationInput,
+        hostCapability: { ...linearCapability, operations: ['read'] },
+      }),
+    ).toThrow('capability');
+    expect(() =>
+      previewLinearMutation({
+        ...mutationInput,
+        projection: { title: 'api key should not leave OAT' },
+        fieldMask: ['title'],
+        outboundSafety: assessOutboundProjectionSafety(
+          { title: 'api key should not leave OAT' },
+          { assessedAt: '2026-09-02T12:00:00.000Z' },
+        ),
+      }),
+    ).toThrow('blocks');
+    expect(() =>
+      planLinearMutation({
+        ...mutationInput,
+        approvedPreviewDigest: 'sha256:stale',
+      }),
+    ).toThrow('approval');
   });
 });
