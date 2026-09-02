@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260818-require-repo-wide-call-site.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260818-require-repo-wide-call-site
@@ -44,7 +44,7 @@ review scope, not a correctness boundary.
 - Source backlog item:
   [BL-260818-require-repo-wide-call-site — Require repo-wide call-site sweeps](../../pjm/backlog/items/BL-260818-require-repo-wide-call-site.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - [explainer-improvements-v2 summary](../project-summaries/20260818-explainer-improvements-v2.md)
     at lines 75-81 and 111-114 records that `publicAccess` was threaded only
@@ -79,7 +79,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 If another change already defines cross-cutting option handling, reconcile to a
@@ -218,7 +218,7 @@ Stop and report instead of improvising when:
 Revalidate against current `origin/main`, the source backlog item, both cited
 historical commits, the explainer summary, phase implementer, implement skill,
 and focused test when main advances materially from
-`2c6005d64f45a19e8b9eedbc977959b066d3eda0`, phase ownership or wording changes,
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, phase ownership or wording changes,
 the broader recurring-gate item lands, or the cited gap cannot be reproduced.
 Refresh or supersede stale scope before execution.
 

@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260827-override-aware-remedy-text.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: BLOCKED
 oat_backlog_items:
   - BL-260827-override-aware-remedy-text
@@ -45,7 +45,7 @@ will repair the supplied path.
 - Source backlog item:
   [BL-260827-override-aware-remedy-text — Override-aware remedy text in assets-root fail-closed errors](../../pjm/backlog/items/BL-260827-override-aware-remedy-text.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/fs/assets.ts:88-90` already distinguishes a non-empty
     explicit override from the packaged default.
@@ -75,7 +75,7 @@ After satisfying the hard dependency and before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 Confirm the structural error introduced by the predecessor is included in the

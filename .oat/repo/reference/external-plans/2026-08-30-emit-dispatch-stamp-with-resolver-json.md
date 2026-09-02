@@ -6,9 +6,9 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260826-emit-the-dispatch-stamp-from.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
-oat_execution_status: READY
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
+oat_execution_status: BLOCKED
 oat_backlog_items:
   - BL-260826-emit-the-dispatch-stamp-from
 oat_issue_url: null
@@ -26,11 +26,16 @@ created: '2026-08-30T23:49:30Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!IMPORTANT]
-> **Execution status: READY.** The selected contract is an additive
+> **Execution status: BLOCKED.** The selected contract is an additive
 > `dispatchStamp` string beside `dispatchReport` when report context is
-> requested. PR #249 removed an unrelated manifest-pack assertion from one
-> shared test file but did not change resolver/report/stamp behavior. This plan
-> does not add a second formatting CLI mode or alter stamp grammar.
+> requested; PR #249 and PR #254 did not change resolver/report/stamp behavior.
+> Execution is blocked on integration, not semantics: the in-flight
+> `tool-pack-scope-provider-truthfulness` project rewrites and version-bumps
+> all three cited skill surfaces and adds `oat project dispatch record` beside
+> the identity modules in one integrated PR expected to merge next. Apply the
+> trivial refresh in Revalidation Before Execution after that merge, then set
+> this plan `READY`. This plan does not add a second formatting CLI mode or
+> alter stamp grammar.
 
 ## Outcome
 
@@ -44,7 +49,7 @@ running an out-of-tree TypeScript shim or reconstructing fields by hand.
 - Source backlog item:
   [BL-260826-emit-the-dispatch-stamp-from — Emit the dispatch stamp from the dispatch-ceiling resolver](../../pjm/backlog/items/BL-260826-emit-the-dispatch-stamp-from.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/commands/project/dispatch-ceiling/index.ts:2758-2775`
     builds a `DispatchReportV1` only when both report scope and action are
@@ -75,13 +80,15 @@ running an out-of-tree TypeScript shim or reconstructing fields by hand.
 
 ## Dependencies
 
-| Type            | Dependency                                                                                                                                                                    | Required state                                                                                  | Current state                                    |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Hard policy     | [DR-260729-additive-dispatch-reports](../decisions/DR-260729-additive-dispatch-reports.md)                                                                                    | Additive JSON field only; preserve `DispatchReportV1` meanings and stamp grammar byte-for-byte. | Accepted; satisfiable inside this plan.          |
-| Soft enrichment | [BL-260826-populate-native-subagent](../../pjm/backlog/items/BL-260826-populate-native-subagent.md) / [issue #211](https://github.com/voxmedia/open-agent-toolkit/issues/211) | If it lands first, revalidate producer/provenance values; unknown remains valid until then.     | Open; does not block emitting a canonical stamp. |
-| Soft adjacency  | [BL-260820-emit-source-qualified](../../pjm/backlog/items/BL-260820-emit-source-qualified.md)                                                                                 | Keep review/gate receipt provenance separate from resolver stamp production.                    | Open; separate ownership.                        |
+| Type             | Dependency                                                                                                                                                                                                                                            | Required state                                                                                  | Current state                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hard policy      | [DR-260729-additive-dispatch-reports](../decisions/DR-260729-additive-dispatch-reports.md)                                                                                                                                                            | Additive JSON field only; preserve `DispatchReportV1` meanings and stamp grammar byte-for-byte. | Accepted; satisfiable inside this plan.                                                                                                                                                                                                                                                                                                                                                                                        |
+| Hard integration | `tool-pack-scope-provider-truthfulness` project (spec-driven; at `p07-t04` on 2026-09-02; one integrated PR with lockstep `0.2.52`) / [BL-260829-make-tool-pack-scope-selection](../../pjm/backlog/items/BL-260829-make-tool-pack-scope-selection.md) | Merged to `origin/main`; Step 3 call-site sweep re-run; cited skill and test anchors refreshed. | Not merged. Its branch leaves `dispatch-ceiling/`, `stamp.ts`, and `DispatchReportV1` unchanged, locks `producer=unknown provenance=unknown` in `dispatch-report.test.ts`, and implements no stamp; it bumps `oat-project-review-provide` (1.5.3), `oat-project-review-provide-remote` (1.1.2), and `oat-project-plan-writing` (1.2.21), adds `commands/project/dispatch/`, and archives `BL-260826-populate-native-subagent`. |
+| Soft enrichment  | [BL-260826-populate-native-subagent](../../pjm/backlog/items/BL-260826-populate-native-subagent.md) / [issue #211](https://github.com/voxmedia/open-agent-toolkit/issues/211)                                                                         | If it lands first, revalidate producer/provenance values; unknown remains valid until then.     | Open; the truthfulness project archives this item at `p07-t04`, so treat that merge as the trigger to revalidate report/stamp inputs (its branch still resolves both to `unknown`).                                                                                                                                                                                                                                            |
+| Soft adjacency   | [BL-260820-emit-source-qualified](../../pjm/backlog/items/BL-260820-emit-source-qualified.md)                                                                                                                                                         | Keep review/gate receipt provenance separate from resolver stamp production.                    | Open; separate ownership.                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-No unsatisfied hard dependency blocks execution.
+One hard integration dependency is unsatisfied: the truthfulness project must
+merge to `origin/main` and the refresh checklist must be applied.
 
 ## Drift check
 
@@ -89,7 +96,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- packages/cli/src/commands/project/dispatch-ceiling packages/cli/src/providers/identity .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/commands/project/dispatch-ceiling packages/cli/src/commands/project/dispatch packages/cli/src/providers/identity .agents/skills/oat-project-review-provide .agents/skills/oat-project-review-provide-remote .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md
 ```
 
 If another change added a stamp mode/field, changed report eligibility, or
@@ -236,6 +243,9 @@ order with a fresh `origin/main` fetch before version checking. Also run
 
 Stop and report instead of improvising when:
 
+- the `tool-pack-scope-provider-truthfulness` project has not merged to
+  `origin/main`, or it has merged but the refresh checklist below has not been
+  applied and the status flipped to `READY`;
 - the requested outcome requires a standalone `--stamp` mode rather than the
   selected additive JSON field;
 - implementation would change `DispatchReportV1` schema/version or stamp grammar;
@@ -250,9 +260,30 @@ Revalidate against current `origin/main`, the source backlog item, linked
 decision, issue #211 and related backlog items, resolver/report/stamp code,
 canonical call sites, and tests when a dependency lands, substantial time
 passes, main advances materially from
-`2c6005d64f45a19e8b9eedbc977959b066d3eda0`, cited contracts or intent change,
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, cited contracts or intent change,
 another PR implements part of the outcome, or a load-bearing claim cannot be
 reproduced.
+
+Required refresh after the `tool-pack-scope-provider-truthfulness` merge
+(its branch was verified read-only on 2026-09-02 at `27b978528`; every
+load-bearing claim reproduces there):
+
+- Re-anchor `dispatch-and-dry-run.md:530` → `:541`,
+  `review-skill-contracts.test.ts:655` → `:672`, and
+  `validation/skills.test.ts:5094` → `:5128`; `dispatch-ceiling/`, `stamp.ts`,
+  `bundle-consistency.test.ts:574`, and the docs page are unchanged.
+- Step 3: the three cited skills gain a "persist native dispatch lineage"
+  paragraph that runs `oat project dispatch record`; land the stamp edits
+  adjacent to it and bump each touched skill again (the bump gate is
+  PR-scoped).
+- Record that `oat project dispatch record` (`commands/project/dispatch/`) is a
+  separate persisted-provenance surface that does not consume the stamp; keep
+  it out of scope unless the sweep proves a consumer.
+- Re-point the `BL-260826-populate-native-subagent` link to
+  `../../pjm/backlog/archived/` once that merge archives it, and reconfirm that
+  `producer`/`provenance` still resolve to `unknown`.
+- Rebase onto the post-merge `origin/main` and choose a lockstep version above
+  `0.2.52`.
 
 Update or supersede stale instructions before import or execution.
 

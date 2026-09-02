@@ -31,28 +31,28 @@ wrapper project, implementation branch, or implementation PR has started.
 
 | Wave | Theme                                | Lanes | Status   | Record                                                        |
 | ---- | ------------------------------------ | ----- | -------- | ------------------------------------------------------------- |
-| W1   | CLI resolution and asset correctness | 4     | composed | Awaiting operator composition approval; no execution started. |
+| W1   | CLI resolution and asset correctness | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W2   | Skill contract truthfulness          | 4     | composed | Awaiting operator composition approval; no execution started. |
 | W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started. |
-| W4   | Delivered-project follow-ups         | 2     | composed | Awaiting operator composition approval; no execution started. |
+| W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started. |
 
-## Wave Table (coverage: 13 plans = 13 index rows; verified 2026-08-31)
+## Wave Table (coverage: 13 plans = 13 index rows; verified 2026-09-02)
 
-| Plan                                                                                                           | Index                                                            | Wave | Ordering notes                                            | Status  |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | --------------------------------------------------------- | ------- |
-| [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                             | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1                                          | pending |
-| [Emit dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)               | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W1   | parallel group 1; issue #211 is soft                      | pending |
-| [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                           | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor      | pending |
-| [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                          | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY | pending |
-| [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                    | pending |
-| [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                         | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation           | pending |
-| [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                 | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation           | pending |
-| [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)     | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first        | pending |
-| [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                       | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                          | pending |
-| [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md) | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                 | pending |
-| [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)               | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep | pending |
-| [Disable configured gates per project](./2026-08-30-disable-configured-gates-per-project.md)                   | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | parallel group; preserve PR #246 contracts                | pending |
-| [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md)                       | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W4   | parallel group; preserve PR #249 diagnostics              | pending |
+| Plan                                                                                                           | Index                                                            | Wave | Ordering notes                                                                                                                       | Status  |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                             | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1                                                                                                                     | pending |
+| [Emit dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)               | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | parallel group; moved from W1 on 2026-09-02; BLOCKED until `tool-pack-scope-provider-truthfulness` merges; issue #211 is soft        | pending |
+| [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                           | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor                                                                                 | pending |
+| [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                          | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY                                                                            | pending |
+| [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                                                                                               | pending |
+| [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                         | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                      | pending |
+| [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                 | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                      | pending |
+| [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)     | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first                                                                                   | pending |
+| [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                       | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                                                                                                     | pending |
+| [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md) | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                                                                                            | pending |
+| [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)               | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep                                                                            | pending |
+| [Disable configured gates per project](./2026-08-30-disable-configured-gates-per-project.md)                   | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | parallel group; preserve PR #246 contracts                                                                                           | pending |
+| [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md)                       | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W4   | parallel group; BLOCKED until `tool-pack-scope-provider-truthfulness` merges and the plan is refreshed; preserve PR #249 diagnostics | pending |
 
 ## Program-wide integration rules
 
@@ -68,15 +68,26 @@ wrapper project, implementation branch, or implementation PR has started.
   definition-of-done gate sequence on the integrated wave branch. Fetch current
   `origin/main` immediately before release-version validation.
 - Revalidate every pending wave when main materially changes. Specifically
-  re-sweep W1 dispatch behavior if issue #211 changes and W2 lifecycle loading
+  re-sweep W4 dispatch behavior if issue #211 changes and W2 lifecycle loading
   if draft PR #190 changes before their lanes start.
+- **External hard dependency:** the `tool-pack-scope-provider-truthfulness`
+  project (spec-driven, at `p07-t04` on 2026-09-02, one integrated PR with
+  lockstep `0.2.52`, expected to merge next). Two W4 plans are `BLOCKED` on
+  it (manifest restamps, dispatch stamp). After it merges: W2's named-skill
+  lane re-sweeps `dispatch-and-dry-run.md` and the review-provide skills; W4's
+  gate-override lane re-anchors `oat-project-plan-writing` and
+  `user-sync-config.ts`; W3's smoke lane re-anchors `tools/smoke/CONTRACT.md`
+  (an adjacent `runtimeObservation` section lands there). Its `p07-t04` also
+  archives four backlog items and rewrites the backlog index, so any wave
+  closeout after that merge must rebase its backlog bookkeeping.
 - Stop at the operator checkpoint below before creating the W1 wrapper project
   or dispatching any implementation lane.
 
 ## Wave 1: CLI resolution and asset correctness
 
-- **Parallel group 1:** Use configured docs index paths; emit the dispatch stamp
-  with resolver JSON; validate asset-bundle structure.
+- **Parallel group 1:** Use configured docs index paths; validate asset-bundle
+  structure. (The dispatch-stamp lane moved to W4 on 2026-09-02 because the
+  in-flight truthfulness merge rewrites its cited skills.)
 - **Group 2 status gate:** After structural asset validation completes and
   merges into the wave branch, revalidate the successor against that exact
   tree. Update or supersede its external plan and set `oat_execution_status` to
@@ -85,9 +96,9 @@ wrapper project, implementation branch, or implementation PR has started.
   `BLOCKED`. Then implement the override-aware remedies and revalidate every
   pre-existing asset failure family plus the new structural branch.
 - **Cross-wave prerequisites:** None beyond a fresh main baseline and operator
-  approval. Issue #211 is a soft revalidation trigger, not an execution block.
-- **Composition rationale:** The three first-group lanes are bounded CLI/runtime
-  fixes with disjoint primary write surfaces. The fourth is a true ordered
+  approval.
+- **Composition rationale:** The two first-group lanes are bounded CLI/runtime
+  fixes with disjoint primary write surfaces. The third is a true ordered
   successor to the asset validator and remains in the same wrapper so its error
   matrix is tested against the exact delivered branch.
 
@@ -121,14 +132,36 @@ wrapper project, implementation branch, or implementation PR has started.
 ## Wave 4: Delivered-project follow-ups
 
 - **Parallel group:** Disable configured lifecycle gates per project; warn on
-  every non-sync manifest version restamp.
-- **Cross-wave prerequisites:** W3 merged. Revalidate both plans against live
-  gate/status surfaces before implementation because they follow freshly merged
-  PRs #246 and #249.
-- **Composition rationale:** Both plans became ready only after their owning
-  projects merged. They are independent CLI follow-ups on separate gate and
-  status surfaces, but both are kept in the final wave to minimize immediate
-  churn around newly delivered contracts and to reconcile release files once.
+  every non-sync manifest version restamp; emit the dispatch stamp with
+  resolver JSON.
+- **Cross-wave prerequisites:** W3 merged and `tool-pack-scope-provider-truthfulness`
+  merged. Refresh the manifest-restamp and dispatch-stamp plans per their
+  Revalidation Before Execution checklists and flip them to `READY` before
+  dispatch; re-anchor the gate-override plan's `oat-project-plan-writing` and
+  `user-sync-config.ts` citations. Revalidate all three against live
+  gate/status/dispatch surfaces because they follow freshly merged PRs #246,
+  #249, and the truthfulness PR.
+- **Composition rationale:** All three plans follow merged or imminently
+  merging projects that own their surfaces. They are independent CLI follow-ups
+  on separate gate, status, and dispatch surfaces, kept in the final wave to
+  minimize churn around newly delivered contracts and to reconcile release
+  files once.
+
+## Revalidation record
+
+- **2026-09-02** — Rebased the program branch onto `origin/main`
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced
+  project records). Re-ran all 13 drift checks: only lockstep version bumps,
+  test line shifts, `oat-project-complete` 1.7.6 (fallback citation moved
+  406 → 465 in the named-skill plan), and unrelated docs prose. All 13 plans
+  re-stamped to that baseline. Verified the in-flight
+  `tool-pack-scope-provider-truthfulness` branch read-only at `27b978528`
+  (190 files vs. the same merge-base): it implements neither the manifest
+  restamp nor the dispatch stamp outcome, but rewrites both plans' surfaces,
+  so both are now `BLOCKED` on its merge and the dispatch-stamp lane moved from
+  W1 to W4. PR #190 (`81a51d2d`, draft) and issue #211 remain open soft
+  triggers. Composition: W1 = 3 lanes, W2 = 4, W3 = 3, W4 = 3; coverage still
+  13/13.
 
 ## Operator checkpoint
 

@@ -5,8 +5,8 @@ oat_external_plan_source: backlog-review
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 created: '2026-08-31T00:01:21Z'
 ---
 
@@ -66,5 +66,5 @@ not an `oat-project-import-plan` target.
   suggestion. Existing residue is administrative evidence, not cleanup
   authority; only manifest-reserved and corroborated resources are removable.
 - Every selected plan was revalidated against full `origin/main` SHA
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` and contains its own drift and
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` and contains its own drift and
   revalidation contract.

@@ -6,9 +6,9 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260826-warn-on-silent-oatversion.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
-oat_execution_status: READY
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
+oat_execution_status: BLOCKED
 oat_backlog_items:
   - BL-260826-warn-on-silent-oatversion
 oat_issue_url: null
@@ -26,10 +26,14 @@ created: '2026-08-30T23:40:20Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!IMPORTANT]
-> **Execution status: READY.** Scope and adoption diagnostics completed and
-> merged as PR #249. Revalidation found that status adoption remains
-> interactive-only and still saves a restamped manifest without exposing the
-> original producer version; this plan now targets that delivered flow.
+> **Execution status: BLOCKED.** Scope and adoption diagnostics completed and
+> merged as PR #249, and the 2026-09-02 revalidation reproduced every silent
+> restamp claim on `origin/main`. Execution is blocked on integration: the
+> in-flight `tool-pack-scope-provider-truthfulness` project rewrites every
+> save site this plan edits (Manifest V2, collection sync, status migration,
+> new engine save sites) in one integrated PR that is expected to merge next.
+> Refresh this plan against that merged tree per Revalidation Before Execution,
+> then set it `READY` before import or execution.
 
 ## Outcome
 
@@ -44,7 +48,7 @@ that no changes were required.
 - Source backlog item:
   [BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps outside sync](../../pjm/backlog/items/BL-260826-warn-on-silent-oatversion.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/manifest/manager.ts:81-94` always replaces
     `manifest.oatVersion` with `OAT_VERSION` immediately before atomic save.
@@ -74,12 +78,14 @@ that no changes were required.
 
 ## Dependencies
 
-| Type                  | Dependency                                                                                                                                                                      | Required state                                                                                                                                      | Current state                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Satisfied predecessor | [PR #249](https://github.com/voxmedia/open-agent-toolkit/pull/249) / [BL-260827-correct-scope-and-adoption](../../pjm/backlog/archived/BL-260827-correct-scope-and-adoption.md) | Project completed; implementation merged to `origin/main`; `status/index.ts`, its JSON/human output, and tests revalidated on that merged baseline. | Satisfied at merge `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; status mutation remains interactive-only. |
-| Soft precedent        | [PR #217](https://github.com/voxmedia/open-agent-toolkit/pull/217) and [its external plan](./2026-08-19-warn-sync-version-skew.md)                                              | Preserve pre-mutation, non-blocking, plain-identity comparison semantics.                                                                           | Merged/implemented.                                                                                      |
+| Type                  | Dependency                                                                                                                                                                                                                                                     | Required state                                                                                                                                      | Current state                                                                                                                                                                                                                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Satisfied predecessor | [PR #249](https://github.com/voxmedia/open-agent-toolkit/pull/249) / [BL-260827-correct-scope-and-adoption](../../pjm/backlog/archived/BL-260827-correct-scope-and-adoption.md)                                                                                | Project completed; implementation merged to `origin/main`; `status/index.ts`, its JSON/human output, and tests revalidated on that merged baseline. | Satisfied at merge `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; status mutation remains interactive-only.                                                                                                                                                                                                                  |
+| Hard integration      | `tool-pack-scope-provider-truthfulness` project (spec-driven; at `p07-t04` on 2026-09-02; ships as one integrated PR with lockstep `0.2.52`) / [BL-260829-make-tool-pack-scope-selection](../../pjm/backlog/items/BL-260829-make-tool-pack-scope-selection.md) | Merged to `origin/main`; this plan refreshed against the merged tree per the checklist in Revalidation Before Execution.                            | Not merged. Its branch changes `manifest/manager.ts` (Manifest V1→V2, `saveManifest(path, ManifestV2)`), `init/index.ts`, `remove-skill.ts`, `status/index.ts` (collection-migration stray class with `migrationAborted`), `sync/*`, and adds `engine/execute-plan.ts` save sites; it implements no part of this outcome. |
+| Soft precedent        | [PR #217](https://github.com/voxmedia/open-agent-toolkit/pull/217) and [its external plan](./2026-08-19-warn-sync-version-skew.md)                                                                                                                             | Preserve pre-mutation, non-blocking, plain-identity comparison semantics.                                                                           | Merged/implemented.                                                                                                                                                                                                                                                                                                       |
 
-There are no unsatisfied hard dependencies.
+One hard integration dependency is unsatisfied: the truthfulness project must
+merge to `origin/main` and this plan must be refreshed against that tree.
 
 ## Drift check
 
@@ -87,7 +93,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- packages/cli/src/manifest/manager.ts packages/cli/src/manifest/manager.test.ts packages/cli/src/commands/init packages/cli/src/commands/remove/skill packages/cli/src/commands/status packages/cli/src/commands/sync packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/manifest/manager.ts packages/cli/src/manifest/manager.test.ts packages/cli/src/commands/init packages/cli/src/commands/remove/skill packages/cli/src/commands/status packages/cli/src/commands/sync packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/execute-plan.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 Reproduce each save call and determine whether the diagnostics project added,
@@ -243,6 +249,9 @@ stand in for execution evidence.
 
 Stop and report instead of improvising when:
 
+- the `tool-pack-scope-provider-truthfulness` project has not merged to
+  `origin/main`, or it has merged but this plan's refresh checklist has not
+  been applied and the status flipped to `READY`;
 - PR #249's canonical scope-owned observations or exception-safe status output
   would be changed instead of preserved;
 - status ownership or output changed without revalidation;
@@ -254,12 +263,40 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
-The prerequisite-merge revalidation was completed against PR #249 and current
-`origin/main`. Revalidate again against PR #217, the predecessor external plan,
-every `saveManifest` call site, output schemas, and focused tests when
-substantial time passes, main advances materially, cited contracts/intent
-change, another PR implements part of the outcome, or any load-bearing
-silent-restamp claim no longer reproduces.
+The prerequisite-merge revalidation was completed against PR #249 and again on
+2026-09-02 against `origin/main` at
+`49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254: lockstep version bumps
+and unrelated test/skill edits only). A second refresh is REQUIRED once the
+`tool-pack-scope-provider-truthfulness` project merges. Its branch, verified
+read-only on 2026-09-02 at `27b978528`, reproduces every claim but changes the
+surfaces this plan edits:
+
+- Re-anchor the seven evidence line references (on that branch:
+  `manager.ts:106-119`, `init/index.ts:1245`, `remove-skill.ts:359-367`,
+  `status/index.ts:1500-1505`, `sync/index.ts:296-313`, `apply.ts:353-376`
+  and `:497-499`, `sync/index.test.ts:1315-1347`).
+- Step 1: target `ManifestV2Schema` and `saveManifest(path, ManifestV2)`,
+  export the helper through `manifest/index.ts`, and rule explicitly on
+  whether the silent V1→V2 `version` upgrade performed by `loadManifest` joins
+  the advisory or stays out of scope (the final `OAT_VERSION` stamp remains
+  out of scope).
+- Step 3: place the status advisory after the new collection-migration block
+  and prove the `migrationAborted` path emits no restamp advisory.
+- Step 4: state the restamp-only condition as
+  `summary.plannedOperations === 0 && versionSkew.length > 0` against the
+  enlarged sync JSON payload (`collectionOperations`, `operationResults`,
+  `providerRefreshAdvice`).
+- Done criteria: enumerate `engine/execute-plan.ts:679` and `:970` as engine
+  save sites reached only through sync and therefore covered by sync's
+  existing advisory.
+- Release bookkeeping: rebase onto the post-merge `origin/main` and choose a
+  lockstep version above `0.2.52`.
+
+Revalidate again against PR #217, the predecessor external plan, every
+`saveManifest` call site, output schemas, and focused tests when substantial
+time passes, main advances materially, cited contracts/intent change, another
+PR implements part of the outcome, or any load-bearing silent-restamp claim no
+longer reproduces.
 
 ## Review focus
 

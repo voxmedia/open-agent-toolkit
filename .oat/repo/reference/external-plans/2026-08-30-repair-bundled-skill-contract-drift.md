@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260819-repair-verified-bundled-skill.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260819-repair-verified-bundled-skill
@@ -44,7 +44,7 @@ for the release-shaped change.
 - Source backlog item:
   [BL-260819-repair-verified-bundled-skill — Repair verified bundled skill contract drift](../../pjm/backlog/items/BL-260819-repair-verified-bundled-skill.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `.agents/skills/oat-doctor/SKILL.md:148-165` labels its inline inventory a
     source of truth but omits the brainstorm pack.
@@ -81,7 +81,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- .agents/skills/oat-doctor/SKILL.md .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-idea-summarize/SKILL.md .agents/skills/analyze/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- .agents/skills/oat-doctor/SKILL.md .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-idea-summarize/SKILL.md .agents/skills/analyze/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 A material change to any claimed mismatch, pack inventory, skill version, or
@@ -252,7 +252,7 @@ decisions, canonical skills, pack manifest, tests, and package versions when:
 
 - a dependency or policy record changed after planning;
 - substantial time elapsed or main advanced materially from
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0`;
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9`;
 - a cited skill, inventory, provider-view, test, or release contract changed;
 - backlog/decision/project intent changed;
 - another PR implemented part of the outcome; or

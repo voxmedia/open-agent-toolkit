@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260712-per-project-override.md
-oat_external_plan_commit: 2c6005d64f45a19e8b9eedbc977959b066d3eda0
-oat_external_plan_date: '2026-08-31'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260712-per-project-override
@@ -44,7 +44,7 @@ progress makes the deliberate posture visible to reviewers.
 - Source backlog item:
   [BL-260712-per-project-override — Per-project override to disable configured external gates](../../pjm/backlog/items/BL-260712-per-project-override.md)
 - Planned at: `origin/main` commit
-  `2c6005d64f45a19e8b9eedbc977959b066d3eda0` on `2026-08-31`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/config/oat-config.ts:181-214` models configured skill gates
     only at config layers.
@@ -80,6 +80,8 @@ progress makes the deliberate posture visible to reviewers.
 | Satisfied predecessor | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated. | Satisfied at merge `511ffff3822cebdc81e4380452652fe801e2bfb8`; revalidated on the current planning baseline. |
 | Preserved contract    | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md) / `artifact_missing` terminal behavior | Preserve synchronous headless completion and cause-specific fail-closed behavior when adding a pre-launch disabled resolution.                        | Delivered by PR #246; this plan does not alter launch or artifact-result semantics.                          |
 
+| Soft integration | `tool-pack-scope-provider-truthfulness` project (in flight; one integrated PR) | After it merges, re-anchor `oat-project-plan-writing/SKILL.md:271-392` (its branch adds a dispatch-lineage paragraph and bumps the skill to 1.2.21) and `config/user-sync-config.ts` (+16 lines), then bump the skill again if edited. | Not merged; verified read-only on 2026-09-02 at `27b978528`. It does not touch gate resolve/execute code. |
+
 There are no unsatisfied hard dependencies.
 
 ## Drift check
@@ -88,7 +90,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 2c6005d64f45a19e8b9eedbc977959b066d3eda0..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
 ```
 
 Re-run all current gate resolve/execute focused tests on the delivered baseline.
