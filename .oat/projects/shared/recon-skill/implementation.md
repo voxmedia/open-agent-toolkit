@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: prev4-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,19 +18,19 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status | Tasks | Completed |
-| ------------ | ------ | ----- | --------- |
-| Phase 1      | passed | 1     | 1/1       |
-| Phase 2      | passed | 4     | 4/4       |
-| Phase 3      | passed | 4     | 4/4       |
-| Phase 4      | passed | 2     | 2/2       |
-| Phase p-rev1 | passed | 2     | 2/2       |
-| Phase p-rev2 | passed | 3     | 3/3       |
-| Phase p-rev3 | passed | 1     | 1/1       |
-| Phase 5      | passed | 6     | 6/6       |
-| Phase p-rev4 | active | 4     | 0/4       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 4     | 4/4       |
+| Phase 3      | passed         | 4     | 4/4       |
+| Phase 4      | passed         | 2     | 2/2       |
+| Phase p-rev1 | passed         | 2     | 2/2       |
+| Phase p-rev2 | passed         | 3     | 3/3       |
+| Phase p-rev3 | passed         | 1     | 1/1       |
+| Phase 5      | passed         | 6     | 6/6       |
+| Phase p-rev4 | review_pending | 4     | 4/4       |
 
-**Total:** 23/27 tasks completed
+**Total:** 27/27 tasks completed
 
 ## Task Status
 
@@ -99,12 +99,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev4: Revision 4 — Final Packet Assurance Corrections
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev4-t01 | pending | —      |
-| prev4-t02 | pending | —      |
-| prev4-t03 | pending | —      |
-| prev4-t04 | pending | —      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev4-t01 | completed | `7d0063155` |
+| prev4-t02 | completed | `51e7b7ecc` |
+| prev4-t03 | completed | `0218c3b63` |
+| prev4-t04 | completed | `a3ecc1836` |
 
 ## Remote Review Received
 
@@ -130,8 +130,8 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Cycle override:** the user explicitly authorized one fresh final re-review
   after these tasks despite the standard final-scope three-cycle cap (8
   standard final artifacts currently recorded)
-- **Next:** execute Revision 4 through `oat-project-implement`, then run the one
-  authorized fresh final review
+- **Next:** Revision 4 is implemented at `a3ecc18369e4d32cc75f6e7574e8c7ba345392cb`;
+  run the one authorized fresh final review
 
 ## Orchestration Runs
 
@@ -1035,6 +1035,25 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   check passed; four bounded negative controls reproduced the findings
 - Next: process the artifact through `oat-project-review-receive`, add bounded
   fix tasks, implement them, and obtain a fresh passing final review
+
+#### Dispatch p-rev4 implementation
+
+- Request ID: `recon-skill-prev4-implementation-20260902`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `85f00ae9f8600ed6fda6fa5b87a203e9d7f07570`
+- Head: `a3ecc18369e4d32cc75f6e7574e8c7ba345392cb`
+- Launch/outcome: accepted / completed
+- Tasks: 4/4 completed in four ordered task commits
+- Recovery attempts: 0/10
+- Verification: 173/173 focused recon and dispatch tests plus the complete
+  repository CI gate sequence, canonical skill validation, lint, format,
+  release validation, and docs build
+- Dispatch: scope=p-rev4 action=implementation role=implementer
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-high
+- Next: run the one user-authorized fresh whole-project final re-review on the
+  exact Revision 4 implementation head
 
 <!-- orchestration-runs-end -->
 

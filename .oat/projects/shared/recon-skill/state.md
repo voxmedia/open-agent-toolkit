@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev4-t01
-oat_last_commit: 79f344ce97b15037b0a09d5a066bc928b7393ec8
+oat_current_task: null
+oat_last_commit: a3ecc18369e4d32cc75f6e7574e8c7ba345392cb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T12:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T13:32:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,19 +94,17 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 4 review fixes ready
+**Status:** Revision 4 implemented; final re-review pending
 **Started:** 2026-08-30
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 ## Current Phase
 
-All 23 implementation tasks are complete. The Phase 5 independent review passed
-the configured Critical/Important threshold with two recorded Medium findings.
-The fresh final review completed on the exact Phase 5 implementation basis and
-found three Important and one Medium correctness gaps. All four findings are
-now bounded Revision 4 tasks beginning at `prev4-t01`; the user authorized one
-fresh final re-review after implementation despite the existing review-cycle
-count. PR #248 remains open.
+All 27 implementation tasks are complete. Revision 4 closes the fresh final
+review's three Important and one Medium correctness gaps with four linear task
+commits at `a3ecc18369e4d32cc75f6e7574e8c7ba345392cb`. The user authorized one
+fresh final re-review on this implementation basis despite the existing
+review-cycle count. PR #248 remains open.
 
 ## Artifacts
 
@@ -114,7 +112,7 @@ count. PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (23/23 tasks complete; final review pending)
+- **Implementation:** `implementation.md` (27/27 tasks complete; final re-review pending)
 
 ## Progress
 
@@ -210,7 +208,9 @@ count. PR #248 remains open.
 - ✓ All six Phase 5 tasks and one bounded recovery attempt completed
 - ✓ Phase 5 review passed the Critical/Important threshold with two recorded
   Medium residual risks
-- ⧗ Revision 4 tasks `prev4-t01` through `prev4-t04` ready for implementation
+- ✓ Revision 4 tasks `prev4-t01` through `prev4-t04` implemented in four
+  ordered commits with no recovery attempts
+- ⧗ One user-authorized fresh final re-review pending on the Revision 4 head
 
 ## Blockers
 
@@ -218,5 +218,5 @@ None.
 
 ## Next Milestone
 
-PR #248 is ready for human review and merge. Project completion/archival remains
-a separate explicit lifecycle step and does not merge the PR.
+Obtain the one authorized fresh final re-review, then rerun the configured exit
+gate and approval-aware closeout sequence on the new implementation basis.
