@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 5 review round 2 found two Critical defects: the guarded publisher is observably non-atomic and still loses open-inode edits, while crossed or nested new/legacy marker ranges can delete user text.
+  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; the three-cycle automated review cap is reached and explicit operator override is required for another fix/review cycle.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-review-r2-fix
+oat_current_task_id: p05-review-governance
 oat_generated: false
 ---
 
@@ -1298,6 +1298,34 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - Reconnaissance was not attempted. The original exact-High implementer owns a
   second bounded fix round; Phase 6 remains gated.
 
+### Review Round 2 Fix
+
+- Commit: `9eab2dc3ea99026ef00ff649f320057df51537b6`
+- The public path now remains continuously present while the original inode is
+  retained as recovery evidence; open-descriptor late writes survive and the
+  helper returns explicit `recovery-required` rather than ordinary success.
+- Combined target/legacy marker ranges now reject both nesting directions and
+  crossings before mutation.
+- Focused verification passed 68/68 and the Phase 5 union passed 367/367.
+  Recovery remains 0/10 with no pending attempt.
+
+### Review Round 3 — Recovery Lifecycle and Consumer Truth
+
+- Artifact: `reviews/p05-review-2026-09-02T052445Z.md`
+- Reviewed head: `9eab2dc3ea99026ef00ff649f320057df51537b6`
+- Verdict: changes requested; 2 Critical, 3 Important, 0 Medium, 0 Minor.
+- Identity-unsafe pre-publication cleanup can delete a foreign replacement at
+  the recovery path.
+- Docs, PJM, and decision consumers can report ordinary success after a
+  recovery-required partial publication.
+- Unresolved recovery is anonymous and forgotten on rerun; unrelated live-file
+  bytes/mode can change; raw recovery errors can leak absolute paths.
+- Reconnaissance was not attempted. All prior round-1 and round-2 findings are
+  resolved as stated; these are adjacent recovery-lifecycle defects.
+- Three standard Phase 5 review cycles have now occurred. Further automated
+  fix/review cycles are blocked by governance until the operator explicitly
+  overrides the cap. Phase 6 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1929,6 +1957,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Outcome: changes requested; 2 Critical findings. The production leaf bypass
   is resolved, but the rollback publisher remains non-atomic and can lose
   open-inode edits, while crossed/nested markers can delete user text.
+- Reconnaissance: not attempted.
+- Selection reason: `review-target`; candidates considered:
+  `gpt-5.6-sol/high`.
+- Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Review round 2 fix — fail-closed publication
+
+- Continuation event: `p05-review-r2-fix-20260902T050000Z`
+- Original request: `dispatch-p05-20260902T021900Z-01454ec32`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Base: `6d343fa87d04112a7bbd63807f00d9063d0c9e1d`
+- Commit: `9eab2dc3ea99026ef00ff649f320057df51537b6`
+- Outcome: public-path liveness/open-inode retention and combined marker-range
+  validation pass focused 68/68 and Phase 5 union 367/367.
+- Dispatch: scope=p05-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+#### Review round 3 — recovery lifecycle and consumer truth
+
+- Reviewed head: `9eab2dc3ea99026ef00ff649f320057df51537b6`
+- Target: `oat-reviewer-gpt-5-6-sol-high`
+- Artifact: `reviews/p05-review-2026-09-02T052445Z.md`
+- Outcome: changes requested; 2 Critical and 3 Important findings in recovery
+  cleanup identity, shared-consumer truth, recovery rediscovery, live-file
+  byte/mode preservation, and error redaction. The three-cycle automated review
+  cap is reached; explicit operator override is required.
 - Reconnaissance: not attempted.
 - Selection reason: `review-target`; candidates considered:
   `gpt-5.6-sol/high`.

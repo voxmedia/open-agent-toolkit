@@ -1732,7 +1732,8 @@ gates exit 0 at the final reviewed head.
 | p04    | code     | fixes_completed | 2026-09-01 | reviews/p04-review-2026-09-01T234753Z.md                      | 07977df386562bfd0974bc487d312d109a6e4b4f | manual     | -                         |
 | p04    | code     | passed          | 2026-09-01 | reviews/p04-review-2026-09-01T234753Z.md                      | 6e58771901d222dc64ee0ecacadf510808a69c97 | manual     | operator-waived-re-review |
 | p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T043143Z.md                      | 61a1ea59083d3d9987a24c0a07ae349924e39cf9 | manual     | -                         |
-| p05    | code     | fixes_added     | 2026-09-02 | reviews/p05-review-2026-09-02T045435Z.md                      | 89d71d78d652e439abe9804f04b520047fe8c79c | manual     | -                         |
+| p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T045435Z.md                      | 89d71d78d652e439abe9804f04b520047fe8c79c | manual     | -                         |
+| p05    | code     | fixes_added     | 2026-09-02 | reviews/p05-review-2026-09-02T052445Z.md                      | 9eab2dc3ea99026ef00ff649f320057df51537b6 | manual     | review-cycle-cap-reached  |
 | p06    | code     | pending         | -          | -                                                             | -                                        | -          | -                         |
 | p07    | code     | pending         | -          | -                                                             | -                                        | -          | -                         |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                         |

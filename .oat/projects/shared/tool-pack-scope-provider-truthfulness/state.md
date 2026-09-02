@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-review-r2-fix
-oat_last_commit: 89d71d78d652e439abe9804f04b520047fe8c79c
+oat_current_task: p05-review-governance
+oat_last_commit: 9eab2dc3ea99026ef00ff649f320057df51537b6
 oat_blockers:
-  - Phase 5 review round 2 found two Critical defects: the guarded publisher is observably non-atomic and still loses open-inode edits, while crossed or nested new/legacy marker ranges can delete user text.
+  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; the three-cycle automated review cap is reached and explicit operator override is required for another fix/review cycle.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T04:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T05:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 5 review round 1's production registration defect is
-resolved at `89d71d78d`, but round 2 reproduced two remaining Critical safety
-defects. The original implementer owns the second bounded correction.
+Implementation - the round-2 defects are resolved at `9eab2dc3e`, but Phase 5
+review round 3 found two Critical and three Important recovery-lifecycle
+defects. The three-cycle automated review cap now requires operator governance.
 
 ## Artifacts
 
@@ -153,16 +153,20 @@ defects. The original implementer owns the second bounded correction.
 - ✓ Phase 4 design alignment accepted by explicit operator disposition
 - ✓ Phase 5 four-task implementation and 331/331 union completed
 - ✓ Phase 5 production workflows registration corrected
-- ⧗ Phase 5 review fixes required for atomic public-path publication/open-inode preservation and crossed/nested marker rejection
+- ✓ Phase 5 public-path liveness/open-inode retention and crossed/nested marker rejection corrected
+- ⧗ Phase 5 recovery lifecycle and shared-consumer truth fixes require explicit review-cycle override
 
 ## Blockers
 
-- The rollback publication protocol creates an observable public-path absence
-  and can delete edits written through an already-open original descriptor.
-- Crossed or nested target/legacy marker pairs can be accepted and delete
-  unrelated user text.
+- Recovery cleanup can delete a raced foreign replacement at the private path.
+- Docs, PJM, and decision consumers can report success after
+  `recovery-required`; unresolved recovery can be forgotten on rerun.
+- Live unrelated bytes/mode can change, and raw recovery errors can leak
+  absolute paths.
+- Three standard Phase 5 review cycles have occurred; another automated
+  fix/review cycle requires explicit operator override.
 
 ## Next Milestone
 
-Apply the second bounded Phase 5 review fix through the original implementer,
-rerun the full phase union, and require a fresh independent Phase 5 review.
+Obtain operator direction: explicitly override the three-cycle cap for one
+bounded Phase 5 fix/review cycle, proceed with known findings, or stop.
