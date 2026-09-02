@@ -2261,16 +2261,25 @@ export async function compileValidatedRun(packetDirectory) {
     }
 
     const valid = errors.length === 0;
-    if (!valid && packetRootIdentity) {
+    const publishable =
+      valid &&
+      (manifest.run.status === 'complete' || manifest.run.status === 'partial');
+    if (valid && !publishable) {
+      errors.push(
+        issue(
+          'PACKET_NOT_PUBLISHABLE',
+          `Packet status ${manifest.run.status} is not publishable`,
+          '$.run.status',
+        ),
+      );
+    }
+    if (!publishable && packetRootIdentity) {
       await assertUnchangedRoot(packetRootIdentity);
       await rm(join(packetRoot, 'packet.md'), { force: true });
     }
     return {
       valid,
-      publishable:
-        valid &&
-        (manifest.run.status === 'complete' ||
-          manifest.run.status === 'partial'),
+      publishable,
       status: manifest.run.status,
       requestedProfile: manifest.run.requestedProfile,
       achievedProfile,
@@ -2310,7 +2319,7 @@ async function main(argv) {
   }
   const result = await validatePacket(packetDirectory);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  process.exitCode = result.valid ? 0 : 1;
+  process.exitCode = result.publishable ? 0 : 1;
 }
 
 if (

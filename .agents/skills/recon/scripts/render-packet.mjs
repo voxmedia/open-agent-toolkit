@@ -261,8 +261,14 @@ export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
   const validation = await compileValidatedRun(packetRoot);
   if (!validation.valid || !validation.publishable) {
-    throw new Error(
-      `Packet validation failed: ${validation.errors.map((error) => error.code).join(', ')}`,
+    const diagnosticCodes = validation.errors.map((error) => error.code);
+    throw Object.assign(
+      new Error(`Packet validation failed: ${diagnosticCodes.join(', ')}`),
+      {
+        code: diagnosticCodes.includes('PACKET_NOT_PUBLISHABLE')
+          ? 'PACKET_NOT_PUBLISHABLE'
+          : 'PACKET_VALIDATION_FAILED',
+      },
     );
   }
   return renderValidatedPacket(validation.validatedRun);

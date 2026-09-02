@@ -1,6 +1,6 @@
 ---
 name: recon
-version: 1.0.0
+version: 1.0.1
 description: Use when a bounded investigation needs source-grounded evidence before analysis or implementation. Produces a validated evidence-packet directory through approved provider-neutral worker waves.
 argument-hint: '<question-or-target> [--profile quick|standard|thorough] [--scope description] [--context path] [--output directory] [--strict]'
 disable-model-invocation: true
@@ -201,7 +201,7 @@ candidates under `raw/`; never promote shared artifacts in place and never
 overwrite the last valid ledger. Candidate packet validation is
 non-destructive for the canonical diagnostic artifacts: when it fails, do not
 invoke the renderer, withdraw any existing `packet.md`, and report the
-candidate failure separately. Only a valid candidate proceeds to
+candidate failure separately. Only a publishable candidate proceeds to
 `scripts/render-packet.mjs`; failure leaves no consumer entry point that could
 refer to a different canonical generation.
 

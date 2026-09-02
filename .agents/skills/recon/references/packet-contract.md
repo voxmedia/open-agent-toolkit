@@ -263,10 +263,11 @@ references, containment, hashes, source reopening, locators, the complete
 approval and receipt selection, exact topology, the one terminal
 reconciliation, legal transitions, secret-safe persistence, derived gaps,
 assurance, and requested vs achieved profile. Candidate validation is
-non-destructive for canonical diagnostic artifacts, but failure withdraws any
-existing `packet.md` and does not authorize rendering. Only a valid `complete`
-or honest `partial` candidate is publishable, so a rejected canonical
-generation cannot retain a consumer entry point from another generation.
+non-destructive for canonical diagnostic artifacts, but a non-publishable
+candidate withdraws any existing `packet.md` and does not authorize rendering.
+Only a valid `complete` or honest `partial` candidate is publishable, so a
+rejected canonical generation cannot retain a consumer entry point from another
+generation.
 
 `complete` requires the requested profile and no material gap. `partial` is
 valid when either a lower profile was achieved or at least one material gap is

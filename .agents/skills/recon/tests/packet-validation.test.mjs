@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import {
   cp,
   mkdtemp,
@@ -12,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
 import { validatePacket } from '../scripts/validate-packet.mjs';
@@ -685,6 +687,47 @@ for (const profile of ['quick', 'standard', 'thorough']) {
     assert.equal(result.valid, true, JSON.stringify(result, null, 2));
     assert.equal(result.achievedProfile, profile);
     assert.equal(result.publishable, true);
+  });
+}
+
+for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
+  test(`valid ${status} generation is diagnosed and withdraws the prior packet`, async () => {
+    const packet = await makePacket({ profile: 'quick' });
+    await writeFile(
+      join(packet.packetRoot, 'packet.md'),
+      '# Reconnaissance Packet\n\n**Status:** complete\n',
+      'utf8',
+    );
+    packet.manifest.run.status = status;
+    await writeJson(packet.manifestPath, packet.manifest);
+
+    const result = await validatePacket(packet.packetRoot);
+    assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+    assert.equal(result.publishable, false);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.code === 'PACKET_NOT_PUBLISHABLE' &&
+          error.path === '$.run.status',
+      ),
+      JSON.stringify(result, null, 2),
+    );
+    await assert.rejects(
+      readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+    );
+
+    const cli = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(
+          new URL('../scripts/validate-packet.mjs', import.meta.url),
+        ),
+        packet.packetRoot,
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+    assert.match(cli.stdout, /PACKET_NOT_PUBLISHABLE/);
   });
 }
 

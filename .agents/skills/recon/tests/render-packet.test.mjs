@@ -494,6 +494,24 @@ test('validation failure withdraws a previously published packet', async () => {
   );
 });
 
+for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
+  test(`renderer diagnoses ${status} and withdraws the prior packet`, async () => {
+    const fixture = await createPacketFixture({ profile: 'quick' });
+    tempRoots.push(fixture.tempRoot);
+    await renderPacket(fixture.packetRoot);
+    fixture.manifest.run.status = status;
+    await fixture.persist();
+
+    await assert.rejects(
+      renderPacket(fixture.packetRoot),
+      /PACKET_NOT_PUBLISHABLE/,
+    );
+    await assert.rejects(
+      readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    );
+  });
+}
+
 test('promotion failure withdraws the published packet and removes the temp file', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
