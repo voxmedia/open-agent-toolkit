@@ -74,10 +74,14 @@ const target: ExactTargetRef = {
   selectedRoute: 'native',
 };
 
-function rejectedTrigger(claimFor: string | null = 'dispatch-fallback-1') {
+function rejectedTrigger(
+  claimFor: string | null = 'dispatch-fallback-1',
+  overrides: Partial<GenericDispatchRecord> = {},
+) {
   const blocked = genericRecord({
     launch_status: 'blocked-before-start',
     child_outcome: 'not-started',
+    ...overrides,
   });
   const rejected = augmentDispatchRecord({
     record: augmentDispatchRecord({
@@ -429,6 +433,77 @@ describe('augmentDispatchRecord', () => {
         },
       }),
     ).toThrow(/preserve the exact target and controls/i);
+  });
+
+  it.each([
+    [
+      'fallback.allow_below_task_class_floor false to true',
+      {
+        fallback: {
+          mode: 'caller-inline',
+          allow_below_task_class_floor: false,
+        },
+      },
+      {
+        fallback: {
+          mode: 'nested-dispatch',
+          target: 'weak-worker',
+          allow_below_task_class_floor: true,
+        },
+      },
+    ],
+    [
+      'fallback introduced by the fallback record alone',
+      {},
+      {
+        fallback: {
+          mode: 'nested-dispatch',
+          allow_below_task_class_floor: true,
+        },
+      },
+    ],
+    [
+      'selection_source',
+      { selection_source: 'policy-resolved' as const },
+      { selection_source: 'explicit-user' as const },
+    ],
+    [
+      'configured_invocation_evidence',
+      { configured_invocation_evidence: ['dispatch ceiling resolver'] },
+      { configured_invocation_evidence: ['agent proposed this route'] },
+    ],
+  ])(
+    'rejects a fallback that changes %s',
+    (_label, triggerOverride, fallbackOverride) => {
+      const trigger = rejectedTrigger(
+        'dispatch-fallback-1',
+        triggerOverride as Partial<GenericDispatchRecord>,
+      );
+      expect(() =>
+        augmentDispatchRecord({
+          record: fallbackRecord({
+            ...triggerOverride,
+            ...fallbackOverride,
+          } as Partial<GenericDispatchRecord>),
+          triggerRecord: trigger,
+          relatedRecords: [],
+          event: fallbackEvent(),
+        }),
+      ).toThrow(/preserve the exact target and controls/i);
+    },
+  );
+
+  it('allows a fallback to carry its own diagnostics and runtime confirmation', () => {
+    const linked = augmentDispatchRecord({
+      record: fallbackRecord({
+        diagnostics: ['native role rejected before start'],
+        runtime_confirmation: 'reported',
+      }),
+      triggerRecord: rejectedTrigger(),
+      relatedRecords: [],
+      event: fallbackEvent(),
+    });
+    expect(linked.oat.fallback).toMatchObject({ status: 'fallback-dispatch' });
   });
 
   it('rejects a fallback whose class floor evidence differs from the trigger', () => {

@@ -91,10 +91,26 @@ const preStartRejectionCodeSchema = z
 /**
  * Immutable configured controls. A fallback approximates the role instruction
  * surface only; every configured control below must survive byte-identically,
- * including the complete generic `payload` that owns sandbox and tool grants.
+ * including the complete generic `payload` that owns sandbox and tool grants
+ * and the generic `fallback` object that owns `allow_below_task_class_floor`.
+ *
+ * Deliberately excluded, with reasons:
+ * - `diagnostics`: per-record narration about that record's own launch. A
+ *   fallback legitimately explains why it exists.
+ * - `runtime_confirmation`: observation state of that record's own child. The
+ *   fallback is a different child, so equality would be a false assertion.
+ * - `caller`, `objective`, `role_name`, `role_selector`, `candidates_considered`,
+ *   `selection_reason`, `launch_status`, `child_outcome`: these legitimately
+ *   differ on a fresh generic child and are constrained separately.
+ *
+ * Deliberately included even though it is evidence rather than a control:
+ * - `configured_invocation_evidence`: it names the configuration that
+ *   authorized the preserved route, so preserving the route without preserving
+ *   its authorization would let a fallback restate why it was allowed.
  */
 export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
   'provider',
+  'selection_source',
   'model_selector',
   'model_selector_granularity',
   'effort_selector',
@@ -106,6 +122,8 @@ export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
   'deadline_seconds',
   'retry_limit',
   'payload',
+  'fallback',
+  'configured_invocation_evidence',
   'dispatch_context',
   'dispatch_policy',
   'dispatch_ceiling',
