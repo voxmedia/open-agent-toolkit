@@ -8,6 +8,7 @@ import {
   canonicalJson,
   hashCanonicalJson,
   hashFile,
+  sha256,
 } from './lib/canonical-json.mjs';
 import {
   isDigest,
@@ -114,22 +115,14 @@ async function retainDeclaredSourceIdentities(
   }
 }
 
-async function readJson(path, code, errors) {
-  try {
-    return JSON.parse(await readFile(path, 'utf8'));
-  } catch (error) {
-    errors.push(
-      issue(
-        code,
-        error instanceof Error ? error.message : `Unable to read ${path}`,
-        path,
-      ),
-    );
-    return null;
-  }
-}
-
-async function readManagedJson(root, path, code, errors) {
+async function readManagedJson(
+  root,
+  path,
+  code,
+  errors,
+  canonicalByteDigests,
+  relativePath,
+) {
   try {
     await assertSafeExistingPath(root, path);
   } catch (error) {
@@ -144,7 +137,21 @@ async function readManagedJson(root, path, code, errors) {
     );
     return null;
   }
-  return readJson(path, code, errors);
+  try {
+    const bytes = await readFile(path);
+    const value = JSON.parse(bytes.toString('utf8'));
+    canonicalByteDigests.set(relativePath, sha256(bytes));
+    return value;
+  } catch (error) {
+    errors.push(
+      issue(
+        code,
+        error instanceof Error ? error.message : `Unable to read ${path}`,
+        path,
+      ),
+    );
+    return null;
+  }
 }
 
 function collectReferences(manifest, ledger) {
@@ -165,6 +172,7 @@ async function validateReferences(packetRoot, references, errors) {
   const checked = new Set();
   const artifactsByPath = new Map();
   const artifactsById = new Map();
+  const validatedByteDigests = new Map();
   for (const reference of references) {
     if (!isObject(reference) || typeof reference.path !== 'string') continue;
     const key = `${reference.path}:${reference.digest}`;
@@ -183,7 +191,8 @@ async function validateReferences(packetRoot, references, errors) {
     }
     try {
       await assertSafeExistingPath(packetRoot, path);
-      const actual = await hashFile(path);
+      const bytes = await readFile(path);
+      const actual = sha256(bytes);
       if (isDigest(reference.digest) && actual !== reference.digest) {
         errors.push(
           issue(
@@ -193,8 +202,9 @@ async function validateReferences(packetRoot, references, errors) {
           ),
         );
       }
+      validatedByteDigests.set(reference.path, actual);
       if (reference.path.endsWith('.json')) {
-        const value = JSON.parse(await readFile(path, 'utf8'));
+        const value = JSON.parse(bytes.toString('utf8'));
         const validation = validateArtifactShape(value);
         errors.push(
           ...validation.errors.map((error) => ({
@@ -230,7 +240,7 @@ async function validateReferences(packetRoot, references, errors) {
       );
     }
   }
-  return { artifactsByPath, artifactsById };
+  return { artifactsByPath, artifactsById, validatedByteDigests };
 }
 
 function lineExcerpt(content, start, end) {
@@ -1955,6 +1965,7 @@ export async function compileValidatedRun(packetDirectory) {
   const errors = [];
   const warnings = [];
   const filesystemIdentities = new Map();
+  const canonicalByteDigests = new Map();
   let packetRootIdentity = null;
   try {
     packetRootIdentity = await assertCanonicalRoot(packetRoot);
@@ -1975,12 +1986,16 @@ export async function compileValidatedRun(packetDirectory) {
     resolve(packetRoot, 'manifest.json'),
     'INVALID_MANIFEST_JSON',
     errors,
+    canonicalByteDigests,
+    'manifest.json',
   );
   const ledger = await readManagedJson(
     packetRoot,
     resolve(packetRoot, 'claims.json'),
     'INVALID_LEDGER_JSON',
     errors,
+    canonicalByteDigests,
+    'claims.json',
   );
 
   if (manifest) errors.push(...validateArtifactShape(manifest).errors);
@@ -2062,11 +2077,25 @@ export async function compileValidatedRun(packetDirectory) {
     );
   }
 
-  const { artifactsByPath, artifactsById } = await validateReferences(
-    packetRoot,
-    collectReferences(manifest, ledger),
-    errors,
-  );
+  const { artifactsByPath, artifactsById, validatedByteDigests } =
+    await validateReferences(
+      packetRoot,
+      collectReferences(manifest, ledger),
+      errors,
+    );
+  for (const [path, digest] of validatedByteDigests) {
+    const retained = canonicalByteDigests.get(path);
+    if (retained && retained !== digest) {
+      errors.push(
+        issue(
+          'ARTIFACT_DIGEST_MISMATCH',
+          `Canonical artifact bytes changed during validation: ${path}`,
+          path,
+        ),
+      );
+    }
+    canonicalByteDigests.set(path, digest);
+  }
   if (manifest && !artifactsByPath.has('claims.json')) {
     errors.push(
       issue(
@@ -2218,6 +2247,7 @@ export async function compileValidatedRun(packetDirectory) {
       validatedRun = createValidatedRun({
         packetRoot,
         filesystemIdentities,
+        canonicalByteDigests,
         manifest,
         ledger,
         artifactsById,

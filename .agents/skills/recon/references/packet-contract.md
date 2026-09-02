@@ -68,6 +68,9 @@ Construction is all-or-nothing. A valid graph contains:
 - exactly one terminal reconciliation for standard or thorough runs and one
   immutable canonical prior-ledger identity used by all review, transition,
   addition, and removal checks;
+- exact byte digests for `manifest.json`, `claims.json`, and every validated
+  referenced packet artifact, retained from the same reads that constructed
+  the normalized graph;
 - canonical absolute realpaths for the packet, repository, file, capture,
   command-output, and publication trust roots, rechecked before use;
 - only secret-safe persisted evidence and diagnostics, including ineligible
@@ -273,7 +276,13 @@ Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
 render core accepts only that graph. It writes an exclusive unpredictable
 temporary sibling, retains that file's identity through hashing and atomic
-promotion, and verifies the promoted digest. Rendering or promotion failure
+promotion, and verifies the promoted digest. Immediately before and after
+promotion it also verifies that the canonical manifest, ledger, and validated
+referenced artifacts still match the byte digests retained by `ValidatedRun`.
+A mismatch is a categorical integrity failure and withdraws `packet.md`.
+Withdrawal first proves the retained packet-root identity; if the root changed,
+the renderer preserves that identity failure and does not follow or unlink the
+replacement path. Rendering or promotion failure on an unchanged root likewise
 withdraws `packet.md` while leaving canonical diagnostics available. Its result
 is the directory path plus a compact status summary and digest, never raw
 dossier content.

@@ -148,16 +148,19 @@ The boundary closes these v1 invariants together:
    trust root is an absolute canonical realpath. A root that is itself a
    symlink, a child symlink, or a root whose identity changes before use is
    invalid.
-5. Persistence safety is independent of assurance eligibility. Every persisted
+5. The graph retains exact byte digests for the canonical manifest, claim
+   ledger, and every validated referenced packet artifact from the same reads
+   used to construct its normalized values.
+6. Persistence safety is independent of assurance eligibility. Every persisted
    excerpt and safe diagnostic is checked for secret material before any
    assurance, audit-retention, gap, or render branch. An ineligible source may
    remain only as redacted non-exact audit evidence; source drift never permits
    a raw secret to persist or render.
-6. Source ineligibility determines gap materiality. A stale, invalid, or
+7. Source ineligibility determines gap materiality. A stale, invalid, or
    unavailable source used by the canonical ledger requires one material gap,
    complete affected-claim coverage, a `partial` run, and claim states below
    `supported`. Callers cannot relabel that gap non-material.
-7. Achieved profile, categorical claim assurance, material gaps, and
+8. Achieved profile, categorical claim assurance, material gaps, and
    publication status are derived from this normalized graph. Downstream code
    receives no raw manifest, ledger, review, receipt, or caller-declared status
    from which to repeat or weaken validation.
@@ -680,11 +683,16 @@ worker or controller never declares it directly.
 
 Rendering accepts only an immutable `ValidatedRun`, writes to a temporary
 sibling, and promotes `packet.md` only after final validation. Candidate
-validation remains non-destructive for canonical diagnostic artifacts. If
-validation, rendering, or promotion fails, `packet.md` is withdrawn so no
-consumer entry point can refer to a different canonical generation. The
-manifest, ledger, reviews, raw diagnostics, and safe failure record remain
-available for diagnosis.
+validation remains non-destructive for canonical diagnostic artifacts. The
+renderer verifies the graph's retained manifest, ledger, and referenced-
+artifact byte digests immediately before and after promotion. A byte mismatch
+is a categorical integrity failure. If validation, rendering, promotion, or
+that continuity check fails, `packet.md` is withdrawn so no consumer entry
+point can refer to a different canonical generation. Withdrawal first verifies
+the retained packet-root identity; a changed real root or symlink retarget is
+left untouched and the identity failure is preserved. The manifest, ledger,
+reviews, raw diagnostics, and safe failure record remain available for
+diagnosis on the unchanged validated root.
 
 ### Diagnostics
 
@@ -730,6 +738,10 @@ Unit tests use checked-in fixtures and invoke the bundled scripts directly:
   provenance, synthesis reasoning, and prior review identifiers are absent.
 - Deterministic `packet.md` rendering from identical manifests and ledgers.
 - Structural failures leaving no publishable `packet.md`.
+- Root replacement and symlink-retarget failures leaving every replacement
+  entry point untouched while unchanged-root failures withdraw `packet.md`.
+- Canonical artifact mutation during promotion producing a categorical
+  integrity failure and no split-generation consumer view.
 - Redaction fixtures proving secret values do not reach persisted artifacts or
   diagnostics, while `redacted-exact` evidence remains eligible according to
   its transient locator-validation disposition and persists no sensitive-span

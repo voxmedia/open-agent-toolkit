@@ -6,7 +6,11 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { hashFile } from './lib/canonical-json.mjs';
-import { assertSafeOutputPath, assertUnchangedRoot } from './lib/safe-path.mjs';
+import {
+  assertSafeExistingPath,
+  assertSafeOutputPath,
+  assertUnchangedRoot,
+} from './lib/safe-path.mjs';
 import { assertValidatedRun } from './lib/validated-run.mjs';
 import { compileValidatedRun } from './validate-packet.mjs';
 
@@ -195,6 +199,64 @@ async function assertFileIdentity(path, identity) {
   }
 }
 
+function packetRootIdentity(run) {
+  return run.filesystemIdentities.find(
+    (identity) => identity.path === run.packetRoot,
+  );
+}
+
+async function assertCanonicalPacketBytes(run) {
+  const rootIdentity = packetRootIdentity(run);
+  for (const retained of run.canonicalByteDigests) {
+    const path = join(run.packetRoot, retained.path);
+    try {
+      await assertUnchangedRoot(rootIdentity);
+      await assertSafeExistingPath(run.packetRoot, path);
+      if ((await hashFile(path)) !== retained.digest) {
+        throw new Error(`Canonical packet bytes changed: ${retained.path}`);
+      }
+    } catch (cause) {
+      if (
+        cause?.code === 'ROOT_IDENTITY_CHANGED' ||
+        cause?.code === 'SYMLINK_ESCAPE'
+      ) {
+        throw cause;
+      }
+      throw Object.assign(
+        new Error(`Canonical packet bytes changed: ${retained.path}`, {
+          cause,
+        }),
+        { code: 'PACKET_CANONICAL_BYTES_CHANGED' },
+      );
+    }
+  }
+  await assertUnchangedRoot(rootIdentity);
+}
+
+async function withdrawPacket(run, target, originalError) {
+  try {
+    await assertUnchangedRoot(packetRootIdentity(run));
+  } catch (identityError) {
+    if (
+      originalError?.code === 'ROOT_IDENTITY_CHANGED' ||
+      originalError?.code === 'SYMLINK_ESCAPE'
+    ) {
+      throw originalError;
+    }
+    throw identityError;
+  }
+  await rm(target, { force: true });
+}
+
+async function removeTemporaryIfRootUnchanged(run, temporary) {
+  try {
+    await assertUnchangedRoot(packetRootIdentity(run));
+  } catch {
+    return;
+  }
+  await rm(temporary, { force: true });
+}
+
 export async function renderPacket(packetDirectory) {
   const packetRoot = resolve(packetDirectory);
   const validation = await compileValidatedRun(packetRoot);
@@ -217,11 +279,11 @@ export async function renderValidatedPacket(
   let temporaryFile;
   try {
     const document = renderPacketDocument(run);
-    await assertSafeOutputPath(packetRoot, temporary);
-    await assertSafeOutputPath(packetRoot, target);
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
+    await assertSafeOutputPath(packetRoot, temporary);
+    await assertSafeOutputPath(packetRoot, target);
     temporaryFile = await open(temporary, 'wx+', 0o600);
     const temporaryStat = await temporaryFile.stat();
     const temporaryIdentity = {
@@ -253,7 +315,9 @@ export async function renderValidatedPacket(
       ],
       digest,
     };
+    await assertCanonicalPacketBytes(run);
     await promote(temporary, target);
+    await assertCanonicalPacketBytes(run);
     await assertFileIdentity(target, temporaryIdentity);
     const [promotedDigest, retainedDigest] = await Promise.all([
       hashFile(target),
@@ -271,8 +335,15 @@ export async function renderValidatedPacket(
     return result;
   } catch (error) {
     try {
-      await rm(target, { force: true });
+      await withdrawPacket(run, target, error);
     } catch (withdrawalError) {
+      if (
+        withdrawalError === error ||
+        withdrawalError?.code === 'ROOT_IDENTITY_CHANGED' ||
+        withdrawalError?.code === 'SYMLINK_ESCAPE'
+      ) {
+        throw withdrawalError;
+      }
       throw new Error(
         `Packet rendering failed (${error instanceof Error ? error.message : error}) and the consumer entry point could not be withdrawn`,
         { cause: withdrawalError },
@@ -281,7 +352,7 @@ export async function renderValidatedPacket(
     throw error;
   } finally {
     await temporaryFile?.close();
-    await rm(temporary, { force: true });
+    await removeTemporaryIfRootUnchanged(run, temporary);
   }
 }
 

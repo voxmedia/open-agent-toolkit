@@ -31,6 +31,7 @@ function normalizeTopology(topology) {
 export function createValidatedRun({
   packetRoot,
   filesystemIdentities,
+  canonicalByteDigests,
   manifest,
   ledger,
   artifactsById,
@@ -44,6 +45,9 @@ export function createValidatedRun({
     packetRoot,
     filesystemIdentities: [...filesystemIdentities.values()]
       .map((identity) => clone(identity))
+      .sort((left, right) => left.path.localeCompare(right.path)),
+    canonicalByteDigests: [...canonicalByteDigests.entries()]
+      .map(([path, digest]) => ({ path, digest }))
       .sort((left, right) => left.path.localeCompare(right.path)),
     manifest: clone(manifest),
     ledger: clone(ledger),

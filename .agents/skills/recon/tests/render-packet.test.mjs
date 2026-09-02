@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   copyFile,
+  mkdir,
   readdir,
   readFile,
   rename,
@@ -157,6 +158,52 @@ test('publication rejects a packet root retargeted after validation', async () =
   await assert.rejects(
     renderValidatedPacket(validation.validatedRun),
     /root|symlink/i,
+  );
+});
+
+test('root identity failure does not withdraw from a replacement directory', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const moved = join(fixture.tempRoot, 'validated-packet-root');
+  await rename(fixture.packetRoot, moved);
+  await mkdir(fixture.packetRoot);
+  const replacementPacket = join(fixture.packetRoot, 'packet.md');
+  await writeFile(replacementPacket, 'unrelated replacement bytes', 'utf8');
+
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun),
+    (error) => error?.code === 'ROOT_IDENTITY_CHANGED',
+  );
+  assert.equal(
+    await readFile(replacementPacket, 'utf8'),
+    'unrelated replacement bytes',
+  );
+});
+
+test('root identity failure does not follow a replacement symlink for withdrawal', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const moved = join(fixture.tempRoot, 'validated-packet-root');
+  const replacement = join(fixture.tempRoot, 'replacement-packet-root');
+  await rename(fixture.packetRoot, moved);
+  await mkdir(replacement);
+  const replacementPacket = join(replacement, 'packet.md');
+  await writeFile(replacementPacket, 'unrelated symlink target bytes', 'utf8');
+  await symlink(replacement, fixture.packetRoot, 'dir');
+
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun),
+    (error) =>
+      error?.code === 'SYMLINK_ESCAPE' ||
+      error?.code === 'ROOT_IDENTITY_CHANGED',
+  );
+  assert.equal(
+    await readFile(replacementPacket, 'utf8'),
+    'unrelated symlink target bytes',
   );
 });
 
@@ -493,6 +540,35 @@ test('temporary path replacement after hashing cannot publish different bytes', 
       (name) => name.includes('.tmp') || name.includes('.backup'),
     ),
     false,
+  );
+});
+
+test('canonical mutation during promotion withdraws the split-generation view', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  await renderPacket(fixture.packetRoot);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const changedLedger = structuredClone(fixture.ledger);
+  changedLedger.synthesis.answer = 'A different canonical generation.';
+
+  await assert.rejects(
+    renderValidatedPacket(validation.validatedRun, {
+      promote: async (temporary, target) => {
+        await writeFile(
+          fixture.claimsPath,
+          `${JSON.stringify(changedLedger, null, 2)}\n`,
+          'utf8',
+        );
+        await rename(temporary, target);
+      },
+    }),
+    (error) => error?.code === 'PACKET_CANONICAL_BYTES_CHANGED',
+  );
+  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
+  assert.equal(
+    JSON.parse(await readFile(fixture.claimsPath, 'utf8')).synthesis.answer,
+    'A different canonical generation.',
   );
 });
 

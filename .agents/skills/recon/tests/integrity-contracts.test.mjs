@@ -84,6 +84,35 @@ async function replaceCatalogRecheck(packet, catalogRecheck) {
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
+test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
+  const packet = await fixture();
+  const validation = await compileValidatedRun(packet.packetRoot);
+  assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+  const retained = new Map(
+    validation.validatedRun.canonicalByteDigests.map(({ path, digest }) => [
+      path,
+      digest,
+    ]),
+  );
+  const expectedPaths = new Set([
+    'manifest.json',
+    'claims.json',
+    ...packet.manifest.artifacts.map(({ path }) => path),
+    ...packet.ledger.inputArtifacts.map(({ path }) => path),
+    ...packet.ledger.evidence.map(({ provenance }) => provenance.path),
+    ...packet.ledger.claims.flatMap(({ derivedFrom }) =>
+      derivedFrom.map(({ path }) => path),
+    ),
+  ]);
+  assert.deepEqual(new Set(retained.keys()), expectedPaths);
+  for (const path of expectedPaths) {
+    assert.equal(
+      retained.get(path),
+      await hashFile(join(packet.packetRoot, path)),
+    );
+  }
+});
+
 const omittedAxisMutations = [
   [
     'wave task class',
