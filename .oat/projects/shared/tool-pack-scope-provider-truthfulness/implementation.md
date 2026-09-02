@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: p07-t01
+oat_current_task_id: p07-t04
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 5     | 5/5       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | complete    | 7     | 7/7       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 5     | 5/5       |
+| Phase 5 | complete    | 4     | 4/4       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 4     | 3/4       |
 
-**Total:** 22/30 tasks completed
+**Total:** 29/30 tasks completed
 
 ---
 
@@ -1557,6 +1557,53 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   receive commit. Two non-blocking observations remain for Phase 7: the size
   bounds are undocumented in caller-facing `record-schema.md`, and a
   `redactDispatchMessage` backstop regex gap is currently unreachable.
+
+## Phase 7: Runtime Observation and Integrated Release
+
+**Status:** in progress — p07-t01..t03 complete, p07-t04 retained by the orchestrator
+**Started:** 2026-09-02
+
+### Task Outcomes
+
+- `p07-t01` committed as `935a80a62`: Codex runtime identity metadata parsed
+  from `session_meta`/`turn_context` only, classified by the `type`
+  discriminator so conversation payloads are never read, with child lineage
+  derived from declared `parent_id` links.
+- `p07-t02` committed as `480dc9e33`: Claude metadata parsing with
+  `not-exposed` for the unselectable native effort axis, Cursor preserved as
+  `not-reported`, and one normalizer comparing observations against the
+  immutable configured invocation. Non-comparable values are excluded from
+  comparison rather than compared as literals, so zero comparable axes yields
+  `not-comparable` and never `matching`.
+- `p07-t03` committed as `a6a131e80`: recorder and command render `configured`
+  and `observed` as separate layers that are never merged; smoke projects the
+  observation with a closed vocabulary and promotes nothing from the
+  configured invocation.
+- Recovery `22721d6aa` mapped two new `record-schema.md` prose sites as
+  non-gate prompt sites. Validated and cleared; p07 attempt usage 1/10.
+- The Phase 6 focused union rose 641 to 658 with no regression. Independently
+  re-verified by the orchestrator at 658/658, exit 0.
+
+### Phase 6 Contract Verification
+
+The orchestrator confirmed no destructive publication primitive was
+reintroduced in `fs/io.ts` or `record.ts` across the Phase 7 range, that
+observation strings are bounded at 256 characters and no Phase 6 bound was
+raised, and that the redaction boundary in `runRecordCommand` is unchanged.
+
+### Open Items for p07-t04
+
+- Provider metadata shapes are fixture-defined, not vendor-verified against
+  live Codex or Claude output. `BL-260826`'s current-Codex depth-2 integration
+  check acceptance criterion is therefore **not** satisfied by this work; only
+  its metadata-only fixture criterion is. Do not close that backlog item as
+  fully satisfied without a live verification or an explicit narrowing.
+- A raw Codex rollout file is refused outright, because real `session_meta`
+  payloads carry `instructions` and `response_item` payloads carry `content`.
+  Callers must pass sanitized metadata. This was kept as the correct
+  fail-closed boundary rather than relaxed.
+- Claude's `not-exposed` effort is an assertion about the provider, not a
+  reading the transcript itself makes.
 
 ---
 

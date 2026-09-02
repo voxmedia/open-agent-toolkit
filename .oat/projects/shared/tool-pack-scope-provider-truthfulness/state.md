@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: f18d1b13175b87946cb31cce1f933901969230cd
+oat_current_task: p07-t04
+oat_last_commit: 22721d6aa78d1d3418784dbaa51c7130395c4e92
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -50,16 +50,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p07:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: recovery-p07-20260902T160500Z-a6a131e80
-        original_request_id: dispatch-p07-20260902-fff0e9ca3
-        original_task_id: p07-t03
-        original_commit: a6a131e8008451f6e93e97dda83ed23d784084a2
-        discovered_by: pnpm exec turbo run test --force (src/validation/autonomy-gate-inventory.test.ts)
-        dispatch_target: unspecified-by-launcher
-        reservation_head: a6a131e8008451f6e93e97dda83ed23d784084a2
-        status: completed
+      pending_attempt: null
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -189,6 +180,9 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 - ✓ Phase 6 focused union independently re-verified at 641/641
 - ✓ Review round 4 passed with 0 Critical and 0 Important
 - ✓ Phase 6 complete after three bounded fix rounds
+- ✓ Phase 7 tasks p07-t01 through p07-t03 implemented at `22721d6aa`
+- ✓ One p07 recovery attempt validated and cleared (attempt 1/10)
+- ✓ Phase 6 focused union held at 658/658 with no regression
 
 ## Blockers
 
@@ -198,5 +192,6 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 
 ## Next Milestone
 
-Implement Phase 7 runtime observation (p07-t01 through p07-t04), then the
-final review and integrated release gates.
+Obtain an independent Phase 7 review, then run p07-t04: merge `origin/main`,
+advance the five lockstep packages to `0.2.52`, close the linked backlog
+items, and pass the release gates.
