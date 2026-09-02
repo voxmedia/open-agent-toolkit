@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: e75f1d8e99edad72aa52442e31be9eec6116ae28
-oat_blockers: ['Phase 5 review round 3 is pending after fix loop 2']
+oat_blockers:
+  ['Phase 5 normal review budget exhausted with one Important finding']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -43,7 +44,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:49:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:55:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,10 +56,11 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented. Fix loop
-2 resolved the one Critical and two Important round-2 findings in `e75f1d8e9`;
-the focused and remote suites pass 87/87 and 538/538. Final normal review round
-3 is pending. Phase 6 has not started.
+Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented and the
+focused and remote suites pass 87/87 and 538/538. Final normal review round 3
+resolved all nine prior findings but blocked on one Important public read
+verification defect. The 3/3 review budget is exhausted. Phase 6 has not
+started.
 
 ## Artifacts
 
@@ -66,7 +68,7 @@ the focused and remote suites pass 87/87 and 538/538. Final normal review round
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 review round 3 pending)
+- **Implementation:** implementation.md (blocked; Phase 5 operator authorization required)
 
 ## Progress
 
@@ -175,18 +177,21 @@ the focused and remote suites pass 87/87 and 538/538. Final normal review round
 - ⚠ Phase 5 review round 2 blocked with 1 Critical and 2 Important findings
 - ✓ Phase 5 bounded fix loop 2/3 committed as `e75f1d8e9` through the original implementer
 - ✓ Expanded Phase 5 live suite passed 87/87 and remote suite passed 538/538
-- ⧗ Final normal Phase 5 review round 3 pending
+- ⚠ Final normal Phase 5 review round 3 blocked with 0 Critical and 1 Important finding
+- ⛔ Phase 5 normal review governance exhausted at 3/3 reviews and 2/3 fix loops
+- ⧗ Operator authorization required for a bounded extension fix/review cycle
 
 ## Blockers
 
-No active implementation defect is known after bounded fix loop 2, but Phase 5
-remains gated on final normal review round 3. Phase 6 is blocked until that
-review passes. The branch-level lockstep version gate remains preserved for
-planned `p08-t05` release work.
+Phase 5 public read verification can report stale capability evidence as
+verified even though validation rejects it. Normal review governance is
+exhausted at 3/3 reviews, so further corrective work requires explicit operator
+authorization. Phase 6 remains blocked. The branch-level lockstep version gate
+remains preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run final normal Phase 5 review round 3 over the full post-fix phase range ending
-at `e75f1d8e99edad72aa52442e31be9eec6116ae28`, including explicit disposition
-of all findings in both prior Phase 5 review artifacts. Do not begin Phase 6
-until the review passes with zero Critical and zero Important findings.
+Obtain explicit operator authorization for one bounded Phase 5 extension fix
+and independent review. If authorized, fix only the Important finding in
+`reviews/p05-review-2026-09-02T215328Z.md` through the original implementer,
+then require a fresh review with zero Critical and zero Important findings.

@@ -839,8 +839,9 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** in progress — fix loop 2 resolved the one Critical and two Important
-round-2 findings; final normal review round 3 is pending.
+**Status:** blocked — final normal review round 3 found one Important defect;
+the 3/3 review budget is exhausted and further work requires operator
+authorization.
 **Started:** 2026-09-02
 **Implementation head:** e75f1d8e99edad72aa52442e31be9eec6116ae28
 
@@ -908,7 +909,15 @@ round-2 findings; final normal review round 3 is pending.
 - Root independently verified the exact boundary, clean diff, and focused suite
   at 87/87. The implementer also passed the full remote suite at 538/538 plus
   CLI lint, type-check, build, formatting, diff, and provider-neutrality checks.
-- Final normal review round 3 is next. Phase 6 has not started.
+- Final normal review round 3 at
+  `reviews/p05-review-2026-09-02T215328Z.md` blocked with zero Critical and one
+  Important finding. It reported `Reconnaissance: not-attempted`, passed the
+  focused suite at 87/87 and remote suite at 538/538, confirmed all nine prior
+  findings resolved, and reproduced stale capability evidence reported as
+  verified by the public read verifier.
+- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops.
+  Further corrective work requires explicit operator authorization. Phase 6
+  has not started.
 
 ---
 
@@ -1804,7 +1813,7 @@ continuation_events:
   - p05-review-fix-2-20260902-6c7c0c26c
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 2/3
+review_rounds: 3/3
 fix_loops: 2/3
 review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
 review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
@@ -1818,7 +1827,11 @@ review_2_findings: 1 critical, 2 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 fix_2_commit: e75f1d8e99edad72aa52442e31be9eec6116ae28
 fix_2_outcome: done
-phase_outcome: fixes_completed_review_3_pending
+review_3_artifact: reviews/p05-review-2026-09-02T215328Z.md
+review_3_head: e75f1d8e99edad72aa52442e31be9eec6116ae28
+review_3_findings: 0 critical, 1 important, 0 medium, 0 minor
+review_3_reconnaissance: not-attempted
+phase_outcome: blocked_review_budget_exhausted
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1856,8 +1869,12 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   boundary.
 - Root independently passed the focused suite at 87/87; the implementer passed
   the full remote suite at 538/538 plus lint, types, build, format, diff, and
-  provider-neutrality checks. Final normal review round 3 is pending; Phase 6
-  did not start.
+  provider-neutrality checks.
+- Final normal review round 3 blocked with zero Critical and one Important
+  finding at exact reviewed head `e75f1d8e99edad72aa52442e31be9eec6116ae28`;
+  reconnaissance was not attempted and all nine prior findings are resolved.
+  Normal review governance is exhausted at 3/3; further corrective work needs
+  operator authorization. Phase 6 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1959,7 +1976,7 @@ Track test execution during implementation.
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 87/87; remote 538/538; checks passed   | 0      | review round 3 pending     |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 87/87; remote 538/538; checks passed   | 0      | blocked by review round 3  |
 
 ## Final Summary (for PR/docs)
 

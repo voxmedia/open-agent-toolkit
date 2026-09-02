@@ -136,6 +136,10 @@ Operator authorized one bounded Phase 4 extension: fix loop 3/3 and independent 
 
 Phase 4 passed the authorized operator-extension review 4/4 with zero findings at reviews/p04-operator-review-2026-09-02T144931Z.md after fix loop 3/3; Phase 5 p05-t01 is unblocked.
 
+### 2026-09-02 · structural · oat-project-implement · p05
+
+Phase 5 blocked after final normal review round 3/3 and fix loop 2/3; zero Critical and one Important finding remains in reviews/p05-review-2026-09-02T215328Z.md; further corrective work requires operator authorization.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
