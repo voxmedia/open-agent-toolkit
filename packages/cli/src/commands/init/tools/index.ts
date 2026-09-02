@@ -100,6 +100,7 @@ import {
   type PackInstallState,
 } from './install-state';
 import {
+  type AgentsGuidancePlan,
   commandProjectGuidanceChoice,
   type PlanProjectGuidanceInput,
   planProjectGuidance,
@@ -789,15 +790,21 @@ function reportSuccess(
   syncScopes: ConcreteScope[],
   adoptedPacks: ToolPack[],
   lifecycle: readonly PackLifecycleOutcome[],
+  projectGuidance: AgentsGuidancePlan,
 ): void {
   const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
     context.logger.json({
-      status: 'ok',
+      status: projectGuidance.action === 'blocked' ? 'partial' : 'ok',
       installedPacks: packs,
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
       lifecycle,
+      projectGuidance: {
+        action: projectGuidance.action,
+        choice: projectGuidance.choice,
+        reason: projectGuidance.reason,
+      },
       ...(providerVisibility ? { providerVisibility } : {}),
     });
     return;
@@ -826,6 +833,47 @@ function reportSuccess(
     context.logger.info(
       `Lifecycle ${outcome.selection.pack}: ${outcome.status} (${outcome.canonical.status})`,
     );
+  }
+  const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
+  if (projectGuidance.action === 'blocked') {
+    context.logger.warn(guidanceMessage);
+  } else {
+    context.logger.info(guidanceMessage);
+  }
+}
+
+async function applyProjectGuidance(
+  plan: AgentsGuidancePlan,
+  dependencies: InitToolsDependencies,
+): Promise<AgentsGuidancePlan> {
+  if (plan.action !== 'update' || !plan.repoRoot) return plan;
+
+  try {
+    const sectionResult = await dependencies.upsertAgentsMdSection(
+      plan.repoRoot,
+      plan.sectionKey,
+      plan.body,
+    );
+    if (plan.legacySectionAction === 'remove') {
+      await dependencies.removeAgentsMdSection(plan.repoRoot, 'workflows');
+    }
+    return {
+      ...plan,
+      action:
+        sectionResult.action === 'created'
+          ? 'create'
+          : sectionResult.action === 'updated'
+            ? 'update'
+            : 'no-change',
+      reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ...plan,
+      action: 'blocked',
+      reason: `Accepted project guidance was blocked: ${message}`,
+    };
   }
 }
 
@@ -1412,18 +1460,17 @@ export async function runInitTools(
         ? []
         : [{ pack, scope } satisfies ProjectGuidancePack];
     });
-    const guidancePlan = await dependencies.planProjectGuidance({
+    const plannedGuidance = await dependencies.planProjectGuidance({
       repoRoot: projectRoot,
       packs: realizedPacks,
       explicitChoice: explicitProjectGuidance,
       interactive: context.interactive,
       confirmAction: dependencies.confirmAction,
     });
-    if (!context.json && guidancePlan.action === 'not-requested') {
-      context.logger.info(guidancePlan.reason);
-    } else if (!context.json && guidancePlan.action === 'blocked') {
-      context.logger.warn(guidancePlan.reason);
-    }
+    const guidancePlan = await applyProjectGuidance(
+      plannedGuidance,
+      dependencies,
+    );
     if (dependencies.syncAfterInstall) {
       const sync = await dependencies.syncAfterInstall(
         affectedScopesList,
@@ -1463,12 +1510,13 @@ export async function runInitTools(
       affectedScopesList,
       adoptedPacks,
       lifecycleOutcomes,
+      guidancePlan,
     );
-    process.exitCode = lifecycleOutcomes.some(
-      ({ status }) => status !== 'complete',
-    )
-      ? 1
-      : 0;
+    process.exitCode =
+      lifecycleOutcomes.some(({ status }) => status !== 'complete') ||
+      guidancePlan.action === 'blocked'
+        ? 1
+        : 0;
     return selectedPacks;
   } catch (error) {
     lastRunInitToolsMetadata = null;

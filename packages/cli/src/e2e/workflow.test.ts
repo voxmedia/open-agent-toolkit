@@ -4,6 +4,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -266,6 +267,116 @@ describe('e2e workflow', () => {
       await expect(
         lstat(join(root, '.claude', 'skills', 'skill-one')),
       ).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('applies opted-in aggregate guidance idempotently without changing PJM adoption', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const existingGuidance = [
+      '# User guidance',
+      '',
+      '<!-- OAT project-management -->',
+      'Existing PJM guidance',
+      '<!-- END OAT project-management -->',
+      '',
+    ].join('\n');
+    await writeFile(join(root, 'AGENTS.md'), existingGuidance, 'utf8');
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const declined = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--no-project-guidance',
+        '--no-sync',
+      ]);
+      expect(declined.exitCode).toBe(0);
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        existingGuidance,
+      );
+
+      const first = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      const second = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+
+      expect(first.exitCode).toBe(0);
+      expect(second.exitCode).toBe(0);
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(guidance).toContain('# User guidance');
+      expect(guidance).toContain('Existing PJM guidance');
+      expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
+      expect(guidance).toContain('### Installed Packs');
+      expect(guidance).not.toContain('<!-- OAT decisions -->');
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('creates missing guidance and updates it through a contained symlink', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const first = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      expect(first.exitCode).toBe(0);
+      await expect(
+        readFile(join(root, 'AGENTS.md'), 'utf8'),
+      ).resolves.toContain('<!-- OAT tools -->');
+
+      await mkdir(join(root, 'guidance'));
+      const target = join(root, 'guidance', 'shared-agents.md');
+      await rename(join(root, 'AGENTS.md'), target);
+      await symlink('guidance/shared-agents.md', join(root, 'AGENTS.md'));
+
+      const second = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      expect(second.exitCode).toBe(0);
+      expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(
+        true,
+      );
+      const guidance = await readFile(target, 'utf8');
+      expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;

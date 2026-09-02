@@ -462,6 +462,7 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     scanTools,
     upsertAgentsMdSection,
+    removeAgentsMdSection,
     reconcilePacks,
     inventoryPack,
     syncAfterInstall,
@@ -1384,6 +1385,75 @@ describe('createInitToolsCommand', () => {
     await expect(
       runCommand(command, ['--project-guidance', '--no-project-guidance']),
     ).rejects.toThrow('cannot be used together');
+  });
+
+  it('applies accepted guidance from complete realized pack evidence', async () => {
+    const {
+      command,
+      upsertAgentsMdSection,
+      removeAgentsMdSection,
+      writeOatConfig,
+    } = createHarness({
+      interactive: true,
+      useLifecycle: true,
+      packSelection: [['docs']],
+      scopeSelection: ['project'],
+      toolsByScope: {
+        project: [createScannedTool('oat-project-new', 'workflows', 'project')],
+        user: [createScannedTool('oat-docs', 'core', 'user')],
+      },
+    });
+
+    await runCommand(command, ['--project-guidance'], ['--scope', 'all']);
+
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
+    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      'tools',
+      expect.stringContaining('**docs**'),
+    );
+    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
+    expect(body).toContain('**core**');
+    expect(body).toContain('**workflows**');
+    expect(removeAgentsMdSection).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      'workflows',
+    );
+    expect(writeOatConfig).not.toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({ pjm: expect.anything() }),
+    );
+  });
+
+  it('keeps a declined guidance choice independent from capability success', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['--no-project-guidance'], ['--scope', 'all']);
+
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('Installed tool packs:');
+    expect(capture.info.join('\n')).toContain('Project guidance: declined');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unsafe guidance as blocked without rewriting pack lifecycle evidence', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('AGENTS.md identity changed before mutation.'),
+    );
+
+    await runCommand(command, ['--project-guidance'], ['--scope', 'all']);
+
+    expect(capture.info.join('\n')).toContain('Installed tool packs:');
+    expect(capture.warn.join('\n')).toContain('Project guidance: blocked');
+    expect(capture.warn.join('\n')).toContain('identity changed');
+    expect(process.exitCode).toBe(1);
   });
 
   it('reconciles shared config from project scope after aggregate install', async () => {
