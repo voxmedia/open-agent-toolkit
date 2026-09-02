@@ -173,6 +173,32 @@ A pack is **complete** at a scope when every managed asset the current release
 declares for that scope is present, **partial** when only some are, and
 **absent** when none are.
 
+### Three independent repository choices
+
+Tool-pack setup separates three decisions that do not imply one another:
+
+1. **Capability placement** chooses whether pack assets live at project scope,
+   user scope, or both. Placement controls where the capability is available;
+   it does not authorize a repository `AGENTS.md` edit.
+2. **Project guidance** is an explicit choice to create or refresh the managed
+   `OAT tools` section in the repository-root `AGENTS.md`. Use
+   `--project-guidance` to accept or `--no-project-guidance` to decline on
+   `oat init --setup`, `oat init tools`, and `oat tools install` flows. The
+   interactive prompt defaults to decline. Non-interactive runs perform no
+   guidance write unless `--project-guidance` is present and report the exact
+   opt-in command instead. Accepted updates describe the complete realized
+   project-and-user pack inventory, preserve unrelated content, and remove the
+   legacy `OAT workflows` section only after the replacement succeeds.
+3. **PJM adoption** is the repository decision to use project-management state.
+   Make it separately with `oat pjm init`; neither installing the
+   `project-management` pack nor accepting tool guidance adopts PJM.
+
+These choices stay independent for standalone workflows installs too. For
+example, `oat init tools workflows --scope user --project-guidance` installs
+the workflows capability at user scope while updating guidance in the current
+repository. A blocked guidance update is reported separately and does not
+undo or misreport the successful capability install.
+
 ### Where pack assets land
 
 | Asset kind        | Project scope                                                                      | User scope                   | Ownership                                           |
@@ -503,8 +529,8 @@ Key behavior:
   output prints `Adopted project tool pack: <pack>` once per adopted pack;
   JSON output adds `adoptedPacks` only when the list is non-empty. This is pack
   intent reconciliation, not repository PJM adoption
-- A user-only install needs no Git repository and performs no repository writes
-- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md` **only for project-scope runs of the aggregate `oat tools install`**. The per-pack subcommands (`oat tools install workflows`, `oat tools install docs`, and the rest) never write `AGENTS.md`, at either scope
+- A user-only capability install needs no Git repository and performs no repository writes unless `--project-guidance` explicitly requests the separate repository guidance update
+- Offers repository `AGENTS.md` guidance independently of capability scope. Pass `--project-guidance` to create or refresh the managed `OAT tools` section, or `--no-project-guidance` to decline; the interactive prompt defaults to decline and non-interactive runs write nothing without the explicit opt-in
 - Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack no longer upserts a managed `OAT project-management` section; `oat pjm init` writes that repository guidance when the repository actually adopts PJM
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
