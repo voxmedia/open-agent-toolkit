@@ -88,6 +88,14 @@ target=cursor-fable-5-high threshold=important findings=critical:0,important:0,m
 
 retro artifact=.oat/projects/shared/recon-skill/references/project-retro.md evidence_used=archived-review-markdown,backlog-records,decision-records,gate-receipts,github-pr-status,lifecycle-artifacts,pr-artifact,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=1 upstream=2 apply=performed filing=performed
 
+### 2026-09-02 · structural · oat-project-implement · p-rev7
+
+Phase p-rev7 passed: task dbfeeede518556ed5678839bc18ab1342e381593; root-owned review reviews/archived/p-rev7-review-2026-09-02T212045Z.md passed with 0 Critical/Important/Medium/Minor; fix loops=0; final-scope review override required.
+
+### 2026-09-02 · structural · oat-project-implement · final
+
+STOP: all 30 tasks are complete and p-rev7 passed. The final-scope review-cycle cap is exhausted; require an explicit override before one fresh mandatory final lifecycle review. If that review passes, continue to the configured cross-family exit gate; if it blocks, stop without automatic remediation or re-review.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
