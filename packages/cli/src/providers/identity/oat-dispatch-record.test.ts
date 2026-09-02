@@ -5,6 +5,8 @@ import type { GenericDispatchRecord } from './generic-dispatch-record';
 import { genericDispatchRecordSchema } from './generic-dispatch-record';
 import {
   augmentDispatchRecord,
+  buildRuntimeObservation,
+  compareObservedRuntimeMetadata,
   IMMUTABLE_FALLBACK_CONTROL_FIELDS,
   MUTABLE_FALLBACK_CONTROL_FIELDS,
   parsePersistedOatDispatchRecord,
@@ -786,5 +788,136 @@ describe('augmentDispatchRecord', () => {
         },
       }),
     ).toThrow(/request id/i);
+  });
+});
+
+describe('runtime observation construction', () => {
+  const configured = {
+    role: 'oat-phase-implementer',
+    model: 'gpt-5.6-sol',
+    effort: 'high',
+    serviceTier: 'priority',
+  };
+
+  it('compares only axes both sides report', () => {
+    expect(compareObservedRuntimeMetadata({}, configured)).toBe(
+      'not-comparable',
+    );
+    expect(
+      compareObservedRuntimeMetadata({ childLineage: 'root' }, configured),
+    ).toBe('not-comparable');
+    expect(
+      compareObservedRuntimeMetadata({ model: 'gpt-5.6-sol' }, configured),
+    ).toBe('matching');
+    expect(
+      compareObservedRuntimeMetadata({ model: 'GPT-5.6-Sol ' }, configured),
+    ).toBe('matching');
+    expect(
+      compareObservedRuntimeMetadata({ model: 'gpt-5.6-terra' }, configured),
+    ).toBe('mismatching');
+    expect(compareObservedRuntimeMetadata({ model: 'gpt-5.6-sol' }, null)).toBe(
+      'not-comparable',
+    );
+  });
+
+  it('treats an unexposed or unreported axis as not comparable', () => {
+    expect(
+      compareObservedRuntimeMetadata({ effort: 'not-exposed' }, configured),
+    ).toBe('not-comparable');
+    expect(
+      compareObservedRuntimeMetadata({ effort: 'not-reported' }, configured),
+    ).toBe('not-comparable');
+    expect(
+      compareObservedRuntimeMetadata(
+        { effort: 'not-exposed', model: 'gpt-5.6-sol' },
+        configured,
+      ),
+    ).toBe('matching');
+  });
+
+  it('builds a reported observation without copying configured values', () => {
+    expect(
+      buildRuntimeObservation({
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        metadata: { model: 'gpt-5.6-sol', childLineage: 'depth-1' },
+        configured,
+      }),
+    ).toEqual({
+      status: 'reported',
+      provider: 'codex',
+      childLineage: 'depth-1',
+      model: 'gpt-5.6-sol',
+      source: 'codex-rollout-metadata',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      match: 'matching',
+    });
+  });
+
+  it('returns not-reported for absent, empty, or invalid metadata', () => {
+    const base = {
+      provider: 'codex',
+      source: 'codex-rollout-metadata',
+      observedAt: '2026-09-02T12:00:00.000Z',
+      configured,
+    };
+    expect(buildRuntimeObservation({ ...base, metadata: null })).toEqual({
+      status: 'not-reported',
+    });
+    expect(buildRuntimeObservation({ ...base, metadata: {} })).toEqual({
+      status: 'not-reported',
+    });
+    expect(
+      buildRuntimeObservation({
+        ...base,
+        observedAt: 'not-a-timestamp',
+        metadata: { model: 'gpt-5.6-sol' },
+      }),
+    ).toEqual({ status: 'not-reported' });
+    expect(
+      buildRuntimeObservation({
+        ...base,
+        metadata: { model: 'a'.repeat(300) },
+      }),
+    ).toEqual({ status: 'not-reported' });
+  });
+
+  it('rejects an observation carrying sensitive content', () => {
+    expect(() =>
+      buildRuntimeObservation({
+        provider: 'codex',
+        source: 'codex-rollout-metadata',
+        observedAt: '2026-09-02T12:00:00.000Z',
+        metadata: {
+          model: 'gpt-5.6-sol',
+          prompt: 'you are a helpful assistant',
+        } as never,
+        configured,
+      }),
+    ).toThrow(/sensitive/i);
+  });
+
+  it('bounds every observation string at the identifier limit', () => {
+    expect(() =>
+      parsePersistedOatDispatchRecord({
+        ...genericRecord(),
+        oat: {
+          schemaVersion: 1,
+          canonicalRole: null,
+          preStartRejection: null,
+          fallbackClaim: null,
+          fallback: { status: 'not-applicable', reason: 'native' },
+          runtimeObservation: {
+            status: 'reported',
+            provider: 'codex',
+            model: 'a'.repeat(300),
+            source: 'codex-rollout-metadata',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            match: 'matching',
+          },
+        },
+      }),
+    ).toThrow();
   });
 });

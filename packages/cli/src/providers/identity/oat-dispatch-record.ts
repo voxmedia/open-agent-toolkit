@@ -327,23 +327,153 @@ const fallbackSchema = z.discriminatedUnion('status', [
   fallbackDispatchSchema,
 ]);
 
+/**
+ * Observation values are provider-reported identifiers, not prose. They are
+ * bounded at the same 256-character caller-authored identifier limit the
+ * generic record uses, so a transcript body cannot ride in through an
+ * optional metadata field.
+ */
+const MAX_OBSERVATION_VALUE_LENGTH = 256;
+const observationValue = () =>
+  z.string().min(1).max(MAX_OBSERVATION_VALUE_LENGTH);
+
 const runtimeObservationSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('not-reported') }).strict(),
   z
     .object({
       status: z.literal('reported'),
-      provider: z.string().min(1),
-      childLineage: z.string().min(1).optional(),
-      role: z.string().min(1).optional(),
-      model: z.string().min(1).optional(),
-      effort: z.string().min(1).optional(),
-      serviceTier: z.string().min(1).optional(),
-      source: z.string().min(1),
+      provider: observationValue(),
+      childLineage: observationValue().optional(),
+      role: observationValue().optional(),
+      model: observationValue().optional(),
+      effort: observationValue().optional(),
+      serviceTier: observationValue().optional(),
+      source: observationValue(),
       observedAt: z.string().datetime(),
       match: z.enum(['matching', 'mismatching', 'not-comparable']),
     })
     .strict(),
 ]);
+
+/**
+ * The comparable axes a provider may report about its own child. Every field is
+ * optional: a provider that does not expose an axis reports nothing for it, and
+ * an axis it exposes but cannot select reports the literal `not-exposed`.
+ * Nothing here is ever populated from the configured invocation.
+ */
+export interface ObservedRuntimeMetadata {
+  childLineage?: string | null;
+  role?: string | null;
+  model?: string | null;
+  effort?: string | null;
+  serviceTier?: string | null;
+}
+
+/**
+ * The immutable configured invocation an observation is compared against. It is
+ * read-only input to the comparison and is never written into an observation.
+ */
+export interface ConfiguredInvocationForObservation {
+  role?: string | null;
+  model?: string | null;
+  effort?: string | null;
+  serviceTier?: string | null;
+}
+
+export type RuntimeObservationMatch =
+  | 'matching'
+  | 'mismatching'
+  | 'not-comparable';
+
+/**
+ * Values that name the absence of an axis rather than a runtime fact. They can
+ * never establish agreement or disagreement, so they are excluded from the
+ * comparable set instead of being compared as literal strings.
+ */
+const NON_COMPARABLE_OBSERVED_VALUES: ReadonlySet<string> = new Set([
+  'not-exposed',
+  'not-reported',
+  'unknown',
+]);
+
+const COMPARED_OBSERVATION_AXES = [
+  'role',
+  'model',
+  'effort',
+  'serviceTier',
+] as const;
+
+function comparableValue(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (trimmed === '') return null;
+  return NON_COMPARABLE_OBSERVED_VALUES.has(trimmed.toLowerCase())
+    ? null
+    : trimmed.toLowerCase();
+}
+
+/**
+ * Compare observed metadata with the configured invocation.
+ *
+ * Only axes both sides report are compared. With no comparable axis the result
+ * is `not-comparable` rather than `matching`: silence is never agreement. A
+ * mismatch is evidence only — it never authorizes replacement, retry, or
+ * fallback.
+ */
+export function compareObservedRuntimeMetadata(
+  metadata: ObservedRuntimeMetadata,
+  configured: ConfiguredInvocationForObservation | null | undefined,
+): RuntimeObservationMatch {
+  let compared = 0;
+  let mismatched = false;
+  for (const axis of COMPARED_OBSERVATION_AXES) {
+    const observed = comparableValue(metadata[axis]);
+    const expected = comparableValue(configured?.[axis]);
+    if (observed === null || expected === null) continue;
+    compared += 1;
+    if (observed !== expected) mismatched = true;
+  }
+  if (compared === 0) return 'not-comparable';
+  return mismatched ? 'mismatching' : 'matching';
+}
+
+/**
+ * Build one source-qualified runtime observation.
+ *
+ * Absent, empty, or schema-invalid metadata yields `not-reported`. The
+ * configured invocation is only ever read for the comparison, so a parse
+ * failure cannot copy a requested value into observed state.
+ */
+export function buildRuntimeObservation(input: {
+  provider: string;
+  source: string;
+  observedAt: string;
+  metadata: ObservedRuntimeMetadata | null;
+  configured?: ConfiguredInvocationForObservation | null;
+}): RuntimeObservation {
+  const metadata = input.metadata;
+  if (metadata === null) return { status: 'not-reported' };
+  assertNoSensitiveDispatchContent(metadata, '<observation>');
+  const reported: Record<string, string> = {};
+  for (const axis of ['childLineage', ...COMPARED_OBSERVATION_AXES] as const) {
+    const value = metadata[axis];
+    if (typeof value === 'string' && value.trim() !== '') {
+      reported[axis] = value;
+    }
+  }
+  if (Object.keys(reported).length === 0) return { status: 'not-reported' };
+
+  const candidate = {
+    status: 'reported' as const,
+    provider: input.provider,
+    ...reported,
+    source: input.source,
+    observedAt: input.observedAt,
+    match: compareObservedRuntimeMetadata(metadata, input.configured),
+  };
+  const parsed = runtimeObservationSchema.safeParse(candidate);
+  return parsed.success ? parsed.data : { status: 'not-reported' };
+}
 
 /**
  * The rejected trigger owns the single-fallback right. Publishing a fallback
