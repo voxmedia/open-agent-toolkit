@@ -478,7 +478,7 @@ export type RuntimeObservationMatch =
  * comparable set instead of being compared as literal strings.
  */
 const NON_COMPARABLE_OBSERVED_VALUES: ReadonlySet<string> = new Set([
-  'not-exposed',
+  NOT_EXPOSED_OBSERVATION_VALUE,
   'not-reported',
   'unknown',
 ]);

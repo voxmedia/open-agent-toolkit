@@ -470,7 +470,7 @@ record already carried one. It normalizes to `reported` only when the record
 names a `provider`, a `source`, an `observedAt` timestamp, and a `match` of
 `matching`, `mismatching`, or `not-comparable`. `comparedAxes` carries the axes
 the verdict rests on; a `matching` with an empty or narrow list is a weaker
-claim than the scalar alone suggests, so consumers must read both. every other shape, including a
+claim than the scalar alone suggests, so consumers must read both. Every other shape, including a
 partially filled observation, becomes `not-reported` with all axes `null`.
 Nothing is ever promoted from `configuredInvocation`, and a `mismatching` or
 absent observation never fails a configured-invocation assertion.

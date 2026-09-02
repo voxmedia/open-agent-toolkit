@@ -916,7 +916,7 @@ describe('dispatch report rendering', () => {
           entries: [
             {
               type: 'session_meta',
-              payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+              payload: { id: 'sess-root', agent_role: 'oat-phase-implementer' },
             },
             { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
           ],

@@ -107,17 +107,17 @@ effort axes stay exact even when runtime producer identity is not reported.
 ### Provider metadata observation
 
 `oat project dispatch record` accepts an optional post-launch observation event
-whose `metadata` is a sanitized provider envelope — `provider`, `observedAt`,
-and `entries` — and normalizes it against the record's own immutable configured
-invocation. The result is stored under the record's `oat.runtimeObservation`.
+whose `metadata` is a provider envelope — `provider`, `observedAt`, and
+`entries` — and normalizes it against the record's own immutable configured
+invocation. `entries` may be raw, unmodified provider output. The result is stored under the record's `oat.runtimeObservation`.
 
 The channel is metadata-only and capability-gated:
 
-| Provider | Observed axes                                               | Notes                                                                                                                                             |
-| -------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Codex    | child lineage, role, model, effort, service tier            | Read from `session_meta` and `turn_context` metadata entries.                                                                                     |
-| Claude   | role, model, effort, service tier; lineage is root-or-child | Read from on-disk `assistant` entry metadata (`attributionAgent`, `effort`, `isSidechain`) plus `message.model` and `message.usage.service_tier`. |
-| Cursor   | none                                                        | Explicitly `not-reported`; requested values are never copied into it.                                                                             |
+| Provider | Observed axes                                               | Notes                                                                                                                                               |
+| -------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex    | child lineage, role, model, effort                          | Read from `session_meta` and `turn_context` metadata entries. No captured Codex rollout reports a service tier, so that axis never populates today. |
+| Claude   | role, model, effort, service tier; lineage is root-or-child | Read from on-disk `assistant` entry metadata (`attributionAgent`, `effort`, `isSidechain`) plus `message.model` and `message.usage.service_tier`.   |
+| Cursor   | none                                                        | Explicitly `not-reported`; requested values are never copied into it.                                                                               |
 
 Parsers classify entries by their `type` discriminator alone, so a conversation
 entry's body is never read, and only bounded provider identifiers are extracted.
@@ -164,11 +164,16 @@ the record does not use is refused.
 
 Request correlation is verified only when the provider declares one: a session
 that names a different request is declined, and a session that declares none is
-attributed to the request the caller paired it with. Correlation is therefore
-provider-verified when available and caller-asserted otherwise.
+attributed to the request the caller paired it with. In practice neither
+provider declares an OAT request id today — no captured Codex rollout carries
+`session_meta.request_id`, and Claude's own `requestId` is a per-turn API
+identifier rather than a dispatch request — so correlation is caller-asserted
+for both, and the declared-correlation check is a forward-compatible guard.
 
 A parse failure, a declined request correlation, an unsupported provider, or an
-absent envelope all produce `not-reported`. None of them copies a requested
+envelope too large to project all produce `not-reported`. A `runtime-observation`
+event carrying neither `metadata` nor `observation` is a malformed event and is
+rejected by the schema rather than degraded. None of them copies a requested
 argument or a materialized pin into observed state, and `mismatching` is
 evidence only: it authorizes no replacement, retry, or fallback, and leaves
 `launch_status`, `child_outcome`, and every configured control untouched. The

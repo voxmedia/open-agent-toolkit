@@ -14,7 +14,7 @@ import {
  *
  * Four accepted paths are UNVERIFIED against any captured rollout and appear
  * zero times in the operator's local corpus (1,596 rollouts spanning cli_version
- * 0.142.4-0.152.x, as of 2026-09-02): `turn_context.service_tier`,
+ * 0.142.4-0.152.x, as of 2026-09-02, on the capturing operator's machine): `turn_context.service_tier`,
  * `turn_context.serviceTier`, `turn_context.reasoning_effort`, and
  * `session_meta.request_id`. They are retained as forward-compatible readers
  * and all fail closed to `null`, so no Codex rollout observed to date reports a

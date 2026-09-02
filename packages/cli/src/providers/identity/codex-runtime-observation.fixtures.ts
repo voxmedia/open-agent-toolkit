@@ -2,7 +2,7 @@
  * Captured Codex rollout metadata, sanitized.
  *
  * These fixtures are derived from three real Codex 0.152.1 rollouts produced by
- * one live nested dispatch on 2026-09-02: a root `exec` session, a depth-1
+ * one live nested dispatch on the capturing operator's machine, 2026-09-02: a root `exec` session, a depth-1
  * subagent, and a depth-2 subagent. They replaced hand-written fixtures that
  * had been constructed from assumption — those fixtures passed while the parser
  * did not work against any real rollout, which is exactly the failure mode

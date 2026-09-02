@@ -217,6 +217,13 @@ export function normalizeRuntimeIdentity(value) {
   };
 }
 
+const OBSERVATION_AXIS_VALUES = new Set([
+  'role',
+  'model',
+  'effort',
+  'serviceTier',
+]);
+
 const OBSERVATION_MATCH_VALUES = new Set([
   'matching',
   'mismatching',
@@ -266,9 +273,14 @@ export function normalizeRuntimeObservation(value) {
   return {
     childLineage: optionalString(value.childLineage),
     // The axes the verdict rests on. A `matching` with an empty or narrow list
-    // is a weaker claim than the scalar alone suggests.
+    // is a weaker claim than the scalar alone suggests. Bounded to the same
+    // closed vocabulary the record schema enforces, so the two projections
+    // cannot drift.
     comparedAxes: Array.isArray(value.comparedAxes)
-      ? value.comparedAxes.map((axis) => String(axis))
+      ? value.comparedAxes
+          .map((axis) => String(axis))
+          .filter((axis) => OBSERVATION_AXIS_VALUES.has(axis))
+          .slice(0, OBSERVATION_AXIS_VALUES.size)
       : [],
     effort: optionalString(value.effort),
     match,

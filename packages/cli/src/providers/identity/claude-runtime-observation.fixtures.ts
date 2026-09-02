@@ -2,7 +2,8 @@
  * Captured Claude transcript metadata, sanitized.
  *
  * Derived from real on-disk transcripts under `~/.claude/projects/`, which is
- * the format Claude actually writes. They replaced hand-written fixtures built
+ * the format Claude actually writes. Corpus counts below are
+ * operator-environment observations (as of 2026-09-02, on the capturing operator's machine). They replaced hand-written fixtures built
  * around `system`/`init` and `result` records: a scan of all 2,725 local
  * transcripts found `"subtype":"init"` in zero of them, so the previous parser
  * returned `not-reported` against every real transcript while its own fixtures

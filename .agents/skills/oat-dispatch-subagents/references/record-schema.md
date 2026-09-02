@@ -301,10 +301,10 @@ identifier bound, which admits letters, digits, `.`, `_`, and `-` only, so no
 observation value can carry a path or a URL. Its `match` and `comparedAxes` are
 always derived from the record's configured invocation rather than supplied by
 the caller, and `matching` covers only the axes listed in `comparedAxes`.
-`not-exposed` names an axis a provider genuinely does not have; an axis that
-went unreported on a given run is simply absent, and neither is ever filled in
-from the request. It records what a provider reported about its own child and
-never restates the request: an axis a provider does not expose is
-`not-exposed`, an absent or unparseable observation is `not-reported`, and
-neither is ever filled in from `model_selector`, `effort_selector`,
-`service_tier_selector`, or `role_selector`.
+It records what a provider reported about its own child and never restates the
+request. An axis the provider did not report is simply absent from the
+observation; an absent or unparseable observation is `not-reported` as a whole;
+and `not-exposed` is reserved vocabulary for an axis a provider genuinely has
+no selectable control for, with no producer today. None of the three is ever
+filled in from `model_selector`, `effort_selector`, `service_tier_selector`, or
+`role_selector`.

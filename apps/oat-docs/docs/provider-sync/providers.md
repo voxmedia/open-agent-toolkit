@@ -112,8 +112,9 @@ authority, or any selector: it only records what a provider said about its own
 child, so a configured selection and an observed identity stay independently
 readable.
 
-Codex reports child lineage, role, model, effort, and service tier through its
-session and turn metadata. Claude reports role, model, effort, and service tier
+Codex reports child lineage, role, model, and effort through its session and
+turn metadata. It reports no service tier: the parser accepts one for forward
+compatibility, but no captured rollout carries the field. Claude reports role, model, effort, and service tier
 from its on-disk transcript metadata, and lineage only as root-or-child: it
 emits no depth field, so a subagent turn is recorded as `depth-unknown` rather
 than given an invented depth. Claude's role comes from the same class of
