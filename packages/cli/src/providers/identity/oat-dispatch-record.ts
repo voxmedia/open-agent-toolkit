@@ -87,24 +87,49 @@ const preStartRejectionCodeSchema = z
   });
 
 /**
- * Immutable configured controls. A fallback approximates the role instruction
- * surface only; every configured control below must survive byte-identically,
- * including the complete generic `payload` that owns sandbox and tool grants
- * and the generic `fallback` object that owns `allow_below_task_class_floor`.
+ * Immutable configured controls across a fallback link.
  *
- * Deliberately excluded, with reasons:
- * - `diagnostics`: per-record narration about that record's own launch. A
- *   fallback legitimately explains why it exists.
- * - `runtime_confirmation`: observation state of that record's own child. The
+ * The rule, so a newly added generic field has a default: a field is immutable
+ * when it describes the configured selection, the authorization for that
+ * selection, or the evidence that justified it. A field is mutable when it
+ * describes this record's own identity, how the work is briefed to its own
+ * child, its own launch lifecycle, or its own child's observed behaviour. When
+ * a new field is ambiguous, treat it as immutable — a false "controls
+ * preserved" claim is worse than a false mismatch.
+ *
+ * All 46 generic fields are accounted for. The 31 immutable ones are listed
+ * below. The 15 mutable ones, each with its reason:
+ * - `request_id`: the fallback is a distinct request and must have its own ID.
+ * - `caller`: the adapter layer that launches the fallback may differ.
+ * - `objective`: a canonical-instruction fallback necessarily rebriefs the work
+ *   for a generic child rather than a resolved role.
+ * - `role_name`, `role_selector`: the fallback deliberately targets a generic
+ *   worker; substituting the role is the whole point of the approximation, and
+ *   the resolved role identity is bound separately through `roleInstructions`.
+ * - `candidates_considered`: the fallback evaluated a different candidate set.
+ * - `selection_reason`: constrained separately — a fallback must declare
+ *   `pre-start-rejection`, which by definition differs from the trigger's.
+ * - `launch_status`, `child_outcome`: each record's own lifecycle state.
+ * - `runtime_confirmation`: observation of that record's own child. The
  *   fallback is a different child, so equality would be a false assertion.
- * - `caller`, `objective`, `role_name`, `role_selector`, `candidates_considered`,
- *   `selection_reason`, `launch_status`, `child_outcome`: these legitimately
- *   differ on a fresh generic child and are constrained separately.
+ * - `diagnostics`: per-record narration. A fallback legitimately explains why
+ *   it exists.
+ * - `continuation_events`: continuation linkage belongs to the record that
+ *   owns the handle.
+ * - `expected_output`, `verification_evidence`, `escalate_when`: the brief
+ *   given to this record's own child, in the same class as `objective`.
  *
- * Deliberately included even though it is evidence rather than a control:
- * - `configured_invocation_evidence`: it names the configuration that
- *   authorized the preserved route, so preserving the route without preserving
- *   its authorization would let a fallback restate why it was allowed.
+ * Included even though they are evidence rather than controls, because they
+ * record why the preserved selection was allowed:
+ * - `configured_invocation_evidence`: names the configuration that authorized
+ *   the preserved route.
+ * - `catalog_snapshot`: names the catalog the selection was made against.
+ * - `guidance_reference`, `guidance_version`, `guidance_verified_at`,
+ *   `guidance_status`: name the dated model guidance behind the selection and
+ *   how fresh it was; a fallback restating `stale` as `fresh` would misstate
+ *   provenance for a preserved target.
+ * - `classification_reason`: the rationale for `task_class`, which is itself a
+ *   compared authorization control.
  */
 export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
   'provider',
@@ -121,7 +146,12 @@ export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
   'retry_limit',
   'payload',
   'fallback',
+  'catalog_snapshot',
   'configured_invocation_evidence',
+  'guidance_reference',
+  'guidance_version',
+  'guidance_verified_at',
+  'guidance_status',
   'dispatch_context',
   'dispatch_policy',
   'dispatch_ceiling',
@@ -131,7 +161,31 @@ export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
   'task_class',
   'model_class_floor',
   'classification_source',
+  'classification_reason',
   'floor_satisfaction',
+] as const satisfies readonly (keyof GenericDispatchRecord)[];
+
+/**
+ * The mutable complement, kept executable rather than only described above so a
+ * newly added generic field fails `covers every generic dispatch field` until
+ * somebody records a decision for it.
+ */
+export const MUTABLE_FALLBACK_CONTROL_FIELDS = [
+  'request_id',
+  'caller',
+  'objective',
+  'role_name',
+  'role_selector',
+  'candidates_considered',
+  'selection_reason',
+  'launch_status',
+  'child_outcome',
+  'runtime_confirmation',
+  'diagnostics',
+  'continuation_events',
+  'expected_output',
+  'verification_evidence',
+  'escalate_when',
 ] as const satisfies readonly (keyof GenericDispatchRecord)[];
 
 export function canonicalEvidenceJson(value: unknown): string {

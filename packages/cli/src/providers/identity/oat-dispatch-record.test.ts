@@ -2,8 +2,11 @@ import type { CanonicalRoleEvidence } from '@agents/canonical';
 import { describe, expect, it } from 'vitest';
 
 import type { GenericDispatchRecord } from './generic-dispatch-record';
+import { genericDispatchRecordSchema } from './generic-dispatch-record';
 import {
   augmentDispatchRecord,
+  IMMUTABLE_FALLBACK_CONTROL_FIELDS,
+  MUTABLE_FALLBACK_CONTROL_FIELDS,
   parsePersistedOatDispatchRecord,
   type ExactTargetRef,
 } from './oat-dispatch-record';
@@ -539,6 +542,71 @@ describe('augmentDispatchRecord', () => {
       event: fallbackEvent(),
     });
     expect(linked.oat.fallback).toMatchObject({ status: 'fallback-dispatch' });
+  });
+
+  it('covers every generic dispatch field with an explicit mutability decision', () => {
+    const schemaFields = Object.keys(
+      genericDispatchRecordSchema.innerType().shape,
+    ).sort();
+    const decided = [
+      ...IMMUTABLE_FALLBACK_CONTROL_FIELDS,
+      ...MUTABLE_FALLBACK_CONTROL_FIELDS,
+    ].sort();
+    expect(decided).toEqual(schemaFields);
+    expect(new Set(decided).size).toBe(decided.length);
+  });
+
+  it.each([
+    [
+      'catalog_snapshot',
+      {
+        catalog_snapshot: {
+          id: 'forged-catalog',
+          source: 'forged',
+          observed_at: '2020-01-01T00:00:00.000Z',
+        },
+      },
+    ],
+    ['guidance_reference', { guidance_reference: 'forged-guidance.md' }],
+    ['guidance_version', { guidance_version: '2020-01-01' }],
+    ['guidance_verified_at', { guidance_verified_at: '2020-01-01' }],
+    ['guidance_status', { guidance_status: 'fresh' as const }],
+  ])('rejects a fallback that restates %s', (_field, override) => {
+    const triggerOverride =
+      'guidance_status' in override
+        ? { guidance_status: 'stale' as const }
+        : {};
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord(override as Partial<GenericDispatchRecord>),
+        triggerRecord: rejectedTrigger('dispatch-fallback-1', triggerOverride),
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/preserve the exact target and controls/i);
+  });
+
+  it('rejects a fallback that restates classification_reason', () => {
+    const classFields = {
+      task_class: 'consequential' as const,
+      model_class_floor: 'consequential',
+      classification_source: 'caller' as const,
+      floor_satisfaction: 'satisfied' as const,
+    };
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord({
+          ...classFields,
+          classification_reason: 'Restated after the fact.',
+        }),
+        triggerRecord: rejectedTrigger('dispatch-fallback-1', {
+          ...classFields,
+          classification_reason: 'Security boundary review.',
+        }),
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/preserve the exact target and controls/i);
   });
 
   it('rejects a fallback whose class floor evidence differs from the trigger', () => {
