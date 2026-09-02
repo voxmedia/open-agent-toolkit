@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -19,15 +19,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase  | Status      | Tasks | Completed |
-| ------ | ----------- | ----- | --------- |
-| p01    | completed   | 2     | 2/2       |
-| p02    | completed   | 3     | 3/3       |
-| p03    | completed   | 3     | 3/3       |
-| p04    | completed   | 6     | 6/6       |
-| p-rev1 | in_progress | 1     | 0/1       |
+| Phase  | Status    | Tasks | Completed |
+| ------ | --------- | ----- | --------- |
+| p01    | completed | 2     | 2/2       |
+| p02    | completed | 3     | 3/3       |
+| p03    | completed | 3     | 3/3       |
+| p04    | completed | 6     | 6/6       |
+| p-rev1 | completed | 1     | 1/1       |
 
-**Total:** 14/15 tasks completed
+**Total:** 15/15 tasks completed
 
 ---
 
@@ -46,6 +46,29 @@ oat_generated: false
 **New tasks added:** `prev1-t01`
 
 **Next:** Execute the revision task via `oat-project-implement`.
+
+---
+
+## Phase p-rev1: PR #254 CI Stabilization
+
+**Status:** completed
+**Started:** 2026-09-02
+**Completed:** 2026-09-02
+
+### Task prev1-t01: Stabilize killed gate-marker CI coverage
+
+**Status:** completed
+**Commit:** 736a73d289c95e270c1c36df1f2125b0772d5d81
+
+The CI-only timeout was a test-harness mismatch: the test's existing marker
+polling loop permits ten seconds, while Vitest's inherited default timeout was
+five seconds. The test-local timeout is now 15 seconds; all lifecycle,
+process-group kill, marker-content, and clean-repository assertions are
+unchanged.
+
+**Verification:** Focused post-change stress passed 10/10; CLI check and
+type-check passed; two uncached workspace test runs passed all 4,721 CLI tests.
+Independent phase review passed with zero findings.
 
 ---
 
@@ -623,6 +646,28 @@ before renewed post-p04 approval, with no post-approval steps. Its first
 required outcome is the summary/current-state refresh that closes gate Medium
 M1.
 
+### Run 8 — p-rev1 CI timeout revision
+
+- Phase base: `489ca5edc08fdc3670ad508c032a407edb57e431`
+- Implementation request: `467889e0-2ee9-4a40-a57f-6c6f6ed47edb`
+- Implementation target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Implementation outcome: `DONE`; one task completed in commit
+  `736a73d289c95e270c1c36df1f2125b0772d5d81`.
+- Diagnosis: CI exposed a five-second Vitest timeout below the test's existing
+  ten-second polling budget; no production lifecycle race reproduced.
+- Verification: focused stress passed 10/10, CLI check and type-check passed,
+  and two uncached workspace runs passed all 4,721 CLI tests.
+- Implementation dispatch: `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+- Review target: `oat-reviewer-gpt-5-6-sol-high`
+- Review artifact:
+  `reviews/p-rev1-review-2026-09-02T121353Z.md`
+- Review result: passed — 0 Critical, 0 Important, 0 Medium, 0 Minor.
+- Review verification: focused test passed 1/1; formatting and exact-range
+  checks passed.
+- Review dispatch: `Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Review reconnaissance: not attempted.
+- Optional nested dispatches: none.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -654,6 +699,7 @@ That generation passed after one fix round and p02 is now merged.
 | p03     | 214 focused tests | 214    | 0      | Terminal discovery, actions, and prune     |
 | p04     | 157 scoped tests  | 157    | 0      | End-to-end retirement and release contract |
 | p04-t06 | 15 focused tests  | 15     | 0      | Explicit-null recordless archive resume    |
+| p-rev1  | 10 focused runs   | 10     | 0      | Killed gate-marker harness timeout         |
 
 ## Final Summary (for PR/docs)
 
@@ -669,9 +715,9 @@ That generation passed after one fix round and p02 is now merged.
   suites.
 - **Verification:** the prior 4721/4721 uncached CLI and 78/78 control-plane
   suites passed. For the PR review correction, 15/15 focused tests and every
-  repository definition-of-done, lint, format, and skill-validation gate exited 0. The task review passed; current-basis final review and the configured exit
-  gate are pending because the new substantive commit invalidated their older
-  receipts.
+  repository definition-of-done, lint, format, and skill-validation gate exited 0. The CI timeout revision then passed 10/10 focused runs, two uncached
+  4721/4721 CLI suites, and an independent zero-finding phase review. GitHub CI
+  revalidation is pending the PR push.
 - **Accepted deltas:** completed-ref authority permits a same-SHA active alias
   because Git cannot atomically lease a no-op completed update with active-ref
   deletion; prune's leased alias cleanup therefore lives in the shared

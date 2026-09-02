@@ -858,6 +858,7 @@ git commit -m "fix(p04-t06): accept null recap resume receipts"
 | github-pr #254 | code     | fixes_completed | 2026-09-01 | reviews/archived/remote-pr-254-review-2026-09-01T221509Z.md | 3f698e213e2bcfc0217750905322cbfb3a0d48ce | -          | -                             |
 | p04-t06        | code     | passed          | 2026-09-01 | reviews/archived/p04-t06-review-2026-09-01T224206Z.md       | 9c1feafb843b71cb1b995395816001823d6d5d40 | manual     | -                             |
 | final          | code     | passed          | 2026-09-01 | reviews/archived/final-review-2026-09-01T225407Z.md         | a8238ae1df5fee8b404b2d4ca0aa0f685b61f81d | auto       | -                             |
+| p-rev1         | code     | passed          | 2026-09-02 | reviews/p-rev1-review-2026-09-02T121353Z.md                 | 736a73d289c95e270c1c36df1f2125b0772d5d81 | manual     | -                             |
 | spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | design         | artifact | pending         | -          | -                                                           | -                                        | -          | -                             |
 | plan           | artifact | passed          | 2026-08-31 | structured plan-review (no artifact)                        | -                                        | auto       | -                             |

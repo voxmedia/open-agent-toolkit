@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-01
+oat_last_updated: 2026-09-02
 oat_generated: true
-oat_summary_last_task: p04-t06
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t01
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: retire-archived-synced-project
@@ -20,6 +20,7 @@ This project closed a synced-project lifecycle gap: successful archival left act
 - Added `refs/oat/completed/<slug>` and idempotent source-SHA-bound transition receipts. Archival now proves local and configured-S3 durability before terminalization, checkout removal, and active-record deletion; recordless retries reuse the original snapshot.
 - Aligned list, dashboard, pull, open, links, and prune with terminal classification so completed projects cannot be resurrected, contradictory states get precise diagnoses, SHA links remain reachable, and prune stays explicitly destructive.
 - Updated the completion skill, lifecycle documentation, lockstep public package versions, and interruption/retry coverage. PR follow-up p04-t06 made recordless resume accept omitted and explicit-`null` no-recap receipts while retaining strict validation for present recap evidence.
+- Stabilized the killed gate-marker integration test after CI exposed that its inherited five-second Vitest timeout was shorter than its existing ten-second polling budget. The test now has a local 15-second timeout with all lifecycle and cleanliness assertions intact.
 
 ## Key Decisions
 
@@ -39,6 +40,11 @@ This project closed a synced-project lifecycle gap: successful archival left act
 - Terminal callers probe both refs: completed-only and same-SHA aliases are terminal; differing SHAs are recovery errors, and transport/authentication failures are not verified absence.
 - Archive retries preserve the original source-SHA and snapshot even without an active record or checkout. Verification passed uncached CLI (4721/4721), control-plane (78/78), repository, release, docs, lint, format, and skill gates.
 - Authenticated Claude Fable gate run `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87`, passed the Important threshold, and was received with its Medium and Minor findings dispositioned.
+- Revision p-rev1 passed 10/10 focused stress runs, two uncached workspace runs with all 4,721 CLI tests passing, and an independent review with zero findings.
+
+## Revision History
+
+- **p-rev1 — PR #254 CI timeout.** GitHub Actions timed out the killed gate-marker test at Vitest's five-second default. Investigation found no production lifecycle race; the test's existing polling loop permits ten seconds, so the revision raised only that test's timeout to 15 seconds and passed independent review with zero findings.
 
 ## Follow-up Items
 
@@ -184,3 +190,7 @@ target=claude-fable-skip-permissions threshold=important exit=1 status=review_fa
 ### 2026-09-01 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
+
+### 2026-09-02 · structural · oat-project-implement · p-rev1-passed
+
+Phase p-rev1 completed at 736a73d289c95e270c1c36df1f2125b0772d5d81 after CI exposed a five-second Vitest timeout below the test existing ten-second polling budget. Test-local timeout alignment passed two uncached 4721/4721 CLI runs and independent review with zero findings; push PR #254 for GitHub CI revalidation.

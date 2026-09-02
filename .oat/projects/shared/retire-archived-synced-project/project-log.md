@@ -172,6 +172,10 @@ target=claude-fable-skip-permissions threshold=important exit=1 status=review_fa
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/retire-archived-synced-project/reviews/final-review-2026-09-01T231603Z.md
 
+### 2026-09-02 · structural · oat-project-implement · p-rev1-passed
+
+Phase p-rev1 completed at 736a73d289c95e270c1c36df1f2125b0772d5d81 after CI exposed a five-second Vitest timeout below the test existing ten-second polling budget. Test-local timeout alignment passed two uncached 4721/4721 CLI runs and independent review with zero findings; push PR #254 for GitHub CI revalidation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

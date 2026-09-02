@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: c916812e70248ac64e4a9db300f606de06c841c0
+oat_current_task: null
+oat_last_commit: 736a73d289c95e270c1c36df1f2125b0772d5d81
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -14,7 +14,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: final p04 basis approved after closeout
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -114,7 +114,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/254' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-31T03:49:42.166Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T12:01:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T12:15:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -124,16 +124,16 @@ oat_project_recap:
 
 # Project State: retire-archived-synced-project
 
-**Status:** Revision in progress for PR #254 CI timeout
+**Status:** Revision complete; PR #254 CI revalidation pending
 **Started:** 2026-08-31
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 ## Current Phase
 
-Implementation revision — CI run `33587438304` timed out in the killed
-gate-run marker coverage after 4,720/4,721 CLI tests passed. Revision task
-`prev1-t01` will reproduce and stabilize that test without weakening its
-lifecycle or clean-repository assertions. PR #254 remains open.
+PR-open revision — `prev1-t01` aligned the killed gate-marker test's timeout
+with its existing polling budget without changing production behavior or
+weakening assertions. Independent review passed with zero findings. PR #254
+remains open pending GitHub CI revalidation.
 
 ## Artifacts
 
@@ -141,7 +141,7 @@ lifecycle or clean-repository assertions. PR #254 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (revision in progress; 14/15 tasks complete)
+- **Implementation:** `implementation.md` (revision complete; 15/15 tasks complete)
 
 ## Progress
 
@@ -195,7 +195,8 @@ lifecycle or clean-repository assertions. PR #254 remains open.
 - ✓ Implementation marked complete
 - ✓ Bugbot and release dry-run passed on PR #254
 - ✗ CI run `33587438304` timed out in killed gate-marker coverage
-- ⧗ Revision task `prev1-t01` pending
+- ✓ Revision task `prev1-t01` completed at `736a73d28`
+- ✓ p-rev1 independent review passed with zero findings
 - ✓ PR #254 remote review converted one Medium null-recap finding to `p04-t06`
 - ✓ `p04-t06` completed at `9c1feafb8`; focused regression passed 15/15
 - ✓ Fresh `p04-t06` review passed with zero findings
@@ -224,5 +225,5 @@ None.
 
 ## Next Milestone
 
-Execute `prev1-t01`, re-run the affected and forced workspace tests, then push
-the correction to PR #254 and revalidate CI.
+Push revision `p-rev1` to PR #254 and revalidate GitHub CI. Run
+`oat-project-revise` for more feedback or `oat-project-complete` when approved.
