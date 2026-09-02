@@ -113,10 +113,12 @@ child, so a configured selection and an observed identity stay independently
 readable.
 
 Codex reports child lineage, role, model, effort, and service tier through its
-session and turn metadata. Claude reports model, effort, and service tier from
-its on-disk transcript metadata, and lineage only as root-or-child: it emits no
-depth field, so a subagent turn is recorded as `depth-unknown` rather than given
-an invented depth. Cursor exposes no metadata channel and stays explicitly
+session and turn metadata. Claude reports role, model, effort, and service tier
+from its on-disk transcript metadata, and lineage only as root-or-child: it
+emits no depth field, so a subagent turn is recorded as `depth-unknown` rather
+than given an invented depth. Claude's role comes from the same class of
+bounded role identifier Codex records, and is reported only on the subagent
+turns that carry one. Cursor exposes no metadata channel and stays explicitly
 `not-reported`.
 
 `not-exposed` is reserved for an axis a provider genuinely does not have. It is

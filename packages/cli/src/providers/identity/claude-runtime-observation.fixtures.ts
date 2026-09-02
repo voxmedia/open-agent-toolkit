@@ -13,16 +13,23 @@
  * fixtures still demonstrate that unread keys are dropped. `message` is reduced
  * to the two explicit key paths the parser reaches — `message.model` and
  * `message.usage.service_tier`. Dropped outright: `message.content` (the
- * conversation), `cwd`, `gitBranch`, `slug`, `agentId`, and every `attribution*`
- * field.
+ * conversation), `cwd`, `gitBranch`, `slug`, `agentId`, and the remaining
+ * `attribution*` fields.
  *
  * Structural facts these fixtures preserve, each load-bearing:
  * - `effort` is a real top-level field on an assistant entry. Claude does
  *   expose a selectable effort axis, so reporting `not-exposed` for it was
  *   wrong; observed values across 124,804 entries are `high`, `xhigh`,
  *   `medium`, and `max`.
+ * - `attributionAgent` is the role identifier, and it is exactly the signal
+ *   Codex carries as `agent_role`. It appears on subagent turns only: present
+ *   on 114,600 of 114,657 sidechain entries and on none of the 26,497
+ *   main-session entries. `SIDECHAIN_TRANSCRIPT` therefore carries it and
+ *   `MAIN_SESSION_TRANSCRIPT` does not, which is the real distinction rather
+ *   than a constructed one.
  * - `isSidechain` distinguishes a main session from a subagent turn. It is the
- *   only lineage signal present, and it is binary.
+ *   only lineage signal present, and it is binary. Role names are not a depth
+ *   signal and are never read as one.
  * - `sessionId` is constant within a transcript; every one of the 2,655 local
  *   transcripts that carries one carries exactly one.
  * - Model and service tier live only under `message`, never at the top level.
@@ -87,6 +94,7 @@ export const SIDECHAIN_TRANSCRIPT: readonly unknown[] = [
     type: 'assistant',
     isSidechain: true,
     effort: 'high',
+    attributionAgent: 'general-purpose',
     sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
     requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
     uuid: '0f106449-eeb9-475c-8186-d70b9d14a82c',
@@ -104,6 +112,7 @@ export const SIDECHAIN_TRANSCRIPT: readonly unknown[] = [
     type: 'assistant',
     isSidechain: true,
     effort: 'high',
+    attributionAgent: 'general-purpose',
     sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
     requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
     uuid: '24c36d1b-c532-447f-9981-8f2b0d0988f8',
@@ -121,6 +130,7 @@ export const SIDECHAIN_TRANSCRIPT: readonly unknown[] = [
     type: 'assistant',
     isSidechain: true,
     effort: 'high',
+    attributionAgent: 'general-purpose',
     sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
     requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
     uuid: 'd3453335-a00b-4716-95bf-6a7574903336',

@@ -32,11 +32,19 @@ import {
  * Entry-level keys the parser reads from an `assistant` entry. `message` is
  * handled separately by explicit path and is deliberately absent from this
  * list.
+ *
+ * `attributionAgent` is the role identifier and is the same class of signal
+ * Codex carries as `agent_role`: a bounded enum-like name, not conversation
+ * content. Across 2,725 captured transcripts it takes 8 distinct values, all
+ * of which pass the shared identifier validator, with a longest value of 21
+ * characters against the 256 bound. It appears on subagent turns only, so a
+ * main session reports no role rather than a synthesized one.
  */
 const CLAUDE_ASSISTANT_KEYS = [
   'type',
   'isSidechain',
   'effort',
+  'attributionAgent',
   'sessionId',
   'session_id',
   'requestId',
@@ -78,6 +86,7 @@ export interface ClaudeRuntimeMetadata {
    * each other. A depth number is therefore not derivable and is not invented.
    */
   childLineage: string | null;
+  /** Observed role, from `attributionAgent`; `null` when the run reports none. */
   role: string | null;
   model: string | null;
   effort: string | null;
@@ -211,7 +220,10 @@ function assistantTurn(entry: Record<string, unknown>): ClaudeTurn {
     model: observedValue(model),
     serviceTier: observedValue(serviceTier),
     requestId: null,
-    role: null,
+    // Role only. It never contributes to lineage: `isSidechain` is the sole
+    // lineage signal, and inferring depth from a role name would be exactly
+    // the invention this parser was rewritten to remove.
+    role: observedValue(entry.attributionAgent),
   };
 }
 

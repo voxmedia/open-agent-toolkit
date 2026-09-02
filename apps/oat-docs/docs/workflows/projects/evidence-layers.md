@@ -113,11 +113,11 @@ invocation. The result is stored under the record's `oat.runtimeObservation`.
 
 The channel is metadata-only and capability-gated:
 
-| Provider | Observed axes                                         | Notes                                                                                               |
-| -------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Codex    | child lineage, role, model, effort, service tier      | Read from `session_meta` and `turn_context` metadata entries.                                       |
-| Claude   | model, effort, service tier; lineage is root-or-child | Read from on-disk `assistant` entry metadata plus `message.model` and `message.usage.service_tier`. |
-| Cursor   | none                                                  | Explicitly `not-reported`; requested values are never copied into it.                               |
+| Provider | Observed axes                                               | Notes                                                                                                                                             |
+| -------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex    | child lineage, role, model, effort, service tier            | Read from `session_meta` and `turn_context` metadata entries.                                                                                     |
+| Claude   | role, model, effort, service tier; lineage is root-or-child | Read from on-disk `assistant` entry metadata (`attributionAgent`, `effort`, `isSidechain`) plus `message.model` and `message.usage.service_tier`. |
+| Cursor   | none                                                        | Explicitly `not-reported`; requested values are never copied into it.                                                                             |
 
 Parsers classify entries by their `type` discriminator alone, so a conversation
 entry's body is never read, and only bounded provider identifiers are extracted.

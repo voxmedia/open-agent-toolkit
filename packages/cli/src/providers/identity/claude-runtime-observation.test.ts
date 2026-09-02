@@ -32,6 +32,7 @@ function assistantEntry(
     type: 'assistant',
     isSidechain: true,
     effort: 'high',
+    attributionAgent: 'oat-phase-implementer',
     sessionId: '19c78382-cceb-45ab-bf24-bb8aa284d96b',
     requestId: 'req_011CdSgeEdPwRsUpVTCihKmV',
     uuid: '0f106449-eeb9-475c-8186-d70b9d14a82c',
@@ -79,6 +80,8 @@ function conversationEntry(type: string) {
 
 describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
   it('reads a real main-session transcript as root', () => {
+    // A main session carries no attributionAgent, so role stays unreported
+    // rather than being filled in from anywhere.
     expect(extractClaudeRuntimeMetadata(MAIN_SESSION_TRANSCRIPT)).toEqual({
       childLineage: 'root',
       role: null,
@@ -96,6 +99,7 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
     // depth is reported unknown rather than invented.
     expect(extractClaudeRuntimeMetadata(SIDECHAIN_TRANSCRIPT)).toMatchObject({
       childLineage: 'depth-unknown',
+      role: 'general-purpose',
       model: 'claude-opus-5',
       effort: 'high',
       serviceTier: 'standard',
@@ -120,11 +124,61 @@ describe('extractClaudeRuntimeMetadata against captured transcripts', () => {
     ).not.toContain('not-exposed');
   });
 
+  it('reports the role from attribution metadata, or nothing when absent', () => {
+    expect(extractClaudeRuntimeMetadata([assistantEntry()])?.role).toBe(
+      'oat-phase-implementer',
+    );
+    // Every value observed across the corpus, including the capitalized one.
+    for (const role of [
+      'workflow-subagent',
+      'general-purpose',
+      'oat-phase-implementer',
+      'oat-reviewer',
+      'Explore',
+      'claude',
+      'claude-code-guide',
+      'fork',
+    ]) {
+      expect(
+        extractClaudeRuntimeMetadata([
+          assistantEntry({ attributionAgent: role }),
+        ])?.role,
+        role,
+      ).toBe(role);
+    }
+    // Absent means unreported, never filled in — the same rule as `effort`.
+    expect(
+      extractClaudeRuntimeMetadata([
+        assistantEntry({ attributionAgent: undefined }),
+      ])?.role,
+    ).toBeNull();
+    // A role name is not a depth signal and must not become one.
+    expect(
+      extractClaudeRuntimeMetadata([
+        assistantEntry({ attributionAgent: 'oat-reviewer' }),
+      ])?.childLineage,
+    ).toBe('depth-unknown');
+  });
+
+  it('drops a role that is not a provider identifier', () => {
+    for (const role of ['a role with spaces', '/Users/x', 'a'.repeat(300)]) {
+      expect(
+        extractClaudeRuntimeMetadata([
+          assistantEntry({ attributionAgent: role }),
+        ])?.role,
+        role,
+      ).toBeNull();
+    }
+  });
+
   it('never reads message.content while reaching model and service tier', () => {
     expect(extractClaudeRuntimeMetadata([contentTrapEntry()])).toMatchObject({
       model: 'claude-opus-5',
       serviceTier: 'standard',
       effort: 'high',
+      // The new entry-level key does not change the guarantee: reaching it
+      // still never touches `message.content`.
+      role: 'oat-phase-implementer',
     });
   });
 
@@ -198,6 +252,7 @@ describe('projectClaudeMetadataEntries', () => {
       model: 'claude-opus-5',
       usage: { service_tier: 'standard' },
     });
+    expect(projected.attributionAgent).toBe('oat-phase-implementer');
     // Unread entry-level keys are dropped, not carried through.
     expect(projected).not.toHaveProperty('uuid');
     expect(projected).not.toHaveProperty('parentUuid');
@@ -223,13 +278,14 @@ describe('parseClaudeRuntimeObservation against captured transcripts', () => {
       status: 'reported',
       provider: 'claude',
       childLineage: 'depth-unknown',
+      role: 'general-purpose',
       model: 'claude-opus-5',
       effort: 'high',
       serviceTier: 'standard',
       source: CLAUDE_OBSERVATION_SOURCE,
       observedAt: OBSERVED_AT,
-      match: 'matching',
-      comparedAxes: ['model', 'effort', 'serviceTier'],
+      match: 'mismatching',
+      comparedAxes: ['role', 'model', 'effort', 'serviceTier'],
     });
   });
 
