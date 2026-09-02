@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev6-t01
-oat_last_commit: 1f6fb25ee7fc6898bc0e008f628a7a39a7b10859
+oat_current_task: null
+oat_last_commit: e8a53e5aeb68e64b62db4bef7d03db73df95da5d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T19:02:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T19:16:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,18 +94,18 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 6 terminal publication fix ready
+**Status:** Revision 6 implemented; configured terminal gate pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
 ## Current Phase
 
-Revision 5 closes its source finding and preserves the chosen bounded
-withdraw-on-failure policy, but the replacement final review found a Critical
-root-replacement cleanup race and an Important canonical-byte continuity race.
-The user authorized one bounded Revision 6 task and selected the configured
-cross-family exit gate as the sole independent terminal review, with no further
-manual final-review loop. PR #248 remains open.
+All 29 implementation tasks are complete. Revision 6 makes withdrawal
+root-identity safe and binds promotion to the manifest, claim ledger, and
+validated referenced artifact bytes retained in `ValidatedRun`. Both direct
+review controls now fail closed, with no generation staging, lock, state
+machine, or persisted artifact added. The configured cross-family exit gate is
+the sole remaining independent terminal review. PR #248 remains open.
 
 ## Artifacts
 
@@ -113,7 +113,7 @@ manual final-review loop. PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (28/29 tasks complete; Revision 6 ready)
+- **Implementation:** `implementation.md` (29/29 tasks complete; configured gate pending)
 
 ## Progress
 
@@ -221,8 +221,9 @@ manual final-review loop. PR #248 remains open.
   package validation gates pass
 - ! Replacement final review found one Critical destructive cleanup race and
   one Important successful-promotion continuity race
-- ⧗ Revision 6 task `prev6-t01` ready; the configured cross-family exit gate
-  is the only authorized terminal review after implementation
+- ✓ Revision 6 task `prev6-t01` closes both publication races in one bounded
+  seven-file commit with 103/103 focused and 177/177 recon/dispatch tests
+- ⧗ Configured cross-family exit gate is the sole authorized terminal review
 
 ## Blockers
 
@@ -230,5 +231,5 @@ None.
 
 ## Next Milestone
 
-Implement Revision 6, then run the configured cross-family exit gate as the
-sole terminal review before the approval-aware closeout sequence.
+Run the configured cross-family exit gate as the sole terminal review, then
+complete the approval-aware closeout sequence.

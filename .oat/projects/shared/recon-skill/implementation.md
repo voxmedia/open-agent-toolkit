@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: prev6-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -18,21 +18,21 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ## Progress Overview
 
-| Phase        | Status | Tasks | Completed |
-| ------------ | ------ | ----- | --------- |
-| Phase 1      | passed | 1     | 1/1       |
-| Phase 2      | passed | 4     | 4/4       |
-| Phase 3      | passed | 4     | 4/4       |
-| Phase 4      | passed | 2     | 2/2       |
-| Phase p-rev1 | passed | 2     | 2/2       |
-| Phase p-rev2 | passed | 3     | 3/3       |
-| Phase p-rev3 | passed | 1     | 1/1       |
-| Phase 5      | passed | 6     | 6/6       |
-| Phase p-rev4 | passed | 4     | 4/4       |
-| Phase p-rev5 | passed | 1     | 1/1       |
-| Phase p-rev6 | active | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 4     | 4/4       |
+| Phase 3      | passed         | 4     | 4/4       |
+| Phase 4      | passed         | 2     | 2/2       |
+| Phase p-rev1 | passed         | 2     | 2/2       |
+| Phase p-rev2 | passed         | 3     | 3/3       |
+| Phase p-rev3 | passed         | 1     | 1/1       |
+| Phase 5      | passed         | 6     | 6/6       |
+| Phase p-rev4 | passed         | 4     | 4/4       |
+| Phase p-rev5 | passed         | 1     | 1/1       |
+| Phase p-rev6 | review_pending | 1     | 1/1       |
 
-**Total:** 28/29 tasks completed
+**Total:** 29/29 tasks completed
 
 ## Task Status
 
@@ -116,9 +116,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev6: Revision 6 — Bind Publication Cleanup and Canonical Bytes
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev6-t01 | pending | —      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev6-t01 | completed | `e8a53e5ae` |
 
 ## Remote Review Received
 
@@ -1142,6 +1142,28 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Constraint: one replacement launch only, same high reviewer target and the
   current clean implementation basis; no review threshold or gate waiver
 
+#### Replacement final review and p-rev6 implementation
+
+- Review request ID: `recon-skill-final-review-prev5-replacement-20260902`
+- Review target: `oat-reviewer-gpt-5-6-sol-high`
+- Reviewed basis: `49aeb5075971180b48c131bbd2b21b82d455bfc9..9203eec1226bf8a68cdff61d5acbe5b439652b8e`
+- Review artifact: `reviews/archived/final-review-2026-09-02T185450Z.md`
+- Review verdict: fixes required — 1 Critical root-replacement cleanup race,
+  1 Important successful-promotion canonical-byte continuity race
+- Terminal route: user-authorized bounded Revision 6 followed by the configured
+  cross-family exit gate only; no additional manual final-review launch
+- Implementation request ID: `recon-skill-prev6-implementation-20260902`
+- Implementation target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Phase base/head: `e37eda51e715b1bfa4dce84dc2aee0102c6319b2` /
+  `e8a53e5aeb68e64b62db4bef7d03db73df95da5d`
+- Tasks: 1/1 completed in one seven-file task commit; recovery attempts: 0/10
+- Verification: pre-fix direct controls reproduced both races; post-fix
+  103/103 focused and 177/177 recon/dispatch tests pass, along with the complete
+  repository, release, skill, lint, format, and docs gate sequence
+- Minimality: byte digests and identity-safe cleanup only; no generation
+  staging, locks, state machine, transaction abstraction, or persisted artifact
+- Next: run the configured cross-family exit gate as the sole terminal review
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -1912,7 +1934,7 @@ PR findings with legal reconciliation, atomic renderer promotion, honest
 provisional genesis, portable same-scope dependency reads, review-evidence
 incorporation, and complete blind-input string scanning. One bounded recovery
 commit aligns the bundled dependency contract test with the shipped skill.
-All 28 planned tasks are complete. Revision 4 binds incorporated review evidence
+All 29 planned tasks are complete. Revision 4 binds incorporated review evidence
 to exact claims through final validation, enforces terminal receipt chronology,
 binds packet promotion to the rendered file identity and digest, and closes the
 original destructive-prevalidation defect. Its independent review closed those
@@ -1920,7 +1942,10 @@ four source findings, then exposed one adjacent split-generation publication
 case. Revision 5 resolves that case with the deliberately smaller policy chosen
 by the user: validation or promotion failure withdraws `packet.md`, leaves
 canonical diagnostics available, and does not add immutable generation staging
-or another state machine. The branch is rebased onto current main and the five
-public packages validate at `0.2.52`. Closeout remains in progress until the
-authorized last final review, configured exit gate, and approval-aware sequence
-complete on this rebased basis.
+or another state machine. Revision 6 closes the two adjacent publication races:
+withdrawal cannot delete a replacement root, and promotion is bound to the
+validated canonical byte generation before and after the Markdown rename. It
+adds only retained digests and identity-safe cleanup. The branch is rebased onto
+current main and the five public packages validate at `0.2.52`. Closeout remains
+in progress until the configured cross-family gate—the selected sole terminal
+review—and approval-aware sequence complete on this basis.
