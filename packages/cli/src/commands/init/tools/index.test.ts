@@ -42,6 +42,7 @@ interface HarnessOptions {
   projectRootUnavailable?: boolean;
   useLifecycle?: boolean;
   declaredPlacement?: Partial<Record<string, 'project' | 'user' | 'both'>>;
+  guidanceResponse?: boolean;
   toolsByScope?: Partial<
     Record<
       'project' | 'user',
@@ -154,6 +155,7 @@ function createHarness(options: HarnessOptions = {}) {
       return next === undefined ? (choices[0]?.value ?? null) : next;
     },
   );
+  const confirmAction = vi.fn(async () => options.guidanceResponse ?? false);
 
   const installCore = vi.fn(async () => ({
     copiedSkills: ['oat-docs', 'oat-doctor'],
@@ -412,6 +414,7 @@ function createHarness(options: HarnessOptions = {}) {
     scanTools,
     selectManyWithAbort,
     selectWithAbort,
+    confirmAction,
     installCore,
     installDocs,
     installIdeas,
@@ -440,6 +443,7 @@ function createHarness(options: HarnessOptions = {}) {
     command,
     selectManyWithAbort,
     selectWithAbort,
+    confirmAction,
     installCore,
     installDocs,
     installIdeas,
@@ -1351,26 +1355,35 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('writes the tool-pack AGENTS section without claiming PJM adoption', async () => {
+  it('does not write project guidance without an explicit accepted choice', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    // Pack placement owns the tool-pack inventory section only. The
-    // project-management and decisions sections are adoption-owned and are
-    // written by `oat pjm init` (`initializeRepoReference`).
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      1,
-      '/tmp/workspace',
-      'tools',
-      expect.stringContaining('Tool Packs'),
-    );
-    const writtenKeys = upsertAgentsMdSection.mock.calls.map((call) => call[1]);
-    expect(writtenKeys).not.toContain('project-management');
-    expect(writtenKeys).not.toContain('decisions');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('prompts once for project guidance and defaults to decline', async () => {
+    const { command, confirmAction, upsertAgentsMdSection } = createHarness({
+      interactive: true,
+      guidanceResponse: false,
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(confirmAction.mock.calls[0]?.[0]).toContain('AGENTS.md');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('rejects conflicting project guidance flags', async () => {
+    const { command } = createHarness({ interactive: false });
+
+    await expect(
+      runCommand(command, ['--project-guidance', '--no-project-guidance']),
+    ).rejects.toThrow('cannot be used together');
   });
 
   it('reconciles shared config from project scope after aggregate install', async () => {
@@ -1394,7 +1407,9 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(scanTools).toHaveBeenCalledTimes(3);
+    // Initial placement, post-install project-config reconciliation, then the
+    // complete project+user evidence refresh used by guidance planning.
+    expect(scanTools).toHaveBeenCalledTimes(5);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({
@@ -1943,17 +1958,18 @@ describe('createInitToolsCommand', () => {
     ]);
   });
 
-  it('logs AGENTS.md tool packs section update', async () => {
-    const { command, capture } = createHarness({ interactive: false });
+  it('prints an actionable non-interactive guidance notice', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+    });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(capture.info.join('\n')).toContain(
-      'AGENTS.md tool packs section updated.',
-    );
+    expect(capture.info.join('\n')).toContain('--project-guidance');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
-  it('does not log AGENTS.md update when section is unchanged', async () => {
+  it('does not report an AGENTS.md update when guidance was not requested', async () => {
     const { command, capture, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
@@ -1962,20 +1978,10 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(capture.info.join('\n')).not.toContain('AGENTS.md');
-  });
-
-  it('AGENTS.md section marks user-scoped packs when scope is user', async () => {
-    const { command, upsertAgentsMdSection } = createHarness({
-      interactive: false,
-    });
-
-    await runCommand(command, [], ['--scope', 'user']);
-
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
-    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
-    expect(body).toContain('_(user scope)_');
-    expect(body).toContain('`~/.agents/skills/`');
+    expect(capture.info.join('\n')).not.toContain(
+      'AGENTS.md tool packs section updated.',
+    );
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
   it('keeps user-only core installs out of repository AGENTS guidance', async () => {

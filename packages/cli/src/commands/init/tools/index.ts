@@ -16,6 +16,7 @@ import {
 } from '@commands/shared/agents-md';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
+  confirmAction,
   type MultiSelectChoice,
   type PromptContext,
   type SelectChoice,
@@ -98,6 +99,13 @@ import {
   buildPackInstallStateMapFromEvidence,
   type PackInstallState,
 } from './install-state';
+import {
+  commandProjectGuidanceChoice,
+  type PlanProjectGuidanceInput,
+  planProjectGuidance,
+  type ProjectGuidancePack,
+  withProjectGuidanceOptions,
+} from './project-guidance';
 import { createInitToolsProjectManagementCommand } from './project-management';
 import {
   installProjectManagement as defaultInstallProjectManagement,
@@ -157,6 +165,8 @@ export interface InitToolsDependencies {
     choices: SelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T | null>;
+  confirmAction: PlanProjectGuidanceInput['confirmAction'];
+  planProjectGuidance: typeof planProjectGuidance;
   installCore: (options: InstallCoreOptions) => Promise<InstallCoreResult>;
   installDocs: (options: InstallDocsOptions) => Promise<InstallDocsResult>;
   installIdeas: (options: InstallIdeasOptions) => Promise<InstallIdeasResult>;
@@ -257,6 +267,8 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   scanTools,
   selectManyWithAbort,
   selectWithAbort,
+  confirmAction,
+  planProjectGuidance,
   installCore: defaultInstallCore,
   installDocs: defaultInstallDocs,
   installIdeas: defaultInstallIdeas,
@@ -869,76 +881,17 @@ async function updateOutdatedSkills(
   return updatedNames;
 }
 
-const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
-  core: 'Diagnostics and documentation (oat-doctor, oat-docs)',
-  docs: 'Documentation and instruction governance workflows',
-  workflows:
-    'Project lifecycle (create, discover, plan, implement, review, complete)',
-  ideas: 'Idea capture and refinement',
-  'project-management':
-    'Local backlog, roadmap, and reference doc management (oat-pjm-* skills)',
-  utility:
-    'Standalone utilities (skill authoring, maintainability review, code reviews)',
-  research: 'Research, analysis, verification, and synthesis',
-  brainstorm: 'Always-on brainstorming entry point with visual companion',
-};
-
 interface PackScopeInfo {
   pack: ToolPack;
   scope: PackInstallTarget;
 }
 
-export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
-  const userPacks = packs.filter(
-    (p) => p.scope === 'user' || p.scope === 'both',
-  );
-  const hasWorkflows = packs.some((p) => p.pack === 'workflows');
-
-  const lines = [
-    '## Tool Packs',
-    '',
-    '- **Skills directory:** `.agents/skills/`',
-    '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
-    '- **Refresh provider views:** `oat sync --scope all`',
-    '- **Update skills to latest versions:** `oat tools update`',
-  ];
-
-  if (userPacks.length > 0) {
-    const userPackNames = userPacks.map((p) => p.pack).join(', ');
-    lines.push(
-      `- **User-scoped skills:** \`~/.agents/skills/\` (${userPackNames} packs installed at user scope)`,
-    );
-  }
-
-  lines.push('', '### Installed Packs', '');
-
-  for (const { pack, scope } of packs) {
-    const suffix =
-      scope === 'user'
-        ? ' _(user scope)_'
-        : scope === 'both'
-          ? ' _(project + user scope)_'
-          : '';
-    lines.push(`- **${pack}** — ${PACK_DESCRIPTIONS[pack]}${suffix}`);
-  }
-
-  if (hasWorkflows) {
-    lines.push(
-      '',
-      '### Workflow Execution Continuation',
-      '',
-      '- This guidance applies only to OAT project lifecycle execution, such as `oat-project-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.',
-      '- When executing an OAT project implementation or OAT project review workflow, do not stop at task boundaries, phase boundaries, or other clean checkpoints unless the configured HiLL checkpoint has been reached, a real blocker exists, or explicit user input is required.',
-      '- Status summaries, completed bookkeeping, and "clean boundary" pauses are not valid stop reasons. After updating tracking artifacts, continue execution until an allowed stop condition applies.',
-    );
-  }
-
-  return lines.join('\n');
-}
+export { buildToolPacksSectionBody } from './project-guidance';
 
 export async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
+  explicitProjectGuidance?: boolean,
 ): Promise<ToolPack[]> {
   lastRunInitToolsMetadata = null;
   let attemptedPacks: ToolPack[] = [];
@@ -1428,31 +1381,6 @@ export async function runInitTools(
       pack,
       scope: packScopes[pack],
     }));
-    const adoptsProject = packScopeInfo.some(({ scope }) => scope !== 'user');
-    const sectionBody = buildToolPacksSectionBody(packScopeInfo);
-    const sectionResult = adoptsProject
-      ? await dependencies.upsertAgentsMdSection(
-          scopeRoot('project'),
-          'tools',
-          sectionBody,
-        )
-      : { action: 'no-change' as const };
-    // Pack placement never writes the project-management or decisions AGENTS
-    // sections. Those belong to explicit repository adoption (`oat pjm init`,
-    // via `initializeRepoReference`), which owns the `pjm.initialized` marker.
-    if (adoptsProject) {
-      await dependencies.removeAgentsMdSection(
-        scopeRoot('project'),
-        'workflows',
-      );
-    }
-
-    if (!context.json && sectionResult.action !== 'no-change') {
-      context.logger.info(
-        `AGENTS.md tool packs section ${sectionResult.action}.`,
-      );
-    }
-
     const affectedScopesList = [...affectedScopes];
     const appliedScopes = [
       ...new Set(
@@ -1472,6 +1400,30 @@ export async function runInitTools(
             )
           ).adoptedPacks
         : [];
+    const finalPackStates = await loadInstalledPackStates(
+      projectRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
+    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
+      const scope = finalPackStates[pack].location;
+      return scope === 'not-installed'
+        ? []
+        : [{ pack, scope } satisfies ProjectGuidancePack];
+    });
+    const guidancePlan = await dependencies.planProjectGuidance({
+      repoRoot: projectRoot,
+      packs: realizedPacks,
+      explicitChoice: explicitProjectGuidance,
+      interactive: context.interactive,
+      confirmAction: dependencies.confirmAction,
+    });
+    if (!context.json && guidancePlan.action === 'not-requested') {
+      context.logger.info(guidancePlan.reason);
+    } else if (!context.json && guidancePlan.action === 'blocked') {
+      context.logger.warn(guidancePlan.reason);
+    }
     if (dependencies.syncAfterInstall) {
       const sync = await dependencies.syncAfterInstall(
         affectedScopesList,
@@ -1563,8 +1515,13 @@ export async function runInitTools(
 
 export async function runInitToolsWithDefaults(
   context: CommandContext,
+  explicitProjectGuidance?: boolean,
 ): Promise<ToolPack[]> {
-  return runInitTools(context, { ...DEFAULT_DEPENDENCIES });
+  return runInitTools(
+    context,
+    { ...DEFAULT_DEPENDENCIES },
+    explicitProjectGuidance,
+  );
 }
 
 /**
@@ -1937,8 +1894,10 @@ export function createInitToolsCommand(
     }
   }
 
-  const command = new Command('tools').description(
-    'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
+  const command = withProjectGuidanceOptions(
+    new Command('tools').description(
+      'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
+    ),
   );
   for (const packCommand of packCommands) {
     command.addCommand(packCommand);
@@ -1947,7 +1906,11 @@ export function createInitToolsCommand(
     const context = dependencies.buildCommandContext(
       readGlobalOptions(actionCommand),
     );
-    const selectedPacks = await runInitTools(context, dependencies);
+    const selectedPacks = await runInitTools(
+      context,
+      dependencies,
+      commandProjectGuidanceChoice(actionCommand),
+    );
     appliedScopesByCommand.set(
       actionCommand,
       lastRunInitToolsMetadata?.appliedScopes ?? [],

@@ -2004,6 +2004,40 @@ config_file = "agents/reviewer.toml"
       expect(runToolPacks).toHaveBeenCalledTimes(1);
     });
 
+    it('propagates explicit project guidance into guided tool setup', async () => {
+      const { command, runToolPacks } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup', '--project-guidance'],
+      });
+
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({ scopeSelection: 'defaults' }),
+        true,
+      );
+    });
+
+    it('rejects conflicting project guidance flags', async () => {
+      const { command } = createHarness({ interactive: false });
+
+      await expect(
+        runInitCommand(command, {
+          globalArgs: ['--scope', 'project'],
+          commandArgs: [
+            '--setup',
+            '--project-guidance',
+            '--no-project-guidance',
+          ],
+        }),
+      ).rejects.toThrow('cannot be used together');
+    });
+
     it('guided setup defers the per-pack scope gate to the tools flow without prompting upfront', async () => {
       const { command, runToolPacks, selectWithAbort } = createHarness({
         interactive: true,

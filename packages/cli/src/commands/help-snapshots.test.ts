@@ -173,22 +173,24 @@ describe('help output snapshots', () => {
       Initialize canonical directories, manifest, and tool packs
 
       Options:
-        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
-                         default: "all")
-        --hook           Install optional pre-commit hook
-        --no-hook        Skip optional pre-commit hook install
-        --setup          Run guided setup after initialization
-        -h, --help       display help for command
+        --scope <scope>        Limit execution scope (choices: "project", "user",
+                               "all", default: "all")
+        --project-guidance     Create or refresh repository AGENTS.md tool guidance
+        --no-project-guidance  Decline repository AGENTS.md tool guidance
+        --hook                 Install optional pre-commit hook
+        --no-hook              Skip optional pre-commit hook install
+        --setup                Run guided setup after initialization
+        -h, --help             display help for command
 
       Global Options:
-        -V, --version    output the version number
-        --json           Output a single JSON document
-        --verbose        Enable verbose debug output
-        --cwd <path>     Override working directory
+        -V, --version          output the version number
+        --json                 Output a single JSON document
+        --verbose              Enable verbose debug output
+        --cwd <path>           Override working directory
 
       Commands:
-        tools            Install OAT tool packs (core, ideas, docs, workflows,
-                         utility, project-management, research, brainstorm)
+        tools [options]        Install OAT tool packs (core, ideas, docs, workflows,
+                               utility, project-management, research, brainstorm)
       "
     `);
   });
@@ -1370,6 +1372,9 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
+        --project-guidance            Create or refresh repository AGENTS.md tool
+                                      guidance
+        --no-project-guidance         Decline repository AGENTS.md tool guidance
         --scope <scope>               Limit execution scope (choices: "project",
                                       "user", "all", default: "all")
         --no-sync                     Skip auto-sync after install

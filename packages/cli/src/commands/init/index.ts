@@ -123,6 +123,10 @@ import {
   createInitToolsCommand,
   runInitToolsWithDefaults,
 } from './tools';
+import {
+  commandProjectGuidanceChoice,
+  withProjectGuidanceOptions,
+} from './tools/project-guidance';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -261,8 +265,12 @@ interface InitDependencies {
   runGuidedSetup: (
     context: CommandContext,
     dependencies: InitDependencies,
+    explicitProjectGuidance?: boolean,
   ) => Promise<void>;
-  runToolPacks: (context: CommandContext) => Promise<ToolPack[]>;
+  runToolPacks: (
+    context: CommandContext,
+    explicitProjectGuidance?: boolean,
+  ) => Promise<ToolPack[]>;
   runProviderSync: (projectRoot: string) => Promise<void>;
 }
 
@@ -695,6 +703,7 @@ async function promptForManualDocsConfig(
 async function runGuidedSetupImpl(
   context: CommandContext,
   dependencies: InitDependencies,
+  explicitProjectGuidance?: boolean,
 ): Promise<void> {
   const projectRoot = await dependencies.resolveScopeRoot('project', context);
   const adapters = dependencies.getAdapters();
@@ -730,7 +739,10 @@ async function runGuidedSetupImpl(
     ? 'gate'
     : 'defaults';
   const guidedContext: CommandContext = { ...context, scopeSelection };
-  const installedPacks = await dependencies.runToolPacks(guidedContext);
+  const installedPacks =
+    explicitProjectGuidance === undefined
+      ? await dependencies.runToolPacks(guidedContext)
+      : await dependencies.runToolPacks(guidedContext, explicitProjectGuidance);
   const installedPackSet = new Set(installedPacks);
 
   context.logger.info('[2/5] Local paths (gitignored artifacts)…');
@@ -897,6 +909,7 @@ async function runInitCommand(
   dependencies: InitDependencies,
   hookFlag: boolean | undefined,
   setupFlag: boolean | undefined,
+  explicitProjectGuidance?: boolean,
 ): Promise<void> {
   const scopes = resolveConcreteScopes(context.scope);
   let projectRoot: string | null = null;
@@ -1273,7 +1286,15 @@ async function runInitCommand(
       );
     }
     if (shouldRunSetup) {
-      await dependencies.runGuidedSetup(context, dependencies);
+      if (explicitProjectGuidance === undefined) {
+        await dependencies.runGuidedSetup(context, dependencies);
+      } else {
+        await dependencies.runGuidedSetup(
+          context,
+          dependencies,
+          explicitProjectGuidance,
+        );
+      }
     }
   }
 }
@@ -1293,7 +1314,7 @@ export function createInitCommand(
     dependencies.resolveProviderScopeContext = undefined;
   }
 
-  return withScopeOption(new Command('init'))
+  return withProjectGuidanceOptions(withScopeOption(new Command('init')))
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')
@@ -1302,6 +1323,12 @@ export function createInitCommand(
     .action(async (_options, command: Command) => {
       const options = readGlobalOptions(command) as InitOptions;
       const context = dependencies.buildCommandContext(options);
-      await runInitCommand(context, dependencies, options.hook, options.setup);
+      await runInitCommand(
+        context,
+        dependencies,
+        options.hook,
+        options.setup,
+        commandProjectGuidanceChoice(command),
+      );
     });
 }

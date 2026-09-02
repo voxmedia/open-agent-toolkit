@@ -7,6 +7,7 @@ import {
   type InitToolsDependencies,
   wasInstallSyncHandled,
 } from '@commands/init/tools';
+import { withProjectGuidanceOptions } from '@commands/init/tools/project-guidance';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
   readGlobalOptions,
@@ -68,6 +69,7 @@ export function createToolsInstallCommand(
       : createBaseCommand();
   cmd.name('install');
   withScopeOption(cmd);
+  withProjectGuidanceOptions(cmd);
   cmd.option('--no-sync', 'Skip auto-sync after install');
   cmd.hook('preAction', (thisCommand) => {
     syncEnabled = thisCommand.opts().sync !== false;
