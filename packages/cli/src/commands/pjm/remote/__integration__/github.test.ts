@@ -1,3 +1,4 @@
+import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
 import {
   classifyGitHubReadObservation,
@@ -5,6 +6,7 @@ import {
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from '@commands/pjm/remote/providers/github';
+import { assessGitHubPublicationSafety } from '@commands/pjm/remote/providers/github-publication-safety';
 import { describe, expect, it } from 'vitest';
 
 import { GenericHostExecutor, LifecycleHarness } from './lifecycle-harness';
@@ -93,6 +95,20 @@ class GitHubLifecycleFixture {
   }
 
   async publish() {
+    const projection = { title: 'Published title' };
+    const universalSafety = assessOutboundProjectionSafety(projection, {
+      assessedAt: '2026-09-02T12:00:00.000Z',
+    });
+    const publicationSafety = assessGitHubPublicationSafety({
+      visibility: 'public',
+      visibilityEvidenceDigest: 'sha256:visibility',
+      projection,
+      outboundSafety: universalSafety,
+      assessedAt: '2026-09-02T12:00:00.000Z',
+    });
+    if (publicationSafety.verdict !== 'safe') {
+      return { state: 'blocked', publicationSafety };
+    }
     const harness = new LifecycleHarness({
       executor: new GenericHostExecutor({
         classification: 'committed',
@@ -109,7 +125,7 @@ class GitHubLifecycleFixture {
         owner: context.owner,
         repositoryId: context.repositoryId,
       },
-      projection: { title: 'Published title' },
+      projection,
       previewDigest: 'sha256:preview',
       approvalDigest: 'sha256:preview',
       capabilityEvidenceDigest: capability.evidenceDigest,
@@ -119,6 +135,7 @@ class GitHubLifecycleFixture {
       semanticOperation: operation.action?.semanticOperation,
       persistedIntent: operation.action?.intent,
       receipt: { observationDigest: operation.observationDigest },
+      publicationSafety: publicationSafety.verdict,
     };
   }
 
@@ -187,6 +204,7 @@ describe('GitHub remote lifecycle integration', () => {
     });
     expect(await fixture.publish()).toMatchObject({
       state: 'verified',
+      publicationSafety: 'safe',
       semanticOperation: 'update',
       persistedIntent: { fields: { title: 'Published title' } },
       receipt: { observationDigest: 'sha256:github-observation' },
