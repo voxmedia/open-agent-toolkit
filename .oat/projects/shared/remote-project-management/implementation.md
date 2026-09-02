@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | blocked   | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | blocked   | 9     | 9/9       |
-| Phase 6    | pending   | 10    | 0/10      |
-| Phase 7    | pending   | 10    | 0/10      |
-| Phase 8    | pending   | 6     | 0/6       |
-| Revision 1 | blocked   | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | in_progress | 9     | 9/9       |
+| Phase 6    | pending     | 10    | 0/10      |
+| Phase 7    | pending     | 10    | 0/10      |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | blocked     | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
 
 **Total:** 58/84 tasks completed
 
@@ -839,10 +839,10 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** blocked — review round 1 found three Critical and three Important
-defects requiring bounded fix loop 1/3.
+**Status:** in progress — review-fix loop 1 resolved all three Critical and
+three Important round-1 findings; fresh review round 2 is pending.
 **Started:** 2026-09-02
-**Implementation head:** ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+**Implementation head:** ef806735359899afd7b720055a776045ec93dca7
 
 ### Phase Summary
 
@@ -889,8 +889,14 @@ defects requiring bounded fix loop 1/3.
   38/38 and the remote suite at 489/489, and reproduced altered mutation/read
   action acceptance, forged duplicate no-match, generic specialized-operation
   validation, and an unbounded discussion body.
-- Bounded fix loop 1/3 through the original Phase 5 implementer is next. Phase
-  6 has not started.
+- Fix loop 1/3 resumed the original Phase 5 implementer through continuation
+  event `p05-review-fix-1-20260902-eed3fca5b` and committed the four-file fix as
+  `ef806735359899afd7b720055a776045ec93dca7`.
+- Root independently verified the exact four-file boundary, clean diff, and live
+  focused suite at 81/81. The implementer also passed the full remote suite at
+  532/532 plus CLI lint, type-check, format, diff, build, and provider-neutrality
+  checks.
+- Fresh review round 2 is next. Phase 6 has not started.
 
 ---
 
@@ -1520,13 +1526,7 @@ task_commits:
   - 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 1/3
-fix_loops: 0/3
-review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
-review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
-review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
-review_1_reconnaissance: not-attempted
-phase_outcome: review_blocked_fixes_pending
+phase_outcome: implementation_passed_review_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p-rev2 action=implementation
@@ -1774,7 +1774,7 @@ candidates_considered:
   - gpt-5.6-sol/medium
 selected_route: native
 phase_base_head: d5293b5649dbb3dd46a5b14590fb8fc411a0fd16
-phase_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+phase_head: ef806735359899afd7b720055a776045ec93dca7
 task_commits:
   - 2ae26d36c64e54ce577c7bc5c3cd3aead419bbea
   - b1c97664b8b9c5088c61cb31b565231b19e16073
@@ -1787,10 +1787,19 @@ task_commits:
   - ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
 launch_status: accepted
 child_outcome: done
-continuation_events: []
+continuation_events:
+  - p05-review-fix-1-20260902-eed3fca5b
 recovery_usage: 0/10
 pending_attempt: null
-phase_outcome: implementation_passed_review_pending
+review_rounds: 1/3
+fix_loops: 1/3
+review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
+review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
+review_1_reconnaissance: not-attempted
+fix_1_commit: ef806735359899afd7b720055a776045ec93dca7
+fix_1_outcome: done
+phase_outcome: fixes_completed_review_2_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1811,8 +1820,14 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   exact reviewed head was `ab94b6080a37b2b1bcdd80a51c93b5507c746fdd`;
   reconnaissance was not attempted, so no review-orchestration section or
   project-log orchestration entry is required at this boundary.
-- Fix loop 1/3 is pending through the original accepted Phase 5 implementer;
-  Phase 6 did not start.
+- Fix loop 1/3 resumed the original accepted Phase 5 implementer under event
+  `p05-review-fix-1-20260902-eed3fca5b` and committed
+  `ef806735359899afd7b720055a776045ec93dca7` within the exact four-file
+  boundary.
+- The focused suite expanded to 81/81 and passed independently at the root; the
+  full remote suite passed 532/532, and lint, types, format, diff, build, and
+  provider-neutrality checks passed.
+- Review round 2 is pending; Phase 6 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1914,7 +1929,7 @@ Track test execution during implementation.
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 38/38; remote 489/489; checks passed   | 0      | blocked by review round 1  |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 81/81; remote 532/532; checks passed   | 0      | review round 2 pending     |
 
 ## Final Summary (for PR/docs)
 
