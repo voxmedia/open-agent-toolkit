@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev5-t01
-oat_last_commit: a3ecc18369e4d32cc75f6e7574e8c7ba345392cb
+oat_current_task: null
+oat_last_commit: 1f6fb25ee7fc6898bc0e008f628a7a39a7b10859
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T14:34:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T15:05:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,19 +94,20 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 5 publication-policy correction ready
+**Status:** Revision 5 implemented; last final re-review pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
 ## Current Phase
 
-Revision 4 closes its four source findings, but the authorized final re-review
-found one adjacent Important split-generation defect: preserving only
-`packet.md` can leave it linked to canonical artifacts from a rejected
-replacement. The user selected the bounded fail-closed policy for Revision 5:
-withdraw the consumer entry point on validation or promotion failure, without
-adding immutable-generation infrastructure, and authorize one last final
-re-review. PR #248 remains open.
+All 28 implementation tasks are complete. Revision 5 implements the selected
+bounded fail-closed policy: invalid candidate validation or renderer promotion
+withdraws `packet.md`, while canonical diagnostics remain available. The branch
+is rebased onto current `origin/main` at
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, and the five lockstep public
+packages are now `0.2.52`, strictly above main's `0.2.51`. One user-authorized
+last final re-review remains before the configured exit gate. PR #248 remains
+open.
 
 ## Artifacts
 
@@ -114,7 +115,7 @@ re-review. PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (27/28 tasks complete; Revision 5 ready)
+- **Implementation:** `implementation.md` (28/28 tasks complete; final re-review pending)
 
 ## Progress
 
@@ -214,8 +215,13 @@ re-review. PR #248 remains open.
   ordered commits with no recovery attempts
 - ✓ Authorized Revision 4 final re-review closed all four source findings
 - ! Re-review found one Important split-generation publication defect
-- ⧗ Revision 5 task `prev5-t01` ready with the user-selected minimal
-  withdraw-on-failure policy
+- ✓ Revision 5 task `prev5-t01` implements the user-selected minimal
+  withdraw-on-failure policy with no generation staging
+- ✓ Branch rebased onto current `origin/main`; additive PJM/reference conflicts
+  preserved both current-main and recon-skill records
+- ✓ Five lockstep public packages bumped to `0.2.52`; release version and
+  package validation gates pass
+- ⧗ One user-authorized last final re-review pending on the rebased head
 
 ## Blockers
 
@@ -223,5 +229,5 @@ None.
 
 ## Next Milestone
 
-Implement Revision 5, run the one user-authorized last final re-review, then
-rerun the configured exit gate and approval-aware closeout sequence.
+Run the one user-authorized last final re-review, then rerun the configured exit
+gate and approval-aware closeout sequence on the rebased implementation basis.

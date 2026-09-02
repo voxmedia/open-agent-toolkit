@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: prev5-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -28,10 +28,10 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev2 | passed         | 3     | 3/3       |
 | Phase p-rev3 | passed         | 1     | 1/1       |
 | Phase 5      | passed         | 6     | 6/6       |
-| Phase p-rev4 | review_pending | 4     | 4/4       |
-| Phase p-rev5 | active         | 1     | 0/1       |
+| Phase p-rev4 | passed         | 4     | 4/4       |
+| Phase p-rev5 | review_pending | 1     | 1/1       |
 
-**Total:** 27/28 tasks completed
+**Total:** 28/28 tasks completed
 
 ## Task Status
 
@@ -109,9 +109,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase p-rev5: Revision 5 — Fail Closed on Split-Generation Publication
 
-| Task      | Status  | Commit |
-| --------- | ------- | ------ |
-| prev5-t01 | pending | —      |
+| Task      | Status    | Commit      |
+| --------- | --------- | ----------- |
+| prev5-t01 | completed | `ff51e593c` |
 
 ## Remote Review Received
 
@@ -154,7 +154,8 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   generation staging to keep v1 bounded and avoid a publication state machine
 - **Cycle override:** the user explicitly authorized one last fresh final
   re-review after Revision 5 despite the standard final-scope review-cycle cap
-- **Next:** implement Revision 5 through `oat-project-implement`
+- **Next:** Revision 5 is implemented on the rebased branch; run the one
+  authorized last final re-review
 
 ## Orchestration Runs
 
@@ -1078,6 +1079,30 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Next: run the one user-authorized fresh whole-project final re-review on the
   exact Revision 4 implementation head
 
+#### Dispatch p-rev5 implementation and current-main reconciliation
+
+- Request ID: `recon-skill-prev5-implementation-20260902`
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Original base/head: `bd280b5cb11f5d07881b7ffec35f345ea35851c7` /
+  `8638b239d2b88e1171569c13c72d54d84f533438`
+- Rebased task commit: `ff51e593c8461849e58200c5e760e5644afd653f`
+- Launch/outcome: accepted / completed with one external-base concern
+- Tasks: 1/1 completed in one task commit; recovery attempts: 0/10
+- Scope: exactly eight declared validator, renderer, test, skill-contract, and
+  design files; no immutable generation or publication state machine added
+- Verification before rebase: 121/121 focused tests, 173/173 recon/dispatch,
+  repository check, type-check, test, build, skill validation, skill bumps,
+  lint, format, release validation, and docs build passed
+- Rebase: current `origin/main` `49aeb5075971180b48c131bbd2b21b82d455bfc9`;
+  four additive generated-record conflicts retained both main and project data
+- Release correction: five lockstep public packages bumped from main's
+  `0.2.51` to `0.2.52`; `release:check-versions` and `release:validate` pass
+- Dispatch: scope=p-rev5 action=implementation role=implementer
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-high
+- Next: fresh repository verification and the one authorized last final review
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -1848,8 +1873,15 @@ PR findings with legal reconciliation, atomic renderer promotion, honest
 provisional genesis, portable same-scope dependency reads, review-evidence
 incorporation, and complete blind-input string scanning. One bounded recovery
 commit aligns the bundled dependency contract test with the shipped skill.
-All 23 planned tasks are complete and repository gates are green. The Phase 5
-review passed the configured Critical/Important threshold while preserving two
-Medium residual risks for the required fresh whole-project final review;
-closeout remains in progress until that review, the configured exit gate, and
-the approval-aware sequence complete on the new implementation basis.
+All 28 planned tasks are complete. Revision 4 binds incorporated review evidence
+to exact claims through final validation, enforces terminal receipt chronology,
+binds packet promotion to the rendered file identity and digest, and closes the
+original destructive-prevalidation defect. Its independent review closed those
+four source findings, then exposed one adjacent split-generation publication
+case. Revision 5 resolves that case with the deliberately smaller policy chosen
+by the user: validation or promotion failure withdraws `packet.md`, leaves
+canonical diagnostics available, and does not add immutable generation staging
+or another state machine. The branch is rebased onto current main and the five
+public packages validate at `0.2.52`. Closeout remains in progress until the
+authorized last final review, configured exit gate, and approval-aware sequence
+complete on this rebased basis.
