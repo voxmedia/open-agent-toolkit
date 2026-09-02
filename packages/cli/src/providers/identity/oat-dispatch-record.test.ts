@@ -74,6 +74,69 @@ const target: ExactTargetRef = {
   selectedRoute: 'native',
 };
 
+function rejectedTrigger() {
+  const blocked = genericRecord({
+    launch_status: 'blocked-before-start',
+    child_outcome: 'not-started',
+  });
+  return augmentDispatchRecord({
+    record: augmentDispatchRecord({
+      record: blocked,
+      event: {
+        kind: 'canonical-role-resolution',
+        requestId: blocked.request_id,
+        source: 'canonical-role-resolver',
+        evidence: roleEvidence,
+      },
+    }),
+    event: {
+      kind: 'pre-start-rejection-attestation',
+      requestId: blocked.request_id,
+      source: 'provider-wrapper',
+      expectedLaunchStatus: 'blocked-before-start',
+      rejection: {
+        code: 'native-role-unavailable',
+        rejectedAt: '2026-09-02T00:00:01.000Z',
+        provesNoChildStarted: true,
+      },
+    },
+  });
+}
+
+function fallbackRecord(overrides: Partial<GenericDispatchRecord> = {}) {
+  return genericRecord({
+    request_id: 'dispatch-fallback-1',
+    role_selector: 'generalPurpose',
+    selection_reason: 'pre-start-rejection',
+    ...overrides,
+  });
+}
+
+function fallbackEvent() {
+  return {
+    kind: 'fallback-link' as const,
+    requestId: 'dispatch-fallback-1',
+    source: 'provider-wrapper' as const,
+    evidence: {
+      status: 'fallback-dispatch' as const,
+      triggerRequestId: 'dispatch-native-1',
+      fallbackRequestId: 'dispatch-fallback-1',
+      trigger: 'pre-start-rejection' as const,
+      fallbackReason: 'Native role rejected before start',
+      kind: 'canonical-instruction-fresh-child' as const,
+      approximation: true as const,
+      preservedTarget: target,
+      rejection: {
+        source: 'provider-wrapper' as const,
+        code: 'native-role-unavailable',
+        rejectedAt: '2026-09-02T00:00:01.000Z',
+        provesNoChildStarted: true as const,
+      },
+      roleInstructions: roleEvidence,
+    },
+  };
+}
+
 describe('augmentDispatchRecord', () => {
   it('adds strict canonical role evidence without changing generic fields', () => {
     const generic = genericRecord();
@@ -129,7 +192,7 @@ describe('augmentDispatchRecord', () => {
           source: 'provider-wrapper',
           expectedLaunchStatus: 'blocked-before-start',
           rejection: {
-            code: 'timeout',
+            code: 'native-role-unavailable',
             rejectedAt: '2026-09-02T00:00:01.000Z',
             provesNoChildStarted: true,
           },
@@ -138,12 +201,182 @@ describe('augmentDispatchRecord', () => {
     ).toThrow(/blocked-before-start/i);
   });
 
-  it('links one fresh exact-target approximation to the rejected request', () => {
+  it.each([
+    ['timeout', /timeout outcome is not a pre-start/i],
+    ['deadline-exceeded', /timeout outcome is not a pre-start/i],
+    ['BLOCKED', /BLOCKED outcome is not a pre-start/i],
+    ['child-blocked', /BLOCKED outcome is not a pre-start/i],
+    ['contract-refusal', /refusal outcome is not a pre-start/i],
+    ['child-refused', /refusal outcome is not a pre-start/i],
+    ['interruption', /interruption outcome is not a pre-start/i],
+    ['run-cancelled', /interruption outcome is not a pre-start/i],
+    ['invalid-run-abort', /interruption outcome is not a pre-start/i],
+    ['runtime-mismatch', /runtime mismatch outcome is not a pre-start/i],
+    ['missing-telemetry', /missing telemetry outcome is not a pre-start/i],
+    ['malformed-output', /malformed output outcome is not a pre-start/i],
+    ['post-acceptance-failure', /post-acceptance outcome is not a pre-start/i],
+  ])('never accepts %s as a pre-start rejection', (code, message) => {
     const blocked = genericRecord({
       launch_status: 'blocked-before-start',
       child_outcome: 'not-started',
     });
-    const trigger = augmentDispatchRecord({
+    expect(() =>
+      augmentDispatchRecord({
+        record: blocked,
+        event: {
+          kind: 'pre-start-rejection-attestation',
+          requestId: blocked.request_id,
+          source: 'provider-wrapper',
+          expectedLaunchStatus: 'blocked-before-start',
+          rejection: {
+            code,
+            rejectedAt: '2026-09-02T00:00:01.000Z',
+            provesNoChildStarted: true,
+          },
+        },
+      }),
+    ).toThrow(message);
+  });
+
+  it('rejects an unrecognized rejection code outside the closed qualifying set', () => {
+    const blocked = genericRecord({
+      launch_status: 'blocked-before-start',
+      child_outcome: 'not-started',
+    });
+    expect(() =>
+      augmentDispatchRecord({
+        record: blocked,
+        event: {
+          kind: 'pre-start-rejection-attestation',
+          requestId: blocked.request_id,
+          source: 'provider-wrapper',
+          expectedLaunchStatus: 'blocked-before-start',
+          rejection: {
+            code: 'something-else-entirely',
+            rejectedAt: '2026-09-02T00:00:01.000Z',
+            provesNoChildStarted: true,
+          },
+        },
+      }),
+    ).toThrow(/qualifying codes/i);
+  });
+
+  it('links one fresh exact-target approximation to the rejected request', () => {
+    const trigger = rejectedTrigger();
+    const fallback = fallbackRecord();
+    const linked = augmentDispatchRecord({
+      record: fallback,
+      triggerRecord: trigger,
+      relatedRecords: [],
+      event: fallbackEvent(),
+    });
+    expect(linked.oat.fallback).toMatchObject({
+      status: 'fallback-dispatch',
+      approximation: true,
+      triggerRequestId: trigger.request_id,
+    });
+    expect(() =>
+      augmentDispatchRecord({
+        record: { ...fallback, request_id: 'dispatch-fallback-2' },
+        triggerRecord: trigger,
+        relatedRecords: [linked],
+        event: {
+          ...fallbackEvent(),
+          requestId: 'dispatch-fallback-2',
+          evidence: {
+            ...fallbackEvent().evidence,
+            fallbackRequestId: 'dispatch-fallback-2',
+          },
+        },
+      }),
+    ).toThrow(/already has a fallback/i);
+  });
+
+  it.each([
+    [
+      'payload',
+      { payload: { sandbox: 'danger-full-access', tools: ['Bash'] } },
+    ],
+    ['provider', { provider: 'claude' }],
+    ['model_selector', { model_selector: 'gpt-5.6-sol-mini' }],
+    [
+      'model_selector_granularity',
+      { model_selector_granularity: 'opaque' as const },
+    ],
+    ['effort_selector', { effort_selector: 'low' }],
+    ['reasoning_mode_selector', { reasoning_mode_selector: 'pro' }],
+    ['service_tier_selector', { service_tier_selector: 'standard' }],
+    ['selected_route', { selected_route: 'cli' }],
+    ['authority', { authority: 'read-only' }],
+    ['authorization_scope', { authorization_scope: 'widened' }],
+    ['deadline_seconds', { deadline_seconds: 1200 }],
+    ['retry_limit', { retry_limit: 3 }],
+    ['dispatch_context', { dispatch_context: 'nested-native' }],
+    ['dispatch_policy', { dispatch_policy: 'economy' }],
+    ['dispatch_ceiling', { dispatch_ceiling: 'consequential' }],
+    ['scope', { scope: 'p07' }],
+    ['action', { action: 'review' }],
+    ['role_class', { role_class: 'recon' }],
+  ])('rejects a fallback that widens %s', (_field, override) => {
+    const trigger = rejectedTrigger();
+    const widened = fallbackRecord(override as Partial<GenericDispatchRecord>);
+    const preservedTarget = {
+      ...target,
+      provider: widened.provider,
+      modelSelector: widened.model_selector,
+      effortSelector: widened.effort_selector,
+      reasoningModeSelector: widened.reasoning_mode_selector ?? null,
+      serviceTierSelector: widened.service_tier_selector ?? null,
+      selectedRoute: widened.selected_route,
+    };
+    expect(() =>
+      augmentDispatchRecord({
+        record: widened,
+        triggerRecord: trigger,
+        relatedRecords: [],
+        event: {
+          ...fallbackEvent(),
+          evidence: { ...fallbackEvent().evidence, preservedTarget },
+        },
+      }),
+    ).toThrow(/preserve the exact target and controls/i);
+  });
+
+  it('rejects a fallback whose class floor evidence differs from the trigger', () => {
+    const classFields = {
+      task_class: 'consequential' as const,
+      model_class_floor: 'consequential',
+      classification_source: 'caller' as const,
+      classification_reason: 'Security boundary review.',
+      floor_satisfaction: 'satisfied' as const,
+    };
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord(classFields),
+        triggerRecord: rejectedTrigger(),
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/preserve the exact target and controls/i);
+  });
+
+  it('rejects a fallback that does not declare pre-start-rejection selection', () => {
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord({ selection_reason: 'inherit' }),
+        triggerRecord: rejectedTrigger(),
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/selection_reason pre-start-rejection/i);
+  });
+
+  it('requires the trigger to carry resolved canonical role evidence', () => {
+    const blocked = genericRecord({
+      launch_status: 'blocked-before-start',
+      child_outcome: 'not-started',
+    });
+    const roleless = augmentDispatchRecord({
       record: blocked,
       event: {
         kind: 'pre-start-rejection-attestation',
@@ -157,61 +390,93 @@ describe('augmentDispatchRecord', () => {
         },
       },
     });
-    const fallback = genericRecord({
-      request_id: 'dispatch-fallback-1',
-      role_selector: 'generalPurpose',
-      selection_reason: 'pre-start-rejection',
-    });
-    const linked = augmentDispatchRecord({
-      record: fallback,
-      triggerRecord: trigger,
-      relatedRecords: [],
+    expect(roleless.oat.canonicalRole).toBeNull();
+    expect(() =>
+      augmentDispatchRecord({
+        record: fallbackRecord(),
+        triggerRecord: roleless,
+        relatedRecords: [],
+        event: fallbackEvent(),
+      }),
+    ).toThrow(/resolved canonical role evidence on the rejected trigger/i);
+
+    const missingRole = augmentDispatchRecord({
+      record: blocked,
       event: {
-        kind: 'fallback-link',
-        requestId: fallback.request_id,
-        source: 'provider-wrapper',
+        kind: 'canonical-role-resolution',
+        requestId: blocked.request_id,
+        source: 'canonical-role-resolver',
         evidence: {
-          status: 'fallback-dispatch',
-          triggerRequestId: trigger.request_id,
-          fallbackRequestId: fallback.request_id,
-          trigger: 'pre-start-rejection',
-          fallbackReason: 'Native role rejected before start',
-          kind: 'canonical-instruction-fresh-child',
-          approximation: true,
-          preservedTarget: target,
-          rejection: {
-            source: 'provider-wrapper',
-            code: 'native-role-unavailable',
-            rejectedAt: '2026-09-02T00:00:01.000Z',
-            provesNoChildStarted: true,
-          },
-          roleInstructions: roleEvidence,
+          status: 'missing',
+          dependency: 'workflows',
+          canonicalRole: 'oat-phase-implementer',
+          candidateMisses: [],
+          recovery: [{ command: 'oat tools install workflows' }],
         },
       },
     });
-    expect(linked.oat.fallback).toMatchObject({
-      status: 'fallback-dispatch',
-      approximation: true,
-      triggerRequestId: trigger.request_id,
-    });
     expect(() =>
       augmentDispatchRecord({
-        record: { ...fallback, request_id: 'dispatch-fallback-2' },
-        triggerRecord: trigger,
-        relatedRecords: [linked],
-        event: {
-          kind: 'fallback-link',
-          requestId: 'dispatch-fallback-2',
-          source: 'provider-wrapper',
-          evidence: {
-            ...linked.oat.fallback,
-            status: 'fallback-dispatch',
-            fallbackRequestId: 'dispatch-fallback-2',
+        record: fallbackRecord(),
+        triggerRecord: {
+          ...missingRole,
+          oat: {
+            ...missingRole.oat,
+            preStartRejection: roleless.oat.preStartRejection,
           },
         },
+        relatedRecords: [],
+        event: fallbackEvent(),
       }),
-    ).toThrow(/already has a fallback/i);
+    ).toThrow(/resolved canonical role evidence on the rejected trigger/i);
   });
+
+  it.each([
+    ['dependency', { dependency: 'utility' }],
+    ['canonicalRole', { canonicalRole: 'unrelated-role' }],
+    ['tier', { tier: 'project' as const }],
+    ['validation', { validation: 'exact-canonical-symlink' as const }],
+    [
+      'canonicalPath',
+      { canonicalPath: '<project>/agents/oat-phase-implementer.md' },
+    ],
+    [
+      'selectedPath',
+      { selectedPath: '<project>/agents/oat-phase-implementer.md' },
+    ],
+    ['roleVersion', { roleVersion: '9.9.9' }],
+    ['contentDigest', { contentDigest: `sha256:${'b'.repeat(64)}` }],
+    [
+      'candidateMisses',
+      {
+        candidateMisses: [
+          {
+            tier: 'loaded' as const,
+            candidate: '<loaded>/agents/oat-phase-implementer.md',
+            outcome: 'missing' as const,
+          },
+        ],
+      },
+    ],
+  ])(
+    'rejects fallback role evidence that substitutes %s',
+    (_field, override) => {
+      expect(() =>
+        augmentDispatchRecord({
+          record: fallbackRecord(),
+          triggerRecord: rejectedTrigger(),
+          relatedRecords: [],
+          event: {
+            ...fallbackEvent(),
+            evidence: {
+              ...fallbackEvent().evidence,
+              roleInstructions: { ...roleEvidence, ...override },
+            },
+          },
+        }),
+      ).toThrow(/role evidence must equal the trigger/i);
+    },
+  );
 
   it('rejects mismatched controls, request IDs, sources, and runtime content', () => {
     expect(() =>

@@ -154,6 +154,16 @@ project state itself.
    telemetry, malformed output, and interruption never authorize fallback or
    replacement. Continue only through the accepted handle or stop.
 
+Pre-start native-selection rejection is a closed event set, disjoint from
+terminal child-outcome codes. Use exactly one of `native-role-unavailable`,
+`native-target-unavailable`, `native-selector-unsupported`,
+`native-catalog-unsatisfying`, `capability-unresolved-or-unsupported`,
+`wrapper-payload-rejected`, or `wrapper-launch-failure`. The recorder rejects
+every other code, and it names the prohibited outcome family when a terminal
+code such as `timeout` is submitted. A fallback additionally requires the
+trigger record to carry resolved canonical role evidence, and the fallback's
+role evidence must equal it exactly.
+
 Project-aware callers pass the validated record and event on standard input:
 
 ```bash

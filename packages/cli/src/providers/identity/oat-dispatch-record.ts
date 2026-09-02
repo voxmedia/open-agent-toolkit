@@ -1,11 +1,169 @@
+import { createHash } from 'node:crypto';
+
 import { z } from 'zod';
 
 import {
   assertNoSensitiveDispatchContent,
   genericDispatchRecordSchema,
+  normalizeDispatchKey,
   parseGenericDispatchRecord,
   type GenericDispatchRecord,
 } from './generic-dispatch-record';
+
+/**
+ * A pre-start native-selection rejection is a closed event set. It is proof
+ * that the native launch surface refused the exact target before any child
+ * started, and it is the only category that can authorize one canonical
+ * fallback. It is deliberately disjoint from terminal child-outcome codes.
+ */
+export const QUALIFYING_PRE_START_REJECTION_CODES = [
+  'native-role-unavailable',
+  'native-target-unavailable',
+  'native-selector-unsupported',
+  'native-catalog-unsatisfying',
+  'capability-unresolved-or-unsupported',
+  'wrapper-payload-rejected',
+  'wrapper-launch-failure',
+] as const;
+
+export type QualifyingPreStartRejectionCode =
+  (typeof QUALIFYING_PRE_START_REJECTION_CODES)[number];
+
+/**
+ * Terminal or post-acceptance outcome families. None of these ever authorizes
+ * replacement, so they are rejected with an explicit diagnostic rather than
+ * falling through the generic closed-set message.
+ */
+const PROHIBITED_REJECTION_FAMILIES: readonly {
+  term: string;
+  category: string;
+}[] = [
+  { term: 'timeout', category: 'timeout' },
+  { term: 'timedout', category: 'timeout' },
+  { term: 'deadlineexceeded', category: 'timeout' },
+  { term: 'blocked', category: 'BLOCKED' },
+  { term: 'refus', category: 'refusal' },
+  { term: 'declin', category: 'refusal' },
+  { term: 'interrupt', category: 'interruption' },
+  { term: 'cancel', category: 'interruption' },
+  { term: 'abort', category: 'interruption' },
+  { term: 'mismatch', category: 'runtime mismatch' },
+  { term: 'missingtelemetry', category: 'missing telemetry' },
+  { term: 'notreported', category: 'missing telemetry' },
+  { term: 'malformed', category: 'malformed output' },
+  { term: 'postacceptance', category: 'post-acceptance' },
+  { term: 'postlaunch', category: 'post-acceptance' },
+  { term: 'poststart', category: 'post-acceptance' },
+];
+
+function prohibitedRejectionCategory(code: string): string | null {
+  const normalized = normalizeDispatchKey(code);
+  return (
+    PROHIBITED_REJECTION_FAMILIES.find(({ term }) => normalized.includes(term))
+      ?.category ?? null
+  );
+}
+
+const preStartRejectionCodeSchema = z
+  .string()
+  .min(1)
+  .superRefine((code, context) => {
+    const prohibited = prohibitedRejectionCategory(code);
+    if (prohibited !== null) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `A ${prohibited} outcome is not a pre-start native-selection rejection and never authorizes fallback or replacement.`,
+      });
+      return;
+    }
+    if (
+      !(QUALIFYING_PRE_START_REJECTION_CODES as readonly string[]).includes(
+        code,
+      )
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Pre-start rejection code must be one of the qualifying codes: ${QUALIFYING_PRE_START_REJECTION_CODES.join(', ')}.`,
+      });
+    }
+  });
+
+/**
+ * Immutable configured controls. A fallback approximates the role instruction
+ * surface only; every configured control below must survive byte-identically,
+ * including the complete generic `payload` that owns sandbox and tool grants.
+ */
+export const IMMUTABLE_FALLBACK_CONTROL_FIELDS = [
+  'provider',
+  'model_selector',
+  'model_selector_granularity',
+  'effort_selector',
+  'reasoning_mode_selector',
+  'service_tier_selector',
+  'selected_route',
+  'authority',
+  'authorization_scope',
+  'deadline_seconds',
+  'retry_limit',
+  'payload',
+  'dispatch_context',
+  'dispatch_policy',
+  'dispatch_ceiling',
+  'scope',
+  'action',
+  'role_class',
+  'task_class',
+  'model_class_floor',
+  'classification_source',
+  'floor_satisfaction',
+] as const satisfies readonly (keyof GenericDispatchRecord)[];
+
+export function canonicalEvidenceJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalEvidenceJson).join(',')}]`;
+  }
+  if (value !== null && typeof value === 'object') {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .filter(([, entry]) => entry !== undefined)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(
+        ([key, entry]) =>
+          `${JSON.stringify(key)}:${canonicalEvidenceJson(entry)}`,
+      )
+      .join(',')}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+function controlProjection(
+  record: GenericDispatchRecord,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    IMMUTABLE_FALLBACK_CONTROL_FIELDS.map((field) => [
+      field,
+      record[field] ?? null,
+    ]),
+  );
+}
+
+export function configuredControlDigest(record: GenericDispatchRecord): string {
+  return `sha256:${createHash('sha256')
+    .update(canonicalEvidenceJson(controlProjection(record)))
+    .digest('hex')}`;
+}
+
+function differingControlFields(
+  left: GenericDispatchRecord,
+  right: GenericDispatchRecord,
+): string[] {
+  const leftControls = controlProjection(left);
+  const rightControls = controlProjection(right);
+  return IMMUTABLE_FALLBACK_CONTROL_FIELDS.filter(
+    (field) =>
+      canonicalEvidenceJson(leftControls[field]) !==
+      canonicalEvidenceJson(rightControls[field]),
+  );
+}
 
 const redactedPathSchema = z
   .string()
@@ -54,7 +212,7 @@ const canonicalRoleSchema = z.discriminatedUnion('status', [
 
 const rejectionSchema = z
   .object({
-    code: z.string().min(1),
+    code: preStartRejectionCodeSchema,
     rejectedAt: z.string().datetime(),
     provesNoChildStarted: z.literal(true),
   })
@@ -302,17 +460,46 @@ export function augmentDispatchRecord(input: {
           'Fallback lacks matching pre-start rejection evidence.',
         );
       }
+      if (record.selection_reason !== 'pre-start-rejection') {
+        throw new Error(
+          'A fallback record must state selection_reason pre-start-rejection.',
+        );
+      }
       if (
-        JSON.stringify(evidence.preservedTarget) !==
-          JSON.stringify(targetFor(record)) ||
-        JSON.stringify(targetFor(trigger)) !==
-          JSON.stringify(targetFor(record)) ||
-        trigger.authority !== record.authority ||
-        trigger.deadline_seconds !== record.deadline_seconds ||
-        trigger.retry_limit !== record.retry_limit
+        canonicalEvidenceJson(evidence.preservedTarget) !==
+          canonicalEvidenceJson(targetFor(record)) ||
+        canonicalEvidenceJson(targetFor(trigger)) !==
+          canonicalEvidenceJson(targetFor(record))
       ) {
         throw new Error(
           'Fallback must preserve the exact target and controls.',
+        );
+      }
+      const changedControls = differingControlFields(trigger, record);
+      if (changedControls.length > 0) {
+        throw new Error(
+          `Fallback must preserve the exact target and controls; ${changedControls.join(', ')} changed.`,
+        );
+      }
+      if (
+        configuredControlDigest(trigger) !== configuredControlDigest(record)
+      ) {
+        throw new Error(
+          'Fallback must preserve the exact target and controls; the configured control digest changed.',
+        );
+      }
+      const triggerRole = trigger.oat.canonicalRole;
+      if (triggerRole === null || triggerRole.status !== 'resolved') {
+        throw new Error(
+          'Fallback requires resolved canonical role evidence on the rejected trigger.',
+        );
+      }
+      if (
+        canonicalEvidenceJson(evidence.roleInstructions) !==
+        canonicalEvidenceJson(triggerRole)
+      ) {
+        throw new Error(
+          "Fallback role evidence must equal the trigger's resolved canonical role evidence exactly.",
         );
       }
       if (
