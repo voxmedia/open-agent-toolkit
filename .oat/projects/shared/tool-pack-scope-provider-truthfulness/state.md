@@ -1,8 +1,8 @@
 ---
-oat_current_task: p06-review-r3
-oat_last_commit: bb93fa12a3155dfc41591f39d40df0c583aceb92
+oat_current_task: p06-review-r4
+oat_last_commit: f18d1b131
 oat_blockers:
-  - Phase 6 review rounds 1 and 2 are fixed at `bb93fa12a`; Phase 7 remains gated until the round 3 independent review passes.
+  - Phase 6 review rounds 1-3 are fixed at `f18d1b131`; Phase 7 remains gated until the round 4 independent review passes.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -124,7 +124,7 @@ non-destructive by operator direction. Round 3 review is pending.
 - **Spec:** `spec.md` (complete — requirements confirmed)
 - **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
 - **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — p06 review round 3 fix active)
+- **Implementation:** `implementation.md` (in progress — awaiting p06 review round 4)
 
 ## Progress
 
@@ -173,15 +173,18 @@ non-destructive by operator direction. Round 3 review is pending.
 - ✓ Operator directed eliminating the destructive class over accepting it
 - ✓ Round 2 fix landed append-only `link`-only publication at `bb93fa12a`
 - ✓ Phase 6 focused union independently re-verified at 597/597
+- ✓ Review round 3 confirmed the publication guarantee with 0 Critical
+- ✓ Round 3 fix closed redaction, content bounds, provenance and lock findings
+- ✓ Phase 6 focused union independently re-verified at 641/641
 
 ## Blockers
 
-- Phase 6 requires a passing round 3 independent review before Phase 7.
+- Phase 6 requires a passing round 4 independent review before Phase 7.
 - `origin/main` advanced to `0.2.51` during Phase 5/6, so p07-t04 must merge
   main and land `0.2.52` across all five lockstep packages; the two release
   gates fail for this reason alone until then.
 
 ## Next Milestone
 
-Obtain a passing round 3 independent review of the complete Phase 6 range
-`e690bd2b4..bb93fa12a`, then begin Phase 7 runtime observation.
+Obtain a passing round 4 independent review of the complete Phase 6 range
+`e690bd2b4..f18d1b131`, then begin Phase 7 runtime observation.

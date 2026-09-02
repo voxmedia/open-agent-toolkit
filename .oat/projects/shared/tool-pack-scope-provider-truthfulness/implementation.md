@@ -1480,13 +1480,60 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   staging file under attacker-controlled ancestry. No operator disposition is
   required.
 - Also closed: `fallback` and `selection_source` added to the immutable
-  control set; NFKC confusable folding with bounded projections over every
-  free-form evidence field; scope-relative redaction of lock, `EEXIST` and
+  control set; NFKC confusable folding with bounded projections over the
+  evidence container fields; scope-relative redaction of lock, `EEXIST` and
   `ENOENT` messages; a recoverable writer lock with holder evidence and a
   15-minute hard cap; and the `wrapper-launch-refused` rename, which forced
   the closed qualifying set to take precedence over family classification.
+- The round 2 projection bounded only depth and per-string length. Round 3
+  closed the breadth and aggregate gap it left; see below for the shipped
+  bounds.
 - The focused Phase 6 union rose from 538 to 597 tests. Independently
   re-verified by the orchestrator at 597/597, exit 0.
+
+### Review Round 3 — Publication Guarantee Confirmed
+
+- Artifact: `reviews/p06-review-2026-09-02T200551Z.md`
+- Reviewed head: `656c49ec7` (code at `bb93fa12a3155dfc41591f39d40df0c583aceb92`)
+- Verdict: changes requested; 0 Critical, 1 Important, 4 Medium, 3 Minor.
+- The round 2 destructive probe was independently reproduced across four
+  scenarios; the out-of-scope victim survived byte-for-byte and
+  inode-for-inode, confirming the publication guarantee recorded above is what
+  the code delivers. The append-only design withstood crafted revision names,
+  request-id traversal, sequence gaps, concurrent-winner confusion, and legacy
+  journal parsing.
+- Remaining findings were local: absolute paths still reaching `--json` from
+  two unredacted journal reads, a projection bounding depth and per-string
+  length but not breadth or aggregate, eight generic fields outside the
+  immutable control set, a lock release that could delete a replacement lock,
+  and three artifact inaccuracies.
+
+### Review Round 3 Fix
+
+- Range: `7981e8929..f18d1b131` (6 `fix(p06-review-r3)` commits, 9 files).
+- Redaction became a hard boundary in `runRecordCommand` rather than a
+  per-producer obligation, so the class does not recur as Phase 7 adds call
+  sites.
+- Shipped content bounds: bounded closed projections over the six evidence
+  container fields (`payload`, `candidates_considered`,
+  `configured_invocation_evidence`, `continuation_events`, `diagnostics`,
+  `escalate_when`) at depth 4, 512 characters per string, 512 values, and
+  16 KiB each; length limits on every caller-authored text field at 256, 512
+  or 1024 characters by kind; and a 64 KiB ceiling on the whole record. The
+  chunked 2 MB journal and the 200,000-character `objective` are both
+  rejected.
+- `catalog_snapshot`, the four `guidance_*` fields and `classification_reason`
+  joined the immutable set (31 total), and a new
+  `MUTABLE_FALLBACK_CONTROL_FIELDS` export makes the enumeration executable so
+  a future generic field addition fails the completeness test.
+- Lock release now requires both the acquisition-time `dev`/`ino` and the
+  holder record to match. Key normalization fails closed on any unaccounted
+  spelling, folding diacritics through NFKD.
+- The implementer independently found and closed a breadth hole the review did
+  not name (`candidates_considered` accepted 5,000 short entries).
+- The focused Phase 6 union rose from 597 to 641 tests. Independently
+  re-verified by the orchestrator at 641/641, exit 0. Every Turbo gate ran
+  forced under an isolated `HOME` with zero cache replays.
 
 ---
 
@@ -2380,6 +2427,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p04 review r9 | design           | absent proof releases directory work             | Aligned two stale passages to the verified fail-closed implementation and accepted the correction without another review                                                    | Explicit operator disposition                                     | implementation/docs    | none                                                                   |
 | p05 review r5 | spec/design      | all apply-time-swapped paths fail closed         | Accepted the narrow privileged-local parent-swap race for pathname-based exclusive creation of an absent root `AGENTS.md`; existing targets remain zero-write               | Explicit operator risk acceptance                                 | implementation/code    | documented residual risk                                               |
 | p06 review r2 | plan/design      | journal persists at `dispatch/<request-id>.json` | Revision 1 keeps that name; updates append `dispatch/<request-id>@<NNNN>.json` and nothing prunes superseded revisions, because pruning would reintroduce a path-based `rm` | Required by the operator-directed non-destructive publication fix | implementation/code    | plan and design text superseded; Phase 7 readers must expect revisions |
+| p06 review r3 | design           | record size unconstrained                        | Whole record capped at 64 KiB, evidence containers at 512 values / 16 KiB, caller prose at 256/512/1024 chars by kind                                                       | Required to close the chunked-content bypass                      | implementation/code    | Phase 7 callers must stay inside these bounds                          |
 | p06 review r2 | plan file union  | Phase 6 file union only                          | Added `.gitignore` for `.dispatch-lock/`                                                                                                                                    | Mechanically derived from the lock-recovery finding               | Round-2 review finding | recorded; no production expansion                                      |
 
 ## Test Results
