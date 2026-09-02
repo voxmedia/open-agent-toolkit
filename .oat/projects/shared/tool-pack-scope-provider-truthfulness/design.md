@@ -570,10 +570,15 @@ manifest manager, drift detector, and sync executor.
   `createdLink` carries durable creation-time identity when available, and
   `transitionToPerEntry` distinguishes an explicit-strategy transition from
   ordinary disablement. An exact transition defers every child operation until
-  the alias is safely clear. In the current runtime it reports a blocked manual
-  recovery outcome without unlinking. A later, separately planned `absent`
-  proof is revalidated at apply, detaches ownership, and releases deferred
-  per-entry operations.
+  the alias is safely clear. In the current runtime, deferred directory
+  transitions remain owned and blocked even when a later plan proves the
+  destination absent; an absent proof does not release automatic directory
+  publication. Release requires disabling the provider and running sync to
+  detach OAT ownership, followed by verified alias removal and explicit
+  manual/external management. Automatic directory publication requires an
+  identity-bound, non-following primitive. File-level operations remain
+  governed by their existing destination-policy and no-clobber checks rather
+  than this directory-transition block.
 - Real-directory conversion is excluded from the first release. Adding it
   later requires a separate destructive-operation design and approval, not a
   hidden extension of `auto`.
@@ -946,8 +951,13 @@ interface ManifestCollectionEntry {
   proof to match all three durable creation fields immediately before removal.
   Matching identity is necessary but not sufficient: without an identity-bound
   parent-relative unlink primitive, apply preserves the alias and reports
-  manual recovery. Per-entry work resumes only after a later plan proves the
-  destination absent and apply revalidates that same absent proof.
+  manual recovery. For deferred directory transitions, a later absent proof is
+  revalidated but does not detach ownership or release per-entry publication.
+  The supported release is provider disablement plus sync-owned detachment,
+  followed by verified alias removal and explicit manual/external management;
+  automatic directory publication requires an identity-bound, non-following
+  primitive. Separately safe file-level operations retain their normal
+  destination-policy and no-clobber behavior.
 - `createdLink` remains optional so V2 manifests written before durable link
   identity was introduced continue to load. Such legacy records may detach
   manifest ownership when disabled, but they never authorize alias unlink.
