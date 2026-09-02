@@ -11,6 +11,7 @@ import {
   planLinearRead,
   previewLinearMutation,
   validateLinearDiscussionReadObservation,
+  verifyLinearMutationObservation,
   type LinearHostCapabilityObservation,
 } from './linear';
 
@@ -464,5 +465,138 @@ describe('Linear read observations', () => {
         },
       }),
     ).toMatchObject({ classification: 'page', persistable: false });
+  });
+});
+
+describe('Linear mutation observations', () => {
+  const projection = { title: 'Updated title', priority: 'urgent' };
+  const outboundSafety = assessOutboundProjectionSafety(projection, {
+    assessedAt: '2026-09-02T12:00:00.000Z',
+  });
+  const mutationInput = {
+    operation: 'update' as const,
+    context: linearContext,
+    hostCapability: linearCapability,
+    bindingId: 'binding_linear_42',
+    stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+    fieldMask: ['title', 'priority'],
+    projection,
+    outboundSafety,
+  };
+  const preview = previewLinearMutation(mutationInput);
+  const action = planLinearMutation({
+    ...mutationInput,
+    approvedPreviewDigest: preview.previewDigest,
+  });
+  const readback = {
+    ...linearObservation,
+    fields: {
+      ...linearObservation.fields,
+      title: 'Updated title',
+      priority: 'urgent',
+      mutationEvidence: action.intent.executionEvidence,
+    },
+  };
+
+  it('requires one accepted attempt and exact pinned authoritative readback', () => {
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback,
+      }),
+    ).toEqual({
+      classification: 'verified',
+      reason: 'authoritative-readback-matched',
+      fields: [
+        { field: 'title', status: 'verified' },
+        { field: 'priority', status: 'verified' },
+      ],
+      retryAllowed: false,
+    });
+  });
+
+  it('classifies rejection, unknown-after-attempt, and missing readback without retry', () => {
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'rejected',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: null,
+      }).classification,
+    ).toBe('rejected');
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'unknown',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: null,
+      }),
+    ).toMatchObject({ classification: 'uncertain', retryAllowed: false });
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: null,
+      }).classification,
+    ).toBe('uncertain');
+  });
+
+  it('detects silently dropped fields and mismatched pinned evidence', () => {
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: {
+          ...readback,
+          fields: { ...readback.fields, priority: 'high' },
+        },
+      }),
+    ).toMatchObject({
+      classification: 'partial',
+      fields: [
+        { field: 'title', status: 'verified' },
+        { field: 'priority', status: 'mismatch' },
+      ],
+      retryAllowed: false,
+    });
+    expect(
+      verifyLinearMutationObservation({
+        action,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: linearCapability.evidenceDigest,
+        },
+        hostCapability: linearCapability,
+        readback: {
+          ...readback,
+          context: { ...linearContext, teamId: 'wrong' },
+        },
+      }).classification,
+    ).toBe('uncertain');
   });
 });

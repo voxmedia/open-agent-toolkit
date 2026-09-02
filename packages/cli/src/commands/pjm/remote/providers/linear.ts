@@ -7,6 +7,7 @@ import {
 import {
   contextsEqual,
   semanticDigest,
+  type FieldVerification,
   type NormalizedRemoteIssue,
   type ObservationValidation,
   type ProviderContext,
@@ -142,6 +143,24 @@ export interface LinearDiscussionReadValidationInput {
   observation: LinearDiscussionReadObservation;
 }
 
+export interface LinearMutationVerificationInput {
+  action: SemanticAction;
+  attempt: {
+    count: number;
+    outcome: 'accepted' | 'rejected' | 'unknown';
+    capabilityEvidenceDigest: string;
+  };
+  hostCapability: LinearHostCapabilityObservation;
+  readback: SanitizedProviderObservation | null;
+}
+
+export interface LinearMutationVerificationResult {
+  classification: 'verified' | 'partial' | 'rejected' | 'uncertain';
+  reason: string;
+  fields: FieldVerification[];
+  retryAllowed: false;
+}
+
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[A-Z][A-Z0-9]*-[1-9][0-9]*$/;
@@ -220,6 +239,16 @@ export function normalizeLinearIssueObservation(
     if (value !== undefined && isBoundedExtensionValue(value)) {
       extensions[key] = value;
     }
+  }
+  if (isRecord(observation.fields.mutationEvidence)) {
+    extensions.capabilityEvidenceDigest = observation.capabilityEvidenceDigest;
+    extensions.mutationEvidence = observation.fields.mutationEvidence;
+  }
+  if (isRecord(observation.fields.createProvenance)) {
+    extensions.createProvenance = observation.fields.createProvenance;
+  }
+  if (Array.isArray(observation.fields.annotations)) {
+    extensions.annotations = stringArray(observation.fields.annotations);
   }
   extensions.suppressedFields = suppressedFields;
   return {
@@ -639,6 +668,113 @@ export function validateLinearDiscussionReadObservation(
   };
 }
 
+export function verifyLinearMutationObservation(
+  input: LinearMutationVerificationInput,
+): LinearMutationVerificationResult {
+  const fields = mutationVerificationFields(input.action);
+  const result = (
+    classification: LinearMutationVerificationResult['classification'],
+    reason: string,
+    fieldResults: FieldVerification[] = fields.map((field) => ({
+      field,
+      status: 'unavailable',
+    })),
+  ): LinearMutationVerificationResult => ({
+    classification,
+    reason,
+    fields: fieldResults,
+    retryAllowed: false,
+  });
+  if (
+    input.action.provider !== 'linear' ||
+    !['create', 'update', 'transition', 'annotate'].includes(
+      input.action.operation,
+    ) ||
+    !validLinearMutationActionEvidence(input.action) ||
+    input.attempt.count !== 1 ||
+    input.attempt.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest
+  ) {
+    return result('uncertain', 'mutation-attribution-invalid');
+  }
+  if (input.attempt.outcome === 'rejected') {
+    return result('rejected', 'provider-rejected-before-acceptance');
+  }
+  if (input.attempt.outcome === 'unknown' || !input.readback) {
+    return result('uncertain', 'authoritative-readback-required');
+  }
+  const capability = validateLinearHostCapability(
+    input.action.operation,
+    input.action.context,
+    input.hostCapability,
+  );
+  if (
+    !capability.valid ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.readback.provider !== 'linear' ||
+    !contextsEqual(input.action.context, input.readback.context) ||
+    input.readback.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    !semanticValuesEqual(
+      input.readback.fields.mutationEvidence,
+      input.action.intent.executionEvidence,
+    )
+  ) {
+    return result('uncertain', 'pinned-readback-evidence-mismatch');
+  }
+  let issue: NormalizedRemoteIssue;
+  try {
+    issue = normalizeLinearIssueObservation(input.readback);
+  } catch {
+    return result('uncertain', 'authoritative-readback-invalid');
+  }
+  if (
+    input.action.operation !== 'create' &&
+    issue.stableId !== input.action.intent.stableId
+  ) {
+    return result('uncertain', 'pinned-readback-identity-mismatch');
+  }
+  if (
+    input.action.operation === 'create' &&
+    !semanticValuesEqual(
+      input.readback.fields.createProvenance,
+      input.action.intent.provenance,
+    )
+  ) {
+    return result('uncertain', 'create-provenance-mismatch');
+  }
+  const postconditions = input.action.intent.postconditions as Record<
+    string,
+    unknown
+  >;
+  const fieldResults = fields.map((field): FieldVerification => {
+    const expected = postconditions[field];
+    const observed =
+      field === 'description'
+        ? issue.description
+        : field === 'status'
+          ? issue.status
+          : field === 'annotation'
+            ? issue.extensions.annotations
+            : issue[field as 'title' | 'priority'];
+    const verified =
+      field === 'annotation' && Array.isArray(observed)
+        ? observed.includes(expected)
+        : semanticValuesEqual(observed, expected);
+    return { field, status: verified ? 'verified' : 'mismatch' };
+  });
+  return result(
+    fieldResults.every((field) => field.status === 'verified')
+      ? 'verified'
+      : 'partial',
+    fieldResults.every((field) => field.status === 'verified')
+      ? 'authoritative-readback-matched'
+      : 'authoritative-readback-postcondition-mismatch',
+    fieldResults,
+  );
+}
+
 function canonicalLinearStableId(workspaceId: string, uuid: string): string {
   return `linear:${workspaceId}:${uuid.toLowerCase()}`;
 }
@@ -802,4 +938,42 @@ function isBoundedExtensionValue(value: unknown): boolean {
     typeof value === 'boolean' ||
     value === null
   );
+}
+
+function mutationVerificationFields(action: SemanticAction): string[] {
+  return Array.isArray(action.intent.fieldMask)
+    ? action.intent.fieldMask.filter(
+        (field): field is string => typeof field === 'string',
+      )
+    : [];
+}
+
+function validLinearMutationActionEvidence(action: SemanticAction): boolean {
+  const evidence = action.intent.executionEvidence;
+  return (
+    typeof action.intent.capabilityEvidenceDigest === 'string' &&
+    typeof action.intent.previewDigest === 'string' &&
+    action.intent.approvalDigest === action.intent.previewDigest &&
+    typeof action.intent.actionDigest === 'string' &&
+    isRecord(evidence) &&
+    evidence.capabilityEvidenceDigest ===
+      action.intent.capabilityEvidenceDigest &&
+    evidence.previewDigest === action.intent.previewDigest &&
+    evidence.approvalDigest === action.intent.approvalDigest &&
+    evidence.actionDigest === action.intent.actionDigest &&
+    isRecord(action.intent.postconditions) &&
+    mutationVerificationFields(action).length > 0
+  );
+}
+
+function semanticValuesEqual(left: unknown, right: unknown): boolean {
+  try {
+    return semanticDigest(left) === semanticDigest(right);
+  } catch {
+    return false;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
