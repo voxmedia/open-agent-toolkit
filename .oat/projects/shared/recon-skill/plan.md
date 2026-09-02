@@ -1626,7 +1626,7 @@ git commit -m "fix(prev6-t01): bind packet publication generation"
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                   |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                   |
 | final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T185450Z.md`                  | 9203eec1226bf8a68cdff61d5acbe5b439652b8e | manual     | -                   |
-| final          | code     | received        | 2026-09-02 | `reviews/final-review-2026-09-02T194356Z.md`                           | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                   |
+| final          | code     | received        | 2026-09-02 | reviews/final-review-2026-09-02T194356Z.md                             | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                   |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                   |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                   |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                   |
