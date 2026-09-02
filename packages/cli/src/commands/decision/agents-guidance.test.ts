@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -85,5 +85,20 @@ describe('decision AGENTS guidance', () => {
     const rootGuidance = await readFile(join(projectRoot, 'AGENTS.md'), 'utf8');
     expect(rootGuidance).toContain('`architecture/decisions/AGENTS.md`');
     expect(rootGuidance).toContain('`architecture/decisions/index.md`');
+  });
+
+  it('preserves project-management guidance at the root', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-decision-agents-'));
+    tempDirs.push(projectRoot);
+    const decisionsRoot = join(projectRoot, 'architecture', 'decisions');
+    const pjmSection =
+      '<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n';
+    await writeFile(join(projectRoot, 'AGENTS.md'), pjmSection, 'utf8');
+
+    await initializeDecisionAgentsGuidance({ projectRoot, decisionsRoot });
+
+    const rootGuidance = await readFile(join(projectRoot, 'AGENTS.md'), 'utf8');
+    expect(rootGuidance).toContain(pjmSection.trim());
+    expect(rootGuidance).toContain('<!-- OAT decisions -->');
   });
 });

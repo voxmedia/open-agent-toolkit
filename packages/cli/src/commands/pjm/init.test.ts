@@ -144,6 +144,28 @@ describe('initializeRepoReference', () => {
     expect(rootGuidance).not.toContain('oat decision init');
   });
 
+  it('preserves unrelated tools guidance while adding adoption sections', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, 'repo');
+    await seedTemplates(join(assetsRoot, 'templates'));
+    await writeFile(
+      join(root, 'AGENTS.md'),
+      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
+      'utf8',
+    );
+
+    await initializeRepoReference({ assetsRoot, repoRoot });
+
+    const rootGuidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+    expect(rootGuidance).toContain(
+      '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->',
+    );
+    expect(rootGuidance).toContain('<!-- OAT project-management -->');
+    expect(rootGuidance).toContain('<!-- OAT decisions -->');
+  });
+
   it('emits the human README and the pjm handoffs README', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
     tempDirs.push(root);

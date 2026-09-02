@@ -1,10 +1,43 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  link,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readlink,
+  realpath,
+  rename,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { removeAgentsMdSection, upsertAgentsMdSection } from './agents-md';
+import {
+  type AgentsMdFileSystem,
+  removeAgentsMdSection,
+  upsertAgentsMdSection,
+} from './agents-md';
+
+const realFileSystem: AgentsMdFileSystem = {
+  link,
+  lstat,
+  readFile,
+  readlink,
+  realpath,
+  rename,
+  rm,
+  writeFile,
+};
+
+function withFileSystem(
+  overrides: Partial<AgentsMdFileSystem>,
+): AgentsMdFileSystem {
+  return { ...realFileSystem, ...overrides };
+}
 
 describe('upsertAgentsMdSection', () => {
   let root: string;
@@ -111,6 +144,169 @@ describe('upsertAgentsMdSection', () => {
       '# Header\n\n<!-- OAT docs -->\ncontent\n<!-- END OAT docs -->\n',
     );
   });
+
+  it.each([
+    ['relative', 'guidance/AGENTS.shared.md'],
+    ['absolute', 'absolute'],
+  ])('updates a contained %s symlink target', async (_kind, targetValue) => {
+    await setup();
+    await mkdir(join(root, 'guidance'));
+    const target = join(root, 'guidance', 'AGENTS.shared.md');
+    await writeFile(target, '# Shared guidance\n', 'utf8');
+    await symlink(
+      targetValue === 'absolute' ? target : targetValue,
+      join(root, 'AGENTS.md'),
+    );
+
+    await upsertAgentsMdSection(root, 'docs', 'new content');
+
+    await expect(readFile(target, 'utf8')).resolves.toContain(
+      '<!-- OAT docs -->\nnew content\n<!-- END OAT docs -->',
+    );
+    expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(true);
+  });
+
+  it.each([
+    [
+      'external',
+      async (agentsPath: string) => symlink('../outside.md', agentsPath),
+    ],
+    ['broken', async (agentsPath: string) => symlink('missing.md', agentsPath)],
+    [
+      'cyclic',
+      async (agentsPath: string) => {
+        await symlink('AGENTS.md', agentsPath);
+      },
+    ],
+    [
+      'directory',
+      async (agentsPath: string) => {
+        await mkdir(join(root, 'guidance'));
+        await symlink('guidance', agentsPath);
+      },
+    ],
+  ])('rejects a %s AGENTS.md symlink without mutation', async (_kind, seed) => {
+    await setup();
+    const agentsPath = join(root, 'AGENTS.md');
+    const outside = join(root, '..', 'outside.md');
+    await writeFile(outside, 'outside sentinel\n', 'utf8');
+    try {
+      await seed(agentsPath);
+
+      await expect(
+        upsertAgentsMdSection(root, 'docs', 'unsafe content'),
+      ).rejects.toThrow(/AGENTS\.md/);
+      await expect(readFile(outside, 'utf8')).resolves.toBe(
+        'outside sentinel\n',
+      );
+    } finally {
+      await rm(outside, { force: true });
+    }
+  });
+
+  it.each([
+    '<!-- OAT docs -->\nunterminated\n',
+    '<!-- END OAT docs -->\n',
+    '<!-- END OAT docs -->\n<!-- OAT docs -->\n',
+    '<!-- OAT docs -->\none\n<!-- OAT docs -->\ntwo\n<!-- END OAT docs -->\n',
+    '<!-- OAT docs -->\none\n<!-- END OAT docs -->\n<!-- END OAT docs -->\n',
+    '<!-- OAT docs -->\none\n<!-- END OAT docs -->\n<!-- OAT docs -->\ntwo\n<!-- END OAT docs -->\n',
+  ])('rejects malformed or duplicate managed markers', async (content) => {
+    await setup(content);
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'replacement'),
+    ).rejects.toThrow(/exactly one ordered marker pair/);
+    await expect(readAgentsMd()).resolves.toBe(content);
+  });
+
+  it('fails closed when the direct file identity changes before commit', async () => {
+    await setup('# Original\n');
+    const agentsPath = join(root, 'AGENTS.md');
+    let swapped = false;
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async (...args) => {
+        await writeFile(...args);
+        if (!swapped) {
+          swapped = true;
+          await rm(agentsPath);
+          await writeFile(agentsPath, '# Foreign replacement\n', 'utf8');
+        }
+      }) as AgentsMdFileSystem['writeFile'],
+    });
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+    ).rejects.toThrow(/identity changed/);
+    await expect(readAgentsMd()).resolves.toBe('# Foreign replacement\n');
+  });
+
+  it('fails closed when a contained symlink changes before commit', async () => {
+    await setup();
+    const originalTarget = join(root, 'original.md');
+    const foreignTarget = join(root, 'foreign.md');
+    const agentsPath = join(root, 'AGENTS.md');
+    await writeFile(originalTarget, '# Original\n', 'utf8');
+    await writeFile(foreignTarget, '# Foreign\n', 'utf8');
+    await symlink('original.md', agentsPath);
+    let swapped = false;
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async (...args) => {
+        await writeFile(...args);
+        if (!swapped) {
+          swapped = true;
+          await rm(agentsPath);
+          await symlink('foreign.md', agentsPath);
+        }
+      }) as AgentsMdFileSystem['writeFile'],
+    });
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+    ).rejects.toThrow(/identity changed/);
+    await expect(readFile(originalTarget, 'utf8')).resolves.toBe(
+      '# Original\n',
+    );
+    await expect(readFile(foreignTarget, 'utf8')).resolves.toBe('# Foreign\n');
+  });
+
+  it('preserves the original file when the atomic rename fails', async () => {
+    await setup('# Original\n');
+    const fileSystem = withFileSystem({
+      rename: vi.fn(async () => {
+        throw new Error('injected rename failure');
+      }),
+    });
+
+    await expect(
+      upsertAgentsMdSection(root, 'docs', 'new content', { fileSystem }),
+    ).rejects.toThrow('injected rename failure');
+    await expect(readAgentsMd()).resolves.toBe('# Original\n');
+  });
+
+  it('preserves unrelated, PJM, and decision sections', async () => {
+    const original = [
+      '# User guidance',
+      '',
+      '<!-- OAT project-management -->',
+      'PJM guidance',
+      '<!-- END OAT project-management -->',
+      '',
+      '<!-- OAT decisions -->',
+      'Decision guidance',
+      '<!-- END OAT decisions -->',
+      '',
+    ].join('\n');
+    await setup(original);
+
+    await upsertAgentsMdSection(root, 'tools', 'Tool guidance');
+
+    const content = await readAgentsMd();
+    expect(content).toContain('# User guidance');
+    expect(content).toContain('PJM guidance');
+    expect(content).toContain('Decision guidance');
+    expect(content).toContain('<!-- OAT tools -->\nTool guidance');
+  });
 });
 
 describe('removeAgentsMdSection', () => {
@@ -170,5 +366,23 @@ describe('removeAgentsMdSection', () => {
     expect(content).toContain('<!-- OAT tools -->');
     expect(content).toContain('new content');
     expect(content).not.toContain('<!-- OAT workflows -->');
+  });
+
+  it('rejects malformed markers instead of removing unrelated content', async () => {
+    const content = [
+      '# User guidance',
+      '<!-- OAT workflows -->',
+      'legacy',
+      '<!-- OAT decisions -->',
+      'decision guidance',
+      '<!-- END OAT decisions -->',
+      '',
+    ].join('\n');
+    await setup(content);
+
+    await expect(removeAgentsMdSection(root, 'workflows')).rejects.toThrow(
+      /exactly one ordered marker pair/,
+    );
+    await expect(readAgentsMd()).resolves.toBe(content);
   });
 });

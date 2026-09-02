@@ -147,6 +147,36 @@ describe('createDocsInitCommand', () => {
 
     expect(capture.info.join('\n')).not.toContain('AGENTS.md');
   });
+
+  it('surfaces an unsafe AGENTS.md mutation instead of reporting success', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+    });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('AGENTS.md identity changed before mutation.'),
+    );
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      'Test',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    expect(capture.error.join('\n')).toContain(
+      'AGENTS.md identity changed before mutation.',
+    );
+    expect(capture.info.join('\n')).not.toContain('AGENTS.md docs section');
+    expect(process.exitCode).toBe(1);
+  });
+
   it('prints single-package next steps when repo shape is single-package', async () => {
     const capture = createLoggerCapture();
     const command = createDocsInitCommand({
