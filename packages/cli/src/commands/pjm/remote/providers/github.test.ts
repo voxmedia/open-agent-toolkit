@@ -1,3 +1,4 @@
+import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
 import { describe, expect, it } from 'vitest';
 
@@ -6,6 +7,7 @@ import {
   githubAdapter,
   normalizeGitHubIssueObservation,
   parseGitHubIssueReference,
+  planGitHubMutation,
   validateGitHubHostCapability,
   type GitHubHostCapabilityObservation,
 } from './github';
@@ -256,6 +258,117 @@ describe('GitHub semantic adapter', () => {
       }
     },
   );
+
+  it('plans create provenance and exact title/managed-body postconditions from a safe projection', () => {
+    const projection = {
+      title: 'Published title',
+      description: 'OAT-owned summary',
+    };
+    const managedBody =
+      'Remote-owned introduction.\n\n<!-- OAT-MANAGED:binding_123:START -->\n## OAT-managed\n\nOAT-owned summary\n<!-- OAT-MANAGED:binding_123:END -->';
+    const safety = assessOutboundProjectionSafety(
+      { ...projection, description: managedBody },
+      {
+        assessedAt: '2026-09-02T12:00:00.000Z',
+      },
+    );
+    expect(
+      planGitHubMutation({
+        operation: 'create',
+        context: hostCapability.context,
+        bindingId: 'binding_123',
+        provenance: {
+          bindingId: 'binding_123',
+          origin: 'local-project:item-42',
+        },
+        fieldMask: ['title', 'description'],
+        descriptionMode: 'managed-section',
+        currentBody: 'Remote-owned introduction.',
+        projection,
+        outboundSafety: safety,
+      }),
+    ).toEqual({
+      provider: 'github',
+      operation: 'create',
+      context: hostCapability.context,
+      intent: {
+        bindingId: 'binding_123',
+        stableId: null,
+        provenance: {
+          bindingId: 'binding_123',
+          origin: 'local-project:item-42',
+        },
+        fieldMask: ['title', 'description'],
+        projection: {
+          title: 'Published title',
+          description: managedBody,
+        },
+        postconditions: {
+          title: 'Published title',
+          description: managedBody,
+        },
+        outboundSafety: {
+          projectionDigest: safety.projectionDigest,
+          resultDigest: safety.resultDigest,
+        },
+      },
+    });
+  });
+
+  it('plans full-body updates and a safe priority extension', () => {
+    const projection = {
+      description: 'Approved complete body',
+      priority: 'high',
+    };
+    const action = planGitHubMutation({
+      operation: 'update',
+      context: hostCapability.context,
+      bindingId: 'binding_123',
+      stableId: 'github:github.example:repo_123:issue_node_42',
+      fieldMask: ['description', 'priority'],
+      descriptionMode: 'replace',
+      projection,
+      outboundSafety: assessOutboundProjectionSafety(projection, {
+        assessedAt: '2026-09-02T12:00:00.000Z',
+      }),
+    });
+    expect(action.intent.projection).toEqual(projection);
+    expect(action.intent.postconditions).toEqual(projection);
+  });
+
+  it('rejects unsupported masks and unsafe priority extensions', () => {
+    const safe = assessOutboundProjectionSafety(
+      { title: 'Safe' },
+      { assessedAt: '2026-09-02T12:00:00.000Z' },
+    );
+    expect(() =>
+      planGitHubMutation({
+        operation: 'update',
+        context: hostCapability.context,
+        bindingId: 'binding_123',
+        stableId: 'stable',
+        fieldMask: ['labels' as 'title'],
+        descriptionMode: 'none',
+        projection: { title: 'Safe' },
+        outboundSafety: safe,
+      }),
+    ).toThrow('Unsupported GitHub mutation field');
+    const priorityProjection = { priority: 'critical' };
+    expect(() =>
+      planGitHubMutation({
+        operation: 'update',
+        context: hostCapability.context,
+        bindingId: 'binding_123',
+        stableId: 'stable',
+        fieldMask: ['priority'],
+        descriptionMode: 'none',
+        projection: priorityProjection,
+        outboundSafety: assessOutboundProjectionSafety(priorityProjection, {
+          assessedAt: '2026-09-02T12:00:00.000Z',
+        }),
+      }),
+    ).toThrow('Unsupported GitHub priority');
+  });
 });
 
 const hostCapability: GitHubHostCapabilityObservation = {

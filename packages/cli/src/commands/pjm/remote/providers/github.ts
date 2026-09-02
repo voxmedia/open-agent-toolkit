@@ -1,4 +1,14 @@
 import {
+  inspectManagedMarkdown,
+  insertManagedMarkdown,
+  replaceManagedMarkdown,
+} from '@commands/pjm/remote/managed-markdown';
+import {
+  requireCurrentOutboundSafety,
+  type OutboundProjection,
+  type OutboundProjectionSafetyResult,
+} from '@commands/pjm/remote/outbound-projection-safety';
+import {
   contextsEqual,
   semanticDigest,
   type NormalizedRemoteIssue,
@@ -76,6 +86,21 @@ export interface GitHubReadObservationInput {
   archived?: boolean;
   authoritativeDeletion?: boolean;
   deletionEvidenceDigest?: string;
+}
+
+export type GitHubMutationField = 'title' | 'description' | 'priority';
+
+export interface GitHubMutationPlanInput {
+  operation: 'create' | 'update';
+  context: ProviderContext;
+  bindingId: string;
+  stableId?: string;
+  provenance?: { bindingId: string; origin: string };
+  fieldMask: GitHubMutationField[];
+  descriptionMode: 'managed-section' | 'replace' | 'none';
+  currentBody?: string;
+  projection: OutboundProjection;
+  outboundSafety: OutboundProjectionSafetyResult;
 }
 
 const URL_REFERENCE =
@@ -260,6 +285,32 @@ export function classifyGitHubReadObservation(
   };
 }
 
+export function planGitHubMutation(
+  input: GitHubMutationPlanInput,
+): SemanticAction {
+  assertMutationIdentity(input);
+  const fieldMask = normalizeMutationFieldMask(input.fieldMask);
+  const projection = buildMutationProjection(input, fieldMask);
+  requireCurrentOutboundSafety(projection, input.outboundSafety);
+  return {
+    provider: 'github',
+    operation: input.operation,
+    context: input.context,
+    intent: {
+      bindingId: input.bindingId,
+      stableId: input.stableId ?? null,
+      provenance: input.provenance ?? null,
+      fieldMask,
+      projection,
+      postconditions: { ...projection },
+      outboundSafety: {
+        projectionDigest: input.outboundSafety.projectionDigest,
+        resultDigest: input.outboundSafety.resultDigest,
+      },
+    },
+  };
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -315,6 +366,109 @@ function unavailableReadResult(
     preservePriorEvidence: true,
     reasons,
   };
+}
+
+function assertMutationIdentity(input: GitHubMutationPlanInput): void {
+  if (!input.bindingId)
+    throw new Error('GitHub mutation requires a binding ID.');
+  if (input.operation === 'create') {
+    if (
+      input.provenance?.bindingId !== input.bindingId ||
+      !input.provenance.origin
+    ) {
+      throw new Error('GitHub create requires explicit binding provenance.');
+    }
+  } else if (!input.stableId) {
+    throw new Error('GitHub update requires stable identity.');
+  }
+}
+
+function normalizeMutationFieldMask(
+  fieldMask: readonly GitHubMutationField[],
+): GitHubMutationField[] {
+  const allowed = new Set<GitHubMutationField>([
+    'title',
+    'description',
+    'priority',
+  ]);
+  if (
+    fieldMask.length === 0 ||
+    new Set(fieldMask).size !== fieldMask.length ||
+    fieldMask.some((field) => !allowed.has(field))
+  ) {
+    throw new Error('Unsupported GitHub mutation field.');
+  }
+  return ['title', 'description', 'priority'].filter((field) =>
+    fieldMask.includes(field as GitHubMutationField),
+  ) as GitHubMutationField[];
+}
+
+function buildMutationProjection(
+  input: GitHubMutationPlanInput,
+  fieldMask: readonly GitHubMutationField[],
+): OutboundProjection {
+  const projectionKeys = Object.keys(input.projection);
+  if (
+    projectionKeys.length !== fieldMask.length ||
+    projectionKeys.some(
+      (key) => !fieldMask.includes(key as GitHubMutationField),
+    )
+  ) {
+    throw new Error(
+      'GitHub mutation projection must exactly match its field mask.',
+    );
+  }
+  const projection: OutboundProjection = {};
+  if (fieldMask.includes('title')) {
+    if (typeof input.projection.title !== 'string')
+      throw new Error('GitHub title projection must be a string.');
+    projection.title = input.projection.title;
+  }
+  if (fieldMask.includes('priority')) {
+    if (
+      input.projection.priority !== null &&
+      !['low', 'medium', 'high', 'urgent'].includes(
+        String(input.projection.priority),
+      )
+    ) {
+      throw new Error('Unsupported GitHub priority.');
+    }
+    projection.priority = input.projection.priority;
+  }
+  if (fieldMask.includes('description')) {
+    projection.description = buildDescriptionProjection(input);
+  }
+  return projection;
+}
+
+function buildDescriptionProjection(
+  input: GitHubMutationPlanInput,
+): string | null {
+  if (input.descriptionMode === 'none') {
+    throw new Error('GitHub description updates are disabled by policy.');
+  }
+  const description = input.projection.description;
+  if (input.descriptionMode === 'replace') {
+    if (description !== null && typeof description !== 'string') {
+      throw new Error('GitHub description projection must be nullable text.');
+    }
+    return description ?? null;
+  }
+  if (typeof description !== 'string') {
+    throw new Error('Managed GitHub description content must be text.');
+  }
+  const currentBody = input.currentBody ?? '';
+  const inspection = inspectManagedMarkdown(currentBody, input.bindingId);
+  const update =
+    inspection.status === 'absent'
+      ? insertManagedMarkdown(currentBody, input.bindingId, description)
+      : inspection.status === 'managed'
+        ? replaceManagedMarkdown(currentBody, input.bindingId, description)
+        : inspection;
+  if (update.status !== 'updated') {
+    throw new Error(`GitHub managed body requires choice: ${update.reason}.`);
+  }
+  return update.body;
 }
 
 function isProviderContext(value: unknown): value is ProviderContext {
