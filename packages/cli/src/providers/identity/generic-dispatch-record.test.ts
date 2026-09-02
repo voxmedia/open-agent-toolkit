@@ -296,6 +296,7 @@ describe('parseGenericDispatchRecord', () => {
 
   it.each([
     'payload',
+    'candidates_considered',
     'configured_invocation_evidence',
     'continuation_events',
     'diagnostics',
@@ -376,6 +377,18 @@ describe('parseGenericDispatchRecord', () => {
         [field]: 'x'.repeat(max + 1),
       }),
     ).toThrow();
+  });
+
+  it('bounds candidates_considered breadth as well as entry length', () => {
+    expect(() =>
+      parseGenericDispatchRecord({
+        ...genericRecord(),
+        candidates_considered: Array.from(
+          { length: 5000 },
+          (_, index) => `c${index}`,
+        ),
+      }),
+    ).toThrow(/512-value control projection limit/i);
   });
 
   it('bounds candidates_considered and escalate_when entries', () => {

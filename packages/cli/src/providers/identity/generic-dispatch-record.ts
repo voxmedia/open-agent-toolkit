@@ -43,9 +43,9 @@ const optionalSelector = identifier().nullable();
  * Every generic container field is validated as a closed, bounded JSON
  * projection so prompt bodies, transcripts, and other free-form content cannot
  * ride into a durable journal through an unbounded `unknown` value. `payload`
- * carries configured sandbox/tool controls; `configured_invocation_evidence`,
- * `continuation_events`, `diagnostics`, and `escalate_when` carry short
- * references and identifiers, not narrative text.
+ * carries configured sandbox/tool controls; `candidates_considered`,
+ * `configured_invocation_evidence`, `continuation_events`, `diagnostics`, and
+ * `escalate_when` carry short references and identifiers, not narrative text.
  *
  * The projection bounds four independent axes so that no single one can be
  * defeated by trading against another: nesting depth, per-string length, node
@@ -55,6 +55,7 @@ const optionalSelector = identifier().nullable();
  */
 const BOUNDED_PROJECTION_FIELDS = [
   'payload',
+  'candidates_considered',
   'configured_invocation_evidence',
   'continuation_events',
   'diagnostics',
