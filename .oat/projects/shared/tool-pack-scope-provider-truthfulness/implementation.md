@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 6 review round 1 found four Critical and one Important dispatch-integrity defects; the bounded fix is assigned to the original implementer before Phase 7.
+  - Phase 6 review rounds 1 and 2 are fixed at `bb93fa12a`; Phase 7 remains gated until the round 3 independent review passes.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p06-review-r1-fix
+oat_current_task_id: p06-review-r3
 oat_generated: false
 ---
 
@@ -1399,7 +1399,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ## Phase 6: Native Dispatch and Fallback Provenance
 
-**Status:** blocked pending review round 1 fixes
+**Status:** blocked pending review round 3
 **Started:** 2026-09-02
 
 ### Task Outcomes
@@ -1432,6 +1432,61 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   and concurrency/barrier regressions for every reproduced path.
 - Reconnaissance was not attempted. The original exact-High Phase 6 implementer
   owns the bounded review fix; Phase 7 remains gated.
+
+### Review Round 1 Fix
+
+- Range: `83a9749b5..bd3961720` (4 `fix(p06-review-r1)` commits, 9 files).
+- Closed a prohibited-rejection denylist and 22-field immutable control
+  comparison with trigger-bound canonical role equality, a contained writer
+  lock with a durable single fallback claim and compare-and-swap updates, and
+  normalized sensitive-key families with a bounded payload projection.
+- The focused Phase 6 union rose from 415 to 538 tests; all static and skill
+  gates passed.
+- C4 was reported as fully fail-closed. That report was inaccurate; the
+  round 2 review disproved it (see below).
+
+### Review Round 2 — Publication Safety and Provenance Coverage
+
+- Artifact: `reviews/p06-review-2026-09-02T191958Z.md`
+- Reviewed head: `bd3961720`
+- Verdict: blocked; 1 Critical, 3 Important, 2 Medium, 3 Minor.
+- Round 1 closure independently reproduced: C1, C2 and I1 verified closed; C3
+  partially closed; C4 open and materially worse than reported.
+- The Critical proved journal publication was destructive rather than
+  fail-closed: the update path clobbered an out-of-scope file via `rename` and
+  `revertMisplacedPublication` then deleted it through a byte-equality
+  ownership branch. The "no out-of-scope write" and "identity-guarded cleanup"
+  claims in `9a31595d0` were both false; only "never returns false success"
+  held.
+- Further findings: `fallback.*` controls and `selection_source` were outside
+  the immutable comparison so `allow_below_task_class_floor` could widen
+  false-to-true; the instruction/credential key families and homoglyph
+  spellings were unfolded and `continuation_events` was unbounded, persisting
+  a 12,181-byte journal of literal prompt text; and absolute paths leaked into
+  `--json` error output.
+
+### Review Round 2 Fix
+
+- Range: `bd3961720..bb93fa12a` (5 `fix(p06-review-r2)` commits).
+- The operator directed elimination of the destructive class rather than a
+  risk acceptance. Publication is now append-only through
+  `publishContainedJsonRevision`, whose only publishing syscall is `link`;
+  `atomicWriteJsonContained` and `revertMisplacedPublication` are removed, and
+  no `rename`, `rm` or `unlink` targets a publication destination.
+- Verified guarantee: under a privileged apply-time directory swap this code
+  cannot replace, truncate or delete any pre-existing file, inside or outside
+  scope, and never returns success for an unverified publication. The residual
+  is non-destructive — one unreferenced create plus a possibly stranded
+  staging file under attacker-controlled ancestry. No operator disposition is
+  required.
+- Also closed: `fallback` and `selection_source` added to the immutable
+  control set; NFKC confusable folding with bounded projections over every
+  free-form evidence field; scope-relative redaction of lock, `EEXIST` and
+  `ENOENT` messages; a recoverable writer lock with holder evidence and a
+  15-minute hard cap; and the `wrapper-launch-refused` rename, which forced
+  the closed qualifying set to take precedence over family classification.
+- The focused Phase 6 union rose from 538 to 597 tests. Independently
+  re-verified by the orchestrator at 597/597, exit 0.
 
 ---
 
@@ -2315,15 +2370,17 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact  | Planned / Documented                     | Actual / Accepted                                                                                                                                                       | Reason                                  | Source of Truth        | Follow-up                         |
-| ------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------- | --------------------------------- |
-| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams | predecessor landed before source work   | PR #249 / current main | none                              |
-| p02 review r1 | plan file union  | update tests named by p02-t07 only       | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                          | Mechanically derived stale fixture      | Round-1 review finding | recorded; no production expansion |
-| p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                | Mechanically derived full-suite fixture | p03-t01 behavior       | recovery attempt 1/10 reserved    |
-| p03 review r2 | plan file union  | p03-t04 named command source/tests only  | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                       | Mechanically derived docs reference     | Round-2 review finding | recorded; no production expansion |
-| p03 review r2 | plan file union  | provider help source changed             | Added adjacent `packages/cli/src/commands/help-snapshots.test.ts` for the two mechanically stale provider-set inline snapshots                                          | Mechanically derived snapshot fixture   | Full test gate         | recorded; no production expansion |
-| p04 review r9 | design           | absent proof releases directory work     | Aligned two stale passages to the verified fail-closed implementation and accepted the correction without another review                                                | Explicit operator disposition           | implementation/docs    | none                              |
-| p05 review r5 | spec/design      | all apply-time-swapped paths fail closed | Accepted the narrow privileged-local parent-swap race for pathname-based exclusive creation of an absent root `AGENTS.md`; existing targets remain zero-write           | Explicit operator risk acceptance       | implementation/code    | documented residual risk          |
+| Task / Review | Source Artifact  | Planned / Documented                             | Actual / Accepted                                                                                                                                                           | Reason                                                            | Source of Truth        | Follow-up                                                   |
+| ------------- | ---------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------- |
+| p01-t01       | design/spec/plan | predecessor active; accepted SHA pending         | PR #249 accepted at `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; landed boolean materialization input, batch shared-owner attribution, and structured availability seams     | predecessor landed before source work                             | PR #249 / current main | none                                                        |
+| p02 review r1 | plan file union  | update tests named by p02-t07 only               | Added adjacent `commands/tools/update/config-write.test.ts` zero-request/zero-write regression                                                                              | Mechanically derived stale fixture                                | Round-1 review finding | recorded; no production expansion                           |
+| p03 recovery  | plan file union  | p03-t01 named scanner/planner/sync tests         | Added adjacent `commands/commands.integration.test.ts` to correct one stale pre-capability Claude user-agent expectation                                                    | Mechanically derived full-suite fixture                           | p03-t01 behavior       | recovery attempt 1/10 reserved                              |
+| p03 review r2 | plan file union  | p03-t04 named command source/tests only          | Added adjacent `apps/oat-docs/docs/provider-sync/commands.md` to correct the provider command reference and scope discoverability                                           | Mechanically derived docs reference                               | Round-2 review finding | recorded; no production expansion                           |
+| p03 review r2 | plan file union  | provider help source changed                     | Added adjacent `packages/cli/src/commands/help-snapshots.test.ts` for the two mechanically stale provider-set inline snapshots                                              | Mechanically derived snapshot fixture                             | Full test gate         | recorded; no production expansion                           |
+| p04 review r9 | design           | absent proof releases directory work             | Aligned two stale passages to the verified fail-closed implementation and accepted the correction without another review                                                    | Explicit operator disposition                                     | implementation/docs    | none                                                        |
+| p05 review r5 | spec/design      | all apply-time-swapped paths fail closed         | Accepted the narrow privileged-local parent-swap race for pathname-based exclusive creation of an absent root `AGENTS.md`; existing targets remain zero-write               | Explicit operator risk acceptance                                 | implementation/code    | documented residual risk                                    |
+| p06 review r2 | plan             | journal persists at `dispatch/<request-id>.json` | Revision 1 keeps that name; updates append `dispatch/<request-id>@<NNNN>.json` and nothing prunes superseded revisions, because pruning would reintroduce a path-based `rm` | Required by the operator-directed non-destructive publication fix | implementation/code    | plan text superseded; Phase 7 readers must expect revisions |
+| p06 review r2 | plan file union  | Phase 6 file union only                          | Added `.gitignore` for `.dispatch-lock/`                                                                                                                                    | Mechanically derived from the lock-recovery finding               | Round-2 review finding | recorded; no production expansion                           |
 
 ## Test Results
 

@@ -1,8 +1,8 @@
 ---
-oat_current_task: p06-review-r1-fix
-oat_last_commit: 642912319c1a3e79ee43397d5158e6fecc15b051
+oat_current_task: p06-review-r3
+oat_last_commit: bb93fa12a
 oat_blockers:
-  - Phase 6 review round 1 found four Critical and one Important dispatch-integrity defects; the bounded fix is assigned to the original implementer before Phase 7.
+  - Phase 6 review rounds 1 and 2 are fixed at `bb93fa12a`; Phase 7 remains gated until the round 3 independent review passes.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T13:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T22:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,11 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - Phase 6 completed four planned tasks, but its first review
-reproduced fallback authorization, concurrency, sensitive-content, containment,
-and generic-correlation defects. A bounded review fix is active.
+Implementation - Phase 6 completed four planned tasks. Review round 1 found
+five defects and round 2 disproved the first fix's publication-safety claim,
+proving the journal update path was destructive rather than fail-closed. Both
+rounds are now fixed at `bb93fa12a`, with publication made append-only and
+non-destructive by operator direction. Round 3 review is pending.
 
 ## Artifacts
 
@@ -165,13 +167,21 @@ and generic-correlation defects. A bounded review fix is active.
 - ✓ Phase 6 four-task implementation completed at `642912319`
 - ✓ Phase 6 verification passed 559/559 plus skill/static gates
 - ⧗ Phase 6 review round 1 blocked with 4 Critical and 1 Important findings
+- ✓ Round 1 fix closed eligibility, concurrency and sensitive-key findings
+- ⧗ Review round 2 blocked with 1 Critical, 3 Important, 2 Medium, 3 Minor
+- ✓ Round 2 disproved the round 1 publication-safety claim as destructive
+- ✓ Operator directed eliminating the destructive class over accepting it
+- ✓ Round 2 fix landed append-only `link`-only publication at `bb93fa12a`
+- ✓ Phase 6 focused union independently re-verified at 597/597
 
 ## Blockers
 
-- Phase 6 requires the bounded round-1 fallback/journal integrity fix and a
-  fresh independent review before Phase 7.
+- Phase 6 requires a passing round 3 independent review before Phase 7.
+- `origin/main` advanced to `0.2.51` during Phase 5/6, so p07-t04 must merge
+  main and land `0.2.52` across all five lockstep packages; the two release
+  gates fail for this reason alone until then.
 
 ## Next Milestone
 
-Fix the five Phase 6 round-1 findings through the original implementer, rerun
-the complete Phase 6 verification set, and obtain a fresh independent review.
+Obtain a passing round 3 independent review of the complete Phase 6 range
+`e690bd2b4..bb93fa12a`, then begin Phase 7 runtime observation.
