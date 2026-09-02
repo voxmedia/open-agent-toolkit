@@ -1,3 +1,4 @@
+import { containsSensitiveContentSignal } from '@commands/pjm/remote/credential-safety';
 import {
   inspectManagedMarkdown,
   insertManagedMarkdown,
@@ -20,6 +21,7 @@ import {
   type SemanticAction,
   type SemanticOperation,
 } from '@commands/pjm/remote/provider';
+import { WHOLE_FIELD_SUPPRESSION_MARKER } from '@commands/pjm/remote/schema';
 
 export interface GitHubIssueReference {
   host?: string;
@@ -170,6 +172,50 @@ export interface GitHubDuplicateSearchValidationResult {
     | 'unavailable'
     | 'invalid';
   stableId: string | null;
+  reasons: string[];
+}
+
+export interface GitHubDiscussionReadPlanInput {
+  context: ProviderContext;
+  hostCapability: GitHubHostCapabilityObservation;
+  stableId: string;
+  evidenceKind: 'comments' | 'activity';
+  cursor: string | null;
+  limit: number;
+}
+
+export interface GitHubDiscussionItemObservation {
+  id: string;
+  kind: 'comment' | 'activity';
+  body: string;
+  observedAt: string;
+}
+
+export interface GitHubDiscussionReadObservation {
+  provider: 'github';
+  context: ProviderContext;
+  availability: 'available' | 'rate-limited' | 'permission-denied';
+  capabilityEvidenceDigest: string;
+  requestedCursor: string | null;
+  nextCursor: string | null;
+  items: GitHubDiscussionItemObservation[];
+}
+
+export interface GitHubDiscussionReadValidationInput {
+  action: SemanticAction;
+  hostCapability: GitHubHostCapabilityObservation;
+  observation: GitHubDiscussionReadObservation;
+}
+
+export interface GitHubDiscussionReadValidationResult {
+  classification: 'page' | 'rate-limited' | 'permission-denied' | 'invalid';
+  page: {
+    items: Array<
+      GitHubDiscussionItemObservation & { contentSuppressed: boolean }
+    >;
+    nextCursor: string | null;
+  } | null;
+  persistable: false;
   reasons: string[];
 }
 
@@ -607,6 +653,127 @@ export function validateDuplicateSearchObservation(
   );
 }
 
+export function planDiscussionRead(
+  input: GitHubDiscussionReadPlanInput,
+): SemanticAction {
+  const capability = validateGitHubHostCapability(
+    {
+      operation: 'read-discussion',
+      context: input.context,
+      requiredFields: [],
+    },
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    throw new Error('GitHub discussion read capability is unavailable.');
+  }
+  if (
+    !input.stableId ||
+    !Number.isInteger(input.limit) ||
+    input.limit < 1 ||
+    input.limit > 100 ||
+    !validDiscussionCursor(input.cursor)
+  ) {
+    throw new Error('GitHub discussion read bounds are invalid.');
+  }
+  return {
+    provider: 'github',
+    operation: 'read-discussion',
+    context: input.context,
+    intent: {
+      stableId: input.stableId,
+      evidenceKind: input.evidenceKind,
+      cursor: input.cursor,
+      limit: input.limit,
+      resultContract: {
+        maxItems: input.limit,
+        content: 'sanitized-non-persistent-evidence',
+      },
+      capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    },
+  };
+}
+
+export function validateDiscussionReadObservation(
+  input: GitHubDiscussionReadValidationInput,
+): GitHubDiscussionReadValidationResult {
+  if (
+    input.action.provider !== 'github' ||
+    input.action.operation !== 'read-discussion'
+  ) {
+    throw new Error(
+      'GitHub discussion validation requires a discussion action.',
+    );
+  }
+  const capability = validateGitHubHostCapability(
+    {
+      operation: 'read-discussion',
+      context: input.action.context,
+      requiredFields: [],
+    },
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    return discussionResult('invalid', null, capability.reasons);
+  }
+  if (input.observation.availability !== 'available') {
+    return discussionResult(input.observation.availability, null, [
+      input.observation.availability,
+    ]);
+  }
+  if (
+    input.observation.provider !== 'github' ||
+    !contextsEqual(input.action.context, input.observation.context) ||
+    input.observation.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest ||
+    input.observation.requestedCursor !== input.action.intent.cursor
+  ) {
+    return discussionResult('invalid', null, [
+      'discussion-context-or-cursor-mismatch',
+    ]);
+  }
+  const contract = recordValue(
+    input.action.intent.resultContract,
+    'GitHub discussion result contract is missing.',
+  );
+  const maxItems = Number(contract.maxItems);
+  if (
+    !Number.isInteger(maxItems) ||
+    input.observation.items.length > maxItems ||
+    !validDiscussionCursor(input.observation.nextCursor)
+  ) {
+    return discussionResult('invalid', null, ['discussion-bound-exceeded']);
+  }
+  const items: NonNullable<
+    GitHubDiscussionReadValidationResult['page']
+  >['items'] = [];
+  for (const item of input.observation.items) {
+    if (
+      !item.id ||
+      item.id.length > 256 ||
+      !['comment', 'activity'].includes(item.kind) ||
+      typeof item.body !== 'string' ||
+      Buffer.byteLength(item.body, 'utf8') > 16_384 ||
+      !Number.isFinite(Date.parse(item.observedAt))
+    ) {
+      return discussionResult('invalid', null, ['discussion-item-invalid']);
+    }
+    const contentSuppressed = containsSensitiveContentSignal(item.body);
+    items.push({
+      id: item.id,
+      kind: item.kind,
+      body: contentSuppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : item.body,
+      observedAt: item.observedAt,
+      contentSuppressed,
+    });
+  }
+  return discussionResult(
+    'page',
+    { items, nextCursor: input.observation.nextCursor },
+    [],
+  );
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -894,6 +1061,26 @@ function recordValue(value: unknown, message: string): Record<string, unknown> {
     throw new Error(message);
   }
   return value as Record<string, unknown>;
+}
+
+function validDiscussionCursor(cursor: string | null): boolean {
+  return (
+    cursor === null ||
+    (cursor.length > 0 &&
+      cursor.length <= 512 &&
+      [...cursor].every((character) => {
+        const code = character.charCodeAt(0);
+        return code >= 32 && code !== 127;
+      }))
+  );
+}
+
+function discussionResult(
+  classification: GitHubDiscussionReadValidationResult['classification'],
+  page: GitHubDiscussionReadValidationResult['page'],
+  reasons: string[],
+): GitHubDiscussionReadValidationResult {
+  return { classification, page, persistable: false, reasons };
 }
 
 function requiredString(fields: Record<string, unknown>, key: string): string {

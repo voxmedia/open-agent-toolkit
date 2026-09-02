@@ -4,7 +4,9 @@ import {
   classifyGitHubReadObservation,
   githubAdapter,
   planDuplicateSearch,
+  planDiscussionRead,
   validateDuplicateSearchObservation,
+  validateDiscussionReadObservation,
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from '@commands/pjm/remote/providers/github';
@@ -27,7 +29,14 @@ const capability: GitHubHostCapabilityObservation = {
   availability: 'available',
   accountId: 'account_123',
   repositoryId: 'repo_123',
-  operations: ['read', 'update', 'transition', 'annotate', 'search-duplicates'],
+  operations: [
+    'read',
+    'update',
+    'transition',
+    'annotate',
+    'search-duplicates',
+    'read-discussion',
+  ],
   observableFields: ['stable-identity', 'title', 'state', 'revision'],
   evidenceDigest: 'sha256:github-capability',
 };
@@ -194,6 +203,42 @@ class GitHubLifecycleFixture {
     });
   }
 
+  discussionRead() {
+    const snapshotBefore = JSON.stringify(issue);
+    const result = validateDiscussionReadObservation({
+      action: planDiscussionRead({
+        context,
+        hostCapability: capability,
+        stableId: issue.identity.stableId,
+        evidenceKind: 'comments',
+        cursor: null,
+        limit: 10,
+      }),
+      hostCapability: capability,
+      observation: {
+        provider: 'github',
+        context,
+        availability: 'available',
+        capabilityEvidenceDigest: capability.evidenceDigest,
+        requestedCursor: null,
+        nextCursor: null,
+        items: [
+          {
+            id: 'comment_1',
+            kind: 'comment',
+            body: 'Informational evidence only',
+            observedAt: '2026-09-02T12:03:00.000Z',
+          },
+        ],
+      },
+    });
+    return {
+      ...result,
+      bindingSnapshotUnchanged: JSON.stringify(issue) === snapshotBefore,
+      journalUnchanged: true,
+    };
+  }
+
   closeout() {
     const ready = verifyGitHubMutationObservation({
       action: githubAdapter.plan('transition', {
@@ -251,6 +296,12 @@ describe('GitHub remote lifecycle integration', () => {
       accepted: true,
       classification: 'one-verified-match',
       stableId: 'issue_node_42',
+    });
+    expect(fixture.discussionRead()).toMatchObject({
+      classification: 'page',
+      persistable: false,
+      bindingSnapshotUnchanged: true,
+      journalUnchanged: true,
     });
   });
 

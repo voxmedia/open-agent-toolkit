@@ -1,5 +1,6 @@
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
+import { WHOLE_FIELD_SUPPRESSION_MARKER } from '@commands/pjm/remote/schema';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,9 +9,11 @@ import {
   normalizeGitHubIssueObservation,
   parseGitHubIssueReference,
   planDuplicateSearch,
+  planDiscussionRead,
   planGitHubMutation,
-  validateGitHubHostCapability,
   validateDuplicateSearchObservation,
+  validateDiscussionReadObservation,
+  validateGitHubHostCapability,
   verifyGitHubMutationObservation,
   type GitHubHostCapabilityObservation,
 } from './github';
@@ -683,6 +686,143 @@ describe('GitHub semantic adapter', () => {
       ).toMatchObject({ classification, accepted });
     },
   );
+
+  it('plans a bounded semantic discussion read with a sanitized cursor contract', () => {
+    expect(
+      planDiscussionRead({
+        context: hostCapability.context,
+        hostCapability,
+        stableId: observation.identity.stableId,
+        evidenceKind: 'comments',
+        cursor: 'cursor_1',
+        limit: 20,
+      }),
+    ).toEqual({
+      provider: 'github',
+      operation: 'read-discussion',
+      context: hostCapability.context,
+      intent: {
+        stableId: observation.identity.stableId,
+        evidenceKind: 'comments',
+        cursor: 'cursor_1',
+        limit: 20,
+        resultContract: {
+          maxItems: 20,
+          content: 'sanitized-non-persistent-evidence',
+        },
+        capabilityEvidenceDigest: hostCapability.evidenceDigest,
+      },
+    });
+    expect(() =>
+      planDiscussionRead({
+        context: hostCapability.context,
+        hostCapability,
+        stableId: observation.identity.stableId,
+        evidenceKind: 'activity',
+        cursor: null,
+        limit: 101,
+      }),
+    ).toThrow('GitHub discussion read bounds are invalid');
+  });
+
+  it('accepts a sanitized bounded page and suppresses the whole signaled field', () => {
+    const action = planDiscussionRead({
+      context: hostCapability.context,
+      hostCapability,
+      stableId: observation.identity.stableId,
+      evidenceKind: 'comments',
+      cursor: 'cursor_1',
+      limit: 20,
+    });
+    expect(
+      validateDiscussionReadObservation({
+        action,
+        hostCapability,
+        observation: {
+          provider: 'github',
+          context: hostCapability.context,
+          availability: 'available',
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          requestedCursor: 'cursor_1',
+          nextCursor: 'cursor_2',
+          items: [
+            {
+              id: 'comment_1',
+              kind: 'comment',
+              body: 'Safe discussion summary',
+              observedAt: '2026-09-02T12:00:00.000Z',
+            },
+            {
+              id: 'activity_1',
+              kind: 'activity',
+              body: 'An api key was accidentally posted',
+              observedAt: '2026-09-02T12:01:00.000Z',
+            },
+          ],
+        },
+      }),
+    ).toEqual({
+      classification: 'page',
+      page: {
+        items: [
+          {
+            id: 'comment_1',
+            kind: 'comment',
+            body: 'Safe discussion summary',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            contentSuppressed: false,
+          },
+          {
+            id: 'activity_1',
+            kind: 'activity',
+            body: WHOLE_FIELD_SUPPRESSION_MARKER,
+            observedAt: '2026-09-02T12:01:00.000Z',
+            contentSuppressed: true,
+          },
+        ],
+        nextCursor: 'cursor_2',
+      },
+      persistable: false,
+      reasons: [],
+    });
+  });
+
+  it.each([
+    { availability: 'rate-limited' as const, classification: 'rate-limited' },
+    {
+      availability: 'permission-denied' as const,
+      classification: 'permission-denied',
+    },
+  ])(
+    'classifies $availability without returning content',
+    ({ availability, classification }) => {
+      const result = validateDiscussionReadObservation({
+        action: planDiscussionRead({
+          context: hostCapability.context,
+          hostCapability,
+          stableId: observation.identity.stableId,
+          evidenceKind: 'activity',
+          cursor: null,
+          limit: 10,
+        }),
+        hostCapability,
+        observation: {
+          provider: 'github',
+          context: hostCapability.context,
+          availability,
+          capabilityEvidenceDigest: hostCapability.evidenceDigest,
+          requestedCursor: null,
+          nextCursor: null,
+          items: [],
+        },
+      });
+      expect(result).toMatchObject({
+        classification,
+        page: null,
+        persistable: false,
+      });
+    },
+  );
 });
 
 function duplicateSearchAction() {
@@ -739,6 +879,7 @@ const hostCapability: GitHubHostCapabilityObservation = {
     'transition',
     'annotate',
     'search-duplicates',
+    'read-discussion',
   ],
   observableFields: ['stable-identity', 'title', 'state', 'revision'],
   evidenceDigest: 'sha256:bounded-capability',
