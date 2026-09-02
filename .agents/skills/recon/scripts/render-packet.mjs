@@ -270,7 +270,7 @@ export async function renderPacket(packetDirectory) {
 
 export async function renderValidatedPacket(
   validatedRun,
-  { promote = rename } = {},
+  { promote = rename, afterPromotionChecks = () => {} } = {},
 ) {
   const run = assertValidatedRun(validatedRun);
   const { manifest, ledger, packetRoot } = run;
@@ -317,7 +317,6 @@ export async function renderValidatedPacket(
     };
     await assertCanonicalPacketBytes(run);
     await promote(temporary, target);
-    await assertCanonicalPacketBytes(run);
     await assertFileIdentity(target, temporaryIdentity);
     const [promotedDigest, retainedDigest] = await Promise.all([
       hashFile(target),
@@ -332,6 +331,8 @@ export async function renderValidatedPacket(
     await Promise.all(
       run.filesystemIdentities.map((identity) => assertUnchangedRoot(identity)),
     );
+    await afterPromotionChecks();
+    await assertCanonicalPacketBytes(run);
     return result;
   } catch (error) {
     try {

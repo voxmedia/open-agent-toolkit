@@ -572,6 +572,83 @@ test('canonical mutation during promotion withdraws the split-generation view', 
   );
 });
 
+for (const mutationCase of [
+  {
+    name: 'claims.json',
+    path: (fixture) => fixture.claimsPath,
+    mutate: async (fixture) => {
+      const changedLedger = structuredClone(fixture.ledger);
+      changedLedger.synthesis.answer = 'A post-promotion canonical generation.';
+      await writeFile(
+        fixture.claimsPath,
+        `${JSON.stringify(changedLedger, null, 2)}\n`,
+        'utf8',
+      );
+    },
+  },
+  {
+    name: 'manifest.json',
+    path: (fixture) => fixture.manifestPath,
+    mutate: async (fixture) => {
+      const changedManifest = structuredClone(fixture.manifest);
+      changedManifest.run.topic = 'A post-promotion manifest generation.';
+      await writeFile(
+        fixture.manifestPath,
+        `${JSON.stringify(changedManifest, null, 2)}\n`,
+        'utf8',
+      );
+    },
+  },
+  {
+    name: 'validated referenced artifact',
+    path: (fixture) =>
+      join(fixture.packetRoot, 'raw', 'dossiers', 'gather.json'),
+    mutate: async (fixture) => {
+      await writeFile(
+        join(fixture.packetRoot, 'raw', 'dossiers', 'gather.json'),
+        '{"mutated":"post-promotion"}\n',
+        'utf8',
+      );
+    },
+  },
+]) {
+  test(`canonical ${mutationCase.name} mutation during post-promotion checks withdraws the split-generation view`, async () => {
+    const fixture = await createPacketFixture();
+    tempRoots.push(fixture.tempRoot);
+    const validation = await compileValidatedRun(fixture.packetRoot);
+    assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+    const mutationPath = mutationCase.path(fixture);
+    assert.ok(
+      validation.validatedRun.canonicalByteDigests.some(
+        ({ path }) => join(fixture.packetRoot, path) === mutationPath,
+      ),
+    );
+    const retainedBytes = await readFile(mutationPath, 'utf8');
+    let mutationCompleted = false;
+
+    const outcome = await renderValidatedPacket(validation.validatedRun, {
+      afterPromotionChecks: async () => {
+        await mutationCase.mutate(fixture);
+        mutationCompleted = true;
+      },
+    }).then(
+      (result) => {
+        return { result };
+      },
+      (error) => {
+        return { error };
+      },
+    );
+
+    assert.equal(mutationCompleted, true);
+    assert.equal(outcome.error?.code, 'PACKET_CANONICAL_BYTES_CHANGED');
+    await assert.rejects(
+      readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'),
+    );
+    assert.notEqual(await readFile(mutationPath, 'utf8'), retainedBytes);
+  });
+}
+
 test('successful promotion replaces the previously published packet', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
