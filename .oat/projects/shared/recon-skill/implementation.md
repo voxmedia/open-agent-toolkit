@@ -1231,6 +1231,21 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   mandatory final lifecycle review requires a fresh explicit user override;
   the configured cross-family gate remains downstream of that review.
 
+#### Authorized final-review override — 2026-09-02T21:42:07Z
+
+- The user explicitly authorized exactly one fresh mandatory final lifecycle
+  review after the Revision 7 phase review passed.
+- Review basis: current committed head
+  `4f5a6113959d29958e5e6396a436bc31d3cfcc60`, containing implementation code
+  commit `dbfeeede518556ed5678839bc18ab1342e381593` plus bounded project
+  bookkeeping.
+- Route: native `oat-reviewer-gpt-5-6-sol-high`, resolved under the managed
+  `high` project policy with model axis `selected:gpt-5.6-sol` and effort axis
+  `selected:high`; configured review execution is `subagent`.
+- Terminal contract: if the review passes, continue to the configured
+  cross-family exit gate. If it reports blocking findings or fails after
+  acceptance, stop without automatic remediation, replacement, or re-review.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
