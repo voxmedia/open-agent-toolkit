@@ -1,6 +1,6 @@
 ---
 oat_current_task: p07-t04
-oat_last_commit: 22721d6aa78d1d3418784dbaa51c7130395c4e92
+oat_last_commit: 8a00322947af68fc637de0e52e3e0104bdd7e8b5
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -182,7 +182,11 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 - ✓ Phase 6 complete after three bounded fix rounds
 - ✓ Phase 7 tasks p07-t01 through p07-t03 implemented at `22721d6aa`
 - ✓ One p07 recovery attempt validated and cleared (attempt 1/10)
-- ✓ Phase 6 focused union held at 658/658 with no regression
+- ✓ Phase 6 focused union held at 664/664 with no regression
+- ⧗ Phase 7 review round 1 blocked with 1 Important and 7 lesser findings
+- ✓ Live nested Codex dispatch disproved the Codex lineage parser
+- ✓ Real-shape Codex and Claude parsers landed at `8a0032294`
+- ✓ Forged-observation and allowlist-projection review fixes landed
 
 ## Blockers
 

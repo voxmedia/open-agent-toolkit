@@ -1581,8 +1581,13 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   configured invocation.
 - Recovery `22721d6aa` mapped two new `record-schema.md` prose sites as
   non-gate prompt sites. Validated and cleared; p07 attempt usage 1/10.
-- The Phase 6 focused union rose 641 to 658 with no regression. Independently
-  re-verified by the orchestrator at 658/658, exit 0.
+- The Phase 6 focused union rose 641 to 664 across the live-verification and
+  review-fix rounds, with no regression. Independently re-verified by the
+  orchestrator at 664/664, exit 0.
+- Live-verification and review fixes landed across `715ace3cd..8a0032294`
+  (8 commits): real-shape Codex lineage, boundary-derived observation `match`
+  with provider binding, allowlist projection of raw provider metadata,
+  `comparedAxes` qualifying every match, and the Claude on-disk parser.
 
 ### Phase 6 Contract Verification
 
@@ -1591,19 +1596,64 @@ reintroduced in `fs/io.ts` or `record.ts` across the Phase 7 range, that
 observation strings are bounded at 256 characters and no Phase 6 bound was
 raised, and that the redaction boundary in `runRecordCommand` is unchanged.
 
+### Live Verification and Its Findings
+
+The operator ran a real nested Codex dispatch in this worktree — root
+(`gpt-5.6-sol`) to `oat-phase-implementer-gpt-5-6-terra-high` (depth-1) to
+`oat-reviewer-gpt-5-6-luna-high` (depth-2) — and fed the resulting rollouts to
+the production parser. **Every session parsed as `root` and every role as
+`null`.** The fixtures had been constructed from assumption rather than
+derived from real output, so 658 tests passed against a parser that worked on
+nothing. The independent Phase 7 review did not catch this, because it probed
+with the same invented fixtures.
+
+Corrections, all verified against real artifacts:
+
+- Codex lineage reads `parent_thread_id` and `agent_role`, not `parent_id` and
+  `role`. The declared `source.subagent.thread_spawn.depth` is authoritative —
+  it is a fact the runtime states about itself — with the parent chain as
+  fallback and `agent_path` as corroboration; disagreement yields
+  `depth-unknown`.
+- The applicable-session rule was also wrong. Model and effort had been
+  correct only by accident: the session's own header is at ordinal 0 and the
+  embedded parent's follows, so last-wins happened to land right. The frame is
+  now the first `session_meta`, with turn contexts filtered by
+  `subagent_history_start_ordinal`.
+- Fork classification tested `source.type === 'fork'`, which is unreachable —
+  a scan of all 1,594 local rollouts found no such shape. The classification
+  was **removed** rather than re-guessed; raw `threadSource` and
+  `forkedFromId` are exposed uninterpreted.
+- Codex `session_id` normalizes to `sessionid`, matching the `session`
+  sensitive-key family, so every real rollout was refused at the input
+  boundary. Raw entries are now projected through the owning parser's
+  allowlist before the sensitive-content assert.
+- The Claude parser had the same defect: `"subtype":"init"` appears in 0 of
+  2,725 local transcripts. It now reads the on-disk shape by two explicit key
+  paths inside `message` (`message.model`, `message.usage.service_tier`) plus
+  entry-level `effort` and `attributionAgent`. The stream-json `system`/`init`
+  path is retained but explicitly labelled unverified.
+- `not-exposed` for Claude effort was **false**: `effort` is present on
+  124,804 of 141,078 real assistant entries. It is removed from the producer
+  path and reserved as vocabulary for a genuinely absent axis.
+- Claude lineage is reported as a binary from `isSidechain`. A walk of every
+  parent chain in all 2,725 transcripts found `parentUuid` never crosses an
+  `agentId` boundary, so no depth taxonomy is derivable and none was invented.
+
 ### Open Items for p07-t04
 
-- Provider metadata shapes are fixture-defined, not vendor-verified against
-  live Codex or Claude output. `BL-260826`'s current-Codex depth-2 integration
-  check acceptance criterion is therefore **not** satisfied by this work; only
-  its metadata-only fixture criterion is. Do not close that backlog item as
-  fully satisfied without a live verification or an explicit narrowing.
-- A raw Codex rollout file is refused outright, because real `session_meta`
-  payloads carry `instructions` and `response_item` payloads carry `content`.
-  Callers must pass sanitized metadata. This was kept as the correct
-  fail-closed boundary rather than relaxed.
-- Claude's `not-exposed` effort is an assertion about the provider, not a
-  reading the transcript itself makes.
+- `BL-260826`'s Codex depth-2 integration criterion is now satisfied by the
+  live run above. Its Claude criterion rests on captured on-disk transcripts
+  rather than a captured stream-json artifact.
+- Operator disposition: close `BL-260826` and file a new low-priority item for
+  the residue (Claude lineage depth, and stream-json shape verification),
+  noting it should be reopened only if it becomes a recurring problem in
+  practice. The item's original Description was correct that Claude
+  transcripts report model, effort and service tier; the implementation
+  targeted the wrong format.
+- `apps/oat-docs/docs/workflows/projects/programmatic-execution.md:40` claims
+  the native Agent launch surface has no effort axis. That is a claim about
+  the launch surface, not transcript observation, and is outside the Phase 7
+  file set. Left unedited and flagged.
 
 ---
 

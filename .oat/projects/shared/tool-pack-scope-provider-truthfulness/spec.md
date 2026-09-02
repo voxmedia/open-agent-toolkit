@@ -218,8 +218,10 @@ selection authoritative.
   - Sanitized metadata excludes prompts and message content.
   - A mismatch or absent observation cannot authorize replacement, retry, or
     fallback.
-  - Providers that do not expose a field report `not-reported` rather than
-    copying requested values into observed state.
+  - A field the provider does not report observes as `not-reported`; an axis a
+    provider genuinely has no selectable control for observes as
+    `not-exposed`. Neither ever copies a requested value into observed state,
+    and both are excluded from comparison rather than compared as literals.
 - **Priority:** P1
 
 **FR10: Baseline Compatibility**
