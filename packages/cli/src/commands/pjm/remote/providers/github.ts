@@ -6,6 +6,7 @@ import {
   type ProviderAdapter,
   type ProviderContext,
   type SanitizedProviderObservation,
+  type SemanticAction,
   type SemanticOperation,
 } from '@commands/pjm/remote/provider';
 
@@ -44,6 +45,37 @@ export interface GitHubCapabilityExpectation {
   operation: SemanticOperation;
   context: ProviderContext;
   requiredFields?: GitHubSemanticField[];
+}
+
+export type GitHubReadLifecycle =
+  | 'current'
+  | 'renamed'
+  | 'transferred'
+  | 'archived'
+  | 'inaccessible'
+  | 'deleted'
+  | 'temporarily-unavailable';
+
+export interface GitHubReadResult {
+  classification: GitHubReadLifecycle;
+  issue: NormalizedRemoteIssue | null;
+  freshness: {
+    observedAt: string;
+    revisionStrength: 'strong' | 'weak';
+  } | null;
+  preservePriorEvidence: boolean;
+  reasons: string[];
+}
+
+export interface GitHubReadObservationInput {
+  action: SemanticAction;
+  hostCapability: GitHubHostCapabilityObservation;
+  observedAt: string;
+  outcome: 'found' | 'not-found' | 'temporary-failure';
+  observation?: SanitizedProviderObservation;
+  archived?: boolean;
+  authoritativeDeletion?: boolean;
+  deletionEvidenceDigest?: string;
 }
 
 const URL_REFERENCE =
@@ -152,6 +184,82 @@ export function validateGitHubHostCapability(
   return { valid: reasons.length === 0, reasons };
 }
 
+export function classifyGitHubReadObservation(
+  input: GitHubReadObservationInput,
+): GitHubReadResult {
+  if (input.action.provider !== 'github' || input.action.operation !== 'read') {
+    throw new Error(
+      'GitHub read classification requires a GitHub read action.',
+    );
+  }
+  if (!Number.isFinite(Date.parse(input.observedAt))) {
+    throw new Error('GitHub read classification requires a valid timestamp.');
+  }
+  const capability = validateGitHubHostCapability(
+    {
+      operation: 'read',
+      context: input.action.context,
+      requiredFields: requiredFieldsForRead(),
+    },
+    input.hostCapability,
+  );
+  if (!capability.valid) {
+    return unavailableReadResult(
+      capability.reasons.includes('rate-limited')
+        ? 'temporarily-unavailable'
+        : 'inaccessible',
+      capability.reasons,
+    );
+  }
+  if (input.outcome === 'temporary-failure') {
+    return unavailableReadResult('temporarily-unavailable', [
+      'temporary-host-failure',
+    ]);
+  }
+  if (input.outcome === 'not-found') {
+    const deleted =
+      input.authoritativeDeletion === true && !!input.deletionEvidenceDigest;
+    return unavailableReadResult(deleted ? 'deleted' : 'inaccessible', [
+      deleted ? 'authoritative-deletion' : 'absence-not-authoritative',
+    ]);
+  }
+  if (!input.observation) {
+    return unavailableReadResult('temporarily-unavailable', [
+      'read-observation-missing',
+    ]);
+  }
+
+  const issue = normalizeGitHubIssueObservation(input.observation);
+  const expectedNodeId = input.action.intent.stableNodeId;
+  if (
+    typeof expectedNodeId === 'string' &&
+    input.observation.fields.nodeId !== expectedNodeId
+  ) {
+    return unavailableReadResult('inaccessible', ['stable-identity-mismatch']);
+  }
+  const expectedRepositoryId = input.action.context.repositoryId;
+  const observedRepositoryId = input.observation.context.repositoryId;
+  const currentAlias = `${requiredString(input.observation.fields, 'owner')}/${requiredString(input.observation.fields, 'name')}#${requiredPositiveInteger(input.observation.fields, 'number')}`;
+  const expectedAlias = input.action.intent.currentAlias;
+  const classification: GitHubReadLifecycle = input.archived
+    ? 'archived'
+    : expectedRepositoryId && observedRepositoryId !== expectedRepositoryId
+      ? 'transferred'
+      : typeof expectedAlias === 'string' && currentAlias !== expectedAlias
+        ? 'renamed'
+        : 'current';
+  return {
+    classification,
+    issue,
+    freshness: {
+      observedAt: input.observedAt,
+      revisionStrength: input.observation.revision.token ? 'strong' : 'weak',
+    },
+    preservePriorEvidence: false,
+    reasons: [],
+  };
+}
+
 export const githubAdapter: ProviderAdapter = {
   provider: 'github',
   normalize: normalizeGitHubIssueObservation,
@@ -191,6 +299,22 @@ export const githubAdapter: ProviderAdapter = {
 
 function requiredFieldsForRead(): GitHubSemanticField[] {
   return ['stable-identity', 'title', 'state', 'revision'];
+}
+
+function unavailableReadResult(
+  classification: Extract<
+    GitHubReadLifecycle,
+    'inaccessible' | 'deleted' | 'temporarily-unavailable'
+  >,
+  reasons: string[],
+): GitHubReadResult {
+  return {
+    classification,
+    issue: null,
+    freshness: null,
+    preservePriorEvidence: true,
+    reasons,
+  };
 }
 
 function isProviderContext(value: unknown): value is ProviderContext {

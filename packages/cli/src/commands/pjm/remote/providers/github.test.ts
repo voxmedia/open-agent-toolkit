@@ -2,6 +2,7 @@ import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider
 import { describe, expect, it } from 'vitest';
 
 import {
+  classifyGitHubReadObservation,
   githubAdapter,
   normalizeGitHubIssueObservation,
   parseGitHubIssueReference,
@@ -161,6 +162,100 @@ describe('GitHub semantic adapter', () => {
     expect(hostCapability).not.toHaveProperty('tools');
     expect(hostCapability).not.toHaveProperty('schema');
   });
+
+  it.each([
+    {
+      name: 'current',
+      input: { outcome: 'found' as const, observation },
+      classification: 'current',
+    },
+    {
+      name: 'renamed',
+      input: {
+        outcome: 'found' as const,
+        observation: {
+          ...observation,
+          fields: {
+            ...observation.fields,
+            name: 'renamed',
+            url: 'https://github.example/acme/renamed/issues/42',
+          },
+        },
+      },
+      classification: 'renamed',
+    },
+    {
+      name: 'transferred',
+      input: {
+        outcome: 'found' as const,
+        observation: {
+          ...observation,
+          context: {
+            ...observation.context,
+            repositoryId: 'repo_456',
+            owner: 'other',
+          },
+          fields: {
+            ...observation.fields,
+            owner: 'other',
+            number: 84,
+            url: 'https://github.example/other/widgets/issues/84',
+          },
+        },
+      },
+      classification: 'transferred',
+    },
+    {
+      name: 'archived',
+      input: { outcome: 'found' as const, observation, archived: true },
+      classification: 'archived',
+    },
+    {
+      name: 'inaccessible',
+      input: { outcome: 'not-found' as const, authoritativeDeletion: false },
+      classification: 'inaccessible',
+    },
+    {
+      name: 'deleted',
+      input: {
+        outcome: 'not-found' as const,
+        authoritativeDeletion: true,
+        deletionEvidenceDigest: 'sha256:deletion',
+      },
+      classification: 'deleted',
+    },
+    {
+      name: 'temporary failure',
+      input: { outcome: 'temporary-failure' as const },
+      classification: 'temporarily-unavailable',
+    },
+  ])(
+    'classifies $name without discarding prior binding evidence',
+    ({ input, classification }) => {
+      const result = classifyGitHubReadObservation({
+        action: githubAdapter.plan('read', {
+          context: hostCapability.context,
+          currentAlias: 'acme/widgets#42',
+          stableNodeId: 'issue_node_42',
+        }),
+        hostCapability,
+        observedAt: '2026-09-01T12:01:00.000Z',
+        ...input,
+      });
+      expect(result.classification).toBe(classification);
+      expect(result.preservePriorEvidence).toBe(
+        !['current', 'renamed', 'transferred', 'archived'].includes(
+          classification,
+        ),
+      );
+      if (result.issue) {
+        expect(result.freshness).toEqual({
+          observedAt: '2026-09-01T12:01:00.000Z',
+          revisionStrength: 'strong',
+        });
+      }
+    },
+  );
 });
 
 const hostCapability: GitHubHostCapabilityObservation = {
