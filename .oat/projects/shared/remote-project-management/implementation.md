@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | in_progress | 11    | 11/11     |
-| Phase 5    | pending     | 9     | 0/9       |
-| Phase 6    | pending     | 10    | 0/10      |
-| Phase 7    | pending     | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | blocked   | 11    | 11/11     |
+| Phase 5    | pending   | 9     | 0/9       |
+| Phase 6    | pending   | 10    | 0/10      |
+| Phase 7    | pending   | 10    | 0/10      |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
 
 **Total:** 49/84 tasks completed
 
@@ -739,8 +739,8 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** in progress — all 11 planned tasks are implemented and verified;
-fresh root-owned code review is pending.
+**Status:** blocked — all 11 planned tasks are implemented, but review round 1
+found five Critical and one Important defect requiring a bounded fix loop.
 **Started:** 2026-09-01
 **Implementation head:** 680424fe8f173fcbea7028f7bef63619574207c8
 
@@ -787,7 +787,13 @@ fresh root-owned code review is pending.
 - Recovery remained 0/10 with no pending attempt or recovery event. Two
   provider-capacity interruptions resumed through the original accepted
   handle at the exact same Sol/high target and request ID.
-- Fresh root-owned Phase 4 code review is next. Phase 5 has not started.
+- Review round 1 at
+  `reviews/p04-review-2026-09-02T123746Z.md` blocked with five Critical and one
+  Important finding. The review covered the exact implementation range through
+  `680424fe8`, reported `Reconnaissance: not-attempted`, and independently
+  reran the focused suite at 53/53.
+- Bounded fix loop 1/3 through the original Phase 4 implementer is next. Phase
+  5 has not started.
 
 ---
 
@@ -1548,7 +1554,13 @@ continuation_events:
   - same-handle resume after provider-capacity interruption during p04-t03
 recovery_usage: 0/10
 pending_attempt: null
-phase_outcome: implementation_passed_review_pending
+review_rounds: 1/3
+fix_loops: 0/3
+review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
+review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
+review_1_findings: 5 critical, 1 important, 0 medium, 0 minor
+review_1_reconnaissance: not-attempted
+phase_outcome: review_blocked_fixes_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1566,7 +1578,12 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   as passing.
 - No optional nested dispatch occurred. Recovery remained 0/10 with no
   pending attempt or event.
-- Fresh root-owned Phase 4 code review is pending; Phase 5 did not start.
+- Review round 1 blocked with five Critical and one Important finding. The
+  exact reviewed head was `680424fe8f173fcbea7028f7bef63619574207c8`;
+  reconnaissance was not attempted, so no review-orchestration section or
+  project-log orchestration entry is required at this boundary.
+- Fix loop 1/3 is pending through the original accepted Phase 4 implementer;
+  Phase 5 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1667,7 +1684,7 @@ Track test execution during implementation.
 | 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 53/53; core checks passed              | 0      | root review pending        |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 53/53; core checks passed              | 0      | blocked by review round 1  |
 
 ## Final Summary (for PR/docs)
 

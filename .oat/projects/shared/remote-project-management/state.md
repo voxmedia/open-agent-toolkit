@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: 680424fe8f173fcbea7028f7bef63619574207c8
-oat_blockers: []
+oat_blockers:
+  ['Phase 4 review round 1 has five Critical and one Important finding']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -40,7 +41,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T12:35:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T12:52:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -54,8 +55,8 @@ oat_generated: false
 
 Phase 4 — GitHub Semantic Adapter. All 11 planned tasks are implemented in
 ordered declared-boundary commits through `680424fe8`; the live phase suite
-passed 53/53 and fresh root-owned code review is pending. Phase 5 has not
-started.
+passed 53/53, but review round 1 blocked with five Critical and one Important
+finding. Bounded fix loop 1/3 is next. Phase 5 has not started.
 
 ## Artifacts
 
@@ -63,7 +64,7 @@ started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 4 review pending)
+- **Implementation:** implementation.md (in progress; Phase 4 review fixes pending)
 
 ## Progress
 
@@ -150,17 +151,21 @@ started.
 - ✓ Revision 2 completed after 3 review rounds and 2 fix loops
 - ✓ Phase 4 tasks `p04-t01` through `p04-t11` completed in 11 ordered commits
 - ✓ Phase 4 live GitHub suite passed 53/53 with clean declared file boundaries
-- ⧗ Fresh root-owned Phase 4 code review pending
+- ⚠ Phase 4 review round 1 blocked with 5 Critical and 1 Important finding
+- ⧗ Phase 4 bounded fix loop 1/3 pending through the original implementer
 
 ## Blockers
 
-No active implementation blocker. Phase 4 implementation is complete and
-awaits its standard root-owned code review. The branch-level lockstep version
-gate remains preserved for planned `p08-t05` release work.
+Phase 4 review round 1 found five Critical and one Important defect covering
+durable transfer identity, universal mutation-safety enforcement, publication
+evidence binding, read evidence pinning, duplicate/discussion attribution, and
+lifecycle test proof. Phase 5 is blocked until bounded fixes pass a fresh
+review. The branch-level lockstep version gate remains preserved for planned
+`p08-t05` release work.
 
 ## Next Milestone
 
-Run fresh root-owned Phase 4 code review over
-`59998f8d170510a528730ed04b8f43976021e8ca..680424fe8f173fcbea7028f7bef63619574207c8`.
-Do not begin Phase 5 until the review passes with zero Critical and zero
-Important findings.
+Run bounded Phase 4 fix loop 1/3 through the original accepted implementer,
+limited to the findings in `reviews/p04-review-2026-09-02T123746Z.md`, then run
+a fresh exact-range review. Do not begin Phase 5 until a review passes with
+zero Critical and zero Important findings.
