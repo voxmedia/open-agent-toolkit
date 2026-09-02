@@ -132,6 +132,10 @@ Phase 4 blocked after review round 3/3 and fix loop 2/3; one Critical, one Impor
 
 Operator authorized one bounded Phase 4 extension: fix loop 3/3 and independent review 4/4 on the original accepted handles; Phase 5 remains blocked pending a passing review.
 
+### 2026-09-02 · structural · oat-project-implement · p04
+
+Phase 4 passed the authorized operator-extension review 4/4 with zero findings at reviews/p04-operator-review-2026-09-02T144931Z.md after fix loop 3/3; Phase 5 p05-t01 is unblocked.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -29,8 +29,8 @@ oat_generated: false
 | Phase 1    | completed   | 10    | 10/10     |
 | Phase 2    | completed   | 10    | 10/10     |
 | Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | in_progress | 11    | 11/11     |
-| Phase 5    | pending     | 9     | 0/9       |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | in_progress | 9     | 0/9       |
 | Phase 6    | pending     | 10    | 0/10      |
 | Phase 7    | pending     | 10    | 0/10      |
 | Phase 8    | pending     | 6     | 0/6       |
@@ -739,8 +739,8 @@ and final normal code review found one Critical and one Important issue.
 
 ## Phase 4: GitHub Semantic Adapter
 
-**Status:** in progress — the authorized operator-extension fix resolved all
-round-3 findings; independent review 4/4 is pending.
+**Status:** completed — the authorized independent review 4/4 passed with zero
+findings after operator-extension fix loop 3/3.
 **Started:** 2026-09-01
 **Implementation head:** 97ca0ed13b0fc76689989e4a49f3e638a9701915
 
@@ -826,7 +826,14 @@ round-3 findings; independent review 4/4 is pending.
 - Root independently verified the exact three-file boundary, clean diff, and
   live focused suite at 116/116. The implementer also passed the full remote
   suite at 451/451 plus CLI lint, type-check, format, diff, and build.
-- Independent operator-extension review 4/4 is next. Phase 5 has not started.
+- Independent operator-extension review 4/4 at
+  `reviews/p04-operator-review-2026-09-02T144931Z.md` passed with zero Critical,
+  Important, Medium, or Minor findings. It reported
+  `Reconnaissance: not-attempted`, independently passed the focused suite at
+  116/116 and the remote suite at 451/451, and none of the prior bypasses
+  reproduced.
+- Phase 4 completed after 4/4 reviews and 3/3 fix loops. Recovery remained 0/10
+  with no pending attempt. Phase 5 is unblocked and `p05-t01` is next.
 
 ---
 
@@ -1590,7 +1597,7 @@ continuation_events:
   - p04-operator-fix-3-20260902-925335642
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 3/3
+review_rounds: 4/4
 fix_loops: 3/3
 review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
 review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
@@ -1613,7 +1620,11 @@ operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
 fix_3_commit: 97ca0ed13b0fc76689989e4a49f3e638a9701915
 fix_3_outcome: done
-phase_outcome: operator_extension_review_4_pending
+review_4_artifact: reviews/p04-operator-review-2026-09-02T144931Z.md
+review_4_head: 97ca0ed13b0fc76689989e4a49f3e638a9701915
+review_4_findings: 0 critical, 0 important, 0 medium, 0 minor
+review_4_reconnaissance: not-attempted
+phase_outcome: passed_operator_extension
 ```
 
 **Implementation dispatch:** Dispatch: scope=p04 action=implementation
@@ -1668,7 +1679,12 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   immutable Phase 4 boundary.
 - The focused suite expanded to 116/116 and passed independently at the root;
   the full remote suite passed 451/451, and lint, types, format, diff, and build
-  passed. Independent review 4/4 is pending; Phase 5 did not start.
+  passed.
+- Independent operator-extension review 4/4 passed with zero findings; none of
+  the prior bypasses reproduced. Reconnaissance was not attempted, so no
+  review-orchestration section is required.
+- Phase 4 completed after 4/4 reviews and 3/3 fix loops. Recovery remained 0/10
+  with no pending attempt. Phase 5 is unblocked and `p05-t01` is next.
 
 <!-- orchestration-runs-end -->
 
