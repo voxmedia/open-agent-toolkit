@@ -10,6 +10,7 @@ import {
   type FieldVerification,
   type NormalizedRemoteIssue,
   type ObservationValidation,
+  type ProviderAdapter,
   type ProviderContext,
   type SanitizedProviderObservation,
   type SemanticAction,
@@ -775,6 +776,141 @@ export function verifyLinearMutationObservation(
   );
 }
 
+export const linearAdapter: ProviderAdapter = {
+  provider: 'linear',
+  normalize: normalizeLinearIssueObservation,
+  plan(operation, input) {
+    if (['create', 'update', 'transition', 'annotate'].includes(operation)) {
+      if (!isCompleteLinearMutationInput(input)) {
+        throw new Error('Linear adapter requires complete mutation input.');
+      }
+      return planLinearMutation(input as unknown as LinearMutationPlanInput);
+    }
+    if (operation === 'read') {
+      if (!isCompleteLinearReadInput(input)) {
+        throw new Error('Linear adapter requires complete read input.');
+      }
+      return planLinearRead(input as unknown as LinearReadPlanInput);
+    }
+    if (operation === 'read-discussion') {
+      if (!isCompleteLinearDiscussionInput(input)) {
+        throw new Error('Linear adapter requires complete discussion input.');
+      }
+      return planLinearDiscussionRead(
+        input as unknown as LinearDiscussionReadPlanInput,
+      );
+    }
+    throw new Error(`Linear adapter does not support '${operation}' yet.`);
+  },
+  validateObservation(action, observation) {
+    if (
+      action.provider !== 'linear' ||
+      observation.provider !== 'linear' ||
+      !contextsEqual(action.context, observation.context)
+    ) {
+      return { valid: false, reasons: ['observation-context-mismatch'] };
+    }
+    const capability = parseLinearHostCapability(
+      observation.fields.hostCapability,
+    );
+    if (!capability) {
+      return { valid: false, reasons: ['capability-evidence-missing'] };
+    }
+    const validation = validateLinearHostCapability(
+      action.operation,
+      action.context,
+      capability,
+      action.operation === 'read'
+        ? ['stable-identity', 'title', 'state', 'revision', 'team-context']
+        : [],
+    );
+    if (!validation.valid) return validation;
+    if (
+      observation.capabilityEvidenceDigest !==
+        action.intent.capabilityEvidenceDigest ||
+      capability.evidenceDigest !== action.intent.capabilityEvidenceDigest
+    ) {
+      return { valid: false, reasons: ['capability-evidence-mismatch'] };
+    }
+    if (
+      ['create', 'update', 'transition', 'annotate'].includes(action.operation)
+    ) {
+      if (!validLinearMutationActionEvidence(action)) {
+        return { valid: false, reasons: ['action-evidence-invalid'] };
+      }
+      if (
+        !semanticValuesEqual(
+          observation.fields.mutationEvidence,
+          action.intent.executionEvidence,
+        )
+      ) {
+        return { valid: false, reasons: ['mutation-evidence-mismatch'] };
+      }
+      try {
+        const issue = normalizeLinearIssueObservation(observation);
+        if (
+          action.operation !== 'create' &&
+          issue.stableId !== action.intent.stableId
+        ) {
+          return { valid: false, reasons: ['observation-identity-mismatch'] };
+        }
+      } catch {
+        return { valid: false, reasons: ['observation-invalid'] };
+      }
+    }
+    return { valid: true, reasons: [] };
+  },
+  verificationFields(action) {
+    return mutationVerificationFields(action);
+  },
+  verify(action, issue) {
+    const fields = mutationVerificationFields(action);
+    if (
+      !validLinearMutationActionEvidence(action) ||
+      issue.provider !== 'linear' ||
+      !contextsEqual(action.context, issue.context) ||
+      (action.operation !== 'create' &&
+        issue.stableId !== action.intent.stableId) ||
+      issue.extensions.capabilityEvidenceDigest !==
+        action.intent.capabilityEvidenceDigest ||
+      !semanticValuesEqual(
+        issue.extensions.mutationEvidence,
+        action.intent.executionEvidence,
+      )
+    ) {
+      return fields.map((field) => ({
+        field,
+        status: 'unavailable' as const,
+      }));
+    }
+    const postconditions = action.intent.postconditions as Record<
+      string,
+      unknown
+    >;
+    return fields.map((field) => {
+      const observed =
+        field === 'description'
+          ? issue.description
+          : field === 'status'
+            ? issue.status
+            : field === 'annotation'
+              ? issue.extensions.annotations
+              : issue[field as 'title' | 'priority'];
+      return {
+        field,
+        status:
+          field === 'annotation' && Array.isArray(observed)
+            ? observed.includes(postconditions[field])
+              ? 'verified'
+              : 'mismatch'
+            : semanticValuesEqual(observed, postconditions[field])
+              ? 'verified'
+              : 'mismatch',
+      } satisfies FieldVerification;
+    });
+  },
+};
+
 function canonicalLinearStableId(workspaceId: string, uuid: string): string {
   return `linear:${workspaceId}:${uuid.toLowerCase()}`;
 }
@@ -976,4 +1112,61 @@ function semanticValuesEqual(left: unknown, right: unknown): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseLinearHostCapability(
+  value: unknown,
+): LinearHostCapabilityObservation | null {
+  if (
+    !isRecord(value) ||
+    value.provider !== 'linear' ||
+    !isRecord(value.context) ||
+    !Array.isArray(value.operations) ||
+    !Array.isArray(value.observableFields) ||
+    typeof value.availability !== 'string' ||
+    typeof value.accountId !== 'string' ||
+    typeof value.workspaceId !== 'string' ||
+    typeof value.teamId !== 'string' ||
+    typeof value.evidenceDigest !== 'string'
+  ) {
+    return null;
+  }
+  return value as unknown as LinearHostCapabilityObservation;
+}
+
+function isCompleteLinearMutationInput(
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    typeof input.operation === 'string' &&
+    isRecord(input.context) &&
+    isRecord(input.hostCapability) &&
+    typeof input.bindingId === 'string' &&
+    Array.isArray(input.fieldMask) &&
+    isRecord(input.projection) &&
+    isRecord(input.outboundSafety) &&
+    typeof input.approvedPreviewDigest === 'string'
+  );
+}
+
+function isCompleteLinearReadInput(input: Record<string, unknown>): boolean {
+  return (
+    isRecord(input.context) &&
+    isRecord(input.hostCapability) &&
+    typeof input.stableId === 'string' &&
+    typeof input.uuid === 'string' &&
+    typeof input.stepId === 'string'
+  );
+}
+
+function isCompleteLinearDiscussionInput(
+  input: Record<string, unknown>,
+): boolean {
+  return (
+    isRecord(input.context) &&
+    isRecord(input.hostCapability) &&
+    typeof input.stableId === 'string' &&
+    Number.isInteger(input.limit) &&
+    (input.cursor === null || typeof input.cursor === 'string')
+  );
 }
