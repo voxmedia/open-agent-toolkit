@@ -96,6 +96,10 @@ Phase p-rev7 passed: task dbfeeede518556ed5678839bc18ab1342e381593; root-owned r
 
 STOP: all 30 tasks are complete and p-rev7 passed. The final-scope review-cycle cap is exhausted; require an explicit override before one fresh mandatory final lifecycle review. If that review passes, continue to the configured cross-family exit gate; if it blocks, stop without automatic remediation or re-review.
 
+### 2026-09-02 · structural · oat-project-implement · final
+
+Final lifecycle review passed at fd5d5c85c10590fb293855ec27d8cac32c67d6b3 with 0 Critical/Important/Medium/Minor findings; artifact reviews/archived/final-review-2026-09-02T214500Z.md; single-use override consumed; configured cross-family exit gate is next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

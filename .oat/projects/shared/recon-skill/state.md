@@ -84,7 +84,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T21:58:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T21:59:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -94,7 +94,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Final lifecycle review passed; receive pending
+**Status:** Final lifecycle review passed; configured gate pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
@@ -104,8 +104,9 @@ Revision 7 closes the remaining post-promotion continuity window by making the
 retained canonical-byte assertion the final awaited publication check. The
 bounded two-file change passed its independent phase review with zero findings.
 All 30 tasks are complete. The single explicitly authorized mandatory final
-lifecycle review passed with zero findings on the immutable reviewed basis.
-PR #248 remains open while the review event is received durably.
+lifecycle review passed with zero findings on the immutable reviewed basis and
+has been received durably. PR #248 remains open while the configured
+cross-family exit gate runs.
 
 ## Artifacts
 
@@ -230,7 +231,8 @@ PR #248 remains open while the review event is received durably.
 - ✓ Revision 7 independent phase review passed with 0 Critical, 0 Important,
   0 Medium, and 0 Minor findings
 - ✓ Single explicitly authorized final lifecycle review passed with zero findings
-- ⧗ Final review artifact receipt and archival are pending
+- ✓ Final review event received and artifact archived with no deferred findings
+- ⧗ Configured cross-family exit gate is pending
 
 ## Blockers
 
@@ -239,5 +241,5 @@ final review; no additional final review is authorized.
 
 ## Next Milestone
 
-Receive and archive `reviews/final-review-2026-09-02T214500Z.md`, then run the
-configured cross-family exit gate on the received passing review basis.
+Run the configured cross-family exit gate on the received passing final-review
+basis. Continue closeout only if its structured result is valid and allowed.
