@@ -1,8 +1,8 @@
 ---
-oat_current_task: p05-review-governance
+oat_current_task: p05-review-r3-fix
 oat_last_commit: 9eab2dc3ea99026ef00ff649f320057df51537b6
 oat_blockers:
-  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; the three-cycle automated review cap is reached and explicit operator override is required for another fix/review cycle.
+  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; Thomas authorized one additional bounded fix and fresh review cycle.
 associated_issues:
   - type: backlog
     ref: BL-260829-make-tool-pack-scope-selection
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T05:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T05:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -112,9 +112,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Implementation - the round-2 defects are resolved at `9eab2dc3e`, but Phase 5
-review round 3 found two Critical and three Important recovery-lifecycle
-defects. The three-cycle automated review cap now requires operator governance.
+Implementation - Phase 5 review round 3 found two Critical and three Important
+recovery-lifecycle defects. Thomas explicitly authorized one additional bounded
+fix and fresh review cycle after the three-cycle governance stop.
 
 ## Artifacts
 
@@ -154,7 +154,8 @@ defects. The three-cycle automated review cap now requires operator governance.
 - ✓ Phase 5 four-task implementation and 331/331 union completed
 - ✓ Phase 5 production workflows registration corrected
 - ✓ Phase 5 public-path liveness/open-inode retention and crossed/nested marker rejection corrected
-- ⧗ Phase 5 recovery lifecycle and shared-consumer truth fixes require explicit review-cycle override
+- ✓ One additional bounded Phase 5 fix/review cycle explicitly authorized
+- ⧗ Phase 5 recovery lifecycle and shared-consumer truth fixes in progress
 
 ## Blockers
 
@@ -163,10 +164,10 @@ defects. The three-cycle automated review cap now requires operator governance.
   `recovery-required`; unresolved recovery can be forgotten on rerun.
 - Live unrelated bytes/mode can change, and raw recovery errors can leak
   absolute paths.
-- Three standard Phase 5 review cycles have occurred; another automated
-  fix/review cycle requires explicit operator override.
+- The one-use override covers only the current five findings and one fresh
+  review. Phase 6 remains gated.
 
 ## Next Milestone
 
-Obtain operator direction: explicitly override the three-cycle cap for one
-bounded Phase 5 fix/review cycle, proceed with known findings, or stop.
+Apply the one authorized bounded Phase 5 fix through the original implementer,
+rerun the full phase union, and run exactly one fresh independent review.

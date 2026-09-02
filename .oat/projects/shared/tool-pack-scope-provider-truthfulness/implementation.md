@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; the three-cycle automated review cap is reached and explicit operator override is required for another fix/review cycle.
+  - Phase 5 review round 3 found two Critical and three Important recovery-lifecycle defects; Thomas authorized one additional bounded fix and fresh review cycle.
 oat_last_updated: 2026-09-02
-oat_current_task_id: p05-review-governance
+oat_current_task_id: p05-review-r3-fix
 oat_generated: false
 ---
 
@@ -1326,6 +1326,17 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
   fix/review cycles are blocked by governance until the operator explicitly
   overrides the cap. Phase 6 remains gated.
 
+### Operator Authorization — One Additional Round-3 Fix and Review
+
+- Thomas explicitly authorized one additional bounded Phase 5 fix/review cycle
+  after the three-cycle governance stop.
+- Scope is limited to the two Critical and three Important findings in
+  `reviews/p05-review-2026-09-02T052445Z.md`.
+- The original exact-High Phase 5 implementer remains the fix owner. Exactly one
+  fresh independent review is authorized after the bounded correction.
+- If that review still reports Critical or Important findings, the override is
+  exhausted and operator governance is required again. Phase 6 remains gated.
+
 ---
 
 ## Orchestration Runs
@@ -1986,6 +1997,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Selection reason: `review-target`; candidates considered:
   `gpt-5.6-sol/high`.
 - Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+
+#### Operator authorization — one additional p05 fix/review cycle
+
+- Direction: Thomas explicitly authorized continuation after the three-cycle
+  Phase 5 review governance stop.
+- Scope: the two Critical and three Important findings in
+  `reviews/p05-review-2026-09-02T052445Z.md` only.
+- Boundary: one bounded exact-target fix and one fresh independent review. The
+  authorization does not advance Phase 6 unless that review passes.
 
 <!-- orchestration-runs-end -->
 
