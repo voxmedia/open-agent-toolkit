@@ -46,7 +46,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -54,7 +54,7 @@ oat_implement_exit_gate:
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: e67366f8bac47927926129897c2fa861d8919cb4
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:b4010535fd5bb9d28d1f6ced6a04f59e5083c18a79b6d175fa388a2cb57ebc3b'
@@ -69,17 +69,17 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=fd621404-cb02-47bb-ad6b-7689197b628f|scope=final|type=code|source=final-review-2026-09-03T154100Z.md'
   receive_source_artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md
   receive_archived_artifact: .oat/projects/shared/recon-skill/reviews/archived/final-review-2026-09-03T154100Z.md
   receive_event_identity: 'scope=final|type=code|source=final-review-2026-09-03T154100Z.md'
   receive_pre_head: ca906b490cf354897caf65cb219e2e2e79ab74d8
-  receive_commit: null
+  receive_commit: b620c794ce5efd8d47b59ef9108b35520842db13
   receive_eligible: true
-  receive_completed: false
-  failure: 'Configured gate returned 0 Critical, 1 Important, 1 Medium, and 2 Minor findings at the Important threshold.'
-  updated_at: '2026-09-03T15:42:00Z'
+  receive_completed: true
+  failure: 'Configured gate returned 0 Critical, 1 Important, 1 Medium, and 2 Minor findings at the Important threshold; eligible receive completed and remediation attempt 2/2 is active in Revision 9.'
+  updated_at: '2026-09-03T15:44:00Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T15:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T15:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
