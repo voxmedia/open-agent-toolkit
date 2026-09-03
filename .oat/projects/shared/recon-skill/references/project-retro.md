@@ -1,6 +1,6 @@
 ---
 oat_retro_project: recon-skill
-oat_retro_generated: 2026-09-01T18:37:05Z
+oat_retro_generated: 2026-09-03T20:20:00Z
 oat_retro_evidence_sources:
   - source: project-log
     status: used
@@ -34,11 +34,15 @@ oat_template: false
 
 The project delivered the intended standalone `recon` capability, but the path
 to a trustworthy packet boundary was materially harder than the original
-implementation plan suggested. Independent reviewers repeatedly found
-publishable false-assurance paths after focused suites were green. The decisive
-improvement was not another local validator patch: it was the p-rev1 change to
-one immutable `ValidatedRun` boundary, followed by exhaustive approval,
-receipt, source-identity, and negative-mutation coverage.
+implementation plan suggested. Independent reviewers and cross-family gates
+repeatedly found publishable false-assurance paths after focused suites were
+green. The decisive improvements were architectural simplifications and strict
+invariant boundaries: first, the p-rev1 consolidation into one immutable
+`ValidatedRun` boundary; second, the p-rev5–p-rev7 closure of publication races
+via atomic promotion and canonical byte continuity; and third, the p-rev8–p-rev9
+gating that bound `ValidatedRun` strictly to publishable status, enforced
+synthesis referential integrity, and transitioned rejected claims honestly to
+`unsupported`.
 
 The run also validated the user's concern about over-engineering. The successful
 response was to simplify internal trust boundaries while preserving the product
@@ -52,29 +56,30 @@ isolated defect.
 
 The retrospective reviewed the append-only project log; discovery, design,
 plan, implementation, state, summary, and PR artifacts; all archived phase and
-final review Markdown; both configured-gate receipts; four accepted recon
+final review Markdown (including the p-rev8 and p-rev9 phase reviews and the
+two configured-gate reviews); all configured-gate receipts; four accepted recon
 decision records; the two deferred integration backlog items; the active
 session transcript; and a generation-time GitHub status query. Durable
 artifacts were authoritative where session detail and current state differed.
 
 No `oat-execution-learnings.md` exists, so that evidence source is explicitly
-unavailable. Two bounded read-only lanes independently analyzed durable
-lifecycle evidence and the review/fix history; their conclusions were checked
-against the referenced committed artifacts before inclusion. Confirmed causes
-are stated directly. No unsupported model-behavior or hidden-runtime cause is
+unavailable. Bounded analysis examined durable lifecycle evidence and the full
+review/fix history across all nine revisions; conclusions were checked against
+the referenced committed artifacts before inclusion. Confirmed causes are
+stated directly. No unsupported model-behavior or hidden-runtime cause is
 inferred from successful later runs.
 
 ## Outcome Snapshot
 
-| Area                | Generation-time outcome                                                                                                    |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Product             | Provider-neutral `recon` skill, bounded `recon-worker`, and directory-first validated evidence packets                     |
-| Distribution        | Research-pack ownership with same-scope utility dependencies and current-only user-agent materialization                   |
-| Execution           | 17 of 17 planned and revision tasks complete across four phases and three revisions                                        |
-| Assurance           | Terminal phase reviews, post-rebase final review, and configured cross-family gate passed with zero findings               |
-| Release preparation | Lockstep CLI `0.2.51` metadata and all repository completion gates passed                                                  |
-| PR                  | At generation time, PR #248 was open, non-draft, merge-clean, and green at head `c0e33f160fe68be252a1f32ce96dacc71c6214d9` |
-| Boundary            | PR merge, project archival, discovery integration, and broader research-skill integration were not part of this run        |
+| Area                | Generation-time outcome                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Product             | Provider-neutral `recon` skill, bounded `recon-worker`, and directory-first validated evidence packets                 |
+| Distribution        | Research-pack ownership with same-scope utility dependencies and current-only user-agent materialization               |
+| Execution           | 36 of 36 planned and revision tasks complete across four phases and nine revisions (`p-rev1` through `p-rev9`)         |
+| Assurance           | Terminal phase reviews, post-rebase final reviews, and configured cross-family gate passed with zero blocking findings |
+| Release preparation | Lockstep CLI `0.2.52` metadata and all repository completion gates passed                                              |
+| PR                  | At generation time, PR #248 was open, non-draft, merge-clean, and green at head `1364ea13c`                            |
+| Boundary            | PR merge, project archival, discovery integration, and broader research-skill integration were not part of this run    |
 
 ## Current State
 
@@ -100,6 +105,9 @@ inferred from successful later runs.
   assurance. They caught non-current user-agent projection after the earlier
   final gate had passed, leading to the bounded p-rev3 guard at commit
   `834f28fa41f163091a1b3904d6daf2fd158e2560`.
+- Revisions 4 through 9 systematically resolved subtle edge-case publication
+  races, unpublishable state leakage, and referential integrity without adding a
+  heavy state simulator or changing external contracts.
 
 ## Challenges and Struggles
 
@@ -136,15 +144,37 @@ introducing the generalized inventory simulator or transaction framework that
 reviewers explicitly rejected. Terminal p03 review passed at `cb3d94ac2` and
 closed all seven prior Critical or Important findings.
 
-### Final assurance needed to survive rebasing
+### Publication race conditions and post-promotion continuity
 
-The pre-rebase final review and configured gate passed, but rebasing changed
-the effective implementation surface. Fresh review then found that `outdated`
-and `newer` installed agents could still reach native role projection. The
-bounded p-rev3 scanner guard now requires `current` inventory and emits an
-actionable pack-update command. A fresh final review and new cross-family gate
-passed afterward, demonstrating why gate freshness must follow the effective
-branch rather than an earlier green generation.
+During post-rebase reviews (Revisions 4 through 7), reviewers identified
+concurrency and promotion races: a failed re-render could delete an existing
+valid packet; withdrawal could remove a replacement root; and post-promotion
+modifications could violate canonical continuity. The response was to enforce
+atomic promotion through a unique temporary sibling, verify pre- and post-rename
+canonical byte digests, and execute explicit canonical-byte continuity checks as
+the final awaited step before publication returns success.
+
+### Valid-but-unpublishable states and referential integrity
+
+The configured cross-family implementation exit gates (Revisions 8 and 9)
+surfaced two subtle integrity gaps:
+
+1. `validate-packet.mjs` checked structural validity separately from
+   publishability (`complete`/`partial`), returning a valid `ValidatedRun` for
+   `running`, `failed`, or `awaiting-approval` statuses that could then be
+   rendered into an misleading `packet.md`.
+2. When semantic review rejected a claim, the reconciler filtered it out of the
+   ledger's claims, but `synthesis.answer` and `synthesis.keyClaimIds` continued
+   to reference and assert the rejected claim. Because the validator lacked
+   referential integrity checks on synthesis, a packet could publish stating a
+   claim that review had explicitly rejected.
+
+The response was p-rev8 and p-rev9: bind `ValidatedRun` creation and rendering
+strictly to publishability (`complete` or `partial`), withdraw `packet.md` with
+categorical `PACKET_NOT_PUBLISHABLE` on any non-publishable candidate,
+categorically validate synthesis referential integrity
+(`SYNTHESIS_REFERENCE_MISSING`), and transition rejected claims to an honest
+`unsupported` state rather than wholesale deletion.
 
 ## Decision Register
 
@@ -170,6 +200,9 @@ branch rather than an earlier green generation.
   consumer projection and per-asset verification were sufficient.
 - Automatic discovery, quick-start, analysis, and research integration was
   deferred rather than coupled to the first release.
+- Wholesale claim deletion on review rejection was rejected in favor of an
+  honest transition to `unsupported` to preserve evidence trails and synthesis
+  integrity.
 
 ## Where We Changed Course
 
@@ -185,6 +218,16 @@ branch rather than an earlier green generation.
 - **Trigger:** rebase invalidated prior final-gate freshness. **Direction:** run
   fresh review and require current agent inventory before native projection.
   **Outcome:** p-rev3 and a new configured gate passed.
+- **Trigger:** post-promotion continuity and split-generation publication races
+  discovered in final reviews. **Direction:** enforce atomic rename with
+  pre/post promotion canonical byte continuity checks. **Outcome:** p-rev6 and
+  p-rev7 passed.
+- **Trigger:** gate review found valid-but-unpublishable runs could leak into
+  `packet.md` and rejected claims left stale synthesis references.
+  **Direction:** bind `ValidatedRun` strictly to publishability, categorically
+  validate synthesis references (`SYNTHESIS_REFERENCE_MISSING`), and transition
+  rejected claims to `unsupported`. **Outcome:** p-rev8 and p-rev9 passed the
+  cross-family gate with zero blocking findings.
 
 ## New Architecture Patterns and Approaches
 
@@ -198,6 +241,12 @@ branch rather than an earlier green generation.
   order.
 - **Freshness-bound materialization.** Native provider projection requires a
   manifest-declared, bundled, installed, and `current` agent definition.
+- **Atomic publication with canonical continuity.** Promotion uses atomic rename
+  with verification of identical canonical byte digests before and after
+  promotion.
+- **Strict publishability gating.** Non-publishable runs (`running`, `failed`,
+  `awaiting-approval`) yield no `ValidatedRun` and withdraw any existing
+  consumer entry point.
 
 ## Domain Learnings
 
@@ -213,6 +262,9 @@ branch rather than an earlier green generation.
 - Same-model concurrence is not independent evidence. Blind inputs, direct
   source reopening, adversarial roles, and categorical unresolved states carry
   the assurance burden.
+- Synthesis prose generated pre-review must be protected by referential
+  integrity checks; claims rejected by review must transition to explicit
+  categorical states (`unsupported`) rather than silently disappearing.
 
 ## Gotchas for Humans
 
@@ -235,6 +287,8 @@ branch rather than an earlier green generation.
   requires them.
 - For user materialization, missing inventory may be absent, but installed
   non-current inventory must fail closed before provider planning.
+- Ensure that helper functions (like `renderValidatedPacket`) fail closed on
+  unpublishable statuses even if internal callers currently filter them.
 
 ## Repo Improvements (Promotion Register)
 
