@@ -1449,6 +1449,80 @@ describe('runtime observation integration', () => {
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('refuses a record that only exceeds the limit once published', async () => {
+    // The writer emits pretty-printed JSON plus a newline. Validating compact
+    // bytes let a record validated at 65,536 land on disk at 65,874.
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    // Sized to stay inside every per-field bound (430 values, ~15 KiB each)
+    // so only the compact-vs-published difference can trip the ceiling.
+    const entry = (prefix: string, i: number) =>
+      `${prefix}${String(i).padStart(3, '0')}-${'x'.repeat(28)}`;
+    const list = (prefix: string) =>
+      Array.from({ length: 380 }, (_, i) => entry(prefix, i));
+    const oversized = genericRecord({
+      diagnostics: list('d'),
+      configured_invocation_evidence: list('e'),
+      continuation_events: list('c'),
+      payload: Object.fromEntries(
+        Array.from({ length: 380 }, (_, i) => [`k${i}`, entry('p', i)]),
+      ),
+    });
+    const compact = new TextEncoder().encode(JSON.stringify(oversized)).length;
+    // Comfortably legal compact; only the published form exceeds the ceiling.
+    expect(compact).toBeLessThan(64 * 1024);
+
+    await expect(
+      recordProjectDispatch({
+        projectPath,
+        input: { record: oversized, event: canonicalEvent() },
+      }),
+    ).rejects.toThrow(/byte|limit/i);
+
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('refuses to publish a revision with an identity-field path', async () => {
+    // The publication postcondition guarantees identity and control fields
+    // only, and must hold even if the parse-layer rejection is bypassed.
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await expect(
+      recordProjectDispatch({
+        projectPath,
+        input: {
+          record: genericRecord({ caller: '/Users/alice/secret' }),
+          event: canonicalEvent(),
+        },
+      }),
+    ).rejects.toThrow(/absolute filesystem path/i);
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('rejects a colon-prefixed path in an identity field', () => {
+    expect(() =>
+      parseDispatchRecordInput({
+        record: genericRecord({ caller: 'cwd:/Users/alice/private' }),
+        event: canonicalEvent(),
+      }),
+    ).toThrow(/absolute filesystem path/i);
+  });
+
+  it('leaves a colon-prefixed path in prose, matching the stated limit', async () => {
+    // Best-effort redaction: this survives, and the suite says so rather than
+    // implying a guarantee the sanitizer does not provide.
+    const { result } = await record(codexEntries, {
+      objective: 'inspect cwd:/Users/alice/private now',
+    });
+    expect(result.record.objective).toBe(
+      'inspect cwd:/Users/alice/private now',
+    );
+  });
+
   it('refuses to publish a revision that still carries a path', async () => {
     // The postcondition runs on the exact value being written, so it holds even
     // if an earlier stage is bypassed.

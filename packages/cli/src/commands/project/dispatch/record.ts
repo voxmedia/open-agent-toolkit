@@ -7,7 +7,7 @@ import {
   withContainedWriterLock,
 } from '@fs/io';
 import {
-  assertJournalHasNoAbsolutePath,
+  assertJournalIdentityHasNoAbsolutePath,
   redactAbsolutePaths,
 } from '@providers/identity/absolute-paths';
 import { CLAUDE_OBSERVATION_SOURCE } from '@providers/identity/claude-runtime-observation';
@@ -15,6 +15,7 @@ import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-obse
 import {
   assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
+  identityFieldsOf,
   parseGenericDispatchRecord,
   type GenericDispatchRecord,
 } from '@providers/identity/generic-dispatch-record';
@@ -469,7 +470,9 @@ async function publishRevision(
   // Last check before bytes reach the journal. The sanitizer runs at parse, but
   // the journal is committed to a shared repository, so the guarantee is
   // enforced on the exact value being written rather than trusted upstream.
-  assertJournalHasNoAbsolutePath(record);
+  // Guarantees identity and control fields only; prose redaction is
+  // best-effort by design. See absolute-paths.ts.
+  assertJournalIdentityHasNoAbsolutePath(identityFieldsOf(genericPart(record)));
   assertBoundedDispatchRecordSize(record);
   try {
     await publishContainedJsonRevision(
