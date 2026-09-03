@@ -1440,6 +1440,19 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   `origin/main` with implementation fingerprint
   `sha256:effective-delta-v1:a87272b3d2e5b1c4802cd90522628387fbfd14b6c474006284d9cf033acaa24d`.
 
+#### Configured exit-gate result — 2026-09-03T17:39:22Z
+
+- Launch attempt: `a3088d0c-9526-452b-8e4c-4928f4c923ae`
+- Gate run: `7c7c7d4a-41a8-4e71-bb14-65fe8de95de8`
+- Target: `cursor-fable-5-1-high`; different-family review achieved
+- Structured outcome: `ok`, receive eligible, gate passed at Important
+  threshold with 0 Critical, 0 Important, 1 Medium, and 3 Minor findings
+- Artifact: `reviews/final-review-2026-09-03T173922Z.md`
+- Corroboration: run, project, invocation, target, artifact, and non-null
+  handoff all match the persisted launch
+- Policy: gate passed at Important threshold; proceed to receive to disposition
+  non-blocking findings before closeout
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
