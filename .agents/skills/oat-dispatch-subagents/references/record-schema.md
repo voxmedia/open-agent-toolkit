@@ -286,15 +286,40 @@ be traded against another:
   strings; and
 - at most 16 KiB serialized per field.
 
-The whole record is additionally capped at 64 KiB. A realistically rich record
+The whole record is additionally capped at 64 KiB, measured as the **published**
+bytes — the pretty-printed JSON plus trailing newline that is actually written
+to the journal, not compact `JSON.stringify` output. The two differ by roughly a
+tenth on a nested record, so size against the published form. Per-field
+projection limits above remain compact measurements, because they bound the
+shape of a field rather than the size of a file. A realistically rich record
 measures a few kilobytes, so these limits bind prompt bodies, transcripts, and
 chunked logs rather than legitimate evidence.
 
 Keys are classified against credential, token, prompt/message, transcript, and
 role-content families after Unicode folding, and a spelling the normalizer
 cannot fully account for is treated as sensitive rather than classified on a
-partial token. Store references, identifiers, digests, and paths; never role
-content, message bodies, or credentials.
+partial token. Store references, identifiers, and digests; never role content, message bodies,
+or credentials.
+
+Absolute filesystem paths are handled by field class, because the journal is
+committed and a home path in it is permanent:
+
+- **Identity and control fields reject them.** `caller`, `scope`, every
+  selector, `selected_route`, the `guidance_*` fields, `authority`,
+  `authorization_scope`, `catalog_snapshot`, `candidates_considered` and
+  `fallback` refuse a record containing an absolute path, including
+  colon-prefixed forms such as `cwd:/Users/alice`. A path is never a legitimate
+  identifier there, so ambiguity resolves to rejection. Pass a repository-relative
+  path or a redacted form like `<user>/agents/<role>.md`.
+- **Prose and nested evidence redact them best-effort.** `objective`,
+  `expected_output`, `verification_evidence`, `classification_reason`,
+  `escalate_when`, and the bounded container fields replace a detected path with
+  `<redacted-path>`. This is deliberately conservative rather than complete: it
+  skips candidates inside an `http`/`https` URL and candidates ending in `/`, so
+  a URL route (`?next=/dashboard`) and a regex literal (`/foo/bar/`) survive
+  intact. Colon-prefixed forms also survive. Corrupting a legitimate value is
+  worse than leaving a path in prose, so do not rely on this to sanitize
+  caller-authored text — redact before submitting.
 
 Optional runtime observation is metadata-only and subject to the same
 identifier bound, which admits letters, digits, `.`, `_`, and `-` only, so no
