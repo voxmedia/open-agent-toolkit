@@ -192,13 +192,11 @@
 
 | ID                                       | Title                                                                                                 | Status | Priority | Scope      | Estimate |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ | -------- | ---------- | -------- |
-| BL-260829-make-tool-pack-scope-selection | Make tool-pack scope, provider reachability, and dispatch state truthful                              | open   | urgent   | feature    | L        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                   | open   | urgent   | feature    | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                      | open   | high     | feature    | M        |
 | BL-260830-add-oat-config-unset-command   | Add oat config unset command                                                                          | open   | high     | feature    | S        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                             | open   | high     | feature    | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                                | open   | high     | task       | M        |
-| BL-260828-add-project-level-oat-guidance | Add project-level OAT guidance prompt during init and workflow installation                           | open   | high     | feature    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                        | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260830-clarify-quick-mode-resume      | Clarify quick-mode resume routing from oat-project-plan                                               | open   | high     | feature    | S        |
@@ -211,7 +209,6 @@
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task       | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task       | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
-| BL-260826-populate-native-subagent       | Populate native subagent runtime identity from provider transcript metadata                           | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
@@ -255,6 +252,8 @@
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                           | open   | low      | feature    | L        |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                           | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                           | open   | low      | task       | M        |
+| BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                     | open   | low      | task       | S        |
+| BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                              | open   | low      | task       | M        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                 | open   | low      | task       | M        |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                       | open   | low      | idea       | L        |
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                            | open   | low      | task       | S        |
@@ -263,6 +262,7 @@
 | BL-260827-harden-the-codex-skill-below   | Harden the codex-skill below-floor guard against paraphrase and anaphora                              | open   | low      | task       | XS       |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260827-override-aware-remedy-text     | Override-aware remedy text in assets-root fail-closed errors                                          | open   | low      | task       | XS       |
+| BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 

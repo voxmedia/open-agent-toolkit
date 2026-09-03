@@ -1,7 +1,7 @@
 ---
 id: BL-260828-add-project-level-oat-guidance
 title: Add project-level OAT guidance prompt during init and workflow installation
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - workflows
 assignee: null
 created: 2026-08-28T23:45:20.125Z
-updated: 2026-08-28T23:45:20.125Z
+updated: '2026-09-03T00:56:43Z'
 associated_issues: []
 external_plans: []
 ---
@@ -27,18 +27,30 @@ When OAT capabilities are installed at user scope, repositories can receive no p
 - `oat init` and explicit guided setup clearly notify users when selected OAT
   packs are installed at user scope and explain that project-level
   `AGENTS.md` guidance is an independent, repository-local choice.
-- Interactive `oat init` offers an explicit yes/no question to add or refresh
-  the managed OAT guidance section in the repository-root `AGENTS.md`,
-  including creating the file when it does not exist; declining leaves the
-  existing file and repository content unchanged.
+- Interactive `oat init` offers an explicit yes/no question about the managed
+  OAT guidance section in the repository-root `AGENTS.md`, creating the file
+  when it does not exist; declining leaves the existing file and repository
+  content unchanged. **Amended 2026-09-03 on closure:** the original wording
+  said "add or refresh". Automatic refresh was deliberately removed by
+  operator decision during Phase 5, after review reproduced a filesystem race
+  in which replacing an existing file could destroy user content. The shipped
+  contract is fail-closed: OAT creates `AGENTS.md` only when absent, and for
+  any existing file emits a deterministic zero-write manual patch. See
+  `spec.md` FR6 and the project's Deviations table.
 - Standalone `oat tools install workflows` offers the same project-guidance
   choice after installation, regardless of whether the workflow capability
   itself was installed at user or project scope; the choice does not change
   pack placement or imply PJM adoption.
-- The managed section is idempotent, preserves user-authored `AGENTS.md`
-  content, and has one clearly defined owner so init, guided setup, and
-  standalone workflow installation cannot produce duplicate or conflicting
-  OAT guidance.
+- The managed section preserves user-authored `AGENTS.md` content, and has one
+  clearly defined owner so init, guided setup, and standalone workflow
+  installation cannot produce duplicate or conflicting OAT guidance.
+  **Amended 2026-09-03 on closure:** the original wording said "is
+  idempotent". Preservation is now absolute rather than idempotent — an
+  existing file is never written at all. The operator-visible consequence is
+  that in a repository that already has an `AGENTS.md`, guidance is never
+  installed by OAT: every run reports `manual-required` with a copy-pasteable
+  patch and sets a non-zero exit code until the patch is applied by hand.
+  Tracked as residue in `BL-260903-close-manual-only-agents-md`.
 - Non-interactive and declined flows provide an actionable notice without
   silently creating or modifying project `AGENTS.md`; any opt-in automation
   path is explicit and documented.
