@@ -397,6 +397,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   - Verification: 45/45 focused, 190/190 recon, 199/199 combined tests passed; lint and format clean
 - **Status:** Phase 6 complete and passed; ready for final exit gate and closeout sequence
 
+## Exit Gate Review and Provisional Coverage Gap Fix
+
+- **Date:** 2026-09-03
+- **Merge origin/main:** `69a1d24ce` merged upstream #256 with five public packages bumped to `0.2.54`.
+- **Gate Review:**
+  - Artifact: `reviews/final-review-2026-09-03T233226Z.md`
+  - Target: `cursor-fable-5-1-high`
+  - Findings: 0 Critical, 1 Important, 0 Medium, 1 Minor
+  - Important: provisional claims with coverage gaps must legally downgrade/transition to `unresolved` (or `contested` for material gaps) rather than throwing `INVALID_PROVISIONAL_GENESIS`.
+  - Minor: enforce legal reconciliation transitions guard on downgrade push.
+- **Fix Commit:** `1c9f31fb1`
+- **Contract update:** `packet-contract.md` updated to document that non-material coverage gaps downgrade verified claims and transition provisional claims to unresolved, while existing supported claims remain supported without verified promotion.
+- **Verification:** 6/6 coverage gap tests pass (reproduced RED $\to$ GREEN), 192/192 recon tests pass, and repository Definition of Done gates 1–8 all pass.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
