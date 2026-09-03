@@ -210,7 +210,13 @@ digest-bound artifacts validate. Do not accept a worker or manifest assertion
 of achievement. A `quick` run can reach `supported` but never `verified`.
 `verified` claims require unique complete semantic, adversarial, and coverage
 results bound to immutable briefs and correct claim dispositions. Unresolved
-material challenge prevents verification.
+material challenge prevents verification. A run with contested claims may
+publish as `complete` when all declared questions and claims are resolved or
+characterized; contested claims are rendered under "Contradictions and
+Qualifications". If an unresolved challenge represents an unanswered question
+or missing source evidence that leaves investigation incomplete, it must be
+recorded as a material gap in `manifest.gaps` and the run published as
+`partial`.
 
 Render `packet.md` with `scripts/render-packet.mjs` only from the final validated
 manifest and ledger. Publish through a symlink-safe temporary sibling followed

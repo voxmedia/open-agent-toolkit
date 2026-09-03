@@ -190,7 +190,13 @@ ID resolves to a unique, complete, typed, hashed result bound to the exact
 immutable brief digest, the claim's required disposition, and the matching
 accepted/completed stage receipts. An unreceipted result cannot contribute
 assurance or reconciliation. A material unresolved challenge or coverage
-finding prevents verification. Review workers propose; only a reconciler writes
+finding prevents verification. A run with contested claims may publish as
+`complete` when all declared questions and claims are resolved or
+characterized; contested claims are rendered under "Contradictions and
+Qualifications". If an unresolved challenge represents an unanswered question
+or missing source evidence that leaves investigation incomplete, it must be
+recorded as a material gap in `manifest.gaps` and the run published as
+`partial`. Review workers propose; only a reconciler writes
 a new ledger candidate. Reconciliation binds the prior ledger reference and
 revision, the next revision, the exact receipted review-result set, and the exact
 canonical claim transitions. Standard and thorough output is exactly the next

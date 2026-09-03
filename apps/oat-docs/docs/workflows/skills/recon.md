@@ -91,7 +91,8 @@ or repository evidence directory exists.
 
 ## Packet Layout and Consumption
 
-Every structurally publishable run uses this top-level layout:
+Every structurally publishable run uses this top-level layout; a
+non-publishable candidate generation withdraws any existing `packet.md`:
 
 ```text
 <topic>-<run-id>/
