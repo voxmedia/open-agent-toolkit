@@ -22,13 +22,22 @@
  * path such as `/secret` is caught — the previous pattern demanded a second
  * separator and let those through.
  *
- * The lookbehind admits a match only at a token start, so relative text such as
- * `and/or`, `dispatch/request-1.json` and a date like `2026/09/03` are not
- * paths. `>` is deliberately excluded from it so the canonical redacted role
- * form `<user>/agents/<role>.md` survives untouched.
+ * The lookbehind admits a match at a token start *and* after the separators
+ * that introduce a value — `=`, `,`, `;`, `|` — because a path is just as
+ * disclosing in `cwd=/Users/alice/private` as it is standing alone. Requiring a
+ * whitespace or quote boundary is what let assignment form through.
+ *
+ * Two exclusions keep that widening from swallowing non-paths. `:` stays out of
+ * the lookbehind, so `https://example.com` and `git@host:org/repo` are not
+ * paths; and the POSIX arm rejects a second leading slash, so a scheme-relative
+ * URL like `src=//cdn.example.com/x.js` is not one either. Ordinary relative
+ * text — `and/or`, `dispatch/request-1.json`, `out=dist/bundle.js`, a date like
+ * `2026/09/03` — never starts with a separator and so never matches. `>` is
+ * deliberately excluded so the canonical redacted role form
+ * `<user>/agents/<role>.md` survives untouched.
  */
 const ABSOLUTE_PATH_PATTERN =
-  /(?<=^|[\s'"`([{<])(?:file:\/\/[^\s'"`;,)\]}]*|\\\\[^\s'"`;,)\]}]+|[A-Za-z]:[\\/][^\s'"`;,)\]}]*|\/[^\s'"`;,)\]}]+)/g;
+  /(?<=^|[\s'"`([{<=,;|])(?:file:\/\/[^\s'"`;,)\]}]*|\\\\[^\s'"`;,)\]}]+|[A-Za-z]:[\\/][^\s'"`;,)\]}]*|\/(?!\/)[^\s'"`;,)\]}]+)/g;
 
 /** The stable stand-in, matching the `<tier>/agents/<role>.md` precedent. */
 export const REDACTED_PATH = '<redacted-path>';

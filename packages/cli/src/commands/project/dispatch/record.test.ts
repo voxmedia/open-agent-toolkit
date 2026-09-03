@@ -1372,6 +1372,83 @@ describe('runtime observation integration', () => {
     expect(journal).not.toContain('/Users/');
   });
 
+  it('redacts assignment-form paths out of the journal bytes', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const secrets = {
+      objective: 'cwd=/Users/alice/private',
+      diagnostic: 'source=file:///etc/passwd',
+      evidence: '--path=/Users/alice/x',
+      payload: 'drive=C:\\Users\\alice\\x',
+      continuation: 'paths=/etc/a,/etc/b',
+    };
+    await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: genericRecord({
+          objective: `run with ${secrets.objective} now`,
+          diagnostics: [secrets.diagnostic],
+          configured_invocation_evidence: [secrets.evidence],
+          payload: { note: secrets.payload },
+          continuation_events: [{ at: secrets.continuation }],
+        }),
+        event: canonicalEvent(),
+      },
+    });
+
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    for (const probe of [
+      '/Users/alice/private',
+      'file:///etc/passwd',
+      '/Users/alice/x',
+      'C:\\Users\\alice',
+      '/etc/a',
+      '/etc/b',
+    ]) {
+      expect(journal, probe).not.toContain(probe);
+    }
+    expect(journal).toContain('<redacted-path>');
+  });
+
+  it('refuses an oversized-after-redaction record and publishes nothing', async () => {
+    // `<redacted-path>` is far longer than `/a`, so sanitizing inflates the
+    // record. The size checks ran before redaction, so an append-only journal
+    // that never prunes could gain a revision too large to read back.
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const command = '/a '.repeat(3400).trim();
+    const input = {
+      record: genericRecord(),
+      event: {
+        kind: 'canonical-role-resolution' as const,
+        requestId: 'dispatch-native-1',
+        source: 'canonical-role-resolver' as const,
+        evidence: {
+          status: 'missing' as const,
+          dependency: 'workflows',
+          canonicalRole: 'oat-phase-implementer',
+          candidateMisses: [],
+          recovery: [{ command }, { command }, { command }],
+        },
+      },
+    };
+    // The input itself is comfortably legal; only redaction pushes it over.
+    expect(new TextEncoder().encode(JSON.stringify(input)).length).toBeLessThan(
+      64 * 1024,
+    );
+
+    await expect(recordProjectDispatch({ projectPath, input })).rejects.toThrow(
+      /byte|limit/i,
+    );
+
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it('refuses to publish a revision that still carries a path', async () => {
     // The postcondition runs on the exact value being written, so it holds even
     // if an earlier stage is bypassed.

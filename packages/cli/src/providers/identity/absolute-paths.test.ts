@@ -31,6 +31,31 @@ describe('absolute path detection', () => {
     expect(redactAbsolutePaths(value)).toBe(value);
   });
 
+  it.each([
+    ['assignment', 'run with cwd=/Users/alice/private now'],
+    ['assignment file url', 'source=file:///etc/passwd'],
+    ['flag assignment', '--path=/Users/x'],
+    ['assignment windows drive', 'a=C:\\Users\\x'],
+    ['comma separated list', 'paths=/etc/a,/etc/b'],
+    ['semicolon separated', 'cmd;/bin/sh'],
+    ['pipe separated', 'cat x|/bin/less'],
+  ])('catches a path in %s form', (_name, value) => {
+    expect(containsAbsolutePath(value)).toBe(true);
+    expect(redactAbsolutePaths(value)).toContain('<redacted-path>');
+  });
+
+  it.each([
+    ['an http url', 'url=https://example.com/x'],
+    ['an ssh remote', 'git@github.com:org/repo.git'],
+    ['a plain assignment', 'key=value'],
+    ['a model assignment', 'model=gpt-5.6-sol'],
+    ['a relative assignment', 'out=dist/bundle.js'],
+    ['a scheme-relative url', 'src=//cdn.example.com/x.js'],
+  ])('does not treat %s as a POSIX path', (_name, value) => {
+    expect(containsAbsolutePath(value)).toBe(false);
+    expect(redactAbsolutePaths(value)).toBe(value);
+  });
+
   it('is the same detector the message boundary uses', () => {
     // Two independent notions of "looks like a path" is how a path could be
     // scrubbed from a message and written verbatim into the record.
