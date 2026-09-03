@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
+import { createValidatedRun } from '../scripts/lib/validated-run.mjs';
 import {
   renderPacket,
   renderPacketDocument,
@@ -530,6 +531,51 @@ test('promotion failure withdraws the published packet and removes the temp file
   assert.equal(
     (await readdir(fixture.packetRoot)).some((name) => name.endsWith('.tmp')),
     false,
+  );
+});
+
+test('renderValidatedPacket throws categorical error on non-publishable run status', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const validation = await compileValidatedRun(fixture.packetRoot);
+  const runningManifest = structuredClone(validation.validatedRun.manifest);
+  runningManifest.run.status = 'running';
+  const runningRun = createValidatedRun({
+    packetRoot: validation.validatedRun.packetRoot,
+    filesystemIdentities: new Map(
+      validation.validatedRun.filesystemIdentities.map((id) => [id.path, id]),
+    ),
+    canonicalByteDigests: new Map(
+      validation.validatedRun.canonicalByteDigests.map((d) => [
+        d.path,
+        d.digest,
+      ]),
+    ),
+    manifest: runningManifest,
+    ledger: validation.validatedRun.ledger,
+    artifactsById: new Map(
+      validation.validatedRun.artifacts.map((a) => [a.id, a]),
+    ),
+    exactEvidence: new Set(validation.validatedRun.exactEvidenceIds),
+    topology: {
+      requiredLanes: validation.validatedRun.topology.requiredLanes,
+      stageByLane: new Map(
+        validation.validatedRun.topology.stages.map((s) => [s.laneId, s.stage]),
+      ),
+      completeArtifactIdsByMode: new Map(
+        Object.entries(
+          validation.validatedRun.topology.completeArtifactIdsByMode,
+        ),
+      ),
+    },
+    achievedProfile: validation.validatedRun.achievedProfile,
+    receiptedReviewIds: new Set(validation.validatedRun.receiptedReviewIds),
+    reconciliationContext: null,
+  });
+
+  await assert.rejects(
+    renderValidatedPacket(runningRun),
+    (err) => err.code === 'PACKET_NOT_PUBLISHABLE',
   );
 });
 

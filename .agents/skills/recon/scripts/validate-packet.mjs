@@ -2312,7 +2312,7 @@ export async function compileValidatedRun(packetDirectory) {
       packetRoot,
       errors,
       warnings,
-      validatedRun: valid ? validatedRun : undefined,
+      validatedRun: publishable ? validatedRun : undefined,
     };
   }
 

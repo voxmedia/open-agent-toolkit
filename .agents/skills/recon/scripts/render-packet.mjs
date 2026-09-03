@@ -282,6 +282,14 @@ export async function renderValidatedPacket(
 ) {
   const run = assertValidatedRun(validatedRun);
   const { manifest, ledger, packetRoot } = run;
+  if (manifest.run.status !== 'complete' && manifest.run.status !== 'partial') {
+    throw Object.assign(
+      new Error(
+        `Cannot render non-publishable run status: ${manifest.run.status}`,
+      ),
+      { code: 'PACKET_NOT_PUBLISHABLE' },
+    );
+  }
   const target = join(packetRoot, 'packet.md');
   const temporary = join(packetRoot, `.packet.md.${randomUUID()}.tmp`);
   let temporaryFile;

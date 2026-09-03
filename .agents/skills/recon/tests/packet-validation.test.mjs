@@ -704,6 +704,7 @@ for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
     const result = await validatePacket(packet.packetRoot);
     assert.equal(result.valid, true, JSON.stringify(result, null, 2));
     assert.equal(result.publishable, false);
+    assert.equal(result.validatedRun, undefined);
     assert.ok(
       result.errors.some(
         (error) =>
