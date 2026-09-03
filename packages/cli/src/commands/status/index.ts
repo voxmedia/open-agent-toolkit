@@ -82,6 +82,7 @@ import {
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
   type ScanBundledManagedAgentsOptions,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
@@ -976,10 +977,10 @@ async function collectScopeReports(
   );
   const providerCanonicalEntries =
     scope === 'user'
-      ? [
-          ...canonicalEntries,
-          ...(await dependencies.scanBundledManagedAgents({ scopeRoot })),
-        ]
+      ? mergeUserScopeMaterializationEntries(
+          canonicalEntries,
+          await dependencies.scanBundledManagedAgents({ scopeRoot }),
+        )
       : canonicalEntries;
   const extensionCanonicalEntries =
     scope === 'user' &&

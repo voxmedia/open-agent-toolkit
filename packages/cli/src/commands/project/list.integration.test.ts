@@ -94,7 +94,14 @@ describe('oat project list coordination integration', () => {
 
   afterEach(async () => {
     await Promise.all(
-      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+      tempDirs.map(async (dir) =>
+        rm(dir, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 50,
+        }),
+      ),
     );
     tempDirs.length = 0;
   });

@@ -39,6 +39,8 @@ export type {
   ScanBundledManagedAgentsOptions,
 } from './scanner';
 export {
+  materializationCanonicalPathAllowed,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanBundledManagedCodexAgents,
   scanCanonical,

@@ -76,6 +76,7 @@ import {
   type HookInstallInfo,
   installHook,
   isHookInstalled,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
   uninstallHook,
@@ -314,10 +315,10 @@ async function collectStraysDefault(
   const candidates: InitStrayCandidate[] = [];
   const providerCanonicalEntries =
     scope === 'user'
-      ? [
-          ...canonicalEntries,
-          ...(await scanBundledManagedAgents({ scopeRoot })),
-        ]
+      ? mergeUserScopeMaterializationEntries(
+          canonicalEntries,
+          await scanBundledManagedAgents({ scopeRoot }),
+        )
       : canonicalEntries;
   const codexExtensionPlan = adaptersToScan.some(
     (adapter) => adapter.name === 'codex',

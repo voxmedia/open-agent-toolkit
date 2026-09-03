@@ -21,6 +21,7 @@ import {
 import {
   computeSyncPlan,
   executeSyncPlan,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
@@ -413,7 +414,10 @@ async function computePlans(
             ),
           ]
         : canonical;
-    const materializationCanonical = [...canonical, ...managedAgents];
+    const materializationCanonical =
+      scope === 'user'
+        ? mergeUserScopeMaterializationEntries(canonical, managedAgents)
+        : canonical;
     if (canonicalFilter?.mode === 'remove') {
       const existing = new Set(
         ordinaryCanonical.map(({ canonicalPath }) =>
