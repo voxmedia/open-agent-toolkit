@@ -94,11 +94,11 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/255' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T04:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T05:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -108,13 +108,13 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation complete — gate fixes landed, PR pending
+**Status:** PR open — awaiting human review
 **Started:** 2026-08-29
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Implementation complete. All seven phases and 30/30 tasks are done, with
+Implementation — PR open; completion may run before or after merge.
 twelve independent review rounds plus a final cross-phase review. Phase 6
 required three bounded fix rounds after round 2 disproved round 1's
 publication-safety claim and the operator directed eliminating the destructive
@@ -201,6 +201,9 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 - ✓ FR10 config-sibling loss fixed; mocked non-failing tests deleted
 - ✓ NFR1 narrowed to an enforceable contract after three tuning rounds
 - ✓ Record ceiling now measures the bytes that land on disk
+- ✓ Final review passed at `baf194743` (cross-model, Cursor sol)
+- ✓ PR created
+- ⧗ Awaiting human review
 - ✓ Phase 7 complete: all four tasks and four independent review rounds
 - ✓ Merged `origin/main` and advanced five lockstep packages to `0.2.52`
 - ✓ All eight Definition-of-Done gates pass, release gates included
@@ -216,4 +219,8 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 
 ## Next Milestone
 
-One confirming cross-model gate pass, then open the PR.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
