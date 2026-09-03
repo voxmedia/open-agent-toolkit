@@ -891,7 +891,6 @@ describe('sync engine integration', () => {
     });
     await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
     const ownedManifest = await loadManifest(manifestPath);
-    const originalIdentity = await lstat(providerDir);
 
     await rm(providerDir);
     await symlink(
@@ -900,10 +899,16 @@ describe('sync engine integration', () => {
       'dir',
     );
     await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+    // Deliberately not asserting that the replacement has a different inode.
+    // Filesystems make no guarantee about inode reuse: macOS/APFS hands out a
+    // fresh inode here, while Linux/ext4 frequently reuses the one just freed,
+    // so the assertion passed locally and failed in CI. The identity is not
+    // load-bearing either way — `removeCollectionSymlinkIfUnchanged` returns
+    // false unconditionally, so a matching inode cannot cause the user's
+    // symlink to be unlinked. What matters is the target, asserted below.
     const replacementIdentity = await lstat(providerDir);
-    expect(String(replacementIdentity.ino)).not.toBe(
-      String(originalIdentity.ino),
-    );
+    expect(replacementIdentity.isSymbolicLink()).toBe(true);
+    expect(await readlink(providerDir)).toBe(join('..', '.agents', 'skills'));
 
     const disablePlan = await computeSyncPlan({
       canonical,

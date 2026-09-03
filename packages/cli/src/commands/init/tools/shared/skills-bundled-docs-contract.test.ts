@@ -1716,7 +1716,12 @@ describe('skills bundled docs contract', () => {
           status: 'resolved',
           tier: 'loaded',
           selectedPath: '<loaded>/agents/oat-reviewer.md',
-          canonicalPath: '<loaded>/agents/oat-reviewer.md',
+          // The canonical file is the user root, so it is labelled `<user>`
+          // even though it was selected through the loaded tier. Roots are
+          // compared by resolved path, so this holds whether or not the
+          // caller passed a realpath'd `skillDir`, and on platforms where a
+          // tmpdir realpaths to a different prefix.
+          canonicalPath: '<user>/agents/oat-reviewer.md',
           validation: 'direct-canonical',
         }),
       );

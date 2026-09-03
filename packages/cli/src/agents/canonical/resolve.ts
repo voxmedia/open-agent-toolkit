@@ -73,15 +73,36 @@ function redactedCandidate(tier: CanonicalRoleTier, role: string): string {
   return `<${tier}>/agents/${role}.md`;
 }
 
+/**
+ * Resolve symlinks before comparing roots.
+ *
+ * `path.resolve` normalizes a path but does not follow symlinks, so the same
+ * canonical file was labelled `<loaded>` or `<user>` depending on whether the
+ * caller happened to pass a realpath'd `skillDir`. On macOS a tmpdir root
+ * realpaths from `/var/...` to `/private/var/...`, which broke the string
+ * match; on Linux it did not. A provenance label must not depend on an
+ * incidental property of the caller's argument.
+ */
+function sameRoot(left: string, right: string): boolean {
+  const normalize = (value: string): string => {
+    try {
+      return realpathSync(value);
+    } catch {
+      return resolve(value);
+    }
+  };
+  return normalize(left) === normalize(right);
+}
+
 function canonicalTier(
   candidate: Candidate,
   userCanonicalRoot: string,
   projectCanonicalRoot: string,
 ): CanonicalRoleTier {
-  if (resolve(candidate.canonicalRoot) === resolve(userCanonicalRoot)) {
+  if (sameRoot(candidate.canonicalRoot, userCanonicalRoot)) {
     return 'user';
   }
-  if (resolve(candidate.canonicalRoot) === resolve(projectCanonicalRoot)) {
+  if (sameRoot(candidate.canonicalRoot, projectCanonicalRoot)) {
     return 'project';
   }
   return candidate.tier;
