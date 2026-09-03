@@ -17,6 +17,13 @@ function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
+const TEMP_TREE_RM_OPTIONS = {
+  recursive: true,
+  force: true,
+  maxRetries: 5,
+  retryDelay: 50,
+} as const;
+
 function configureClone(cloneDir: string): void {
   git(cloneDir, ['config', 'user.email', 'synced-fixture@example.com']);
   git(cloneDir, ['config', 'user.name', 'Synced Fixture']);
@@ -46,7 +53,7 @@ export async function createSyncedFixture(
       configureClone(cloneB);
     }
   } catch (error) {
-    await rm(rootDir, { recursive: true, force: true });
+    await rm(rootDir, TEMP_TREE_RM_OPTIONS);
     throw error;
   }
 
@@ -55,7 +62,7 @@ export async function createSyncedFixture(
     originDir,
     cloneA,
     cloneB,
-    cleanup: () => rm(rootDir, { recursive: true, force: true }),
+    cleanup: () => rm(rootDir, TEMP_TREE_RM_OPTIONS),
   };
 }
 
