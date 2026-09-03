@@ -33,7 +33,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev6 | review_pending | 1     | 1/1       |
 | Phase p-rev7 | passed         | 1     | 1/1       |
 | Phase p-rev8 | passed         | 3     | 3/3       |
-| Phase p-rev9 | review_pending | 3     | 3/3       |
+| Phase p-rev9 | passed         | 3     | 3/3       |
 
 **Total:** 36/36 tasks completed
 
@@ -321,6 +321,17 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Verification (root):** all 192 recon/dispatch Node tests pass; full CI gates pass
 - **Tracking:** all three tasks marked completed; phase enters `review_pending`
 - **Next:** run p-rev9 independent phase review inline in root under the user's no-subagent directive, then rerun the configured gate
+
+## p-rev9 Review Passed
+
+- **Date:** 2026-09-03
+- **Mode:** inline root review by explicit user direction; no subagents
+- **Reviewed range:** `1a64048cb..1385fd1e102e3b2e56997577537b0b9788f615fa`
+- **Artifact:** `reviews/p-rev9-review-2026-09-03T163000Z.md`
+- **Reconnaissance:** not-attempted
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Verification:** all 192 recon/dispatch tests pass, skill bump checks pass, 63/63 canonical skills validate, oxfmt and oxlint pass
+- **Next:** rerun the configured implementation exit gate with the user-selected `claude-fable-skip-permissions` target
 
 ## Orchestration Runs
 

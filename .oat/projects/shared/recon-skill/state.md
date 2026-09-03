@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # p-rev8 phase review passed; configured gate rerun pending
+oat_phase_status: in_progress # p-rev9 phase review passed; configured gate rerun pending
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T16:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T16:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,15 +106,19 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Configured gate fixes queued in Revision 9
+**Status:** Revision 9 implemented; phase review passed
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-The configured cross-family exit gate (Claude Fable) returned one Important,
-one Medium, and two Minor findings in a valid blocked envelope. Revision 9
-converts all four findings; PR #248 remains open.
+Revision 9 converts all four configured-gate findings: synthesis referential
+integrity is categorically validated, rejected claims transition honestly to
+`unsupported`, `ValidatedRun` and renderer are strictly bound to publishable
+status, and contract clarity plus docs withdrawal descriptions are aligned. All
+three committed tasks pass root verification (192/192 recon/dispatch tests,
+skill bumps, skill validation). The fresh inline root phase review passed with
+zero findings; PR #248 remains open.
 
 ## Artifacts
 
@@ -122,7 +126,7 @@ converts all four findings; PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (33/36 tasks complete; Revision 9 queued)
+- **Implementation:** `implementation.md` (36/36 tasks complete; Revision 9 review passed)
 
 ## Progress
 
@@ -251,7 +255,12 @@ converts all four findings; PR #248 remains open.
   findings
 - ! Configured cross-family exit gate (Claude Fable) returned 1 Important, 1
   Medium, and 2 Minor findings with a receive-eligible blocked result
-- ⧗ Revision 9 tasks `prev9-t01` through `prev9-t03` are queued
+- ✓ Revision 9 tasks `prev9-t01` through `prev9-t03` implemented
+- ✓ Root verification passes 192/192 recon and dispatch tests, skill bumps,
+  and skill validation checks
+- ✓ p-rev9 independent phase review passed inline in the root under the user's
+  no-subagent directive with 0 Critical, 0 Important, 0 Medium, and 0 Minor
+  findings
 
 ## Blockers
 
@@ -260,6 +269,5 @@ the single-use manual final-review override remains consumed.
 
 ## Next Milestone
 
-Execute Revision 9 through `oat-project-implement`. After its phase review,
-rerun final verification and the configured gate within the remaining
+Rerun final verification and the configured gate within the remaining
 remediation budget.
