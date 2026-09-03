@@ -169,6 +169,26 @@ Commands report both. `oat tools list` and `oat tools info` show placement,
 intent source, and completeness. `oat status` and `oat doctor` report drift
 between intent and inventory with a scoped recovery command.
 
+### Requested scope versus realized placement
+
+Intent and inventory are reported as separate, source-qualified facts, so a
+pack you declared but never installed is never rendered as installed. The
+interactive picker labels each pack from **realized** placement — the scopes
+where managed assets actually exist on disk — not from declared `tools.*`
+intent. A pack declared at project scope with nothing materialized shows as
+not installed, which is the honest answer.
+
+Installation outcomes carry `realizedPlacement` alongside the requested scope,
+so JSON consumers can tell the two apart. Selecting `User scope` installs at
+user scope only; it never silently widens to `project + user`.
+
+One caveat worth knowing: `oat tools list` and `oat tools info` human output,
+and `oat status` JSON, still print a `placement` field derived from
+declaration rather than realization. For a declared-but-absent pack that field
+reads `project` even though nothing is installed. Prefer the picker labels and
+`realizedPlacement` when you need the truthful answer. Retiring the
+declaration-derived field is tracked in the repository backlog.
+
 A pack is **complete** at a scope when every managed asset the current release
 declares for that scope is present, **partial** when only some are, and
 **absent** when none are.
