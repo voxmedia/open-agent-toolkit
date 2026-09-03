@@ -247,7 +247,7 @@ oat_generated: false
   project and user scopes, direct reproduction showed an unrelated pack report
   a user-scope failure while recommending `--scope project`; even the failed
   pack's one-scope retry cannot re-establish both invalidated scopes.
-- Artifact: `reviews/p02-review-2026-08-31T155718Z.md`; reviewed head
+- Artifact: `reviews/archived/p02-review-2026-08-31T155718Z.md`; reviewed head
   `e85ba38ae575e193a7084f1046798ca0827f6bef`; 0 critical, 1 important.
 - Verification: 29 files / 710 tests; focused blocker suite; CLI lint,
   type-check, formatting, and `git diff --check` all passed.
@@ -266,7 +266,7 @@ oat_generated: false
 all`, but its prose unconditionally says canonical removal was applied. Six
   absent packs in the review fixture correctly report `canonical.status:
 unchanged`, making the source-qualified recovery record contradictory.
-- Artifact: `reviews/p02-review-2026-08-31T164057Z.md`; reviewed head
+- Artifact: `reviews/archived/p02-review-2026-08-31T164057Z.md`; reviewed head
   `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`; 0 critical, 1 important.
 - Verification: focused 35 tests and combined 29 files / 714 tests; CLI lint,
   type-check, formatting, and `git diff --check` all passed.
@@ -284,7 +284,7 @@ unchanged`, making the source-qualified recovery record contradictory.
 
 - Commit `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab` completed the final
   correction without widening scope.
-- `reviews/p02-review-2026-08-31T170932Z.md` reviewed the complete p02 range at
+- `reviews/archived/p02-review-2026-08-31T170932Z.md` reviewed the complete p02 range at
   that head and passed with 0 critical, 0 important, 0 medium, and 0 minor.
 - Focused removal and combined 29-file / 714-test suites, CLI lint, type-check,
   formatting, and `git diff --check` passed. Phase 3 may begin.
@@ -503,7 +503,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 1
 
-- Artifact: `reviews/p03-review-2026-08-31T184315Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T184315Z.md`
 - Reviewed head: `810f0788d6034b12997e2154f14ac50dce8623df`
 - Verdict: changes requested; 0 Critical, 3 Important, 1 Medium, 0 Minor.
 - Reconnaissance: not attempted.
@@ -532,7 +532,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 2
 
-- Artifact: `reviews/p03-review-2026-08-31T193945Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T193945Z.md`
 - Reviewed head: `2132804175242aa706791c03e12577a87f849ad4`
 - Verdict: changes requested; 0 Critical, 1 Important, 1 Medium, 2 Minor.
 - Reconnaissance: attempted through one bounded read-only intelligent-recon
@@ -568,7 +568,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 3 — Terminal Governance Boundary
 
-- Artifact: `reviews/p03-review-2026-08-31T202630Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T202630Z.md`
 - Reviewed head: `d7762061f9db31db06160a1b87eeca08981dd39a`
 - Verdict: changes requested; 0 Critical, 2 Important, 0 Medium, 0 Minor.
 - Reconnaissance: attempted through one bounded read-only intelligent-recon
@@ -615,7 +615,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 4 — Terminal Governance Boundary
 
-- Artifact: `reviews/p03-review-2026-08-31T223136Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T223136Z.md`
 - Reviewed head: `4ddd2e4dcf42ccc5e8fe2252bcb4168fff24dc3c`
 - Verdict: changes requested; 0 Critical, 1 Important, 0 Medium, 0 Minor.
 - Reconnaissance: attempted through one bounded read-only intelligent-recon
@@ -672,7 +672,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 5 — Terminal Governance Boundary
 
-- Artifact: `reviews/p03-review-2026-08-31T234602Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T234602Z.md`
 - Reviewed head: `73a0488bea572ec927eb10abfd94bdd1e6849e09`
 - Verdict: changes requested; 0 Critical, 1 Important, 2 Medium, 0 Minor.
 - Reconnaissance: not attempted.
@@ -719,7 +719,7 @@ high confidence. The original commit remains the source authority.
 
 ### Review Round 6 — Passed
 
-- Artifact: `reviews/p03-review-2026-09-01T002159Z.md`
+- Artifact: `reviews/archived/p03-review-2026-09-01T002159Z.md`
 - Reviewed head: `f50e007d7eac0de9c0bf2eec32c1ee9e8443817b`
 - Verdict: passed; 0 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: not attempted.
@@ -791,7 +791,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 1
 
-- Artifact: `reviews/p04-review-2026-09-01T013028Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T013028Z.md`
 - Reviewed head: `09ab8e7a0878e812caec569eed0512e3bd7a2e88`
 - Verdict: changes requested; 2 Critical, 1 Important, 2 Medium, 0 Minor.
 - Reconnaissance: attempted through one accepted consequential lane plus
@@ -833,7 +833,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 2
 
-- Artifact: `reviews/p04-review-2026-09-01T020351Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T020351Z.md`
 - Reviewed head: `d50d2d6c642c347114a1c2de5eb9502496328ffb`
 - Verdict: changes requested; 2 Critical, 2 Important, 0 Medium, 0 Minor.
 - Reconnaissance: attempted through one accepted consequential safety lane. The
@@ -875,7 +875,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 3
 
-- Artifact: `reviews/p04-review-2026-09-01T023939Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T023939Z.md`
 - Reviewed head: `6da49610627aae9f3eb78879906239ac5a86fa48`
 - Verdict: changes requested; 1 Critical, 1 Important, 2 Medium, 0 Minor.
 - Reconnaissance: attempted through one accepted consequential safety lane. The
@@ -914,7 +914,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 4 — Final Bounded Cycle
 
-- Artifact: `reviews/p04-review-2026-09-01T031017Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T031017Z.md`
 - Reviewed head: `54ef41a4a57d9f1222096013e0d0a03dd2e8bb2b`
 - Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: attempted through one accepted consequential safety lane. The
@@ -947,7 +947,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 5 — Terminal Governance Boundary
 
-- Artifact: `reviews/p04-review-2026-09-01T033543Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T033543Z.md`
 - Reviewed head: `740e2a7ca90d16efd38f226db9840598ef634daf`
 - Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: attempted through one accepted consequential safety lane;
@@ -1009,7 +1009,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 6 — Operator Extension Exhausted
 
-- Artifact: `reviews/p04-review-2026-09-01T193927Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T193927Z.md`
 - Reviewed head: `82f801ab880ad8b8272426726d3dace9b819fbef`
 - Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: not attempted; the artifact correctly contains no Review
@@ -1078,7 +1078,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 7 — Fail-Closed Extension Exhausted
 
-- Artifact: `reviews/p04-review-2026-09-01T210000Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T210000Z.md`
 - Reviewed head: `dd1fed438344718d7f98642da93b7f65501b79ee`
 - Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: not attempted; the artifact correctly contains no Review
@@ -1125,7 +1125,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 8 — Terminal Governance Boundary
 
-- Artifact: `reviews/p04-review-2026-09-01T220158Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T220158Z.md`
 - Reviewed head: `86df6a8f5fc76fe30554d7ce6562067c3a5b58e0`
 - Verdict: changes requested; 1 Critical, 0 Important, 0 Medium, 0 Minor.
 - Reconnaissance: not attempted; the artifact correctly contains no Review
@@ -1192,7 +1192,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 9 — Terminal Design-Alignment Boundary
 
-- Artifact: `reviews/p04-review-2026-09-01T234753Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T234753Z.md`
 - Reviewed head: `07977df386562bfd0974bc487d312d109a6e4b4f`
 - Verdict: changes requested; 0 Critical, 1 Important, 0 Medium, 0 Minor.
 - The full Phase 4 code safety surface passes. Deferred directory copy and
@@ -1254,7 +1254,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 1 — Production Registration and No-Clobber Boundary
 
-- Artifact: `reviews/p05-review-2026-09-02T043143Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T043143Z.md`
 - Reviewed head: `61a1ea59083d3d9987a24c0a07ae349924e39cf9`
 - Verdict: changes requested; 2 Critical, 1 Important, 0 Medium, 0 Minor.
 - The production registered `workflows` leaf bypasses the guidance-aware
@@ -1283,7 +1283,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 2 — Atomic Publication and Combined Marker Structure
 
-- Artifact: `reviews/p05-review-2026-09-02T045435Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T045435Z.md`
 - Reviewed head: `89d71d78d652e439abe9804f04b520047fe8c79c`
 - Verdict: changes requested; 2 Critical, 0 Important, 0 Medium, 0 Minor.
 - The production registration finding is resolved.
@@ -1310,7 +1310,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 3 — Recovery Lifecycle and Consumer Truth
 
-- Artifact: `reviews/p05-review-2026-09-02T052445Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T052445Z.md`
 - Reviewed head: `9eab2dc3ea99026ef00ff649f320057df51537b6`
 - Verdict: changes requested; 2 Critical, 3 Important, 0 Medium, 0 Minor.
 - Identity-unsafe pre-publication cleanup can delete a foreign replacement at
@@ -1330,7 +1330,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 - Thomas explicitly authorized one additional bounded Phase 5 fix/review cycle
   after the three-cycle governance stop.
 - Scope is limited to the two Critical and three Important findings in
-  `reviews/p05-review-2026-09-02T052445Z.md`.
+  `reviews/archived/p05-review-2026-09-02T052445Z.md`.
 - The original exact-High Phase 5 implementer remains the fix owner. Exactly one
   fresh independent review is authorized after the bounded correction.
 - If that review still reports Critical or Important findings, the override is
@@ -1349,7 +1349,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Authorized Post-Cap Review — Terminal Governance Boundary
 
-- Artifact: `reviews/p05-review-2026-09-02T124148Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T124148Z.md`
 - Reviewed head: `19198457148de815415304c620db39e78b41ef2c`
 - Verdict: changes requested; 2 Critical, 3 Important, 0 Medium, 0 Minor.
 - Temporary source identity is not securely bound through metadata mutation and
@@ -1380,7 +1380,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Operator Disposition — Accept Absent-File Parent-Swap Residual Risk
 
-- Review artifact: `reviews/p05-review-2026-09-02T134849Z.md`
+- Review artifact: `reviews/archived/p05-review-2026-09-02T134849Z.md`
 - Reviewed head: `52d2e69addd6ca17b421f48de9a858a9a31a0366`
 - The redesign review passed all 427 Phase 5 tests and static checks but
   reproduced one narrow race: a privileged concurrent local process can swap
@@ -1418,7 +1418,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 1 — Fallback and Journal Integrity
 
-- Artifact: `reviews/p06-review-2026-09-02T151842Z.md`
+- Artifact: `reviews/archived/p06-review-2026-09-02T151842Z.md`
 - Reviewed head: `642912319c1a3e79ee43397d5158e6fecc15b051`
 - Verdict: changes requested; 4 Critical, 1 Important, 0 Medium, 0 Minor.
 - Direct probes accepted prohibited/control-widened/unrelated-role fallback,
@@ -1446,7 +1446,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 2 — Publication Safety and Provenance Coverage
 
-- Artifact: `reviews/p06-review-2026-09-02T191958Z.md`
+- Artifact: `reviews/archived/p06-review-2026-09-02T191958Z.md`
 - Reviewed head: `bd3961720`
 - Verdict: blocked; 1 Critical, 3 Important, 2 Medium, 3 Minor.
 - Round 1 closure independently reproduced: C1, C2 and I1 verified closed; C3
@@ -1492,7 +1492,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 3 — Publication Guarantee Confirmed
 
-- Artifact: `reviews/p06-review-2026-09-02T200551Z.md`
+- Artifact: `reviews/archived/p06-review-2026-09-02T200551Z.md`
 - Reviewed head: `656c49ec7` (code at `bb93fa12a3155dfc41591f39d40df0c583aceb92`)
 - Verdict: changes requested; 0 Critical, 1 Important, 4 Medium, 3 Minor.
 - The round 2 destructive probe was independently reproduced across four
@@ -1536,7 +1536,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ### Review Round 4 — Passed
 
-- Artifact: `reviews/p06-review-2026-09-02T203606Z.md`
+- Artifact: `reviews/archived/p06-review-2026-09-02T203606Z.md`
 - Reviewed head: `36511be140685eb8dd6f874616c713cf0c529274` (code at
   `f18d1b13175b87946cb31cce1f933901969230cd`)
 - Verdict: passed; 0 Critical, 0 Important, 1 Medium, 3 Minor.
@@ -1600,7 +1600,7 @@ raised, and that the redaction boundary in `runRecordCommand` is unchanged.
 
 ### Review Round 1
 
-- Artifact: `reviews/p07-review-2026-09-02T212839Z.md`
+- Artifact: `reviews/archived/p07-review-2026-09-02T212839Z.md`
 - Reviewed head: `715ace3cd0928e096e5d7c57bdb2c8c699128d17`
 - Verdict: changes requested; 0 Critical, 1 Important, 3 Medium, 4 Minor.
 - It confirmed the no-conversation-content and non-authoritative-observation
@@ -1661,7 +1661,7 @@ Corrections, all verified against real artifacts:
 
 ### Review Round 2 and Its Critical
 
-- Artifact: `reviews/p07-review-2026-09-02T230419Z.md`; verdict blocked with
+- Artifact: `reviews/archived/p07-review-2026-09-02T230419Z.md`; verdict blocked with
   1 Critical, 2 Important, 3 Medium, 4 Minor.
 - The Critical was the live-verification defect a third time, one provider
   over: the Claude projection retained `sessionId`/`session_id` and
@@ -1700,7 +1700,7 @@ Corrections, all verified against real artifacts:
 
 ### Review Round 3
 
-- Artifact: `reviews/p07-review-2026-09-02T234824Z.md`; **0 Critical**, 2
+- Artifact: `reviews/archived/p07-review-2026-09-02T234824Z.md`; **0 Critical**, 2
   Important, 2 Medium, 4 Minor. The reviewer's verdict is that the
   implementation is ready and nothing requires redesign.
 - Full-corpus sweep through the production input path, recomputed
@@ -1727,7 +1727,7 @@ Corrections, all verified against real artifacts:
 
 ### Review Round 4
 
-- Artifact: `reviews/p07-review-2026-09-03T001908Z.md`
+- Artifact: `reviews/archived/p07-review-2026-09-03T001908Z.md`
 - Verdict: 0 Critical, 1 Important, 4 Medium, 3 Minor. The implementation is
   ready; the Important was orchestrator artifact drift, corrected here.
 - Independent full-corpus sweep: Codex 1,596 files 0 refused (1,564
@@ -1856,7 +1856,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Reviewed head: `940e87e5663bb6c36d8f7d7bfbb6db67d482b3e8`
 - Verdict: passed; findings critical 0, important 0, medium 0, minor 1
-- Artifact: `reviews/p01-review-2026-08-31T115349Z.md`
+- Artifact: `reviews/archived/p01-review-2026-08-31T115349Z.md`
 - Reconnaissance: not attempted
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -1886,13 +1886,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Review records
 
-- Round 1: `reviews/p02-review-2026-08-31T132646Z.md`, reviewed
+- Round 1: `reviews/archived/p02-review-2026-08-31T132646Z.md`, reviewed
   `23efb17c732c2a95fbe38eae2be4c48f78754932`, 2 critical / 2 important,
   findings fixed by `d959cb12caadf9587a271a3757f7d917a5b674bc`.
-- Round 2: `reviews/p02-review-2026-08-31T142211Z.md`, reviewed
+- Round 2: `reviews/archived/p02-review-2026-08-31T142211Z.md`, reviewed
   `d959cb12caadf9587a271a3757f7d917a5b674bc`, 0 critical / 2 important,
   findings fixed by `9d557564faa2430001483ed823a07d2cc920a3c1`.
-- Round 3: `reviews/p02-review-2026-08-31T144935Z.md`, reviewed
+- Round 3: `reviews/archived/p02-review-2026-08-31T144935Z.md`, reviewed
   `9d557564faa2430001483ed823a07d2cc920a3c1`, 0 critical / 2 important;
   terminal blocked verdict after the third governed cycle.
 - All review rounds used `oat-reviewer-gpt-5-6-sol-high`, invocation `manual`,
@@ -1910,7 +1910,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   and whitespace checks pass at `e85ba38ae575e193a7084f1046798ca0827f6bef`
 - Review-fix rounds: 3/3 used; no automatic fifth cycle is authorized
 - Outstanding: explicit human disposition of
-  `reviews/p02-review-2026-08-31T155718Z.md`; do not start p03
+  `reviews/archived/p02-review-2026-08-31T155718Z.md`; do not start p03
 
 #### Fix continuation — `review-fix-p02-r03-20260831T153500Z`
 
@@ -1926,7 +1926,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Target: `oat-reviewer-gpt-5-6-sol-high`
 - Reviewed head: `e85ba38ae575e193a7084f1046798ca0827f6bef`
 - Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
-- Artifact: `reviews/p02-review-2026-08-31T155718Z.md`
+- Artifact: `reviews/archived/p02-review-2026-08-31T155718Z.md`
 - Reconnaissance: attempted; orchestration evidence is recorded in the artifact
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -1942,7 +1942,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   and whitespace checks pass at `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`
 - Review-fix rounds: 4/4 used; no automatic round 6 is authorized
 - Outstanding: explicit human disposition of
-  `reviews/p02-review-2026-08-31T164057Z.md`; do not start p03
+  `reviews/archived/p02-review-2026-08-31T164057Z.md`; do not start p03
 
 #### Fix continuation — `review-fix-p02-r04-20260831T161500Z`
 
@@ -1959,7 +1959,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Target: `oat-reviewer-gpt-5-6-sol-high`
 - Reviewed head: `4e1cbac86f3f0bb5acefe446d8df8c81df3f025f`
 - Verdict: blocked; findings critical 0, important 1, medium 0, minor 0
-- Artifact: `reviews/p02-review-2026-08-31T164057Z.md`
+- Artifact: `reviews/archived/p02-review-2026-08-31T164057Z.md`
 - Reconnaissance: attempted; orchestration evidence is recorded in the artifact
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -1991,7 +1991,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Target: `oat-reviewer-gpt-5-6-sol-high`
 - Reviewed head: `eb218a7a2463e580e1ddb8c0bed5b9998d25e0ab`
 - Verdict: passed; findings critical 0, important 0, medium 0, minor 0
-- Artifact: `reviews/p02-review-2026-08-31T170932Z.md`
+- Artifact: `reviews/archived/p02-review-2026-08-31T170932Z.md`
 - Reconnaissance: not attempted
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -2034,7 +2034,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reviewed head: `810f0788d6034b12997e2154f14ac50dce8623df`
 - Verdict: changes requested; findings critical 0, important 3, medium 1,
   minor 0
-- Artifact: `reviews/p03-review-2026-08-31T184315Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T184315Z.md`
 - Reconnaissance: not attempted
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -2053,7 +2053,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reviewed head: `2132804175242aa706791c03e12577a87f849ad4`
 - Verdict: changes requested; findings critical 0, important 1, medium 1,
   minor 2
-- Artifact: `reviews/p03-review-2026-08-31T193945Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T193945Z.md`
 - Reconnaissance: attempted; complete orchestration evidence is in the artifact
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
@@ -2072,7 +2072,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Reviewed head: `d7762061f9db31db06160a1b87eeca08981dd39a`
 - Verdict: changes requested; findings critical 0, important 2, medium 0,
   minor 0
-- Artifact: `reviews/p03-review-2026-08-31T202630Z.md`
+- Artifact: `reviews/archived/p03-review-2026-08-31T202630Z.md`
 - Reconnaissance: attempted; complete orchestration evidence is in the artifact
 - Outcome: terminal governance boundary after the third p03 review cycle;
   operator disposition required before any fourth cycle
@@ -2096,7 +2096,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Target: `oat-reviewer-gpt-5-6-sol-high`
 - Reviewed head: `f50e007d7eac0de9c0bf2eec32c1ee9e8443817b`
 - Verdict: passed; findings critical 0, important 0, medium 0, minor 0
-- Artifact: `reviews/p03-review-2026-09-01T002159Z.md`
+- Artifact: `reviews/archived/p03-review-2026-09-01T002159Z.md`
 - Reconnaissance: not attempted
 - Selection reason: `native-catalog`; candidates considered:
   `gpt-5.6-sol/high`.
@@ -2151,7 +2151,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `d50d2d6c642c347114a1c2de5eb9502496328ffb`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T020351Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T020351Z.md`
 - Outcome: changes requested; 2 Critical and 2 Important findings. Phase 5
   remains gated while the same exact-High implementer owns the bounded fix.
 - Reconnaissance: attempted; complete nested dispatch and reconciliation
@@ -2172,7 +2172,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `6da49610627aae9f3eb78879906239ac5a86fa48`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T023939Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T023939Z.md`
 - Outcome: changes requested; 1 Critical, 1 Important, and 2 Medium findings.
   Phase 5 remains gated while the same exact-High implementer owns the bounded
   fix.
@@ -2194,7 +2194,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `54ef41a4a57d9f1222096013e0d0a03dd2e8bb2b`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T031017Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T031017Z.md`
 - Outcome: changes requested; 1 Critical finding. All round-3 findings are
   resolved; Phase 5 remains gated for the final bounded p04 correction/review.
 - Reconnaissance: attempted; complete nested dispatch and reconciliation
@@ -2215,7 +2215,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `740e2a7ca90d16efd38f226db9840598ef634daf`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T033543Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T033543Z.md`
 - Outcome: changes requested; 1 Critical finding. The five-round review budget
   is exhausted, operator governance is required, and Phase 5 remains gated.
 - Reconnaissance: attempted; complete nested dispatch and primary
@@ -2237,7 +2237,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `82f801ab880ad8b8272426726d3dace9b819fbef`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T193927Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T193927Z.md`
 - Outcome: changes requested; 1 Critical destination-ancestry symlink-swap
   finding. The one-use extension is exhausted, operator governance is required,
   and Phase 5 remains gated.
@@ -2259,7 +2259,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `dd1fed438344718d7f98642da93b7f65501b79ee`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T210000Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T210000Z.md`
 - Outcome: changes requested; 1 Critical repeated-sync state-transition
   finding. The one-use extension is exhausted, operator governance is required,
   and Phase 5 remains gated.
@@ -2305,7 +2305,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `86df6a8f5fc76fe30554d7ce6562067c3a5b58e0`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T220158Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T220158Z.md`
 - Outcome: changes requested; 1 Critical deferred-symlink ancestry race. The
   one-use correction/review authorization is exhausted, operator governance is
   required, and Phase 5 remains gated.
@@ -2356,7 +2356,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `07977df386562bfd0974bc487d312d109a6e4b4f`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p04-review-2026-09-01T234753Z.md`
+- Artifact: `reviews/archived/p04-review-2026-09-01T234753Z.md`
 - Outcome: changes requested; 0 Critical and 1 Important design-alignment
   finding. Code safety passes, but two approved design passages retain the
   removed automatic directory-transition release. The one-use authorization
@@ -2392,7 +2392,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `61a1ea59083d3d9987a24c0a07ae349924e39cf9`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p05-review-2026-09-02T043143Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T043143Z.md`
 - Outcome: changes requested; 2 Critical and 1 Important findings. The
   production leaf bypass, same-inode concurrent-edit clobber, and partial
   malformed-legacy mutation are assigned to the original Phase 5 implementer.
@@ -2416,7 +2416,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `89d71d78d652e439abe9804f04b520047fe8c79c`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p05-review-2026-09-02T045435Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T045435Z.md`
 - Outcome: changes requested; 2 Critical findings. The production leaf bypass
   is resolved, but the rollback publisher remains non-atomic and can lose
   open-inode edits, while crossed/nested markers can delete user text.
@@ -2440,7 +2440,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `9eab2dc3ea99026ef00ff649f320057df51537b6`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p05-review-2026-09-02T052445Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T052445Z.md`
 - Outcome: changes requested; 2 Critical and 3 Important findings in recovery
   cleanup identity, shared-consumer truth, recovery rediscovery, live-file
   byte/mode preservation, and error redaction. The three-cycle automated review
@@ -2455,7 +2455,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Direction: Thomas explicitly authorized continuation after the three-cycle
   Phase 5 review governance stop.
 - Scope: the two Critical and three Important findings in
-  `reviews/p05-review-2026-09-02T052445Z.md` only.
+  `reviews/archived/p05-review-2026-09-02T052445Z.md` only.
 - Boundary: one bounded exact-target fix and one fresh independent review. The
   authorization does not advance Phase 6 unless that review passes.
 
@@ -2474,7 +2474,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `19198457148de815415304c620db39e78b41ef2c`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p05-review-2026-09-02T124148Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T124148Z.md`
 - Outcome: changes requested; 2 Critical and 3 Important findings in
   publication identity, recovery ownership, complete metadata preservation,
   and partial consumer reporting. The one-use override is exhausted.
@@ -2511,7 +2511,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `52d2e69addd6ca17b421f48de9a858a9a31a0366`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p05-review-2026-09-02T134849Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T134849Z.md`
 - Outcome: blocked with 1 Critical finding. A repository-directory swap after
   final validation but before pathname-based `writeFile(wx)` can redirect the
   new `AGENTS.md` outside the validated root while the helper reports `created`.
@@ -2549,7 +2549,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Reviewed head: `642912319c1a3e79ee43397d5158e6fecc15b051`
 - Target: `oat-reviewer-gpt-5-6-sol-high`
-- Artifact: `reviews/p06-review-2026-09-02T151842Z.md`
+- Artifact: `reviews/archived/p06-review-2026-09-02T151842Z.md`
 - Outcome: changes requested; 4 Critical and 1 Important findings are assigned
   to the original Phase 6 implementer before Phase 7.
 - Reconnaissance: not attempted.
