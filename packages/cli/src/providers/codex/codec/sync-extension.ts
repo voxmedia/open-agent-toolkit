@@ -16,7 +16,10 @@ import {
   type WorkflowDispatchRouteTarget,
 } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
-import type { CanonicalEntry } from '@engine/index';
+import {
+  materializationCanonicalPathAllowed,
+  type CanonicalEntry,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { validateRealPathWithinScope } from '@fs/paths';
@@ -93,6 +96,7 @@ interface DesiredCodexRole {
   configFile: string;
   rolePath: string;
   content: string;
+  sourcePath: string;
 }
 
 interface CodexMaterializationTarget {
@@ -128,16 +132,11 @@ function canonicalPathAllowed(
   canonicalEntry: CanonicalEntry,
   allowedCanonicalPaths?: string[],
 ): boolean {
-  if (!allowedCanonicalPaths?.length) {
-    return true;
-  }
-
-  const allowedSet = new Set(allowedCanonicalPaths);
-  const relativeCanonicalPath = toRelativePath(
+  return materializationCanonicalPathAllowed(
     scopeRoot,
-    canonicalEntry.canonicalPath,
+    canonicalEntry,
+    allowedCanonicalPaths,
   );
-  return allowedSet.has(relativeCanonicalPath);
 }
 
 async function readOptionalFile(path: string): Promise<string | null> {
@@ -183,6 +182,7 @@ async function desiredRolesFromCanonical(
       configFile: exported.configFile,
       rolePath: join(scopeRoot, '.codex', exported.configFile),
       content: exported.content,
+      sourcePath: entry.canonicalPath,
     });
 
     if (CODEX_MATERIALIZED_BASE_ROLES.has(exported.roleName)) {
@@ -201,20 +201,23 @@ async function desiredRolesFromCanonical(
             materialized.content,
             target.owner,
           ),
+          sourcePath: entry.canonicalPath,
         });
       }
     }
   }
 
   const roleContents = new Map<string, string>();
+  const sourceByRoleName = new Map<string, string>();
   for (const role of roles) {
     const existing = roleContents.get(role.roleName);
     if (existing !== undefined && existing !== role.content) {
       throw new CliError(
-        `Distinct Codex targets produced the same role name ${role.roleName}. Refusing ambiguous role writes.`,
+        `Duplicate Codex role name ${role.roleName} from ${sourceByRoleName.get(role.roleName) ?? 'an earlier canonical agent'} and ${role.sourcePath}. Refusing ambiguous role writes.`,
       );
     }
     roleContents.set(role.roleName, role.content);
+    sourceByRoleName.set(role.roleName, role.sourcePath);
   }
 
   return roles.sort((left, right) =>

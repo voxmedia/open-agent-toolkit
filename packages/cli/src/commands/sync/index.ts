@@ -21,6 +21,7 @@ import {
 import {
   computeSyncPlan,
   executeSyncPlan,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
@@ -456,7 +457,10 @@ async function computePlans(
 
     const extensionCanonical =
       scope === 'user' && enabledExtensions.length > 0
-        ? [...canonical, ...(await dependencies.scanBundledManagedAgents())]
+        ? mergeUserScopeMaterializationEntries(
+            canonical,
+            await dependencies.scanBundledManagedAgents(),
+          )
         : canonical;
     const materializationExtensionPlans = await Promise.all(
       enabledExtensions.map((extension) =>

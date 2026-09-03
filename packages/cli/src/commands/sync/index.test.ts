@@ -67,6 +67,7 @@ interface HarnessOptions {
   useDiskCodexExtension?: boolean;
   useDiskScanner?: boolean;
   useDiskBundledCodexAgents?: boolean;
+  bundledManagedAgents?: CanonicalEntry[];
   extraMaterializationExtensions?: SyncMaterializationExtension[];
 }
 
@@ -426,7 +427,7 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical,
     scanBundledManagedAgents: options.useDiskBundledCodexAgents
       ? vi.fn(scanBundledManagedAgentsFromDisk)
-      : vi.fn(async () => []),
+      : vi.fn(async () => options.bundledManagedAgents ?? []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     ...(options.providerContextResolver
@@ -3352,6 +3353,48 @@ describe('createSyncCommand', () => {
         message: `Cannot remove canonical provider views while source exists: ${removed}`,
       });
       expect(computeSyncPlan).not.toHaveBeenCalled();
+    });
+
+    it('prefers bundled managed agents over user copies for user-scope extensions', async () => {
+      const adapter = createCodexAdapter();
+      const bundledReviewer: CanonicalEntry = {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath: '/bundle/agents/oat-reviewer.md',
+        isFile: true,
+      };
+      const { command, computeCodexProjectExtensionPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          user: [
+            createAgentCanonicalEntry('oat-reviewer.md', '/tmp/home'),
+            createAgentCanonicalEntry('oat-codebase-mapper.md', '/tmp/home'),
+          ],
+        },
+        bundledManagedAgents: [bundledReviewer],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        '/tmp/home',
+        [
+          bundledReviewer,
+          createAgentCanonicalEntry('oat-codebase-mapper.md', '/tmp/home'),
+        ],
+        undefined,
+        expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
+      );
     });
 
     it('forwards the exact filter into user-scope materialization extension planning', async () => {

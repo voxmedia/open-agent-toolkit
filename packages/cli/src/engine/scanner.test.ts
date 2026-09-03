@@ -4,7 +4,13 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { scanBundledManagedAgents, scanCanonical } from './scanner';
+import {
+  materializationCanonicalPathAllowed,
+  mergeUserScopeMaterializationEntries,
+  scanBundledManagedAgents,
+  scanCanonical,
+  type CanonicalEntry,
+} from './scanner';
 
 describe('scanCanonical', () => {
   const tempDirs: string[] = [];
@@ -119,6 +125,66 @@ describe('scanCanonical', () => {
       'oat-reviewer.md',
     ]);
     expect(entries.every((entry) => entry.type === 'agent')).toBe(true);
+  });
+
+  it('drops user copies of bundled managed roles and keeps other canonical agents', () => {
+    const userReviewer: CanonicalEntry = {
+      name: 'oat-reviewer.md',
+      type: 'agent',
+      canonicalPath: '/home/user/.agents/agents/oat-reviewer.md',
+      isFile: true,
+    };
+    const userMapper: CanonicalEntry = {
+      name: 'oat-codebase-mapper.md',
+      type: 'agent',
+      canonicalPath: '/home/user/.agents/agents/oat-codebase-mapper.md',
+      isFile: true,
+    };
+    const bundledReviewer: CanonicalEntry = {
+      name: 'oat-reviewer.md',
+      type: 'agent',
+      canonicalPath: '/bundle/agents/oat-reviewer.md',
+      isFile: true,
+    };
+    const bundledImplementer: CanonicalEntry = {
+      name: 'oat-phase-implementer.md',
+      type: 'agent',
+      canonicalPath: '/bundle/agents/oat-phase-implementer.md',
+      isFile: true,
+    };
+
+    const merged = mergeUserScopeMaterializationEntries(
+      [userReviewer, userMapper],
+      [bundledImplementer, bundledReviewer],
+    );
+
+    expect(merged.filter((entry) => entry.name === 'oat-reviewer.md')).toEqual([
+      bundledReviewer,
+    ]);
+    expect(merged).toEqual(
+      expect.arrayContaining([bundledImplementer, userMapper]),
+    );
+    expect(merged).not.toContainEqual(userReviewer);
+  });
+
+  it('treats bundled managed agents as matching home-relative install filters', () => {
+    const bundledReviewer: CanonicalEntry = {
+      name: 'oat-reviewer.md',
+      type: 'agent',
+      canonicalPath: '/bundle/agents/oat-reviewer.md',
+      isFile: true,
+    };
+
+    expect(
+      materializationCanonicalPathAllowed('/home/user', bundledReviewer, [
+        '.agents/agents/oat-reviewer.md',
+      ]),
+    ).toBe(true);
+    expect(
+      materializationCanonicalPathAllowed('/home/user', bundledReviewer, [
+        '.agents/agents/oat-phase-implementer.md',
+      ]),
+    ).toBe(false);
   });
 
   it('returns empty array when .agents/ does not exist', async () => {

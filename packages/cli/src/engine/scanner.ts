@@ -99,6 +99,64 @@ export async function scanBundledManagedAgents(): Promise<CanonicalEntry[]> {
   }));
 }
 
+/**
+ * User-scope Codex/Cursor materialization reads the bundled managed role files,
+ * not the installed copies under `~/.agents/agents/`. Concatenating both lists
+ * produces the same Cursor/Codex role name twice and aborts the whole sync.
+ */
+export function mergeUserScopeMaterializationEntries(
+  canonicalEntries: CanonicalEntry[],
+  bundledManagedAgents: CanonicalEntry[],
+): CanonicalEntry[] {
+  const bundledNames = new Set(bundledManagedAgents.map((entry) => entry.name));
+  const merged: CanonicalEntry[] = [];
+  const seenBundledNames = new Set<string>();
+
+  for (const entry of bundledManagedAgents) {
+    if (seenBundledNames.has(entry.name)) {
+      continue;
+    }
+    seenBundledNames.add(entry.name);
+    merged.push(entry);
+  }
+
+  for (const entry of canonicalEntries) {
+    if (entry.type === 'agent' && bundledNames.has(entry.name)) {
+      continue;
+    }
+    merged.push(entry);
+  }
+
+  return merged;
+}
+
+export function materializationCanonicalPathAllowed(
+  scopeRoot: string,
+  canonicalEntry: CanonicalEntry,
+  allowedCanonicalPaths?: string[],
+): boolean {
+  if (!allowedCanonicalPaths?.length) {
+    return true;
+  }
+
+  const allowed = new Set(allowedCanonicalPaths);
+  const relativePath = relative(
+    scopeRoot,
+    canonicalEntry.canonicalPath,
+  ).replaceAll('\\', '/');
+  if (allowed.has(relativePath)) {
+    return true;
+  }
+
+  return (
+    canonicalEntry.type === 'agent' &&
+    canonicalEntry.isFile &&
+    allowed.has(
+      join('.agents', 'agents', canonicalEntry.name).replaceAll('\\', '/'),
+    )
+  );
+}
+
 /** @deprecated Use scanBundledManagedAgents for provider-neutral materialization. */
 export const scanBundledManagedCodexAgents = scanBundledManagedAgents;
 
