@@ -108,7 +108,7 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation complete — cross-model gate fixes in flight
+**Status:** Implementation complete — gate fixes landed, PR pending
 **Started:** 2026-08-29
 **Last Updated:** 2026-09-03
 
@@ -197,6 +197,10 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 - ✓ Correlation guard restored on the live path; dead code removed
 - ✓ Envelope byte bound replaced with an O(1) entry-count bound
 - ✓ Review round 4 returned 0 Critical and confirmed no regression
+- ⧗ Cross-model gate (Cursor sol) found 3 P0 gaps twelve Opus rounds missed
+- ✓ FR10 config-sibling loss fixed; mocked non-failing tests deleted
+- ✓ NFR1 narrowed to an enforceable contract after three tuning rounds
+- ✓ Record ceiling now measures the bytes that land on disk
 - ✓ Phase 7 complete: all four tasks and four independent review rounds
 - ✓ Merged `origin/main` and advanced five lockstep packages to `0.2.52`
 - ✓ All eight Definition-of-Done gates pass, release gates included
@@ -204,14 +208,12 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 
 ## Blockers
 
-- Cross-model final gate review returned **not ready**: absolute paths persist
-  into durable dispatch records (NFR1) and production config writes delete
-  unknown `projects.*` siblings (FR10). Both fixes are in flight.
-- FR1/FR3 provider reachability is defined but never populated. Deferred by
-  operator decision to `BL-260903-populate-provider-reachability`; recorded in
-  the Deviations table.
+- None blocking the PR. One confirming gate pass remains.
+- Three deferred gaps are recorded rather than open questions: FR1/FR3 provider
+  reachability (`BL-260903-populate-provider-reachability`), the NFR1 prose
+  redaction residual (amended in `spec.md`, tested limits), and
+  `__proto__`-named config keys (`BL-260903-preserve-proto-named-config`).
 
 ## Next Milestone
 
-Land the NFR1 path-redaction and FR10 config-preservation fixes, re-gate on
-Cursor sol, reconcile the final-review ledger, then open the PR.
+One confirming cross-model gate pass, then open the PR.

@@ -1777,7 +1777,8 @@ gates exit 0 at the final reviewed head.
 | p07    | code     | fixes_completed | 2026-09-02 | reviews/archived/p07-review-2026-09-02T230419Z.md             | 27b97852848d0229fe7b0c722242c85bfbe353aa | manual     | live-artifact-mandate           |
 | p07    | code     | fixes_completed | 2026-09-02 | reviews/archived/p07-review-2026-09-02T234824Z.md             | e7d99d3012c4f49a008bf45e9538dc640f18a348 | manual     | -                               |
 | p07    | code     | fixes_completed | 2026-09-03 | reviews/archived/p07-review-2026-09-03T001908Z.md             | d38307fca93ab83ffc4eca64f4741ac60d79b6f7 | manual     | compressed-tail                 |
-| final  | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
+| final  | code     | fixes_completed | 2026-09-03 | reviews/archived/final-review-2026-09-03T011813Z.md           | 20f54805f24bd18fc55cc462224c739a8bee2260 | manual     | opus-first-pass                 |
+| final  | code     | fixes_completed | 2026-09-03 | (cross-model gate, Cursor gpt-5.6-sol-xhigh; stdout only)     | 027e1a100f62a9e93adacc84c38988e370c4aec9 | manual     | cross-model-gate-r1-r3          |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                               |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -                                        | -          | -                               |
 | plan   | artifact | passed          | 2026-08-30 | reviews/archived/artifact-plan-review-2026-08-30T231629Z.md   | -                                        | -          | -                               |

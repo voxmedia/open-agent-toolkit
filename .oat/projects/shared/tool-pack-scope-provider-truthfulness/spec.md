@@ -256,8 +256,22 @@ selection authoritative.
     creation of an absent root `AGENTS.md`: a privileged concurrent local
     process can swap the validated repository parent before pathname-based
     creation. Existing files and symlinks remain zero-write.
-  - Home paths and user-specific absolute paths remain redacted in durable
-    output.
+  - Absolute filesystem paths are **rejected** in identity and control fields
+    of a durable dispatch record, where a path is never a legitimate value.
+    In free-form prose and nested evidence fields they are redacted on a
+    **best-effort** basis. **Amended 2026-09-03 on gate review:** the original
+    wording promised unconditional redaction in durable output. Three review
+    rounds established that a delimiter-based detector over arbitrary prose
+    cannot deliver that as a P0 guarantee without corrupting legitimate values
+    — a URL route (`?next=/dashboard`), a regex literal (`/foo/bar/`) and a
+    real disclosure (`path:/Users/...`) are not separable by delimiter alone,
+    and corrupted evidence in a provenance record is worse than an
+    under-redacted one. Prose redaction therefore states its known limits
+    rather than claiming completeness. Closing the gap properly needs
+    context-aware tokenization; see the gate review artifact and
+    `implementation.md`.
+  - Error and diagnostic messages emitted to human or JSON output remain
+    redacted through the single shared boundary.
 - **Priority:** P0
 
 **NFR2: Idempotence and Failure Atomicity**
