@@ -32,7 +32,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev5 | passed         | 1     | 1/1       |
 | Phase p-rev6 | review_pending | 1     | 1/1       |
 | Phase p-rev7 | passed         | 1     | 1/1       |
-| Phase p-rev8 | review_pending | 3     | 3/3       |
+| Phase p-rev8 | passed         | 3     | 3/3       |
 
 **Total:** 33/33 tasks completed
 
@@ -275,6 +275,19 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Next:** run the p-rev8 independent phase review inline in root under the
   user's no-subagent directive, then rerun the configured gate with the
   user-selected `claude-fable-skip-permissions` target
+
+## p-rev8 Review Passed
+
+- **Date:** 2026-09-02
+- **Mode:** inline root review by explicit user direction; no subagents
+- **Reviewed range:** `58ec27ebf..e67366f8bac47927926129897c2fa861d8919cb4`
+- **Artifact:** `reviews/p-rev8-review-2026-09-02T234837Z.md`
+- **Reconnaissance:** not-attempted
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+- **Verification:** 185/185 focused recon, workflow, contract, and dispatch
+  tests; 63/63 canonical skills; plan validation; and format checks passed
+- **Next:** rerun the configured implementation exit gate with the user-selected
+  `claude-fable-skip-permissions` target
 
 ## Orchestration Runs
 

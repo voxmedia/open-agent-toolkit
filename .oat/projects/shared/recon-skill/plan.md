@@ -1777,6 +1777,7 @@ git commit -m "docs(prev8-t03): align Cursor projection plan record"
 | p-rev7         | code     | passed          | 2026-09-02 | reviews/archived/p-rev7-review-2026-09-02T212045Z.md                   | dbfeeede518556ed5678839bc18ab1342e381593 | manual     | -                     |
 | final          | code     | passed          | 2026-09-02 | reviews/archived/final-review-2026-09-02T214500Z.md                    | fd5d5c85c10590fb293855ec27d8cac32c67d6b3 | manual     | -                     |
 | final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T221657Z.md                    | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high |
+| p-rev8         | code     | passed          | 2026-09-02 | reviews/p-rev8-review-2026-09-02T234837Z.md                            | e67366f8bac47927926129897c2fa861d8919cb4 | manual     | -                     |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                     |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                     |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                     |

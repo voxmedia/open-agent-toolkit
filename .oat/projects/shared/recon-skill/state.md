@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 318e60ca78ebbb3706ecf5b4adbeab9d3a58edcc
+oat_last_commit: e67366f8bac47927926129897c2fa861d8919cb4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # p-rev8 implementation complete; inline phase review pending
+oat_phase_status: in_progress # p-rev8 phase review passed; configured gate rerun pending
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -26,11 +26,11 @@ oat_phase_recovery_policy:
         event_id: 6ad55f42-f535-46ed-b0c9-570cf5ea19d1
         original_request_id: recon-skill-prev8-implementation-20260902T222500Z
         original_task_id: prev8-t01
-        original_commit: b69e1c56c1d272b629f47e0b354f40855d9f4db6
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 53d5ef8ef700363d315e91ebea2d1b85c0075792
-        status: completed
+      original_commit: b69e1c56c1d272b629f47e0b354f40855d9f4db6
+      discovered_by: pnpm test
+      dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+      reservation_head: 53d5ef8ef700363d315e91ebea2d1b85c0075792
+      status: null
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
@@ -106,7 +106,7 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 8 implemented; inline phase review pending
+**Status:** Revision 8 implemented; phase review passed
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-02
 
@@ -117,8 +117,8 @@ generations now withdraw the prior packet with a categorical diagnostic,
 negative review dispositions reconcile through the existing contested/removal
 contract, and the stale Cursor skill-view claim is corrected. All three
 committed tasks plus one recovery attempt pass root verification (183/183
-recon, 9/9 dispatch, 4754/4754 forced CLI tests). The phase is in inline root
-review under the user's no-subagent directive; PR #248 remains open.
+recon, 9/9 dispatch, 4754/4754 forced CLI tests). The fresh inline root phase
+review passed 185/185 focused tests with zero findings; PR #248 remains open.
 
 ## Artifacts
 
@@ -126,7 +126,7 @@ review under the user's no-subagent directive; PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (33/33 tasks complete; Revision 8 review pending)
+- **Implementation:** `implementation.md` (33/33 tasks complete; Revision 8 review passed)
 
 ## Progress
 
@@ -250,8 +250,9 @@ review under the user's no-subagent directive; PR #248 remains open.
   bounded recovery attempt
 - ✓ Root verification passes 183/183 recon, 9/9 dispatch, 4754/4754 forced
   CLI tests, 63/63 skill validation, and formatting checks
-- ⧗ p-rev8 independent phase review pending (inline root review per user
-  no-subagent directive)
+- ✓ p-rev8 independent phase review passed inline in the root under the user's
+  no-subagent directive with 0 Critical, 0 Important, 0 Medium, and 0 Minor
+  findings
 
 ## Blockers
 
@@ -260,6 +261,5 @@ the single-use manual final-review override remains consumed.
 
 ## Next Milestone
 
-Complete the p-rev8 inline phase review, then rerun final verification and the
-configured gate using the user-selected `claude-fable-skip-permissions` target
-within the remaining remediation budget.
+Rerun final verification and the configured gate using the user-selected
+`claude-fable-skip-permissions` target within the remaining remediation budget.
