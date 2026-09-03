@@ -74,10 +74,11 @@ pointer, and let the next invocation resume'` at `:1620-1623`), and the
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                  | Required state                                                         | Current state          |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------- |
-| Satisfied     | [PR #254](https://github.com/voxmedia/open-agent-toolkit/pull/254) synced deferred clear and resume                         | Preserve the synced finalizer path and its five scripts byte-for-byte. | Merged at `49aeb5075`. |
-| Soft ordering | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md) | Land this plan first; it owns the Step 6 → 8 → 12 spine.               | Pending.               |
+| Type          | Dependency                                                                                                                  | Required state                                                                               | Current state          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------- |
+| Satisfied     | [PR #254](https://github.com/voxmedia/open-agent-toolkit/pull/254) synced deferred clear and resume                         | Preserve the synced finalizer path and its five scripts byte-for-byte.                       | Merged at `49aeb5075`. |
+| Soft ordering | Sibling plan [Make the autonomous recap capability-aware](./2026-09-02-make-autonomous-project-recap-capability-aware.md)   | Land first; it edits Step 3.6 of the same skill. Never in one parallel group with this plan. | Pending (W5 group 3).  |
+| Soft ordering | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md) | Land this plan first; it owns the Step 6 → 8 → 12 spine.                                     | Pending.               |
 
 There are no unsatisfied hard dependencies.
 

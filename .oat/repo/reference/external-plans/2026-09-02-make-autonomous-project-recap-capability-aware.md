@@ -88,10 +88,12 @@ why. Optionally, config keys let a host opt in by naming seam modules.
 
 ## Dependencies
 
-| Type              | Dependency                                                                                                 | Required state                                                                                                          | Current state |
-| ----------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Soft integration  | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | Land first; both edit `completion-and-closeout.md`, `oat-project-complete`, and `oat-project-autonomous` and bump them. | Pending (W2). |
-| Related, distinct | `BL-260727-make-explainer-run-durability`, `BL-260817-run-the-rc-explainer-end`                            | Untouched; they own durability and CI browser coverage.                                                                 | Open.         |
+| Type              | Dependency                                                                                                       | Required state                                                                                                                                 | Current state         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Soft integration  | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)       | Land first; both edit `completion-and-closeout.md`, `oat-project-complete`, and `oat-project-autonomous` and bump them.                        | Pending (W2).         |
+| Soft ordering     | Sibling plan [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                     | Land first; step 5's optional `workflow.explainers.recapSeams.*` keys must then be added to the unset family-coverage test in the same change. | Pending (W5 group 2). |
+| Soft ordering     | Sibling plan [Defer activeProject clearing](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md) | Runs after this plan; both edit `oat-project-complete/SKILL.md` and bump its version, so never in one parallel group.                          | Pending (W5 group 4). |
+| Related, distinct | `BL-260727-make-explainer-run-durability`, `BL-260817-run-the-rc-explainer-end`                                  | Untouched; they own durability and CI browser coverage.                                                                                        | Open.                 |
 
 There are no unsatisfied hard dependencies.
 

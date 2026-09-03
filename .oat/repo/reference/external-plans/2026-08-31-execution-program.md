@@ -57,16 +57,16 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md)                                                                  | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W4   | parallel group; BLOCKED until `tool-pack-scope-provider-truthfulness` merges and the plan is refreshed; preserve PR #249 diagnostics | pending |
 | [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; land before the index-lock plan                                                                                             | pending |
 | [Retry gate project-log finalization across transient Git index locks](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after post-selection recovery                                                                                                | pending |
-| [Keep instruction-sync pointer files out of documentation content trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2                                                                                                                              | pending |
+| [Keep instruction-sync pointer files out of documentation content trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; before `oat config unset`                                                                                                   | pending |
 | [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W1   | group 2 successor; READY only after the docs-index lane merges and step 1 passes                                                     | pending |
-| [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md)     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                              | pending |
-| [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                           | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                              | pending |
-| [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2                                                                                                                              | pending |
+| [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md)     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2; before the readiness-contract lane                                                                                          | pending |
+| [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                           | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after instruction-sync pointers                                                                                              | pending |
+| [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                              | pending |
 | [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)          | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W2   | group 3 after the named-skill loading lane                                                                                           | pending |
-| [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)               | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3; land before the consolidation plan                                                                                          | pending |
-| [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 4 after active-pointer and quick-resume                                                                                        | pending |
-| [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3                                                                                                                              | pending |
-| [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3                                                                                                                              | pending |
+| [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)               | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 4 after the recap lane; before the consolidation plan                                                                          | pending |
+| [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 5 after active-pointer and quick-resume                                                                                        | pending |
+| [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after `oat config unset`                                                                                                     | pending |
+| [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the skill-script lane                                                                                                  | pending |
 
 ## Program-wide integration rules
 
@@ -170,25 +170,32 @@ wrapper project, implementation branch, or implementation PR has started.
 ## Wave 5: Program-intake follow-ups
 
 - **Parallel group 1:** Recover committed review artifacts after
-  post-selection failures; validate skill-to-script references; add
-  `oat config unset`.
+  post-selection failures; keep instruction-sync pointers out of docs trees;
+  route incomplete quick projects to quick-start.
 - **Parallel group 2:** Retry gate project-log finalization across index
-  locks (after group 1's gate plan); keep instruction-sync pointers out of
-  docs trees; route incomplete quick projects to quick-start.
-- **Parallel group 3:** Defer activeProject clearing on archive completions;
-  make the autonomous recap capability-aware; enforce the external-plan
-  readiness contract.
-- **Group 4:** Make consolidated-project retirement semantic, after the
+  locks (after group 1's gate plan); add `oat config unset` (after the
+  instruction-sync plan so its family-coverage test includes the new
+  `documentation.*` key); validate skill-to-script references.
+- **Parallel group 3:** Enforce the external-plan readiness contract (after
+  the skill-script lane, which shares a contract-test file); make the
+  autonomous recap capability-aware (after `oat config unset`, adding its
+  optional seam keys to the unset family test).
+- **Group 4:** Defer activeProject clearing on archive completions, after the
+  recap lane releases `oat-project-complete/SKILL.md`.
+- **Group 5:** Make consolidated-project retirement semantic, after the
   active-pointer and quick-resume lanes.
 - **Cross-wave prerequisites:** W4 merged. Before dispatch, re-read every W5
   plan's `## Landing-event impact` table against the then-current state of
   `tool-pack-scope-provider-truthfulness` and PR #190 and apply the listed
   refreshes; the skill-script plan and the readiness plan re-anchor
   contract-test files the truthfulness merge rewrites.
-- **Composition rationale:** Ten lanes with three shared seams (the gate
-  module, `OatDocumentationConfig`/`config/index.ts`, and the quick-start and
-  complete skills) arranged so each seam is touched by at most one lane per
-  group; every lane follows a freshly merged wave that owns adjacent prose.
+- **Composition rationale:** Ten lanes with four shared seams (the gate
+  module; `OatDocumentationConfig`/`config/index.ts`; the completion skill,
+  which three lanes edit in sequence; and the shared skill contract-test
+  files) arranged in five groups so each seam is touched by at most one lane
+  per group and the Wave 4 index ordering (docs-index exclusions →
+  instruction-sync → unset → recap) is honored; every lane follows a freshly
+  merged wave that owns adjacent prose.
 
 ## Revalidation record
 
@@ -198,6 +205,11 @@ wrapper project, implementation branch, or implementation PR has started.
   patch-and-restore in W2 group 3, and the other ten in a new W5. Every new
   plan carries a `## Landing-event impact` table for the truthfulness merge
   and PR #190. Ledger: W1 = 4 lanes, W2 = 5, W3 = 3, W4 = 3, W5 = 10.
+- **2026-09-02 (review)** — Bugbot found two composition defects in W5:
+  the active-pointer and recap lanes shared the completion skill in one
+  group, and `oat config unset` ran before the instruction-sync pointer key
+  it must cover. Recomposed W5 into five groups honoring the Wave 4 index
+  ordering and added the recap → unset ordering neither document stated.
 
 - **2026-09-02** — Rebased the program branch onto `origin/main`
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced

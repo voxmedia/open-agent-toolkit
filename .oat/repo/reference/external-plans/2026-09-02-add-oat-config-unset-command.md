@@ -73,9 +73,11 @@ match `set`.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                        | Required state                                                            | Current state            |
-| ------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------ |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md) | Land first so the family-coverage test includes `documentation.excludes`. | Pending (BLOCKED on W1). |
+| Type          | Dependency                                                                                                                        | Required state                                                                                     | Current state            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
+| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                 | Land first so the family-coverage test includes `documentation.excludes`.                          | Pending (BLOCKED on W1). |
+| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Land first so the family-coverage test includes its `documentation.*` opt-out key.                 | Pending (W5 group 1).    |
+| Soft ordering | Sibling plan [Make the autonomous recap capability-aware](./2026-09-02-make-autonomous-project-recap-capability-aware.md)         | Runs after this plan and must extend the family-coverage test with its optional `recapSeams` keys. | Pending (W5 group 3).    |
 
 There are no unsatisfied hard dependencies.
 
