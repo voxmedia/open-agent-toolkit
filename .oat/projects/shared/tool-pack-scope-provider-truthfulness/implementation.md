@@ -2675,7 +2675,7 @@ the repository's cross-model rule for high-risk diffs. It returned **not ready**
 with 0 Critical, 4 Important, 3 Medium, 2 Minor, against a preceding Opus final
 review that had returned 0 Critical and judged all fifteen requirements met.
 
-It found three P0 gaps that twelve same-model rounds had missed. Two were
+It found three P0 gaps that every preceding same-model round had missed. Two were
 verified independently by the orchestrator before any fix was dispatched:
 
 - **NFR1** — `parseGenericDispatchRecord` never identifies filesystem paths, so
@@ -2839,8 +2839,9 @@ scope` selection no longer widens to `project + user`.
   an isolated `HOME` with zero cache replays: `check`, `type-check`, `test`
   (5,503 passing), `build`, `check:skill-bumps`, `release:check-versions`,
   `release:validate`, `build:docs`.
-- Twelve independent review rounds across seven phases plus a final
-  cross-phase review.
+- Thirty-five phase code-review artifacts across seven phases (p01:1, p02:6,
+  p03:6, p04:9, p05:5, p06:4, p07:4), plus three artifact reviews, an Opus
+  final review, and a cross-model gate that ran three fix rounds.
 - Live provider verification rather than fixtures alone: a real nested Codex
   dispatch (root, depth-1, depth-2) and full-corpus sweeps through the
   production input path — 1,596 Codex rollouts and 2,740 Claude transcripts,

@@ -115,7 +115,7 @@ oat_project_explainer:
 ## Current Phase
 
 Implementation — PR open; completion may run before or after merge.
-twelve independent review rounds plus a final cross-phase review. Phase 6
+35 phase code-review artifacts plus a final cross-phase review. Phase 6
 required three bounded fix rounds after round 2 disproved round 1's
 publication-safety claim and the operator directed eliminating the destructive
 class, making journal publication append-only and `link`-only. Phase 7
@@ -197,7 +197,7 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 - ✓ Correlation guard restored on the live path; dead code removed
 - ✓ Envelope byte bound replaced with an O(1) entry-count bound
 - ✓ Review round 4 returned 0 Critical and confirmed no regression
-- ⧗ Cross-model gate (Cursor sol) found 3 P0 gaps twelve Opus rounds missed
+- ⧗ Cross-model gate (Cursor sol) found 3 P0 gaps prior same-model rounds missed
 - ✓ FR10 config-sibling loss fixed; mocked non-failing tests deleted
 - ✓ NFR1 narrowed to an enforceable contract after three tuning rounds
 - ✓ Record ceiling now measures the bytes that land on disk

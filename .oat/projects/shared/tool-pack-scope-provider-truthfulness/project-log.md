@@ -148,6 +148,14 @@ Phase 4 terminal review verdict=blocked with 1 Critical after 7 review-fix conti
 
 Authorized Phase 5 review at 191984571 is blocked with 2 Critical and 3 Important findings; reconnaissance attempted and reconciled in reviews/p05-review-2026-09-02T124148Z.md; the one-use override is exhausted and Phase 6 remains gated.
 
+### 2026-09-03 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/tool-pack-scope-provider-truthfulness/references/project-retro.md evidence_used=archived-review-markdown,git-history,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=3 upstream=2 apply=declined filing=deferred
+
+### 2026-09-03 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/tool-pack-scope-provider-truthfulness/references/project-retro.md evidence_used=archived-review-markdown,git-history,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=3 upstream=2 apply=performed filing=performed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

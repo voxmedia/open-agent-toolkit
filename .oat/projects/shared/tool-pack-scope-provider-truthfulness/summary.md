@@ -54,8 +54,10 @@ All eight Definition-of-Done gates pass at `0.2.52`, forced under an isolated
 `build`, `check:skill-bumps`, `release:check-versions`, `release:validate`,
 `build:docs`.
 
-Sixteen independent review rounds ran across the seven phases, plus an Opus
-final review and a cross-model gate review on Cursor `gpt-5.6-sol-xhigh`.
+Thirty-five phase code-review artifacts were produced across the seven phases
+(p01:1, p02:6, p03:6, p04:9, p05:5, p06:4, p07:4), plus three artifact reviews,
+an Opus final review, and a cross-model gate review on Cursor
+`gpt-5.6-sol-xhigh` that ran three fix rounds and a confirmation.
 
 Provider parsing was verified against real artifacts rather than fixtures alone:
 a live nested Codex dispatch (root, depth-1, depth-2) and full-corpus sweeps
@@ -84,6 +86,7 @@ The most reusable finding is about verification rather than the feature. Three
 defects shipped green behind tests that could not fail: invented Codex fixtures
 that encoded a rollout shape which does not exist, an FR10 test that mocked the
 very reader that dropped the field, and NFR1 verified only on the surface that
-had already been fixed. Twelve same-model review rounds converged on the same
-reading of each requirement and reinforced it; a different model reading the
-requirement text fresh found all three on its first pass.
+had already been fixed. Every preceding review round was the same model class as
+the implementer, and they converged on the same reading of each requirement and
+reinforced it; a different model reading the requirement text fresh found all
+three on its first pass.
