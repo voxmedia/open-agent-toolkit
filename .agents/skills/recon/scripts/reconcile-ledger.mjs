@@ -16,13 +16,17 @@ const permittedDispositions = new Map([
 const legalReconciliationTransitions = new Set([
   'provisional:verified',
   'provisional:contested',
+  'provisional:unresolved',
   'provisional:unsupported',
   'supported:verified',
   'supported:contested',
+  'supported:unresolved',
   'supported:unsupported',
   'verified:contested',
+  'verified:unresolved',
   'verified:unsupported',
   'contested:verified',
+  'contested:unresolved',
   'contested:unsupported',
   'unresolved:contested',
   'unresolved:unsupported',
@@ -209,6 +213,16 @@ export function reconcileLedger({
         (item) => item.claimId === claim.id && item.disposition === 'uncertain',
       ),
     );
+    const incomplete =
+      supporting.length > 0 &&
+      [...requiredDispositions.keys()].some(
+        (kind) =>
+          !reviewResults.some(
+            (review) =>
+              review.reviewKind === kind &&
+              review.dispositions.some((item) => item.claimId === claim.id),
+          ),
+      );
     const materialCoverageGap = reviewResults.some(
       (review) =>
         review.reviewKind === 'coverage' &&
@@ -254,7 +268,15 @@ export function reconcileLedger({
       }
       continue;
     }
-    if (uncertain) continue;
+    if (uncertain || incomplete) {
+      const from = claim.status;
+      const to = 'unresolved';
+      if (legalReconciliationTransitions.has(`${from}:${to}`)) {
+        claim.status = to;
+        if (from !== to) transitions.push({ claimId: claim.id, from, to });
+      }
+      continue;
+    }
     if (!coreComplete) continue;
     const from = claim.status;
     const to = materialCoverageGap ? 'contested' : 'verified';

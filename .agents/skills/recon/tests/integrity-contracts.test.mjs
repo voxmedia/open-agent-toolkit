@@ -1031,27 +1031,92 @@ test('reconciling a rejected key claim transitions it to unsupported and renders
   );
 });
 
-test('production reconciliation preserves an uncertain claim without promotion', async () => {
-  const packet = await fixture();
-  const priorReference = packet.manifest.artifacts.find(
-    (item) => item.path === 'raw/drafts/claims-v1.json',
-  );
-  const priorLedger = await readJson(
-    join(packet.packetRoot, priorReference.path),
-  );
-  const semantic = await readJson(
-    join(packet.packetRoot, 'reviews/semantic.json'),
-  );
-  semantic.dispositions[0].disposition = 'uncertain';
-  await replaceArtifact(packet, 'reviews/semantic.json', semantic);
+test('production reconciliation transitions uncertain and incomplete provisional claims to an honest unresolved partial', async () => {
+  const scenarios = [
+    {
+      name: 'uncertain semantic review',
+      reviewPath: 'reviews/semantic.json',
+      mutate(review) {
+        review.dispositions[0].disposition = 'uncertain';
+      },
+    },
+    {
+      name: 'missing coverage disposition',
+      reviewPath: 'reviews/coverage.json',
+      mutate(review) {
+        review.dispositions = [];
+      },
+    },
+  ];
 
-  const { ledger, reconciliation } = reconcileLedger({
-    priorLedger,
-    reviewResults: await coreReviewResults(packet),
-    priorReference,
-  });
-  assert.equal(ledger.claims[0].status, 'supported');
-  assert.deepEqual(reconciliation.transitions, []);
+  for (const scenario of scenarios) {
+    const packet = await fixture();
+    const priorReference = packet.manifest.artifacts.find(
+      (item) => item.path === 'raw/drafts/claims-v1.json',
+    );
+    const priorLedger = await readJson(
+      join(packet.packetRoot, priorReference.path),
+    );
+    priorLedger.claims[0].status = 'provisional';
+    priorLedger.transitions = priorLedger.transitions.filter(
+      (transition) => transition.claimId !== 'claim-1',
+    );
+    await replaceArtifact(packet, priorReference.path, priorLedger);
+
+    const review = await readJson(join(packet.packetRoot, scenario.reviewPath));
+    scenario.mutate(review);
+    await replaceArtifact(packet, scenario.reviewPath, review);
+
+    const { ledger, reconciliation } = reconcileLedger({
+      priorLedger,
+      reviewResults: await coreReviewResults(packet),
+      priorReference,
+    });
+    assert.equal(ledger.claims[0].status, 'unresolved', scenario.name);
+    assert.deepEqual(
+      reconciliation.transitions.filter(
+        (transition) => transition.claimId === 'claim-1',
+      ),
+      [
+        {
+          claimId: 'claim-1',
+          from: 'provisional',
+          to: 'unresolved',
+        },
+      ],
+      scenario.name,
+    );
+
+    packet.manifest.run.status = 'partial';
+    packet.manifest.gaps.push({
+      id: `gap-${scenario.name.replaceAll(' ', '-')}`,
+      code: 'INCOMPLETE_REVIEW',
+      message: `Claim review remained incomplete: ${scenario.name}.`,
+      material: true,
+      sourceIds: [],
+      claimIds: ['claim-1'],
+      coverageFindingIds: [],
+    });
+    await replaceArtifact(packet, 'claims.json', ledger);
+    await replaceArtifact(
+      packet,
+      'reviews/reconciliation.json',
+      reconciliation,
+    );
+
+    const compiled = await compileValidatedRun(packet.packetRoot);
+    assert.equal(
+      compiled.valid,
+      true,
+      `${scenario.name}: ${JSON.stringify(compiled, null, 2)}`,
+    );
+    assert.equal(compiled.status, 'partial', scenario.name);
+    assert.equal(
+      compiled.validatedRun.ledger.claims[0].status,
+      'unresolved',
+      scenario.name,
+    );
+  }
 });
 
 test('production reconciliation preserves reviewed claims when verification would require an illegal transition', async () => {
