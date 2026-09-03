@@ -1,8 +1,15 @@
 /**
- * The single absolute-path detector.
+ * Absolute-path detection for dispatch records and messages.
  *
- * NFR1 requires that home paths and user-specific absolute paths stay redacted
- * in durable output. Before this module there were two independent notions of
+ * Two patterns, deliberately different. `IDENTITY_PATH_PATTERN` is strict and
+ * used where a path is never a legitimate value, so ambiguity resolves to
+ * rejection. `PROSE_PATH_PATTERN` is conservative and used where a false
+ * positive would corrupt legitimate evidence, so it under-matches by design:
+ * colon-prefixed forms, path-shaped routes inside URLs, and trailing-slash
+ * candidates survive. Prose redaction is therefore best-effort, not a
+ * guarantee — see `spec.md` NFR1, amended 2026-09-03.
+ *
+ * Before this module there were two independent notions of
  * "looks like a path": a regex inside `redactDispatchMessage`, which only
  * scrubbed error text, and nothing at all on the persistence boundary. The
  * durable journal is committed to a shared repository, so a username or local

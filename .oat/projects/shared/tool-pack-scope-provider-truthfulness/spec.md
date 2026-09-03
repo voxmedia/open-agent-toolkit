@@ -270,8 +270,10 @@ selection authoritative.
     rather than claiming completeness. Closing the gap properly needs
     context-aware tokenization; see the gate review artifact and
     `implementation.md`.
-  - Error and diagnostic messages emitted to human or JSON output remain
-    redacted through the single shared boundary.
+  - Error and diagnostic messages emitted to human or JSON output are redacted
+    through the same shared boundary, and inherit the same best-effort limits
+    as prose: the message redactor uses the prose pattern, so colon-prefixed
+    forms, URL routes, and trailing-slash candidates can survive.
 - **Priority:** P0
 
 **NFR2: Idempotence and Failure Atomicity**
