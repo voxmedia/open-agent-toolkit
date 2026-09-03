@@ -236,7 +236,10 @@ branch; source ineligibility never bypasses persistence safety.
   transitions, and coverage-disposition bindings. Coverage findings are closed
   records bound to affected claims and exact manifest gaps. Accepted material
   gaps require a legal downgrade for every affected claim; a resolved finding
-  instead names exact typed evidence. Thorough redundant verification and
+  instead names exact typed evidence. Non-material coverage gaps downgrade
+  verified claims and transition provisional claims to unresolved, while
+  existing supported claims remain supported without verified promotion.
+  Thorough redundant verification and
   contradiction resolution are claim-bearing typed review results, not raw
   dossiers: they bind immutable briefs, claim dispositions, and explicit
   affected-contradiction dispositions.

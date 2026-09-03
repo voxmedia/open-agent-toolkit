@@ -1247,6 +1247,118 @@ test('production reconciliation transitions a provisional claim omitted by every
   assert.equal(compiled.validatedRun.ledger.claims[0].status, 'unresolved');
 });
 
+test('production reconciliation transitions a provisional claim with a non-material coverage gap to unresolved', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  priorLedger.claims[0].status = 'provisional';
+  priorLedger.transitions = priorLedger.transitions.filter(
+    (transition) => transition.claimId !== 'claim-1',
+  );
+  await replaceArtifact(packet, priorReference.path, priorLedger);
+
+  const coverage = await readJson(
+    join(packet.packetRoot, 'reviews/coverage.json'),
+  );
+  coverage.dispositions[0].disposition = 'gap';
+  await replaceArtifact(packet, 'reviews/coverage.json', coverage);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'unresolved');
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'provisional', to: 'unresolved' }],
+  );
+
+  packet.manifest.run.status = 'partial';
+  packet.manifest.gaps.push({
+    id: 'gap-claim-coverage-gap',
+    code: 'COVERAGE_GAP',
+    message: 'The claim was subject to a coverage gap.',
+    material: true,
+    sourceIds: [],
+    claimIds: ['claim-1'],
+    coverageFindingIds: [],
+  });
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.equal(compiled.status, 'partial');
+  assert.equal(compiled.validatedRun.ledger.claims[0].status, 'unresolved');
+});
+
+test('production reconciliation transitions a provisional claim with a material coverage gap to contested', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  priorLedger.claims[0].status = 'provisional';
+  priorLedger.transitions = priorLedger.transitions.filter(
+    (transition) => transition.claimId !== 'claim-1',
+  );
+  await replaceArtifact(packet, priorReference.path, priorLedger);
+
+  const coverage = await readJson(
+    join(packet.packetRoot, 'reviews/coverage.json'),
+  );
+  coverage.dispositions[0].disposition = 'gap';
+  coverage.coverageFindings = [
+    {
+      id: 'coverage-gap-material',
+      gapId: 'gap-material-coverage',
+      code: 'MISSING_CORROBORATION',
+      message: 'A corroborating source is absent.',
+      material: true,
+      claimIds: ['claim-1'],
+    },
+  ];
+  await replaceArtifact(packet, 'reviews/coverage.json', coverage);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'contested');
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'provisional', to: 'contested' }],
+  );
+
+  packet.manifest.run.status = 'partial';
+  packet.manifest.gaps.push({
+    id: 'gap-material-coverage',
+    code: 'MISSING_CORROBORATION',
+    message: 'A corroborating source is absent.',
+    material: true,
+    sourceIds: [],
+    claimIds: ['claim-1'],
+    coverageFindingIds: ['coverage-gap-material'],
+  });
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.equal(compiled.status, 'partial');
+  assert.equal(compiled.validatedRun.ledger.claims[0].status, 'contested');
+});
+
 test('production reconciliation promotes an unresolved claim after complete independent review while preserving unsupported claims', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(

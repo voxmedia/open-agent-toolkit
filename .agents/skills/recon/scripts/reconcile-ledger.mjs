@@ -281,12 +281,20 @@ export function reconcileLedger({
       }
       continue;
     }
-    if (coverageGap && claim.status === 'verified') {
-      const from = claim.status;
-      const to = materialCoverageGap ? 'contested' : 'unresolved';
-      claim.status = to;
-      transitions.push({ claimId: claim.id, from, to });
-      continue;
+    if (coverageGap && !coreComplete) {
+      if (
+        claim.status === 'verified' ||
+        claim.status === 'provisional' ||
+        materialCoverageGap
+      ) {
+        const from = claim.status;
+        const to = materialCoverageGap ? 'contested' : 'unresolved';
+        if (legalReconciliationTransitions.has(`${from}:${to}`)) {
+          claim.status = to;
+          if (from !== to) transitions.push({ claimId: claim.id, from, to });
+        }
+        continue;
+      }
     }
     if (!coreComplete) continue;
     const from = claim.status;
