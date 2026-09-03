@@ -263,6 +263,7 @@
 | BL-260827-harden-the-codex-skill-below   | Harden the codex-skill below-floor guard against paraphrase and anaphora                              | open   | low      | task       | XS       |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260827-override-aware-remedy-text     | Override-aware remedy text in assets-root fail-closed errors                                          | open   | low      | task       | XS       |
+| BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                            | open   | low      | task       | S        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
