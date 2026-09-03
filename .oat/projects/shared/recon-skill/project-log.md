@@ -116,6 +116,10 @@ target=claude-fable-skip-permissions threshold=important exit=1 status=review_fa
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md
 
+### 2026-09-03 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:3 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
