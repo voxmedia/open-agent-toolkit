@@ -1,0 +1,47 @@
+import { redactDispatchMessage } from '@commands/project/dispatch/record';
+import { describe, expect, it } from 'vitest';
+
+import { containsAbsolutePath, redactAbsolutePaths } from './absolute-paths';
+
+describe('absolute path detection', () => {
+  it.each([
+    ['posix root-level', '/secret'],
+    ['posix home', '/Users/tstang/.ssh/id_rsa'],
+    ['linux home', '/home/tstang/key'],
+    ['windows drive backslash', 'C:\\Users\\tstang\\k.pem'],
+    ['windows drive slash', 'C:/Users/tstang'],
+    ['unc share', '\\\\server\\share\\secret'],
+    ['file url', 'file:///etc/passwd'],
+    ['quoted in a message', "EACCES: open '/secret'"],
+  ])('catches %s', (_name, value) => {
+    expect(containsAbsolutePath(value)).toBe(true);
+    expect(redactAbsolutePaths(value)).not.toContain(value);
+  });
+
+  it.each([
+    ['a conjunction', 'and/or'],
+    ['a journal revision', 'dispatch/request-1.json'],
+    ['a date', '2026/09/03'],
+    ['the canonical role form', '<user>/agents/oat-reviewer.md'],
+    ['a relative path', 'a/b/c'],
+    ['a lock file', '.dispatch-lock'],
+    ['a model selector', 'gpt-5.6-sol'],
+  ])('does not treat %s as a path', (_name, value) => {
+    expect(containsAbsolutePath(value)).toBe(false);
+    expect(redactAbsolutePaths(value)).toBe(value);
+  });
+
+  it('is the same detector the message boundary uses', () => {
+    // Two independent notions of "looks like a path" is how a path could be
+    // scrubbed from a message and written verbatim into the record.
+    expect(redactDispatchMessage("EACCES: open '/secret'")).toBe(
+      "EACCES: open '<redacted-path>'",
+    );
+    expect(redactDispatchMessage('see file:///etc/passwd')).toBe(
+      'see <redacted-path>',
+    );
+    expect(redactDispatchMessage('<user>/agents/oat-reviewer.md')).toBe(
+      '<user>/agents/oat-reviewer.md',
+    );
+  });
+});

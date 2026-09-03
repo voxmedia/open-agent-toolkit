@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { z } from 'zod';
 
+import { redactAbsolutePathsDeep } from './absolute-paths';
 import {
   assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
@@ -719,7 +720,11 @@ export function parsePersistedOatDispatchRecord(
   const { oat, ...generic } = parsed;
   return {
     ...parseGenericDispatchRecord(generic),
-    oat: oatRecordSchema.parse(oat),
+    // The namespaced augmentation is nested evidence throughout — rejection
+    // reasons, fallback narration, observation values — so it is redacted
+    // rather than rejected. The canonical `<tier>/agents/<role>.md` role form
+    // is not an absolute path and survives untouched.
+    oat: oatRecordSchema.parse(redactAbsolutePathsDeep(oat)),
   };
 }
 

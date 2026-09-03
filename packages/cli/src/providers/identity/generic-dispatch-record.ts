@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import {
+  assertNoAbsolutePath,
+  redactAbsolutePathsDeep,
+} from './absolute-paths';
+
 /**
  * Length bounds for caller-authored text. `identifier` covers names, selectors,
  * routes, and statuses; `reason` covers a single explanatory sentence; `prose`
@@ -536,10 +541,56 @@ export function assertNoSensitiveDispatchContent(
   }
 }
 
+/**
+ * Fields where an absolute path is incidental content rather than a malformed
+ * identifier: free-form prose a human wrote, and the nested evidence containers
+ * that quote commands and diagnostics. A path here is redacted, because the
+ * surrounding text is still meaningful without it.
+ *
+ * Every other field in the record is identity or control — a caller, a scope, a
+ * selector, a route, a guidance reference. A path is never a legitimate value
+ * for those, and rewriting one in place would silently corrupt the identifier
+ * it claims to be, so those are rejected instead.
+ */
+const PATH_REDACTED_FIELDS = [
+  'objective',
+  'expected_output',
+  'verification_evidence',
+  'classification_reason',
+  'escalate_when',
+  'payload',
+  'diagnostics',
+  'configured_invocation_evidence',
+  'continuation_events',
+] as const satisfies readonly (keyof GenericDispatchRecord)[];
+
+/**
+ * The persistence-boundary path sanitizer for the generic record.
+ *
+ * NFR1 is enforced here rather than in each producer, for the same reason
+ * redaction became a boundary in Phase 6: a guarantee implemented as a
+ * per-producer obligation regresses the moment a call site is added.
+ */
+export function sanitizeDispatchRecordPaths(
+  record: GenericDispatchRecord,
+): GenericDispatchRecord {
+  const redacted = new Set<string>(PATH_REDACTED_FIELDS);
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (redacted.has(key)) {
+      sanitized[key] = redactAbsolutePathsDeep(value);
+      continue;
+    }
+    assertNoAbsolutePath(value, key);
+    sanitized[key] = value;
+  }
+  return sanitized as GenericDispatchRecord;
+}
+
 export function parseGenericDispatchRecord(
   value: unknown,
 ): GenericDispatchRecord {
   assertNoSensitiveDispatchContent(value);
   assertBoundedDispatchRecordSize(value);
-  return genericDispatchRecordSchema.parse(value);
+  return sanitizeDispatchRecordPaths(genericDispatchRecordSchema.parse(value));
 }

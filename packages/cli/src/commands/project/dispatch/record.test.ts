@@ -1305,6 +1305,101 @@ describe('runtime observation integration', () => {
     }
   });
 
+  it('rejects an absolute path in every identity or control field', () => {
+    // A path is never a legitimate caller, scope, selector or route. Rewriting
+    // one in place would corrupt the identifier, so these fail closed.
+    for (const [field, value] of [
+      ['caller', '/Users/tstang/secret/caller'],
+      ['scope', '/Users/tstang/private/scope'],
+      ['role_selector', '/Users/tstang/role'],
+      ['model_selector', '/Users/tstang/model'],
+      ['selected_route', '/Users/tstang/route'],
+      ['authority', '/secret'],
+      ['guidance_reference', 'file:///Users/tstang/guide.md'],
+    ] as const) {
+      expect(
+        () =>
+          parseDispatchRecordInput({
+            record: genericRecord({ [field]: value }),
+            event: canonicalEvent(),
+          }),
+        field,
+      ).toThrow(/absolute filesystem path/i);
+    }
+  });
+
+  it('redacts absolute paths out of the journal bytes', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    const secrets = {
+      objective: '/Users/tstang/.ssh/id_rsa',
+      payload: '/Users/tstang/private/payload',
+      evidence: '/Users/tstang/evidence',
+      diagnostic: '/Users/tstang/diag',
+      continuation: 'C:\\Users\\tstang\\cont',
+      escalate: '\\\\srv\\share\\escalate',
+      expected: 'file:///Users/tstang/expected',
+      verification: '/secret',
+    };
+    const result = await recordProjectDispatch({
+      projectPath,
+      input: {
+        record: genericRecord({
+          objective: `read ${secrets.objective} then continue`,
+          payload: { note: secrets.payload },
+          configured_invocation_evidence: [secrets.evidence],
+          diagnostics: [secrets.diagnostic],
+          continuation_events: [{ at: secrets.continuation }],
+          escalate_when: [secrets.escalate],
+          expected_output: secrets.expected,
+          verification_evidence: `run ${secrets.verification}`,
+        }),
+        event: canonicalEvent(),
+      },
+    });
+
+    // Assert on the bytes actually written, not on the in-memory result.
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    for (const [name, secret] of Object.entries(secrets)) {
+      expect(journal, name).not.toContain(secret);
+    }
+    expect(journal).toContain('<redacted-path>');
+    // Redaction, not deletion: the surrounding prose survives.
+    expect(result.record.objective).toBe('read <redacted-path> then continue');
+    expect(journal).not.toContain('/Users/');
+  });
+
+  it('refuses to publish a revision that still carries a path', async () => {
+    // The postcondition runs on the exact value being written, so it holds even
+    // if an earlier stage is bypassed.
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await expect(
+      recordProjectDispatch({
+        projectPath,
+        input: {
+          record: genericRecord(),
+          event: {
+            ...canonicalEvent(),
+            evidence: {
+              ...canonicalEvent().evidence,
+              dependency: '/Users/tstang/dependency',
+            },
+          },
+        },
+      }),
+    ).resolves.toMatchObject({ status: 'persisted' });
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    expect(journal).not.toContain('/Users/tstang/dependency');
+    expect(journal).toContain('<redacted-path>');
+  });
+
   it('keeps the parser source through the command layer', async () => {
     // Provenance is not idempotent under re-parsing: a resolved observation
     // looks caller-supplied. This pins that the command layer parses once.

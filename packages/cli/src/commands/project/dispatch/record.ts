@@ -6,6 +6,10 @@ import {
   redactedFsError,
   withContainedWriterLock,
 } from '@fs/io';
+import {
+  assertJournalHasNoAbsolutePath,
+  redactAbsolutePaths,
+} from '@providers/identity/absolute-paths';
 import { CLAUDE_OBSERVATION_SOURCE } from '@providers/identity/claude-runtime-observation';
 import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-observation';
 import {
@@ -84,9 +88,11 @@ function parseJournalEntry(fileName: string): JournalEntry | null {
  * last stop before a message reaches `--json`, so a future call site that
  * forgets cannot regress NFR1. Known roots become stable labels; anything else
  * that still looks like an absolute path is scrubbed.
+ *
+ * The detector is shared with the record sanitizer. Two independent notions of
+ * "looks like a path" is how a path could be scrubbed from an error message and
+ * written verbatim into the durable record by the same command.
  */
-const ABSOLUTE_PATH_PATTERN =
-  /(?<=^|[\s'"([])(?:[A-Za-z]:)?[\\/](?:[^\s'"`;,)\]]+[\\/])+[^\s'"`;,)\]]*/g;
 
 export function redactDispatchMessage(
   message: string,
@@ -108,7 +114,7 @@ export function redactDispatchMessage(
   )) {
     if (root) redacted = redacted.split(root).join(label);
   }
-  return redacted.replace(ABSOLUTE_PATH_PATTERN, '<redacted-path>');
+  return redactAbsolutePaths(redacted);
 }
 
 /**
@@ -459,6 +465,10 @@ async function publishRevision(
     );
   }
   const fileName = revisionFileName(requestId, revision);
+  // Last check before bytes reach the journal. The sanitizer runs at parse, but
+  // the journal is committed to a shared repository, so the guarantee is
+  // enforced on the exact value being written rather than trusted upstream.
+  assertJournalHasNoAbsolutePath(record);
   try {
     await publishContainedJsonRevision(
       join(dispatchDir, fileName),
