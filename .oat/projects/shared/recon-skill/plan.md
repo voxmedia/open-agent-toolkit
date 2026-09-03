@@ -1755,35 +1755,36 @@ git commit -m "docs(prev8-t03): align Cursor projection plan record"
 
 ## Reviews
 
-| Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target           |
-| -------------- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
-| p01            | code     | passed          | 2026-08-31 | `reviews/archived/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -                     |
-| p02            | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                     |
-| p03            | code     | passed          | 2026-08-31 | `reviews/archived/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                     |
-| p04            | code     | passed          | 2026-08-31 | `reviews/archived/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                     |
-| p05            | code     | passed          | 2026-09-02 | `reviews/p05-review-2026-09-02T001430Z.md`                             | 79f344ce97b15037b0a09d5a066bc928b7393ec8 | manual     | -                     |
-| p-rev1         | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                     |
-| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`                  | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                     |
-| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                     |
-| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                     |
-| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high   |
-| final          | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                     |
-| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                     |
-| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high   |
-| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                     |
-| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                     |
-| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T185450Z.md`                  | 9203eec1226bf8a68cdff61d5acbe5b439652b8e | manual     | -                     |
-| final          | code     | fixes_completed | 2026-09-02 | reviews/archived/final-review-2026-09-02T194356Z.md                    | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                     |
-| p-rev7         | code     | passed          | 2026-09-02 | reviews/archived/p-rev7-review-2026-09-02T212045Z.md                   | dbfeeede518556ed5678839bc18ab1342e381593 | manual     | -                     |
-| final          | code     | passed          | 2026-09-02 | reviews/archived/final-review-2026-09-02T214500Z.md                    | fd5d5c85c10590fb293855ec27d8cac32c67d6b3 | manual     | -                     |
-| final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T221657Z.md                    | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high |
-| p-rev8         | code     | passed          | 2026-09-02 | reviews/p-rev8-review-2026-09-02T234837Z.md                            | e67366f8bac47927926129897c2fa861d8919cb4 | manual     | -                     |
-| spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                     |
-| design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                     |
-| plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                     |
-| plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                     |
-| plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                     |
-| github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                     |
+| Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                   |
+| -------------- | -------- | --------------- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01            | code     | passed          | 2026-08-31 | `reviews/archived/p01-code-rereview-2026-08-31T045845Z.md`             | d10b5271e072687ae244c03b5fd268c3eacbc828 | auto       | -                             |
+| p02            | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                             |
+| p03            | code     | passed          | 2026-08-31 | `reviews/archived/p03-review-2026-08-31T204054Z.md`                    | cb3d94ac2afa9d29f59257c708f71161fec35dcb | manual     | -                             |
+| p04            | code     | passed          | 2026-08-31 | `reviews/archived/p04-review-2026-08-31T213712Z.md`                    | e2b8b40771dd64d22dc3e16e2faa1110db1e792a | manual     | -                             |
+| p05            | code     | passed          | 2026-09-02 | `reviews/p05-review-2026-09-02T001430Z.md`                             | 79f344ce97b15037b0a09d5a066bc928b7393ec8 | manual     | -                             |
+| p-rev1         | code     | passed          | 2026-08-31 | `reviews/archived/p-rev1-code-terminal-rereview-2026-08-31T170315Z.md` | 841a7164a4f789f244b1e7adac47b44365d09dfb | auto       | -                             |
+| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T220007Z.md`                  | 1d705ab4176e51723ae39c41573987af233bdd53 | manual     | -                             |
+| final          | code     | fixes_completed | 2026-08-31 | `reviews/archived/final-review-2026-08-31T225932Z.md`                  | 855f8b717ac02d44fbb61b0d3371fb647656303c | manual     | -                             |
+| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-review-2026-08-31T232924Z.md`                  | 3cc1cd2e37e776da21f12d7243a96a212762d77f | manual     | -                             |
+| final          | code     | passed          | 2026-08-31 | `reviews/archived/final-code-review-2026-08-31T234514Z.md`             | 8bad1e035080be3155ab6c91dae2f5104027d7da | gate       | cursor-fable-5-high           |
+| final          | code     | fixes_completed | 2026-09-01 | `reviews/archived/final-review-2026-09-01T032917Z.md`                  | dd7af61450eda1e2a5b494798bb6956ec5506d83 | manual     | -                             |
+| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T034801Z.md`                  | 547705fae790c32d1bd9dada11f5877253e11530 | manual     | -                             |
+| final          | code     | passed          | 2026-09-01 | `reviews/archived/final-review-2026-09-01T040114Z.md`                  | c82f11521a12262cc5cea93c66d2d66d85b06bda | gate       | cursor-fable-5-high           |
+| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T121146Z.md`                  | 8574dffc8f7c2abfab25649b384abfb0aa738d15 | manual     | -                             |
+| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T134131Z.md`                  | 096936e035b38a884c0d5c619ee46833ca58a6ac | manual     | -                             |
+| final          | code     | fixes_completed | 2026-09-02 | `reviews/archived/final-review-2026-09-02T185450Z.md`                  | 9203eec1226bf8a68cdff61d5acbe5b439652b8e | manual     | -                             |
+| final          | code     | fixes_completed | 2026-09-02 | reviews/archived/final-review-2026-09-02T194356Z.md                    | 97e97ffae43ffdbcb9a876b8e24763f0979f0d60 | manual     | -                             |
+| p-rev7         | code     | passed          | 2026-09-02 | reviews/archived/p-rev7-review-2026-09-02T212045Z.md                   | dbfeeede518556ed5678839bc18ab1342e381593 | manual     | -                             |
+| final          | code     | passed          | 2026-09-02 | reviews/archived/final-review-2026-09-02T214500Z.md                    | fd5d5c85c10590fb293855ec27d8cac32c67d6b3 | manual     | -                             |
+| final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T221657Z.md                    | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high         |
+| p-rev8         | code     | passed          | 2026-09-02 | reviews/p-rev8-review-2026-09-02T234837Z.md                            | e67366f8bac47927926129897c2fa861d8919cb4 | manual     | -                             |
+| final          | code     | received        | 2026-09-03 | reviews/final-review-2026-09-03T154100Z.md                             | 79d62efd676df98c64ffc2ca371b06dae9433d1f | gate       | claude-fable-skip-permissions |
+| spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                             |
+| design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                             |
+| plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                             |
+| plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                             |
+| plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                             |
+| github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
