@@ -333,6 +333,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Verification:** all 192 recon/dispatch tests pass, skill bump checks pass, 63/63 canonical skills validate, oxfmt and oxlint pass
 - **Next:** rerun the configured implementation exit gate with the user-selected `claude-fable-skip-permissions` target
 
+## Final Review Passed: Configured Gate (cursor-fable-5-1-high)
+
+- **Date:** 2026-09-03
+- **Artifact:** `reviews/archived/final-review-2026-09-03T173922Z.md`
+- **Gate run:** `7c7c7d4a-41a8-4e71-bb14-65fe8de95de8`
+- **Target:** `cursor-fable-5-1-high`; different-family independence achieved
+- **Reviewed head:** `e28b5355b00620024db09ac13a0008da82917edd`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 3 Minor
+- **Verdict:** passed at Important threshold with no blocking findings
+- **Disposition:** non-blocking Medium (synthesis prose qualification) and three
+  Minors (reconciler plumbing, duplicate diagnostic, docs/contract parameter
+  documentation) dispositioned as accepted non-blocking follow-up items
+- **Next:** complete configured gate receive and proceed to final closeout
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->

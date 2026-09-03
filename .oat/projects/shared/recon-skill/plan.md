@@ -1897,7 +1897,7 @@ git commit -m "docs(prev9-t03): align adversarial challenge contract clarity and
 | p-rev8         | code     | passed          | 2026-09-02 | reviews/p-rev8-review-2026-09-02T234837Z.md                            | e67366f8bac47927926129897c2fa861d8919cb4 | manual     | -                             |
 | final          | code     | fixes_added     | 2026-09-03 | reviews/archived/final-review-2026-09-03T154100Z.md                    | 79d62efd676df98c64ffc2ca371b06dae9433d1f | gate       | claude-fable-skip-permissions |
 | p-rev9         | code     | passed          | 2026-09-03 | reviews/p-rev9-review-2026-09-03T163000Z.md                            | 1385fd1e1351eb5a02dfb6cd50e2cc11a21ffbbc | manual     | -                             |
-| final          | code     | received        | 2026-09-03 | reviews/final-review-2026-09-03T173922Z.md                             | e28b5355b00620024db09ac13a0008da82917edd | gate       | cursor-fable-5-1-high         |
+| final          | code     | passed          | 2026-09-03 | reviews/archived/final-review-2026-09-03T173922Z.md                    | e28b5355b00620024db09ac13a0008da82917edd | gate       | cursor-fable-5-1-high         |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                             |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                             |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                             |
@@ -1914,11 +1914,20 @@ Status progression is `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`. In quick mode the `spec` row remains as the
 required review-table placeholder; there is no spec artifact to review.
 
-Final gate residual disposition: the single Minor accepted-risk note concerns
-the intentional harness rule that leaves process `HOME` unchanged. New
-bundle-tier tests inject temporary user, scope, and asset roots; if an unrelated
-pre-existing bundle-tier test fails locally, maintainer-template resolution is
-the first diagnostic suspect. No plan change or implementation task is needed.
+Final gate residual disposition: the configured cross-family gate
+(`cursor-fable-5-1-high`) passed with 0 Critical, 0 Important, 1 Medium, and 3
+Minor findings. Non-blocking residual disposition: (1) Medium — synthesis prose
+predating semantic downgrade is accepted as an acknowledged limitation of the
+pre-review compile stage; the honest categorical state is prominently rendered
+directly beneath in Key Claims and Contradictions, and ledger referential
+integrity is strictly enforced. (2) Minor — dead removal plumbing in
+reconciler is harmless legacy scaffolding, accepted as deferred cleanup. (3)
+Minor — duplicate synthesis check in schema and assurance validators is harmless
+defense-in-depth, accepted as deferred cleanup. (4) Minor — contract/docs
+parameter and code documentation clarifications accepted as non-blocking
+documentation debt. (5) Minor — intentional harness rule leaving process `HOME`
+unchanged remains an accepted test constraint. No plan change or implementation
+task is needed.
 
 ## Implementation Complete
 
