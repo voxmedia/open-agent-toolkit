@@ -1,44 +1,97 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-08-31
+oat_generated: true
+oat_generated_at: 2026-09-03
+oat_project: tool-pack-scope-provider-truthfulness
 ---
 
-# Project Log: tool-pack-scope-provider-truthfulness
+# Project Summary: tool-pack-scope-provider-truthfulness
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+OAT reported several distinct facts under overloaded labels — declared pack
+intent, realized canonical assets, provider-view materialization, running-session
+catalog visibility, and native dispatch outcome — and those facts could
+disagree. A user could select user scope while the picker implied project
+placement; canonical agents could be complete while the active provider could
+not discover them; and a generic-child fallback could be mistaken for native-role
+success.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+This project established one evidence model shared by the picker, installation,
+inventory, synchronization, diagnostics, and dispatch reporting, and integrated
+four bounded child workstreams without erasing their ownership.
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+## What Was Implemented
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+Seven phases, 30 tasks, over eight days.
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Truthful scope (P1-P2).** Requested tool-pack scope and realized placement
+  are separately observable. The picker labels packs from realized placement
+  rather than declared intent, and a `User scope` selection no longer widens to
+  `project + user`.
+- **Provider reachability (P3).** Supported user-scope agents materialize to
+  every active configured provider — Claude agents now reach
+  `~/.claude/agents/` — or fail closed with a named reason.
+- **Collection aliases (P4).** Exact provider collection aliases are adopted and
+  detached safely, with manifest tracking and fail-closed handling of unsafe
+  links. Alias _creation_ is not shipped; see Known Gaps.
+- **Project guidance (P5).** A repository-root `AGENTS.md` is created when
+  absent. An existing file is never modified: OAT emits a deterministic manual
+  patch instead, after review reproduced a filesystem race in which replacing an
+  existing file could destroy user content.
+- **Dispatch provenance (P6).** One neutral generic dispatch record plus
+  namespaced `oat` evidence, with closed pre-start rejection codes, 31 immutable
+  configured controls, exactly one fallback per trigger, and an append-only
+  `link`-only project journal that never replaces or removes a published
+  revision.
+- **Runtime observation (P7).** Optional metadata-only corroboration for Codex
+  and Claude, projected to a neutral six-key fact set, correlated against the
+  immutable configured invocation and never authoritative over it.
 
-## Entry format
+## Verification
 
-Judgment entries:
+All eight Definition-of-Done gates pass at `0.2.52`, forced under an isolated
+`HOME` with zero cache replays: `check`, `type-check`, `test` (5,423 passing),
+`build`, `check:skill-bumps`, `release:check-versions`, `release:validate`,
+`build:docs`.
 
-```text
-### 2026-08-31 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+Thirty-five phase code-review artifacts were produced across the seven phases
+(p01:1, p02:6, p03:6, p04:9, p05:5, p06:4, p07:4), plus three artifact reviews,
+an Opus final review, and a cross-model gate review on Cursor
+`gpt-5.6-sol-xhigh` that ran three fix rounds and a confirmation.
 
-Structural entries:
+Provider parsing was verified against real artifacts rather than fixtures alone:
+a live nested Codex dispatch (root, depth-1, depth-2) and full-corpus sweeps
+through the production input path — 1,596 Codex rollouts and 2,740 Claude
+transcripts, zero refusals.
 
-```text
-### 2026-08-31 · structural · <producer> · <ref>
-```
+## Known Gaps
 
-## Entries
+Four are recorded rather than hidden:
 
-Entries are chronological and append-only.
+- **FR1/FR3 provider reachability** is defined as a type but never populated;
+  every lifecycle path hard-codes `providers: []`.
+  `BL-260903-populate-provider-reachability`.
+- **NFR1 prose redaction** is best-effort, not a guarantee. Absolute paths are
+  rejected in identity and control fields; in prose, colon-prefixed forms, URL
+  routes, and trailing-slash candidates survive. Amended in `spec.md`.
+- **Collection alias creation** (`BL-260724`) is not shipped; behavior is
+  adopt-only. Left open deliberately.
+- **Claude lineage depth** is not derivable and `__proto__`-named config keys are
+  dropped by the shared JSON parser.
+  `BL-260903-close-claude-runtime-lineage`, `BL-260903-preserve-proto-named-config`.
+
+## Lessons
+
+The most reusable finding is about verification rather than the feature. Three
+defects shipped green behind tests that could not fail: invented Codex fixtures
+that encoded a rollout shape which does not exist, an FR10 test that mocked the
+very reader that dropped the field, and NFR1 verified only on the surface that
+had already been fixed. Every preceding review round was the same model class as
+the implementer, and they converged on the same reading of each requirement and
+reinforced it; a different model reading the requirement text fresh found all
+three on its first pass.
+
+## Workflow Observations
 
 ### 2026-08-31 · structural · oat gate review · plan
 
@@ -155,7 +208,3 @@ retro artifact=.oat/projects/shared/tool-pack-scope-provider-truthfulness/refere
 ### 2026-09-03 · structural · oat-project-retro · project-retro
 
 retro artifact=.oat/projects/shared/tool-pack-scope-provider-truthfulness/references/project-retro.md evidence_used=archived-review-markdown,git-history,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=3 upstream=2 apply=performed filing=performed
-
-## End-of-run synthesis (pending — do not skip at project completion)
-
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
