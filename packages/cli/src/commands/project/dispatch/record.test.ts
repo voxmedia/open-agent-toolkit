@@ -1205,6 +1205,106 @@ describe('runtime observation integration', () => {
     );
   });
 
+  it('declines an envelope naming a different provider, in production', async () => {
+    // Drives parseDispatchRecordInput itself. Claude entries that do produce
+    // facts, against a codex record: if the mismatch branch were neutralized
+    // the projection would succeed and this would report.
+    const parsed = parseDispatchRecordInput({
+      record: genericRecord({ provider: 'codex' }),
+      event: {
+        kind: 'runtime-observation',
+        requestId: 'dispatch-native-1',
+        source: 'runtime-observer',
+        metadata: {
+          provider: 'claude',
+          observedAt: '2026-09-02T12:00:00.000Z',
+          entries: SIDECHAIN_TRANSCRIPT,
+        },
+      },
+    });
+    expect(parsed.event).toMatchObject({
+      observation: { status: 'not-reported' },
+    });
+    expect(parsed.observationReason).toMatch(/names provider claude/i);
+
+    // Guard against a vacuous pass: the same entries under a matching record
+    // must report, so the assertion above can only come from the branch.
+    expect(
+      parseDispatchRecordInput({
+        record: genericRecord({
+          provider: 'claude',
+          model_selector: 'claude-opus-5',
+        }),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'claude',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: SIDECHAIN_TRANSCRIPT,
+          },
+        },
+      }).event,
+    ).toMatchObject({ observation: { status: 'reported' } });
+  });
+
+  it('never emits an unredacted path in a degradation reason', async () => {
+    const json = vi.fn();
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
+    roots.push(projectPath);
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    const secret = '/Users/someone/secret/key.pem';
+    const previousExitCode = process.exitCode;
+    try {
+      const command = createProjectDispatchCommand({
+        buildCommandContext: () => ({
+          scope: 'all',
+          dryRun: false,
+          verbose: false,
+          json: true,
+          cwd: projectPath,
+          home: '/Users/someone',
+          interactive: false,
+          logger: {
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            success: vi.fn(),
+            json,
+          },
+        }),
+        resolveProjectRoot: async () => projectPath,
+        readFile: async () => '',
+        readStdin: async () =>
+          JSON.stringify({
+            record: genericRecord(),
+            event: {
+              kind: 'runtime-observation',
+              requestId: 'dispatch-native-1',
+              source: 'runtime-observer',
+              metadata: {
+                provider: secret,
+                observedAt: '2026-09-02T12:00:00.000Z',
+                entries: [],
+              },
+            },
+          }),
+      });
+      await command.parseAsync(['record', '--event-file', '-'], {
+        from: 'user',
+      });
+      // The reason is the first new call site since the redaction boundary's
+      // docstring promised it could not be bypassed.
+      const emitted = JSON.stringify(json.mock.calls);
+      expect(emitted).not.toContain(secret);
+      expect(emitted).not.toContain('/Users/someone');
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+
   it('keeps the parser source through the command layer', async () => {
     // Provenance is not idempotent under re-parsing: a resolved observation
     // looks caller-supplied. This pins that the command layer parses once.

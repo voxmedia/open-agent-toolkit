@@ -113,10 +113,28 @@ async function runRecordCommand(
         : await dependencies.readFile(options.eventFile);
     // Hand the raw event to the recorder; it owns the single authoritative
     // parse, and parsing twice would relabel the provenance of its own output.
-    const result = await recordProjectDispatch({
+    const raw = await recordProjectDispatch({
       projectPath,
       input: JSON.parse(content),
     });
+    // The degradation reason is caller-influenced text on the success path, so
+    // it goes through the same single redaction boundary as every failure
+    // message. Producing a message that skips this boundary is exactly the
+    // per-producer regression this command was restructured to prevent.
+    const result: typeof raw = {
+      ...raw,
+      runtimeIdentity: {
+        ...raw.runtimeIdentity,
+        reason:
+          raw.runtimeIdentity.reason === null
+            ? null
+            : redactDispatchMessage(raw.runtimeIdentity.reason, {
+                project: projectPath,
+                repo: repoRoot,
+                home: context.home,
+              }),
+      },
+    };
     if (context.json) {
       context.logger.json(result);
     } else {
