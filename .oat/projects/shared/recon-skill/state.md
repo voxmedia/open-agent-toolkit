@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t01
 oat_last_commit: 3b5552e143f8dd6189b96e4ffa2a1a3ba1461e9a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T20:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T21:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,13 +106,14 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation complete; PR open for review
+**Status:** Remote PR review received; Phase 6 queued
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — Remote PR review findings (Round 2) received from PR #248.
+Tasks p06-t01 through p06-t04 queued for execution.
 
 ## Artifacts
 
@@ -120,7 +121,7 @@ Implementation — PR open; completion may run before or after merge.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (36/36 tasks complete; Revision 9 review passed)
+- **Implementation:** `implementation.md` (36/40 tasks complete; Phase 6 queued)
 
 ## Progress
 
@@ -259,7 +260,8 @@ Implementation — PR open; completion may run before or after merge.
   Critical, 0 Important, 1 Medium, and 3 Minor findings
 - ✓ Configured gate review received durably; non-blocking findings dispositioned
 - ✓ PR description artifact written and PR #248 refreshed
-- ⧗ Awaiting human review
+- ! Remote PR review (Round 2) received: 0 Critical, 1 Important, 3 Medium, 0 Minor findings
+- ⧗ Phase 6 tasks `p06-t01` through `p06-t04` are queued
 
 ## Blockers
 
@@ -267,8 +269,4 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Execute Phase 6 tasks `p06-t01` through `p06-t04` via `oat-project-implement`.

@@ -1870,6 +1870,123 @@ Run skill validation, docs check, and relevant tests. Format with
 git commit -m "docs(prev9-t03): align adversarial challenge contract clarity and docs withdrawal description"
 ```
 
+## Phase 6: Remote PR Review Fixes
+
+Source: `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`
+(2026-09-03). Bugbot feedback on PR #248 identified one Important and three
+Medium findings covering reconciliation handling of uncertain reviews and
+coverage gaps, adversary brief projection validation, and contract transitions
+from unresolved to verified.
+
+### Task p06-t01: (review) Transition uncertain and incomplete reviews to unresolved
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add negative controls showing that `reconcileLedger` currently ignores `uncertain` and incomplete review sets, leaving claims in their prior provisional status without legal transition, which triggers `INVALID_PROVISIONAL_GENESIS` during validation.
+
+**Step 2: Implement fix**
+
+Add `provisional:unresolved`, `supported:unresolved`, `verified:unresolved`, and `contested:unresolved` transitions to `legalReconciliationTransitions`. When a claim has `uncertain` or incomplete review dispositions in standard/thorough runs, transition it to `unresolved` with a legal transition entry rather than leaving it in an illegal provisional state.
+
+**Step 3: Verify targeted behavior**
+
+Run focused integrity-contract tests to verify that uncertain claims transition honestly to `unresolved` and pass packet validation as an honest partial.
+
+**Step 4: Verify project commands and commit**
+
+Run test suites and commit with:
+
+```bash
+git commit -m "fix(p06-t01): transition uncertain and incomplete reviews to unresolved"
+```
+
+### Task p06-t02: (review) Prevent non-covered claims from reaching verified
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test case where a claim receives a coverage disposition of `gap` without a material finding. Show that `coreComplete` currently treats `gap` as satisfied and promotes the claim to `verified`, which later fails packet assurance validation because verified claims require `covered`.
+
+**Step 2: Implement fix**
+
+Update `coreComplete` in `reconcile-ledger.mjs` so that `coverage` review requires `covered` for `verified` promotion. A coverage `gap` disposition must prevent `verified` promotion and route to `contested` or keep the claim from being marked verified.
+
+**Step 3: Verify targeted behavior**
+
+Run focused integrity tests confirming that claims with coverage gaps are never promoted to `verified`.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p06-t02): prevent non-covered claims from reaching verified"
+```
+
+### Task p06-t03: (review) Enforce exact projections on adversarial brief statements
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/create-review-brief.mjs`
+- Modify: `.agents/skills/recon/tests/review-brief.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test showing that `validateReviewBrief` in `adversary` mode currently accepts provisional statements with extra fields (such as `evidence`, `status`, or `qualifications`), violating selective blindness.
+
+**Step 2: Implement fix**
+
+In `validateReviewBrief` for `brief.mode === 'adversary'`, validate each entry in `brief.provisionalStatements` to strictly ensure its keys equal `id,statement` exactly, rejecting any extra fields with `BLINDNESS_VIOLATION`.
+
+**Step 3: Verify targeted behavior**
+
+Run review-brief tests to confirm that adversarial statement projections are strictly validated.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p06-t03): enforce exact projections on adversarial brief statements"
+```
+
+### Task p06-t04: (review) Allow unresolved claims to transition to verified
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test showing that `legalTransitions` in `contracts.mjs` allows `unresolved` to transition to `supported`, `contested`, or `unsupported`, but rejects `unresolved:verified` when an independent review later affirms an unsettled claim.
+
+**Step 2: Implement fix**
+
+Add `unresolved:verified` to `legalTransitions` in `contracts.mjs` and to `legalReconciliationTransitions` in `reconcile-ledger.mjs` so that an unsettled claim affirmed by subsequent independent review can reach `verified`.
+
+**Step 3: Verify targeted behavior**
+
+Run tests confirming `unresolved:verified` transitions succeed and compile cleanly.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p06-t04): allow unresolved claims to transition to verified"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                   |
@@ -1904,6 +2021,7 @@ git commit -m "docs(prev9-t03): align adversarial challenge contract clarity and
 | plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                             |
 | plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                             |
 | github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                             |
+| github-pr #248 | remote   | fixes_added     | 2026-09-03 | `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`          | -                                        | -          | -                             |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
@@ -1964,8 +2082,12 @@ task is needed.
 - Revision 9: 3 tasks — validate synthesis referential integrity and transition
   rejected claims to unsupported, bind ValidatedRun creation/rendering to
   publishability, and align contract clarity and docs.
+- Phase 6: 4 tasks — correct remote-review findings: transition uncertain/incomplete
+  reviews to unresolved, prevent non-covered claims from reaching verified, enforce
+  exact projections on adversarial brief statements, and allow unresolved claims
+  to transition to verified.
 
-**Total: 36 tasks**
+**Total: 40 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

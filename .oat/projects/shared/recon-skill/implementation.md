@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_last_updated: 2026-09-03
+oat_current_task_id: p06-t01
 oat_generated: false
 oat_template: false
 ---
@@ -34,8 +34,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev7 | passed         | 1     | 1/1       |
 | Phase p-rev8 | passed         | 3     | 3/3       |
 | Phase p-rev9 | passed         | 3     | 3/3       |
+| Phase 6      | pending        | 4     | 0/4       |
 
-**Total:** 36/36 tasks completed
+**Total:** 36/40 tasks completed
 
 ## Task Status
 
@@ -150,6 +151,15 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | prev9-t01 | completed | `7b35fbdf8` |
 | prev9-t02 | completed | `a6223751d` |
 | prev9-t03 | completed | `1385fd1e1` |
+
+### Phase 6: Remote PR Review Fixes
+
+| Task    | Status  | Commit |
+| ------- | ------- | ------ |
+| p06-t01 | pending | -      |
+| p06-t02 | pending | -      |
+| p06-t03 | pending | -      |
+| p06-t04 | pending | -      |
 
 ## Remote Review Received
 
@@ -346,6 +356,19 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   Minors (reconciler plumbing, duplicate diagnostic, docs/contract parameter
   documentation) dispositioned as accepted non-blocking follow-up items
 - **Next:** complete configured gate receive and proceed to final closeout
+
+## Remote Review Received: Round 2
+
+- **Date:** 2026-09-03
+- **PR:** #248
+- **Findings:** 0 critical, 1 important, 3 medium, 0 minor
+- **New tasks:** `p06-t01`, `p06-t02`, `p06-t03`, `p06-t04`
+- **Deferred:** None.
+- **Dismissed:** None.
+- **Artifact:** `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`
+- **Provenance:** The source Bugbot events lack OAT marker provenance; ledger
+  lineage fields remain unknown rather than using the current PR head.
+- **Next:** execute Phase 6 tasks through `oat-project-implement`
 
 ## Orchestration Runs
 
