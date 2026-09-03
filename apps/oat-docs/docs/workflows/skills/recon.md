@@ -112,6 +112,11 @@ non-publishable candidate generation withdraws any existing `packet.md`:
 - `raw/` contains worker dossiers, dispatch receipts, candidate artifacts, and
   safe failure diagnostics. It is not normal consumer input.
 
+The ledger compiler and packet validator enforce categorical referential
+integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
+reference to an unknown claim or question ID fails validation with
+`SYNTHESIS_REFERENCE_MISSING`.
+
 The normal handoff is the packet directory path plus a compact status summary.
 Open `packet.md` first and follow machine-readable or review links only when you
 need an audit trail. Do not copy `raw/` dossiers or worker reasoning into the
@@ -133,6 +138,19 @@ percentages:
 
 A quick packet never promotes a claim to `verified`. Stronger profiles can do
 so only when their required review artifacts and receipts validate.
+
+When an independent semantic review rejects a proposed claim, the reconciler
+transitions it to `unsupported` rather than deleting it. This preserves the
+claim statement, cited evidence, and transition history in `claims.json`, and
+renders the finding under Contradictions and Qualifications.
+
+An adversarial challenge transitions a claim to `contested`. A run with
+contested claims may publish as `complete` when all declared questions and
+claims are resolved or characterized; contested claims are rendered under
+Contradictions and Qualifications. If an unresolved challenge represents an
+unanswered question or missing source evidence that leaves investigation
+incomplete, it is recorded as a material gap in `manifest.gaps` and the run
+publishes as `partial`.
 
 ## Selective Blindness and Authority
 
@@ -162,6 +180,14 @@ and `packet.md` then identify the requested and achieved profiles, failed or
 omitted passes, material gaps, affected claims, and required assurance
 downgrades. A run may be partial even when it achieved the requested profile if
 a material evidence gap remains.
+
+Before assurance or publication, candidate runs are normalized into a deeply
+immutable `ValidatedRun`. To prevent premature or invalid promotion,
+`ValidatedRun` is only constructed and exposed when a candidate generation is
+structurally valid and publishable (`complete` or `partial`). Non-publishable
+runs (`failed`, `running`, `preparing`, `awaiting-approval`) withdraw any
+existing `packet.md` under the unchanged-root guard, leave no `ValidatedRun`,
+and cause the exported renderer to fail closed with `PACKET_NOT_PUBLISHABLE`.
 
 If the manifest, ledger, topology, receipts, source identities, or publication
 boundary cannot be validated, the run is `failed`. It may retain safe raw
