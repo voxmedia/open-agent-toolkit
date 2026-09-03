@@ -36,6 +36,8 @@ export {
 export { assertSafeProviderMutationPath } from './provider-path-safety';
 export type { CanonicalEntry } from './scanner';
 export {
+  materializationCanonicalPathAllowed,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanBundledManagedCodexAgents,
   scanCanonical,

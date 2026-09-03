@@ -19,7 +19,10 @@ import {
 } from '@config/dispatch-matrix';
 import { normalizeProjectPath, resolveActiveProject } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
-import type { CanonicalEntry } from '@engine/index';
+import {
+  materializationCanonicalPathAllowed,
+  type CanonicalEntry,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { validateRealPathWithinScope } from '@fs/paths';
@@ -354,11 +357,10 @@ function canonicalPathAllowed(
   canonicalEntry: CanonicalEntry,
   allowedCanonicalPaths?: string[],
 ): boolean {
-  if (!allowedCanonicalPaths?.length) {
-    return true;
-  }
-  return new Set(allowedCanonicalPaths).has(
-    toRelativePath(scopeRoot, canonicalEntry.canonicalPath),
+  return materializationCanonicalPathAllowed(
+    scopeRoot,
+    canonicalEntry,
+    allowedCanonicalPaths,
   );
 }
 
@@ -367,6 +369,7 @@ async function desiredRolesFromCanonical(
   targets: CursorMaterializationTarget[],
 ): Promise<CursorMaterializedAgent[]> {
   const desired: CursorMaterializedAgent[] = [];
+  const sourceByRoleName = new Map<string, string>();
   for (const entry of canonicalEntries) {
     if (
       entry.type !== 'agent' ||
@@ -384,25 +387,22 @@ async function desiredRolesFromCanonical(
       continue;
     }
     for (const target of targets) {
-      desired.push(
-        materializeCursorAgent({
-          agent,
-          mapping: target.mapping,
-          owner: target.owner,
-        }),
-      );
+      const role = materializeCursorAgent({
+        agent,
+        mapping: target.mapping,
+        owner: target.owner,
+      });
+      const existingSource = sourceByRoleName.get(role.roleName);
+      if (existingSource) {
+        throw new CliError(
+          `Duplicate Cursor role name ${role.roleName} from ${existingSource} and ${entry.canonicalPath}. Refusing ambiguous role writes.`,
+        );
+      }
+      sourceByRoleName.set(role.roleName, entry.canonicalPath);
+      desired.push(role);
     }
   }
 
-  const names = new Set<string>();
-  for (const role of desired) {
-    if (names.has(role.roleName)) {
-      throw new CliError(
-        `Distinct Cursor targets produced the same Cursor role name ${role.roleName}. Refusing ambiguous role writes.`,
-      );
-    }
-    names.add(role.roleName);
-  }
   return desired.sort((left, right) =>
     left.roleName.localeCompare(right.roleName),
   );

@@ -81,6 +81,7 @@ import {
   type CanonicalEntry,
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
+  mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
@@ -975,10 +976,10 @@ async function collectScopeReports(
     scope === 'user' &&
     (activeExtensionProviders.has('codex') ||
       activeExtensionProviders.has('cursor'))
-      ? [
-          ...canonicalEntries,
-          ...(await dependencies.scanBundledManagedAgents()),
-        ]
+      ? mergeUserScopeMaterializationEntries(
+          canonicalEntries,
+          await dependencies.scanBundledManagedAgents(),
+        )
       : canonicalEntries;
   const codexExtensionPlan = activeExtensionProviders.has('codex')
     ? await dependencies.computeCodexProjectExtensionPlan(
