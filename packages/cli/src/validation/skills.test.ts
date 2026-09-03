@@ -5326,7 +5326,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.4'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.5'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
     ] as const;

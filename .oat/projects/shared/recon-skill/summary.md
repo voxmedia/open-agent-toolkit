@@ -50,7 +50,8 @@ judgment with the consuming agent.
 - Documentation, generated assets, release metadata, and focused contract,
   lifecycle, integration, and adversarial test coverage. All 36 planned and
   revision tasks completed across revisions p-rev1 through p-rev9, and the
-  configured cross-family implementation exit gate passed.
+  configured cross-family implementation exit gate passed. Lockstep public
+  packages bumped to `0.2.53`.
 
 ## Key Decisions
 
