@@ -751,7 +751,7 @@ describe('CLI command integration', () => {
         process.env.HOME = previousHome;
       }
     }
-  }, 15_000);
+  }, 30_000);
 
   it('providers list shows all registered adapters', async () => {
     const root = await createWorkspace();

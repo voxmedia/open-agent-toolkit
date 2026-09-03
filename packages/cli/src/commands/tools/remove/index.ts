@@ -14,7 +14,6 @@ import {
   autoSync,
 } from '@commands/tools/shared/auto-sync';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
-import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
@@ -67,7 +66,6 @@ const defaultDependencies: RemoveToolsDependencies = {
   },
   hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
     hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
-  reconcilePacks: reconcilePackLifecycles,
   inventoryScopedPack,
   writeScopedPackIntent,
 };
