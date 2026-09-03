@@ -1,3 +1,4 @@
+import { serializeJsonDocument } from '@fs/io';
 import { z } from 'zod';
 
 import {
@@ -125,6 +126,16 @@ function serializedByteLength(value: unknown): number {
   return new TextEncoder().encode(JSON.stringify(value) ?? 'null').length;
 }
 
+/**
+ * Bytes as published. The whole-record ceiling constrains a file on disk, so it
+ * measures the writer's own serialization rather than a compact approximation
+ * of it. Per-field projection bounds below stay compact: they bound the shape
+ * of a field, not the size of a file.
+ */
+function publishedByteLength(value: unknown): number {
+  return new TextEncoder().encode(serializeJsonDocument(value)).length;
+}
+
 function projectionNodeCount(value: unknown): number {
   if (value === null || typeof value !== 'object') return 1;
   if (Array.isArray(value)) {
@@ -165,7 +176,7 @@ function projectionAggregateViolation(
  * of individually legal fields can produce an unbounded journal revision.
  */
 export function assertBoundedDispatchRecordSize(value: unknown): void {
-  const bytes = serializedByteLength(value);
+  const bytes = publishedByteLength(value);
   if (bytes > MAX_RECORD_BYTES) {
     throw new Error(
       `A dispatch record serializes to ${bytes} bytes, above the ${MAX_RECORD_BYTES}-byte record limit.`,
@@ -571,6 +582,15 @@ const PATH_REDACTED_FIELDS = [
  * redaction became a boundary in Phase 6: a guarantee implemented as a
  * per-producer obligation regresses the moment a call site is added.
  */
+export function identityFieldsOf(
+  record: GenericDispatchRecord,
+): Record<string, unknown> {
+  const redacted = new Set<string>(PATH_REDACTED_FIELDS);
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => !redacted.has(key)),
+  );
+}
+
 export function sanitizeDispatchRecordPaths(
   record: GenericDispatchRecord,
 ): GenericDispatchRecord {

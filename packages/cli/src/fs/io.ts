@@ -288,13 +288,25 @@ export async function removeCollectionSymlinkIfUnchanged(
   }
 }
 
+/**
+ * The one serialization of a JSON document OAT writes to disk.
+ *
+ * Every size bound that claims to constrain a published file must measure this
+ * exact string. Validating compact `JSON.stringify` while writing pretty-printed
+ * output with a trailing newline let a record validated at 65,536 bytes land on
+ * disk at 65,874.
+ */
+export function serializeJsonDocument(data: unknown): string {
+  return `${JSON.stringify(data, null, 2)}\n`;
+}
+
 export async function atomicWriteJson(
   filePath: string,
   data: unknown,
 ): Promise<void> {
   const tempPath = `${filePath}.tmp`;
   await ensureDir(dirname(filePath));
-  await writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  await writeFile(tempPath, serializeJsonDocument(data), 'utf8');
   await rename(tempPath, filePath);
 }
 
@@ -764,7 +776,7 @@ export async function publishContainedJsonRevision(
   }
 
   const parentIdentity = identityOf(await lstat(dirname(resolvedFile)));
-  const content = `${JSON.stringify(data, null, 2)}\n`;
+  const content = serializeJsonDocument(data);
   const tempPath = join(
     dirname(resolvedFile),
     `.${basename(resolvedFile)}.${randomUUID()}.tmp`,
