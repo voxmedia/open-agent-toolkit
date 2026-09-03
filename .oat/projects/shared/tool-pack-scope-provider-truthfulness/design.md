@@ -1309,7 +1309,10 @@ values are never inspected or persisted by evidence collection.
 - **Sensitive content:** Dispatch journals exclude prompts, messages,
   credentials, transcript bodies, and role-file contents.
 - **Path redaction:** Home paths serialize with `~`; project paths serialize
-  relative to the project root. Raw absolute paths remain process-local.
+  relative to the project root. **Superseded 2026-09-03:** the shipped contract
+  rejects absolute paths in identity and control fields and redacts them
+  best-effort in prose; colon-prefixed forms, URL routes, and trailing-slash
+  candidates can survive into durable output. See `spec.md` NFR1.
 - **Input validation:** Zod schemas validate config, manifest V2, provider
   registrations, JSON evidence, and dispatch events at boundaries.
 

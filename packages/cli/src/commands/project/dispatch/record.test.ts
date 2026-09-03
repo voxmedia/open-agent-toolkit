@@ -702,7 +702,7 @@ describe('recordProjectDispatch', () => {
     ).toBe('Journal revision dispatch/request-1.json exists.');
   });
 
-  it('emits no absolute path through the JSON command surface', async () => {
+  it('redacts a damaged-journal path through the JSON command surface', async () => {
     const projectPath = await mkdtemp(join(tmpdir(), 'oat-dispatch-project-'));
     roots.push(projectPath);
     await writeFile(
