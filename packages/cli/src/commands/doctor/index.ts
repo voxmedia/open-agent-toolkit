@@ -31,6 +31,12 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
+import {
   attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
@@ -49,7 +55,11 @@ import {
   type DispatchMatrixCellRef,
   type DispatchMatrixSource,
 } from '@config/dispatch-matrix';
-import type { SyncConfig } from '@config/index';
+import {
+  DEFAULT_SYNC_CONFIG,
+  loadSyncConfig,
+  type SyncConfig,
+} from '@config/index';
 import {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
@@ -64,13 +74,8 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import TOML from '@iarna/toml';
 import { loadManifest, type Manifest } from '@manifest/index';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import { CURSOR_MODEL_PIN_MAPPINGS } from '@providers/cursor/codec/catalog';
-import { geminiAdapter } from '@providers/gemini';
 import {
   diagnoseCursorMaterializedModels,
   validateMatrixCell,
@@ -85,14 +90,75 @@ import {
 } from '@providers/identity/dispatch-validation';
 import {
   getConfigAwareAdapters,
+  getProviderRegistrations,
+  resolveProviderScopeContext,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
+import {
+  userAgentMaterializationCoverage,
+  type UserAgentMaterializationCoverage,
+} from '@providers/shared/registry';
+import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
 import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
 
 import { checkStaleInvocations } from './stale-invocations';
 import { checkSyncedProjects } from './synced-projects';
+
+interface DoctorProviderRefreshAdvice {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: string;
+  visibility: ProviderVisibilityEvidence;
+}
+
+function collectProviderRefreshAdvice(
+  contexts: ReadonlyMap<ConcreteScope, ProviderScopeContext>,
+): DoctorProviderRefreshAdvice[] {
+  return [...contexts.entries()].flatMap(([scope, context]) => {
+    const active = new Set(context.activeProviders);
+    return context.registrations.flatMap((registration) => {
+      if (!active.has(registration.adapter.name)) return [];
+      return registration.capabilities
+        .filter(
+          (capability) =>
+            capability.scope === scope && capability.support === 'supported',
+        )
+        .map((capability) => ({
+          scope,
+          provider: registration.adapter.name,
+          contentKind: capability.contentKind,
+          visibility: adviseProviderRefresh({
+            policy: capability.catalogRefresh,
+            materialization: 'unknown',
+            observation: {
+              state: 'not-reported',
+              reference:
+                'oat doctor validates managed state but does not query the active provider catalog',
+            },
+          }),
+        }));
+    });
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly DoctorProviderRefreshAdvice[],
+): string | null {
+  if (advice.length === 0) return null;
+  return [
+    'Provider catalog visibility:',
+    ...advice.map(
+      ({ scope, provider, contentKind, visibility }) =>
+        `  [${scope}] ${provider}/${contentKind}: ${visibility.state} (${visibility.policy.state})`,
+    ),
+  ].join('\n');
+}
 
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -111,12 +177,18 @@ interface DoctorDependencies {
   readFile: (path: string) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
+  loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
+  resolveProviderScopeContext?: (input: {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
@@ -208,13 +280,7 @@ async function checkSymlinkSupportDefault(
 async function checkProvidersDefault(
   scopeRoot: string,
 ): Promise<Array<{ name: string; detected: boolean; version: string | null }>> {
-  const adapters = [
-    claudeAdapter,
-    cursorAdapter,
-    codexAdapter,
-    copilotAdapter,
-    geminiAdapter,
-  ];
+  const adapters = getProviderRegistrations().map(({ adapter }) => adapter);
 
   return Promise.all(
     adapters.map(async (adapter) => ({
@@ -312,14 +378,12 @@ function createDependencies(): DoctorDependencies {
     readFile: async (path) => readFile(path, 'utf8'),
     resolveAssetsRoot,
     resolveUserSyncConfig,
-    getAdapters: () => [
-      claudeAdapter,
-      cursorAdapter,
-      codexAdapter,
-      copilotAdapter,
-      geminiAdapter,
-    ],
+    async loadSyncConfig(configPath) {
+      return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+    },
+    getAdapters: () => getProviderRegistrations().map(({ adapter }) => adapter),
     getConfigAwareAdapters,
+    resolveProviderScopeContext,
     readOatConfig,
     readOatConfigForDefaultScopeRepair,
     readOatLocalConfig,
@@ -1018,10 +1082,11 @@ function createPackDuplicationCheck(
 
 async function createPackStateChecks(
   scopeRoots: Map<ConcreteScope, string>,
+  providerContexts: Map<ConcreteScope, ProviderScopeContext>,
   dependencies: DoctorDependencies,
-): Promise<DoctorCheck[]> {
+): Promise<{ checks: DoctorCheck[]; evidence: PackEvidenceBlockV1 }> {
   if (scopeRoots.size === 0) {
-    return [];
+    return { checks: [], evidence: packEvidenceBlock([]) };
   }
 
   const roots: PackPathRoots = {
@@ -1032,48 +1097,114 @@ async function createPackStateChecks(
   };
 
   let findings: PackStateFinding[];
+  let inventories: PackInventory[];
   try {
     const assetsRoot = await dependencies.resolveAssetsRoot();
     const userRoot = scopeRoots.get('user');
-    const userManagedRoleMaterialization = userRoot
-      ? await dependencies
-          .getConfigAwareAdapters(
-            dependencies.getAdapters(),
-            userRoot,
-            await dependencies.resolveUserSyncConfig(join(userRoot, '.oat')),
-          )
-          .then(({ activeAdapters }) =>
-            activeAdapters.some(
-              ({ name }) => name === 'codex' || name === 'cursor',
-            ),
-          )
-      : false;
-    const inventories = attributeSharedOwnerDiagnostics(
+    const userAgentCoverage: UserAgentMaterializationCoverage = userRoot
+      ? await (async () => {
+          const config = await dependencies.resolveUserSyncConfig(
+            join(userRoot, '.oat'),
+          );
+          const providerContext = providerContexts.get('user') ?? null;
+          const activeAdapters = providerContext
+            ? providerContext.registrations
+                .filter(({ adapter }) =>
+                  providerContext.activeProviders.includes(adapter.name),
+                )
+                .map(({ adapter }) => adapter)
+            : await dependencies
+                .getConfigAwareAdapters(
+                  dependencies.getAdapters(),
+                  userRoot,
+                  config,
+                )
+                .then(
+                  ({ activeAdapters: resolvedAdapters }) => resolvedAdapters,
+                );
+          const activeProviders = activeAdapters.map(({ name }) => name);
+          const knownRegistrations = getProviderRegistrations().filter(
+            ({ adapter }) => activeProviders.includes(adapter.name),
+          );
+          let coverage = userAgentMaterializationCoverage({
+            registrations: providerContext?.registrations ?? knownRegistrations,
+            activeProviders,
+          });
+          if (coverage !== 'all') {
+            const mappings = activeAdapters.flatMap(({ userMappings }) =>
+              userMappings.filter(({ contentType }) => contentType === 'agent'),
+            );
+            if (mappings.some(({ nativeRead }) => !nativeRead)) {
+              coverage = 'all';
+            } else if (mappings.length > 0 && coverage === 'none') {
+              coverage = 'bundled';
+            }
+          }
+          return coverage;
+        })()
+      : 'none';
+    inventories = attributeSharedOwnerDiagnostics(
       await Promise.all(
         PACK_NAMES.map((pack) =>
           dependencies.inventoryPack({
             pack,
             assetsRoot,
             ...roots,
-            ...(userRoot ? { userManagedRoleMaterialization } : {}),
+            ...(userRoot
+              ? {
+                  userManagedRoleMaterialization: userAgentCoverage !== 'none',
+                }
+              : {}),
           }),
         ),
       ),
     );
+    if (userAgentCoverage === 'all') {
+      inventories = inventories.map((inventory) => ({
+        ...inventory,
+        scopes: inventory.scopes.map((scoped) =>
+          scoped.scope === 'user'
+            ? {
+                ...scoped,
+                diagnostics: scoped.diagnostics.filter(
+                  ({ code }) => code !== 'user-agent-unmaterialized',
+                ),
+              }
+            : scoped,
+        ),
+        diagnostics: inventory.diagnostics.filter(
+          ({ code }) => code !== 'user-agent-unmaterialized',
+        ),
+      }));
+    }
     findings = collectPackStateFindings(inventories);
   } catch (error) {
-    return [
-      {
-        name: 'packs:inventory',
-        description: 'Managed pack inventory availability',
-        status: 'warn',
-        message:
-          error instanceof Error
-            ? `Unable to inventory managed packs: ${error.message}`
-            : 'Unable to inventory managed packs.',
-        fix: 'Run `pnpm build` and rerun `oat doctor`.',
-      },
-    ];
+    const detail =
+      error instanceof Error
+        ? `Unable to inventory managed packs: ${error.message}`
+        : 'Unable to inventory managed packs.';
+    const evidence = packEvidenceBlock(
+      PACK_NAMES.map((pack) =>
+        unavailablePackEvidence({
+          pack,
+          scopes: [...scopeRoots.keys()],
+          reason: detail,
+          roots,
+        }),
+      ),
+    );
+    return {
+      checks: [
+        {
+          name: 'packs:inventory',
+          description: 'Managed pack inventory availability',
+          status: 'warn',
+          message: evidence.diagnostics[0]?.detail ?? detail,
+          fix: 'Run `pnpm build` and rerun `oat doctor`.',
+        },
+      ],
+      evidence,
+    };
   }
 
   const checks: DoctorCheck[] = [];
@@ -1083,7 +1214,14 @@ async function createPackStateChecks(
   if (scopeRoots.has('project') && scopeRoots.has('user')) {
     checks.push(createPackDuplicationCheck(findings, roots));
   }
-  return checks;
+  return {
+    checks,
+    evidence: packEvidenceBlock(
+      inventories.map((canonical) =>
+        projectRenderablePackEvidence(canonical, roots),
+      ),
+    ),
+  };
 }
 
 function createScopeUnavailableCheck(
@@ -1105,6 +1243,7 @@ async function runChecksForScope(
   scopeRoot: string,
   userConfigDir: string,
   dependencies: DoctorDependencies,
+  providerContext?: ProviderScopeContext,
 ): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
 
@@ -1167,7 +1306,15 @@ async function runChecksForScope(
       : 'Use copy strategy or grant symlink permissions.',
   });
 
-  const providers = await dependencies.checkProviders(scopeRoot);
+  const providers = providerContext
+    ? await Promise.all(
+        providerContext.registrations.map(async ({ adapter }) => ({
+          name: adapter.name,
+          detected: providerContext.detectedProviders.includes(adapter.name),
+          version: adapter.detectVersion ? await adapter.detectVersion() : null,
+        })),
+      )
+    : await dependencies.checkProviders(scopeRoot);
   const detectedCount = providers.filter(
     (provider) => provider.detected,
   ).length;
@@ -1344,6 +1491,7 @@ async function runDoctorCommand(
   const checks: DoctorCheck[] = [];
   const scopes = resolveConcreteScopes(context.scope);
   const scopeRoots = new Map<ConcreteScope, string>();
+  const providerContexts = new Map<ConcreteScope, ProviderScopeContext>();
 
   for (const scope of scopes) {
     let scopeRoot: string;
@@ -1359,21 +1507,50 @@ async function runDoctorCommand(
       throw error;
     }
     scopeRoots.set(scope, scopeRoot);
+    const providerContext = dependencies.resolveProviderScopeContext
+      ? await dependencies.resolveProviderScopeContext({
+          scope,
+          scopeRoot,
+          config:
+            scope === 'user'
+              ? await dependencies.resolveUserSyncConfig(
+                  join(context.home, '.oat'),
+                )
+              : await dependencies.loadSyncConfig(
+                  join(scopeRoot, '.oat', 'sync', 'config.json'),
+                ),
+        })
+      : undefined;
+    if (providerContext) providerContexts.set(scope, providerContext);
     const scopeChecks = await runChecksForScope(
       scope,
       scopeRoot,
       join(context.home, '.oat'),
       dependencies,
+      providerContext,
     );
     checks.push(...scopeChecks);
   }
 
-  checks.push(...(await createPackStateChecks(scopeRoots, dependencies)));
+  const packState = await createPackStateChecks(
+    scopeRoots,
+    providerContexts,
+    dependencies,
+  );
+  checks.push(...packState.checks);
+  const providerRefreshAdvice = collectProviderRefreshAdvice(providerContexts);
 
   if (context.json) {
-    context.logger.json({ scope: context.scope, checks });
+    context.logger.json({
+      scope: context.scope,
+      checks,
+      packEvidence: packState.evidence,
+      providerRefreshAdvice,
+    });
   } else {
     context.logger.info(formatDoctorResults(checks));
+    const providerSummary = formatProviderRefreshAdvice(providerRefreshAdvice);
+    if (providerSummary) context.logger.info(providerSummary);
   }
 
   const hasFail = checks.some((check) => check.status === 'fail');
@@ -1388,6 +1565,14 @@ export function createDoctorCommand(
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined ||
+      overrides.checkProviders !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('doctor'))
     .description('Run environment and setup diagnostics')

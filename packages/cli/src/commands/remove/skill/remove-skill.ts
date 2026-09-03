@@ -22,6 +22,7 @@ import {
   loadManifest,
   type Manifest,
   type ManifestEntry,
+  type ManifestEntryV2,
   removeEntry,
   saveManifest,
 } from '@manifest/index';
@@ -189,6 +190,15 @@ async function buildScopePlan(
   const unmanagedProviderViews: ProviderView[] = [];
   const manifestProvidersToRemove = new Set<string>();
 
+  for (const entry of manifest.entries as unknown as ManifestEntryV2[]) {
+    if (
+      entry.canonicalPath === canonicalRelativePath &&
+      entry.strategy === 'collection'
+    ) {
+      manifestProvidersToRemove.add(entry.provider);
+    }
+  }
+
   for (const adapter of activeAdapters) {
     const syncMappings = dependencies
       .getSyncMappings(adapter, scope)
@@ -206,6 +216,16 @@ async function buildScopePlan(
 
       if (hasManifestEntry) {
         manifestProvidersToRemove.add(adapter.name);
+        const manifestEntry = (
+          manifest.entries as unknown as ManifestEntryV2[]
+        ).find(
+          (entry) =>
+            entry.canonicalPath === canonicalRelativePath &&
+            entry.provider === adapter.name,
+        );
+        if (manifestEntry?.strategy === 'collection') {
+          continue;
+        }
         managedProviderViews.push({
           provider: adapter.name,
           absolutePath,

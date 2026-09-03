@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
   existsSync,
-  lstatSync,
   mkdtempSync,
   mkdirSync,
   realpathSync,
@@ -12,8 +11,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
+import { join } from 'node:path';
 
+import { resolveCanonicalRole } from '@agents/canonical';
 import type { PackDefinition } from '@commands/tools/shared/pack-manifest';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
@@ -75,48 +75,6 @@ interface PortableAssetFinding {
 interface PortableAssetReference extends PortableAssetFinding {
   file: string;
 }
-
-type AgentCandidateTier = 'loaded' | 'user' | 'project';
-type AgentCandidateOutcome =
-  | 'missing'
-  | 'broken-symlink'
-  | 'escaping-symlink'
-  | 'noncanonical-copy'
-  | 'wrong-target';
-
-interface AgentCandidateAttempt {
-  tier: AgentCandidateTier;
-  candidate: string;
-  outcome: AgentCandidateOutcome;
-}
-
-interface ResolveCanonicalAgentInput {
-  dependency: string;
-  canonicalName: string;
-  skillDir: string;
-  userCanonicalRoot: string;
-  projectCanonicalRoot: string;
-}
-
-type CanonicalAgentResolution =
-  | {
-      status: 'resolved';
-      dependency: string;
-      canonicalName: string;
-      tier: AgentCandidateTier;
-      providerRoot: string;
-      selectedFile: string;
-      canonicalFile: string;
-      validation: 'direct-canonical' | 'exact-canonical-symlink';
-      attempts: AgentCandidateAttempt[];
-    }
-  | {
-      status: 'miss';
-      dependency: string;
-      canonicalName: string;
-      attempts: AgentCandidateAttempt[];
-      recovery: string[];
-    };
 
 // Authored Markdown shipped by one user-default pack asset.
 interface MarkdownAsset {
@@ -183,6 +141,10 @@ function listSkillDirs(): string[] {
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
+}
+
+function canonicalRoleFixture(name: string): string {
+  return `---\nname: ${name}\nversion: 1.0.0\ndescription: Test canonical role\n---\n\n# ${name}\n`;
 }
 
 function listAuthoredMarkdown(skillDir: string): string[] {
@@ -389,182 +351,6 @@ function isProviderAgentSyncOccurrence(
     /\.(?:claude|cursor)\/agents\/([a-zA-Z0-9_-]+)\.md`?\s*\(synced (?:to|from) `?$/i,
   );
   return syncedCanonical?.[1] === canonicalName && /^`?\)/.test(after);
-}
-
-function inspectCanonicalAgentCandidate(
-  tier: AgentCandidateTier,
-  providerRoot: string,
-  canonicalRoot: string,
-  canonicalName: string,
-):
-  | {
-      status: 'resolved';
-      selectedFile: string;
-      canonicalFile: string;
-      validation: 'direct-canonical' | 'exact-canonical-symlink';
-    }
-  | { status: 'miss'; attempt: AgentCandidateAttempt } {
-  const selectedFile = join(providerRoot, 'agents', `${canonicalName}.md`);
-  const canonicalFile = join(canonicalRoot, 'agents', `${canonicalName}.md`);
-  let selectedStat;
-
-  try {
-    selectedStat = lstatSync(selectedFile);
-  } catch {
-    return {
-      status: 'miss',
-      attempt: { tier, candidate: selectedFile, outcome: 'missing' },
-    };
-  }
-
-  if (selectedStat.isSymbolicLink()) {
-    let selectedRealpath: string;
-    try {
-      selectedRealpath = realpathSync(selectedFile);
-    } catch {
-      return {
-        status: 'miss',
-        attempt: {
-          tier,
-          candidate: selectedFile,
-          outcome: 'broken-symlink',
-        },
-      };
-    }
-
-    let canonicalRealpath: string;
-    try {
-      if (!lstatSync(canonicalFile).isFile()) {
-        throw new Error('Canonical target is not a regular file');
-      }
-      canonicalRealpath = realpathSync(canonicalFile);
-    } catch {
-      return {
-        status: 'miss',
-        attempt: {
-          tier,
-          candidate: selectedFile,
-          outcome: 'escaping-symlink',
-        },
-      };
-    }
-
-    if (
-      selectedRealpath === canonicalRealpath &&
-      selectedFile !== canonicalFile
-    ) {
-      return {
-        status: 'resolved',
-        selectedFile,
-        canonicalFile,
-        validation: 'exact-canonical-symlink',
-      };
-    }
-
-    return {
-      status: 'miss',
-      attempt: {
-        tier,
-        candidate: selectedFile,
-        outcome: 'escaping-symlink',
-      },
-    };
-  }
-
-  if (!selectedStat.isFile()) {
-    return {
-      status: 'miss',
-      attempt: { tier, candidate: selectedFile, outcome: 'wrong-target' },
-    };
-  }
-
-  if (selectedFile === canonicalFile) {
-    return {
-      status: 'resolved',
-      selectedFile,
-      canonicalFile,
-      validation: 'direct-canonical',
-    };
-  }
-
-  return {
-    status: 'miss',
-    attempt: {
-      tier,
-      candidate: selectedFile,
-      outcome: 'noncanonical-copy',
-    },
-  };
-}
-
-function resolveCanonicalAgentTarget({
-  dependency,
-  canonicalName,
-  skillDir,
-  userCanonicalRoot,
-  projectCanonicalRoot,
-}: ResolveCanonicalAgentInput): CanonicalAgentResolution {
-  const loadedRoot = resolve(skillDir, '..', '..');
-  const loadedCanonicalRoot =
-    basename(loadedRoot) === '.agents'
-      ? loadedRoot
-      : join(dirname(loadedRoot), '.agents');
-  const candidates: Array<{
-    tier: AgentCandidateTier;
-    providerRoot: string;
-    canonicalRoot: string;
-  }> = [
-    {
-      tier: 'loaded',
-      providerRoot: loadedRoot,
-      canonicalRoot: loadedCanonicalRoot,
-    },
-    {
-      tier: 'user',
-      providerRoot: userCanonicalRoot,
-      canonicalRoot: userCanonicalRoot,
-    },
-    {
-      tier: 'project',
-      providerRoot: projectCanonicalRoot,
-      canonicalRoot: projectCanonicalRoot,
-    },
-  ];
-  const attempts: AgentCandidateAttempt[] = [];
-
-  for (const candidate of candidates) {
-    const result = inspectCanonicalAgentCandidate(
-      candidate.tier,
-      candidate.providerRoot,
-      candidate.canonicalRoot,
-      canonicalName,
-    );
-    if (result.status === 'resolved') {
-      return {
-        status: 'resolved',
-        dependency,
-        canonicalName,
-        tier: candidate.tier,
-        providerRoot: candidate.providerRoot,
-        selectedFile: result.selectedFile,
-        canonicalFile: result.canonicalFile,
-        validation: result.validation,
-        attempts,
-      };
-    }
-    attempts.push(result.attempt);
-  }
-
-  return {
-    status: 'miss',
-    dependency,
-    canonicalName,
-    attempts,
-    recovery: [
-      `oat tools install ${dependency} --scope <user|project>`,
-      `oat tools update --pack ${dependency} --scope <user|project>`,
-    ],
-  };
 }
 
 function collectCrossSkillTargets(
@@ -1875,16 +1661,16 @@ describe('skills bundled docs contract', () => {
       mkdirSync(join(claudeAgent, '..'), { recursive: true });
       mkdirSync(cursorSkillDir, { recursive: true });
       mkdirSync(join(cursorAgent, '..'), { recursive: true });
-      writeFileSync(userCanonical, '# User canonical\n');
-      writeFileSync(projectCanonical, '# Project canonical\n');
+      writeFileSync(userCanonical, canonicalRoleFixture(canonicalName));
+      writeFileSync(projectCanonical, canonicalRoleFixture(canonicalName));
       symlinkSync(canonicalSkillDir, claudeSkillDir, 'dir');
       symlinkSync(userCanonical, claudeAgent);
       symlinkSync(userCanonical, cursorAgent);
 
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: claudeSkillDir,
           userCanonicalRoot: join(userScope, '.agents'),
           projectCanonicalRoot: join(projectScope, '.agents'),
@@ -1893,17 +1679,16 @@ describe('skills bundled docs contract', () => {
         expect.objectContaining({
           status: 'resolved',
           tier: 'loaded',
-          providerRoot: join(userScope, '.claude'),
-          selectedFile: claudeAgent,
-          canonicalFile: userCanonical,
+          selectedPath: '<loaded>/agents/oat-reviewer.md',
+          canonicalPath: '<user>/agents/oat-reviewer.md',
           validation: 'exact-canonical-symlink',
         }),
       );
 
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: cursorSkillDir,
           userCanonicalRoot: join(userScope, '.agents'),
           projectCanonicalRoot: join(projectScope, '.agents'),
@@ -1912,17 +1697,16 @@ describe('skills bundled docs contract', () => {
         expect.objectContaining({
           status: 'resolved',
           tier: 'loaded',
-          providerRoot: join(userScope, '.cursor'),
-          selectedFile: cursorAgent,
-          canonicalFile: userCanonical,
+          selectedPath: '<loaded>/agents/oat-reviewer.md',
+          canonicalPath: '<user>/agents/oat-reviewer.md',
           validation: 'exact-canonical-symlink',
         }),
       );
 
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: realpathSync(claudeSkillDir),
           userCanonicalRoot: join(userScope, '.agents'),
           projectCanonicalRoot: join(projectScope, '.agents'),
@@ -1931,8 +1715,13 @@ describe('skills bundled docs contract', () => {
         expect.objectContaining({
           status: 'resolved',
           tier: 'loaded',
-          providerRoot: realpathSync(join(userScope, '.agents')),
-          selectedFile: realpathSync(userCanonical),
+          selectedPath: '<loaded>/agents/oat-reviewer.md',
+          // The canonical file is the user root, so it is labelled `<user>`
+          // even though it was selected through the loaded tier. Roots are
+          // compared by resolved path, so this holds whether or not the
+          // caller passed a realpath'd `skillDir`, and on platforms where a
+          // tmpdir realpaths to a different prefix.
+          canonicalPath: '<user>/agents/oat-reviewer.md',
           validation: 'direct-canonical',
         }),
       );
@@ -1960,7 +1749,7 @@ describe('skills bundled docs contract', () => {
       mkdirSync(cursorSkillDir, { recursive: true });
       mkdirSync(cursorAgentDir, { recursive: true });
       mkdirSync(join(userCanonical, '..'), { recursive: true });
-      writeFileSync(userCanonical, '# Canonical bytes\n');
+      writeFileSync(userCanonical, canonicalRoleFixture(canonicalName));
       writeFileSync(
         join(cursorAgentDir, `${canonicalName}.md`),
         '# Canonical bytes\n',
@@ -1977,9 +1766,9 @@ describe('skills bundled docs contract', () => {
         'developer_instructions = "transformed"\n',
       );
 
-      const copyMiss = resolveCanonicalAgentTarget({
+      const copyMiss = resolveCanonicalRole({
         dependency: 'workflows',
-        canonicalName,
+        canonicalRole: canonicalName,
         skillDir: cursorSkillDir,
         userCanonicalRoot,
         projectCanonicalRoot,
@@ -1987,7 +1776,7 @@ describe('skills bundled docs contract', () => {
       expect(copyMiss).toEqual(
         expect.objectContaining({ status: 'resolved', tier: 'user' }),
       );
-      expect(copyMiss.attempts).toEqual([
+      expect(copyMiss.candidateMisses).toEqual([
         expect.objectContaining({
           tier: 'loaded',
           outcome: 'noncanonical-copy',
@@ -2008,13 +1797,13 @@ describe('skills bundled docs contract', () => {
         'developer_instructions = "transformed"\n',
       );
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: codexSkillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
-        }).attempts,
+        }).candidateMisses,
       ).toEqual([
         expect.objectContaining({
           tier: 'loaded',
@@ -2023,13 +1812,13 @@ describe('skills bundled docs contract', () => {
       ]);
       rmSync(join(codexAgentDir, `${canonicalName}.md`));
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: codexSkillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
-        }).attempts,
+        }).candidateMisses,
       ).toEqual([
         expect.objectContaining({ tier: 'loaded', outcome: 'missing' }),
       ]);
@@ -2041,13 +1830,13 @@ describe('skills bundled docs contract', () => {
       );
       writeFileSync(join(fixtureRoot, 'outside.md'), '# Outside\n');
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: cursorSkillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
-        }).attempts,
+        }).candidateMisses,
       ).toEqual([
         expect.objectContaining({
           tier: 'loaded',
@@ -2061,13 +1850,13 @@ describe('skills bundled docs contract', () => {
         join(cursorAgentDir, `${canonicalName}.md`),
       );
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName,
+          canonicalRole: canonicalName,
           skillDir: cursorSkillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
-        }).attempts,
+        }).candidateMisses,
       ).toEqual([
         expect.objectContaining({
           tier: 'loaded',
@@ -2092,16 +1881,16 @@ describe('skills bundled docs contract', () => {
       const writeAgent = (root: string, name: string): string => {
         const file = join(root, 'agents', `${name}.md`);
         mkdirSync(join(file, '..'), { recursive: true });
-        writeFileSync(file, `# ${name}\n`);
+        writeFileSync(file, canonicalRoleFixture(name));
         return file;
       };
 
       writeAgent(userCanonicalRoot, 'oat-reviewer');
       writeAgent(projectCanonicalRoot, 'oat-reviewer');
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName: 'oat-reviewer',
+          canonicalRole: 'oat-reviewer',
           skillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
@@ -2110,9 +1899,9 @@ describe('skills bundled docs contract', () => {
 
       writeAgent(loadedRoot, 'oat-reviewer');
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName: 'oat-reviewer',
+          canonicalRole: 'oat-reviewer',
           skillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
@@ -2121,24 +1910,29 @@ describe('skills bundled docs contract', () => {
         expect.objectContaining({ status: 'resolved', tier: 'loaded' }),
       );
 
-      const missing = resolveCanonicalAgentTarget({
+      const missing = resolveCanonicalRole({
         dependency: 'research',
-        canonicalName: 'skeptical-evaluator',
+        canonicalRole: 'skeptical-evaluator',
         skillDir,
         userCanonicalRoot,
         projectCanonicalRoot,
       });
       expect(missing).toEqual(
         expect.objectContaining({
-          status: 'miss',
+          status: 'missing',
           dependency: 'research',
           recovery: [
-            'oat tools install research --scope <user|project>',
-            'oat tools update --pack research --scope <user|project>',
+            {
+              command: 'oat tools install research --scope <user|project>',
+            },
+            {
+              command:
+                'oat tools update --pack research --scope <user|project>',
+            },
           ],
         }),
       );
-      expect(missing.attempts.map(({ tier }) => tier)).toEqual([
+      expect(missing.candidateMisses.map(({ tier }) => tier)).toEqual([
         'loaded',
         'user',
         'project',
@@ -2146,9 +1940,9 @@ describe('skills bundled docs contract', () => {
 
       writeAgent(projectCanonicalRoot, 'skeptical-evaluator');
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'research',
-          canonicalName: 'skeptical-evaluator',
+          canonicalRole: 'skeptical-evaluator',
           skillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
@@ -2157,14 +1951,14 @@ describe('skills bundled docs contract', () => {
         expect.objectContaining({ status: 'resolved', tier: 'project' }),
       );
       expect(
-        resolveCanonicalAgentTarget({
+        resolveCanonicalRole({
           dependency: 'workflows',
-          canonicalName: 'oat-phase-implementer',
+          canonicalRole: 'oat-phase-implementer',
           skillDir,
           userCanonicalRoot,
           projectCanonicalRoot,
         }).status,
-      ).toBe('miss');
+      ).toBe('missing');
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }

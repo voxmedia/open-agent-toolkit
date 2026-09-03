@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.2.3
+version: 1.2.4
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -128,6 +128,62 @@ decomposition.
 
 The optional policy and ceiling are already-resolved inputs. Do not infer where
 they came from or resolve project state to obtain them.
+
+## Native Dispatch Lineage
+
+For a project-aware dispatch, the calling workflow records native dispatch
+lineage through the project adapter; this provider-neutral engine never writes
+project state itself.
+
+1. Construct the complete generic record and namespaced OAT event, redact it,
+   and validate sensitive-content exclusion before the native host call or
+   launch. Construction is in memory; do not claim a launch result yet.
+2. Invoke the exact native target once. Immediately after the host returns,
+   record either `launch_status: accepted` or
+   `launch_status: blocked-before-start` in the generic dispatch record. A
+   blocked result also requires the provider-wrapper attestation
+   `provesNoChildStarted: true`.
+3. Preserve the exact target and controls: provider, model, effort, reasoning
+   mode, service tier, route, authority, sandbox/tool payload, deadline, and
+   retry limit. Namespaced evidence cannot redefine any generic field.
+4. Only a proven pre-start rejection permits one fresh fallback record; that
+   one fallback requires `provesNoChildStarted: true`. It preserves the exact
+   target and controls, links both request IDs,
+   includes resolved canonical role identity, and says `approximation: true`.
+5. Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch, missing
+   telemetry, malformed output, and interruption never authorize fallback or
+   replacement. Continue only through the accepted handle or stop.
+
+Pre-start native-selection rejection is a closed event set, disjoint from
+terminal child-outcome codes. Use exactly one of `native-role-unavailable`,
+`native-target-unavailable`, `native-selector-unsupported`,
+`native-catalog-unsatisfying`, `capability-unresolved-or-unsupported`,
+`wrapper-payload-rejected`, or `wrapper-launch-refused`. The recorder rejects
+every other code, and it names the prohibited outcome family when a terminal
+code such as `timeout` is submitted. A fallback additionally requires the
+trigger record to carry resolved canonical role evidence, and the fallback's
+role evidence must equal it exactly.
+
+`wrapper-launch-refused` covers only conditions in which the launch surface
+declined the request and no child process was ever created: a rejected or
+unsupported payload, a refused authorization scope, an unavailable or
+unregistered target, or a wrapper precondition failure raised before spawn. Any
+condition in which a child process was created — including spawn success
+followed by immediate exit, a crash, a broken handle, or a lost transport — is a
+terminal outcome, not a pre-start rejection, and must be recorded through
+`child_outcome`. If you cannot prove the child never existed, you cannot set
+`provesNoChildStarted: true`, and no fallback is authorized.
+
+Project-aware callers pass the validated record and event on standard input:
+
+```bash
+oat project dispatch record \
+  --project "$PROJECT_PATH" \
+  --event-file - \
+  --json
+```
+
+The command validates and persists evidence only. It never launches a provider.
 
 ## Capability and Authorization
 

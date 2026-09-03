@@ -58,13 +58,20 @@ Project scope is used for project workflows and repo-local sync state. User scop
 
 ## `.oat/sync/` details
 
-| Path                      | Purpose                                                           |
-| ------------------------- | ----------------------------------------------------------------- |
-| `.oat/sync/manifest.json` | Records sync-managed provider entries and drift contract state    |
-| `.oat/sync/config.json`   | Project sync behavior, provider settings, and known-stray choices |
+| Path                      | Purpose                                                             |
+| ------------------------- | ------------------------------------------------------------------- |
+| `.oat/sync/manifest.json` | Records sync-managed entries, collection ownership, and drift state |
+| `.oat/sync/config.json`   | Project sync behavior, provider settings, and known-stray choices   |
 
 The equivalent user files are `~/.oat/sync/manifest.json` and
 `~/.oat/sync/config.json`.
+
+Manifest version 2 stores `collections` alongside per-entry evidence. Each
+collection record uses scope-relative canonical/provider paths and records
+whether OAT created the exact alias or adopted an existing one. Its inherited
+entries refer back to that collection; the manifest never authorizes deletion
+through the alias target. Writes are atomic, and unchanged manifests from the
+older per-entry schema normalize in memory before the next successful sync.
 
 `config.json` currently includes:
 

@@ -110,10 +110,20 @@ describe('runListTools', () => {
     const payload = capture.jsonPayloads[0] as {
       tools: ToolInfo[];
       packs: unknown[];
+      packEvidence: {
+        schemaVersion: number;
+        status: string;
+        items: Array<{ realizedPlacement: string }>;
+      };
     };
     expect(payload.tools).toHaveLength(1);
     expect(payload.tools[0]!.name).toBe('oat-idea-new');
     expect(payload.packs).toHaveLength(8);
+    expect(payload.packEvidence).toMatchObject({
+      schemaVersion: 1,
+      status: 'ok',
+    });
+    expect(payload.packEvidence.items).toHaveLength(8);
   });
 
   it('shows custom tools with pack=custom', async () => {
@@ -217,5 +227,46 @@ describe('runListTools', () => {
     expect(deps.capture.info.join('\n')).toContain(
       'diagnostic duplicate-scope',
     );
+    expect(
+      result.packEvidence.items.find(({ pack }) => pack === 'ideas'),
+    ).toMatchObject({
+      realizedPlacement: 'project',
+      knownRealizedScopes: ['project'],
+    });
+    expect(deps.capture.info.join('\n')).toContain('Normalized pack evidence:');
+  });
+
+  it('keeps bounded inventory failures in additive redacted evidence', async () => {
+    const deps = createDeps({});
+    deps.inventoryPack = async ({ pack }) => {
+      if (pack === 'workflows') {
+        throw new Error('cannot read /home/user/private/agents');
+      }
+      return {
+        pack,
+        placement: 'unavailable',
+        scopes: [],
+        diagnostics: [],
+      };
+    };
+
+    const result = await runListTools(
+      createContext({ scope: 'user', logger: deps.capture.logger }),
+      deps,
+    );
+
+    expect(result.packEvidence.status).toBe('partial');
+    expect(
+      result.packEvidence.items.find(({ pack }) => pack === 'workflows'),
+    ).toMatchObject({
+      realizedPlacement: 'unknown',
+      diagnostics: [
+        expect.objectContaining({
+          code: 'inventory-unavailable',
+          detail: 'cannot read ~/private/agents',
+        }),
+      ],
+    });
+    expect(deps.capture.info.join('\n')).not.toContain('/home/user');
   });
 });

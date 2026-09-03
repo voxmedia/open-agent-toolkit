@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { formatAgentsMdGuidanceResult } from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
@@ -167,12 +168,29 @@ export function createPjmCommand(
           templatesRoot: resolve(projectRoot, '.oat', 'templates'),
           home: context.home,
         });
+        const guidanceIncomplete = Object.values(result.guidance ?? {}).some(
+          ({ action }) => action === 'manual-required' || action === 'blocked',
+        );
 
         if (context.json) {
-          context.logger.json({ status: 'ok', ...result });
+          if (guidanceIncomplete) {
+            context.logger.json({
+              status: 'partial',
+              scaffold: { status: 'complete' },
+              adoption: { status: 'declared' },
+              created: result.created,
+              skipped: result.skipped,
+              guidance: result.guidance,
+            });
+          } else {
+            const { guidance: _guidance, ...completed } = result;
+            context.logger.json({ status: 'ok', ...completed });
+          }
         } else {
           context.logger.info(
-            `Initialized PJM repo reference scaffold at ${result.repoRoot}`,
+            guidanceIncomplete
+              ? 'Initialized PJM repo reference scaffold.'
+              : `Initialized PJM repo reference scaffold at ${result.repoRoot}`,
           );
           if (result.created.length > 0) {
             context.logger.info(`Created: ${result.created.join(', ')}`);
@@ -183,8 +201,18 @@ export function createPjmCommand(
             );
           }
           context.logger.info(INSTRUCTIONS_SYNC_HINT);
+          if (guidanceIncomplete) {
+            context.logger.warn(
+              'PJM scaffold and adoption completed; AGENTS.md guidance requires manual action.',
+            );
+            for (const guidance of Object.values(result.guidance ?? {})) {
+              for (const line of formatAgentsMdGuidanceResult(guidance)) {
+                context.logger.info(line);
+              }
+            }
+          }
         }
-        process.exitCode = 0;
+        process.exitCode = guidanceIncomplete ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }

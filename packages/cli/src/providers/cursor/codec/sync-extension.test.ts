@@ -424,10 +424,21 @@ describe('cursor sync extension', () => {
     await mkdir(join(root, '.cursor'), { recursive: true });
     await symlink(external, join(root, '.cursor', 'agents'), 'dir');
 
-    await expect(applyCursorProjectExtensionPlan(root, plan)).resolves.toEqual({
+    await expect(
+      applyCursorProjectExtensionPlan(root, plan),
+    ).resolves.toMatchObject({
       applied: 0,
       failed: 1,
       skipped: 0,
+      operations: [
+        expect.objectContaining({
+          provider: 'cursor',
+          target: 'role',
+          status: 'failed',
+          failure:
+            'Materialization failed; inspect local verbose diagnostics and retry sync.',
+        }),
+      ],
     });
     await expect(
       readFile(join(external, 'oat-reviewer-gpt-5-6-sol-high.md'), 'utf8'),

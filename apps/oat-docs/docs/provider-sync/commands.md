@@ -55,6 +55,21 @@ Key behavior:
 
 - Mutates by default; use `--dry-run` to preview
 - Strategy-aware operations (`symlink`, `copy`, `auto`)
+- Configured `auto` may adopt an existing exact collection-directory alias.
+  When the destination is absent, the current runtime falls back per entry;
+  OAT does not create or unlink a collection alias without identity-bound
+  guarded primitives. Configuring an explicit per-entry strategy does not
+  release an owned collection: the current runtime fails closed for deferred
+  collection-directory copies and symlinks because it cannot keep every
+  destination ancestor identity-bound.
+  To leave the provider directory externally owned, run
+  `oat providers set --scope <scope> --disabled <provider>` and then
+  `oat sync --scope <scope>` to detach OAT ownership. Then verify and remove
+  the preserved alias before managing that directory manually.
+  Automatic transition requires an identity-bound, non-following publication
+  primitive. Deferred file operations and ordinary non-transition per-entry
+  symlinks retain their existing behavior. Explicit `symlink` and `copy` remain
+  per-entry modes; `oat sync` does not add a `--strategy` option.
 - Provider enable/disable honored via sync config
 - Cursor skills are native-read from canonical `.agents/skills`; sync does not
   create `.cursor/skills` mirrors
@@ -83,27 +98,40 @@ oat sync --scope all --dry-run
 Review every planned `remove` and `detach` operation before running the same
 command without `--dry-run`.
 
+Dry-run and apply output include a `Collection aliases` section with scope,
+provider, content kind, action, ownership, scope-relative canonical/provider
+directories, reason, and planned or applied result. JSON reports the same
+redacted fields under `collectionOperations`; collection proofs are reduced to
+status and a safe reason rather than filesystem identities or absolute scope
+roots. Real-directory fallback is reported as `fallback-per-entry`.
+
 ## `oat providers list`
 
 Purpose:
 
 - Summarize adapters, detection, and mapping-level health summary
+- Summarize managed collection aliases by `oat-created` and `adopted-exact`
+  ownership in both human and JSON output
 
 ## `oat providers inspect <provider>`
 
 Purpose:
 
 - Show adapter mappings and per-scope mapping state details
+- Show each owned collection alias with scope-relative paths, ownership, and
+  last-verification time
 
 ## `oat providers set`
 
 Purpose:
 
-- Enable or disable project providers in sync config
+- Enable or disable providers in the selected scope's sync config; project is
+  the default scope
 
 Key behavior:
 
-- Modifies `.oat/sync/config.json` to toggle provider enablement
+- Updates the selected scope's sync config to toggle provider enablement
+- Scope: `--scope project|user` (defaults to `project`)
 - Options: `--enabled <providers>`, `--disabled <providers>` (comma-separated)
 - Changes take effect on next `oat sync`
 

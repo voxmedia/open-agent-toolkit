@@ -1,9 +1,12 @@
 import { execFileSync } from 'node:child_process';
 import {
+  chmod,
   lstat,
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -241,6 +244,25 @@ describe('e2e workflow', () => {
       const result = await runCli(root, ['sync', ...scopeArgs]);
 
       expect(result.exitCode).toBe(0);
+      const preview = await runCli(
+        root,
+        [
+          'tools',
+          'remove',
+          '--pack',
+          'core',
+          '--dry-run',
+          '--no-sync',
+          '--json',
+          ...scopeArgs,
+        ],
+        ['--json'],
+      );
+      expect(preview.exitCode).toBe(0);
+      expect(JSON.parse(preview.stdout).lifecycle[0].selection).toMatchObject({
+        pack: 'core',
+        targetScopes: ['user'],
+      });
       await expect(
         lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
       ).resolves.toBeDefined();
@@ -252,6 +274,769 @@ describe('e2e workflow', () => {
       else process.env.HOME = previousHome;
     }
   });
+
+  it('reports the same existing aggregate guidance patch without writing on rerun', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const existingGuidance = [
+      '# User guidance',
+      '',
+      '<!-- OAT project-management -->',
+      'Existing PJM guidance',
+      '<!-- END OAT project-management -->',
+      '',
+    ].join('\n');
+    await writeFile(join(root, 'AGENTS.md'), existingGuidance, 'utf8');
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const declined = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--no-project-guidance',
+        '--no-sync',
+      ]);
+      expect(declined.exitCode).toBe(0);
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        existingGuidance,
+      );
+
+      const first = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      const second = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+
+      expect(first.exitCode).toBe(1);
+      expect(`${first.stdout}\n${first.stderr}`).toMatch(/manual/i);
+      expect(`${first.stdout}\n${first.stderr}`).toContain(
+        '<!-- OAT tools -->',
+      );
+      expect(`${first.stdout}\n${first.stderr}`).not.toContain(root);
+      expect(second.exitCode).toBe(1);
+      expect(`${second.stdout}\n${second.stderr}`).toBe(
+        `${first.stdout}\n${first.stderr}`,
+      );
+      const guidance = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(guidance).toBe(existingGuidance);
+      expect(await readdir(root)).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(/tmp|recovery/i)]),
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('reports existing registered-workflows guidance as a redacted manual patch', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    await writeFile(join(root, 'AGENTS.md'), '# Existing guidance\n', 'utf8');
+
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(
+        root,
+        [
+          'tools',
+          'install',
+          '--scope',
+          'project',
+          '--no-sync',
+          '--project-guidance',
+          'workflows',
+        ],
+        ['--json'],
+      );
+
+      expect(result.exitCode).toBe(1);
+      const payload = JSON.parse(result.stdout);
+      expect(payload).toMatchObject({
+        status: 'partial',
+        projectGuidance: {
+          action: 'manual-required',
+          manualPatch: {
+            target: 'AGENTS.md',
+            managedBlock: expect.stringContaining('<!-- OAT tools -->'),
+          },
+        },
+      });
+      expect(JSON.stringify(payload.projectGuidance)).not.toContain(root);
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        '# Existing guidance\n',
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it.each(
+    (['aggregate', 'registered workflows'] as const).flatMap((entryPoint) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ entryPoint, targetKind, json })),
+      ),
+    ),
+  )(
+    'keeps $entryPoint $targetKind guidance manual-only in json=$json mode across reruns',
+    async ({ entryPoint, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-manual-guidance-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      const existing = [
+        '# Private operator guidance',
+        '<!-- OAT workflows -->',
+        'Legacy workflow guidance',
+        '<!-- END OAT workflows -->',
+        '# Private suffix',
+        '',
+      ].join('\n');
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      const before = await lstat(target);
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args = [
+          'tools',
+          'install',
+          '--scope',
+          'project',
+          '--no-sync',
+          '--project-guidance',
+          ...(entryPoint === 'registered workflows' ? ['workflows'] : []),
+        ];
+        const first = await runCli(root, args, json ? ['--json'] : []);
+        const second = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(first.exitCode).toBe(1);
+        expect(second.exitCode).toBe(1);
+        let firstPatch: {
+          target: string;
+          managedBlock: string;
+          legacyBlockAction: string;
+        };
+        let secondPatch: typeof firstPatch;
+        if (json) {
+          const firstGuidance = JSON.parse(first.stdout).projectGuidance;
+          const secondGuidance = JSON.parse(second.stdout).projectGuidance;
+          expect(firstGuidance.action).toBe('manual-required');
+          expect(secondGuidance.action).toBe('manual-required');
+          firstPatch = firstGuidance.manualPatch;
+          secondPatch = secondGuidance.manualPatch;
+          expect(JSON.stringify(firstGuidance)).not.toContain(root);
+        } else {
+          const extractPatch = (output: string) => {
+            const managedBlock = output.match(
+              /<!-- OAT tools -->[\s\S]*?<!-- END OAT tools -->/,
+            )?.[0];
+            return {
+              target: output.match(/Target: ([^\n]+)/)?.[1] ?? 'missing-target',
+              managedBlock: managedBlock ?? 'missing-block',
+              legacyBlockAction:
+                output.match(/Legacy block action: ([^\n]+)/)?.[1] ??
+                'missing-action',
+            };
+          };
+          firstPatch = extractPatch(`${first.stdout}\n${first.stderr}`);
+          secondPatch = extractPatch(`${second.stdout}\n${second.stderr}`);
+        }
+        expect(secondPatch).toEqual(firstPatch);
+        expect(firstPatch).toMatchObject({
+          target: targetKind === 'direct' ? 'AGENTS.md' : 'guidance/shared.md',
+          managedBlock: expect.stringContaining('<!-- OAT tools -->'),
+          legacyBlockAction: 'remove-manually',
+        });
+        expect(`${first.stdout}\n${first.stderr}`).not.toContain(
+          'Private operator guidance',
+        );
+        expect(`${first.stdout}\n${first.stderr}`).not.toContain(
+          'Private suffix',
+        );
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
+        );
+        const config = JSON.parse(
+          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        );
+        expect(config.pjm).toBeUndefined();
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it('creates missing guidance and recognizes exact content through a contained symlink', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-guidance-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const first = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      expect(first.exitCode).toBe(0);
+      await expect(
+        readFile(join(root, 'AGENTS.md'), 'utf8'),
+      ).resolves.toContain('<!-- OAT tools -->');
+
+      await mkdir(join(root, 'guidance'));
+      const target = join(root, 'guidance', 'shared-agents.md');
+      await rename(join(root, 'AGENTS.md'), target);
+      await symlink('guidance/shared-agents.md', join(root, 'AGENTS.md'));
+
+      const second = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--project-guidance',
+        '--no-sync',
+      ]);
+      expect(second.exitCode).toBe(0);
+      expect((await lstat(join(root, 'AGENTS.md'))).isSymbolicLink()).toBe(
+        true,
+      );
+      const guidance = await readFile(target, 'utf8');
+      expect(guidance.match(/<!-- OAT tools -->/g)).toHaveLength(1);
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it.each(
+    (['docs', 'pjm', 'decision'] as const).flatMap((consumer) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ consumer, targetKind, json })),
+      ),
+    ),
+  )(
+    'reports $consumer manual guidance truthfully for a $targetKind target in json=$json mode',
+    async ({ consumer, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-consumer-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      const existing = '# Existing guidance\n';
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      const before = await lstat(target);
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      if (consumer === 'decision') {
+        await mkdir(join(root, '.oat', 'repo'), { recursive: true });
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            pjm: { initialized: true, schemaVersion: 1 },
+          }),
+          'utf8',
+        );
+      }
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args =
+          consumer === 'docs'
+            ? [
+                'docs',
+                'init',
+                '--framework',
+                'mkdocs',
+                '--app-name',
+                'docs',
+                '--target-dir',
+                'docs-app',
+                '--description',
+                'Test docs',
+                '--format',
+                'none',
+                '--no-root-patch',
+                '--yes',
+              ]
+            : consumer === 'pjm'
+              ? ['pjm', 'init']
+              : ['decision', 'init'];
+        const result = await runCli(root, args, json ? ['--json'] : []);
+        if (consumer === 'docs') {
+          await rm(join(root, 'docs-app'), { recursive: true, force: true });
+        }
+        const repeated = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(result.exitCode).toBe(1);
+        expect(repeated.exitCode).toBe(1);
+        if (json) {
+          const payload = JSON.parse(result.stdout);
+          const repeatedPayload = JSON.parse(repeated.stdout);
+          const manualGuidance =
+            consumer === 'docs'
+              ? payload.guidance
+              : consumer === 'pjm'
+                ? payload.guidance.projectManagement
+                : payload.guidance.root;
+          const repeatedManualGuidance =
+            consumer === 'docs'
+              ? repeatedPayload.guidance
+              : consumer === 'pjm'
+                ? repeatedPayload.guidance.projectManagement
+                : repeatedPayload.guidance.root;
+          expect(payload.status).toBe('partial');
+          expect(JSON.stringify(payload)).toContain('manual-required');
+          expect(JSON.stringify(payload)).toContain('managedBlock');
+          expect(repeatedManualGuidance).toEqual(manualGuidance);
+          expect(result.stdout).not.toContain('"status": "ok"');
+        } else {
+          expect(`${result.stdout}\n${result.stderr}`).toMatch(/manual/i);
+          expect(`${result.stdout}\n${result.stderr}`).toContain(
+            'Managed block:',
+          );
+          const extractBlocks = (output: string) =>
+            output.match(/<!-- OAT [^ ]+ -->[\s\S]*?<!-- END OAT [^ ]+ -->/g);
+          expect(
+            extractBlocks(`${repeated.stdout}\n${repeated.stderr}`),
+          ).toEqual(extractBlocks(`${result.stdout}\n${result.stderr}`));
+        }
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(root);
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
+        );
+
+        const config = JSON.parse(
+          await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+        );
+        if (consumer === 'docs') expect(config.pjm).toBeUndefined();
+        else expect(config.pjm.initialized).toBe(true);
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it.each(
+    (['docs', 'pjm', 'decision'] as const).flatMap((consumer) =>
+      (['direct', 'symlink'] as const).flatMap((targetKind) =>
+        [false, true].map((json) => ({ consumer, targetKind, json })),
+      ),
+    ),
+  )(
+    'blocks malformed $consumer guidance for a $targetKind target in json=$json mode',
+    async ({ consumer, targetKind, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-blocked-guidance-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const target =
+        targetKind === 'direct'
+          ? join(root, 'AGENTS.md')
+          : join(root, 'guidance', 'shared.md');
+      const key =
+        consumer === 'docs'
+          ? 'docs'
+          : consumer === 'pjm'
+            ? 'project-management'
+            : 'decisions';
+      const existing = `# Private prefix\n<!-- OAT ${key} -->\nunterminated\n# Private suffix\n`;
+      await mkdir(join(root, 'guidance'), { recursive: true });
+      await writeFile(target, existing, { mode: 0o640 });
+      await chmod(target, 0o640);
+      const before = await lstat(target);
+      if (targetKind === 'symlink') {
+        await symlink('guidance/shared.md', join(root, 'AGENTS.md'));
+      }
+      if (consumer === 'decision') {
+        await mkdir(join(root, '.oat', 'repo'), { recursive: true });
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            pjm: { initialized: true, schemaVersion: 1 },
+          }),
+          'utf8',
+        );
+      }
+
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const args =
+          consumer === 'docs'
+            ? [
+                'docs',
+                'init',
+                '--framework',
+                'mkdocs',
+                '--app-name',
+                'docs',
+                '--target-dir',
+                'docs-app',
+                '--description',
+                'Test docs',
+                '--format',
+                'none',
+                '--no-root-patch',
+                '--yes',
+              ]
+            : consumer === 'pjm'
+              ? ['pjm', 'init']
+              : ['decision', 'init'];
+        const result = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(result.exitCode).toBe(1);
+        if (json) {
+          const payload = JSON.parse(result.stdout);
+          expect(payload.status).toBe('partial');
+          expect(JSON.stringify(payload)).toContain('blocked');
+          expect(result.stdout).not.toContain('"status": "ok"');
+        } else {
+          expect(`${result.stdout}\n${result.stderr}`).toMatch(/blocked/i);
+        }
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(root);
+        expect(`${result.stdout}\n${result.stderr}`).not.toContain(
+          'Private prefix',
+        );
+        await expect(readFile(target, 'utf8')).resolves.toBe(existing);
+        const after = await lstat(target);
+        expect(after.ino).toBe(before.ino);
+        expect(after.mode).toBe(before.mode);
+        expect(await readdir(join(target, '..'))).not.toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+          ]),
+        );
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it.each([
+    {
+      position: 'before',
+      scope: 'project' as const,
+      json: false,
+    },
+    { position: 'after', scope: 'project' as const, json: true },
+    { position: 'before', scope: 'user' as const, json: true },
+    { position: 'after', scope: 'user' as const, json: false },
+  ])(
+    'applies registered workflows guidance with the option $position the subcommand at $scope scope',
+    async ({ position, scope, json }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const prefix = ['tools', 'install', '--scope', scope, '--no-sync'];
+        const args =
+          position === 'before'
+            ? [...prefix, '--project-guidance', 'workflows']
+            : [...prefix, 'workflows', '--project-guidance'];
+        const result = await runCli(root, args, json ? ['--json'] : []);
+
+        expect(result.exitCode).toBe(0);
+        await expect(
+          readFile(join(root, 'AGENTS.md'), 'utf8'),
+        ).resolves.toContain('<!-- OAT tools -->');
+        const capabilityRoot = scope === 'project' ? root : userRoot;
+        await expect(
+          lstat(
+            join(capabilityRoot, '.agents', 'skills', 'oat-project-implement'),
+          ),
+        ).resolves.toBeDefined();
+        if (json) {
+          expect(JSON.parse(result.stdout)).toMatchObject({
+            status: 'ok',
+            pack: 'workflows',
+            scopes: [scope],
+            projectGuidance: { action: expect.stringMatching(/create|update/) },
+          });
+        } else {
+          expect(result.stdout).toContain('Installed workflows tool pack');
+          expect(result.stdout).toContain('Project guidance:');
+        }
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it('keeps registered workflows decline write-free in human output', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const original = '# User guidance\n';
+    await writeFile(join(root, 'AGENTS.md'), original, 'utf8');
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(root, [
+        'tools',
+        'install',
+        '--scope',
+        'project',
+        '--no-sync',
+        'workflows',
+        '--no-project-guidance',
+      ]);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('Project guidance: declined');
+      await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+        original,
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('keeps registered workflows non-interactive default write-free in JSON', async () => {
+    const root = await createWorkspace();
+    const userRoot = await mkdtemp(
+      join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+    );
+    tempDirs.push(root, userRoot);
+    const previousHome = process.env.HOME;
+    process.env.HOME = userRoot;
+    try {
+      const result = await runCli(
+        root,
+        ['tools', 'install', '--scope', 'project', '--no-sync', 'workflows'],
+        ['--json'],
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        status: 'ok',
+        projectGuidance: { action: 'not-requested' },
+      });
+      await expect(lstat(join(root, 'AGENTS.md'))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it.each([
+    {
+      path: 'aggregate',
+      args: [] as string[],
+      legacy:
+        '# User guidance\n\n<!-- OAT workflows -->\nunterminated legacy\n',
+    },
+    {
+      path: 'registered workflows',
+      args: ['workflows'],
+      legacy:
+        '# User guidance\n\n<!-- OAT workflows -->\none\n<!-- END OAT workflows -->\n\n<!-- OAT workflows -->\ntwo\n<!-- END OAT workflows -->\n',
+    },
+  ])(
+    'leaves malformed legacy guidance byte-for-byte unchanged for the $path path',
+    async ({ args, legacy }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      await writeFile(join(root, 'AGENTS.md'), legacy, 'utf8');
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const result = await runCli(
+          root,
+          [
+            'tools',
+            'install',
+            '--scope',
+            'project',
+            '--no-sync',
+            '--project-guidance',
+            ...args,
+          ],
+          ['--json'],
+        );
+
+        expect(result.exitCode).toBe(1);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+          status: 'partial',
+          projectGuidance: { action: 'blocked' },
+        });
+        await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+          legacy,
+        );
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
+
+  it.each(
+    (['aggregate', 'registered workflows'] as const).flatMap((path) =>
+      [
+        {
+          shape: 'tools containing workflows',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- OAT workflows -->',
+            'legacy',
+            '<!-- END OAT workflows -->',
+            'interstitial user text',
+            '<!-- END OAT tools -->',
+            '# Suffix user text',
+            '',
+          ].join('\n'),
+        },
+        {
+          shape: 'workflows containing tools',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT workflows -->',
+            'legacy',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- END OAT tools -->',
+            'interstitial user text',
+            '<!-- END OAT workflows -->',
+            '# Suffix user text',
+            '',
+          ].join('\n'),
+        },
+        {
+          shape: 'crossed tools and workflows',
+          content: [
+            '# Prefix user text',
+            '<!-- OAT tools -->',
+            'old tools',
+            '<!-- OAT workflows -->',
+            'interstitial user text',
+            '<!-- END OAT tools -->',
+            '# Suffix user text',
+            '<!-- END OAT workflows -->',
+            '',
+          ].join('\n'),
+        },
+      ].map((fixture) => ({ path, ...fixture })),
+    ),
+  )(
+    'blocks $shape markers byte-for-byte on the $path path',
+    async ({ path, content }) => {
+      const root = await createWorkspace();
+      const userRoot = await mkdtemp(
+        join(tmpdir(), 'oat-cli-e2e-workflows-home-'),
+      );
+      tempDirs.push(root, userRoot);
+      await writeFile(join(root, 'AGENTS.md'), content, 'utf8');
+      const previousHome = process.env.HOME;
+      process.env.HOME = userRoot;
+      try {
+        const result = await runCli(
+          root,
+          [
+            'tools',
+            'install',
+            '--scope',
+            'project',
+            '--no-sync',
+            '--project-guidance',
+            ...(path === 'registered workflows' ? ['workflows'] : []),
+          ],
+          ['--json'],
+        );
+
+        expect(result.exitCode).toBe(1);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+          status: 'partial',
+          projectGuidance: {
+            action: 'blocked',
+            reason: expect.stringMatching(/overlap|cross|disjoint/i),
+          },
+        });
+        await expect(readFile(join(root, 'AGENTS.md'), 'utf8')).resolves.toBe(
+          content,
+        );
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+      }
+    },
+  );
 
   it('fresh repo: init → sync → providers list → status (all in sync)', async () => {
     const root = await createWorkspace();
@@ -288,6 +1073,11 @@ describe('e2e workflow', () => {
 
     await runCli(root, ['init']);
     await seedCanonical(root);
+    await writeSyncConfig(root, {
+      version: 1,
+      defaultStrategy: 'symlink',
+      providers: {},
+    });
     await runCli(root, ['sync']);
 
     const driftPath = join(root, '.claude', 'skills', 'skill-one');
@@ -747,5 +1537,279 @@ describe('synced project lifecycle', () => {
     } finally {
       await fixture.cleanup();
     }
+  });
+});
+
+describe('dispatch runtime observation', () => {
+  const tempRoots: string[] = [];
+
+  afterEach(async () => {
+    while (tempRoots.length > 0) {
+      const root = tempRoots.pop();
+      if (root) await rm(root, { force: true, recursive: true });
+    }
+  });
+
+  function baseRecord(overrides: Record<string, unknown> = {}) {
+    return {
+      request_id: 'dispatch-native-1',
+      caller: 'oat-project-implement',
+      scope: 'p07',
+      objective: 'Corroborate runtime identity',
+      action: 'implementation',
+      role_name: 'oat-phase-implementer',
+      role_class: 'implementation',
+      provider: 'codex',
+      dispatch_context: 'root-native',
+      catalog_snapshot: {
+        id: 'catalog-1',
+        source: 'tool-schema',
+        observed_at: '2026-09-02T00:00:00.000Z',
+      },
+      authority: 'phase-files',
+      role_selector: 'oat-phase-implementer-gpt-5-6-sol-high',
+      model_selector: 'gpt-5.6-sol',
+      model_selector_granularity: 'exact-native-model-choice',
+      effort_selector: 'high',
+      service_tier_selector: 'priority',
+      selection_source: 'policy-resolved',
+      candidates_considered: ['oat-phase-implementer-gpt-5-6-sol-high'],
+      selection_reason: 'native-catalog',
+      selected_route: 'native',
+      deadline_seconds: 600,
+      retry_limit: 0,
+      payload: {},
+      launch_status: 'accepted',
+      child_outcome: 'completed',
+      configured_invocation_evidence: ['dispatch ceiling resolver'],
+      runtime_confirmation: 'not-reported',
+      diagnostics: [],
+      continuation_events: [],
+      ...overrides,
+    };
+  }
+
+  async function seedProject(root: string): Promise<string> {
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    return projectPath;
+  }
+
+  it('appends a matching observation revision and preserves the first one', async () => {
+    const root = await createWorkspace();
+    tempRoots.push(root);
+    const projectPath = await seedProject(root);
+
+    const canonicalFile = join(root, 'canonical.json');
+    await writeFile(
+      canonicalFile,
+      JSON.stringify({
+        record: baseRecord(),
+        event: {
+          kind: 'canonical-role-resolution',
+          requestId: 'dispatch-native-1',
+          source: 'canonical-role-resolver',
+          evidence: {
+            status: 'resolved',
+            dependency: 'workflows',
+            canonicalRole: 'oat-phase-implementer',
+            tier: 'user',
+            validation: 'direct-canonical',
+            canonicalPath: '<user>/agents/oat-phase-implementer.md',
+            selectedPath: '<user>/agents/oat-phase-implementer.md',
+            roleVersion: '1.2.3',
+            contentDigest: `sha256:${'a'.repeat(64)}`,
+            candidateMisses: [],
+          },
+        },
+      }),
+      'utf8',
+    );
+    const observationFile = join(root, 'observation.json');
+    await writeFile(
+      observationFile,
+      JSON.stringify({
+        record: baseRecord(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              {
+                ordinal: 0,
+                type: 'session_meta',
+                payload: {
+                  session_id: '01a06402-2861-7421-821a-137187a03f7f',
+                  id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+                  parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+                  thread_source: 'subagent',
+                  agent_role: 'oat-phase-implementer',
+                  agent_path: '/root/phase_7',
+                  subagent_history_start_ordinal: 10,
+                  source: {
+                    subagent: {
+                      thread_spawn: {
+                        parent_thread_id:
+                          '01a06402-2861-7421-821a-137187a03f7f',
+                        depth: 1,
+                        agent_path: '/root/phase_7',
+                        agent_role: 'oat-phase-implementer',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                ordinal: 1,
+                type: 'session_meta',
+                payload: {
+                  session_id: '01a06402-2861-7421-821a-137187a03f7f',
+                  id: '01a06402-2861-7421-821a-137187a03f7f',
+                  thread_source: 'user',
+                  source: 'exec',
+                },
+              },
+              {
+                ordinal: 6,
+                type: 'turn_context',
+                payload: { model: 'gpt-5.6-terra', effort: 'medium' },
+              },
+              {
+                ordinal: 15,
+                type: 'turn_context',
+                payload: { model: 'gpt-5.6-sol', effort: 'high' },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const first = await runCli(root, [
+      'project',
+      'dispatch',
+      'record',
+      '--project',
+      '.oat/projects/shared/demo',
+      '--event-file',
+      canonicalFile,
+    ]);
+    expect(first.exitCode).toBe(0);
+    const firstRevision = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+
+    const second = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        observationFile,
+      ],
+      ['--json'],
+    );
+    expect(second.exitCode).toBe(0);
+
+    // Append-only: revision 1 is untouched and the observation lands on a new
+    // revision alongside it.
+    expect((await readdir(join(projectPath, 'dispatch'))).sort()).toEqual([
+      'dispatch-native-1.json',
+      'dispatch-native-1@0002.json',
+    ]);
+    await expect(
+      readFile(join(projectPath, 'dispatch', 'dispatch-native-1.json'), 'utf8'),
+    ).resolves.toBe(firstRevision);
+
+    const payload = JSON.parse(second.stdout);
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'reported',
+      match: 'matching',
+      observed: { childLineage: 'depth-1', model: 'gpt-5.6-sol' },
+      configured: { model: 'gpt-5.6-sol', effort: 'high' },
+    });
+    expect(payload.record.oat.canonicalRole.status).toBe('resolved');
+    expect(payload.record.model_selector).toBe('gpt-5.6-sol');
+  });
+
+  it('keeps Cursor not-reported and never emits an absolute path', async () => {
+    const root = await createWorkspace();
+    tempRoots.push(root);
+    await seedProject(root);
+
+    const eventFile = join(root, 'cursor.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: baseRecord({
+          provider: 'cursor',
+          role_selector: 'generalPurpose',
+        }),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'cursor',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              { type: 'session_meta', payload: { id: 'sess-root' } },
+              { type: 'turn_context', payload: { model: 'gpt-5.6-sol' } },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const reported = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+    expect(reported.exitCode).toBe(0);
+    const payload = JSON.parse(reported.stdout);
+    expect(payload.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'not-reported',
+      observed: null,
+      match: null,
+    });
+
+    const failure = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        join(root, 'missing.json'),
+      ],
+      ['--json'],
+    );
+    expect(failure.exitCode).toBe(1);
+    expect(failure.stdout).not.toContain(root);
+    expect(failure.stdout).not.toContain(tmpdir());
   });
 });

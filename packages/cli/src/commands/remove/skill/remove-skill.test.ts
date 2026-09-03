@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -206,6 +213,34 @@ function withSkillEntry(
   };
 }
 
+function withCollectionSkillEntry(
+  manifest: Manifest,
+  skillName: string,
+): Manifest {
+  manifest.collections.push({
+    id: 'claude-skills',
+    provider: 'claude',
+    contentType: 'skill',
+    canonicalDir: '.agents/skills',
+    providerDir: '.claude/skills',
+    linkTarget: '.agents/skills',
+    ownership: 'adopted-exact',
+    lastVerified: '2026-02-13T00:00:00.000Z',
+  });
+  (manifest.entries as unknown[]).push({
+    canonicalPath: `.agents/skills/${skillName}`,
+    providerPath: `.claude/skills/${skillName}`,
+    provider: 'claude',
+    contentType: 'skill',
+    strategy: 'collection',
+    collectionId: 'claude-skills',
+    contentHash: null,
+    isFile: false,
+    lastSynced: '2026-02-13T00:00:00.000Z',
+  });
+  return manifest;
+}
+
 describe('createRemoveSkillCommand', () => {
   let originalExitCode: number | undefined;
 
@@ -318,6 +353,44 @@ describe('createRemoveSkillCommand', () => {
       ),
     ).toBeUndefined();
     expect(process.exitCode).toBe(0);
+  });
+
+  it('removes collection inheritance without mutating beneath the alias', async () => {
+    const root = await makeTempDir();
+    const skillName = 'oat-demo';
+    await mkdir(join(root, '.agents', 'skills', skillName), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', skillName, 'SKILL.md'),
+      '# demo\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'skills', 'other'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await saveManifest(
+      manifestPath,
+      withCollectionSkillEntry(createEmptyManifest(), skillName) as never,
+    );
+
+    const { command } = createHarness({ projectRoot: root });
+    await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
+    await expect(
+      dirExists(join(root, '.agents', 'skills', 'other')),
+    ).resolves.toBe(true);
+    const updated = await loadManifest(manifestPath);
+    expect(updated.collections).toHaveLength(1);
+    expect(updated.entries).toEqual([]);
   });
 
   it('preserves unmanaged Copilot-local skill content during canonical removal', async () => {

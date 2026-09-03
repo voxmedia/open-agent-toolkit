@@ -242,6 +242,44 @@ async function seedProjectTemplates(root: string): Promise<void> {
   }
 }
 
+function dispatchRecordFixture() {
+  return {
+    request_id: 'dispatch-native-1',
+    caller: 'oat-project-implement',
+    scope: 'p07',
+    objective: 'Integrate runtime observation',
+    action: 'implementation',
+    role_name: 'oat-phase-implementer',
+    role_class: 'implementation',
+    provider: 'codex',
+    dispatch_context: 'root-native',
+    catalog_snapshot: {
+      id: 'catalog-1',
+      source: 'tool-schema',
+      observed_at: '2026-09-02T00:00:00.000Z',
+    },
+    authority: 'phase-files',
+    role_selector: 'oat-phase-implementer-gpt-5-6-sol-high',
+    model_selector: 'gpt-5.6-sol',
+    model_selector_granularity: 'exact-native-model-choice',
+    effort_selector: 'high',
+    service_tier_selector: 'priority',
+    selection_source: 'policy-resolved',
+    candidates_considered: ['oat-phase-implementer-gpt-5-6-sol-high'],
+    selection_reason: 'native-catalog',
+    selected_route: 'native',
+    deadline_seconds: 600,
+    retry_limit: 0,
+    payload: {},
+    launch_status: 'accepted',
+    child_outcome: 'completed',
+    configured_invocation_evidence: ['dispatch ceiling resolver'],
+    runtime_confirmation: 'not-reported',
+    diagnostics: [],
+    continuation_events: [],
+  };
+}
+
 describe('CLI command integration', () => {
   const tempDirs: string[] = [];
 
@@ -295,7 +333,7 @@ describe('CLI command integration', () => {
     expect(manifest.entries).toEqual([]);
   });
 
-  it('sync uses Cursor native skills while retaining Cursor agent views', async () => {
+  it('sync falls Claude skills back per-entry while retaining Cursor native skills and agent views', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     await runCli(root, ['init']);
@@ -304,6 +342,9 @@ describe('CLI command integration', () => {
     const result = await runCli(root, ['sync']);
     expect(result.exitCode).toBe(0);
 
+    const claudeSkillCollectionStat = await lstat(
+      join(root, '.claude', 'skills'),
+    );
     const claudeSkillStat = await lstat(
       join(root, '.claude', 'skills', 'skill-one'),
     );
@@ -314,6 +355,7 @@ describe('CLI command integration', () => {
       join(root, '.cursor', 'agents', 'agent-one'),
     );
 
+    expect(claudeSkillCollectionStat.isDirectory()).toBe(true);
     expect(claudeSkillStat.isSymbolicLink()).toBe(true);
     await expect(
       lstat(join(root, '.cursor', 'skills', 'skill-one')),
@@ -329,6 +371,21 @@ describe('CLI command integration', () => {
           entry.provider === 'cursor' && entry.contentType === 'skill',
       ),
     ).toBe(false);
+    expect(
+      manifest.collections.some(
+        (collection: { contentType: string; provider: string }) =>
+          collection.provider === 'claude' &&
+          collection.contentType === 'skill',
+      ),
+    ).toBe(false);
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string; strategy: string }) =>
+          entry.provider === 'claude' &&
+          entry.contentType === 'skill' &&
+          entry.strategy === 'symlink',
+      ),
+    ).toBe(true);
   });
 
   it('sync uses Copilot native skills while retaining Copilot agent and rule views', async () => {
@@ -1074,17 +1131,38 @@ describe('CLI command integration', () => {
       const sync = await runCli(root, ['sync', '--scope', 'user']);
       expect(sync.exitCode).toBe(0);
 
+      for (const scopeArgs of [['--scope', 'user'], ['--scope=user']]) {
+        const preview = await runCli(
+          root,
+          [
+            'tools',
+            'remove',
+            '--pack',
+            'core',
+            '--dry-run',
+            '--no-sync',
+            '--json',
+            ...scopeArgs,
+          ],
+          ['--json'],
+        );
+        expect(preview.exitCode).toBe(0);
+        expect(JSON.parse(preview.stdout).lifecycle[0].selection).toMatchObject(
+          { pack: 'core', targetScopes: ['user'] },
+        );
+      }
+
       // Skills materialize through user path mappings.
       await expect(
         lstat(join(userRoot, '.claude', 'skills', 'skill-one')),
       ).resolves.toBeDefined();
 
-      // User-scope path mappings are skill-only by contract
-      // (`SCOPE_CONTENT_TYPES.user`). Arbitrary user canonical agents are not
-      // mirrored into provider agent directories.
+      // User canonical agents materialize when the active provider declares
+      // user-agent capability. Claude owns a user-agent path mapping, so this
+      // generic canonical agent reaches its provider view.
       await expect(
         lstat(join(userRoot, '.claude', 'agents', 'agent-one')),
-      ).rejects.toMatchObject({ code: 'ENOENT' });
+      ).resolves.toBeDefined();
 
       // Managed user agents reach Codex through the materialization
       // extension, which sources bundled managed agent definitions.
@@ -1190,5 +1268,150 @@ describe('CLI command integration', () => {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;
     }
+  });
+
+  it('project dispatch record persists an observation without launching a provider', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+
+    const dispatchRecord = dispatchRecordFixture();
+    const eventFile = join(root, 'observation.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: dispatchRecord,
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              {
+                type: 'session_meta',
+                payload: { id: 'sess-root', role: 'oat-phase-implementer' },
+              },
+              {
+                type: 'turn_context',
+                payload: {
+                  model: 'gpt-5.6-terra',
+                  effort: 'high',
+                  service_tier: 'priority',
+                },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('persisted');
+    expect(payload.path).toBe('dispatch/dispatch-native-1.json');
+    expect(payload.runtimeIdentity).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+      configured: { model: 'gpt-5.6-sol', effort: 'high' },
+      observed: { model: 'gpt-5.6-terra', provider: 'codex' },
+    });
+    // The observation is corroboration only: the configured invocation and the
+    // launch lifecycle are unchanged, and no conversation content is stored.
+    expect(payload.record.model_selector).toBe('gpt-5.6-sol');
+    expect(payload.record.launch_status).toBe('accepted');
+    expect(result.stdout).not.toContain(root);
+
+    const persisted = JSON.parse(
+      await readFile(
+        join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+        'utf8',
+      ),
+    );
+    expect(persisted.oat.runtimeObservation).toMatchObject({
+      status: 'reported',
+      match: 'mismatching',
+      source: 'codex-rollout-metadata',
+    });
+  });
+
+  it('project dispatch record drops content from a raw observation envelope', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+
+    const eventFile = join(root, 'content.json');
+    await writeFile(
+      eventFile,
+      JSON.stringify({
+        record: dispatchRecordFixture(),
+        event: {
+          kind: 'runtime-observation',
+          requestId: 'dispatch-native-1',
+          source: 'runtime-observer',
+          metadata: {
+            provider: 'codex',
+            observedAt: '2026-09-02T12:00:00.000Z',
+            entries: [
+              { type: 'session_meta', payload: { id: 'sess-root' } },
+              {
+                type: 'response_item',
+                payload: { content: 'SECRET-USER-MESSAGE' },
+              },
+            ],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const result = await runCli(
+      root,
+      [
+        'project',
+        'dispatch',
+        'record',
+        '--project',
+        '.oat/projects/shared/demo',
+        '--event-file',
+        eventFile,
+      ],
+      ['--json'],
+    );
+
+    // The observation channel is metadata-only, enforced by the allowlist
+    // projection rather than by caller discipline: a raw envelope is accepted
+    // and its conversation content never reaches the journal or stdout.
+    expect(result.exitCode).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    expect(payload.status).toBe('persisted');
+    expect(result.stdout).not.toContain('SECRET-USER-MESSAGE');
+    expect(result.stdout).not.toContain(root);
+    const journal = await readFile(
+      join(projectPath, 'dispatch', 'dispatch-native-1.json'),
+      'utf8',
+    );
+    expect(journal).not.toContain('SECRET-USER-MESSAGE');
+    expect(journal).not.toContain('entries');
   });
 });

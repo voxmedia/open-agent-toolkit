@@ -74,3 +74,31 @@ export async function assertSafeProviderMutationPath(
     }
   }
 }
+
+function isNestedPath(parent: string, candidate: string): boolean {
+  const relativePath = relative(resolve(parent), resolve(candidate));
+  return (
+    relativePath === '' ||
+    (!isAbsolute(relativePath) &&
+      relativePath !== '..' &&
+      !relativePath.startsWith(`..${sep}`))
+  );
+}
+
+export async function assertSafeProviderCollectionPath(
+  scopeRoot: string,
+  canonicalDir: string,
+  providerDir: string,
+): Promise<void> {
+  if (
+    isNestedPath(canonicalDir, providerDir) ||
+    isNestedPath(providerDir, canonicalDir)
+  ) {
+    throw new Error(
+      'Canonical and provider collection paths must not be nested.',
+    );
+  }
+
+  await assertSafeProviderMutationPath(scopeRoot, canonicalDir);
+  await assertSafeProviderMutationPath(scopeRoot, providerDir);
+}

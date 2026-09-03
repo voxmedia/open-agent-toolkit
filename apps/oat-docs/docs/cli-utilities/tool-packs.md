@@ -169,16 +169,64 @@ Commands report both. `oat tools list` and `oat tools info` show placement,
 intent source, and completeness. `oat status` and `oat doctor` report drift
 between intent and inventory with a scoped recovery command.
 
+### Requested scope versus realized placement
+
+Intent and inventory are reported as separate, source-qualified facts, so a
+pack you declared but never installed is never rendered as installed. The
+interactive picker labels each pack from **realized** placement — the scopes
+where managed assets actually exist on disk — not from declared `tools.*`
+intent. A pack declared at project scope with nothing materialized shows as
+not installed, which is the honest answer.
+
+Installation outcomes carry `realizedPlacement` alongside the requested scope,
+so JSON consumers can tell the two apart. Selecting `User scope` installs at
+user scope only; it never silently widens to `project + user`.
+
+One caveat worth knowing: `oat tools list` and `oat tools info` human output,
+and `oat status` JSON, still print a `placement` field derived from
+declaration rather than realization. For a declared-but-absent pack that field
+reads `project` even though nothing is installed. Prefer the picker labels and
+`realizedPlacement` when you need the truthful answer. Retiring the
+declaration-derived field is tracked in the repository backlog.
+
 A pack is **complete** at a scope when every managed asset the current release
 declares for that scope is present, **partial** when only some are, and
 **absent** when none are.
+
+### Three independent repository choices
+
+Tool-pack setup separates three decisions that do not imply one another:
+
+1. **Capability placement** chooses whether pack assets live at project scope,
+   user scope, or both. Placement controls where the capability is available;
+   it does not authorize a repository `AGENTS.md` edit.
+2. **Project guidance** is an explicit choice to create an absent root
+   `AGENTS.md` or print a manual patch for its managed `OAT tools` section. Use
+   `--project-guidance` to accept or `--no-project-guidance` to decline on
+   `oat init --setup`, `oat init tools`, and `oat tools install` flows. The
+   interactive prompt defaults to decline. Non-interactive runs perform no
+   guidance write unless `--project-guidance` is present and report the exact
+   opt-in command instead. When `AGENTS.md` already exists or is a contained
+   symlink, accepted guidance performs zero writes and prints the same
+   repository-relative, copy-pasteable managed block on every run. The patch
+   describes the complete realized project-and-user pack inventory and tells
+   the operator to remove a legacy `OAT workflows` block manually when needed.
+3. **PJM adoption** is the repository decision to use project-management state.
+   Make it separately with `oat pjm init`; neither installing the
+   `project-management` pack nor accepting tool guidance adopts PJM.
+
+These choices stay independent for standalone workflows installs too. For
+example, `oat init tools workflows --scope user --project-guidance` installs
+the workflows capability at user scope while updating guidance in the current
+repository. A blocked guidance update is reported separately and does not
+undo or misreport the successful capability install.
 
 ### Where pack assets land
 
 | Asset kind        | Project scope                                                                      | User scope                   | Ownership                                           |
 | ----------------- | ---------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------- |
 | Skill             | `.agents/skills/<name>/`                                                           | `~/.agents/skills/<name>/`   | Managed — updated and removed by OAT                |
-| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed (see the user-scope agent limitation below) |
+| Agent             | `.agents/agents/<name>.md`                                                         | `~/.agents/agents/<name>.md` | Managed; provider projection is capability-driven   |
 | Template          | `.oat/templates/<name>`                                                            | `~/.oat/templates/<name>`    | Seeded once at project scope; managed at user scope |
 | Script            | `.oat/scripts/<name>`                                                              | `~/.oat/scripts/<name>`      | Managed, executable                                 |
 | Bundled docs tree | not applicable                                                                     | `~/.oat/docs/`               | Managed directory (core pack)                       |
@@ -189,30 +237,33 @@ creates `~/.oat/ideas/backlog.md` and `~/.oat/ideas/scratchpad.md`. Only the
 `workflows` project-scaffold seeds — `.oat/projects-root`, `.oat/config.json`,
 and the project `.gitkeep` files — are pinned to project scope.
 
-#### User-scope agents have limited native materialization
+#### User-scope agent projection is provider-capability driven
 
-Canonical **agents** are installed at either scope. At user scope, native
-Codex or Cursor role materialization is active only when that adapter is active
-under the resolved sync config: explicit enablement wins without filesystem
-detection, explicit disablement wins despite detection, and an unset adapter
-follows detection. That native materialization supplies the bundled managed
-role files (`oat-phase-implementer.md` and `oat-reviewer.md`); it does not
-materialize other pack-owned user agents. For example, a user-scope workflows
-install leaves `oat-codebase-mapper` without a native provider role, and a
-user-scope research install does the same for `skeptical-evaluator`. When no
-Codex or Cursor adapter is active, even the bundled managed roles lack native
-materialization.
+Canonical **agents** are installed at either scope. User sync scans them when
+an active provider declares user-agent capability. Explicit enablement wins
+without filesystem detection, explicit disablement wins despite detection, and
+an unset adapter follows detection. Provider mappings and registered
+materialization extensions then determine the output: entry sync, native read,
+extension-owned role materialization, or explicit unsupported evidence.
 
-This diagnostic concerns native provider roles only. Providers may read
-canonical agent instructions through a separate loaded, user, and project
-lookup contract; that read availability does not establish native
-materialization and does not suppress this finding.
+Core sync does not write extension-owned role paths. Codex and Cursor own their
+generated managed-role outputs through provider extensions, while other user
+agents continue through each active adapter's declared mapping. Per-asset sync
+results distinguish changed, current, missing, failed, unsupported, and unknown
+outcomes, so one failed or unsupported asset does not erase evidence for its
+siblings.
 
-`oat status` and `oat doctor` name the affected agents with a
-`user-agent-unmaterialized` finding rather than reporting the pack as complete
-without qualification. Install the pack at **project scope** when you need its
-native provider roles; `oat tools update` cannot repair this, because it is a
-scope limitation rather than drift.
+Materialization is not runtime visibility. `oat status` and `oat doctor` report
+the registered refresh policy separately and say `not-reported` when they did
+not inspect a running provider catalog. A provider file being current therefore
+does not mean the active session is proven to see it.
+
+After a successful provider-visible file change, OAT conservatively advises
+starting a new provider session so it has an opportunity to load the changed
+asset. This repository policy is not a provider hot-reload guarantee, an
+application-process restart requirement, or proof of visibility. No advice is
+emitted for current/no-op, planned-only, failed, missing, inactive, or
+unsupported materialization.
 
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
@@ -285,9 +336,12 @@ adoption**, and the two are tracked independently:
   fresh install, so `~/.agents/skills/` and `~/.oat/templates/` receive the
   managed assets and no repository file is touched.
 - **Initialize (adoption)**: `oat pjm init` instantiates the two-layer working
-  repo-reference surface under `.oat/repo/`, upserts the repository `AGENTS.md`
-  project-management guidance, and records explicit adoption in
+  repo-reference surface under `.oat/repo/`, creates repository guidance only
+  when the root `AGENTS.md` is absent, and records explicit adoption in
   `.oat/config.json` as `pjm.initialized: true` with a `pjm.schemaVersion`.
+  When the root file or a contained symlink already exists, adoption completes
+  independently and OAT prints a manual project-management/decision patch
+  without changing that file.
 
 Having the pack installed does **not** mean this repository uses PJM. Adoption
 is a per-repository decision recorded by `oat pjm init`:
@@ -315,7 +369,7 @@ neither recognized legacy input nor a complete current layout is skipped with
 an `oat pjm init` recovery. `--print-prompt` only reads the bundled prompt and
 does not inspect adoption or modify the repository.
 
-Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
+Decision records still require repository PJM adoption. Run `oat pjm init` first: like every repository-mutating PJM command, `oat decision init` fails closed in an unadopted repository, writes nothing, and returns `oat pjm init` as the recovery. Once the repository is adopted, `oat decision init` scaffolds only the decision surface — the decision directory, generated index, and decision-specific AGENTS guidance — without touching current state, roadmap, or backlog artifacts. It does not require the `project-management` pack. A missing AGENTS file can be created exclusively; an existing file or symlink is left byte-for-byte unchanged and receives a manual decision-guidance patch. If the pack is installed later, project-management guidance remains a separate managed section so the decision instructions stay independently reusable.
 
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
@@ -500,9 +554,9 @@ Key behavior:
   output prints `Adopted project tool pack: <pack>` once per adopted pack;
   JSON output adds `adoptedPacks` only when the list is non-empty. This is pack
   intent reconciliation, not repository PJM adoption
-- A user-only install needs no Git repository and performs no repository writes
-- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md` **only for project-scope runs of the aggregate `oat tools install`**. The per-pack subcommands (`oat tools install workflows`, `oat tools install docs`, and the rest) never write `AGENTS.md`, at either scope
-- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack no longer upserts a managed `OAT project-management` section; `oat pjm init` writes that repository guidance when the repository actually adopts PJM
+- A user-only capability install needs no Git repository and performs no repository writes unless `--project-guidance` explicitly requests the separate repository guidance update
+- Offers repository `AGENTS.md` guidance independently of capability scope. Pass `--project-guidance` to create an absent file or print a manual managed `OAT tools` patch for an existing file/symlink, or `--no-project-guidance` to decline; the interactive prompt defaults to decline and non-interactive runs write nothing without the explicit opt-in
+- Repository `AGENTS.md` guidance for project management is owned by adoption, not by pack placement. Installing the `project-management` pack never writes the section. `oat pjm init` creates guidance only when the root file is absent; otherwise it completes scaffold/adoption and prints a manual patch without changing the existing file or symlink
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views
@@ -771,11 +825,11 @@ brainstorm`, and `oat tools remove --pack brainstorm` manage the skill plus
 
 ### Auto-sync behavior
 
-All mutation commands (`install`, `update`, `remove`, `migrate`) automatically run `oat sync --scope <scope>` after successful operations. This ensures provider views stay in sync with canonical assets without manual intervention.
+All mutation commands (`install`, `update`, `remove`, `migrate`) automatically run `oat sync --scope <scope>` after successful operations. This reconciles provider files without manual intervention; it does not prove that an already-running provider catalog has loaded them.
 
 Use `--no-sync` on any mutation command to skip this step.
 
-For `oat tools install`, the follow-up sync still refreshes provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
+For `oat tools install`, the follow-up sync still reconciles provider views immediately, but its removal pass is scoped to the canonical entries that were just installed. New-session advice is shown only when a registered provider/content policy applies to a successful current-run change. It gives the provider an opportunity to load the changed asset; it does not tell you to restart the application process or prove runtime visibility. This avoids deleting unrelated provider views when a worktree has stale manifest entries for packs whose canonical content is absent locally.
 
 Removal and migration use the symmetric contract: the follow-up sync prunes exactly the provider views for the canonical paths that were removed, in that scope only, and only after the canonical source is confirmed absent.
 

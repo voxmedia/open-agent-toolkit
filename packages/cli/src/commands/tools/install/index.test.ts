@@ -165,6 +165,7 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
       scanTools,
       selectManyWithAbort,
       selectWithAbort,
+      confirmAction: vi.fn(async () => false),
       installCore,
       installDocs,
       installIdeas,

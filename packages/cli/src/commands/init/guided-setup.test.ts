@@ -269,6 +269,27 @@ describe('guided setup integration', () => {
     ).toBe(true);
   });
 
+  it('passes accepted project guidance through guided setup without changing the setup sequence', async () => {
+    const { command, capture, runToolPacks } = createGuidedSetupHarness({
+      interactive: false,
+      hookInstalled: true,
+      oatDirExists: true,
+    });
+
+    await runInit(command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--setup', '--project-guidance'],
+    });
+
+    expect(runToolPacks).toHaveBeenCalledWith(
+      expect.objectContaining({ scopeSelection: 'defaults' }),
+      true,
+    );
+    expect(
+      capture.info.some((message) => message.includes('Guided setup complete')),
+    ).toBe(true);
+  });
+
   it('partial flow: user skips tools but configures local paths', async () => {
     const { command, runToolPacks, addLocalPaths, runProviderSync, capture } =
       createGuidedSetupHarness({

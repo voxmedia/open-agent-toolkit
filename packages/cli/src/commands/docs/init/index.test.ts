@@ -13,7 +13,7 @@ function createHarness(options: { interactive?: boolean } = {}) {
 
   const runDocsInit = vi.fn(async () => {});
   const upsertAgentsMdSection = vi.fn(async () => ({
-    action: 'updated' as const,
+    action: 'created' as const,
   }));
 
   const command = createDocsInitCommand({
@@ -102,7 +102,7 @@ describe('createDocsInitCommand', () => {
     );
   });
 
-  it('logs AGENTS.md update when section is created or updated', async () => {
+  it('logs AGENTS.md creation when the missing file is created', async () => {
     const { command, capture } = createHarness({ interactive: false });
 
     await runCommand(command, [
@@ -120,7 +120,7 @@ describe('createDocsInitCommand', () => {
     ]);
 
     expect(capture.info.join('\n')).toContain(
-      'AGENTS.md docs section updated.',
+      'AGENTS.md docs section created.',
     );
   });
 
@@ -147,6 +147,84 @@ describe('createDocsInitCommand', () => {
 
     expect(capture.info.join('\n')).not.toContain('AGENTS.md');
   });
+
+  it('surfaces an unsafe AGENTS.md mutation instead of reporting success', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+    });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('AGENTS.md identity changed before mutation.'),
+    );
+
+    await runCommand(command, [
+      '--framework',
+      'fumadocs',
+      '--app-name',
+      'my-docs',
+      '--target-dir',
+      'apps/my-docs',
+      '--description',
+      'Test',
+      '--format',
+      'none',
+      '--yes',
+    ]);
+
+    expect(capture.error.join('\n')).toMatch(/planned safely/);
+    expect(capture.error.join('\n')).not.toContain('/tmp/workspace');
+    expect(capture.info.join('\n')).not.toContain('AGENTS.md docs section');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it.each([false, true])(
+    'reports manual-required guidance as one partial outcome in json=%s mode',
+    async (json) => {
+      const { command, capture, upsertAgentsMdSection } = createHarness({
+        interactive: false,
+      });
+      upsertAgentsMdSection.mockResolvedValueOnce({
+        action: 'manual-required',
+        manualPatch: {
+          target: 'AGENTS.md',
+          managedBlock: '<!-- OAT docs -->\nDocs\n<!-- END OAT docs -->',
+          legacyBlockAction: 'preserve',
+          instructions: ['Open AGENTS.md.', 'Apply the managed block.'],
+        },
+      });
+
+      await runCommand(
+        command,
+        [
+          '--framework',
+          'mkdocs',
+          '--app-name',
+          'docs',
+          '--target-dir',
+          'apps/docs',
+          '--description',
+          '',
+          '--format',
+          'none',
+          '--yes',
+        ],
+        json ? ['--json'] : [],
+      );
+
+      if (json) {
+        expect(capture.jsonPayloads).toHaveLength(1);
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          scaffold: { status: 'complete' },
+          guidance: { action: 'manual-required' },
+        });
+      } else {
+        expect(capture.warn.join('\n')).toMatch(/manual-required/i);
+        expect(capture.info.join('\n')).toContain('Managed block:');
+      }
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
   it('prints single-package next steps when repo shape is single-package', async () => {
     const capture = createLoggerCapture();
     const command = createDocsInitCommand({
@@ -171,7 +249,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit: vi.fn(async () => {}),
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
     });
 
@@ -224,7 +302,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit: vi.fn(async () => {}),
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
       readOatConfig,
       confirmAction: vi.fn(async () => false),
@@ -277,7 +355,7 @@ describe('createDocsInitCommand', () => {
       ),
       runDocsInit,
       upsertAgentsMdSection: vi.fn(async () => ({
-        action: 'updated' as const,
+        action: 'created' as const,
       })),
       readOatConfig,
       confirmAction: vi.fn(async () => false),

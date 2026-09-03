@@ -47,7 +47,8 @@ After core initialization completes, `oat init` can enter an interactive guided 
    - choose **Yes** to run the per-pack scope selector for every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`)
    - choose **No** to apply additive per-pack defaults without extra scope prompts
    - on a fresh install every pack defaults to **user** scope, so capabilities follow you across repositories; an existing install keeps its current placement
-   - installing `project-management` installs the capability only. Adopting it for this repository is a separate, explicit `oat pjm init` step — see [Install vs. initialize](tool-packs.md#install-vs-initialize)
+   - after placement is chosen, repository `AGENTS.md` guidance is a separate opt-in. Accepting creates the managed `OAT tools` section only when the root file is absent. An existing file or symlink is never replaced: OAT prints a repository-relative, copy-pasteable managed-block patch instead. Declining leaves `AGENTS.md` unchanged
+   - installing `project-management` installs the capability only. Adopting it for this repository is a third, separate choice made with `oat pjm init` — see [Install vs. initialize](tool-packs.md#install-vs-initialize)
 2. **Local paths** — multi-select from default gitignored artifact paths (analysis, PR, reviews, ideas). Pre-existing paths are pre-checked; only new paths are added.
 3. **Documentation** — detect or enter docs metadata for the repo when documentation exists.
 4. **Provider sync** — sync provider project views via `oat sync --scope project`.
@@ -58,11 +59,14 @@ Hook install note:
 - The optional OAT pre-commit hook installs into Git's active hook directory.
 - If a repo uses a managed hook folder such as `.githooks/`, that path must already be configured in Git, or OAT must configure it during the prompt flow before hook install.
 
-**Non-interactive mode:** Fresh-init guided setup offers are interactive-only. If `--setup` is passed in non-interactive mode (`--json`, piped input, non-TTY, or `OAT_NON_INTERACTIVE=1`), guided setup does not prompt: tool packs use additive defaults, local-path and documentation prompts are skipped unless already configured, and provider sync is skipped unless separately requested.
+**Non-interactive mode:** Fresh-init guided setup offers are interactive-only. If `--setup` is passed in non-interactive mode (`--json`, piped input, non-TTY, or `OAT_NON_INTERACTIVE=1`), guided setup does not prompt: tool packs use additive defaults, local-path and documentation prompts are skipped unless already configured, and provider sync is skipped unless separately requested. Repository guidance also defaults to no write; pass `--project-guidance` to opt in explicitly or `--no-project-guidance` to record an explicit decline.
 
 ```bash
 # Explicit guided setup on an existing repo
 oat init --setup --scope project
+
+# Install capabilities and create or propose repository guidance
+oat init --setup --project-guidance
 
 # Fresh init — guided setup is offered automatically
 oat init --scope project

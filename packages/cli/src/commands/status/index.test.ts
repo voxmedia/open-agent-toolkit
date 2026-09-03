@@ -36,12 +36,13 @@ import {
   type CodexExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
 import type { CursorExtensionPlan } from '@providers/cursor/codec/sync-extension';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import {
   getAdoptionSources,
   getConfigAwareAdapters,
   getSyncMappings,
 } from '@providers/shared/adapter.utils';
+import { getProviderRegistrations } from '@providers/shared/registry';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -51,6 +52,7 @@ import { createStatusCommand } from './index';
 
 interface TestHarnessOptions {
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   manifestEntries?: ManifestEntry[];
   driftReports?: DriftReport[];
   strayReports?: DriftReport[];
@@ -205,12 +207,17 @@ function createDetectedAdapter(
   name: string,
   detected: boolean,
 ): ProviderAdapter {
+  const registered = getProviderRegistrations().find(
+    ({ adapter }) => adapter.name === name,
+  )?.adapter;
   return {
-    name,
-    displayName: name,
-    defaultStrategy: 'auto',
-    projectMappings: [],
-    userMappings: [],
+    ...(registered ?? {
+      name,
+      displayName: name,
+      defaultStrategy: 'auto' as const,
+      projectMappings: [],
+      userMappings: [],
+    }),
     detect: async () => detected,
   };
 }
@@ -488,6 +495,13 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
     getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     getSyncMappings: vi.fn(getSyncMappings),
     getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {
@@ -591,6 +605,85 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.info[0]).toContain('in_sync');
+  });
+
+  it('reports sourced refresh policy separately from unobserved provider visibility', async () => {
+    const { capture, command } = createHarness({
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['claude'],
+        detectedProviders: ['claude'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<{
+        provider: string;
+        contentKind: string;
+        visibility: { state: string; policy: { state: string } };
+      }>;
+    };
+    expect(
+      payload.providerRefreshAdvice.find(
+        ({ provider, contentKind }) =>
+          provider === 'claude' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      visibility: {
+        state: 'not-reported',
+        policy: {
+          state: 'restart-required',
+          provenance: { kind: 'repository-decision' },
+        },
+      },
+    });
+  });
+
+  it('uses a registry-only provider context for status reachability', async () => {
+    const adapter: ProviderAdapter = {
+      ...createAdapter(),
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      projectMappings: [
+        {
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.registry-only/skills',
+          nativeRead: false,
+        },
+      ],
+    };
+    const { command, detectStrays } = createHarness({
+      adapters: [],
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(detectStrays).toHaveBeenCalledWith(
+      'registry-only',
+      '/tmp/workspace/.registry-only/skills',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
   it('reports drifted entries with reasons', async () => {
@@ -1273,7 +1366,13 @@ describe('createStatusCommand', () => {
 
     await runStatusCommand(command, ['--scope', 'user']);
 
-    expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user');
+    expect(scanCanonical).toHaveBeenCalledWith(
+      '/tmp/home',
+      'user',
+      expect.arrayContaining([
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]),
+    );
     expect(scanBundledManagedCodexAgents).toHaveBeenCalledTimes(1);
     expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
       '/tmp/home',
@@ -1286,6 +1385,25 @@ describe('createStatusCommand', () => {
       ]),
       undefined,
       { userConfigDir: '/tmp/home/.oat' },
+    );
+  });
+
+  it('scans user agents selected by active Claude capability', async () => {
+    const { command, scanCanonical } = createHarness({
+      adapters: [createDetectedAdapter('claude', true)],
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [],
+    });
+
+    await runStatusCommand(command, ['--scope', 'user']);
+
+    expect(scanCanonical).toHaveBeenCalledWith(
+      '/tmp/home',
+      'user',
+      expect.arrayContaining([
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]),
     );
   });
 
@@ -1744,7 +1862,7 @@ describe('createStatusCommand', () => {
         label: 'Claude-only detection',
         adapters: [createDetectedAdapter('claude', true)],
         providers: {},
-        expected: false,
+        expected: true,
       },
       {
         label: 'Codex configured enabled without detection',
@@ -1804,6 +1922,12 @@ describe('createStatusCommand', () => {
         expected: true,
       },
       {
+        label: 'unsupported provider detection',
+        adapters: [createDetectedAdapter('unsupported', true)],
+        providers: {},
+        expected: false,
+      },
+      {
         label: 'no providers',
         adapters: [],
         providers: {},
@@ -1855,10 +1979,12 @@ describe('createStatusCommand', () => {
         ]),
       ];
       const human = createHarness({
+        adapters: [],
         driftReports: [],
         packInventories: inventories,
       });
       const json = createHarness({
+        adapters: [],
         driftReports: [],
         packInventories: inventories,
       });
@@ -2009,6 +2135,13 @@ describe('createStatusCommand', () => {
           unavailableScopes: string[];
           pjm: { state: string; recovery: string | null } | null;
         };
+        packEvidence: {
+          items: Array<{
+            pack: string;
+            realizedPlacement: string;
+            diagnostics: Array<{ code: string }>;
+          }>;
+        };
       };
 
       const utility = payload.packs.states.find(
@@ -2025,6 +2158,11 @@ describe('createStatusCommand', () => {
         recovery: 'oat tools update --pack utility --scope project',
       });
       expect(payload.packs.unavailableScopes).toEqual([]);
+      expect(
+        payload.packEvidence.items.find(({ pack }) => pack === 'utility'),
+      ).toMatchObject({
+        realizedPlacement: 'project',
+      });
     });
 
     it('reports duplicate cross-scope packs with a migration recovery command', async () => {
@@ -2141,7 +2279,7 @@ describe('createStatusCommand', () => {
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     });
 
@@ -2162,7 +2300,7 @@ describe('createStatusCommand', () => {
         pack: 'core',
         assetsRoot: '/tmp/assets',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     });
 
@@ -2213,6 +2351,14 @@ describe('createStatusCommand', () => {
           states: unknown[];
           unavailableScopes: string[];
         };
+        packEvidence: {
+          status: string;
+          items: Array<{
+            pack: string;
+            realizedPlacement: string;
+            diagnostics: Array<{ code: string; detail: string }>;
+          }>;
+        };
       };
       expect(payload.packs.availability).toMatchObject({
         status: 'unavailable',
@@ -2225,6 +2371,18 @@ describe('createStatusCommand', () => {
       });
       expect(payload.packs.states).toEqual([]);
       expect(payload.packs.unavailableScopes).toEqual(['project']);
+      expect(payload.packEvidence.status).toBe('partial');
+      expect(
+        payload.packEvidence.items.find(({ pack }) => pack === 'workflows'),
+      ).toMatchObject({
+        realizedPlacement: 'unknown',
+        diagnostics: [
+          expect.objectContaining({
+            code: 'inventory-unavailable',
+            detail: 'cannot read ~/.agents/skills/oat-project-new',
+          }),
+        ],
+      });
       expect(JSON.stringify(payload)).not.toContain('/tmp/home');
     });
 

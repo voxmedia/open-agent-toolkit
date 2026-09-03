@@ -60,6 +60,7 @@ export interface ScopedPackInventory {
 
 export interface PackInventory {
   pack: PackName;
+  /** @deprecated Use ToolPackEvidence.realizedPlacement for truthful placement. */
   placement: 'project' | 'user' | 'both' | 'unavailable';
   scopes: ScopedPackInventory[];
   diagnostics: PackDiagnostic[];

@@ -1,7 +1,7 @@
 ---
 id: BL-260826-populate-native-subagent
 title: Populate native subagent runtime identity from provider transcript metadata
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - claude
 assignee: null
 created: 2026-08-26T05:15:31.163Z
-updated: 2026-08-26T05:15:31.163Z
+updated: '2026-09-03T00:56:43Z'
 associated_issues: []
 external_plans: []
 ---

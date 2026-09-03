@@ -386,6 +386,17 @@ For gate-originated review, keep `dispatchReport.gateInvocation`, existing
 work-producer `diversity`, and reviewer `runtimeIdentity` as three distinct
 facts; producer stamps or self-report never overwrite configured invocation.
 
+All project-aware launch paths preserve native dispatch lineage. Construct and
+redact the complete generic record plus OAT role event before the native host
+call. Immediately after the call returns `accepted` or
+`blocked-before-start`, run `oat project dispatch record --project
+"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
+`provesNoChildStarted: true`; only it permits one exact-target approximation
+with a fresh request ID. Preserve exact model, effort, reasoning, service tier,
+route, authority, and provider controls. Timeout, `BLOCKED`, refusal after
+acceptance, runtime mismatch, missing telemetry, interruption, or malformed
+output never authorizes fallback or replacement.
+
 Axis states:
 
 - `selected:<value>` - host exposes the axis and the orchestrator chose a value.

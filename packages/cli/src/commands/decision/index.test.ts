@@ -22,8 +22,8 @@ function createHarness(): {
 } {
   const capture = createLoggerCapture();
   const initializeDecisionAgentsGuidance = vi.fn(async () => ({
-    root: 'created' as const,
-    scoped: 'created' as const,
+    root: { action: 'created' as const },
+    scoped: { action: 'created' as const },
   }));
   const initializeDecisionRecords = vi.fn(async (decisionsRoot: string) => ({
     decisionsRoot,
@@ -156,8 +156,8 @@ describe('createDecisionCommand', () => {
       created: ['index.md'],
       skipped: [],
       guidance: {
-        root: 'created',
-        scoped: 'created',
+        root: { action: 'created' },
+        scoped: { action: 'created' },
       },
     });
     expect(process.exitCode).toBe(0);
@@ -199,12 +199,53 @@ describe('createDecisionCommand', () => {
     expect(capture.jsonPayloads).toEqual([
       {
         status: 'error',
-        message:
-          'Decision index initialized at /tmp/workspace/repo/.oat/repo/reference/decisions, but AGENTS.md guidance could not be written: permission denied. Fix the guidance write error and rerun `oat decision init`.',
+        message: expect.stringMatching(/planned safely/),
       },
     ]);
+    expect(JSON.stringify(capture.jsonPayloads)).not.toContain(
+      '/tmp/workspace',
+    );
     expect(process.exitCode).toBe(1);
   });
+
+  it.each([false, true])(
+    'reports completed decision scaffold with manual-required guidance in json=%s mode',
+    async (json) => {
+      const { command, capture, initializeDecisionAgentsGuidance } =
+        createHarness();
+      initializeDecisionAgentsGuidance.mockResolvedValueOnce({
+        root: {
+          action: 'manual-required',
+          manualPatch: {
+            target: 'AGENTS.md',
+            managedBlock:
+              '<!-- OAT decisions -->\nDecisions\n<!-- END OAT decisions -->',
+            legacyBlockAction: 'preserve',
+            instructions: ['Open AGENTS.md.', 'Apply the block.'],
+          },
+        },
+        scoped: { action: 'no-change' },
+      });
+
+      await runCommand(command, 'init', json ? ['--json'] : []);
+
+      if (json) {
+        expect(capture.jsonPayloads).toHaveLength(1);
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'partial',
+          scaffold: { status: 'complete' },
+          guidance: {
+            root: { action: 'manual-required' },
+            scoped: { action: 'no-change' },
+          },
+        });
+      } else {
+        expect(capture.warn.join('\n')).toMatch(/requires manual action/i);
+        expect(capture.info.join('\n')).toContain('Managed block:');
+      }
+      expect(process.exitCode).toBe(1);
+    },
+  );
 
   it('regenerates the managed decision index', async () => {
     const { command, capture, regenerateDecisionIndex } = createHarness();

@@ -76,12 +76,14 @@ sequenceDiagram
   participant Root as Project root
   participant Adapter as Project adapter
   participant Engine as Dispatch engine
+  participant Journal as Project dispatch journal
   participant Phase as Phase implementer
 
   Root->>Adapter: Phase + lifecycle authority
   Adapter->>Engine: Provider-neutral dispatch request
   Engine-->>Root: Exact route + request ID
   Root->>Phase: Phase Scope
+  Root->>Journal: Accepted or blocked-before-start record
   Phase-->>Root: Phase report + commits
 ```
 
@@ -117,6 +119,22 @@ original `request_id`.
 
 This preserves continuity without allowing replacement after an accepted failed
 launch.
+
+## Native Dispatch Lineage
+
+The launcher constructs and redacts the complete generic record plus the
+namespaced OAT role event before it calls the native host. Immediately after
+the host returns, the project adapter validates and persists the accepted or
+`blocked-before-start` state with `oat project dispatch record`. The command is
+a recorder only; it never launches a provider or changes selection authority.
+
+An accepted handle owns the scope and closes replacement. One fresh fallback
+record is legal only when the native wrapper proves no child started, links the
+trigger and fallback request IDs, preserves the exact provider/model/effort/
+route/authority controls, resolves canonical role identity, and labels the
+fresh child as an approximation. Timeout, `BLOCKED`, refusal after acceptance,
+runtime mismatch, missing telemetry, interruption, and malformed output never
+authorize a fallback.
 
 ## Optional Third Tier
 

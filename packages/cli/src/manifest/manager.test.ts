@@ -14,7 +14,7 @@ import {
   removeEntry,
   saveManifest,
 } from './manager';
-import type { Manifest, ManifestEntry } from './manifest.types';
+import type { Manifest, ManifestEntry, ManifestV2 } from './manifest.types';
 
 async function createTempDir(name: string): Promise<string> {
   const dir = join(tmpdir(), `oat-${name}-${Date.now()}-${Math.random()}`);
@@ -55,11 +55,28 @@ describe('manifest manager', () => {
       expect(loaded.entries[0]?.provider).toBe('claude');
     });
 
+    it('normalizes a V1 manifest to V2 in memory without rewriting it', async () => {
+      const legacy = {
+        version: 1,
+        oatVersion: '0.1.0',
+        entries: [],
+        lastUpdated: '2026-02-13T00:00:00.000Z',
+      };
+      await mkdir(join(workDir, '.agents'), { recursive: true });
+      await writeFile(manifestPath, JSON.stringify(legacy), 'utf8');
+
+      const loaded = await loadManifest(manifestPath);
+
+      expect(loaded).toMatchObject({ version: 2, collections: [] });
+      expect(JSON.parse(await readFile(manifestPath, 'utf8'))).toEqual(legacy);
+    });
+
     it('returns empty manifest when file does not exist', async () => {
       const loaded = await loadManifest(manifestPath);
 
-      expect(loaded.version).toBe(1);
+      expect(loaded.version).toBe(2);
       expect(loaded.entries).toEqual([]);
+      expect(loaded.collections).toEqual([]);
     });
 
     it('throws CliError on corrupt JSON', async () => {
@@ -73,7 +90,7 @@ describe('manifest manager', () => {
       await mkdir(join(workDir, '.agents'), { recursive: true });
       await writeFile(
         manifestPath,
-        JSON.stringify({ version: 2, entries: [], oatVersion: '0.1.0' }),
+        JSON.stringify({ version: 3, entries: [], oatVersion: '0.1.0' }),
         'utf8',
       );
 
@@ -120,7 +137,8 @@ describe('manifest manager', () => {
       await saveManifest(manifestPath, manifest);
 
       const persisted = JSON.parse(await readFile(manifestPath, 'utf8'));
-      expect(persisted.version).toBe(1);
+      expect(persisted.version).toBe(2);
+      expect(persisted.collections).toEqual([]);
       await expect(readFile(`${manifestPath}.tmp`, 'utf8')).rejects.toThrow();
     });
 
@@ -134,6 +152,43 @@ describe('manifest manager', () => {
 
       const persisted = await loadManifest(manifestPath);
       expect(persisted.oatVersion).toBe(OAT_VERSION);
+    });
+
+    it('round trips V2 collection ownership', async () => {
+      const manifest: ManifestV2 = {
+        ...createEmptyManifest(),
+        entries: [
+          {
+            canonicalPath: '.agents/skills/example',
+            providerPath: '.claude/skills/example',
+            provider: 'claude',
+            contentType: 'skill',
+            strategy: 'collection',
+            collectionId: 'claude-skills',
+            contentHash: null,
+            isFile: false,
+            lastSynced: '2026-02-13T00:00:00.000Z',
+          },
+        ],
+        collections: [
+          {
+            id: 'claude-skills',
+            provider: 'claude',
+            contentType: 'skill',
+            canonicalDir: '.agents/skills',
+            providerDir: '.claude/skills',
+            linkTarget: '.agents/skills',
+            ownership: 'oat-created',
+            lastVerified: '2026-02-13T00:00:00.000Z',
+          },
+        ],
+      };
+
+      await saveManifest(manifestPath, manifest);
+
+      const persisted = await loadManifest(manifestPath);
+      expect(persisted.collections).toEqual(manifest.collections);
+      expect(persisted.entries).toEqual(manifest.entries);
     });
 
     it('creates parent directories if needed', async () => {

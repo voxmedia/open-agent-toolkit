@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.1
+version: 1.1.2
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -310,6 +310,17 @@ exact variant before any reviewer starts permits another target-preserving
 route. After acceptance, continue only through the existing reviewer handle;
 timeout, interruption, malformed output, or `BLOCKED` never authorizes a
 replacement launch.
+
+Persist native dispatch lineage around the host-owned remote-review launch.
+Construct and redact the complete generic record plus OAT role event before the
+native call. Immediately after the call returns `accepted` or
+`blocked-before-start`, run `oat project dispatch record --project
+"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
+`provesNoChildStarted: true`; only it permits one exact-target approximation
+with a fresh request ID. Preserve exact model, effort, route, authority, and
+provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime
+mismatch, malformed output, interruption, and missing telemetry never
+authorize fallback or replacement.
 
 This resolver command is independent of lifecycle gates. Reusable `oat gate
 review` commands must remain provider-neutral and must not contain or add a

@@ -3,18 +3,25 @@ import { join } from 'node:path';
 import type { ApplyOatCoreGitattributesResult } from '@commands/init/gitattributes';
 import type { ApplyOatCoreResult } from '@commands/init/gitignore';
 import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
+import {
+  hasScopedPackRealizationEvidence,
+  packScopeFactsFromInventory,
+  projectPackEvidence,
+} from '@commands/tools/shared/pack-evidence';
 import type {
   InventoryScopedPackInput,
   ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
-import {
-  hasScopedPackPlacementEvidence,
-  inventoryScopedPack,
-} from '@commands/tools/shared/pack-inventory';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
 } from '@commands/tools/shared/pack-lifecycle';
+import {
+  evaluatePackLifecycleOutcome,
+  resolveAdditivePackScopeSelection,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import type { PackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -42,6 +49,7 @@ export interface UpdateResult {
   notBundled: ToolInfo[];
   assetRefreshes: PackAssetRefresh[];
   plans: PackReconcilePlan[];
+  lifecycle?: PackLifecycleOutcome[];
 }
 
 export interface UpdateToolsDependencies {
@@ -159,7 +167,7 @@ export async function updateTools(
           scopeRoot,
           assetsRoot,
         });
-        if (!hasScopedPackPlacementEvidence(before)) continue;
+        if (!hasScopedPackRealizationEvidence(before)) continue;
         requests.push({
           pack: definition.name,
           scope,
@@ -174,6 +182,7 @@ export async function updateTools(
       return result;
     }
     const lifecycle = await dependencies.reconcilePacks(requests, { dryRun });
+    result.lifecycle = updateLifecycleOutcomes(lifecycle);
     result.plans.push(...lifecycle.map(({ plan }) => plan));
     for (const entry of lifecycle) {
       const definition = getPackDefinition(entry.request.pack);
@@ -385,6 +394,80 @@ export async function updateTools(
   }
 
   return result;
+}
+
+function updateLifecycleOutcomes(
+  results: readonly PackLifecycleResult[],
+): PackLifecycleOutcome[] {
+  const verifiable = results.filter(
+    ({ apply }) =>
+      apply === null || ('inventory' in apply && apply.inventory !== undefined),
+  );
+  const packs = [...new Set(verifiable.map(({ request }) => request.pack))];
+  return packs.map((pack) => {
+    const lifecycle = verifiable.filter(({ request }) => request.pack === pack);
+    const requestedScopes = lifecycle.map(({ request }) => request.scope);
+    const finalScopes = lifecycle.map(
+      ({ apply, before }) => apply?.inventory ?? before,
+    );
+    const finalEvidence = projectPackEvidence({
+      canonical: null,
+      scopes: finalScopes.map(packScopeFactsFromInventory),
+    });
+    const selection = resolveAdditivePackScopeSelection({
+      pack,
+      requested:
+        requestedScopes.includes('project') && requestedScopes.includes('user')
+          ? 'both'
+          : requestedScopes[0]!,
+      knownRealizedScopes: lifecycle
+        .filter(({ before }) => hasScopedPackRealizationEvidence(before))
+        .map(({ request }) => request.scope),
+      unknownScopes: [],
+    });
+    if (lifecycle.every(({ apply }) => apply === null)) {
+      return {
+        schemaVersion: 1,
+        selection,
+        canonical: { status: 'unchanged', results: lifecycle },
+        sync: { scopes: [], status: 'not-run', providers: [] },
+        finalEvidence,
+        status: 'complete',
+        recovery: [],
+      };
+    }
+    return evaluatePackLifecycleOutcome({
+      selection,
+      lifecycle,
+      sync: { scopes: [], status: 'not-run', providers: [] },
+      finalEvidence,
+    });
+  });
+}
+
+export function failedUpdateLifecycleOutcomes(
+  target: Exclude<UpdateTarget, { kind: 'name' }>,
+  scopes: readonly ConcreteScope[],
+  error: unknown,
+): PackLifecycleOutcome[] {
+  const message = error instanceof Error ? error.message : String(error);
+  return getSelectedDefinitions(target).map(({ name: pack }) => ({
+    schemaVersion: 1,
+    selection: {
+      pack,
+      requested:
+        scopes.includes('project') && scopes.includes('user')
+          ? 'both'
+          : scopes[0]!,
+      retainedRealizedScopes: [],
+      targetScopes: scopes,
+    },
+    canonical: { status: 'failed', results: [] },
+    sync: { scopes: [], status: 'not-run', providers: [] },
+    finalEvidence: null,
+    status: 'failed',
+    recovery: [{ code: 'canonical-apply-failed', message }],
+  }));
 }
 
 function getSelectedDefinitions(

@@ -32,6 +32,9 @@ and updates project state.
   third tier.
 - **Parallelism:** plan-declared phases may run concurrently in separate
   worktrees. Tasks inside one phase remain serial.
+- **Dispatch evidence:** project-aware launches persist one generic request
+  record plus namespaced OAT native dispatch lineage without changing native
+  model or provider selection.
 
 Tasks execute serially in one worktree for the phase.
 
@@ -68,6 +71,16 @@ The root:
 
 The root does not implement phase tasks while an accepted phase launch owns
 that scope.
+
+Before a native launch, the root constructs and redacts the complete generic
+dispatch record and OAT role event. Immediately after the host returns, it runs
+`oat project dispatch record --project <project-path> --event-file - --json`
+with the accepted or `blocked-before-start` result. An accepted launch closes
+replacement. Only an explicit rejection proving no child started permits one
+fresh request that preserves the exact target and controls and is labeled as
+an approximation. Timeout, `BLOCKED`, refusal after acceptance, runtime
+mismatch, missing telemetry, and malformed output are terminal evidence, not
+fallback triggers.
 
 ### Phase implementer
 

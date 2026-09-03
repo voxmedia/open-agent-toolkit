@@ -4,6 +4,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { createProvidersCommand } from '@commands/providers/index';
+import { createProvidersListCommand } from '@commands/providers/list/list';
 import type { Manifest, ManifestEntry } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -14,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
   driftStateByProvider?: Record<string, 'in_sync' | 'drifted' | 'missing'>;
+  manifest?: Manifest;
 }
 
 interface RunProvidersArgs {
@@ -70,6 +72,39 @@ function createEntry(provider: string, name: string): ManifestEntry {
   };
 }
 
+function createCollectionManifest(): Manifest {
+  return {
+    version: 2,
+    oatVersion: OAT_VERSION,
+    entries: [
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.claude/skills/skill-one',
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'collection',
+        collectionId: 'claude-skills',
+        contentHash: null,
+        isFile: false,
+        lastSynced: '2026-02-14T00:00:00.000Z',
+      },
+    ] as unknown as ManifestEntry[],
+    collections: [
+      {
+        id: 'claude-skills',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: 'adopted-exact',
+        lastVerified: '2026-02-14T00:00:00.000Z',
+      },
+    ],
+    lastUpdated: '2026-02-14T00:00:00.000Z',
+  };
+}
+
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
@@ -106,6 +141,9 @@ function createHarness(options: HarnessOptions = {}): {
     loadManifest: vi.fn(async (manifestPath: string) => {
       if (manifestPath.startsWith('/tmp/home')) {
         return createManifest([]);
+      }
+      if (options.manifest) {
+        return options.manifest;
       }
       return createManifest([
         createEntry('claude', 'skill-one'),
@@ -175,6 +213,95 @@ describe('oat providers list', () => {
     expect(capture.info[0]).toContain('not detected');
   });
 
+  it('uses an injected registry-only provider without command-local registration edits', async () => {
+    const capture = createLoggerCapture();
+    const registryOnly = createAdapter('registry-only', 'Registry Only', true);
+    const listCommand = createProvidersListCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as Scope,
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: '/tmp/workspace',
+        home: '/tmp/home',
+        interactive: false,
+        logger: capture.logger,
+      }),
+      resolveScopeRoot: vi.fn(async () => '/tmp/workspace'),
+      loadSyncConfig: vi.fn(async () => ({
+        version: 1,
+        defaultStrategy: 'auto',
+        knownStrays: [],
+        providers: {},
+      })),
+      resolveProviderScopeContext: vi.fn(async () => ({
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [
+          {
+            provider: 'registry-only',
+            state: 'active',
+            source: 'detected-unset',
+            reason: 'test registry',
+          },
+        ],
+        registrations: [
+          {
+            adapter: registryOnly,
+            extensions: [],
+            capabilities: [
+              {
+                scope: 'project',
+                contentKind: 'skill',
+                support: 'supported',
+                projectionModes: ['entry-sync'],
+                nativeRoleSurface: false,
+                collectionAlias: 'supported',
+                catalogRefresh: { state: 'unknown', reason: 'not sourced' },
+              },
+            ],
+          },
+        ],
+      })),
+      getSyncMappings: vi.fn(
+        (adapter: ProviderAdapter) => adapter.projectMappings,
+      ),
+      loadManifest: vi.fn(async () => createManifest([])),
+      detectDrift: vi.fn(),
+    });
+    const command = new Command('providers').addCommand(listCommand);
+
+    await runProvidersList(command, {
+      globalArgs: ['--json', '--scope', 'project'],
+    });
+
+    expect(capture.jsonPayloads[0]).toEqual([
+      expect.objectContaining({
+        name: 'registry-only',
+        detected: true,
+        scopes: [
+          expect.objectContaining({
+            scope: 'project',
+            activation: expect.objectContaining({ state: 'active' }),
+            content: [
+              expect.objectContaining({
+                contentKind: 'skill',
+                capability: 'supported',
+                projectionModes: ['entry-sync'],
+                materialization: 'unknown',
+                visibility: 'not-reported',
+                nativeRead: false,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ]);
+  });
+
   it('shows sync status summary per provider', async () => {
     const { command, capture } = createHarness({
       driftStateByProvider: {
@@ -197,6 +324,37 @@ describe('oat providers list', () => {
 
     expect(capture.info[0]).toContain('strategy=symlink');
     expect(capture.info[0]).toContain('content_types=skill');
+  });
+
+  it('summarizes collection ownership consistently in human and JSON output', async () => {
+    const humanHarness = createHarness({
+      manifest: createCollectionManifest(),
+    });
+    await runProvidersList(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(humanHarness.capture.info[0]).toContain('collections=1');
+    expect(humanHarness.capture.info[0]).toContain(
+      'collection_ownership=oat-created:0|adopted-exact:1',
+    );
+
+    const jsonHarness = createHarness({ manifest: createCollectionManifest() });
+    await runProvidersList(jsonHarness.command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+    expect(jsonHarness.capture.jsonPayloads[0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'claude',
+          collectionAliases: {
+            managed: 1,
+            oatCreated: 0,
+            adoptedExact: 1,
+          },
+        }),
+      ]),
+    );
   });
 
   it('outputs JSON array when --json flag set', async () => {

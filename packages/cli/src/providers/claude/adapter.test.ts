@@ -69,6 +69,18 @@ describe('claudeAdapter', () => {
     ]);
   });
 
+  it('declares user agents as core entry-sync materialization', () => {
+    expect(
+      claudeAdapter.userMappings.find(
+        ({ contentType }) => contentType === 'agent',
+      ),
+    ).toMatchObject({
+      canonicalDir: '.agents/agents',
+      providerDir: '.claude/agents',
+      nativeRead: false,
+    });
+  });
+
   it('all mappings have nativeRead: false', () => {
     const allMappings = [
       ...claudeAdapter.projectMappings,

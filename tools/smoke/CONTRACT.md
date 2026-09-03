@@ -421,7 +421,8 @@ file names, provider-reference paths, or frontmatter versions.
     "mechanism": "native or CLI mechanism",
     "outcome": "completed | failed | rejected"
   },
-  "runtimeIdentity": null
+  "runtimeIdentity": null,
+  "runtimeObservation": null
 }
 ```
 
@@ -461,6 +462,18 @@ runtime identity. Runtime identity is normalized to `reported` only when both
 producer and model are present and provenance is one of `runtime-observed`,
 `provider-output`, or `gate-corroborated`. Every other value becomes
 `not-reported`.
+
+`runtimeObservation` is the optional metadata-only corroboration layer, and the
+collector only projects it. Collection reads committed files and never launches
+a provider, so an observation exists in evidence solely because a launcher-owned
+record already carried one. It normalizes to `reported` only when the record
+names a `provider`, a `source`, an `observedAt` timestamp, and a `match` of
+`matching`, `mismatching`, or `not-comparable`. `comparedAxes` carries the axes
+the verdict rests on; a `matching` with an empty or narrow list is a weaker
+claim than the scalar alone suggests, so consumers must read both. Every other shape, including a
+partially filled observation, becomes `not-reported` with all axes `null`.
+Nothing is ever promoted from `configuredInvocation`, and a `mismatching` or
+absent observation never fails a configured-invocation assertion.
 
 The collector preserves structured provider candidates from the committed
 fixture dispatch matrix and recomputes eligible candidates through the named
