@@ -16,11 +16,16 @@ const permittedDispositions = new Map([
 const legalReconciliationTransitions = new Set([
   'provisional:verified',
   'provisional:contested',
+  'provisional:unsupported',
   'supported:verified',
   'supported:contested',
+  'supported:unsupported',
   'verified:contested',
+  'verified:unsupported',
   'contested:verified',
+  'contested:unsupported',
   'unresolved:contested',
+  'unresolved:unsupported',
 ]);
 
 function exactClone(value) {
@@ -232,12 +237,12 @@ export function reconcileLedger({
       ]),
     ];
     if (rejectedReview) {
-      removals.push(claim.id);
-      removalDispositions.push({
-        claimId: claim.id,
-        reviewId: rejectedReview.id,
-        disposition: 'rejected',
-      });
+      const from = claim.status;
+      const to = 'unsupported';
+      if (legalReconciliationTransitions.has(`${from}:${to}`)) {
+        claim.status = to;
+        if (from !== to) transitions.push({ claimId: claim.id, from, to });
+      }
       continue;
     }
     if (challenged) {
@@ -261,6 +266,11 @@ export function reconcileLedger({
   if (removals.length > 0) {
     const removed = new Set(removals);
     ledger.claims = ledger.claims.filter((claim) => !removed.has(claim.id));
+    if (ledger.synthesis && Array.isArray(ledger.synthesis.keyClaimIds)) {
+      ledger.synthesis.keyClaimIds = ledger.synthesis.keyClaimIds.filter(
+        (id) => !removed.has(id),
+      );
+    }
   }
   ledger.transitions = transitions;
   const coverageDispositions = (

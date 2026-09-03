@@ -1056,6 +1056,45 @@ function validateLedger(value, errors) {
       errors,
       '$.synthesis',
     );
+    const claimIds = new Set(
+      Array.isArray(value.claims)
+        ? value.claims.map((claim) => claim?.id).filter(Boolean)
+        : [],
+    );
+    if (Array.isArray(value.synthesis.keyClaimIds)) {
+      for (const [index, claimId] of value.synthesis.keyClaimIds.entries()) {
+        if (typeof claimId === 'string' && !claimIds.has(claimId)) {
+          errors.push(
+            issue(
+              'SYNTHESIS_REFERENCE_MISSING',
+              `Synthesis key claim ${claimId} does not resolve to an existing claim`,
+              `$.synthesis.keyClaimIds[${index}]`,
+            ),
+          );
+        }
+      }
+    }
+    const questionIds = new Set(
+      Array.isArray(value.unresolvedQuestions)
+        ? value.unresolvedQuestions.map((q) => q?.id).filter(Boolean)
+        : [],
+    );
+    if (Array.isArray(value.synthesis.unresolvedQuestionIds)) {
+      for (const [
+        index,
+        questionId,
+      ] of value.synthesis.unresolvedQuestionIds.entries()) {
+        if (typeof questionId === 'string' && !questionIds.has(questionId)) {
+          errors.push(
+            issue(
+              'SYNTHESIS_REFERENCE_MISSING',
+              `Synthesis unresolved question ${questionId} does not resolve to an existing question`,
+              `$.synthesis.unresolvedQuestionIds[${index}]`,
+            ),
+          );
+        }
+      }
+    }
   }
   for (const key of ['evidence', 'claims', 'unresolvedQuestions']) {
     if (Array.isArray(value[key])) duplicateIds(value[key], `$.${key}`, errors);

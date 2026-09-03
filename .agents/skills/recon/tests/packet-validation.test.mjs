@@ -1313,3 +1313,17 @@ test('material gaps permit honest same-profile partial but never complete public
   await writeJson(complete.manifestPath, complete.manifest);
   await expectInvalid(complete, 'MATERIAL_GAP_REQUIRES_PARTIAL');
 });
+
+test('validation categorically rejects when synthesis references missing claim or question', async () => {
+  const missingClaim = await makePacket();
+  missingClaim.ledger.synthesis.keyClaimIds.push('claim-nonexistent');
+  await persist(missingClaim);
+  await expectInvalid(missingClaim, 'SYNTHESIS_REFERENCE_MISSING');
+
+  const missingQuestion = await makePacket();
+  missingQuestion.ledger.synthesis.unresolvedQuestionIds.push(
+    'question-nonexistent',
+  );
+  await persist(missingQuestion);
+  await expectInvalid(missingQuestion, 'SYNTHESIS_REFERENCE_MISSING');
+});

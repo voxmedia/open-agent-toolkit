@@ -1688,6 +1688,32 @@ function validateAssurance(validatedRun, errors) {
   const priorClaims = new Map(
     (validatedRun.priorLedger?.claims ?? []).map((claim) => [claim.id, claim]),
   );
+  const claimIds = new Set((ledger.claims ?? []).map((claim) => claim.id));
+  for (const claimId of ledger.synthesis?.keyClaimIds ?? []) {
+    if (!claimIds.has(claimId)) {
+      errors.push(
+        issue(
+          'SYNTHESIS_REFERENCE_MISSING',
+          `Synthesis key claim ${claimId} does not resolve to an existing claim`,
+          '$.synthesis.keyClaimIds',
+        ),
+      );
+    }
+  }
+  const questionIds = new Set(
+    (ledger.unresolvedQuestions ?? []).map((q) => q.id),
+  );
+  for (const questionId of ledger.synthesis?.unresolvedQuestionIds ?? []) {
+    if (!questionIds.has(questionId)) {
+      errors.push(
+        issue(
+          'SYNTHESIS_REFERENCE_MISSING',
+          `Synthesis unresolved question ${questionId} does not resolve to an existing question`,
+          '$.synthesis.unresolvedQuestionIds',
+        ),
+      );
+    }
+  }
   for (const claim of ledger.claims ?? []) {
     if (
       (claim.status === 'supported' || claim.status === 'verified') &&

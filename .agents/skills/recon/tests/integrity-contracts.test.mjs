@@ -6,6 +6,7 @@ import { afterEach, test } from 'node:test';
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
 import { reconcileLedger } from '../scripts/reconcile-ledger.mjs';
+import { renderPacketDocument } from '../scripts/render-packet.mjs';
 import {
   compileValidatedRun,
   validatePacket,
@@ -923,7 +924,7 @@ test('production reconciliation retains a challenged claim as contested through 
   assert.equal(compiled.validatedRun.ledger.claims[0].status, 'contested');
 });
 
-test('production reconciliation converts a typed rejection into an authorized removal through compilation', async () => {
+test('production reconciliation converts a typed rejection into an unsupported claim transition through compilation', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
     (item) => item.path === 'raw/drafts/claims-v1.json',
@@ -960,26 +961,73 @@ test('production reconciliation converts a typed rejection into an authorized re
     reviewResults: await coreReviewResults(packet),
     priorReference,
   });
-  assert.equal(
-    ledger.claims.some((claim) => claim.id === 'claim-2'),
-    false,
+  const claim2 = ledger.claims.find((claim) => claim.id === 'claim-2');
+  assert.equal(claim2?.status, 'unsupported');
+  assert.deepEqual(
+    reconciliation.transitions.filter((t) => t.claimId === 'claim-2'),
+    [
+      {
+        claimId: 'claim-2',
+        from: 'contested',
+        to: 'unsupported',
+      },
+    ],
   );
-  assert.deepEqual(reconciliation.removals, ['claim-2']);
-  assert.deepEqual(reconciliation.removalDispositions, [
-    {
-      claimId: 'claim-2',
-      reviewId: 'review-semantic',
-      disposition: 'rejected',
-    },
-  ]);
 
   await replaceArtifact(packet, 'claims.json', ledger);
   await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
   const compiled = await compileValidatedRun(packet.packetRoot);
   assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
   assert.equal(
-    compiled.validatedRun.ledger.claims.some((claim) => claim.id === 'claim-2'),
-    false,
+    compiled.validatedRun.ledger.claims.find((claim) => claim.id === 'claim-2')
+      ?.status,
+    'unsupported',
+  );
+});
+
+test('reconciling a rejected key claim transitions it to unsupported and renders it accurately', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const semantic = await readJson(
+    join(packet.packetRoot, 'reviews/semantic.json'),
+  );
+  semantic.dispositions.find((d) => d.claimId === 'claim-1').disposition =
+    'rejected';
+  await replaceArtifact(packet, 'reviews/semantic.json', semantic);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(
+    ledger.claims.find((claim) => claim.id === 'claim-1')?.status,
+    'unsupported',
+  );
+  assert.deepEqual(
+    reconciliation.transitions.filter((t) => t.claimId === 'claim-1'),
+    [{ claimId: 'claim-1', from: 'supported', to: 'unsupported' }],
+  );
+
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+
+  const rendered = renderPacketDocument(compiled.validatedRun);
+  assert.match(rendered, /\*\*unsupported\*\*/);
+  assert.match(
+    rendered,
+    /## Key Claims[\s\S]*### claim-1[\s\S]*- \*\*State:\*\* \*\*unsupported\*\*/,
+  );
+  assert.match(
+    rendered,
+    /## Contradictions and Qualifications[\s\S]*\*\*claim-1\*\* \(unsupported\)/,
   );
 });
 

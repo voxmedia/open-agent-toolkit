@@ -59,7 +59,9 @@ export function renderPacketDocument(validatedRun) {
     .filter(Boolean);
   const contradictions = ledger.claims.filter(
     (claim) =>
-      claim.status === 'contested' || (claim.challenges ?? []).length > 0,
+      claim.status === 'contested' ||
+      claim.status === 'unsupported' ||
+      (claim.challenges ?? []).length > 0,
   );
   const failedStages = topology.stages
     .map(({ stage }) => stage)
