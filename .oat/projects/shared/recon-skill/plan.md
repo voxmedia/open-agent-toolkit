@@ -1753,6 +1753,123 @@ provider projections unchanged. Format `plan.md` with
 git commit -m "docs(prev8-t03): align Cursor projection plan record"
 ```
 
+## Phase p-rev9: Revision 9 — Close Configured-Gate Findings
+
+Source: `reviews/archived/final-review-2026-09-03T154100Z.md`
+(2026-09-03). The configured cross-family exit gate returned one Important,
+one Medium, and two Minor findings. Its validated blocked envelope is
+receive-eligible under `onFailure: block`; this revision converts every finding
+without widening the existing packet or reconciliation architecture.
+
+### Task prev9-t01: (review) Validate synthesis referential integrity and transition rejected claims to unsupported
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs`
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Reproduce synthesis referential integrity gap and rejected-to-unsupported gap**
+
+Add negative controls that:
+
+1. Validate that a packet whose `synthesis.keyClaimIds` references an unknown
+   claim ID or `synthesis.unresolvedQuestionIds` references an unknown question ID
+   fails validation with `SYNTHESIS_REFERENCE_MISSING`.
+2. Demonstrate that semantic review `rejected` currently deletes the claim while
+   leaving it asserted in synthesis, and that `reconcileLedger` throws on
+   transitions to `unsupported`.
+
+**Step 2: Add synthesis referential integrity checks and honest rejected claim transitions**
+
+1. In `validate-packet.mjs`: in `validateAssurance` (or ledger validation), assert
+   that every ID in `synthesis.keyClaimIds` resolves to an existing claim in
+   `ledger.claims`, and every ID in `synthesis.unresolvedQuestionIds` resolves to
+   an existing question in `ledger.unresolvedQuestions`. Emit categorical issue
+   `SYNTHESIS_REFERENCE_MISSING` on mismatch.
+2. In `reconcile-ledger.mjs`: add `supported:unsupported`,
+   `provisional:unsupported`, `verified:unsupported`, and `contested:unsupported`
+   to `legalReconciliationTransitions`. When semantic review disposition is
+   `rejected`, transition the claim status to `unsupported` (with honest
+   transition record) rather than wholesale deletion.
+3. In `render-packet.mjs`: ensure the renderer cleanly renders `unsupported`
+   claims without asserting rejected claims as facts.
+
+**Step 3: Verification**
+
+Run focused validator, integrity, and integration tests. Format with
+`pnpm exec oxfmt --write` and commit with:
+
+```bash
+git commit -m "fix(prev9-t01): validate synthesis referential integrity and transition rejected claims to unsupported"
+```
+
+### Task prev9-t02: (review) Bind ValidatedRun creation and rendering to publishability
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/render-packet.test.mjs`
+
+**Step 1: Reproduce non-publishable ValidatedRun construction and promotion**
+
+Add negative controls showing that `compileValidatedRun` on non-publishable
+status returns a defined `validatedRun`, and that `renderValidatedPacket`
+promotes a `packet.md` for a `running` or `failed` run.
+
+**Step 2: Enforce publishability invariant on ValidatedRun**
+
+1. In `validate-packet.mjs`: in `compileValidatedRun`, return
+   `validatedRun: publishable ? validatedRun : undefined`.
+2. In `render-packet.mjs`: in `renderValidatedPacket`, assert that
+   `manifest.run.status` is `complete` or `partial`; if not, throw
+   `PACKET_NOT_PUBLISHABLE`.
+
+**Step 3: Verification**
+
+Run focused validator and renderer suites. Format with `pnpm exec oxfmt --write`
+and commit with:
+
+```bash
+git commit -m "fix(prev9-t02): bind ValidatedRun creation and rendering to publishability"
+```
+
+### Task prev9-t03: (review) Align adversarial challenge contract clarity and docs withdrawal description
+
+**Files:**
+
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/SKILL.md`
+- Modify: `apps/oat-docs/docs/workflows/skills/recon.md`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/workflow.integration.test.mjs`
+
+**Step 1: Clarify contested and partial status contract**
+
+In `packet-contract.md` and `SKILL.md` Step 7: state clearly whether an
+unresolved challenge is an evidence gap that forces `partial`, or whether a
+`complete` run may carry contested claims when characterized. Align tests with
+the explicit rule.
+
+**Step 2: Document packet withdrawal on non-publishable generations**
+
+In `apps/oat-docs/docs/workflows/skills/recon.md`: state that a non-publishable
+candidate generation withdraws any existing `packet.md`.
+
+**Step 3: Verification**
+
+Run skill validation, docs check, and relevant tests. Format with
+`pnpm exec oxfmt --write` and commit with:
+
+```bash
+git commit -m "docs(prev9-t03): align adversarial challenge contract clarity and docs withdrawal description"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                   |
@@ -1778,7 +1895,7 @@ git commit -m "docs(prev8-t03): align Cursor projection plan record"
 | final          | code     | passed          | 2026-09-02 | reviews/archived/final-review-2026-09-02T214500Z.md                    | fd5d5c85c10590fb293855ec27d8cac32c67d6b3 | manual     | -                             |
 | final          | code     | fixes_added     | 2026-09-02 | reviews/archived/final-review-2026-09-02T221657Z.md                    | 676941aeae600d58d7c7e07a30a289df26725432 | gate       | cursor-fable-5-1-high         |
 | p-rev8         | code     | passed          | 2026-09-02 | reviews/p-rev8-review-2026-09-02T234837Z.md                            | e67366f8bac47927926129897c2fa861d8919cb4 | manual     | -                             |
-| final          | code     | received        | 2026-09-03 | reviews/final-review-2026-09-03T154100Z.md                             | 79d62efd676df98c64ffc2ca371b06dae9433d1f | gate       | claude-fable-skip-permissions |
+| final          | code     | fixes_added     | 2026-09-03 | reviews/archived/final-review-2026-09-03T154100Z.md                    | 79d62efd676df98c64ffc2ca371b06dae9433d1f | gate       | claude-fable-skip-permissions |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                             |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                             |
 | plan-self      | artifact | passed          | 2026-08-31 | `reviews/archived/plan-self-review-2026-08-31T011150Z.md`              | -                                        | -          | -                             |
@@ -1833,8 +1950,11 @@ the first diagnostic suspect. No plan change or implementation task is needed.
 - Revision 8: 3 tasks — withdraw valid-but-non-publishable generations,
   reconcile contract-legal negative review dispositions, and align the Cursor
   projection plan record.
+- Revision 9: 3 tasks — validate synthesis referential integrity and transition
+  rejected claims to unsupported, bind ValidatedRun creation/rendering to
+  publishability, and align contract clarity and docs.
 
-**Total: 33 tasks**
+**Total: 36 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.

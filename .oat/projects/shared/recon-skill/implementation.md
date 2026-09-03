@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: null
+oat_current_task_id: prev9-t01
 oat_generated: false
 oat_template: false
 ---
@@ -33,8 +33,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev6 | review_pending | 1     | 1/1       |
 | Phase p-rev7 | passed         | 1     | 1/1       |
 | Phase p-rev8 | passed         | 3     | 3/3       |
+| Phase p-rev9 | pending        | 3     | 0/3       |
 
-**Total:** 33/33 tasks completed
+**Total:** 33/36 tasks completed
 
 ## Task Status
 
@@ -141,6 +142,14 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Task              | Status    | Commit      |
 | ----------------- | --------- | ----------- |
 | p-rev8-recovery-1 | completed | `318e60ca7` |
+
+### Phase p-rev9: Revision 9 — Close Configured-Gate Findings
+
+| Task      | Status  | Commit |
+| --------- | ------- | ------ |
+| prev9-t01 | pending | -      |
+| prev9-t02 | pending | -      |
+| prev9-t03 | pending | -      |
 
 ## Remote Review Received
 
@@ -288,6 +297,22 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   tests; 63/63 canonical skills; plan validation; and format checks passed
 - **Next:** rerun the configured implementation exit gate with the user-selected
   `claude-fable-skip-permissions` target
+
+## Configured Gate Review Received: Revision 9
+
+- **Date:** 2026-09-03
+- **Artifact:** `reviews/archived/final-review-2026-09-03T154100Z.md`
+- **Gate run:** `fd621404-cb02-47bb-ad6b-7689197b628f`
+- **Target:** `claude-fable-skip-permissions`; different-family independence achieved
+- **Reviewed head:** `79d62efd676df98c64ffc2ca371b06dae9433d1f`
+- **Findings:** 0 Critical, 1 Important, 1 Medium, 2 Minor
+- **New tasks:** `prev9-t01`, `prev9-t02`, `prev9-t03`
+- **Disposition:** all findings converted; no deferrals or dismissals
+- **I1:** validate synthesis referential integrity and transition rejected claims to `unsupported`
+- **M1:** bind ValidatedRun construction and rendering strictly to publishable status
+- **m1/m2:** document unresolved challenge status semantics and docs page withdrawal behavior
+- **Deferred Medium ledger:** empty before this review and remains empty
+- **Next:** execute Revision 9 tasks
 
 ## Orchestration Runs
 

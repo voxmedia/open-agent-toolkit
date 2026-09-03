@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev9-t01
 oat_last_commit: 01f2dc8c6b2f9b3c02a4fa521c303d6dd71f637b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T15:42:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T15:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,19 +106,15 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 8 implemented; phase review passed
+**Status:** Configured gate fixes queued in Revision 9
 **Started:** 2026-08-30
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Revision 8 converts all three configured-gate findings: non-publishable
-generations now withdraw the prior packet with a categorical diagnostic,
-negative review dispositions reconcile through the existing contested/removal
-contract, and the stale Cursor skill-view claim is corrected. All three
-committed tasks plus one recovery attempt pass root verification (183/183
-recon, 9/9 dispatch, 4754/4754 forced CLI tests). The fresh inline root phase
-review passed 185/185 focused tests with zero findings; PR #248 remains open.
+The configured cross-family exit gate (Claude Fable) returned one Important,
+one Medium, and two Minor findings in a valid blocked envelope. Revision 9
+converts all four findings; PR #248 remains open.
 
 ## Artifacts
 
@@ -126,7 +122,7 @@ review passed 185/185 focused tests with zero findings; PR #248 remains open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (33/33 tasks complete; Revision 8 review passed)
+- **Implementation:** `implementation.md` (33/36 tasks complete; Revision 9 queued)
 
 ## Progress
 
@@ -253,13 +249,17 @@ review passed 185/185 focused tests with zero findings; PR #248 remains open.
 - ✓ p-rev8 independent phase review passed inline in the root under the user's
   no-subagent directive with 0 Critical, 0 Important, 0 Medium, and 0 Minor
   findings
+- ! Configured cross-family exit gate (Claude Fable) returned 1 Important, 1
+  Medium, and 2 Minor findings with a receive-eligible blocked result
+- ⧗ Revision 9 tasks `prev9-t01` through `prev9-t03` are queued
 
 ## Blockers
 
-None. The configured gate findings are converted into bounded Revision 8 work;
+None. The configured gate findings are converted into bounded Revision 9 work;
 the single-use manual final-review override remains consumed.
 
 ## Next Milestone
 
-Rerun final verification and the configured gate using the user-selected
-`claude-fable-skip-permissions` target within the remaining remediation budget.
+Execute Revision 9 through `oat-project-implement`. After its phase review,
+rerun final verification and the configured gate within the remaining
+remediation budget.
