@@ -108,7 +108,7 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation complete — ready for final review and PR
+**Status:** Implementation complete — cross-model gate fixes in flight
 **Started:** 2026-08-29
 **Last Updated:** 2026-09-03
 
@@ -204,8 +204,14 @@ against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 
 ## Blockers
 
-- None. All eight Definition-of-Done gates pass at `0.2.52`.
+- Cross-model final gate review returned **not ready**: absolute paths persist
+  into durable dispatch records (NFR1) and production config writes delete
+  unknown `projects.*` siblings (FR10). Both fixes are in flight.
+- FR1/FR3 provider reachability is defined but never populated. Deferred by
+  operator decision to `BL-260903-populate-provider-reachability`; recorded in
+  the Deviations table.
 
 ## Next Milestone
 
-Final project review, then open the PR.
+Land the NFR1 path-redaction and FR10 config-preservation fixes, re-gate on
+Cursor sol, reconcile the final-review ledger, then open the PR.
