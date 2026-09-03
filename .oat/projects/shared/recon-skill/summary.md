@@ -2,16 +2,22 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-01
+oat_last_updated: 2026-09-03
 oat_generated: true
 oat_template: false
 oat_template_name: summary
-oat_summary_last_task: prev3-t01
-oat_summary_revision_count: 3
+oat_summary_last_task: prev9-t03
+oat_summary_revision_count: 9
 oat_summary_includes_revisions:
   - p-rev1
   - p-rev2
   - p-rev3
+  - p-rev4
+  - p-rev5
+  - p-rev6
+  - p-rev7
+  - p-rev8
+  - p-rev9
 ---
 
 # Summary: recon-skill
@@ -42,10 +48,9 @@ judgment with the consuming agent.
   dependency leases, reconciliation across install/update/remove lifecycles, and
   user-scope provider materialization for the worker definition.
 - Documentation, generated assets, release metadata, and focused contract,
-  lifecycle, integration, and adversarial test coverage. All 17 planned and
-  revision tasks completed, the post-rebase final independent review passed with
-  no findings, and the fresh configured cross-family implementation exit gate
-  passed.
+  lifecycle, integration, and adversarial test coverage. All 36 planned and
+  revision tasks completed across revisions p-rev1 through p-rev9, and the
+  configured cross-family implementation exit gate passed.
 
 ## Key Decisions
 
@@ -81,20 +86,22 @@ judgment with the consuming agent.
 - Post-rebase provider projection now fails closed unless a manifest-declared
   user-materializable agent has `current` inventory matching the bundled
   definition; no new materialization layer was introduced.
+- Revisions 4–9 closed remote PR and gate review findings: publication races
+  now fail closed with atomic rename and canonical continuity checks, rejected
+  claims transition honestly to `unsupported`, and synthesis referential
+  integrity is strictly validated.
 
 ## Notable Challenges
 
-The first final review found that packet integrity covered only a reduced
-approval envelope. After replacing it with the canonical projection, a second
-review found missing terminal-receipt causality, catalog freshness, and normative
-array-value checks. Revision p-rev2 added those checks at the existing packet
-boundary; direct adversarial probes then rejected all tested structural,
-freshness, receipt-chain, and canonical-array mutations while valid runs still
-published. After rebasing onto current `origin/main`, a fresh final review found
-that native-role projection still accepted `outdated` and `newer` installed
-agents. Revision p-rev3 added one scanner guard and focused sync coverage; the
-subsequent final review and configured cross-family gate both passed with zero
-findings.
+Packet integrity and publication races required repeated hardening across
+multiple review and gate rounds. What initially began as separate validation
+checks evolved through revisions p-rev1 and p-rev2 into one immutable
+`ValidatedRun` boundary with full receipt-chain causality. Revisions 5 through 7
+closed publication races around split-generation views and post-promotion
+canonical continuity. Finally, revisions 8 and 9 closed valid-but-unpublishable
+state leaks, honest `unsupported` rejected claim transitions, and synthesis
+referential integrity checks. All CI definition of done gates passed at the final
+head.
 
 ## Tradeoffs Made
 
@@ -127,6 +134,12 @@ completed passes, provenance, and unresolved gaps.
 - **p-rev3 — Fail closed on drifted materializable agents.** Required `current`
   inventory before native role projection, preserved missing/absent behavior,
   and added actionable update guidance plus scanner and sync regressions.
+- **p-rev4–p-rev7 — Publication race safety & continuity.** Bound incorporated
+  evidence, enforced atomic promotion with canonical-byte continuity checks, and
+  withdrew consumer entry points upon publication failure.
+- **p-rev8–p-rev9 — Exit gate findings closure.** Withdrew valid-but-unpublishable
+  generations, transitioned rejected claims honestly to `unsupported`, validated
+  synthesis referential integrity, and bound `ValidatedRun` to publishability.
 
 ## Follow-up Items
 
@@ -178,13 +191,42 @@ Terminal final review passed at 3cc1cd2e3 with 0 findings after 2 bounded review
 
 target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-code-review-2026-08-31T234514Z.md
 
-### 2026-09-01 · structural · oat-project-implement · p-rev3
-
-Post-rebase final review found one Important native-role projection defect.
-Task prev3-t01 required current inventory, passed 75/75 focused scanner and
-sync tests, and a fresh full final review passed with zero findings at
-547705fae790c32d1bd9dada11f5877253e11530.
-
 ### 2026-09-01 · structural · oat gate review · final
 
 target=cursor-fable-5-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-01T040114Z.md
+
+### 2026-09-01 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/recon-skill/references/project-retro.md evidence_used=archived-review-markdown,backlog-records,decision-records,gate-receipts,github-pr-status,lifecycle-artifacts,pr-artifact,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=1 upstream=2 apply=performed filing=performed
+
+### 2026-09-02 · structural · oat-project-implement · p-rev7
+
+Phase p-rev7 passed: task dbfeeede518556ed5678839bc18ab1342e381593; root-owned review reviews/archived/p-rev7-review-2026-09-02T212045Z.md passed with 0 Critical/Important/Medium/Minor; fix loops=0; final-scope review override required.
+
+### 2026-09-02 · structural · oat-project-implement · final
+
+STOP: all 30 tasks are complete and p-rev7 passed. The final-scope review-cycle cap is exhausted; require an explicit override before one fresh mandatory final lifecycle review. If that review passes, continue to the configured cross-family exit gate; if it blocks, stop without automatic remediation or re-review.
+
+### 2026-09-02 · structural · oat-project-implement · final
+
+Final lifecycle review passed at fd5d5c85c10590fb293855ec27d8cac32c67d6b3 with 0 Critical/Important/Medium/Minor findings; artifact reviews/archived/final-review-2026-09-02T214500Z.md; single-use override consumed; configured cross-family exit gate is next.
+
+### 2026-09-02 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-02T221657Z.md
+
+### 2026-09-02 · structural · oat-project-review-receive · final
+
+Received configured gate run 814287bf-abce-4264-8e51-11226227b9c8: 0 Critical, 1 Important, 1 Medium, 1 Minor; created Revision 8 tasks prev8-t01 through prev8-t03 with no deferrals; source archived at reviews/archived/final-review-2026-09-02T221657Z.md.
+
+### 2026-09-03 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
+
+### 2026-09-03 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md
+
+### 2026-09-03 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:3 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md

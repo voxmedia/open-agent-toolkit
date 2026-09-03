@@ -290,7 +290,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Date:** 2026-09-02
 - **Mode:** inline root review by explicit user direction; no subagents
 - **Reviewed range:** `58ec27ebf..e67366f8bac47927926129897c2fa861d8919cb4`
-- **Artifact:** `reviews/p-rev8-review-2026-09-02T234837Z.md`
+- **Artifact:** `reviews/archived/p-rev8-review-2026-09-02T234837Z.md`
 - **Reconnaissance:** not-attempted
 - **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
 - **Verification:** 185/185 focused recon, workflow, contract, and dispatch
@@ -327,7 +327,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Date:** 2026-09-03
 - **Mode:** inline root review by explicit user direction; no subagents
 - **Reviewed range:** `1a64048cb..1385fd1e1351eb5a02dfb6cd50e2cc11a21ffbbc`
-- **Artifact:** `reviews/p-rev9-review-2026-09-03T163000Z.md`
+- **Artifact:** `reviews/archived/p-rev9-review-2026-09-03T163000Z.md`
 - **Reconnaissance:** not-attempted
 - **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
 - **Verification:** all 192 recon/dispatch tests pass, skill bump checks pass, 63/63 canonical skills validate, oxfmt and oxlint pass
@@ -1155,7 +1155,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Model/effort axes: `selected:gpt-5.6-sol` / `selected:high`
 - Launch/outcome: accepted / completed
 - Reconnaissance: not-attempted
-- Artifact: `reviews/p05-review-2026-09-02T001430Z.md`
+- Artifact: `reviews/archived/p05-review-2026-09-02T001430Z.md`
 - Reviewed head: `79f344ce97b15037b0a09d5a066bc928b7393ec8`
 - Findings: 0 Critical, 0 Important, 2 Medium, 0 Minor
 - Disposition: passed by the implementation review threshold; both Medium
@@ -1172,7 +1172,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Recovery attempts: 1/10, settled
 - Review-fix iterations: 0/3
 - Optional nested dispatches: none
-- Review: `reviews/p05-review-2026-09-02T001430Z.md`
+- Review: `reviews/archived/p05-review-2026-09-02T001430Z.md`
 - Residual Medium findings: incorporated review evidence is not yet exercised
   through final packet validation; documented prevalidation can still remove a
   prior published packet before the renderer's preservation path
