@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-02
-oat_current_task_id: p07-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 7     | 7/7       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 5     | 5/5       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 5     | 5/5       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 4     | 4/4       |
 
-**Total:** 29/30 tasks completed
+**Total:** 30/30 tasks completed
 
 ---
 
@@ -1560,7 +1560,7 @@ check` passed with 10/10 cache replays plus live validation of 63 skills.
 
 ## Phase 7: Runtime Observation and Integrated Release
 
-**Status:** in progress — p07-t01..t03 complete, p07-t04 retained by the orchestrator
+**Status:** completed after 4/4 tasks and four independent review rounds
 **Started:** 2026-09-02
 
 ### Task Outcomes
@@ -1749,7 +1749,31 @@ Corrections, all verified against real artifacts:
   residue backlog item rather than a further cycle, since the phase has
   converged and downstream work is blocked on this branch merging.
 
-### Open Items for p07-t04
+### Task p07-t04 Outcome
+
+- Merged `origin/main` (PR #254, 73 files) cleanly despite six files changed on
+  both sides, and advanced the five lockstep public packages from `0.2.51` to
+  **`0.2.52`** at `a58237b9e`. `origin/main` moved from `0.2.50` to `0.2.51`
+  during Phases 5 and 6, so the original bump target was stale.
+- All eight Definition-of-Done gates pass, including `release:check-versions`
+  and `release:validate`, which had failed on the version floor for the whole
+  project.
+- Backlog closure at `66d14d3e4`: `BL-260826`, `BL-260828` and `BL-260829`
+  closed; `BL-260724` deliberately left **open**; three low-priority residue
+  items filed. `BL-260827-correct-scope-and-adoption`,
+  `BL-260827-clean-up-tool-pack-lifecycle` and
+  `BL-260829-unified-agent-provider-root` were already archived earlier.
+- `BL-260828`'s criteria 2 and 4 were amended on closure rather than ticked as
+  written, because the Phase 5 fail-closed redesign superseded their
+  "add or refresh" and "idempotent" wording.
+- `BL-260724` stays open: its headline criterion — `auto` preferring a
+  collection alias when the provider collection is absent — is not in the
+  shipped product. `collectionAliasCreationAvailable` defaults `false` with no
+  production caller, and the creation primitive throws unconditionally. It and
+  the `AGENTS.md` residue are blocked on the same missing
+  `openat`/`renameat`/`linkat`-class primitive.
+
+### Residual Open Items
 
 - `BL-260826`'s Codex depth-2 integration criterion is now satisfied by the
   live run above. Its Claude criterion rests on captured on-disk transcripts

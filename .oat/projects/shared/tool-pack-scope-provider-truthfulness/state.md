@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t04
-oat_last_commit: d38307fca93ab83ffc4eca64f4741ac60d79b6f7
+oat_current_task: null
+oat_last_commit: 66d14d3e47ccfc862722c8738340b3666c22adc8
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -26,7 +26,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 5 # Schema maximum; Thomas separately authorized one one-use fail-closed deferred-symlink p04 correction/re-review cycle on 2026-09-01
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -108,7 +108,7 @@ oat_project_explainer:
 
 # Project State: tool-pack-scope-provider-truthfulness
 
-**Status:** Implementation in progress
+**Status:** Implementation complete — ready for final review and PR
 **Started:** 2026-08-29
 **Last Updated:** 2026-09-01
 
@@ -194,15 +194,15 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 - ✓ Correlation guard restored on the live path; dead code removed
 - ✓ Envelope byte bound replaced with an O(1) entry-count bound
 - ✓ Review round 4 returned 0 Critical and confirmed no regression
+- ✓ Phase 7 complete: all four tasks and four independent review rounds
+- ✓ Merged `origin/main` and advanced five lockstep packages to `0.2.52`
+- ✓ All eight Definition-of-Done gates pass, release gates included
+- ✓ Three backlog items closed, `BL-260724` left open, three residue items filed
 
 ## Blockers
 
-- `origin/main` advanced to `0.2.51` during Phase 5/6, so p07-t04 must merge
-  main and land `0.2.52` across all five lockstep packages; the two release
-  gates fail for this reason alone until then.
+- None. All eight Definition-of-Done gates pass at `0.2.52`.
 
 ## Next Milestone
 
-Obtain an independent Phase 7 review, then run p07-t04: merge `origin/main`,
-advance the five lockstep packages to `0.2.52`, close the linked backlog
-items, and pass the release gates.
+Final project review, then open the PR.
