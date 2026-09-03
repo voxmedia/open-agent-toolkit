@@ -56,6 +56,44 @@ describe('absolute path detection', () => {
     expect(redactAbsolutePaths(value)).toBe(value);
   });
 
+  describe('narrowed contract', () => {
+    it('rejects a colon-prefixed path in an identity field', () => {
+      // Identity fields admit no URL and no regex, so ambiguity is resolved by
+      // rejecting rather than by guessing.
+      for (const value of ['cwd:/Users/alice/private', 'path:/Users/alice/x']) {
+        expect(containsAbsolutePath(value), value).toBe(true);
+      }
+    });
+
+    it('leaves a colon-prefixed path in prose alone, by design', () => {
+      // Pinned so the limit is visible in the suite rather than an unstated
+      // gap: `:` cannot be a path delimiter without mangling every URL.
+      expect(redactAbsolutePaths('see cwd:/Users/alice/private')).toBe(
+        'see cwd:/Users/alice/private',
+      );
+    });
+
+    it('never mangles a URL route or a regex literal in prose', () => {
+      for (const value of [
+        'https://site.example/login?next=/dashboard',
+        "node -e 'const re=/foo/bar/'",
+        'https://example.com/a/b',
+        'fetch https://x.example/v1/items/42 now',
+      ]) {
+        expect(redactAbsolutePaths(value), value).toBe(value);
+      }
+    });
+
+    it('still redacts an unambiguous path in prose', () => {
+      expect(redactAbsolutePaths('read /Users/alice/.ssh/id_rsa now')).toBe(
+        'read <redacted-path> now',
+      );
+      expect(redactAbsolutePaths('cwd=/Users/alice/private')).toBe(
+        'cwd=<redacted-path>',
+      );
+    });
+  });
+
   it('is the same detector the message boundary uses', () => {
     // Two independent notions of "looks like a path" is how a path could be
     // scrubbed from a message and written verbatim into the record.

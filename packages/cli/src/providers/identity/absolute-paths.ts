@@ -14,44 +14,80 @@
  */
 
 /**
- * Absolute paths in every spelling the boundary must catch.
+ * Two detectors, because one regex cannot serve both jobs.
  *
- * Anchors, in order: `file://` URLs; UNC shares (`\\server\share`); Windows
- * drive paths (`C:\...`, `C:/...`); and POSIX absolute paths. The POSIX arm
- * requires only one leading separator plus a single character, so a root-level
- * path such as `/secret` is caught — the previous pattern demanded a second
- * separator and let those through.
+ * `/dashboard` is a URL route, `/foo/bar/` is a regex literal, and
+ * `path:/Users/alice` is a real disclosure. Three rounds of tuning a single
+ * delimiter-sensitive pattern traded a leak for a mangled value each time, so
+ * the detectors are now split by what the field can legitimately contain.
  *
- * The lookbehind admits a match at a token start *and* after the separators
- * that introduce a value — `=`, `,`, `;`, `|` — because a path is just as
- * disclosing in `cwd=/Users/alice/private` as it is standing alone. Requiring a
- * whitespace or quote boundary is what let assignment form through.
+ * IDENTITY fields (caller, scope, selectors, routes, guidance references,
+ * authority, catalog snapshot, candidates, fallback) admit no URL, no regex and
+ * no path, so ambiguity there is resolved by rejecting. Its lookbehind includes
+ * `:` so `cwd:/Users/alice` is caught.
  *
- * Two exclusions keep that widening from swallowing non-paths. `:` stays out of
- * the lookbehind, so `https://example.com` and `git@host:org/repo` are not
- * paths; and the POSIX arm rejects a second leading slash, so a scheme-relative
- * URL like `src=//cdn.example.com/x.js` is not one either. Ordinary relative
- * text — `and/or`, `dispatch/request-1.json`, `out=dist/bundle.js`, a date like
- * `2026/09/03` — never starts with a separator and so never matches. `>` is
- * deliberately excluded so the canonical redacted role form
- * `<user>/agents/<role>.md` survives untouched.
+ * PROSE fields carry human text and quoted evidence, where a URL or a regex is
+ * legitimate content. Redaction there is deliberately conservative and
+ * best-effort — see {@link redactAbsolutePaths}.
  */
-const ABSOLUTE_PATH_PATTERN =
+const IDENTITY_PATH_PATTERN =
+  /(?<=^|[\s'"`([{<=,;|:])(?:file:\/\/[^\s'"`;,)\]}]*|\\\\[^\s'"`;,)\]}]+|[A-Za-z]:[\\/][^\s'"`;,)\]}]*|\/(?!\/)[^\s'"`;,)\]}]+)/g;
+
+/** As above, minus `:`, which is what makes URLs and regexes distinguishable. */
+const PROSE_PATH_PATTERN =
   /(?<=^|[\s'"`([{<=,;|])(?:file:\/\/[^\s'"`;,)\]}]*|\\\\[^\s'"`;,)\]}]+|[A-Za-z]:[\\/][^\s'"`;,)\]}]*|\/(?!\/)[^\s'"`;,)\]}]+)/g;
+
+/** Spans of an http(s) URL, whose internal slashes are routes, not paths. */
+const HTTP_URL_PATTERN = /https?:\/\/[^\s'"`)\]}]*/g;
 
 /** The stable stand-in, matching the `<tier>/agents/<role>.md` precedent. */
 export const REDACTED_PATH = '<redacted-path>';
 
-export function containsAbsolutePath(value: string): boolean {
-  // A global regex carries lastIndex; construct per call rather than share it.
-  return new RegExp(ABSOLUTE_PATH_PATTERN.source, 'g').test(value);
+function fresh(pattern: RegExp): RegExp {
+  return new RegExp(pattern.source, 'g');
 }
 
+/**
+ * Identity-field detector. Rejects on ambiguity by design.
+ */
+export function containsAbsolutePath(value: string): boolean {
+  return fresh(IDENTITY_PATH_PATTERN).test(value);
+}
+
+function httpUrlSpans(value: string): readonly (readonly [number, number])[] {
+  const spans: [number, number][] = [];
+  const pattern = fresh(HTTP_URL_PATTERN);
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(value)) !== null) {
+    spans.push([match.index, match.index + match[0].length]);
+  }
+  return spans;
+}
+
+/**
+ * Best-effort prose redaction. NOT a guarantee.
+ *
+ * Known limits, stated so they are visible rather than assumed away:
+ * - A colon-prefixed path (`cwd:/Users/alice`) survives, because `:` cannot be
+ *   treated as a path delimiter without mangling every URL.
+ * - A candidate inside an http(s) URL is left alone, so a path-shaped route
+ *   such as `?next=/dashboard` survives.
+ * - A candidate ending in `/` is left alone, because `/foo/bar/` is far more
+ *   often a regex literal than a directory in prose.
+ * - Any path shape the pattern does not match survives.
+ *
+ * The bias is deliberate. A path leaked into prose is a disclosure; a mangled
+ * URL or regex is corrupted evidence, and corrupted evidence is worse in a
+ * provenance record. Identity and control fields carry the enforceable half of
+ * the guarantee via {@link containsAbsolutePath}.
+ */
 export function redactAbsolutePaths(value: string): string {
-  return value.replace(
-    new RegExp(ABSOLUTE_PATH_PATTERN.source, 'g'),
-    REDACTED_PATH,
-  );
+  const spans = httpUrlSpans(value);
+  return value.replace(fresh(PROSE_PATH_PATTERN), (match, offset: number) => {
+    if (match.endsWith('/')) return match;
+    const inUrl = spans.some(([from, to]) => offset >= from && offset < to);
+    return inUrl ? match : REDACTED_PATH;
+  });
 }
 
 /**
@@ -102,18 +138,18 @@ export function assertNoAbsolutePath(value: unknown, path: string): void {
 }
 
 /**
- * The publication postcondition. Runs on the exact value about to be written,
- * so no combination of fields, providers or future call sites can put a path
- * into the journal even if an earlier stage is bypassed.
+ * The publication postcondition, scoped to what is actually guaranteed.
+ *
+ * It hard-fails on a path in an identity or control field, which is the half of
+ * NFR1 that is enforceable. It deliberately does **not** claim that no absolute
+ * path remains anywhere in the revision: prose redaction is best-effort, and a
+ * postcondition that asserted more than the sanitizer can deliver would be a
+ * false guarantee rather than a check.
  */
-export function assertJournalHasNoAbsolutePath(value: unknown): void {
-  const serialized = JSON.stringify(value) ?? '';
-  if (containsAbsolutePath(serialized)) {
-    const found = serialized.match(
-      new RegExp(ABSOLUTE_PATH_PATTERN.source, 'g'),
-    );
-    throw new Error(
-      `Refusing to publish a dispatch journal revision containing an absolute filesystem path: ${found?.[0] ?? 'unknown'}.`,
-    );
+export function assertJournalIdentityHasNoAbsolutePath(
+  identityFields: Readonly<Record<string, unknown>>,
+): void {
+  for (const [field, value] of Object.entries(identityFields)) {
+    assertNoAbsolutePath(value, `<journal>.${field}`);
   }
 }
