@@ -53,7 +53,7 @@ copying their content here. -->
   `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head
   `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87` and passed the configured
   Important threshold; its Medium and Minor findings are dispositioned.
-- CLI `0.2.51` (`recon-skill`, implementation complete and user-approved; PR
+- CLI `0.2.52` (`recon-skill`, implementation complete and user-approved; PR
   #248 open) adds the provider-neutral `recon` skill and
   `recon-worker` to the research pack. Approved homogeneous worker waves now
   gather, verify, challenge, cover, and reconcile bounded evidence into one
@@ -62,11 +62,12 @@ copying their content here. -->
   outside default consumer context. The research pack acquires its reusable
   dispatch dependencies from the utility pack through same-scope durable leases
   and materializes the worker at user scope only when installed inventory is
-  current and matches the bundled definition. All 17 implementation and
-  revision tasks, final independent review, configured cross-family exit gate,
-  and user approval passed. First-class discovery/quick-start integration and
-  broader analysis and research integration remain separately tracked in
-  `BL-260830-integrate-recon-with-oat` and `BL-260830-integrate-recon-across`.
+  current and matches the bundled definition. All 36 implementation and
+  revision tasks across revisions p-rev1 through p-rev9, independent reviews,
+  and the configured cross-family exit gate passed. First-class
+  discovery/quick-start integration and broader analysis and research
+  integration remain separately tracked in `BL-260830-integrate-recon-with-oat`
+  and `BL-260830-integrate-recon-across`.
 - CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows
