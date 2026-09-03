@@ -34,7 +34,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev7 | passed         | 1     | 1/1       |
 | Phase p-rev8 | passed         | 3     | 3/3       |
 | Phase p-rev9 | passed         | 3     | 3/3       |
-| Phase 6      | review_pending | 4     | 4/4       |
+| Phase 6      | passed         | 4     | 4/4       |
 
 **Total:** 40/40 tasks completed
 
@@ -379,6 +379,23 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Verification (root):** 188/188 recon tests, 199/199 recon/dispatch tests, 798/798 skills tests, `pnpm oat:validate-skills`, `pnpm lint`, and `pnpm format` passed
 - **Tracking:** all four tasks marked completed; phase enters `review_pending`
 - **Next:** run Phase 6 independent review
+
+## Phase 6 Reviewed and Passed
+
+- **Date:** 2026-09-03
+- **Review Round 1:**
+  - Artifact: `reviews/p06-review-2026-09-03T214500Z.md`
+  - Reviewed Head: `984e8243dd7c03072049b8098c1775f053e1bb45`
+  - Findings: 0 Critical, 1 Important, 1 Medium, 0 Minor
+  - Important: wholly omitted provisional claims transition to `unresolved`
+  - Medium: coverage gaps downgrade previously verified claims
+- **Fix Commit:** `a0647dacd8438cc2fd91adedce872a0eaa0658ea`
+- **Review Round 2 (Re-review):**
+  - Artifact: `reviews/p06-review-2026-09-03T225829Z.md`
+  - Reviewed Head: `a0647dacd8438cc2fd91adedce872a0eaa0658ea`
+  - Verdict: Passed (0 Critical, 0 Important, 0 Medium, 0 Minor)
+  - Verification: 45/45 focused, 190/190 recon, 199/199 combined tests passed; lint and format clean
+- **Status:** Phase 6 complete and passed; ready for final exit gate and closeout sequence
 
 ## Orchestration Runs
 

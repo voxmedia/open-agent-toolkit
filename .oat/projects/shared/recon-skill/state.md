@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 984e8243dd7c03072049b8098c1775f053e1bb45
+oat_last_commit: a0647dacd8438cc2fd91adedce872a0eaa0658ea
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -106,16 +106,16 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Phase 6 tasks complete; phase review pending
+**Status:** Phase 6 complete and passed review; ready for final exit gate / closeout
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Phase 6 tasks p06-t01 through p06-t04 completed: uncertain reviews transition
-to unresolved, coverage gaps prevent verified promotion, adversarial brief
-statements are strictly projected, and unresolved claims can transition to
-verified. Phase review is pending.
+Phase 6 implementation and re-review passed: uncertain and omitted reviews
+transition to unresolved, coverage gaps downgrade verified claims, adversarial
+brief statements are strictly projected, and unresolved claims transition to
+verified. Ready for final exit gate and closeout sequence.
 
 ## Artifacts
 
@@ -123,7 +123,7 @@ verified. Phase review is pending.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (40/40 tasks complete; Phase 6 review pending)
+- **Implementation:** `implementation.md` (40/40 tasks complete; Phase 6 review passed)
 
 ## Progress
 
@@ -264,7 +264,7 @@ verified. Phase review is pending.
 - ✓ PR description artifact written and PR #248 refreshed
 - ! Remote PR review (Round 2) received: 0 Critical, 1 Important, 3 Medium, 0 Minor findings
 - ✓ Phase 6 tasks `p06-t01` through `p06-t04` implemented
-- ⧗ Phase 6 independent review pending
+- ✓ Phase 6 review and re-review passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings
 
 ## Blockers
 
@@ -272,4 +272,4 @@ None.
 
 ## Next Milestone
 
-Run Phase 6 independent review.
+Run configured final exit gate and proceed with PR refresh/closeout.
