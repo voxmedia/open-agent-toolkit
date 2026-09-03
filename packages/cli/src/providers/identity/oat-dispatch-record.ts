@@ -718,7 +718,7 @@ export function parsePersistedOatDispatchRecord(
   assertBoundedDispatchRecordSize(value);
   const parsed = persistedOatDispatchRecordSchema.parse(value);
   const { oat, ...generic } = parsed;
-  return {
+  const sanitized = {
     ...parseGenericDispatchRecord(generic),
     // The namespaced augmentation is nested evidence throughout — rejection
     // reasons, fallback narration, observation values — so it is redacted
@@ -726,6 +726,10 @@ export function parsePersistedOatDispatchRecord(
     // is not an absolute path and survives untouched.
     oat: oatRecordSchema.parse(redactAbsolutePathsDeep(oat)),
   };
+  // Same ordering rule as the generic record: the size check above ran on the
+  // untransformed input, so it is re-run on the redacted result.
+  assertBoundedDispatchRecordSize(sanitized);
+  return sanitized;
 }
 
 export function augmentDispatchRecord(input: {

@@ -13,6 +13,7 @@ import {
 import { CLAUDE_OBSERVATION_SOURCE } from '@providers/identity/claude-runtime-observation';
 import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-observation';
 import {
+  assertBoundedDispatchRecordSize,
   assertNoSensitiveDispatchContent,
   parseGenericDispatchRecord,
   type GenericDispatchRecord,
@@ -469,6 +470,7 @@ async function publishRevision(
   // the journal is committed to a shared repository, so the guarantee is
   // enforced on the exact value being written rather than trusted upstream.
   assertJournalHasNoAbsolutePath(record);
+  assertBoundedDispatchRecordSize(record);
   try {
     await publishContainedJsonRevision(
       join(dispatchDir, fileName),

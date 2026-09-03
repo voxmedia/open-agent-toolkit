@@ -592,5 +592,14 @@ export function parseGenericDispatchRecord(
 ): GenericDispatchRecord {
   assertNoSensitiveDispatchContent(value);
   assertBoundedDispatchRecordSize(value);
-  return sanitizeDispatchRecordPaths(genericDispatchRecordSchema.parse(value));
+  const sanitized = sanitizeDispatchRecordPaths(
+    genericDispatchRecordSchema.parse(value),
+  );
+  // Redaction is a transform that runs after validation, and `<redacted-path>`
+  // is far longer than a short path like `/a`, so it can only grow a record.
+  // Bounds are therefore re-run on the transform's output: a postcondition
+  // checked against pre-transform data is not a postcondition.
+  const revalidated = genericDispatchRecordSchema.parse(sanitized);
+  assertBoundedDispatchRecordSize(revalidated);
+  return revalidated;
 }
