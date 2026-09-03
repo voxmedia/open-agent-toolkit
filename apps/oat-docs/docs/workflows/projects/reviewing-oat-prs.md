@@ -6,17 +6,21 @@ description: Understand synced-project records, SHA-pinned artifact links, and t
 # Reviewing OAT PRs
 
 A PR for a synced OAT project contains the implementation diff without placing
-the agent-facing project tree on the feature branch. Reviewers get durable
-project context through a small tracked record and a generated links block in
-the PR body.
+the agent-facing project tree on the feature branch. While the project is
+active, reviewers discover its context through a small tracked record and a
+generated links block in the PR body.
 
 ## The synced record
 
-`.oat/projects/synced/<project>.json` is tracked on the feature branch. It
-names the project slug, `origin`, `refs/oat/projects/<project>`, whether the
-project is active or complete, and the archive snapshot when completion has
-created one. It is discovery and lifecycle metadata; the project artifacts
-themselves live on the project ref.
+`.oat/projects/synced/<project>.json` is tracked on the feature branch while
+the project is active. It names the project slug, `origin`, and
+`refs/oat/projects/<project>`. The record and active ref are discovery and
+lifecycle metadata; the project artifacts themselves live on the project ref.
+
+Successful archived closeout deletes the tracked record and makes
+`refs/oat/completed/<project>` the authoritative terminal reachability root.
+The PR's existing SHA-pinned artifact links remain valid through that completed
+ref even after the active checkout and record are gone.
 
 ## The artifact links block
 

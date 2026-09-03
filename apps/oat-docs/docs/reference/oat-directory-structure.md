@@ -188,7 +188,8 @@ Each OAT project lives under:
 - `.oat/projects/synced/<project>/` for a gitignored nested worktree whose
   history is published to `refs/oat/projects/<project>`
 - `.oat/projects/synced/<project>.json` for the tracked discovery record that
-  identifies the ref, remote, and active or complete status
+  identifies the ref, remote, and active transaction state; archived closeout
+  deletes this record after terminal durability is verified
 - `.oat/projects/local/<project>/`
 - `.oat/projects/archived/<project>/`
 
@@ -196,16 +197,24 @@ Completion and archive sync behavior:
 
 - When archiving is selected, `oat-project-complete` archives locally into
   `.oat/projects/archived/<project>/`. For a synced project, the snapshot omits
-  the nested checkout's `.git` pointer and `reviews/`, then completion marks
-  the tracked record complete, removes the nested worktree, and retains the
-  project ref so pinned links keep resolving.
+  the nested checkout's `.git` pointer and `reviews/`. After required local and
+  configured S3 durability succeeds, completion makes
+  `refs/oat/completed/<project>` authoritative, removes the nested worktree,
+  and deletes the tracked JSON record. Full-SHA links remain reachable through
+  the completed ref.
+- Both a completed-only ref and completed plus same-SHA active alias are valid
+  terminal shapes. The alias is inert and ignored by list, pull, and open;
+  differing SHAs are a hard mismatch with explicit recovery guidance.
 - When archiving is disabled or declined, completion leaves the synced
   checkout and ref in place, pushes the finalized artifacts, and exact-path
   commits the tracked record as complete.
-- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion also uploads a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/`.
+- If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion must successfully upload a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/` before it retires the active record and checkout.
 - `oat repo archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
 - `oat repo archive sync <project-name>` syncs the latest dated remote snapshot for a single project into `.oat/projects/archived/<project-name>/`.
 - Default archive sync is non-destructive toward unrelated local-only archive data, but it does replace a local project archive when a newer dated remote snapshot is selected for that same project.
+- `oat project prune` is separate and destructive: for a terminal project it
+  removes the completed ref and any matching active alias, while leaving local
+  and S3 archive snapshots intact. A ref mismatch blocks deletion.
 
 Typical contents:
 

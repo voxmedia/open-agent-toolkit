@@ -53,3 +53,11 @@ Observation: the exit-gate reviewer's pnpm test failed once in tools/smoke/deter
 ### 2026-08-26 · general · feedback · closeout ordering
 
 Observation: wave-2 archived its backlog item before summary.md existed, contradicting the wrapper plan's strictly ordered Implementation Complete checklist (synthesis + summary roll-up before archival). Impact: a final-review Medium and a recorded deviation; no data loss. Recommendation: generate summary.md immediately after the orchestration-log synthesis and before oat backlog archive; add this to the wave skill's closeout sequence wording.
+
+### 2026-08-31 · general · feedback · HiLL checkpoint phase timing
+
+The implement workflow misread oat_hill_checkpoints: [p04] as a gate before p04 and paused before the final phase. The intended contract is that a phase-listed HiLL checkpoint is evaluated after that phase completes. Strengthen the skill, template comments, and user-facing prose to say explicitly that pNN means after pNN, not before it. (observed on Observed on OAT 0.2.50)
+
+### 2026-08-31 · general · feedback · HiLL checkpoint timing correction
+
+Correction to the immediately preceding HiLL checkpoint phase timing entry: the intended observed version is OAT 0.2.50; the CLI rendered the supplied version-note prefix redundantly. The checkpoint-timing recommendation is unchanged.

@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- `BL-260831-retire-archived-synced-project` is complete in the staged CLI
+  `0.2.51` release unit: successful synced archival retires active record and
+  discovery identity while preserving completed-ref reachability, configured
+  durability, legacy migration, and idempotent recovery.
 - External planning now distinguishes plan readiness from execution readiness:
   well-scoped items remain eligible for dated, current-main-pinned plans while
   hard dependencies keep execution explicitly blocked. The missing
@@ -251,6 +255,7 @@
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                           | open   | low      | feature    | L        |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                           | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                           | open   | low      | task       | M        |
+| BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                 | open   | low      | task       | M        |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                       | open   | low      | idea       | L        |
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                            | open   | low      | task       | S        |
 | BL-260826-emit-the-dispatch-stamp-from   | Emit the dispatch stamp from the dispatch-ceiling resolver                                            | open   | low      | task       | XS       |

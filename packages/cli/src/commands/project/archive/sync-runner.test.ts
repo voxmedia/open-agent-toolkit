@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -294,6 +294,70 @@ describe('archive sync runner', () => {
     expect(harness.capture.info[0]).toBe(
       'Skipped archived projects; local archive is already using the latest remote snapshot.',
     );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('restores a recordless terminal snapshot without recreating active state', async () => {
+    const repoRoot = await createRepoRoot();
+    const slug = 'retired-project';
+    const snapshotName = `20260831-${slug}`;
+    const harness = createHarness({
+      cwd: repoRoot,
+      listOutput: `                           PRE ${snapshotName}/`,
+    });
+    harness.execFile.mockImplementation(
+      async (_file: string, args: readonly string[]) => {
+        if (args[0] === 's3' && args[1] === 'ls') {
+          return {
+            stdout: `                           PRE ${snapshotName}/\n`,
+            stderr: '',
+          };
+        }
+        if (args[0] === 's3' && args[1] === 'sync') {
+          const archivePath = join(repoRoot, String(args[3]));
+          await mkdir(archivePath, { recursive: true });
+          await writeFile(
+            join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+            `${JSON.stringify({
+              projectName: slug,
+              snapshotName,
+              scope: 'synced',
+              sourceRefSha: 'a'.repeat(40),
+            })}\n`,
+            'utf8',
+          );
+        }
+        return { stdout: '', stderr: '' };
+      },
+    );
+
+    await runSync(harness, { projectName: slug });
+
+    await expect(
+      readFile(
+        join(
+          repoRoot,
+          '.oat',
+          'projects',
+          'archived',
+          slug,
+          ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain(`"snapshotName":"${snapshotName}"`);
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'synced', `${slug}.json`),
+        'utf8',
+      ),
+    ).rejects.toThrow();
+    await expect(
+      readFile(
+        join(repoRoot, '.oat', 'projects', 'synced', slug, 'state.md'),
+        'utf8',
+      ),
+    ).rejects.toThrow();
     expect(process.exitCode).toBe(0);
   });
 

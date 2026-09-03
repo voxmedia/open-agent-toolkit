@@ -991,56 +991,34 @@ printf 'artifact-read\\n'`,
     );
   });
 
-  it('pulls synced completion projects before artifact reads and fails closed', () => {
+  it('routes synced completion through the terminal-aware entry before artifact reads', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const executor = readRepoFile(
+      '.agents/skills/oat-project-complete/scripts/execute-synced-archive-entry.mjs',
     );
     const scopeIndex = content.indexOf(
       'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)',
     );
-    const pullIndex = content.indexOf(
-      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+    const entryIndex = content.indexOf(
+      'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
     );
     const stateReadIndex = content.indexOf(
       'Before asking the batched questions, read `oat_pr_status`',
     );
 
     expect(scopeIndex).toBeGreaterThanOrEqual(0);
-    expect(pullIndex).toBeGreaterThan(scopeIndex);
-    expect(stateReadIndex).toBeGreaterThan(pullIndex);
-
-    const arrivalBlock = content.slice(
-      scopeIndex,
-      content.indexOf('PROJECT_RETAINED_REF=""', scopeIndex),
+    expect(entryIndex).toBeGreaterThan(scopeIndex);
+    expect(stateReadIndex).toBeGreaterThan(entryIndex);
+    expect(executor).toContain("if (entry.route === 'pull')");
+    expect(executor).toContain('await pullProject(projectPath);');
+    expect(executor).toContain(
+      "await runOat(['project', 'pull', projectPath], options.repoRoot);",
     );
-    const runArrival = (pullStatus: string) =>
-      execFileSync(
-        '/bin/bash',
-        [
-          '-c',
-          `oat() {
-  if [[ "$1 $2" == "project scope" ]]; then
-    printf synced
-  elif [[ "$1 $2" == "project pull" ]]; then
-    [[ "$pullStatus" == "success" ]]
-  fi
-}
-${arrivalBlock}
-printf 'artifact-read\\n'`,
-          'completion-arrival',
-        ],
-        {
-          encoding: 'utf8',
-          env: {
-            ...process.env,
-            PROJECT_PATH: '/tmp/synced-project',
-            pullStatus,
-          },
-        },
-      );
-
-    expect(runArrival('success')).toContain('artifact-read');
-    expect(() => runArrival('conflict')).toThrow();
+    expect(executor).toContain(
+      "throw executionError(`oat ${args.join(' ')} failed: ${error.message}`);",
+    );
   });
 
   it('integrates interactive completion recap and retro policy before lifecycle mutation', () => {
@@ -1049,7 +1027,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.6');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1233,7 +1211,10 @@ printf 'artifact-read\\n'`,
       '**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**',
     );
     expect(content).toContain(
-      'Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).',
+      'Archive happens after PR description generation. For a synced project, the',
+    );
+    expect(content).toContain(
+      'archive command owns the exact lifecycle commit that deletes the discovery',
     );
     expect(content).toContain(
       'The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.',
@@ -1410,7 +1391,7 @@ printf 'artifact-read\\n'`,
       'test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1',
     );
     expect(normalizedContent).toContain(
-      'When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records again.',
+      'When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not stage or commit recap records again.',
     );
     expect(content).toContain(
       'git commit --only -m "chore(oat): attest final project recap" --',
@@ -1648,7 +1629,13 @@ printf 'artifact-read\\n'`,
     );
     expect(content).toContain('gh pr edit "$PR_REF" --body-file "$TMP_BODY"');
     expect(content).toContain(
-      'If `gh pr edit` fails (e.g. PR was merged between Step 2 and now',
+      'If `gh` is missing or `gh pr edit` fails, always print the manual-update path.',
+    );
+    expect(content).toContain(
+      'For a synced archive completion this tracked-PR update is required: stop',
+    );
+    expect(content).toContain(
+      'before Step 12, retain the active pointer, and let the next invocation resume',
     );
   });
 

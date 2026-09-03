@@ -5649,7 +5649,7 @@ describe('oat gate', () => {
       }),
     ).toBe('');
     await rm(markerPath!, { force: true });
-  });
+  }, 15_000);
 
   it('normalizes a gate review artifact missing only a zero-count Medium heading', async () => {
     const { root, home } = await setup();

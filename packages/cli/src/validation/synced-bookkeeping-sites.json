@@ -31,19 +31,19 @@
   },
   {
     "file": "packages/cli/src/commands/project/pull/index.ts",
-    "anchor": "const target: ResolvedSyncTarget = await dependencies.resolveSyncedTarget(",
+    "anchor": "target = await dependencies.resolveSyncedTarget(",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },
   {
     "file": "packages/cli/src/commands/project/links/index.ts",
-    "anchor": "const target = await dependencies.resolveSyncedTarget(",
+    "anchor": "if (resolveProjectScope(absolute, sharedRoot, repoRoot) !== 'synced') {",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },
   {
     "file": "packages/cli/src/commands/project/prune/index.ts",
-    "anchor": "const target = await dependencies.resolveSyncedTarget(",
+    "anchor": "target = await dependencies.resolveSyncedTarget(",
     "kind": "resolve",
     "guard": "canonical-resolution"
   },

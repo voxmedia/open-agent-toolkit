@@ -37,6 +37,22 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.51` (retire-archived-synced-project, implementation complete;
+  pending PR/release) retires a successfully archived synced project from its
+  active JSON-record and discovery-ref namespaces only after local and every
+  configured remote durability target succeed. `refs/oat/completed/<slug>`
+  preserves terminal identity and source-commit reachability; a same-SHA active
+  ref may remain as an inert alias, while differing SHAs and remote lookup
+  failures remain precise fail-closed diagnoses. List, dashboard, pull, open,
+  links, prune, archive recovery, and the completion skill now share this
+  recordless terminal contract. Uncached CLI 4721/4721 and control-plane 78/78
+  tests and the full repository/release/docs gate sequence passed. Follow-up
+  task p04-t06 also made recordless archive resume accept explicit `null` as a
+  no-recap receipt without weakening validation of present recap evidence. The
+  authenticated Claude Fable gate run
+  `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head
+  `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87` and passed the configured
+  Important threshold; its Medium and Minor findings are dispositioned.
 - CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows
