@@ -63,8 +63,8 @@ export interface InitializeDecisionAgentsGuidanceOptions {
 }
 
 export interface DecisionAgentsGuidanceResult {
-  root: UpsertSectionResult['action'];
-  scoped: UpsertSectionResult['action'];
+  root: UpsertSectionResult;
+  scoped: UpsertSectionResult;
 }
 
 export async function initializeScopedDecisionAgentsGuidance(
@@ -92,8 +92,5 @@ export async function initializeDecisionAgentsGuidance(
     ),
   );
 
-  return {
-    root: root.action,
-    scoped: scoped.action,
-  };
+  return { root, scoped };
 }

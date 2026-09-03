@@ -8,7 +8,9 @@ import { OAT_VERSION } from '@shared/oat-version';
 import {
   type Manifest,
   type ManifestEntry,
+  type ManifestV2,
   ManifestSchema,
+  ManifestV2Schema,
 } from './manifest.types';
 
 function formatIssuePath(path: (string | number)[]): string {
@@ -24,9 +26,10 @@ function nowIso(): string {
 
 export function createEmptyManifest(): Manifest {
   return {
-    version: 1,
+    version: 2,
     oatVersion: OAT_VERSION,
     entries: [],
+    collections: [],
     lastUpdated: nowIso(),
   };
 }
@@ -44,6 +47,17 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
       );
     }
 
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('version' in parsed) ||
+      (parsed.version !== 1 && parsed.version !== 2)
+    ) {
+      throw new CliError(
+        `Manifest at ${manifestPath} failed validation: version must be 1 or 2. Delete or repair the file and re-run oat sync.`,
+      );
+    }
+
     const result = ManifestSchema.safeParse(parsed);
     if (!result.success) {
       const issueDetails = result.error.issues
@@ -54,7 +68,18 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
       );
     }
 
-    return result.data;
+    if (result.data.version === 1) {
+      return {
+        ...result.data,
+        version: 2,
+        entries: result.data.entries.map((entry) => ({ ...entry })),
+        collections: [],
+      };
+    }
+
+    // Collection entries are consumed by the collection planner before the
+    // existing per-entry engine receives this compatibility view.
+    return result.data as unknown as Manifest;
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -80,9 +105,9 @@ export async function loadManifest(manifestPath: string): Promise<Manifest> {
 
 export async function saveManifest(
   manifestPath: string,
-  manifest: Manifest,
+  manifest: ManifestV2,
 ): Promise<void> {
-  const validated = ManifestSchema.parse({
+  const validated = ManifestV2Schema.parse({
     ...manifest,
     oatVersion: OAT_VERSION,
   });

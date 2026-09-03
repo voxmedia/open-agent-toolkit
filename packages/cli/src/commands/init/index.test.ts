@@ -27,7 +27,7 @@ import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
 import { codexAdapter } from '@providers/codex';
 import { cursorAdapter } from '@providers/cursor';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -48,6 +48,8 @@ interface HarnessOptions {
   useDefaultCollectStrays?: boolean;
   useDefaultEnsureCanonicalDirs?: boolean;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
+  providerContextResolver?: () => Promise<ProviderScopeContext>;
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
   userKnownStrays?: string[];
@@ -66,6 +68,17 @@ interface HarnessOptions {
 interface RunInitArgs {
   globalArgs?: string[];
   commandArgs?: string[];
+}
+
+function createProviderAdapter(name: string): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'symlink',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => true,
+  };
 }
 
 const ADOPT_REMEDIATION =
@@ -195,8 +208,8 @@ function createHarness(options: HarnessOptions = {}): {
   const selectWithAbort = vi.fn(async () =>
     singleSelectResponses.length > 0 ? singleSelectResponses.shift()! : 'no',
   );
-  const selectProvidersWithAbort = vi.fn(
-    async () => providerSelectResponses.shift() ?? [],
+  const selectProvidersWithAbort = vi.fn(async () =>
+    providerSelectResponses.length > 0 ? providerSelectResponses.shift()! : [],
   );
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
@@ -319,6 +332,15 @@ function createHarness(options: HarnessOptions = {}): {
       detectedUnset: options.configAwareActiveAdapterNames ?? ['claude'],
       detectedDisabled: [],
     })),
+    ...(options.providerContextResolver
+      ? { resolveProviderScopeContext: options.providerContextResolver }
+      : options.providerContext
+        ? {
+            resolveProviderScopeContext: vi.fn(
+              async () => options.providerContext!,
+            ),
+          }
+        : {}),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     getHookInstallInfo,
     configureLocalHooksPath,
@@ -532,6 +554,50 @@ describe('createInitCommand', () => {
     );
   });
 
+  for (const [path, response] of [
+    ['cancel', null],
+    ['save', ['registry-only']],
+  ] as const) {
+    it(`detects each provider once during interactive init ${path}`, async () => {
+      const adapter = createProviderAdapter('registry-only');
+      const detect = vi.spyOn(adapter, 'detect').mockResolvedValue(true);
+      const providerContextResolver = vi.fn(async () => {
+        await adapter.detect('/tmp/workspace');
+        return {
+          scope: 'project' as const,
+          configSource: '<project>/.oat/sync/config.json',
+          activeProviders: ['registry-only'],
+          detectedProviders: ['registry-only'],
+          mismatches: {
+            detectedUnset: ['registry-only'],
+            detectedDisabled: [],
+          },
+          activation: [
+            {
+              provider: 'registry-only',
+              state: 'active' as const,
+              source: 'detected-unset' as const,
+              reason: 'detected without explicit configuration',
+            },
+          ],
+          registrations: [{ adapter, extensions: [], capabilities: [] }],
+        };
+      });
+      const { command } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        adapters: [adapter],
+        providerContextResolver,
+        providerSelectResponses: [response],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(providerContextResolver).toHaveBeenCalledTimes(1);
+      expect(detect).toHaveBeenCalledTimes(1);
+    });
+  }
+
   it('non-interactive mode does not mutate provider config and shows guidance', async () => {
     const { command, capture, selectProvidersWithAbort, saveSyncConfig } =
       createHarness({
@@ -602,6 +668,36 @@ describe('createInitCommand', () => {
     const activeAdapters = collectStrays.mock
       .calls[0]?.[4] as ProviderAdapter[];
     expect(activeAdapters.map((adapter) => adapter.name)).toEqual(['claude']);
+  });
+
+  it('uses a registry-only provider context for project stray scanning', async () => {
+    const adapter: ProviderAdapter = {
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+    const { command, collectStrays } = createHarness({
+      interactive: false,
+      hookInstalled: true,
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const activeAdapters = collectStrays.mock
+      .calls[0]?.[4] as ProviderAdapter[];
+    expect(activeAdapters.map(({ name }) => name)).toEqual(['registry-only']);
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
@@ -1906,6 +2002,40 @@ config_file = "agents/reviewer.toml"
       });
 
       expect(runToolPacks).toHaveBeenCalledTimes(1);
+    });
+
+    it('propagates explicit project guidance into guided tool setup', async () => {
+      const { command, runToolPacks } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup', '--project-guidance'],
+      });
+
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({ scopeSelection: 'defaults' }),
+        true,
+      );
+    });
+
+    it('rejects conflicting project guidance flags', async () => {
+      const { command } = createHarness({ interactive: false });
+
+      await expect(
+        runInitCommand(command, {
+          globalArgs: ['--scope', 'project'],
+          commandArgs: [
+            '--setup',
+            '--project-guidance',
+            '--no-project-guidance',
+          ],
+        }),
+      ).rejects.toThrow('cannot be used together');
     });
 
     it('guided setup defers the per-pack scope gate to the tools flow without prompting upfront', async () => {

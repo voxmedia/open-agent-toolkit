@@ -7,5 +7,18 @@ export {
   removeEntry,
   saveManifest,
 } from './manager';
-export type { Manifest, ManifestEntry } from './manifest.types';
-export { ManifestEntrySchema, ManifestSchema } from './manifest.types';
+export type {
+  Manifest,
+  ManifestCollectionEntry,
+  ManifestEntry,
+  ManifestEntryV2,
+  ManifestV1,
+  ManifestV2,
+} from './manifest.types';
+export {
+  ManifestCollectionEntrySchema,
+  ManifestEntrySchema,
+  ManifestSchema,
+  ManifestV1Schema,
+  ManifestV2Schema,
+} from './manifest.types';

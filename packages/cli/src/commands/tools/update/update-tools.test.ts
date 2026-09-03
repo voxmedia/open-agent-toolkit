@@ -32,7 +32,6 @@ import {
 import { removeTools } from '@commands/tools/remove/remove-tools';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
-import { serializePackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
 import {
   hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
@@ -41,7 +40,7 @@ import {
 import type { ToolInfo } from '@commands/tools/shared/types';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   type UpdateTarget,
@@ -434,7 +433,7 @@ describe('updateTools', () => {
     expect(deps.copies).toHaveLength(0);
   });
 
-  it('repairs a fully missing intended docs pack through the exact dry-run plan', async () => {
+  it('treats a declared-only pack as not installed without reconciling or writing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-update-pack-lifecycle-'));
     try {
       const assetsRoot = await resolveAssetsRoot();
@@ -448,7 +447,8 @@ describe('updateTools', () => {
       deps.resolveAssetsRoot = async () => assetsRoot;
       deps.resolveScopeRoot = async () => root;
       deps.inventoryScopedPack = inventoryScopedPack;
-      deps.reconcilePacks = reconcilePackLifecycles;
+      const reconcilePacks = vi.fn(reconcilePackLifecycles);
+      deps.reconcilePacks = reconcilePacks;
 
       const dryRun = await updateTools(
         { kind: 'pack', pack: 'docs' },
@@ -458,19 +458,9 @@ describe('updateTools', () => {
         true,
         deps,
       );
-      expect(dryRun.plans).toHaveLength(1);
-      expect(dryRun.plans[0]!.operations).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            kind: 'copy-dir',
-            assetId: 'template:docs-app-mkdocs',
-          }),
-          expect.objectContaining({
-            kind: 'copy-dir',
-            assetId: 'template:docs-app-fuma',
-          }),
-        ]),
-      );
+      expect(dryRun.notInstalled).toEqual(['docs']);
+      expect(dryRun.plans).toEqual([]);
+      expect(reconcilePacks).not.toHaveBeenCalled();
 
       const applied = await updateTools(
         { kind: 'pack', pack: 'docs' },
@@ -480,9 +470,9 @@ describe('updateTools', () => {
         false,
         deps,
       );
-      expect(serializePackReconcilePlan(applied.plans[0]!)).toBe(
-        serializePackReconcilePlan(dryRun.plans[0]!),
-      );
+      expect(applied.notInstalled).toEqual(['docs']);
+      expect(applied.plans).toEqual([]);
+      expect(reconcilePacks).not.toHaveBeenCalled();
       await expect(
         inventoryScopedPack({
           pack: 'docs',
@@ -490,7 +480,7 @@ describe('updateTools', () => {
           scopeRoot: root,
           assetsRoot,
         }),
-      ).resolves.toMatchObject({ completeness: 'complete' });
+      ).resolves.toMatchObject({ completeness: 'absent' });
       await expect(
         readScopedPackIntent({ pack: 'docs', scope: 'user', scopeRoot: root }),
       ).resolves.toMatchObject({ enabled: true, source: 'declared' });
@@ -525,7 +515,6 @@ describe('updateTools', () => {
 
       await expect(readOatConfig(root)).resolves.toMatchObject({
         projects: {
-          root: '.oat/projects/shared',
           defaultScope: 'local',
         },
       });

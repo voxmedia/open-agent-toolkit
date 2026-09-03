@@ -224,5 +224,50 @@ describe('runInfoTool', () => {
     expect(capture.info.join('\n')).toContain(
       'path=/home/.oat/templates/ideas/idea-summary.md',
     );
+    expect(result.packEvidence).toMatchObject({
+      schemaVersion: 1,
+      status: 'partial',
+      items: [
+        expect.objectContaining({
+          realizedPlacement: 'none',
+          diagnostics: expect.arrayContaining([
+            expect.objectContaining({ code: 'declared-only' }),
+            expect.objectContaining({ code: 'partial-placement' }),
+          ]),
+        }),
+      ],
+    });
+    expect(capture.info.join('\n')).toContain('Realized placement: none');
+  });
+
+  it('returns unavailable pack evidence without changing the pack lookup contract', async () => {
+    const deps = createDeps({});
+    deps.inventoryPack = async () => {
+      throw new Error('cannot read /home/user/private/pack');
+    };
+    const capture = createLoggerCapture();
+
+    const result = await runInfoTool(
+      createContext({ scope: 'user', json: true, logger: capture.logger }),
+      'ideas',
+      deps,
+    );
+
+    expect(result).toMatchObject({ found: true, tool: null, pack: null });
+    expect(result.packEvidence).toMatchObject({
+      status: 'partial',
+      items: [
+        expect.objectContaining({
+          realizedPlacement: 'unknown',
+          diagnostics: [
+            expect.objectContaining({
+              code: 'inventory-unavailable',
+              detail: 'cannot read ~/private/pack',
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/home/user');
   });
 });

@@ -68,6 +68,51 @@ describe('scanCanonical', () => {
     expect(entries.some((entry) => entry.type === 'agent')).toBe(false);
   });
 
+  it('scans caller-declared user capabilities including agents and rules', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'agents', 'agent-one.md'),
+      '# agent\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'rule-one.md'),
+      '# rule\n',
+      'utf8',
+    );
+
+    const entries = await scanCanonical(root, 'user', [
+      { contentType: 'agent', canonicalDir: '.agents/agents' },
+      { contentType: 'rule', canonicalDir: '.agents/rules' },
+    ]);
+
+    expect(entries.map(({ type, name }) => `${type}:${name}`)).toEqual([
+      'agent:agent-one.md',
+      'rule:rule-one.md',
+    ]);
+  });
+
+  it('deduplicates repeated declared directories from multiple providers', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+
+    const entries = await scanCanonical(root, 'user', [
+      { contentType: 'skill', canonicalDir: '.agents/skills' },
+      { contentType: 'skill', canonicalDir: '.agents/skills' },
+    ]);
+
+    expect(entries).toHaveLength(1);
+  });
+
   it('loads the two bundled base roles shared by materialization extensions', async () => {
     const entries = await scanBundledManagedAgents();
 

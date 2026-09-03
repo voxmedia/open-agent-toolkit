@@ -41,6 +41,12 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
+import {
   attributeSharedOwnerDiagnostics,
   hasScopedPackPlacementEvidence,
   inventoryPack,
@@ -87,34 +93,40 @@ import {
 } from '@fs/paths';
 import type { Manifest } from '@manifest/index';
 import { loadManifest, saveManifest } from '@manifest/manager';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import {
   applyCodexProjectExtensionPlan,
   type CodexExtensionPlan,
   computeCodexProjectExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import {
   applyCursorProjectExtensionPlan,
   computeCursorProjectExtensionPlan,
   type CursorExtensionPlan,
 } from '@providers/cursor/codec/sync-extension';
-import { geminiAdapter } from '@providers/gemini';
 import {
   getConfigAwareAdapters,
+  getProviderRegistrations,
   getSyncMappings,
+  resolveProviderScopeContext,
   type PathMapping,
   type MaterializationPlan,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import type { AdoptionSource } from '@providers/shared/adapter.types';
 import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import {
+  userAgentMaterializationCoverage,
+  type UserAgentMaterializationCoverage,
+} from '@providers/shared/registry';
+import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
+import {
+  type CanonicalScanTarget,
   type ConcreteScope,
   type ContentType,
-  SCOPE_CONTENT_TYPES,
   type Scope,
 } from '@shared/types';
 import { formatStatusTable } from '@ui/output';
@@ -176,6 +188,7 @@ interface StatusPackReport {
   states: StatusPackState[];
   unavailableScopes: ConcreteScope[];
   pjm: StatusPjmState | null;
+  evidence: PackEvidenceBlockV1;
 }
 
 function unavailablePackReport(
@@ -213,6 +226,18 @@ function unavailablePackReport(
     states: [],
     unavailableScopes,
     pjm: null,
+    evidence: packEvidenceBlock(
+      PACK_NAMES.map((pack) =>
+        unavailablePackEvidence({
+          pack,
+          scopes: Object.keys(roots).map((key) =>
+            key === 'projectRoot' ? 'project' : 'user',
+          ),
+          reason: detail,
+          roots,
+        }),
+      ),
+    ),
   };
 }
 
@@ -221,7 +246,16 @@ interface StatusJsonPayload {
   reports: DriftReport[];
   summary: StatusSummary;
   packs: StatusPackReport;
+  packEvidence: PackEvidenceBlockV1;
+  providerRefreshAdvice: ProviderCatalogStatus[];
   remediation?: string;
+}
+
+interface ProviderCatalogStatus {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: ContentType | 'directory';
+  visibility: ProviderVisibilityEvidence;
 }
 
 interface StatusDependencies {
@@ -237,6 +271,7 @@ interface StatusDependencies {
   scanCanonical: (
     scopeRoot: string,
     scope: ConcreteScope,
+    targets?: readonly CanonicalScanTarget[],
   ) => Promise<CanonicalEntry[]>;
   scanBundledManagedAgents: (
     options?: ScanBundledManagedAgentsOptions,
@@ -247,6 +282,11 @@ interface StatusDependencies {
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<{ activeAdapters: ProviderAdapter[] }>;
+  resolveProviderScopeContext?: (input: {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
   getAdoptionSources: (
     adapter: ProviderAdapter,
@@ -345,6 +385,53 @@ interface ScopeReportCollection {
   reports: DriftReport[];
   strayCandidates: StatusStrayCandidate[];
   activeAdapterNames: string[];
+  userAgentMaterializationCoverage: UserAgentMaterializationCoverage;
+  providerContext: ProviderScopeContext | null;
+}
+
+function collectProviderRefreshAdvice(
+  collections: readonly ScopeReportCollection[],
+): ProviderCatalogStatus[] {
+  return collections.flatMap((collection) => {
+    const providerContext = collection.providerContext;
+    if (!providerContext) return [];
+    const active = new Set(providerContext.activeProviders);
+    return providerContext.registrations.flatMap((registration) => {
+      if (!active.has(registration.adapter.name)) return [];
+      return registration.capabilities
+        .filter(
+          ({ scope, support }) =>
+            scope === collection.scope && support === 'supported',
+        )
+        .map((capability) => ({
+          scope: collection.scope,
+          provider: registration.adapter.name,
+          contentKind: capability.contentKind,
+          visibility: adviseProviderRefresh({
+            policy: capability.catalogRefresh,
+            materialization: 'unknown',
+            observation: {
+              state: 'not-reported',
+              reference:
+                'oat status inspects managed files but does not query the active provider catalog',
+            },
+          }),
+        }));
+    });
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly ProviderCatalogStatus[],
+): string | null {
+  if (advice.length === 0) return null;
+  return [
+    'Provider catalog visibility:',
+    ...advice.map(
+      ({ scope, provider, contentKind, visibility }) =>
+        `  [${scope}] ${provider}/${contentKind}: ${visibility.state} (${visibility.policy.state})`,
+    ),
+  ].join('\n');
 }
 
 const DEFAULT_DEPENDENCIES: StatusDependencies = {
@@ -365,15 +452,10 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   scanCanonical,
   scanBundledManagedAgents,
   getAdapters() {
-    return [
-      claudeAdapter,
-      cursorAdapter,
-      codexAdapter,
-      copilotAdapter,
-      geminiAdapter,
-    ];
+    return getProviderRegistrations().map(({ adapter }) => adapter);
   },
   getConfigAwareAdapters,
+  resolveProviderScopeContext,
   getSyncMappings,
   getAdoptionSources,
   detectDrift,
@@ -416,13 +498,6 @@ function canonicalInsideMapping(
     normalizedCanonicalPath === normalizedCanonicalDir ||
     normalizedCanonicalPath.startsWith(`${normalizedCanonicalDir}/`)
   );
-}
-
-function contentTypeAllowed(
-  contentType: ContentType,
-  scope: ConcreteScope,
-): boolean {
-  return SCOPE_CONTENT_TYPES[scope].includes(contentType);
 }
 
 function summarizeReports(reports: DriftReport[]): StatusSummary {
@@ -613,7 +688,7 @@ function shouldReportPjmAdoption(
 async function collectPackReport(
   scopeRoots: Map<ConcreteScope, string>,
   unavailableScopes: ConcreteScope[],
-  userManagedRoleMaterialization: boolean,
+  userAgentCoverage: UserAgentMaterializationCoverage,
   dependencies: StatusDependencies,
 ): Promise<StatusPackReport> {
   const roots: PackPathRoots = {
@@ -628,6 +703,7 @@ async function collectPackReport(
       states: [],
       unavailableScopes,
       pjm: null,
+      evidence: packEvidenceBlock([]),
     };
   }
 
@@ -642,18 +718,43 @@ async function collectPackReport(
             assetsRoot,
             ...roots,
             ...(scopeRoots.has('user')
-              ? { userManagedRoleMaterialization }
+              ? {
+                  userManagedRoleMaterialization: userAgentCoverage !== 'none',
+                }
               : {}),
           }),
         ),
       ),
     );
+    if (userAgentCoverage === 'all') {
+      inventories = inventories.map((inventory) => ({
+        ...inventory,
+        scopes: inventory.scopes.map((scoped) =>
+          scoped.scope === 'user'
+            ? {
+                ...scoped,
+                diagnostics: scoped.diagnostics.filter(
+                  ({ code }) => code !== 'user-agent-unmaterialized',
+                ),
+              }
+            : scoped,
+        ),
+        diagnostics: inventory.diagnostics.filter(
+          ({ code }) => code !== 'user-agent-unmaterialized',
+        ),
+      }));
+    }
   } catch (error) {
     return unavailablePackReport(error, roots, unavailableScopes);
   }
   const states = inventories
     .map((inventory) => toStatusPackState(inventory, roots))
     .filter((state): state is StatusPackState => state !== null);
+  const evidence = packEvidenceBlock(
+    inventories.map((canonical) =>
+      projectRenderablePackEvidence(canonical, roots),
+    ),
+  );
 
   const projectRoot = scopeRoots.get('project');
   if (!projectRoot) {
@@ -662,6 +763,7 @@ async function collectPackReport(
       states,
       unavailableScopes,
       pjm: null,
+      evidence,
     };
   }
 
@@ -681,6 +783,7 @@ async function collectPackReport(
       repoRoot: formatPackPath(adoption.repoRoot, roots),
       recovery: adoption.recovery,
     },
+    evidence,
   };
 }
 
@@ -775,19 +878,82 @@ async function collectScopeReports(
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
   const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
   const userConfigDir = join(context.home, '.oat');
-  const [manifest, canonicalEntries, syncConfig, userSyncConfig] =
-    await Promise.all([
-      dependencies.loadManifest(manifestPath),
-      dependencies.scanCanonical(scopeRoot, scope),
-      dependencies.loadSyncConfig(syncConfigPath),
-      dependencies.resolveUserSyncConfig(userConfigDir),
-    ]);
-  const adapters = dependencies.getAdapters();
-  const { activeAdapters } = await dependencies.getConfigAwareAdapters(
-    adapters,
-    scopeRoot,
-    scope === 'user' ? userSyncConfig : syncConfig,
+  const [manifest, syncConfig, userSyncConfig] = await Promise.all([
+    dependencies.loadManifest(manifestPath),
+    dependencies.loadSyncConfig(syncConfigPath),
+    dependencies.resolveUserSyncConfig(userConfigDir),
+  ]);
+  const effectiveConfig = scope === 'user' ? userSyncConfig : syncConfig;
+  const providerContext = dependencies.resolveProviderScopeContext
+    ? await dependencies.resolveProviderScopeContext({
+        scope,
+        scopeRoot,
+        config: effectiveConfig,
+      })
+    : null;
+  const adapters = providerContext
+    ? providerContext.registrations.map(({ adapter }) => adapter)
+    : dependencies.getAdapters();
+  const activeAdapters = providerContext
+    ? adapters.filter(({ name }) =>
+        providerContext.activeProviders.includes(name),
+      )
+    : await dependencies
+        .getConfigAwareAdapters(adapters, scopeRoot, effectiveConfig)
+        .then((resolution) => resolution.activeAdapters);
+  const activeAdapterNames = activeAdapters.map(({ name }) => name);
+  const knownRegistrations = getProviderRegistrations().filter(({ adapter }) =>
+    activeAdapterNames.includes(adapter.name),
   );
+  const coverageRegistrations =
+    providerContext?.registrations ?? knownRegistrations;
+  const mappingScanTargets = activeAdapters
+    .flatMap((adapter) => dependencies.getSyncMappings(adapter, scope))
+    .map(({ contentType, canonicalDir }) => ({ contentType, canonicalDir }));
+  const capabilityScanTargets = coverageRegistrations
+    .filter(({ adapter }) => activeAdapterNames.includes(adapter.name))
+    .flatMap(({ capabilities }) =>
+      capabilities
+        .filter(
+          (capability) =>
+            capability.scope === scope &&
+            capability.support === 'supported' &&
+            capability.contentKind !== 'directory',
+        )
+        .map((capability) => ({
+          contentType: capability.contentKind as ContentType,
+          canonicalDir: `.agents/${capability.contentKind}s`,
+        })),
+    );
+  const scanTargets = [...mappingScanTargets, ...capabilityScanTargets].filter(
+    (target, index, targets) =>
+      targets.findIndex(
+        (candidate) =>
+          candidate.contentType === target.contentType &&
+          candidate.canonicalDir === target.canonicalDir,
+      ) === index,
+  );
+  const canonicalEntries = await dependencies.scanCanonical(
+    scopeRoot,
+    scope,
+    scanTargets,
+  );
+  let agentCoverage = userAgentMaterializationCoverage({
+    registrations: coverageRegistrations,
+    activeProviders: activeAdapterNames,
+  });
+  if (scope === 'user' && agentCoverage !== 'all') {
+    const activeAgentMappings = activeAdapters.flatMap((adapter) =>
+      dependencies
+        .getSyncMappings(adapter, scope)
+        .filter(({ contentType }) => contentType === 'agent'),
+    );
+    if (activeAgentMappings.some(({ nativeRead }) => !nativeRead)) {
+      agentCoverage = 'all';
+    } else if (activeAgentMappings.length > 0 && agentCoverage === 'none') {
+      agentCoverage = 'bundled';
+    }
+  }
   const reports: DriftReport[] = [];
   const strayCandidates: StatusStrayCandidate[] = [];
   const trackedCanonicalByProvider = new Set(
@@ -799,6 +965,15 @@ async function collectScopeReports(
   const activeProviderNames = new Set(
     activeAdapters.map((adapter) => adapter.name),
   );
+  const activeExtensionProviders = new Set(
+    providerContext
+      ? providerContext.registrations
+          .filter(({ adapter }) => activeProviderNames.has(adapter.name))
+          .flatMap(({ extensions }) =>
+            extensions.map(({ provider }) => provider),
+          )
+      : [...activeProviderNames],
+  );
   const providerCanonicalEntries =
     scope === 'user'
       ? [
@@ -806,18 +981,24 @@ async function collectScopeReports(
           ...(await dependencies.scanBundledManagedAgents({ scopeRoot })),
         ]
       : canonicalEntries;
-  const codexExtensionPlan = activeProviderNames.has('codex')
+  const extensionCanonicalEntries =
+    scope === 'user' &&
+    (activeExtensionProviders.has('codex') ||
+      activeExtensionProviders.has('cursor'))
+      ? providerCanonicalEntries
+      : canonicalEntries;
+  const codexExtensionPlan = activeExtensionProviders.has('codex')
     ? await dependencies.computeCodexProjectExtensionPlan(
         scopeRoot,
-        providerCanonicalEntries,
+        extensionCanonicalEntries,
         undefined,
         { userConfigDir },
       )
     : undefined;
-  const cursorExtensionPlan = activeProviderNames.has('cursor')
+  const cursorExtensionPlan = activeExtensionProviders.has('cursor')
     ? await dependencies.computeCursorProjectExtensionPlan(
         scopeRoot,
-        providerCanonicalEntries,
+        extensionCanonicalEntries,
         undefined,
         { userConfigDir },
       )
@@ -855,10 +1036,6 @@ async function collectScopeReports(
       if (!mappingContentTypes.has(entry.contentType)) {
         continue;
       }
-      if (!contentTypeAllowed(entry.contentType, scope)) {
-        continue;
-      }
-
       const matchedMapping = mappings.find(
         (mapping) =>
           mapping.contentType === entry.contentType &&
@@ -1011,7 +1188,9 @@ async function collectScopeReports(
     manifest,
     reports: filtered.reports,
     strayCandidates: filtered.candidates,
-    activeAdapterNames: activeAdapters.map((adapter) => adapter.name),
+    activeAdapterNames,
+    userAgentMaterializationCoverage: scope === 'user' ? agentCoverage : 'none',
+    providerContext,
   };
 }
 
@@ -1049,6 +1228,7 @@ async function runStatusCommand(
   }
 
   const summary = summarizeReports(reports);
+  const providerRefreshAdvice = collectProviderRefreshAdvice(scopeCollections);
   const hasIssues = summary.total > 0 && summary.inSync !== summary.total;
 
   if (options.hook) {
@@ -1068,12 +1248,15 @@ async function runStatusCommand(
     scopeRoots,
     unavailableScopes,
     scopeCollections.some(
-      ({ scope, activeAdapterNames }) =>
-        scope === 'user' &&
-        activeAdapterNames.some(
-          (name) => name === 'codex' || name === 'cursor',
-        ),
-    ),
+      (collection) => collection.userAgentMaterializationCoverage === 'all',
+    )
+      ? 'all'
+      : scopeCollections.some(
+            (collection) =>
+              collection.userAgentMaterializationCoverage === 'bundled',
+          )
+        ? 'bundled'
+        : 'none',
     dependencies,
   );
 
@@ -1083,6 +1266,8 @@ async function runStatusCommand(
       reports,
       summary,
       packs: packReport,
+      packEvidence: packReport.evidence,
+      providerRefreshAdvice,
     };
     if (!context.interactive && summary.stray > 0) {
       payload.remediation = DEFAULT_REMEDIATION;
@@ -1094,6 +1279,8 @@ async function runStatusCommand(
     if (packSummary) {
       context.logger.info(packSummary);
     }
+    const providerSummary = formatProviderRefreshAdvice(providerRefreshAdvice);
+    if (providerSummary) context.logger.info(providerSummary);
   }
 
   if (summary.stray > 0) {
@@ -1352,6 +1539,13 @@ export function createStatusCommand(
     ...DEFAULT_DEPENDENCIES,
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
   return withScopeOption(new Command('status'))
     .description('Report provider sync and drift status')

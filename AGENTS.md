@@ -82,6 +82,21 @@ accepted, the post-fix implementation rejects that same state, and a valid
 accepted control still passes. Preserve the exact probe or fixture and its
 expected categorical outcome so independent review can repeat it.
 
+A passing test is not proof the code works; it proves the code matches its
+fixtures, and an invented fixture can encode the same wrong model as the code
+that reads it. Parsers of external formats — provider transcripts, rollout
+files, third-party schemas — take fixtures derived from captured real output,
+record that provenance in the fixture file's header, and run against a real
+artifact before review is requested. A Codex lineage parser shipped with a green
+658-test phase suite and parsed zero real rollouts: its fixtures encoded a
+`parent_id` field the provider never emits, and review probed the same fixtures.
+
+When a test is the evidence that a P0 requirement holds, prove it can fail:
+neutralize the guard, confirm the test breaks, restore, and report that
+alongside the fix — once per clause when the requirement has several. Two
+defects shipped behind tests that could not fail; one mocked the very reader
+that dropped the field it asserted was preserved.
+
 CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
 touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 

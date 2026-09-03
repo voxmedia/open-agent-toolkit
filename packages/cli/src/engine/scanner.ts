@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import {
   inventoryScopedPack,
@@ -15,6 +15,7 @@ import { resolveAssetsRoot } from '@fs/assets';
 import {
   SCOPE_CONTENT_TYPES,
   USER_SCOPE_MANAGED_AGENT_FILES,
+  type CanonicalScanTarget,
   type Scope,
 } from '@shared/types';
 
@@ -199,16 +200,35 @@ export const scanBundledManagedCodexAgents = scanBundledManagedAgents;
 export async function scanCanonical(
   basePath: string,
   scope: ConcreteScope,
+  targets?: readonly CanonicalScanTarget[],
 ): Promise<CanonicalEntry[]> {
   const scopeRoot = resolve(basePath);
   const entries: CanonicalEntry[] = [];
+  const scanTargets =
+    targets ??
+    SCOPE_CONTENT_TYPES[scope].map((contentType) => ({
+      contentType,
+      canonicalDir: join('.agents', canonicalDirectoryName(contentType)),
+    }));
+  const seenTargets = new Set<string>();
 
-  for (const contentType of SCOPE_CONTENT_TYPES[scope]) {
-    const contentDir = join(
-      scopeRoot,
-      '.agents',
-      canonicalDirectoryName(contentType),
-    );
+  for (const { contentType, canonicalDir } of scanTargets) {
+    const contentDir = resolve(scopeRoot, canonicalDir);
+    const relativeContentDir = relative(scopeRoot, contentDir);
+    if (
+      isAbsolute(canonicalDir) ||
+      relativeContentDir === '..' ||
+      relativeContentDir.startsWith(`..${sep}`)
+    ) {
+      throw new CliError(
+        `Canonical scan target must stay within the scope root: ${canonicalDir}`,
+      );
+    }
+    const targetKey = `${contentType}::${contentDir}`;
+    if (seenTargets.has(targetKey)) {
+      continue;
+    }
+    seenTargets.add(targetKey);
     const includeFiles = contentType === 'agent' || contentType === 'rule';
     const scanned = await readEntries(contentDir);
 

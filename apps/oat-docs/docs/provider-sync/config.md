@@ -103,6 +103,25 @@ safe, including after interruption.
   - `false`: provider is inactive even if directory is detected.
   - unset: provider falls back to directory detection.
 - `defaultStrategy` is used when no provider-specific `strategy` is set.
+- `auto` prefers a safe exact collection-directory alias when the canonical
+  collection and provider mapping are eligible. The current runtime can adopt
+  an existing exact alias; an absent destination falls back to per-entry sync
+  because guarded alias creation is unavailable. OAT does not automatically
+  unlink collection aliases. Configuring an explicit per-entry strategy does
+  not release an owned collection. Deferred collection-directory copies and
+  symlinks fail closed with manual recovery guidance on the current runtime.
+  To make the provider directory externally owned, disable the provider with
+  `oat providers set --scope <scope> --disabled <provider>`, run
+  `oat sync --scope <scope>` to detach OAT ownership, and then verify and remove
+  the preserved alias before managing the directory manually. Automatic
+  transition requires an identity-bound,
+  non-following publication primitive. Deferred file operations and ordinary
+  non-transition per-entry symlinks retain their existing behavior. A real
+  provider directory falls back to per-entry sync; broken, foreign, nested,
+  unsafe, or unverifiable collection identity fails closed without replacement.
+- Explicit `symlink` and `copy` always remain per-entry strategies. Strategy is
+  configured here (globally or per provider); `oat sync` intentionally has no
+  `--strategy` flag.
 - At runtime, config is normalized so `providers` is always present in memory.
 - Project scans combine project and user known-stray paths. User scans use the
   user sync config.

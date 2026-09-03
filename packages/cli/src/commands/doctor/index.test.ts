@@ -33,7 +33,9 @@ import {
 import {
   getConfigAwareAdapters,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
+import { getProviderRegistrations } from '@providers/shared/registry';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import type { DoctorCheck } from '@ui/output';
@@ -78,6 +80,7 @@ interface HarnessOptions {
     version: string | null;
   }>;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
   userSyncConfigProviders?: SyncConfig['providers'];
   oatConfig?: OatConfig;
   oatConfigError?: Error;
@@ -189,12 +192,17 @@ function emptyInventory(pack: PackName): PackInventory {
 }
 
 function detectedAdapter(name: string, detected: boolean): ProviderAdapter {
+  const registered = getProviderRegistrations().find(
+    ({ adapter }) => adapter.name === name,
+  )?.adapter;
   return {
-    name,
-    displayName: name,
-    defaultStrategy: 'auto',
-    projectMappings: [],
-    userMappings: [],
+    ...(registered ?? {
+      name,
+      displayName: name,
+      defaultStrategy: 'auto' as const,
+      projectMappings: [],
+      userMappings: [],
+    }),
     detect: async () => detected,
   };
 }
@@ -370,8 +378,16 @@ function createHarness(options: HarnessOptions = {}): {
       ...DEFAULT_SYNC_CONFIG,
       providers: options.userSyncConfigProviders ?? {},
     })),
+    loadSyncConfig: vi.fn(async () => DEFAULT_SYNC_CONFIG),
     getAdapters: () => adapters,
     getConfigAwareAdapters: vi.fn(getConfigAwareAdapters),
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
     readOatConfig: vi.fn(async () => {
       if (options.oatConfigError) {
         throw options.oatConfigError;
@@ -506,6 +522,72 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('providers');
     expect(capture.info[0]).toContain('claude@2.0.0');
+  });
+
+  it('reports sourced refresh policy separately from unobserved provider visibility', async () => {
+    const { command, capture } = createHarness({
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['claude'],
+        detectedProviders: ['claude'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<{
+        provider: string;
+        contentKind: string;
+        visibility: { state: string; policy: { state: string } };
+      }>;
+    };
+    expect(
+      payload.providerRefreshAdvice.find(
+        ({ provider, contentKind }) =>
+          provider === 'claude' && contentKind === 'agent',
+      ),
+    ).toMatchObject({
+      visibility: {
+        state: 'not-reported',
+        policy: {
+          state: 'restart-required',
+          provenance: { kind: 'repository-decision' },
+        },
+      },
+    });
+  });
+
+  it('uses registry-only provider context for doctor detection', async () => {
+    const adapter: ProviderAdapter = {
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+      detectVersion: async () => '9.9.9',
+    };
+    const { command, capture } = createHarness({
+      providers: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('registry-only@9.9.9');
   });
 
   it('reports an invalid projects.defaultScope as a failing check', async () => {
@@ -1820,6 +1902,16 @@ config_file = "agents/${roleName}.toml"
   it('names user-scope agents lacking native materialization without demanding a repair', async () => {
     const { command, capture } = createHarness({
       scope: 'user',
+      adapters: [],
+      providerContext: {
+        scope: 'user',
+        configSource: '~/.oat/sync/config.json',
+        activeProviders: [],
+        detectedProviders: [],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: getProviderRegistrations(),
+      },
       packInventories: [
         packInventory('research', [
           scopedInventory(
@@ -1844,7 +1936,21 @@ config_file = "agents/${roleName}.toml"
 
     await runDoctor(command, { scope: 'user', globalArgs: ['--json'] });
 
-    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const payload = capture.jsonPayloads[0] as {
+      checks: DoctorCheck[];
+      packEvidence: {
+        status: string;
+        items: Array<{
+          pack: string;
+          realizedPlacement: string;
+          diagnostics: Array<{
+            code: string;
+            affectedAssets: string[];
+            recovery: Array<{ command?: string }>;
+          }>;
+        }>;
+      };
+    };
     const packCheck = payload.checks.find(
       (check) => check.name === 'user:pack_state',
     );
@@ -1866,6 +1972,24 @@ config_file = "agents/${roleName}.toml"
     // command is offered and the check itself does not warn.
     expect(packCheck?.fix).toBeUndefined();
     expect(packCheck?.status).toBe('pass');
+    const evidence = payload.packEvidence.items.find(
+      ({ pack }) => pack === 'research',
+    );
+    expect(payload.packEvidence.status).toBe('partial');
+    expect(evidence).toMatchObject({
+      realizedPlacement: 'user',
+      diagnostics: [
+        expect.objectContaining({
+          code: 'provider-materialization-missing',
+          affectedAssets: ['~/.agents/agents/skeptical-evaluator.md'],
+          recovery: [
+            expect.objectContaining({
+              command: 'oat tools install research --scope project',
+            }),
+          ],
+        }),
+      ],
+    });
   });
 
   it('warns about duplicate cross-scope packs and offers migration', async () => {
@@ -1954,7 +2078,7 @@ config_file = "agents/${roleName}.toml"
       label: 'Claude only',
       adapters: [detectedAdapter('claude', true)],
       providers: {},
-      expected: false,
+      expected: true,
     },
     {
       label: 'Codex configured enabled but undetected',
@@ -1973,6 +2097,12 @@ config_file = "agents/${roleName}.toml"
       adapters: [detectedAdapter('cursor', true)],
       providers: {},
       expected: true,
+    },
+    {
+      label: 'unsupported provider',
+      adapters: [detectedAdapter('unsupported', true)],
+      providers: {},
+      expected: false,
     },
     {
       label: 'no provider',
@@ -2012,7 +2142,7 @@ config_file = "agents/${roleName}.toml"
         assetsRoot: '/tmp/assets',
         projectRoot: '/tmp/workspace',
         userRoot: '/tmp/home',
-        userManagedRoleMaterialization: false,
+        userManagedRoleMaterialization: true,
       });
     }
   });
@@ -2032,7 +2162,7 @@ config_file = "agents/${roleName}.toml"
       pack: 'core',
       assetsRoot: '/tmp/assets',
       userRoot: '/tmp/home',
-      userManagedRoleMaterialization: false,
+      userManagedRoleMaterialization: true,
     });
     expect(process.exitCode).toBe(1);
   });
@@ -2058,7 +2188,16 @@ config_file = "agents/${roleName}.toml"
 
     await runDoctor(command, { globalArgs: ['--json'] });
 
-    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const payload = capture.jsonPayloads[0] as {
+      checks: DoctorCheck[];
+      packEvidence: {
+        items: Array<{
+          pack: string;
+          realizedPlacement: string;
+          diagnostics: Array<{ code: string }>;
+        }>;
+      };
+    };
     const packCheck = payload.checks.find(
       (check) => check.name === 'project:pack_state',
     );
@@ -2067,6 +2206,15 @@ config_file = "agents/${roleName}.toml"
     expect(packCheck?.fix).toContain(
       'oat tools update --pack docs --scope project',
     );
+    expect(
+      payload.packEvidence.items.find(({ pack }) => pack === 'docs'),
+    ).toMatchObject({
+      realizedPlacement: 'none',
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: 'declared-only' }),
+        expect.objectContaining({ code: 'partial-placement' }),
+      ]),
+    });
   });
 
   it('warns when managed pack inventory cannot be computed', async () => {

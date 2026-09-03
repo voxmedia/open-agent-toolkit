@@ -9,10 +9,13 @@ import {
   resolveConcreteScopes,
 } from '@commands/shared/shared.utils';
 import {
+  type AutoSyncResult,
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
+import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
   hasScopedPackOwnershipEvidence,
@@ -26,7 +29,11 @@ import { Command } from 'commander';
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,
+  failedPostRemovalLifecycleOutcomes,
+  failedRemovalLifecycleOutcomes,
+  removalLifecycleOutcomes,
   removeTools,
+  selectedPacks,
 } from './remove-tools';
 
 const defaultDependencies: RemoveToolsDependencies = {
@@ -61,6 +68,8 @@ const defaultDependencies: RemoveToolsDependencies = {
   hasPackOwnershipEvidence: async (pack, scope, scopeRoot) =>
     hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
   reconcilePacks: reconcilePackLifecycles,
+  inventoryScopedPack,
+  writeScopedPackIntent,
 };
 
 const defaultSyncDependencies: AutoSyncDependencies = {
@@ -123,42 +132,134 @@ export function createToolsRemoveCommand(
 
       const scopes = resolveConcreteScopes(context.scope);
       const dryRun = opts.dryRun ?? false;
-      const result = await removeTools(
-        target,
-        scopes,
-        context.cwd,
-        context.home,
-        dryRun,
-        dependencies,
-      );
+      let result: Awaited<ReturnType<typeof removeTools>>;
+      try {
+        result = await removeTools(
+          target,
+          scopes,
+          context.cwd,
+          context.home,
+          dryRun,
+          dependencies,
+        );
+      } catch (error) {
+        if (target.kind === 'name' || !context.json) throw error;
+        const lifecycle = failedRemovalLifecycleOutcomes(target, scopes, error);
+        logger.json({
+          target: describeTarget(target),
+          dryRun,
+          result: {
+            removed: [],
+            removedAssets: [],
+            retainedOwnerData: [],
+            packOutcomes: [],
+            notInstalled: [],
+          },
+          lifecycle,
+        });
+        process.exitCode = 1;
+        return;
+      }
 
       if (!dryRun && target.kind !== 'name' && !dependencies.reconcilePacks) {
         const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
-        for (const scope of scopes) {
-          const scopeRoot = await dependencies.resolveScopeRoot(
-            scope,
-            context.cwd,
-            context.home,
-          );
-          for (const pack of packs) {
-            // Durable scoped intent is what lets `oat tools update` restore a
-            // pack whose files are all missing, so it may only be cleared for a
-            // pack this run actually removed something for. A removal that
-            // removed nothing reports nothing and must leave intent alone.
-            const removedForPack = result.packOutcomes.some(
-              (outcome) =>
-                outcome.pack === pack &&
-                outcome.scope === scope &&
-                outcome.removed,
-            );
-            if (!removedForPack) continue;
-            await writeScopedPackIntent({
-              pack,
+        let stage: 'intent-write' | 'final-inventory' = 'intent-write';
+        let currentPack = packs[0]!;
+        let currentScope = scopes[0]!;
+        try {
+          for (const scope of scopes) {
+            currentScope = scope;
+            const scopeRoot = await dependencies.resolveScopeRoot(
               scope,
-              scopeRoot,
-              enabled: false,
-            });
+              context.cwd,
+              context.home,
+            );
+            for (const pack of packs) {
+              currentPack = pack;
+              // Durable scoped intent is what lets `oat tools update` restore a
+              // pack whose files are all missing, so it may only be cleared for a
+              // pack this run actually removed something for.
+              const removedForPack = result.packOutcomes.some(
+                (outcome) =>
+                  outcome.pack === pack &&
+                  outcome.scope === scope &&
+                  outcome.removed,
+              );
+              if (!removedForPack) continue;
+              await (
+                dependencies.writeScopedPackIntent ?? writeScopedPackIntent
+              )({
+                pack,
+                scope,
+                scopeRoot,
+                enabled: false,
+              });
+            }
           }
+          if (dependencies.inventoryScopedPack) {
+            stage = 'final-inventory';
+            const assetsRoot = await dependencies.resolveAssetsRoot();
+            const finalInventories: Awaited<
+              ReturnType<NonNullable<typeof dependencies.inventoryScopedPack>>
+            >[] = [];
+            for (const scope of scopes) {
+              currentScope = scope;
+              const scopeRoot = await dependencies.resolveScopeRoot(
+                scope,
+                context.cwd,
+                context.home,
+              );
+              for (const pack of selectedPacks(target)) {
+                currentPack = pack;
+                finalInventories.push(
+                  await dependencies.inventoryScopedPack({
+                    pack,
+                    scope,
+                    scopeRoot,
+                    assetsRoot,
+                  }),
+                );
+              }
+            }
+            result.lifecycle = removalLifecycleOutcomes(
+              selectedPacks(target),
+              scopes,
+              result.packOutcomes,
+              false,
+              finalInventories,
+            );
+          }
+        } catch (error) {
+          const lifecycle = failedPostRemovalLifecycleOutcomes(
+            target,
+            scopes,
+            result.packOutcomes,
+            stage,
+            currentPack,
+            currentScope,
+            error,
+          );
+          const legacyResult = { ...result };
+          delete legacyResult.lifecycle;
+          if (context.json) {
+            logger.json({
+              target: describeTarget(target),
+              dryRun,
+              result: legacyResult,
+              lifecycle,
+            });
+          } else {
+            for (const tool of result.removed) {
+              logger.success(`Removed: ${tool.name} (${tool.scope})`);
+            }
+            for (const outcome of lifecycle) {
+              logger.warn(
+                outcome.recovery.map(({ message }) => message).join('; '),
+              );
+            }
+          }
+          process.exitCode = 1;
+          return;
         }
       }
 
@@ -173,6 +274,7 @@ export function createToolsRemoveCommand(
       }
 
       // Auto-sync after mutations (before output so sync errors are captured)
+      const syncResults: AutoSyncResult[] = [];
       if (!dryRun && opts.sync !== false) {
         for (const scope of scopes) {
           const scopeRoot = await dependencies.resolveScopeRoot(
@@ -186,19 +288,32 @@ export function createToolsRemoveCommand(
             scopeRoot,
           );
           if (removedCanonicalPaths.length === 0) continue;
-          await autoSync(
-            [scope],
-            context.cwd,
-            context.home,
-            logger,
-            syncDependencies,
-            { removedCanonicalPaths },
+          syncResults.push(
+            await autoSync(
+              [scope],
+              context.cwd,
+              context.home,
+              logger,
+              syncDependencies,
+              { removedCanonicalPaths },
+            ),
           );
         }
       }
+      const lifecycle = finalizeRemovalLifecycle(result.lifecycle, syncResults);
+      const legacyResult = { ...result };
+      delete legacyResult.lifecycle;
 
       if (context.json) {
-        logger.json({ target: describeTarget(target), dryRun, result });
+        logger.json({
+          target: describeTarget(target),
+          dryRun,
+          result: legacyResult,
+          ...(lifecycle ? { lifecycle } : {}),
+        });
+        if (lifecycle?.some(({ status }) => status !== 'complete')) {
+          process.exitCode = 1;
+        }
         return;
       }
 
@@ -210,7 +325,58 @@ export function createToolsRemoveCommand(
       } else {
         logger.info('No tools to remove.');
       }
+      for (const outcome of lifecycle ?? []) {
+        if (outcome.status === 'complete') continue;
+        logger.warn(
+          `Pack ${outcome.selection.pack} removal ${outcome.status}: ${outcome.recovery.map(({ message }) => message).join('; ')}`,
+        );
+        process.exitCode = 1;
+      }
     });
+}
+
+function finalizeRemovalLifecycle(
+  lifecycle: PackLifecycleOutcome[] | undefined,
+  syncResults: readonly AutoSyncResult[],
+): PackLifecycleOutcome[] | undefined {
+  if (!lifecycle || syncResults.length === 0) return lifecycle;
+  return lifecycle.map((outcome) => {
+    const relevant = syncResults.filter(({ scopes }) =>
+      scopes.some((scope) => outcome.selection.targetScopes.includes(scope)),
+    );
+    if (relevant.length === 0 || relevant.every(({ synced }) => synced)) {
+      return relevant.length === 0
+        ? outcome
+        : {
+            ...outcome,
+            sync: {
+              scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
+              status: 'complete',
+              providers: [],
+            },
+          };
+    }
+    const error = relevant.find((result) => result.error)?.error;
+    return {
+      ...outcome,
+      sync: {
+        scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
+        status: 'failed',
+        providers: [],
+        ...(error ? { error } : {}),
+      },
+      status: 'partial',
+      recovery: [
+        ...outcome.recovery,
+        {
+          code: 'provider-sync-incomplete',
+          message:
+            error ??
+            `Run oat sync for ${outcome.selection.targetScopes.join(', ')} scope`,
+        },
+      ],
+    };
+  });
 }
 
 function canonicalRemovalPaths(

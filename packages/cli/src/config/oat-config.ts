@@ -45,6 +45,11 @@ export interface OatGitConfig {
   defaultBranch?: string;
 }
 
+/**
+ * Known project config keys. Unknown siblings written by a newer OAT are not
+ * described here, but they are preserved verbatim across read-mutate-write:
+ * see the FR10 merge in `normalizeOatConfig`.
+ */
 export interface OatProjectsConfig {
   root?: string;
   defaultScope?: 'shared' | 'local' | 'synced';
@@ -1143,11 +1148,27 @@ function normalizeOatConfig(
         2,
       );
     }
-    if (root || defaultScope) {
-      next.projects = {
-        ...(root ? { root } : {}),
-        ...(defaultScope ? { defaultScope } : {}),
-      };
+    // FR10: retain unknown siblings. Normalization previously rebuilt this
+    // subtree from the two known keys, so any field a newer OAT wrote was
+    // destroyed by the next read-mutate-write cycle — which every project-scope
+    // pack install performs. The values come from JSON.parse, so they are
+    // JSON-safe by construction; known keys are normalized and overwrite the
+    // raw ones, and everything else is carried through untouched.
+    // Built with `Object.fromEntries` rather than assignment: `preserved[key]`
+    // invokes the legacy prototype setter for a key named `__proto__`, so a
+    // valid JSON sibling with that name would silently vanish.
+    const preserved = Object.fromEntries(
+      Object.entries(parsed.projects).filter(
+        ([key]) => key !== 'root' && key !== 'defaultScope',
+      ),
+    );
+    const normalized: Record<string, unknown> = {
+      ...preserved,
+      ...(root ? { root } : {}),
+      ...(defaultScope ? { defaultScope } : {}),
+    };
+    if (Object.keys(normalized).length > 0) {
+      next.projects = normalized as OatProjectsConfig;
     }
   }
 

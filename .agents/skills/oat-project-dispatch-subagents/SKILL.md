@@ -1,6 +1,6 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.1.3
+version: 1.1.4
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
@@ -150,6 +150,29 @@ For every lifecycle dispatch:
 8. Preserve its generic dispatch record unchanged.
 9. Add lifecycle outcome metadata and let the calling workflow perform state,
    plan, implementation-log, commit, or review-table writes.
+
+### Persist native dispatch lineage
+
+For project-aware launches, apply the generic engine's native dispatch lineage
+contract. Construct and redact the complete generic record plus OAT event
+before the native host call. Immediately after the call returns accepted or
+`blocked-before-start`, persist the result with:
+
+```bash
+oat project dispatch record \
+  --project "$PROJECT_PATH" \
+  --event-file - \
+  --json
+```
+
+The accepted record closes replacement. A rejected record must include
+`provesNoChildStarted: true` before one target-preserving canonical-instruction
+fallback may receive its own fresh request ID. Preserve exact provider, model,
+effort, reasoning mode, service tier, route, authority, payload controls,
+deadline, and retry limit. Timeout, `BLOCKED`, refusal after acceptance,
+runtime mismatch, missing telemetry, or malformed output never authorizes
+fallback or replacement. The recorder validates evidence; it never launches a
+provider or mutates lifecycle bookkeeping.
 
 Example adapter input:
 

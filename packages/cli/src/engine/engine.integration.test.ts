@@ -2,6 +2,7 @@ import {
   lstat,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   readlink,
   rm,
@@ -9,21 +10,85 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
-import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
-import { createSymlink } from '@fs/io';
-import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import {
+  DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
+  type SyncConfig,
+} from '@config/sync-config';
+import { createSymlink, createSymlinkNoClobber } from '@fs/io';
+import {
+  createEmptyManifest,
+  loadManifest,
+  saveManifest,
+} from '@manifest/manager';
+import type { ManifestV2 } from '@manifest/manifest.types';
+import { claudeAdapter } from '@providers/claude/adapter';
 import { copilotAdapter } from '@providers/copilot/adapter';
 import { cursorAdapter } from '@providers/cursor/adapter';
 import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { computeSyncPlan } from './compute-plan';
-import { executeSyncPlan } from './execute-plan';
+import { computeSyncPlan as computeSyncPlanImplementation } from './compute-plan';
+import { executeSyncPlan as executeSyncPlanImplementation } from './execute-plan';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import { scanCanonical } from './scanner';
 import { createTestAdapter } from './test-helpers';
+
+const DEFAULT_SYNC_CONFIG: SyncConfig = {
+  ...AUTO_SYNC_CONFIG,
+  defaultStrategy: 'symlink',
+};
+const COPY_SYNC_CONFIG: SyncConfig = {
+  ...AUTO_SYNC_CONFIG,
+  defaultStrategy: 'copy',
+};
+
+function computeSyncPlan(
+  args: Parameters<typeof computeSyncPlanImplementation>[0],
+): ReturnType<typeof computeSyncPlanImplementation> {
+  return computeSyncPlanImplementation({
+    ...args,
+    collectionAliasCreationAvailable:
+      args.collectionAliasCreationAvailable ?? true,
+    collectionAliasEligibleMappings:
+      args.collectionAliasEligibleMappings ??
+      args.adapters.flatMap((adapter) =>
+        [...adapter.projectMappings, ...adapter.userMappings]
+          .filter(({ contentType }) => contentType === 'skill')
+          .map(() => ({
+            provider: adapter.name,
+            contentType: 'skill' as const,
+          })),
+      ),
+  });
+}
+
+async function createTestCollectionLink(
+  target: string,
+  linkPath: string,
+): Promise<{ linkText: string; device: string; inode: string }> {
+  await mkdir(dirname(linkPath), { recursive: true });
+  const linkText = relative(dirname(linkPath), target);
+  await symlink(linkText, linkPath, 'dir');
+  const created = await lstat(linkPath);
+  return {
+    linkText,
+    device: String(created.dev),
+    inode: String(created.ino),
+  };
+}
+
+function executeSyncPlan(
+  ...args: Parameters<typeof executeSyncPlanImplementation>
+): ReturnType<typeof executeSyncPlanImplementation> {
+  const [plan, manifest, manifestPath, dependencies = {}] = args;
+  return executeSyncPlanImplementation(plan, manifest, manifestPath, {
+    ...dependencies,
+    createCollectionSymlinkNoClobber:
+      dependencies.createCollectionSymlinkNoClobber ?? createTestCollectionLink,
+  });
+}
 
 async function seedCanonical(root: string): Promise<void> {
   await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
@@ -103,6 +168,57 @@ function createLegacyCopilotAdapter(): ProviderAdapter {
   };
 }
 
+function createSkillCollectionAdapter(): ProviderAdapter {
+  const adapter = createTestAdapter();
+  return {
+    ...adapter,
+    projectMappings: adapter.projectMappings.filter(
+      ({ contentType }) => contentType === 'skill',
+    ),
+  };
+}
+
+async function createHistoricalCollectionManifest(
+  root: string,
+  options: {
+    ownership?: 'oat-created' | 'adopted-exact';
+    durableIdentity?: boolean;
+  } = {},
+): Promise<ManifestV2> {
+  const canonicalDir = join(root, '.agents', 'skills');
+  const providerDir = join(root, '.claude', 'skills');
+  await mkdir(canonicalDir, { recursive: true });
+  await mkdir(join(root, '.claude'), { recursive: true });
+  await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+  const providerLink = await lstat(providerDir);
+  const durableIdentity = options.durableIdentity ?? true;
+
+  return {
+    ...createEmptyManifest(),
+    collections: [
+      {
+        id: 'historical-collection',
+        provider: 'claude',
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.claude/skills',
+        linkTarget: '.agents/skills',
+        ownership: options.ownership ?? 'oat-created',
+        ...(durableIdentity
+          ? {
+              createdLink: {
+                device: String(providerLink.dev),
+                inode: String(providerLink.ino),
+                linkText: await readlink(providerDir),
+              },
+            }
+          : {}),
+        lastVerified: new Date().toISOString(),
+      },
+    ],
+  };
+}
+
 describe('sync engine integration', () => {
   const tempDirs: string[] = [];
 
@@ -171,6 +287,857 @@ describe('sync engine integration', () => {
     expect(
       secondPlan.entries.every((entry) => entry.operation === 'skip'),
     ).toBe(true);
+  });
+
+  it('reconciles collection inheritance, removal, repetition, and disablement without child mutation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+
+    const firstCanonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical: firstCanonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(firstPlan.collections).toEqual([
+      expect.objectContaining({ action: 'create-collection-link' }),
+    ]);
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      '# skill two\n',
+      'utf8',
+    );
+    const secondCanonical = await scanCanonical(root, 'project');
+    const firstManifest = await loadManifest(manifestPath);
+    const inheritancePlan = await computeSyncPlan({
+      canonical: secondCanonical,
+      adapters: [adapter],
+      manifest: firstManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(inheritancePlan.entries).toEqual([]);
+    expect(inheritancePlan.collections).toEqual([
+      expect.objectContaining({
+        action: 'inherit-collection',
+        inheritedEntries: [
+          '.agents/skills/skill-one',
+          '.agents/skills/skill-two',
+        ],
+      }),
+    ]);
+    await executeSyncPlan(inheritancePlan, firstManifest, manifestPath);
+
+    const inheritedManifest = await loadManifest(manifestPath);
+    const repeatedPlan = await computeSyncPlan({
+      canonical: secondCanonical,
+      adapters: [adapter],
+      manifest: inheritedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(repeatedPlan).toMatchObject({
+      entries: [],
+      removals: [],
+      collections: [],
+    });
+
+    await rm(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+      force: true,
+    });
+    const reducedCanonical = await scanCanonical(root, 'project');
+    const removalPlan = await computeSyncPlan({
+      canonical: reducedCanonical,
+      adapters: [adapter],
+      manifest: inheritedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(removalPlan.entries).toEqual([]);
+    expect(removalPlan.removals).toEqual([
+      expect.objectContaining({ operation: 'detach' }),
+    ]);
+    await executeSyncPlan(removalPlan, inheritedManifest, manifestPath);
+
+    const reducedManifest = await loadManifest(manifestPath);
+    expect(reducedManifest.entries).toEqual([
+      expect.objectContaining({
+        canonicalPath: '.agents/skills/skill-two',
+        strategy: 'collection',
+      }),
+    ]);
+    const disablePlan = await computeSyncPlan({
+      canonical: reducedCanonical,
+      adapters: [],
+      manifest: reducedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(disablePlan.collections).toEqual([
+      expect.objectContaining({ action: 'detach-collection' }),
+    ]);
+    const result = await executeSyncPlan(
+      disablePlan,
+      reducedManifest,
+      manifestPath,
+    );
+
+    expect(result.collectionResults).toEqual([
+      expect.objectContaining({
+        action: 'detach-collection',
+        status: 'partial',
+        reason: expect.stringMatching(/manual|preserv|guard/i),
+      }),
+    ]);
+    expect(
+      (await lstat(join(root, '.claude', 'skills'))).isSymbolicLink(),
+    ).toBe(true);
+    await expect(
+      readFile(
+        join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('# skill two\n');
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+  });
+
+  it.each(['symlink', 'copy'] as const)(
+    'blocks explicit %s transition until a later plan revalidates an absent alias',
+    async (strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      const outside = await mkdtemp(join(tmpdir(), 'oat-engine-outside-'));
+      tempDirs.push(root, outside);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const canonicalDir = join(root, '.agents', 'skills');
+      const providerDir = join(root, '.claude', 'skills');
+      await writeFile(join(outside, 'user-owned.md'), 'outside-before', 'utf8');
+      await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+      await mkdir(join(root, '.claude'), { recursive: true });
+      await writeFile(
+        join(canonicalDir, 'skill-one', 'SKILL.md'),
+        '# skill one\n',
+        'utf8',
+      );
+      const canonical = await scanCanonical(root, 'project');
+      const collectionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(
+        collectionPlan,
+        createEmptyManifest(),
+        manifestPath,
+      );
+      const collectionManifest = await loadManifest(manifestPath);
+
+      expect(collectionManifest.collections[0]).toMatchObject({
+        ownership: 'oat-created',
+        createdLink: {
+          device: expect.any(String),
+          inode: expect.any(String),
+          linkText: expect.any(String),
+        },
+      });
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest: collectionManifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+        }),
+      ]);
+      expect(transitionPlan.entries).toEqual([
+        expect.objectContaining({
+          operation: strategy === 'copy' ? 'create_copy' : 'create_symlink',
+          strategy,
+          deferredUntilCollectionDetached: true,
+        }),
+      ]);
+
+      const result = await executeSyncPlan(
+        transitionPlan,
+        collectionManifest,
+        manifestPath,
+      );
+      expect(result.failed).toBe(2);
+      expect(result.collectionResults[0]).toMatchObject({
+        status: 'rejected',
+        reason: expect.stringMatching(/manual|preserv|guard/i),
+      });
+      expect(result.operations[0]).toMatchObject({ status: 'failed' });
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [expect.objectContaining({ ownership: 'oat-created' })],
+        entries: [expect.objectContaining({ strategy: 'collection' })],
+      });
+
+      await rm(providerDir);
+      const absentTransitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest: collectionManifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+      expect(absentTransitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+          proof: expect.objectContaining({ status: 'absent' }),
+        }),
+      ]);
+      expect(absentTransitionPlan.entries).toEqual([
+        expect.objectContaining({ deferredUntilCollectionDetached: true }),
+      ]);
+
+      let ordinaryCopyCalls = 0;
+      const unsafeOrdinaryCopy = async (
+        _source: string,
+        destination: string,
+      ): Promise<void> => {
+        ordinaryCopyCalls += 1;
+        await mkdir(dirname(destination), { recursive: true });
+        await symlink(outside, destination, 'dir');
+        await writeFile(join(destination, 'unsafe.md'), 'unsafe-write', 'utf8');
+      };
+      let unsafeSymlinkCalls = 0;
+      const unsafeDeferredSymlink = async (
+        source: string,
+        destination: string,
+        isFile?: boolean,
+      ): Promise<void> => {
+        unsafeSymlinkCalls += 1;
+        await mkdir(providerDir);
+        await rm(providerDir, { recursive: true });
+        await symlink(outside, providerDir, 'dir');
+        await createSymlinkNoClobber(source, destination, isFile);
+      };
+      const resumed = await executeSyncPlan(
+        absentTransitionPlan,
+        collectionManifest,
+        manifestPath,
+        {
+          copyDirectory: unsafeOrdinaryCopy,
+          createSymlinkNoClobber: unsafeDeferredSymlink,
+        },
+      );
+      if (strategy === 'copy') {
+        expect(resumed.failed).toBe(2);
+        expect(resumed.collectionResults[0]).toMatchObject({
+          action: 'detach-collection',
+          status: expect.stringMatching(/rejected|failed|partial/),
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(resumed.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(ordinaryCopyCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(
+          readFile(join(outside, 'user-owned.md'), 'utf8'),
+        ).resolves.toBe('outside-before');
+
+        const blockedManifest = await loadManifest(manifestPath);
+        expect(blockedManifest).toMatchObject({
+          collections: [expect.objectContaining({ ownership: 'oat-created' })],
+          entries: [expect.objectContaining({ strategy: 'collection' })],
+        });
+
+        const retryCanonical = await scanCanonical(root, 'project');
+        const retryPlan = await computeSyncPlan({
+          canonical: retryCanonical,
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'copy' } },
+          },
+          scopeRoot: root,
+        });
+        expect(retryPlan.collections).toEqual([
+          expect.objectContaining({
+            action: 'detach-collection',
+            transitionToPerEntry: true,
+            proof: expect.objectContaining({ status: 'absent' }),
+          }),
+        ]);
+        expect(retryPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_copy',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+
+        const retried = await executeSyncPlan(
+          retryPlan,
+          blockedManifest,
+          manifestPath,
+          { copyDirectory: unsafeOrdinaryCopy },
+        );
+        expect(retried.failed).toBe(2);
+        expect(retried.collectionResults[0]).toMatchObject({
+          action: 'detach-collection',
+          status: expect.stringMatching(/rejected|failed|partial/),
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(retried.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(ordinaryCopyCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
+
+        const changedStrategyPlan = await computeSyncPlan({
+          canonical: retryCanonical,
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'symlink' } },
+          },
+          scopeRoot: root,
+        });
+        expect(changedStrategyPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_symlink',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+        const changedStrategy = await executeSyncPlan(
+          changedStrategyPlan,
+          blockedManifest,
+          manifestPath,
+          { createSymlinkNoClobber: unsafeDeferredSymlink },
+        );
+        expect(changedStrategy.failed).toBe(2);
+        expect(changedStrategy.collectionResults[0]).toMatchObject({
+          status: 'rejected',
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(changedStrategy.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
+      } else {
+        expect(resumed.failed).toBe(2);
+        expect(resumed.collectionResults[0]).toMatchObject({
+          status: 'rejected',
+          reason: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(resumed.operations[0]).toMatchObject({
+          status: 'failed',
+          failure: expect.stringMatching(/external.*ownership|identity.bound/i),
+        });
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+
+        const blockedManifest = await loadManifest(manifestPath);
+        expect(blockedManifest).toMatchObject({
+          collections: [expect.objectContaining({ ownership: 'oat-created' })],
+          entries: [expect.objectContaining({ strategy: 'collection' })],
+        });
+        const retryPlan = await computeSyncPlan({
+          canonical: await scanCanonical(root, 'project'),
+          adapters: [adapter],
+          manifest: blockedManifest,
+          scope: 'project',
+          config: {
+            ...AUTO_SYNC_CONFIG,
+            providers: { claude: { strategy: 'symlink' } },
+          },
+          scopeRoot: root,
+        });
+        expect(retryPlan.entries).toEqual([
+          expect.objectContaining({
+            operation: 'create_symlink',
+            deferredUntilCollectionDetached: true,
+          }),
+        ]);
+        const retried = await executeSyncPlan(
+          retryPlan,
+          blockedManifest,
+          manifestPath,
+          { createSymlinkNoClobber: unsafeDeferredSymlink },
+        );
+        expect(retried.failed).toBe(2);
+        expect(unsafeSymlinkCalls).toBe(0);
+        await expect(lstat(providerDir)).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        await expect(readdir(outside)).resolves.toEqual(['user-owned.md']);
+        await expect(loadManifest(manifestPath)).resolves.toEqual(
+          blockedManifest,
+        );
+      }
+    },
+  );
+
+  it.each(['symlink', 'copy'] as const)(
+    'blocks zero-child explicit %s transition until manual removal is replanned',
+    async (strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const providerDir = join(root, '.claude', 'skills');
+      const manifest = await createHistoricalCollectionManifest(root);
+      await saveManifest(manifestPath, manifest);
+      const canonical = await scanCanonical(root, 'project');
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(transitionPlan.entries).toEqual([]);
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+        }),
+      ]);
+      const result = await executeSyncPlan(
+        transitionPlan,
+        manifest,
+        manifestPath,
+      );
+
+      expect(result.collectionResults).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          status: 'partial',
+          reason: expect.stringMatching(/manual|preserv|guard/i),
+        }),
+      ]);
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'historical-collection' }],
+      });
+
+      await rm(providerDir);
+      const absentTransitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy } },
+        },
+        scopeRoot: root,
+      });
+      expect(absentTransitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'detach-collection',
+          transitionToPerEntry: true,
+          proof: expect.objectContaining({ status: 'absent' }),
+        }),
+      ]);
+      await executeSyncPlan(absentTransitionPlan, manifest, manifestPath);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [],
+        entries: [],
+      });
+    },
+  );
+
+  it.each(['adopted', 'changed', 'legacy', 'unverifiable'] as const)(
+    'preserves a zero-child %s collection conflict during explicit transition',
+    async (kind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const providerDir = join(root, '.claude', 'skills');
+      const manifest = await createHistoricalCollectionManifest(root, {
+        ownership: kind === 'adopted' ? 'adopted-exact' : 'oat-created',
+        durableIdentity: kind !== 'legacy',
+      });
+      if (kind === 'changed' || kind === 'unverifiable') {
+        await rm(providerDir);
+        if (kind === 'changed') {
+          await mkdir(join(root, 'foreign-skills'));
+        }
+        await symlink(
+          kind === 'changed' ? join(root, 'foreign-skills') : 'missing-skills',
+          providerDir,
+          'dir',
+        );
+      }
+      const canonical = await scanCanonical(root, 'project');
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy: 'symlink' } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(transitionPlan.entries).toEqual([]);
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({ action: 'reject-collection' }),
+      ]);
+      await executeSyncPlan(transitionPlan, manifest, manifestPath);
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+      await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+        collections: [{ id: 'historical-collection' }],
+      });
+    },
+  );
+
+  it('preserves a same-target user replacement during disablement', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const canonicalDir = join(root, '.agents', 'skills');
+    const providerDir = join(root, '.claude', 'skills');
+    await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(canonicalDir, 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    const canonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+    const ownedManifest = await loadManifest(manifestPath);
+
+    await rm(providerDir);
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'identity-reservation'),
+      'dir',
+    );
+    await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+    // Deliberately not asserting that the replacement has a different inode.
+    // Filesystems make no guarantee about inode reuse: macOS/APFS hands out a
+    // fresh inode here, while Linux/ext4 frequently reuses the one just freed,
+    // so the assertion passed locally and failed in CI. The identity is not
+    // load-bearing either way — `removeCollectionSymlinkIfUnchanged` returns
+    // false unconditionally, so a matching inode cannot cause the user's
+    // symlink to be unlinked. What matters is the target, asserted below.
+    const replacementIdentity = await lstat(providerDir);
+    expect(replacementIdentity.isSymbolicLink()).toBe(true);
+    expect(await readlink(providerDir)).toBe(join('..', '.agents', 'skills'));
+
+    const disablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: ownedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    const result = await executeSyncPlan(
+      disablePlan,
+      ownedManifest,
+      manifestPath,
+    );
+
+    expect(result.collectionResults[0]).toMatchObject({
+      action: 'detach-collection',
+      status: 'changed',
+    });
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+  });
+
+  it('detaches a legacy created record without deleting its exact alias', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const canonicalDir = join(root, '.agents', 'skills');
+    const providerDir = join(root, '.claude', 'skills');
+    await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(canonicalDir, 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    const canonical = await scanCanonical(root, 'project');
+    const firstPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+    const legacyManifest = await loadManifest(manifestPath);
+    delete (
+      legacyManifest
+        .collections[0] as (typeof legacyManifest.collections)[number] & {
+        createdLink?: unknown;
+      }
+    ).createdLink;
+
+    const disablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: legacyManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(disablePlan, legacyManifest, manifestPath);
+
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+  });
+
+  it.each(['adopted', 'changed', 'replacement', 'unverifiable'] as const)(
+    'preserves an %s collection conflict during explicit strategy transition',
+    async (kind) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createSkillCollectionAdapter();
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const canonicalDir = join(root, '.agents', 'skills');
+      const providerDir = join(root, '.claude', 'skills');
+      await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+      await mkdir(join(root, '.claude'), { recursive: true });
+      await writeFile(
+        join(canonicalDir, 'skill-one', 'SKILL.md'),
+        '# skill one\n',
+        'utf8',
+      );
+      const canonical = await scanCanonical(root, 'project');
+
+      if (kind === 'adopted') {
+        await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+      }
+      const firstPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
+      const manifest = await loadManifest(manifestPath);
+
+      if (kind === 'changed') {
+        await rm(providerDir);
+        await mkdir(join(root, 'foreign-skills'));
+        await symlink(join('..', 'foreign-skills'), providerDir, 'dir');
+      }
+      if (kind === 'replacement') {
+        await rm(providerDir);
+        await symlink(
+          join('..', '.agents', 'skills'),
+          join(root, '.claude', 'identity-reservation'),
+          'dir',
+        );
+        await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+      }
+      if (kind === 'unverifiable') {
+        delete (
+          manifest.collections[0] as (typeof manifest.collections)[number] & {
+            createdLink?: unknown;
+          }
+        ).createdLink;
+      }
+
+      const transitionPlan = await computeSyncPlan({
+        canonical,
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: {
+          ...AUTO_SYNC_CONFIG,
+          providers: { claude: { strategy: 'symlink' } },
+        },
+        scopeRoot: root,
+      });
+
+      expect(transitionPlan.entries).toEqual([]);
+      expect(transitionPlan.collections).toEqual([
+        expect.objectContaining({
+          action: 'reject-collection',
+          reason: expect.stringMatching(/clear|preserv|identity/i),
+        }),
+      ]);
+      expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    },
+  );
+
+  it('detaches adopted and changed collection aliases without removing them', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createSkillCollectionAdapter();
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const canonicalDir = join(root, '.agents', 'skills');
+    const providerDir = join(root, '.claude', 'skills');
+    await mkdir(join(canonicalDir, 'skill-one'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await writeFile(
+      join(canonicalDir, 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+
+    const canonical = await scanCanonical(root, 'project');
+    const adoptionPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(adoptionPlan.collections).toEqual([
+      expect.objectContaining({ action: 'adopt-collection-link' }),
+    ]);
+    await executeSyncPlan(adoptionPlan, createEmptyManifest(), manifestPath);
+
+    const adoptedManifest = await loadManifest(manifestPath);
+    const adoptedDisablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: adoptedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(adoptedDisablePlan, adoptedManifest, manifestPath);
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
+
+    const freshPlan = await computeSyncPlan({
+      canonical,
+      adapters: [adapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(freshPlan, createEmptyManifest(), manifestPath);
+    const ownedManifest = await loadManifest(manifestPath);
+    ownedManifest.collections[0]!.ownership = 'oat-created';
+    await rm(providerDir);
+    const foreignDir = join(root, 'foreign-skills');
+    await mkdir(foreignDir);
+    await symlink(join('..', 'foreign-skills'), providerDir, 'dir');
+    const changedDisablePlan = await computeSyncPlan({
+      canonical,
+      adapters: [],
+      manifest: ownedManifest,
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(changedDisablePlan, ownedManifest, manifestPath);
+
+    expect((await lstat(providerDir)).isSymbolicLink()).toBe(true);
+    expect(await readlink(providerDir)).toBe(join('..', 'foreign-skills'));
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      collections: [],
+      entries: [],
+    });
   });
 
   it('repairs missing manifest entries for pre-existing in-sync symlinks', async () => {
@@ -342,7 +1309,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(firstPlan, createEmptyManifest(), manifestPath);
@@ -359,7 +1326,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest,
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     const result = await executeSyncPlan(plan, manifest, manifestPath);
@@ -389,7 +1356,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
@@ -463,7 +1430,7 @@ describe('sync engine integration', () => {
       adapters: [adapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(plan, createEmptyManifest(), manifestPath);
@@ -553,6 +1520,52 @@ describe('sync engine integration', () => {
     ).rejects.toThrow();
   });
 
+  it('materializes Claude reviewer and implementer files at user scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    for (const name of ['oat-reviewer.md', 'oat-phase-implementer.md']) {
+      await writeFile(
+        join(root, '.agents', 'agents', name),
+        `---\nname: ${name.replace('.md', '')}\ndescription: managed\n---\n`,
+        'utf8',
+      );
+    }
+
+    const canonical = await scanCanonical(
+      root,
+      'user',
+      claudeAdapter.userMappings.map(({ contentType, canonicalDir }) => ({
+        contentType,
+        canonicalDir,
+      })),
+    );
+    const plan = await computeSyncPlan({
+      canonical,
+      adapters: [claudeAdapter],
+      manifest: createEmptyManifest(),
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    const result = await executeSyncPlan(
+      plan,
+      createEmptyManifest(),
+      manifestPath,
+    );
+
+    expect(result.operations?.map(({ status }) => status)).toEqual([
+      'changed',
+      'changed',
+    ]);
+    for (const name of ['oat-reviewer.md', 'oat-phase-implementer.md']) {
+      await expect(
+        lstat(join(root, '.claude', 'agents', name)),
+      ).resolves.toMatchObject({});
+    }
+  });
+
   it('retires project Cursor skill copies without affecting active mappings or local skills', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
     tempDirs.push(root);
@@ -581,7 +1594,7 @@ describe('sync engine integration', () => {
       adapters: [legacyAdapter],
       manifest: createEmptyManifest(),
       scope: 'project',
-      config: DEFAULT_SYNC_CONFIG,
+      config: COPY_SYNC_CONFIG,
       scopeRoot: root,
     });
     await executeSyncPlan(legacyPlan, createEmptyManifest(), manifestPath);

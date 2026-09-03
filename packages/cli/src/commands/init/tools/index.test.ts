@@ -42,6 +42,7 @@ interface HarnessOptions {
   projectRootUnavailable?: boolean;
   useLifecycle?: boolean;
   declaredPlacement?: Partial<Record<string, 'project' | 'user' | 'both'>>;
+  guidanceResponse?: boolean;
   toolsByScope?: Partial<
     Record<
       'project' | 'user',
@@ -124,6 +125,11 @@ function createHarness(options: HarnessOptions = {}) {
     ],
     user: [createScannedTool('oat-docs', 'core', 'user')],
   };
+  const realizedPlacements = new Set(
+    (['project', 'user'] as const).flatMap((scope) =>
+      (toolsByScope[scope] ?? []).map((tool) => `${tool.pack}:${scope}`),
+    ),
+  );
 
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => {
@@ -149,6 +155,7 @@ function createHarness(options: HarnessOptions = {}) {
       return next === undefined ? (choices[0]?.value ?? null) : next;
     },
   );
+  const confirmAction = vi.fn(async () => options.guidanceResponse ?? false);
 
   const installCore = vi.fn(async () => ({
     copiedSkills: ['oat-docs', 'oat-doctor'],
@@ -244,12 +251,15 @@ function createHarness(options: HarnessOptions = {}) {
       toolsByScope[scanOptions.scope] ?? [],
   );
   const upsertAgentsMdSection = vi.fn(async () => ({
-    action: 'updated' as const,
+    action: 'created' as const,
   }));
   const removeAgentsMdSection = vi.fn(async () => false);
   const reconcilePacks = vi.fn(
-    async (requests: readonly PackLifecycleRequest[]) =>
-      requests.map((request) => {
+    async (requests: readonly PackLifecycleRequest[]) => {
+      for (const request of requests) {
+        realizedPlacements.add(`${request.pack}:${request.scope}`);
+      }
+      return requests.map((request) => {
         const inventory = {
           pack: request.pack,
           scope: request.scope,
@@ -262,7 +272,21 @@ function createHarness(options: HarnessOptions = {}) {
             diagnostics: [],
           },
           completeness: 'complete' as const,
-          assets: [],
+          assets: [
+            {
+              definition: {
+                id: `${request.pack}-fixture`,
+                kind: 'skill' as const,
+                destination: `.agents/skills/${request.pack}-fixture`,
+                scopes: [request.scope],
+                ownership: { [request.scope]: 'managed' as const },
+              },
+              path: `${request.scopeRoot}/.agents/skills/${request.pack}-fixture`,
+              status: 'current' as const,
+              installedVersion: '1.0.0',
+              bundledVersion: '1.0.0',
+            },
+          ],
           diagnostics: [],
         };
         const operation = {
@@ -286,7 +310,8 @@ function createHarness(options: HarnessOptions = {}) {
           plan,
           apply: { applied: [operation], inventory, synced: false },
         };
-      }),
+      });
+    },
   );
   const inventoryPack = vi.fn(
     async ({
@@ -303,10 +328,9 @@ function createHarness(options: HarnessOptions = {}) {
         if (scope === 'user' && !userRoot) return [];
         if (pack === 'core' && scope === 'project') return [];
         const declared = options.declaredPlacement?.[pack];
-        const enabled =
-          declared === scope ||
-          declared === 'both' ||
-          (toolsByScope[scope] ?? []).some((tool) => tool.pack === pack);
+        const isDeclared = declared === scope || declared === 'both';
+        const realized = realizedPlacements.has(`${pack}:${scope}`);
+        const enabled = isDeclared || realized;
         return [
           {
             pack,
@@ -315,14 +339,34 @@ function createHarness(options: HarnessOptions = {}) {
               pack,
               scope,
               enabled,
-              source: enabled
-                ? ('inferred-legacy' as const)
-                : ('none' as const),
+              source: isDeclared
+                ? ('declared' as const)
+                : realized
+                  ? ('inferred-legacy' as const)
+                  : ('none' as const),
               configPath: `/${scope}/.oat/config.json`,
               diagnostics: [],
             },
-            completeness: enabled ? ('complete' as const) : ('absent' as const),
-            assets: [],
+            completeness: realized
+              ? ('complete' as const)
+              : ('absent' as const),
+            assets: realized
+              ? [
+                  {
+                    definition: {
+                      id: `${pack}-fixture`,
+                      kind: 'skill' as const,
+                      destination: `.agents/skills/${pack}-fixture`,
+                      scopes: [scope],
+                      ownership: { [scope]: 'managed' as const },
+                    },
+                    path: `/${scope}/.agents/skills/${pack}-fixture`,
+                    status: 'current' as const,
+                    installedVersion: '1.0.0',
+                    bundledVersion: '1.0.0',
+                  },
+                ]
+              : [],
             diagnostics: [],
           },
         ];
@@ -343,6 +387,11 @@ function createHarness(options: HarnessOptions = {}) {
       };
     },
   );
+  const syncAfterInstall = vi.fn(async (scopes: Array<'project' | 'user'>) => ({
+    synced: scopes.length > 0,
+    scopes,
+    error: null,
+  }));
 
   const command = createInitToolsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -365,6 +414,7 @@ function createHarness(options: HarnessOptions = {}) {
     scanTools,
     selectManyWithAbort,
     selectWithAbort,
+    confirmAction,
     installCore,
     installDocs,
     installIdeas,
@@ -383,7 +433,9 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     upsertAgentsMdSection,
     removeAgentsMdSection,
-    ...(options.useLifecycle ? { reconcilePacks, inventoryPack } : {}),
+    ...(options.useLifecycle
+      ? { reconcilePacks, inventoryPack, syncAfterInstall }
+      : {}),
   });
 
   return {
@@ -391,6 +443,7 @@ function createHarness(options: HarnessOptions = {}) {
     command,
     selectManyWithAbort,
     selectWithAbort,
+    confirmAction,
     installCore,
     installDocs,
     installIdeas,
@@ -409,8 +462,10 @@ function createHarness(options: HarnessOptions = {}) {
     resolveLocalPaths,
     scanTools,
     upsertAgentsMdSection,
+    removeAgentsMdSection,
     reconcilePacks,
     inventoryPack,
+    syncAfterInstall,
   };
 }
 
@@ -1301,26 +1356,102 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('writes the tool-pack AGENTS section without claiming PJM adoption', async () => {
+  it('does not write project guidance without an explicit accepted choice', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    // Pack placement owns the tool-pack inventory section only. The
-    // project-management and decisions sections are adoption-owned and are
-    // written by `oat pjm init` (`initializeRepoReference`).
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('prompts once for project guidance and defaults to decline', async () => {
+    const { command, confirmAction, upsertAgentsMdSection } = createHarness({
+      interactive: true,
+      guidanceResponse: false,
+    });
+
+    await runCommand(command, [], ['--scope', 'all']);
+
+    expect(confirmAction).toHaveBeenCalledTimes(1);
+    expect(confirmAction.mock.calls[0]?.[0]).toContain('AGENTS.md');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('rejects conflicting project guidance flags', async () => {
+    const { command } = createHarness({ interactive: false });
+
+    await expect(
+      runCommand(command, ['--project-guidance', '--no-project-guidance']),
+    ).rejects.toThrow('cannot be used together');
+  });
+
+  it('applies accepted guidance from complete realized pack evidence', async () => {
+    const {
+      command,
+      upsertAgentsMdSection,
+      removeAgentsMdSection,
+      writeOatConfig,
+    } = createHarness({
+      interactive: true,
+      useLifecycle: true,
+      packSelection: [['docs']],
+      scopeSelection: ['project'],
+      toolsByScope: {
+        project: [createScannedTool('oat-project-new', 'workflows', 'project')],
+        user: [createScannedTool('oat-docs', 'core', 'user')],
+      },
+    });
+
+    await runCommand(command, ['--project-guidance'], ['--scope', 'all']);
+
     expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
-    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
-      1,
+    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
       '/tmp/workspace',
       'tools',
-      expect.stringContaining('Tool Packs'),
+      expect.stringContaining('**docs**'),
+      { removeSectionKeys: ['workflows'] },
     );
-    const writtenKeys = upsertAgentsMdSection.mock.calls.map((call) => call[1]);
-    expect(writtenKeys).not.toContain('project-management');
-    expect(writtenKeys).not.toContain('decisions');
+    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
+    expect(body).toContain('**core**');
+    expect(body).toContain('**workflows**');
+    expect(removeAgentsMdSection).not.toHaveBeenCalled();
+    expect(writeOatConfig).not.toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({ pjm: expect.anything() }),
+    );
+  });
+
+  it('keeps a declined guidance choice independent from capability success', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+
+    await runCommand(command, ['--no-project-guidance'], ['--scope', 'all']);
+
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('Installed tool packs:');
+    expect(capture.info.join('\n')).toContain('Project guidance: declined');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unsafe guidance as blocked without rewriting pack lifecycle evidence', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+    });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('AGENTS.md identity changed before mutation.'),
+    );
+
+    await runCommand(command, ['--project-guidance'], ['--scope', 'all']);
+
+    expect(capture.info.join('\n')).toContain('Installed tool packs:');
+    expect(capture.warn.join('\n')).toContain('Project guidance: blocked');
+    expect(capture.warn.join('\n')).toContain('planned safely');
+    expect(process.exitCode).toBe(1);
   });
 
   it('reconciles shared config from project scope after aggregate install', async () => {
@@ -1344,7 +1475,9 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(scanTools).toHaveBeenCalledTimes(3);
+    // Initial placement, post-install project-config reconciliation, then the
+    // complete project+user evidence refresh used by guidance planning.
+    expect(scanTools).toHaveBeenCalledTimes(5);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({
@@ -1436,6 +1569,12 @@ describe('createInitToolsCommand', () => {
     expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
   });
 
+  // FR10 sibling preservation is covered by filesystem integration tests in
+  // `commands/tools/shared/project-tools-config.test.ts`. The tests that lived
+  // here mocked `readOatConfig` to return a `futureSibling` that production
+  // `readOatConfig` could never return, then asserted the mocked writer
+  // received it — so they passed while the field was being destroyed.
+
   it('does not write shared config for a direct user-only brainstorm install', async () => {
     const { command, installBrainstorm, scanTools, writeOatConfig } =
       createHarness({
@@ -1515,7 +1654,154 @@ describe('createInitToolsCommand', () => {
     expect(installProjectManagement).not.toHaveBeenCalled();
   });
 
-  it('preserves declared placement while repairing a fully missing aggregate pack', async () => {
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits complete lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle: Array<{ status: string }> | { status: string };
+        providerVisibility: { state: string; source: string };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ status: 'complete' }),
+        ]),
+      );
+      expect(payload.providerVisibility).toMatchObject({
+        state: 'not-reported',
+        source: 'runtime-observation',
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits canonical failure lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture, reconcilePacks } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      reconcilePacks.mockRejectedValueOnce(new Error('canonical failed'));
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        status: string;
+        lifecycle:
+          | Array<{ canonical: { status: string } }>
+          | {
+              canonical: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(payload.status).toBe('error');
+      expect(outcomes[0]?.canonical.status).toBe('failed');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits verification failure lifecycle evidence for $label installs',
+    async ({ args }) => {
+      const { command, capture, inventoryPack } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      inventoryPack.mockResolvedValue({
+        pack: 'docs',
+        placement: 'unavailable',
+        scopes: [],
+        diagnostics: [],
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle:
+          | Array<{ canonical: { status: string } }>
+          | {
+              canonical: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes[0]?.canonical.status).toBe('verification-failed');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
+    { label: 'aggregate', args: [] as string[] },
+    { label: 'direct', args: ['docs'] },
+  ])(
+    'emits partial lifecycle evidence when provider sync fails for $label installs',
+    async ({ args }) => {
+      const { command, capture, syncAfterInstall } = createHarness({
+        interactive: true,
+        useLifecycle: true,
+        packSelection: [['docs']],
+        scopeSelection: ['user'],
+        toolsByScope: { project: [], user: [] },
+      });
+      syncAfterInstall.mockResolvedValue({
+        synced: false,
+        scopes: ['user'],
+        error: 'provider sync failed',
+      });
+
+      await runCommand(command, args, ['--json', '--scope', 'user']);
+
+      const payload = capture.jsonPayloads.at(-1) as {
+        lifecycle:
+          | Array<{ status: string; sync: { status: string } }>
+          | {
+              status: string;
+              sync: { status: string };
+            };
+      };
+      const outcomes = Array.isArray(payload.lifecycle)
+        ? payload.lifecycle
+        : [payload.lifecycle];
+      expect(outcomes[0]).toMatchObject({
+        status: 'partial',
+        sync: { status: 'failed' },
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('does not preserve declared-only placement when repairing a fully missing aggregate pack', async () => {
     const { command, reconcilePacks } = createHarness({
       interactive: false,
       useLifecycle: true,
@@ -1527,10 +1813,10 @@ describe('createInitToolsCommand', () => {
 
     const requests = reconcilePacks.mock.calls[0]![0];
     expect(requests).toContainEqual(
-      expect.objectContaining({ pack: 'docs', scope: 'project' }),
+      expect.objectContaining({ pack: 'docs', scope: 'user' }),
     );
     expect(requests).not.toContainEqual(
-      expect.objectContaining({ pack: 'docs', scope: 'user' }),
+      expect.objectContaining({ pack: 'docs', scope: 'project' }),
     );
   });
 
@@ -1542,17 +1828,24 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, ['docs'], ['--scope', 'user']);
 
-    expect(reconcilePacks).toHaveBeenCalledWith([
-      expect.objectContaining({
-        pack: 'docs',
-        scope: 'user',
-        action: 'install',
-      }),
-    ]);
+    expect(reconcilePacks).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pack: 'docs',
+          scope: 'project',
+          action: 'install',
+        }),
+        expect.objectContaining({
+          pack: 'docs',
+          scope: 'user',
+          action: 'install',
+        }),
+      ]),
+    );
     expect(installDocs).not.toHaveBeenCalled();
   });
 
-  it('keeps a direct pack install at its existing project placement', async () => {
+  it('does not treat declared-only project intent as an existing direct placement', async () => {
     // Upgrade path for every pre-user-scope install: the pack's defaultScope is
     // now `user`, so a bare re-install must consult existing placement or it
     // silently creates a second copy at the other scope.
@@ -1568,7 +1861,7 @@ describe('createInitToolsCommand', () => {
     expect(reconcilePacks).toHaveBeenCalledWith([
       expect.objectContaining({
         pack: 'docs',
-        scope: 'project',
+        scope: 'user',
         action: 'install',
       }),
     ]);
@@ -1612,6 +1905,21 @@ describe('createInitToolsCommand', () => {
     ]);
   });
 
+  it('fails closed when direct pack placement inventory is unavailable', async () => {
+    const { command, capture, inventoryPack, reconcilePacks } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+    inventoryPack.mockRejectedValueOnce(new Error('inventory unavailable'));
+
+    await runCommand(command, ['docs']);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.error).toContain('inventory unavailable');
+    expect(reconcilePacks).not.toHaveBeenCalled();
+  });
+
   it('does not write repository AGENTS guidance from the production project-scope PJM placement', async () => {
     // Production registers `createReconciledPackCommand` (reconcilePacks is the
     // default dependency); the legacy adapter is only wired when a caller
@@ -1630,6 +1938,132 @@ describe('createInitToolsCommand', () => {
     expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      position: 'before',
+      scope: 'project' as const,
+      args: ['--project-guidance', 'workflows'],
+    },
+    {
+      position: 'after',
+      scope: 'project' as const,
+      args: ['workflows', '--project-guidance'],
+    },
+    {
+      position: 'before',
+      scope: 'user' as const,
+      args: ['--project-guidance', 'workflows'],
+    },
+    {
+      position: 'after',
+      scope: 'user' as const,
+      args: ['workflows', '--project-guidance'],
+    },
+  ])(
+    'applies registered workflows guidance with the option $position the subcommand at $scope scope',
+    async ({ args, scope }) => {
+      const {
+        command,
+        capture,
+        reconcilePacks,
+        upsertAgentsMdSection,
+        removeAgentsMdSection,
+      } = createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+
+      await runCommand(command, args, ['--json', '--scope', scope]);
+
+      expect(reconcilePacks).toHaveBeenCalledWith([
+        expect.objectContaining({ pack: 'workflows', scope }),
+      ]);
+      expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+        '/tmp/workspace',
+        'tools',
+        expect.stringContaining('**workflows**'),
+        { removeSectionKeys: ['workflows'] },
+      );
+      expect(removeAgentsMdSection).not.toHaveBeenCalled();
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'ok',
+        pack: 'workflows',
+        scopes: [scope],
+        projectGuidance: { action: 'create' },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('reports registered workflows decline without changing capability success', async () => {
+    const { command, capture, reconcilePacks, upsertAgentsMdSection } =
+      createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+
+    await runCommand(
+      command,
+      ['workflows', '--no-project-guidance'],
+      ['--scope', 'project'],
+    );
+
+    expect(reconcilePacks).toHaveBeenCalledTimes(1);
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.info.join('\n')).toContain('Installed workflows tool pack');
+    expect(capture.info.join('\n')).toContain('Project guidance: declined');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports registered workflows non-interactive guidance default without writing', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+      useLifecycle: true,
+      toolsByScope: { project: [], user: [] },
+    });
+
+    await runCommand(command, ['workflows'], ['--json', '--scope', 'project']);
+
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'ok',
+      projectGuidance: { action: 'not-requested' },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports unsafe registered workflows guidance as partial after capability success', async () => {
+    const { command, capture, reconcilePacks, upsertAgentsMdSection } =
+      createHarness({
+        interactive: false,
+        useLifecycle: true,
+        toolsByScope: { project: [], user: [] },
+      });
+    upsertAgentsMdSection.mockRejectedValueOnce(
+      new Error('malformed legacy markers'),
+    );
+
+    await runCommand(
+      command,
+      ['workflows', '--project-guidance'],
+      ['--json', '--scope', 'project'],
+    );
+
+    expect(reconcilePacks).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'partial',
+      pack: 'workflows',
+      lifecycle: { status: 'complete' },
+      projectGuidance: {
+        action: 'blocked',
+        reason: expect.stringContaining('planned safely'),
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('installs a direct user-eligible pack completely at both explicit scopes', async () => {
     const { command, reconcilePacks } = createHarness({
       interactive: false,
@@ -1644,17 +2078,18 @@ describe('createInitToolsCommand', () => {
     ]);
   });
 
-  it('logs AGENTS.md tool packs section update', async () => {
-    const { command, capture } = createHarness({ interactive: false });
+  it('prints an actionable non-interactive guidance notice', async () => {
+    const { command, capture, upsertAgentsMdSection } = createHarness({
+      interactive: false,
+    });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(capture.info.join('\n')).toContain(
-      'AGENTS.md tool packs section updated.',
-    );
+    expect(capture.info.join('\n')).toContain('--project-guidance');
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
-  it('does not log AGENTS.md update when section is unchanged', async () => {
+  it('does not report an AGENTS.md update when guidance was not requested', async () => {
     const { command, capture, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
@@ -1663,20 +2098,10 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(capture.info.join('\n')).not.toContain('AGENTS.md');
-  });
-
-  it('AGENTS.md section marks user-scoped packs when scope is user', async () => {
-    const { command, upsertAgentsMdSection } = createHarness({
-      interactive: false,
-    });
-
-    await runCommand(command, [], ['--scope', 'user']);
-
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
-    const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
-    expect(body).toContain('_(user scope)_');
-    expect(body).toContain('`~/.agents/skills/`');
+    expect(capture.info.join('\n')).not.toContain(
+      'AGENTS.md tool packs section updated.',
+    );
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
   });
 
   it('keeps user-only core installs out of repository AGENTS guidance', async () => {

@@ -31,6 +31,7 @@ import {
   type MaterializationPlan,
   type MaterializationWriteOperation,
 } from '@providers/shared';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import YAML from 'yaml';
 
 import {
@@ -842,15 +843,18 @@ export async function applyCodexProjectExtensionPlan(
   scopeRoot: string,
   plan: CodexExtensionPlan,
 ): Promise<CodexExtensionApplyResult> {
-  const result: CodexExtensionApplyResult = {
-    applied: 0,
-    failed: 0,
-    skipped: 0,
-  };
+  const operationResults: MaterializationOperationResult[] = [];
 
   for (const operation of plan.operations) {
     if (operation.action === 'skip') {
-      result.skipped += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'current',
+      });
       continue;
     }
 
@@ -863,13 +867,44 @@ export async function applyCodexProjectExtensionPlan(
         await ensureDir(dirname(absolutePath));
         await writeFile(absolutePath, operation.content ?? '', 'utf8');
       }
-      result.applied += 1;
-    } catch {
-      result.failed += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'changed',
+      });
+    } catch (error) {
+      const missing =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT';
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: missing ? 'missing' : 'failed',
+        failure: missing
+          ? 'Materialization input was missing; restore it and retry sync.'
+          : 'Materialization failed; inspect local verbose diagnostics and retry sync.',
+      });
     }
   }
 
-  return result;
+  return {
+    applied: operationResults.filter(({ status }) => status === 'changed')
+      .length,
+    failed: operationResults.filter(
+      ({ status }) => status === 'failed' || status === 'missing',
+    ).length,
+    skipped: operationResults.filter(({ status }) => status === 'current')
+      .length,
+    operations: operationResults,
+  };
 }
 
 export function hasCodexExtensionChanges(plan: CodexExtensionPlan): boolean {

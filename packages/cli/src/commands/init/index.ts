@@ -89,26 +89,25 @@ import {
   saveManifest,
 } from '@manifest/manager';
 import type { Manifest } from '@manifest/manifest.types';
-import { claudeAdapter } from '@providers/claude';
-import { codexAdapter } from '@providers/codex';
 import {
   applyCodexProjectExtensionPlan,
   computeCodexProjectExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
-import { copilotAdapter } from '@providers/copilot';
-import { cursorAdapter } from '@providers/cursor';
 import {
   applyCursorProjectExtensionPlan,
   computeCursorProjectExtensionPlan,
 } from '@providers/cursor/codec/sync-extension';
-import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
+  getProviderRegistrations,
+  recomputeProviderScopeContext,
+  resolveProviderScopeContext,
   type MaterializationPlan,
   type PathMapping,
   type ProviderAdapter,
+  type ProviderScopeContext,
 } from '@providers/shared';
 import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import type { ConcreteScope, Scope } from '@shared/types';
@@ -124,6 +123,10 @@ import {
   createInitToolsCommand,
   runInitToolsWithDefaults,
 } from './tools';
+import {
+  commandProjectGuidanceChoice,
+  withProjectGuidanceOptions,
+} from './tools/project-guidance';
 
 const ADOPT_REMEDIATION =
   'Run "oat init" interactively to adopt stray entries.';
@@ -134,13 +137,7 @@ const HOOK_GUIDANCE =
   'Run "oat init --hook" to install optional pre-commit hook.';
 
 function getDefaultAdapters(): ProviderAdapter[] {
-  return [
-    claudeAdapter,
-    cursorAdapter,
-    codexAdapter,
-    copilotAdapter,
-    geminiAdapter,
-  ];
+  return getProviderRegistrations().map(({ adapter }) => adapter);
 }
 
 interface InitOptions extends GlobalOptions {
@@ -220,6 +217,11 @@ interface InitDependencies {
     scopeRoot: string,
     config: SyncConfig,
   ) => Promise<ConfigAwareAdaptersResult>;
+  resolveProviderScopeContext?: (input: {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    config: SyncConfig;
+  }) => Promise<ProviderScopeContext>;
   applyOatCoreGitignore: (repoRoot: string) => Promise<ApplyOatCoreResult>;
   applyOatCoreGitattributes: (
     repoRoot: string,
@@ -263,8 +265,12 @@ interface InitDependencies {
   runGuidedSetup: (
     context: CommandContext,
     dependencies: InitDependencies,
+    explicitProjectGuidance?: boolean,
   ) => Promise<void>;
-  runToolPacks: (context: CommandContext) => Promise<ToolPack[]>;
+  runToolPacks: (
+    context: CommandContext,
+    explicitProjectGuidance?: boolean,
+  ) => Promise<ToolPack[]>;
   runProviderSync: (projectRoot: string) => Promise<void>;
 }
 
@@ -455,6 +461,7 @@ function createDependencies(): InitDependencies {
     resolveUserSyncConfig,
     saveSyncConfig,
     getConfigAwareAdapters,
+    resolveProviderScopeContext,
     applyOatCoreGitignore,
     applyOatCoreGitattributes,
     dirExists,
@@ -696,19 +703,33 @@ async function promptForManualDocsConfig(
 async function runGuidedSetupImpl(
   context: CommandContext,
   dependencies: InitDependencies,
+  explicitProjectGuidance?: boolean,
 ): Promise<void> {
   const projectRoot = await dependencies.resolveScopeRoot('project', context);
   const adapters = dependencies.getAdapters();
   const configPath = join(projectRoot, '.oat', 'sync', 'config.json');
   const syncConfig = await dependencies.loadSyncConfig(configPath);
-  const resolution = await dependencies.getConfigAwareAdapters(
-    adapters,
-    projectRoot,
-    syncConfig,
-  );
-  const activeProviderNames = resolution.activeAdapters.map(
-    (a) => a.displayName,
-  );
+  const providerContext = dependencies.resolveProviderScopeContext
+    ? await dependencies.resolveProviderScopeContext({
+        scope: 'project',
+        scopeRoot: projectRoot,
+        config: syncConfig,
+      })
+    : undefined;
+  const resolution = providerContext
+    ? undefined
+    : await dependencies.getConfigAwareAdapters(
+        adapters,
+        projectRoot,
+        syncConfig,
+      );
+  const activeProviderNames = providerContext
+    ? providerContext.registrations
+        .filter(({ adapter }) =>
+          providerContext.activeProviders.includes(adapter.name),
+        )
+        .map(({ adapter }) => adapter.displayName)
+    : resolution!.activeAdapters.map((adapter) => adapter.displayName);
 
   context.logger.info('[1/5] Tool packs…');
   // Defer the per-pack scope gate to the tools flow: `gate` asks the customize
@@ -718,7 +739,10 @@ async function runGuidedSetupImpl(
     ? 'gate'
     : 'defaults';
   const guidedContext: CommandContext = { ...context, scopeSelection };
-  const installedPacks = await dependencies.runToolPacks(guidedContext);
+  const installedPacks =
+    explicitProjectGuidance === undefined
+      ? await dependencies.runToolPacks(guidedContext)
+      : await dependencies.runToolPacks(guidedContext, explicitProjectGuidance);
   const installedPackSet = new Set(installedPacks);
 
   context.logger.info('[2/5] Local paths (gitignored artifacts)…');
@@ -885,6 +909,7 @@ async function runInitCommand(
   dependencies: InitDependencies,
   hookFlag: boolean | undefined,
   setupFlag: boolean | undefined,
+  explicitProjectGuidance?: boolean,
 ): Promise<void> {
   const scopes = resolveConcreteScopes(context.scope);
   let projectRoot: string | null = null;
@@ -905,13 +930,29 @@ async function runInitCommand(
       oatDirExistedBefore = await dependencies.dirExists(
         join(scopeRoot, '.oat'),
       );
-      const adapters = dependencies.getAdapters();
+      let providerContext = dependencies.resolveProviderScopeContext
+        ? await dependencies.resolveProviderScopeContext({
+            scope,
+            scopeRoot,
+            config: syncConfig,
+          })
+        : undefined;
+      const adapters = providerContext
+        ? providerContext.registrations.map(({ adapter }) => adapter)
+        : dependencies.getAdapters();
       let config = syncConfig;
-      let resolution = await dependencies.getConfigAwareAdapters(
-        adapters,
-        scopeRoot,
-        config,
-      );
+      let resolution = providerContext
+        ? undefined
+        : await dependencies.getConfigAwareAdapters(
+            adapters,
+            scopeRoot,
+            config,
+          );
+      let activeAdapters = providerContext
+        ? adapters.filter(({ name }) =>
+            providerContext!.activeProviders.includes(name),
+          )
+        : resolution!.activeAdapters;
 
       if (!context.interactive && !context.json) {
         context.logger.info(PROVIDER_CONFIG_REMEDIATION);
@@ -924,9 +965,7 @@ async function runInitCommand(
           description: adapter.displayName,
           checked:
             config.providers[adapter.name]?.enabled === true ||
-            resolution.activeAdapters.some(
-              (active) => active.name === adapter.name,
-            ),
+            activeAdapters.some((active) => active.name === adapter.name),
         }));
 
         const selectedProviders = await dependencies.selectProvidersWithAbort(
@@ -952,14 +991,24 @@ async function runInitCommand(
           syncConfig = config;
         }
 
-        resolution = await dependencies.getConfigAwareAdapters(
-          adapters,
-          scopeRoot,
-          config,
-        );
+        providerContext = providerContext
+          ? recomputeProviderScopeContext(providerContext, config)
+          : undefined;
+        resolution = providerContext
+          ? undefined
+          : await dependencies.getConfigAwareAdapters(
+              adapters,
+              scopeRoot,
+              config,
+            );
+        activeAdapters = providerContext
+          ? adapters.filter(({ name }) =>
+              providerContext!.activeProviders.includes(name),
+            )
+          : resolution!.activeAdapters;
       }
 
-      activeAdaptersForStrays = resolution.activeAdapters;
+      activeAdaptersForStrays = activeAdapters;
     }
 
     await dependencies.ensureCanonicalDirs(scopeRoot, scope);
@@ -1237,7 +1286,15 @@ async function runInitCommand(
       );
     }
     if (shouldRunSetup) {
-      await dependencies.runGuidedSetup(context, dependencies);
+      if (explicitProjectGuidance === undefined) {
+        await dependencies.runGuidedSetup(context, dependencies);
+      } else {
+        await dependencies.runGuidedSetup(
+          context,
+          dependencies,
+          explicitProjectGuidance,
+        );
+      }
     }
   }
 }
@@ -1249,8 +1306,15 @@ export function createInitCommand(
     ...createDependencies(),
     ...overrides,
   };
+  if (
+    overrides.resolveProviderScopeContext === undefined &&
+    (overrides.getAdapters !== undefined ||
+      overrides.getConfigAwareAdapters !== undefined)
+  ) {
+    dependencies.resolveProviderScopeContext = undefined;
+  }
 
-  return withScopeOption(new Command('init'))
+  return withProjectGuidanceOptions(withScopeOption(new Command('init')))
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
     .option('--no-hook', 'Skip optional pre-commit hook install')
@@ -1259,6 +1323,12 @@ export function createInitCommand(
     .action(async (_options, command: Command) => {
       const options = readGlobalOptions(command) as InitOptions;
       const context = dependencies.buildCommandContext(options);
-      await runInitCommand(context, dependencies, options.hook, options.setup);
+      await runInitCommand(
+        context,
+        dependencies,
+        options.hook,
+        options.setup,
+        commandProjectGuidanceChoice(command),
+      );
     });
 }

@@ -173,22 +173,25 @@ describe('help output snapshots', () => {
       Initialize canonical directories, manifest, and tool packs
 
       Options:
-        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
-                         default: "all")
-        --hook           Install optional pre-commit hook
-        --no-hook        Skip optional pre-commit hook install
-        --setup          Run guided setup after initialization
-        -h, --help       display help for command
+        --scope <scope>        Limit execution scope (choices: "project", "user",
+                               "all", default: "all")
+        --project-guidance     Create missing or print manual repository AGENTS.md
+                               tool guidance
+        --no-project-guidance  Decline repository AGENTS.md tool guidance
+        --hook                 Install optional pre-commit hook
+        --no-hook              Skip optional pre-commit hook install
+        --setup                Run guided setup after initialization
+        -h, --help             display help for command
 
       Global Options:
-        -V, --version    output the version number
-        --json           Output a single JSON document
-        --verbose        Enable verbose debug output
-        --cwd <path>     Override working directory
+        -V, --version          output the version number
+        --json                 Output a single JSON document
+        --verbose              Enable verbose debug output
+        --cwd <path>           Override working directory
 
       Commands:
-        tools            Install OAT tool packs (core, ideas, docs, workflows,
-                         utility, project-management, research, brainstorm)
+        tools [options]        Install OAT tool packs (core, ideas, docs, workflows,
+                               utility, project-management, research, brainstorm)
       "
     `);
   });
@@ -466,8 +469,8 @@ describe('help output snapshots', () => {
       Commands:
         list [options]                List provider adapters and sync summary
         inspect [options] <provider>  Inspect provider details and mapping state
-        set [options]                 Enable or disable project providers in sync
-                                      config
+        set [options]                 Enable or disable providers in the selected
+                                      scope's sync config (project by default)
         codex                         Codex provider utilities
         help [command]                display help for command
       "
@@ -536,11 +539,12 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat providers set [options]
 
-      Enable or disable project providers in sync config
+      Enable or disable providers in the selected scope's sync config (project by
+      default)
 
       Options:
-        --scope <scope>         Limit execution scope (choices: "project", "user",
-                                "all", default: "project")
+        --scope <scope>         Sync config scope: project or user (choices:
+                                "project", "user", default: "project")
         --enabled <providers>   Comma-separated providers to enable
         --disabled <providers>  Comma-separated providers to disable
         -h, --help              display help for command
@@ -1081,6 +1085,7 @@ describe('help output snapshots', () => {
         archive [options] [project-path]             Manage archived project data
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        dispatch                                     Validate and persist project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
@@ -1100,6 +1105,20 @@ describe('help output snapshots', () => {
         help [command]                               display help for command
       "
     `);
+  });
+
+  it('project dispatch record --help documents project and stdin recording', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'dispatch',
+      'record',
+    ]).helpInformation();
+
+    expect(help).toContain('--project <project-path>');
+    expect(help).toContain('--event-file <json-file-or-dash>');
+    expect(help).toMatch(/or -\s+for standard input/);
+    expect(help).not.toMatch(/launch/i);
   });
 
   it('dispatch-ceiling resolve help documents the ephemeral named ceiling tier', () => {
@@ -1369,6 +1388,9 @@ describe('help output snapshots', () => {
       project-management, research, brainstorm)
 
       Options:
+        --project-guidance            Create missing or print manual repository
+                                      AGENTS.md tool guidance
+        --no-project-guidance         Decline repository AGENTS.md tool guidance
         --scope <scope>               Limit execution scope (choices: "project",
                                       "user", "all", default: "all")
         --no-sync                     Skip auto-sync after install

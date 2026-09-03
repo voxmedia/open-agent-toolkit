@@ -1,7 +1,7 @@
 ---
 id: BL-260829-make-tool-pack-scope-selection
 title: Make tool-pack scope, provider reachability, and dispatch state truthful
-status: open
+status: closed
 priority: urgent
 scope: feature
 scope_estimate: L
@@ -18,7 +18,7 @@ labels:
   - provenance
 assignee: null
 created: 2026-08-29T00:25:34.986Z
-updated: 2026-08-29T00:27:41Z
+updated: '2026-09-03T00:56:44Z'
 associated_issues: []
 external_plans: []
 ---

@@ -471,6 +471,23 @@ printf 'artifact-read\\n'`,
     }
   });
 
+  it('requires local and remote review rails to persist native dispatch lineage', () => {
+    for (const skill of [
+      'oat-project-review-provide',
+      'oat-project-review-provide-remote',
+    ]) {
+      const content = readRepoFile(`.agents/skills/${skill}/SKILL.md`);
+      expect(content, skill).toContain('native dispatch lineage');
+      expect(content, skill).toContain('oat project dispatch record');
+      expect(content, skill).toMatch(
+        /immediately[^]{0,180}accepted[^]{0,160}blocked-before-start/i,
+      );
+      expect(content, skill).toMatch(
+        /timeout[^]{0,160}`BLOCKED`[^]{0,180}(?:never|not)[^]{0,100}(?:fallback|replacement)/i,
+      );
+    }
+  });
+
   it('materializes synced projects before implementation and review validation', () => {
     const implement = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',

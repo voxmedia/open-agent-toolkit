@@ -13,6 +13,7 @@ import type { AutoSyncDependencies } from '@commands/tools/shared/auto-sync';
 import {
   attributeSharedOwnerDiagnostics,
   inventoryPack,
+  type ScopedPackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import {
   hasScopedPackOwnershipEvidence,
@@ -53,6 +54,9 @@ import { createToolsRemoveCommand } from './index';
 import {
   type RemoveTarget,
   type RemoveToolsDependencies,
+  failedRemovalLifecycleOutcomes,
+  failedPostRemovalLifecycleOutcomes,
+  removalLifecycleOutcomes,
   removeTools,
 } from './remove-tools';
 
@@ -92,6 +96,42 @@ function createDeps(
     },
     pathExists: async () => false,
     hasPackOwnershipEvidence: async () => false,
+  };
+}
+
+function lifecycleInventory(
+  pack: 'ideas',
+  scope: 'project' | 'user',
+  present: boolean,
+): ScopedPackInventory {
+  return {
+    pack,
+    scope,
+    intent: {
+      pack,
+      scope,
+      enabled: present,
+      source: present ? 'declared' : 'none',
+      configPath: '/scope/.oat/config.json',
+      diagnostics: [],
+    },
+    completeness: present ? 'complete' : 'absent',
+    assets: [
+      {
+        definition: {
+          id: 'skill:oat-idea-new',
+          kind: 'skill',
+          destination: '.agents/skills/oat-idea-new',
+          scopes: [scope],
+          ownership: { [scope]: 'managed' },
+        },
+        path: '/scope/.agents/skills/oat-idea-new',
+        status: present ? 'current' : 'missing',
+        installedVersion: null,
+        bundledVersion: null,
+      },
+    ],
+    diagnostics: [],
   };
 }
 
@@ -228,6 +268,8 @@ describe('removeTools', () => {
       }),
     ];
     const deps = createDeps({ project: tools });
+    deps.inventoryScopedPack = async ({ pack, scope }) =>
+      lifecycleInventory(pack as 'ideas', scope, true);
 
     const result = await removeTools(
       { kind: 'pack', pack: 'ideas' },
@@ -243,6 +285,7 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toContain(
       '/project/.agents/skills/oat-idea-ideate',
     );
+    expect(result.lifecycle).toEqual([]);
   });
 
   it('removes the brainstorm pack and its skill directory', async () => {
@@ -460,6 +503,153 @@ describe('removeTools', () => {
     expect(result.removed).toHaveLength(1);
     expect(deps.removedDirs).toHaveLength(0);
     expect(deps.removedFiles).toHaveLength(0);
+    expect(result).not.toHaveProperty('lifecycle');
+  });
+
+  it('preserves current pack evidence during a pack dry-run', async () => {
+    const deps = createDeps({ project: [createTool()] });
+    deps.inventoryScopedPack = async ({ pack, scope }) =>
+      lifecycleInventory(pack as 'ideas', scope, true);
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'ideas' },
+      ['project'],
+      '/cwd',
+      '/home',
+      true,
+      deps,
+    );
+
+    expect(result.lifecycle).toMatchObject([
+      {
+        canonical: { status: 'unchanged' },
+        selection: { retainedRealizedScopes: ['project'] },
+        finalEvidence: { realizedPlacement: 'project' },
+      },
+    ]);
+  });
+
+  it('reports only re-inventoried remaining scopes after partial removal', async () => {
+    const deps = createDeps({
+      project: [createTool({ scope: 'project' })],
+      user: [createTool({ scope: 'user' })],
+    });
+    deps.inventoryScopedPack = async ({ pack, scope }) => {
+      return lifecycleInventory(pack as 'ideas', scope, true);
+    };
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'ideas' },
+      ['project', 'user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    const lifecycle = removalLifecycleOutcomes(
+      ['ideas'],
+      ['project', 'user'],
+      result.packOutcomes,
+      false,
+      [
+        lifecycleInventory('ideas', 'project', false),
+        lifecycleInventory('ideas', 'user', true),
+      ],
+    );
+    expect(lifecycle).toMatchObject([
+      {
+        status: 'partial',
+        selection: { retainedRealizedScopes: ['user'] },
+        finalEvidence: { realizedPlacement: 'user' },
+        recovery: [
+          {
+            message: expect.stringContaining('--pack ideas --scope user'),
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('reports post-write disabled intent in command lifecycle evidence', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await materialize(
+      join(scopeRoot, '.agents', 'skills', 'oat-idea-new'),
+      true,
+    );
+    await writeScopedPackIntent({
+      pack: 'ideas',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    const deps = filesystemDeps(scopeRoot);
+    deps.inventoryScopedPack = async ({ pack, scope, scopeRoot: root }) => {
+      const intent = await readScopedPackIntent({
+        pack,
+        scope,
+        scopeRoot: root,
+      });
+      const present = await pathExists(
+        join(root, '.agents', 'skills', 'oat-idea-new'),
+      );
+      return {
+        ...lifecycleInventory('ideas', scope, present),
+        intent,
+      };
+    };
+    const stdout: string[] = [];
+    const write = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation((chunk) => {
+        stdout.push(String(chunk));
+        return true;
+      });
+    try {
+      const program = new Command()
+        .name('oat')
+        .option('--json')
+        .option('--scope <scope>')
+        .option('--cwd <path>')
+        .exitOverride();
+      const tools = new Command('tools');
+      tools.addCommand(
+        createToolsRemoveCommand(deps, { runSync: async () => {} }),
+      );
+      program.addCommand(tools);
+      await program.parseAsync(
+        [
+          '--json',
+          '--scope',
+          'user',
+          '--cwd',
+          scopeRoot,
+          'tools',
+          'remove',
+          '--pack',
+          'ideas',
+          '--no-sync',
+        ],
+        { from: 'user' },
+      );
+    } finally {
+      write.mockRestore();
+    }
+
+    const payload = JSON.parse(stdout.join('')) as {
+      lifecycle: Array<{
+        status: string;
+        finalEvidence: {
+          scopes: Array<{ intent: { enabled: boolean; source: string } }>;
+        };
+      }>;
+    };
+    expect(payload.lifecycle[0]).toMatchObject({
+      status: 'complete',
+      finalEvidence: {
+        scopes: [{ intent: { enabled: false, source: 'none' } }],
+      },
+    });
   });
 
   it('errors when tool name not found in any scope', async () => {
@@ -477,6 +667,322 @@ describe('removeTools', () => {
     expect(result.notInstalled).toEqual(['nonexistent']);
     expect(result.removed).toHaveLength(0);
   });
+
+  it('normalizes a pack removal failure into structured lifecycle evidence', () => {
+    expect(
+      failedRemovalLifecycleOutcomes(
+        { kind: 'pack', pack: 'docs' },
+        ['user'],
+        new Error('managed assets remain'),
+      ),
+    ).toMatchObject([
+      {
+        status: 'failed',
+        selection: { pack: 'docs', targetScopes: ['user'] },
+        recovery: [
+          {
+            code: 'canonical-apply-failed',
+            message: 'managed assets remain',
+          },
+        ],
+      },
+    ]);
+  });
+
+  for (const stage of ['intent-write', 'final-inventory'] as const) {
+    for (const json of [false, true]) {
+      it(`reports ${stage} failure after canonical removal in ${json ? 'JSON' : 'human'} mode`, async () => {
+        const deps = createDeps({ project: [createTool()] });
+        let inventoryCalls = 0;
+        deps.writeScopedPackIntent = async () => {
+          if (stage === 'intent-write') throw new Error('intent store offline');
+        };
+        deps.inventoryScopedPack = async ({ pack, scope }) => {
+          inventoryCalls += 1;
+          if (stage === 'final-inventory' && inventoryCalls > 1) {
+            throw new Error('inventory unreadable');
+          }
+          return lifecycleInventory(pack as 'ideas', scope, true);
+        };
+        const stdout: string[] = [];
+        const stderr: string[] = [];
+        const stdoutWrite = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation((chunk) => {
+            stdout.push(String(chunk));
+            return true;
+          });
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation((chunk) => {
+            stderr.push(String(chunk));
+            return true;
+          });
+        const previousExitCode = process.exitCode;
+        try {
+          process.exitCode = 0;
+          const program = new Command()
+            .name('oat')
+            .option('--json')
+            .option('--scope <scope>')
+            .option('--cwd <path>')
+            .exitOverride();
+          const tools = new Command('tools');
+          tools.addCommand(
+            createToolsRemoveCommand(deps, { runSync: async () => {} }),
+          );
+          program.addCommand(tools);
+          await program.parseAsync(
+            [
+              ...(json ? ['--json'] : []),
+              '--scope',
+              'project',
+              '--cwd',
+              '/project',
+              'tools',
+              'remove',
+              '--pack',
+              'ideas',
+              '--no-sync',
+            ],
+            { from: 'user' },
+          );
+
+          expect(process.exitCode).toBe(1);
+          expect(deps.removedDirs).toContain(
+            '/project/.agents/skills/oat-idea-new',
+          );
+          const expectedStage =
+            stage === 'intent-write'
+              ? 'durable intent update failed'
+              : 'final inventory failed';
+          if (json) {
+            const payload = JSON.parse(stdout.join('')) as {
+              result: { removed: Array<{ name: string }> };
+              lifecycle: Array<{
+                canonical: { status: string };
+                finalEvidence: unknown;
+                status: string;
+                recovery: Array<{ message: string }>;
+              }>;
+            };
+            expect(payload.result.removed).toEqual([
+              expect.objectContaining({ name: 'oat-idea-new' }),
+            ]);
+            expect(payload.lifecycle[0]).toMatchObject({
+              canonical: { status: 'applied' },
+              finalEvidence: null,
+              status: 'failed',
+              recovery: [
+                {
+                  message: expect.stringContaining(
+                    `${expectedStage} for ideas at project scope`,
+                  ),
+                },
+              ],
+            });
+          } else {
+            expect(stdout.join('')).toContain('Removed: oat-idea-new');
+            expect(`${stdout.join('')} ${stderr.join('')}`).toContain(
+              expectedStage,
+            );
+          }
+        } finally {
+          process.exitCode = previousExitCode;
+          stdoutWrite.mockRestore();
+          stderrWrite.mockRestore();
+        }
+      });
+    }
+  }
+
+  it('projects post-removal failures as applied but unverified', () => {
+    expect(
+      failedPostRemovalLifecycleOutcomes(
+        { kind: 'pack', pack: 'ideas' },
+        ['project'],
+        [{ pack: 'ideas', scope: 'project', removed: true }],
+        'intent-write',
+        'ideas',
+        'project',
+        new Error('intent store offline'),
+      ),
+    ).toMatchObject([
+      {
+        canonical: { status: 'applied' },
+        finalEvidence: null,
+        status: 'failed',
+      },
+    ]);
+  });
+
+  for (const stage of ['intent-write', 'final-inventory'] as const) {
+    for (const json of [false, true]) {
+      it(`covers every pack and scope after later ${stage} failure in ${json ? 'JSON' : 'human'} mode`, async () => {
+        const deps = createDeps({
+          project: [
+            createTool({ scope: 'project' }),
+            createTool({
+              name: 'oat-docs-analyze',
+              pack: 'docs',
+              scope: 'project',
+            }),
+          ],
+          user: [
+            createTool({ scope: 'user' }),
+            createTool({
+              name: 'oat-docs-analyze',
+              pack: 'docs',
+              scope: 'user',
+            }),
+          ],
+        });
+        let inventoryCalls = 0;
+        deps.writeScopedPackIntent = async ({ pack, scope }) => {
+          if (stage === 'intent-write' && pack === 'docs' && scope === 'user') {
+            throw new Error('later intent failure');
+          }
+        };
+        deps.inventoryScopedPack = async ({ pack, scope }) => {
+          inventoryCalls += 1;
+          if (
+            stage === 'final-inventory' &&
+            inventoryCalls > 16 &&
+            pack === 'docs' &&
+            scope === 'user'
+          ) {
+            throw new Error('later inventory failure');
+          }
+          return {
+            ...lifecycleInventory('ideas', scope, true),
+            pack,
+            intent: {
+              ...lifecycleInventory('ideas', scope, true).intent,
+              pack,
+            },
+          };
+        };
+        const stdout: string[] = [];
+        const stderr: string[] = [];
+        const stdoutWrite = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation((chunk) => {
+            stdout.push(String(chunk));
+            return true;
+          });
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation((chunk) => {
+            stderr.push(String(chunk));
+            return true;
+          });
+        const previousExitCode = process.exitCode;
+        try {
+          process.exitCode = 0;
+          const program = new Command()
+            .name('oat')
+            .option('--json')
+            .option('--scope <scope>')
+            .option('--cwd <path>')
+            .exitOverride();
+          const tools = new Command('tools');
+          tools.addCommand(
+            createToolsRemoveCommand(deps, { runSync: async () => {} }),
+          );
+          program.addCommand(tools);
+          await program.parseAsync(
+            [
+              ...(json ? ['--json'] : []),
+              '--scope',
+              'all',
+              '--cwd',
+              '/project',
+              'tools',
+              'remove',
+              '--all',
+              '--no-sync',
+            ],
+            { from: 'user' },
+          );
+
+          expect(process.exitCode).toBe(1);
+          const packs = [
+            'core',
+            'ideas',
+            'docs',
+            'workflows',
+            'utility',
+            'project-management',
+            'research',
+            'brainstorm',
+          ];
+          const expectedCommands = packs.flatMap((pack) =>
+            ['project', 'user'].map(
+              (scope) => `oat tools remove --pack ${pack} --scope ${scope}`,
+            ),
+          );
+          const detail =
+            stage === 'intent-write'
+              ? 'later intent failure'
+              : 'later inventory failure';
+          const stageLabel =
+            stage === 'intent-write'
+              ? 'durable intent update failed'
+              : 'final inventory failed';
+          const expectedRecovery = packs.map((pack) => {
+            const canonicalApplied = pack === 'ideas' || pack === 'docs';
+            const canonicalSummary = canonicalApplied
+              ? `Canonical removal was applied for ${pack}, but final state is unverified`
+              : `No canonical removal was observed for ${pack}; final state remains unverified`;
+            return {
+              selection: { pack },
+              canonical: {
+                status: canonicalApplied ? 'applied' : 'unchanged',
+              },
+              recovery: ['project', 'user'].map((scope) => ({
+                code: 'final-inventory-unverified',
+                message: `${canonicalSummary} because ${stageLabel} for docs at user scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${scope}`,
+              })),
+            };
+          });
+          if (json) {
+            const payload = JSON.parse(stdout.join('')) as {
+              lifecycle: Array<{
+                selection: { pack: string };
+                canonical: { status: string };
+                recovery: Array<{ code: string; message: string }>;
+              }>;
+            };
+            expect(
+              payload.lifecycle.map(({ selection, canonical, recovery }) => ({
+                selection: { pack: selection.pack },
+                canonical: { status: canonical.status },
+                recovery,
+              })),
+            ).toEqual(expectedRecovery);
+            expect(
+              payload.lifecycle.flatMap(({ recovery }) => recovery),
+            ).toHaveLength(expectedCommands.length);
+          } else {
+            const warningLines = stderr.join('').trim().split('\n');
+            expect(warningLines).toEqual(
+              expectedRecovery.map(({ recovery }) =>
+                recovery.map(({ message }) => message).join('; '),
+              ),
+            );
+            expect(warningLines).toHaveLength(packs.length);
+            expect(
+              warningLines.join('\n').match(/Rerun oat tools remove/g),
+            ).toHaveLength(expectedCommands.length);
+          }
+        } finally {
+          process.exitCode = previousExitCode;
+          stdoutWrite.mockRestore();
+          stderrWrite.mockRestore();
+        }
+      });
+    }
+  }
 
   it('removes tools across multiple scopes', async () => {
     const deps = createDeps({

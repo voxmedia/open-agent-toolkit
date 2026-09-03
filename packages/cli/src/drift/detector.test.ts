@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { computeDirectoryHash, computeFileHash } from '@manifest/hash';
-import type { ManifestEntry } from '@manifest/manifest.types';
+import type { ManifestEntry, ManifestEntryV2 } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { CopyTransform } from './detector';
@@ -66,6 +66,49 @@ describe('detectDrift', () => {
     const report = await detectDrift(createManifestEntry(), root);
 
     expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('reports inherited collection entries in sync from exact alias identity', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await seedSkill(root, '.agents/skills/skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const entry: ManifestEntryV2 = {
+      ...createManifestEntry(),
+      strategy: 'collection',
+      collectionId: 'claude-skills',
+    };
+
+    const report = await detectDrift(entry, root);
+
+    expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('reports a changed owned collection alias as replaced without mutating it', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    await seedSkill(root, '.agents/skills/skill-one');
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await mkdir(join(root, 'foreign'), { recursive: true });
+    await symlink(
+      join(root, 'foreign'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const entry: ManifestEntryV2 = {
+      ...createManifestEntry(),
+      strategy: 'collection',
+      collectionId: 'claude-skills',
+    };
+
+    const report = await detectDrift(entry, root);
+
+    expect(report.state).toEqual({ status: 'drifted', reason: 'replaced' });
   });
 
   it('returns drifted:broken when symlink target does not exist', async () => {
