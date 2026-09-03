@@ -28,6 +28,7 @@ const legalReconciliationTransitions = new Set([
   'contested:verified',
   'contested:unresolved',
   'contested:unsupported',
+  'unresolved:verified',
   'unresolved:contested',
   'unresolved:unsupported',
 ]);

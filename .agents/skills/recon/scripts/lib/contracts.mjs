@@ -75,6 +75,7 @@ const legalTransitions = new Set([
   'contested:unresolved',
   'contested:unsupported',
   'unresolved:supported',
+  'unresolved:verified',
   'unresolved:contested',
   'unresolved:unsupported',
   'unsupported:provisional',

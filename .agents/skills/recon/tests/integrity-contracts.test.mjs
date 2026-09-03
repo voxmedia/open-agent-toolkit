@@ -1148,44 +1148,49 @@ test('production reconciliation transitions uncertain and incomplete provisional
   }
 });
 
-test('production reconciliation preserves reviewed claims when verification would require an illegal transition', async () => {
+test('production reconciliation promotes an unresolved claim after complete independent review while preserving unsupported claims', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
     (item) => item.path === 'raw/drafts/claims-v1.json',
   );
-  const originalPriorLedger = await readJson(
+  const priorLedger = await readJson(
     join(packet.packetRoot, priorReference.path),
   );
-  const results = await Promise.all(
-    ['semantic', 'adversarial', 'coverage'].map(async (kind) =>
-      readJson(join(packet.packetRoot, 'reviews', `${kind}.json`)),
-    ),
-  );
-
-  for (const status of ['unresolved', 'unsupported']) {
-    const priorLedger = structuredClone(originalPriorLedger);
-    priorLedger.claims[0].status = status;
-    const { ledger, reconciliation } = reconcileLedger({
-      priorLedger,
-      reviewResults: results,
-      priorReference,
-    });
-
-    assert.equal(ledger.claims[0].status, status);
-    assert.deepEqual(ledger.transitions, []);
-    assert.deepEqual(reconciliation.transitions, []);
-  }
-
-  const promoted = reconcileLedger({
-    priorLedger: originalPriorLedger,
-    reviewResults: results,
+  const reviewResults = await coreReviewResults(packet);
+  const unsupportedPriorLedger = structuredClone(priorLedger);
+  unsupportedPriorLedger.claims[0].status = 'unsupported';
+  unsupportedPriorLedger.transitions[0].to = 'unsupported';
+  const unsupported = reconcileLedger({
+    priorLedger: unsupportedPriorLedger,
+    reviewResults,
     priorReference,
   });
-  assert.equal(originalPriorLedger.claims[0].status, 'supported');
-  assert.equal(promoted.ledger.claims[0].status, 'verified');
-  assert.deepEqual(promoted.ledger.transitions, [
-    { claimId: 'claim-1', from: 'supported', to: 'verified' },
+  assert.equal(unsupported.ledger.claims[0].status, 'unsupported');
+  assert.deepEqual(unsupported.reconciliation.transitions, []);
+
+  priorLedger.claims[0].status = 'unresolved';
+  priorLedger.transitions[0] = {
+    claimId: 'claim-1',
+    from: 'provisional',
+    to: 'unresolved',
+  };
+  await replaceArtifact(packet, priorReference.path, priorLedger);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults,
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'verified');
+  assert.deepEqual(reconciliation.transitions, [
+    { claimId: 'claim-1', from: 'unresolved', to: 'verified' },
   ]);
+
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.equal(compiled.validatedRun.ledger.claims[0].status, 'verified');
 });
 
 test('production reconciliation retains exact incorporated review evidence and rejects dishonest links', async () => {
