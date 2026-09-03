@@ -1374,6 +1374,20 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
   received durably before the configured `onFailure: block` remediation policy
   can consume an attempt or authorize fixes.
 
+#### Configured exit-gate result — 2026-09-03T15:41:00Z
+
+- Launch attempt: `02081235-213d-4cda-b0d8-cbddf44d0ee1`
+- Gate run: `fd621404-cb02-47bb-ad6b-7689197b628f`
+- Target: `claude-fable-skip-permissions`; different-family review achieved
+- Structured outcome: `blocked`, receive eligible, with 0 Critical, 1
+  Important, 1 Medium, and 2 Minor findings
+- Artifact: `reviews/final-review-2026-09-03T154100Z.md`
+- Corroboration: run, project, invocation, target, artifact, and non-null
+  handoff all match the persisted launch
+- Policy: no disposition has been applied yet. The structured review must be
+  received durably before the configured `onFailure: block` remediation policy
+  can consume an attempt or authorize fixes.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
