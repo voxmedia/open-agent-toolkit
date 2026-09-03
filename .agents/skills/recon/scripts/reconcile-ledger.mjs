@@ -238,9 +238,7 @@ export function reconcileLedger({
             review.reviewKind === kind &&
             review.dispositions.some(
               (item) =>
-                item.claimId === claim.id &&
-                (item.disposition === disposition ||
-                  (kind === 'coverage' && item.disposition === 'gap')),
+                item.claimId === claim.id && item.disposition === disposition,
             ),
         ),
     );

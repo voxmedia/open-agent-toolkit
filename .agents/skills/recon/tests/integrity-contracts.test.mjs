@@ -882,6 +882,35 @@ test('production reconciliation deterministically consumes the prior ledger and 
   );
 });
 
+test('production reconciliation never verifies a claim with a coverage gap disposition', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const coverage = await readJson(
+    join(packet.packetRoot, 'reviews/coverage.json'),
+  );
+  coverage.dispositions[0].disposition = 'gap';
+  await replaceArtifact(packet, 'reviews/coverage.json', coverage);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'supported');
+  assert.notEqual(ledger.claims[0].status, 'verified');
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [],
+  );
+});
+
 test('production reconciliation retains a challenged claim as contested through compilation', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
