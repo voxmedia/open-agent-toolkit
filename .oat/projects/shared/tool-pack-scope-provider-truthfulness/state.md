@@ -1,6 +1,6 @@
 ---
 oat_current_task: p07-t04
-oat_last_commit: 51e5f825cbba26e2e4c410aa470b3f5e346c7f2d
+oat_last_commit: d38307fca93ab83ffc4eca64f4741ac60d79b6f7
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -191,6 +191,9 @@ append-only and `link`-only. Phase 7 runtime observation is next.
 - ✓ Neutral six-key projection removed the provider-key collision class
 - ✓ Full-corpus sweeps: Codex 1,596 and Claude 2,731 files, 0 refused
 - ✓ Review round 3 returned 0 Critical; implementation judged ready
+- ✓ Correlation guard restored on the live path; dead code removed
+- ✓ Envelope byte bound replaced with an O(1) entry-count bound
+- ✓ Review round 4 returned 0 Critical and confirmed no regression
 
 ## Blockers
 

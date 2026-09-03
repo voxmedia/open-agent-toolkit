@@ -1768,6 +1768,7 @@ gates exit 0 at the final reviewed head.
 | p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T212839Z.md                      | 715ace3cd0928e096e5d7c57bdb2c8c699128d17 | manual     | -                               |
 | p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T230419Z.md                      | 27b97852848d0229fe7b0c722242c85bfbe353aa | manual     | live-artifact-mandate           |
 | p07    | code     | fixes_completed | 2026-09-02 | reviews/p07-review-2026-09-02T234824Z.md                      | e7d99d3012c4f49a008bf45e9538dc640f18a348 | manual     | -                               |
+| p07    | code     | fixes_completed | 2026-09-03 | reviews/p07-review-2026-09-03T001908Z.md                      | d38307fca93ab83ffc4eca64f4741ac60d79b6f7 | manual     | compressed-tail                 |
 | final  | code     | pending         | -          | -                                                             | -                                        | -          | -                               |
 | spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                               |
 | design | artifact | fixes_completed | 2026-08-30 | reviews/archived/artifact-design-review-2026-08-30T221537Z.md | -                                        | -          | -                               |

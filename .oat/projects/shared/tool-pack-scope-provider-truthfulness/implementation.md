@@ -1598,6 +1598,23 @@ reintroduced in `fs/io.ts` or `record.ts` across the Phase 7 range, that
 observation strings are bounded at 256 characters and no Phase 6 bound was
 raised, and that the redaction boundary in `runRecordCommand` is unchanged.
 
+### Review Round 1
+
+- Artifact: `reviews/p07-review-2026-09-02T212839Z.md`
+- Reviewed head: `715ace3cd0928e096e5d7c57bdb2c8c699128d17`
+- Verdict: changes requested; 0 Critical, 1 Important, 3 Medium, 4 Minor.
+- It confirmed the no-conversation-content and non-authoritative-observation
+  guarantees with strong probes, and the Phase 6 contract intact.
+- Its Important found the caller-supplied `event.observation` path bypassing
+  every validation the metadata path applied: a `provider: codex` record
+  persisted an observation claiming `provider: claude`, `source: attacker`,
+  and `match: matching` at exit 0.
+- **This review probed with the repository's own fixtures and therefore could
+  not detect that the Codex parser was wrong about the world.** The live
+  verification below found that immediately. Later rounds were mandated to
+  verify against real artifacts, which is how rounds 2 and 3 found what they
+  did.
+
 ### Live Verification and Its Findings
 
 The operator ran a real nested Codex dispatch in this worktree — root
@@ -1623,8 +1640,9 @@ Corrections, all verified against real artifacts:
   `subagent_history_start_ordinal`.
 - Fork classification tested `source.type === 'fork'`, which is unreachable —
   a scan of all 1,594 local rollouts found no such shape. The classification
-  was **removed** rather than re-guessed; raw `threadSource` and
-  `forkedFromId` are exposed uninterpreted.
+  was **removed** rather than re-guessed. `threadSource` and `forkedFromId`
+  remain as uninterpreted fields on the parser's internal metadata type; they
+  are not among the six projected observation facts and never reach a record.
 - Codex `session_id` normalizes to `sessionid`, matching the `session`
   sensitive-key family, so every real rollout was refused at the input
   boundary. Raw entries are now projected through the owning parser's
@@ -1694,11 +1712,42 @@ Corrections, all verified against real artifacts:
   `sessionId` to `OBSERVED_RUNTIME_FACT_KEYS` failed both the test and `tsc`.
 - Phase 6 contract intact with 0-byte diffs on all three protected files; the
   `entries: null` exclusion was probed five ways and holds.
-- Remaining code work: the declared request-correlation check fell off the
-  production path in the round-2 single-parse change (no real-world trigger —
-  `session_meta.request_id` is 0 of 2,735), and the envelope byte bound
-  serializes the whole envelope before bounding, which both performs the
-  unbounded work it prevents and reads `content`.
+- Both round-3 code findings were fixed in `d38307fca`. The declared
+  request-correlation check was restored on the live path in
+  `observationFromFacts` rather than deleted, and the three functions it had
+  become unreachable through — `normalizeRuntimeObservation`,
+  `parseCodexRuntimeObservation`, `parseClaudeRuntimeObservation` — were
+  removed with their 14 tests repointed at the production pipeline. The
+  envelope byte bound was removed entirely rather than made incremental:
+  `runtimeObservationEnvelopeExceedsBounds` is now `entries.length > 5000`,
+  O(1), reading nothing. Measuring bytes charged for exactly the fields the
+  parsers refuse to read, so removing it both closed the content-trap hole and
+  improved real coverage — Codex over-bound 58 to 32 with reported 1,538 to
+  1,564; Claude over-bound 4 to 2.
+
+### Review Round 4
+
+- Artifact: `reviews/p07-review-2026-09-03T001908Z.md`
+- Verdict: 0 Critical, 1 Important, 4 Medium, 3 Minor. The implementation is
+  ready; the Important was orchestrator artifact drift, corrected here.
+- Independent full-corpus sweep: Codex 1,596 files 0 refused (1,564
+  reported); Claude 2,740 files 0 refused (2,668 reported). Round 2's Critical
+  has not regressed.
+- The correlation guard is reachable and unbypassable: deleting it fails
+  exactly the live-path test, and the persisted schema is `.strict()` with no
+  `correlation` key, so the caller-supplied form is refused outright.
+- The O(1) bound survived eight resource attacks — a 5M-element array at a
+  read key (0.1ms), a 64 MiB string at a read key (13.2ms, linear), 500k-deep
+  nesting never traversed, 5,000 maximal entries (25.1ms), 5,001 degrading.
+  A 17 MiB field behind an access-recording getter is never read. Removing
+  the byte bound strictly reduced work.
+- Phase 6 contract intact with identical blob SHAs on all three protected
+  files; focused union 676/676.
+- Two bounded fixes were taken from this round (a path leak in the new
+  degradation reason, and a missing production test on the provider-mismatch
+  branch). The remaining Mediums and Minors are wording and are carried to the
+  residue backlog item rather than a further cycle, since the phase has
+  converged and downstream work is blocked on this branch merging.
 
 ### Open Items for p07-t04
 
