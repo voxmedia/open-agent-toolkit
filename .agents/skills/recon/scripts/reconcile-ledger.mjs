@@ -214,16 +214,21 @@ export function reconcileLedger({
         (item) => item.claimId === claim.id && item.disposition === 'uncertain',
       ),
     );
-    const incomplete =
-      supporting.length > 0 &&
-      [...requiredDispositions.keys()].some(
-        (kind) =>
-          !reviewResults.some(
-            (review) =>
-              review.reviewKind === kind &&
-              review.dispositions.some((item) => item.claimId === claim.id),
-          ),
-      );
+    const incomplete = [...requiredDispositions.keys()].some(
+      (kind) =>
+        !reviewResults.some(
+          (review) =>
+            review.reviewKind === kind &&
+            review.dispositions.some((item) => item.claimId === claim.id),
+        ),
+    );
+    const coverageGap = supporting.some(
+      (review) =>
+        review.reviewKind === 'coverage' &&
+        review.dispositions.some(
+          (item) => item.claimId === claim.id && item.disposition === 'gap',
+        ),
+    );
     const materialCoverageGap = reviewResults.some(
       (review) =>
         review.reviewKind === 'coverage' &&
@@ -274,6 +279,13 @@ export function reconcileLedger({
         claim.status = to;
         if (from !== to) transitions.push({ claimId: claim.id, from, to });
       }
+      continue;
+    }
+    if (coverageGap && claim.status === 'verified') {
+      const from = claim.status;
+      const to = materialCoverageGap ? 'contested' : 'unresolved';
+      claim.status = to;
+      transitions.push({ claimId: claim.id, from, to });
       continue;
     }
     if (!coreComplete) continue;

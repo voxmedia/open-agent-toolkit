@@ -911,6 +911,48 @@ test('production reconciliation never verifies a claim with a coverage gap dispo
   );
 });
 
+test('production reconciliation downgrades a previously verified claim with a coverage gap', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  priorLedger.claims[0].status = 'verified';
+  priorLedger.transitions[0] = {
+    claimId: 'claim-1',
+    from: 'provisional',
+    to: 'verified',
+  };
+  await replaceArtifact(packet, priorReference.path, priorLedger);
+
+  const coverage = await readJson(
+    join(packet.packetRoot, 'reviews/coverage.json'),
+  );
+  coverage.dispositions[0].disposition = 'gap';
+  await replaceArtifact(packet, 'reviews/coverage.json', coverage);
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'unresolved');
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'verified', to: 'unresolved' }],
+  );
+
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.equal(compiled.validatedRun.ledger.claims[0].status, 'unresolved');
+});
+
 test('production reconciliation retains a challenged claim as contested through compilation', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
@@ -931,9 +973,12 @@ test('production reconciliation retains a challenged claim as contested through 
     priorReference,
   });
   assert.equal(ledger.claims[0].status, 'contested');
-  assert.deepEqual(reconciliation.transitions, [
-    { claimId: 'claim-1', from: 'supported', to: 'contested' },
-  ]);
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'supported', to: 'contested' }],
+  );
 
   packet.manifest.run.status = 'partial';
   packet.manifest.gaps.push({
@@ -1148,6 +1193,60 @@ test('production reconciliation transitions uncertain and incomplete provisional
   }
 });
 
+test('production reconciliation transitions a provisional claim omitted by every review to unresolved', async () => {
+  const packet = await fixture();
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  priorLedger.claims[0].status = 'provisional';
+  priorLedger.transitions = priorLedger.transitions.filter(
+    (transition) => transition.claimId !== 'claim-1',
+  );
+  await replaceArtifact(packet, priorReference.path, priorLedger);
+
+  for (const kind of ['semantic', 'adversarial', 'coverage']) {
+    const relative = `reviews/${kind}.json`;
+    const review = await readJson(join(packet.packetRoot, relative));
+    review.dispositions = review.dispositions.filter(
+      (disposition) => disposition.claimId !== 'claim-1',
+    );
+    await replaceArtifact(packet, relative, review);
+  }
+
+  const { ledger, reconciliation } = reconcileLedger({
+    priorLedger,
+    reviewResults: await coreReviewResults(packet),
+    priorReference,
+  });
+  assert.equal(ledger.claims[0].status, 'unresolved');
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'provisional', to: 'unresolved' }],
+  );
+
+  packet.manifest.run.status = 'partial';
+  packet.manifest.gaps.push({
+    id: 'gap-claim-omitted-by-all-reviews',
+    code: 'INCOMPLETE_REVIEW',
+    message: 'The claim was omitted by every required review.',
+    material: true,
+    sourceIds: [],
+    claimIds: ['claim-1'],
+    coverageFindingIds: [],
+  });
+  await replaceArtifact(packet, 'claims.json', ledger);
+  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
+  const compiled = await compileValidatedRun(packet.packetRoot);
+  assert.equal(compiled.valid, true, JSON.stringify(compiled, null, 2));
+  assert.equal(compiled.status, 'partial');
+  assert.equal(compiled.validatedRun.ledger.claims[0].status, 'unresolved');
+});
+
 test('production reconciliation promotes an unresolved claim after complete independent review while preserving unsupported claims', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
@@ -1166,7 +1265,12 @@ test('production reconciliation promotes an unresolved claim after complete inde
     priorReference,
   });
   assert.equal(unsupported.ledger.claims[0].status, 'unsupported');
-  assert.deepEqual(unsupported.reconciliation.transitions, []);
+  assert.deepEqual(
+    unsupported.reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [],
+  );
 
   priorLedger.claims[0].status = 'unresolved';
   priorLedger.transitions[0] = {
@@ -1182,9 +1286,12 @@ test('production reconciliation promotes an unresolved claim after complete inde
     priorReference,
   });
   assert.equal(ledger.claims[0].status, 'verified');
-  assert.deepEqual(reconciliation.transitions, [
-    { claimId: 'claim-1', from: 'unresolved', to: 'verified' },
-  ]);
+  assert.deepEqual(
+    reconciliation.transitions.filter(
+      (transition) => transition.claimId === 'claim-1',
+    ),
+    [{ claimId: 'claim-1', from: 'unresolved', to: 'verified' }],
+  );
 
   await replaceArtifact(packet, 'claims.json', ledger);
   await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
