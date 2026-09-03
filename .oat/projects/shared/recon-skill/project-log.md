@@ -124,6 +124,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 retro artifact=.oat/projects/shared/recon-skill/references/project-retro.md evidence_used=archived-review-markdown,backlog-records,decision-records,gate-receipts,github-pr-status,lifecycle-artifacts,pr-artifact,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=1 upstream=2 apply=skipped filing=skipped
 
+### 2026-09-03 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T233226Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
