@@ -112,6 +112,10 @@ Received configured gate run 814287bf-abce-4264-8e51-11226227b9c8: 0 Critical, 1
 
 target=claude-fable-skip-permissions threshold=important exit=1 status=review_failed
 
+### 2026-09-03 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T154100Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
