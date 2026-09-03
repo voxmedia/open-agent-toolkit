@@ -1569,85 +1569,11 @@ describe('createInitToolsCommand', () => {
     expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
   });
 
-  it.each(['project', 'user', 'both'] as const)(
-    'preserves project config subtrees through direct %s placement',
-    async (scope) => {
-      const projects = {
-        defaultScope: 'synced' as const,
-        root: '.custom/projects',
-        futureSibling: { mode: 'future', enabled: true },
-      };
-      configPersistence.readOatConfig.mockResolvedValue({
-        version: 1,
-        projects,
-      } as never);
-      const { command } = createHarness({
-        interactive: false,
-        useLifecycle: true,
-        toolsByScope: {
-          project:
-            scope === 'user'
-              ? []
-              : [createScannedTool('oat-docs-analyze', 'docs', 'project')],
-          user: [],
-        },
-      });
-
-      await runCommand(
-        command,
-        ['docs'],
-        ['--scope', scope === 'both' ? 'all' : scope],
-      );
-
-      if (scope === 'user') {
-        expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
-      } else {
-        expect(configPersistence.writeOatConfig).toHaveBeenCalledWith(
-          '/tmp/workspace',
-          expect.objectContaining({ projects }),
-        );
-      }
-    },
-  );
-
-  it.each(['project', 'user', 'both'] as const)(
-    'preserves project config subtrees through aggregate %s placement',
-    async (scope) => {
-      const projects = {
-        defaultScope: 'synced' as const,
-        root: '.custom/projects',
-        futureSibling: ['kept-byte-for-byte'],
-      };
-      configPersistence.readOatConfig.mockResolvedValue({
-        version: 1,
-        projects,
-      } as never);
-      const { command } = createHarness({
-        interactive: true,
-        useLifecycle: true,
-        packSelection: [['docs']],
-        scopeSelection: [scope],
-        toolsByScope: {
-          project:
-            scope === 'user'
-              ? []
-              : [createScannedTool('oat-docs-analyze', 'docs', 'project')],
-          user: [],
-        },
-      });
-
-      await runCommand(command, [], ['--scope', 'all']);
-
-      if (scope === 'user') {
-        expect(configPersistence.writeOatConfig).not.toHaveBeenCalled();
-      } else {
-        expect(configPersistence.writeOatConfig).toHaveBeenCalledWith(
-          '/tmp/workspace',
-          expect.objectContaining({ projects }),
-        );
-      }
-    },
-  );
+  // FR10 sibling preservation is covered by filesystem integration tests in
+  // `commands/tools/shared/project-tools-config.test.ts`. The tests that lived
+  // here mocked `readOatConfig` to return a `futureSibling` that production
+  // `readOatConfig` could never return, then asserted the mocked writer
+  // received it — so they passed while the field was being destroyed.
 
   it('does not write shared config for a direct user-only brainstorm install', async () => {
     const { command, installBrainstorm, scanTools, writeOatConfig } =

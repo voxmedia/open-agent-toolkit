@@ -1,5 +1,13 @@
-import type { OatConfig } from '@config/oat-config';
-import { describe, expect, it, vi } from 'vitest';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import {
+  readOatConfig,
+  writeOatConfig,
+  type OatConfig,
+} from '@config/oat-config';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   type ProjectToolsConfigDependencies,
@@ -177,5 +185,94 @@ describe('reconcileProjectToolsConfig', () => {
       reconcileProjectToolsConfig(reconcileOptions, dependencies),
     ).resolves.toEqual({ action: 'unchanged', adoptedPacks: [] });
     expect(dependencies.writeOatConfig).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('FR10 project config sibling preservation', () => {
+  const roots: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      roots.splice(0).map((root) => rm(root, { force: true, recursive: true })),
+    );
+  });
+
+  it('preserves unknown projects siblings through a real read-write cycle', async () => {
+    // Real readOatConfig and writeOatConfig against a real file. The previous
+    // coverage mocked readOatConfig to return a sibling that production
+    // readOatConfig can never return, so it asserted the mock, not the code.
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
+    roots.push(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    const futureSibling = {
+      mode: 'future',
+      enabled: true,
+      nested: { list: [1, 'two', null], deep: { kept: 'byte-for-byte' } },
+    };
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify(
+        {
+          version: 1,
+          projects: {
+            root: '.custom/projects',
+            defaultScope: 'synced',
+            futureSibling,
+          },
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+
+    await reconcileProjectToolsConfig(
+      { repoRoot },
+      {
+        resolveAssetsRoot: async () => '/assets',
+        scanTools: async () => [createTool('docs', 'project')],
+        // The two functions under test are the production ones.
+        readOatConfig,
+        writeOatConfig,
+      },
+    );
+
+    const after = JSON.parse(
+      await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8'),
+    ) as {
+      projects?: Record<string, unknown>;
+      tools?: Record<string, unknown>;
+    };
+    expect(after.projects?.futureSibling).toEqual(futureSibling);
+    expect(after.projects?.root).toBe('.custom/projects');
+    expect(after.projects?.defaultScope).toBe('synced');
+    // The write actually happened, so this is not a vacuous pass.
+    expect(after.tools?.docs).toBe(true);
+  });
+
+  it('preserves siblings even when no known projects key is set', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
+    roots.push(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1, projects: { futureOnly: 'kept' } }, null, 2)}\n`,
+      'utf8',
+    );
+
+    await reconcileProjectToolsConfig(
+      { repoRoot },
+      {
+        resolveAssetsRoot: async () => '/assets',
+        scanTools: async () => [createTool('docs', 'project')],
+        readOatConfig,
+        writeOatConfig,
+      },
+    );
+
+    const after = JSON.parse(
+      await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8'),
+    ) as { projects?: Record<string, unknown> };
+    expect(after.projects?.futureOnly).toBe('kept');
   });
 });
