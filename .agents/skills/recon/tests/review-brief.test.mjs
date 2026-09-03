@@ -82,6 +82,35 @@ test('adversarial projection contains only scope, questions, and provisional sta
   assert.equal(validateReviewBrief(brief).valid, true);
 });
 
+test('adversarial statement validation rejects fields outside the exact blind projection', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const valid = createReviewBrief({
+    mode: 'adversary',
+    id: 'brief-adversary-exact-statements',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+    claimIds: ['claim-1'],
+  });
+
+  for (const field of ['evidence', 'status', 'qualifications']) {
+    const candidate = structuredClone(valid);
+    candidate.provisionalStatements[0][field] = [];
+    const result = validateReviewBrief(candidate);
+    assert.equal(result.valid, false, field);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.code === 'BLINDNESS_VIOLATION' &&
+          error.path === '$.provisionalStatements[0]',
+      ),
+      `${field}: ${JSON.stringify(result, null, 2)}`,
+    );
+  }
+  assert.equal(validateReviewBrief(valid).valid, true);
+});
+
 test('review briefs exclude dossier, compiler, synthesis, provenance, and prior review data', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);

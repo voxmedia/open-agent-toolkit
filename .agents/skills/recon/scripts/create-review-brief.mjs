@@ -269,18 +269,35 @@ export function validateReviewBrief(brief) {
         }
       }
     }
-  } else if (
-    brief.mode === 'adversary' &&
-    (!Array.isArray(brief.questions) ||
+  } else if (brief.mode === 'adversary') {
+    if (
+      !Array.isArray(brief.questions) ||
       !Array.isArray(brief.provisionalStatements) ||
-      !isObject(brief.scope))
-  ) {
-    errors.push(
-      issue(
-        'INVALID_REVIEW_BRIEF',
-        'Adversarial brief needs scope, questions, and provisional statements',
-      ),
-    );
+      !isObject(brief.scope)
+    ) {
+      errors.push(
+        issue(
+          'INVALID_REVIEW_BRIEF',
+          'Adversarial brief needs scope, questions, and provisional statements',
+        ),
+      );
+    }
+    for (const [index, statement] of (
+      brief.provisionalStatements ?? []
+    ).entries()) {
+      if (
+        !isObject(statement) ||
+        Object.keys(statement).sort().join(',') !== 'id,statement'
+      ) {
+        errors.push(
+          issue(
+            'BLINDNESS_VIOLATION',
+            'Adversarial statements have an invalid projection',
+            `$.provisionalStatements[${index}]`,
+          ),
+        );
+      }
+    }
   } else if (brief.mode === 'coverage') {
     if (
       !Array.isArray(brief.questions) ||
