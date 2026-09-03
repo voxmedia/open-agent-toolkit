@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 9f86de22b10c016c58b2b7ef243912d4fc6a488c
+oat_last_commit: cadda3c0ea6ca647d46a58ded965b57b55b7884d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # p-rev9 phase review passed; configured gate rerun pending
+oat_phase_status: complete # all phases complete; configured gate passed
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -46,15 +46,15 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 1385fd1e1351eb5a02dfb6cd50e2cc11a21ffbbc
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:a87272b3d2e5b1c4802cd90522628387fbfd14b6c474006284d9cf033acaa24d'
@@ -69,17 +69,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=3). Run oat-project-review-receive for .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=7c7c7d4a-41a8-4e71-bb14-65fe8de95de8|scope=final|type=code|source=final-review-2026-09-03T173922Z.md'
   receive_source_artifact: .oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md
   receive_archived_artifact: .oat/projects/shared/recon-skill/reviews/archived/final-review-2026-09-03T173922Z.md
   receive_event_identity: 'scope=final|type=code|source=final-review-2026-09-03T173922Z.md'
   receive_pre_head: cacefd2b75426408da75ff370b15d3ec7159d5ca
-  receive_commit: null
+  receive_commit: cadda3c0ea6ca647d46a58ded965b57b55b7884d
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-03T17:41:00Z'
+  updated_at: '2026-09-03T17:43:00Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T17:41:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T17:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,19 +106,17 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Revision 9 implemented; phase review passed
+**Status:** Implementation complete; configured gate passed
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Revision 9 converts all four configured-gate findings: synthesis referential
-integrity is categorically validated, rejected claims transition honestly to
-`unsupported`, `ValidatedRun` and renderer are strictly bound to publishable
-status, and contract clarity plus docs withdrawal descriptions are aligned. All
-three committed tasks pass root verification (192/192 recon/dispatch tests,
-skill bumps, skill validation). The fresh inline root phase review passed with
-zero findings; PR #248 remains open.
+All implementation and revision phases (p01–p05, p-rev1–p-rev9, 36 tasks) are
+complete. The configured cross-family implementation exit gate
+(`cursor-fable-5-1-high`) passed at the Important threshold with 0 Critical, 0
+Important, 1 Medium, and 3 Minor findings. The review was received durably and
+all non-blocking findings dispositioned. PR #248 is merge-ready.
 
 ## Artifacts
 
@@ -261,13 +259,14 @@ zero findings; PR #248 remains open.
 - ✓ p-rev9 independent phase review passed inline in the root under the user's
   no-subagent directive with 0 Critical, 0 Important, 0 Medium, and 0 Minor
   findings
+- ✓ Configured cross-family exit gate (`cursor-fable-5-1-high`) passed with 0
+  Critical, 0 Important, 1 Medium, and 3 Minor findings
+- ✓ Configured gate review received durably; non-blocking findings dispositioned
 
 ## Blockers
 
-None. The configured gate findings are converted into bounded Revision 9 work;
-the single-use manual final-review override remains consumed.
+None.
 
 ## Next Milestone
 
-Rerun final verification and the configured gate within the remaining
-remediation budget.
+Closeout and merge PR #248.
