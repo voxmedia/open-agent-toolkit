@@ -1127,10 +1127,14 @@ function normalizeOatConfig(
     // pack install performs. The values come from JSON.parse, so they are
     // JSON-safe by construction; known keys are normalized and overwrite the
     // raw ones, and everything else is carried through untouched.
-    const preserved: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(parsed.projects)) {
-      if (key !== 'root' && key !== 'defaultScope') preserved[key] = value;
-    }
+    // Built with `Object.fromEntries` rather than assignment: `preserved[key]`
+    // invokes the legacy prototype setter for a key named `__proto__`, so a
+    // valid JSON sibling with that name would silently vanish.
+    const preserved = Object.fromEntries(
+      Object.entries(parsed.projects).filter(
+        ([key]) => key !== 'root' && key !== 'defaultScope',
+      ),
+    );
     const normalized: Record<string, unknown> = {
       ...preserved,
       ...(root ? { root } : {}),

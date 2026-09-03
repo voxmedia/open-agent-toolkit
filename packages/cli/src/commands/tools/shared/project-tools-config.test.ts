@@ -250,6 +250,34 @@ describe('FR10 project config sibling preservation', () => {
     expect(after.tools?.docs).toBe(true);
   });
 
+  it('preserves a __proto__ sibling through the config write path', async () => {
+    // `preserved[key] = value` invokes the legacy prototype setter, so a
+    // sibling named `__proto__` vanished during normalization. This drives
+    // the production writer with a config a library caller could hold.
+    //
+    // Scope note: reading such a sibling back from disk still loses it, one
+    // layer earlier and outside this boundary — `parseJsonConfig` uses
+    // `jsonc-parser`, which builds objects by assignment and drops
+    // `__proto__` before normalization ever runs. `constructor` is unaffected
+    // in both layers.
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
+    roots.push(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    const config = JSON.parse(
+      '{"version":1,"projects":{"root":".p","__proto__":{"keep":"me"},"constructor":{"c":1}}}',
+    ) as OatConfig;
+    expect(
+      Object.prototype.hasOwnProperty.call(config.projects ?? {}, '__proto__'),
+    ).toBe(true);
+
+    await writeOatConfig(repoRoot, config);
+
+    const raw = await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8');
+    expect(raw).toContain('"__proto__"');
+    expect(raw).toContain('"constructor"');
+    expect(raw).toContain('".p"');
+  });
+
   it('preserves siblings even when no known projects key is set', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
     roots.push(repoRoot);
