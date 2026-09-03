@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: a2a6feaf092e91f2939a83cbd9bed688e5107548
+oat_last_commit: 3b5552e143f8dd6189b96e4ffa2a1a3ba1461e9a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # all phases complete; configured gate passed
+oat_phase_status: pr_open
 oat_orchestration_retry_limit: 3 # operator-authorized extension for p02 fix round 3
 oat_phase_recovery_policy:
   phase_attempt_usage:
@@ -96,7 +96,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/248' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-30T20:17:05.681Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-03T18:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-03T20:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -106,17 +106,13 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Implementation complete; configured gate passed
+**Status:** Implementation complete; PR open for review
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-All implementation and revision phases (p01–p05, p-rev1–p-rev9, 36 tasks) are
-complete. The configured cross-family implementation exit gate
-(`cursor-fable-5-1-high`) passed at the Important threshold with 0 Critical, 0
-Important, 1 Medium, and 3 Minor findings. The review was received durably and
-all non-blocking findings dispositioned. PR #248 is merge-ready.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -262,6 +258,8 @@ all non-blocking findings dispositioned. PR #248 is merge-ready.
 - ✓ Configured cross-family exit gate (`cursor-fable-5-1-high`) passed with 0
   Critical, 0 Important, 1 Medium, and 3 Minor findings
 - ✓ Configured gate review received durably; non-blocking findings dispositioned
+- ✓ PR description artifact written and PR #248 refreshed
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -269,4 +267,8 @@ None.
 
 ## Next Milestone
 
-Closeout and merge PR #248.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
