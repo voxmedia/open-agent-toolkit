@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-03
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -34,9 +34,9 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 | Phase p-rev7 | passed         | 1     | 1/1       |
 | Phase p-rev8 | passed         | 3     | 3/3       |
 | Phase p-rev9 | passed         | 3     | 3/3       |
-| Phase 6      | pending        | 4     | 0/4       |
+| Phase 6      | review_pending | 4     | 4/4       |
 
-**Total:** 36/40 tasks completed
+**Total:** 40/40 tasks completed
 
 ## Task Status
 
@@ -154,12 +154,12 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 ### Phase 6: Remote PR Review Fixes
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p06-t01 | pending | -      |
-| p06-t02 | pending | -      |
-| p06-t03 | pending | -      |
-| p06-t04 | pending | -      |
+| Task    | Status    | Commit      |
+| ------- | --------- | ----------- |
+| p06-t01 | completed | `d5a7a99e0` |
+| p06-t02 | completed | `8df564dfe` |
+| p06-t03 | completed | `8b51ae21c` |
+| p06-t04 | completed | `984e8243d` |
 
 ## Remote Review Received
 
@@ -369,6 +369,16 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - **Provenance:** The source Bugbot events lack OAT marker provenance; ledger
   lineage fields remain unknown rather than using the current PR head.
 - **Next:** execute Phase 6 tasks through `oat-project-implement`
+
+## Phase 6 Implemented
+
+- **Date:** 2026-09-03
+- **Commits:** `d5a7a99e0`, `8df564dfe`, `8b51ae21c`, `984e8243d`
+- **Request ID:** `recon-skill-p06-implementation-20260903T213500Z`
+- **Dispatch target:** `oat-phase-implementer-gpt-5-6-sol-high`
+- **Verification (root):** 188/188 recon tests, 199/199 recon/dispatch tests, 798/798 skills tests, `pnpm oat:validate-skills`, `pnpm lint`, and `pnpm format` passed
+- **Tracking:** all four tasks marked completed; phase enters `review_pending`
+- **Next:** run Phase 6 independent review
 
 ## Orchestration Runs
 

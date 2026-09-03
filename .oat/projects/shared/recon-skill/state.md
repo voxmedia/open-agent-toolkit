@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 3b5552e143f8dd6189b96e4ffa2a1a3ba1461e9a
+oat_current_task: null
+oat_last_commit: 984e8243dd7c03072049b8098c1775f053e1bb45
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -106,14 +106,16 @@ oat_project_recap:
 
 # Project State: recon-skill
 
-**Status:** Remote PR review received; Phase 6 queued
+**Status:** Phase 6 tasks complete; phase review pending
 **Started:** 2026-08-30
 **Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Implementation — Remote PR review findings (Round 2) received from PR #248.
-Tasks p06-t01 through p06-t04 queued for execution.
+Phase 6 tasks p06-t01 through p06-t04 completed: uncertain reviews transition
+to unresolved, coverage gaps prevent verified promotion, adversarial brief
+statements are strictly projected, and unresolved claims can transition to
+verified. Phase review is pending.
 
 ## Artifacts
 
@@ -121,7 +123,7 @@ Tasks p06-t01 through p06-t04 queued for execution.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independent review passed)
 - **Plan:** `plan.md` (complete; independent and external reviews passed)
-- **Implementation:** `implementation.md` (36/40 tasks complete; Phase 6 queued)
+- **Implementation:** `implementation.md` (40/40 tasks complete; Phase 6 review pending)
 
 ## Progress
 
@@ -261,7 +263,8 @@ Tasks p06-t01 through p06-t04 queued for execution.
 - ✓ Configured gate review received durably; non-blocking findings dispositioned
 - ✓ PR description artifact written and PR #248 refreshed
 - ! Remote PR review (Round 2) received: 0 Critical, 1 Important, 3 Medium, 0 Minor findings
-- ⧗ Phase 6 tasks `p06-t01` through `p06-t04` are queued
+- ✓ Phase 6 tasks `p06-t01` through `p06-t04` implemented
+- ⧗ Phase 6 independent review pending
 
 ## Blockers
 
@@ -269,4 +272,4 @@ None.
 
 ## Next Milestone
 
-Execute Phase 6 tasks `p06-t01` through `p06-t04` via `oat-project-implement`.
+Run Phase 6 independent review.
