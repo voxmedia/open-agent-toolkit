@@ -11,11 +11,12 @@ labels:
   - quick-start
 assignee: null
 created: 2026-09-02T23:48:38.755Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-03T00:08:42Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/250
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-make-consolidated-project-retirement-semantic.md
 ---
 
 ## Description

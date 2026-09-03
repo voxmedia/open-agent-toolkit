@@ -10,11 +10,12 @@ labels:
   - cli
 assignee: null
 created: 2026-09-02T23:48:37.046Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-03T00:08:42Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/239
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-add-exclusions-to-docs-index-generation.md
 ---
 
 ## Description

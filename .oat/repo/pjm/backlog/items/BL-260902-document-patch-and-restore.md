@@ -12,11 +12,12 @@ labels:
   - autonomy
 assignee: null
 created: 2026-09-02T23:48:32.116Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-03T00:08:42Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/234
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-document-patch-and-restore-for-lost-child-handles.md
 ---
 
 ## Description
@@ -26,6 +27,6 @@ The handle-unavailable branch of `oat-project-implement` only prescribes an unch
 ## Acceptance Criteria
 
 - The handle-unavailable branch of `oat-project-implement` (phase-execution reference) states that a fresh child never starts on a dirty tree and prescribes detect → save staged diff as a patch outside the worktree → restore the affected paths → brief the continuation to apply, review, and commit the patch first → record the patch reference in the continuation event.
-- The continuation brief template carries an optional `recovered_patch` field with the patch path and stat.
-- The autonomy contract inventory row for the handle-loss branch reflects the new guidance.
+- The continuation brief carries an optional `recovered_patch` field (path and stat) in both the root contract (`phase-execution.md`) and the child contract (`oat-phase-implementer.md`), applicable to recover and same-target implement continuations.
+- The autonomy-contract line mappings for the edited reference stay current (the inventory test passes across all four mirrors); no new prompt site is introduced.
 - The lifecycle contract test that reads the phase-execution reference asserts the patch-and-restore clauses so they cannot regress silently.

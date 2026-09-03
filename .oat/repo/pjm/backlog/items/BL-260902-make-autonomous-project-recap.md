@@ -11,11 +11,12 @@ labels:
   - autonomy
 assignee: null
 created: 2026-09-02T23:48:48.908Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-03T00:08:42Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/230
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-make-autonomous-project-recap-capability-aware.md
 ---
 
 ## Description

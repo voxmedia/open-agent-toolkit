@@ -12,11 +12,12 @@ labels:
   - reliability
 assignee: null
 created: 2026-09-02T23:48:30.479Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-09-03T00:08:42Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/232
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md
 ---
 
 ## Description

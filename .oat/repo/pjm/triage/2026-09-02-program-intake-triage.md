@@ -108,8 +108,8 @@ updated: 2026-09-02
 - Confidence: 93%.
 - Evidence: The doctor half is fixed: `packages/cli/src/commands/pjm/doctor.ts:28,36` now accept `CLAUDE.md` as a valid generated pointer (PR #244). Pointer placement is unchanged: no `documentation` docs-directory exclusion exists in `pjm/init.ts` or `shared/agents-md.ts`.
 - Existing coverage: None for placement.
-- Proposed GitHub action: Keep open; add `tracked-in-backlog`; comment crediting PR #244 for the doctor half.
-- Backlog action: Created `BL-260902-keep-pjm-init-provider` (medium / task / M).
+- Proposed GitHub action: Keep open; add `tracked-in-backlog`; comment crediting PR #244 for the doctor half and noting that the writer is `oat instructions sync` (`pjm init` only prints the hint).
+- Backlog action: Created `BL-260902-keep-pjm-init-provider` (medium / task / M), retitled during plan reconnaissance to "Keep instruction-sync pointer files out of documentation content trees" because `oat instructions sync`, not `oat pjm init`, writes the pointers.
 - Priority and size rationale: Medium because affected repositories can delete the pointers; M because placement policy, opt-out config, fixture tests, and docs are all involved.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
 - Post-merge result: Pending.
