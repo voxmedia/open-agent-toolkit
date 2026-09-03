@@ -3,24 +3,13 @@ import { describe, expect, it } from 'vitest';
 import {
   CLAUDE_ASSISTANT_KEYS,
   CLAUDE_INIT_KEYS,
-  CLAUDE_OBSERVATION_SOURCE,
   extractClaudeRuntimeMetadata,
-  parseClaudeRuntimeObservation,
   observeClaudeRuntimeFacts,
 } from './claude-runtime-observation';
 import {
   MAIN_SESSION_TRANSCRIPT,
   SIDECHAIN_TRANSCRIPT,
 } from './claude-runtime-observation.fixtures';
-
-const OBSERVED_AT = '2026-09-02T12:00:00.000Z';
-
-const configured = {
-  role: 'oat-phase-implementer',
-  model: 'claude-opus-5',
-  effort: 'high',
-  serviceTier: 'standard',
-};
 
 /** A real-shaped assistant entry. `message` is built by the caller. */
 function assistantEntry(
@@ -305,52 +294,5 @@ describe('observeClaudeRuntimeFacts', () => {
 
   it('returns nothing for a conversation-only transcript', () => {
     expect(observeClaudeRuntimeFacts([conversationEntry('user')])).toBeNull();
-  });
-});
-
-describe('parseClaudeRuntimeObservation against captured transcripts', () => {
-  it('reports a source-qualified observation from a real sidechain', () => {
-    expect(
-      parseClaudeRuntimeObservation({
-        entries: SIDECHAIN_TRANSCRIPT,
-        observedAt: OBSERVED_AT,
-        configured,
-      }),
-    ).toEqual({
-      status: 'reported',
-      provider: 'claude',
-      childLineage: 'depth-unknown',
-      role: 'general-purpose',
-      model: 'claude-opus-5',
-      effort: 'high',
-      serviceTier: 'standard',
-      source: CLAUDE_OBSERVATION_SOURCE,
-      observedAt: OBSERVED_AT,
-      match: 'mismatching',
-      comparedAxes: ['role', 'model', 'effort', 'serviceTier'],
-    });
-  });
-
-  it('reports a mismatching model without authorizing anything', () => {
-    expect(
-      parseClaudeRuntimeObservation({
-        entries: [assistantEntry({}, { model: 'claude-haiku-4-5-20251001' })],
-        observedAt: OBSERVED_AT,
-        configured,
-      }),
-    ).toMatchObject({
-      match: 'mismatching',
-      model: 'claude-haiku-4-5-20251001',
-    });
-  });
-
-  it('never copies requested values when parsing finds nothing', () => {
-    const observation = parseClaudeRuntimeObservation({
-      entries: [conversationEntry('user')],
-      observedAt: OBSERVED_AT,
-      configured,
-    });
-    expect(observation).toEqual({ status: 'not-reported' });
-    expect(JSON.stringify(observation)).not.toContain('claude-opus-5');
   });
 });

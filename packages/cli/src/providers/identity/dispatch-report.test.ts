@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseCodexRuntimeObservation } from './codex-runtime-observation';
+import { observeCodexRuntimeFacts } from './codex-runtime-observation';
 import {
   buildDispatchReport,
   formatDispatchReport,
@@ -10,6 +10,7 @@ import {
   type DispatchReportResolution,
   type DispatchReportV1,
 } from './dispatch-report';
+import { buildRuntimeObservation } from './oat-dispatch-record';
 import { formatDispatchStamp } from './stamp';
 
 /** Minimal generic dispatch fields for a persisted-record shape assertion. */
@@ -912,15 +913,21 @@ describe('dispatch report rendering', () => {
           status: 'not-applicable' as const,
           reason: 'No fallback recorded.',
         },
-        runtimeObservation: parseCodexRuntimeObservation({
-          entries: [
-            {
-              type: 'session_meta',
-              payload: { id: 'sess-root', agent_role: 'oat-phase-implementer' },
-            },
-            { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
-          ],
+        runtimeObservation: buildRuntimeObservation({
+          provider: 'codex',
+          source: 'codex-rollout-metadata',
           observedAt: '2026-09-02T12:00:00.000Z',
+          metadata:
+            observeCodexRuntimeFacts([
+              {
+                type: 'session_meta',
+                payload: {
+                  id: 'sess-root',
+                  agent_role: 'oat-phase-implementer',
+                },
+              },
+              { type: 'turn_context', payload: { model: 'gpt-5.6-terra' } },
+            ]) ?? {},
           configured: { model: 'gpt-5.6-sol' },
         }),
       },

@@ -976,6 +976,7 @@ describe('runtime observation integration', () => {
       },
       match: 'matching',
       comparedAxes: ['role', 'model', 'effort'],
+      reason: null,
       status: 'reported',
     });
 
@@ -1147,6 +1148,61 @@ describe('runtime observation integration', () => {
         },
       }),
     ).rejects.toThrow(/capabilit/i);
+  });
+
+  it('declines a session that names a different request, on the live path', async () => {
+    // The declared-correlation guard has to run where records are actually
+    // written; a guard reachable only from a helper the CLI never calls is
+    // a test passing on dead code.
+    const { result } = await record([
+      {
+        ordinal: 0,
+        type: 'session_meta',
+        payload: {
+          id: '01a06402-4d66-74f1-a706-f69cde1516f6',
+          parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+          thread_source: 'subagent',
+          request_id: 'dispatch-some-other-request',
+          agent_role: 'oat-phase-implementer',
+          source: {
+            subagent: {
+              thread_spawn: {
+                parent_thread_id: '01a06402-2861-7421-821a-137187a03f7f',
+                depth: 1,
+              },
+            },
+          },
+        },
+      },
+      {
+        ordinal: 7,
+        type: 'turn_context',
+        payload: { model: 'gpt-5.6-sol', effort: 'high' },
+      },
+    ]);
+    expect(result.record.oat.runtimeObservation).toEqual({
+      status: 'not-reported',
+    });
+    expect(result.runtimeIdentity.reason).toMatch(/correlat/i);
+  });
+
+  it('names why an observation degraded', async () => {
+    const overBound = await record(
+      Array.from({ length: 20_000 }, () => ({ type: 'event_msg' })),
+    );
+    expect(overBound.result.runtimeIdentity).toMatchObject({
+      status: 'not-reported',
+      reason: expect.stringMatching(/too large|bound/i),
+    });
+
+    const cursor = await record(
+      [{ ordinal: 0, type: 'session_meta', payload: { id: 'x' } }],
+      { provider: 'cursor', role_selector: 'generalPurpose' },
+      'cursor',
+    );
+    expect(cursor.result.runtimeIdentity.reason).toMatch(
+      /no runtime observation channel/i,
+    );
   });
 
   it('keeps the parser source through the command layer', async () => {

@@ -1,9 +1,4 @@
-import {
-  buildRuntimeObservation,
-  observationIdentifier as observedValue,
-  type ConfiguredInvocationForObservation,
-  type RuntimeObservation,
-} from './oat-dispatch-record';
+import { observationIdentifier as observedValue } from './oat-dispatch-record';
 
 /**
  * Claude runtime metadata parsing.
@@ -265,13 +260,6 @@ export function extractClaudeRuntimeMetadata(
 }
 
 /**
- * Produce one source-qualified Claude runtime observation.
- *
- * Returns `not-reported` when no Claude metadata is present, when the entries
- * mix sessions, or when the provider declares a different OAT request. A parse
- * failure never falls back to the configured invocation.
- */
-/**
  * Neutral observation facts for the cross-provider projection.
  *
  * The single-session guarantee runs in-process inside
@@ -297,34 +285,4 @@ export function observeClaudeRuntimeFacts(entries: readonly unknown[]): {
     serviceTier: metadata.serviceTier,
     correlation: metadata.requestId,
   };
-}
-
-export function parseClaudeRuntimeObservation(input: {
-  entries: readonly unknown[];
-  observedAt: string;
-  requestId?: string;
-  configured?: ConfiguredInvocationForObservation | null;
-}): RuntimeObservation {
-  const metadata = extractClaudeRuntimeMetadata(input.entries);
-  if (metadata === null) return { status: 'not-reported' };
-  if (
-    input.requestId !== undefined &&
-    metadata.requestId !== null &&
-    metadata.requestId !== input.requestId
-  ) {
-    return { status: 'not-reported' };
-  }
-  return buildRuntimeObservation({
-    provider: 'claude',
-    source: CLAUDE_OBSERVATION_SOURCE,
-    observedAt: input.observedAt,
-    metadata: {
-      childLineage: metadata.childLineage,
-      role: metadata.role,
-      model: metadata.model,
-      effort: metadata.effort,
-      serviceTier: metadata.serviceTier,
-    },
-    configured: input.configured ?? null,
-  });
 }

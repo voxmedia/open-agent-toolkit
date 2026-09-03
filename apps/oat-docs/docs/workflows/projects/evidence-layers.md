@@ -132,15 +132,27 @@ on any captured assistant entry and `parentUuid` links messages within one agent
 rather than agents to each other, so a depth number is reported unknown rather
 than derived.
 
-The guarantee is the allowlist, not caller discipline. `entries` are projected
-through the owning parser's allowlist before anything is validated, and the
-projection — never the raw input — is what the sensitive-content boundary
-inspects and what the parsers read. `entries` are never persisted in any form.
+The guarantee is the projection, not caller discipline. Provider parsing happens
+entirely inside the provider module, and what comes back is a flat, closed set
+of neutral facts — lineage, role, model, effort, service tier, correlation —
+whose key names are owned by OAT rather than by the provider. That projection,
+never the raw input, is what the sensitive-content boundary inspects and what is
+compared against the configured invocation. `entries` are never persisted in any
+form.
+
+Emitting neutral keys rather than mirroring the provider's own entry shape is
+deliberate. Mirroring a source shape means inheriting its field names, and a
+provider is free to name a field anything: an earlier revision passed the
+provider's shape through and carried `sessionId` and `message` into the output,
+both of which classify as sensitive, which made every real Claude transcript
+unrecordable.
+
 A caller may therefore hand over an unmodified rollout or session log: every
-field outside the allowlist, including instruction text, conversation bodies,
+field outside the fact set, including instruction text, conversation bodies,
 working directories, and repository identity, is dropped before the record
-boundary. Requiring pre-sanitized input instead would push the stripper into
-every caller, which is a larger leak surface than the one it removes.
+boundary and is never read in the first place. Requiring pre-sanitized input
+instead would push the stripper into every caller, which is a larger leak
+surface than the one it removes.
 
 Comparison covers only the axes both sides report, and `comparedAxes` records
 exactly which ones. This qualifier is load-bearing: `matching` means "every axis

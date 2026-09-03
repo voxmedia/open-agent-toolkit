@@ -28,7 +28,7 @@ import {
 import {
   observationFromFacts,
   parseRuntimeObservationEnvelope,
-  projectRuntimeObservationFacts,
+  projectRuntimeObservation,
   providerSupportsRuntimeObservation,
 } from '@providers/identity/runtime-observation';
 
@@ -125,6 +125,8 @@ const CALLER_ASSERTED_OBSERVATION_SOURCE = 'caller-asserted';
 export interface DispatchRecordInput {
   record: GenericDispatchRecord;
   event: OatDispatchEvidenceEvent;
+  /** Why an observation degraded, when one did. Not durable evidence. */
+  observationReason?: string | null;
 }
 
 /**
@@ -157,6 +159,12 @@ export interface DispatchRecordRuntimeIdentity {
    * absent from this list.
    */
   comparedAxes: readonly string[];
+  /**
+   * Why an observation is `not-reported`, so a caller attaching a 25 MB rollout
+   * can tell that outcome from one attaching an empty array. A per-command
+   * diagnostic, never durable evidence.
+   */
+  reason: string | null;
   status: 'reported' | 'not-reported';
 }
 
@@ -277,27 +285,35 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
       );
     }
     const envelope = parseRuntimeObservationEnvelope(rawMetadata);
-    const facts =
+    const projected =
       envelope.provider === record.provider
-        ? projectRuntimeObservationFacts(envelope.provider, envelope.entries)
-        : null;
+        ? projectRuntimeObservation(envelope.provider, envelope.entries)
+        : {
+            facts: null,
+            reason: `observation metadata names provider ${envelope.provider}, but the record names ${record.provider}`,
+          };
+    const facts = projected.facts;
     assertNoSensitiveDispatchContent(facts, '<observation-metadata>');
     const { metadata: _metadata, ...rest } = value.event;
     // Built here from parsed provider output, so it carries a parser source and
     // must not be re-processed as if a caller had supplied it.
+    const observation = observationFromFacts({
+      record,
+      provider: envelope.provider,
+      source: OBSERVATION_SOURCE_BY_PROVIDER[envelope.provider] ?? 'unknown',
+      observedAt: envelope.observedAt,
+      facts,
+    });
     return {
       record,
-      event: {
-        ...rest,
-        observation: observationFromFacts({
-          record,
-          provider: envelope.provider,
-          source:
-            OBSERVATION_SOURCE_BY_PROVIDER[envelope.provider] ?? 'unknown',
-          observedAt: envelope.observedAt,
-          facts,
-        }),
-      } as OatDispatchEvidenceEvent,
+      event: { ...rest, observation } as OatDispatchEvidenceEvent,
+      observationReason:
+        observation.status === 'reported'
+          ? null
+          : // Facts can be produced and still be declined downstream, when the
+            // session declares a different request than this record does.
+            (projected.reason ??
+            'observation metadata correlates to a different request'),
     };
   }
 
@@ -312,6 +328,7 @@ export function parseDispatchRecordInput(value: unknown): DispatchRecordInput {
 
 function runtimeIdentityFor(
   record: PersistedOatDispatchRecordV1,
+  reason: string | null = null,
 ): DispatchRecordRuntimeIdentity {
   const observation: RuntimeObservation = record.oat.runtimeObservation;
   return {
@@ -338,6 +355,7 @@ function runtimeIdentityFor(
     match: observation.status === 'reported' ? observation.match : null,
     comparedAxes:
       observation.status === 'reported' ? (observation.comparedAxes ?? []) : [],
+    reason: observation.status === 'reported' ? null : reason,
     status: observation.status,
   };
 }
@@ -479,7 +497,10 @@ export async function recordProjectDispatch(input: {
       path: null,
       created: false,
       record,
-      runtimeIdentity: runtimeIdentityFor(record),
+      runtimeIdentity: runtimeIdentityFor(
+        record,
+        parsedInput.observationReason ?? null,
+      ),
     };
   }
 
@@ -585,7 +606,10 @@ export async function recordProjectDispatch(input: {
         path,
         created: revision === 1,
         record,
-        runtimeIdentity: runtimeIdentityFor(record),
+        runtimeIdentity: runtimeIdentityFor(
+          record,
+          parsedInput.observationReason ?? null,
+        ),
       };
     },
   );

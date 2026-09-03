@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { GenericDispatchRecord } from './generic-dispatch-record';
 import { isSensitiveDispatchKey } from './generic-dispatch-record';
 import {
-  normalizeRuntimeObservation,
+  observationFromFacts,
   OBSERVED_RUNTIME_FACT_KEYS,
+  runtimeObservationEnvelopeExceedsBounds,
   parseRuntimeObservationEnvelope,
+  projectRuntimeObservation,
   projectRuntimeObservationFacts,
   providerSupportsRuntimeObservation,
 } from './runtime-observation';
@@ -105,6 +107,36 @@ const claudeEntries = [
   },
 ];
 
+/**
+ * The production pipeline, exactly as `parseDispatchRecordInput` runs it:
+ * project to neutral facts, then build the observation against the record.
+ * Driving anything else here is how a guard ends up unreachable in production
+ * while its tests keep passing.
+ */
+function normalizeRuntimeObservation(input: {
+  record: GenericDispatchRecord;
+  envelope: {
+    provider: string;
+    observedAt: string;
+    entries: readonly unknown[];
+  };
+}) {
+  const projected =
+    input.envelope.provider === input.record.provider
+      ? projectRuntimeObservation(
+          input.envelope.provider,
+          input.envelope.entries,
+        )
+      : { facts: null, reason: 'provider mismatch' };
+  return observationFromFacts({
+    record: input.record,
+    provider: input.envelope.provider,
+    source: `${input.envelope.provider}-observation`,
+    observedAt: input.envelope.observedAt,
+    facts: projected.facts,
+  });
+}
+
 describe('providerSupportsRuntimeObservation', () => {
   it('gates observation on provider capability', () => {
     expect(providerSupportsRuntimeObservation('codex')).toBe(true);
@@ -125,22 +157,72 @@ describe('parseRuntimeObservationEnvelope', () => {
     ).toHaveLength(2);
   });
 
+  it('bounds without reading conversation content', () => {
+    // The byte bound used to JSON.stringify the whole envelope, which read
+    // `content` from every conversation entry — the one place the
+    // metadata-only guarantee leaked.
+    const entry: Record<string, unknown> = {
+      type: 'response_item',
+      ordinal: 3,
+    };
+    for (const key of ['content', 'payload', 'message', 'text']) {
+      Object.defineProperty(entry, key, {
+        enumerable: true,
+        get() {
+          throw new Error(`Bounding read conversation content via ${key}.`);
+        },
+      });
+    }
+    const entries = [
+      {
+        ordinal: 0,
+        type: 'session_meta',
+        payload: { id: 'sess', thread_source: 'user', source: 'exec' },
+      },
+      ...Array.from({ length: 200 }, () => entry),
+      { ordinal: 7, type: 'turn_context', payload: { model: 'gpt-5.6-sol' } },
+    ];
+    expect(runtimeObservationEnvelopeExceedsBounds(entries)).toBe(false);
+    expect(projectRuntimeObservationFacts('codex', entries)).toMatchObject({
+      model: 'gpt-5.6-sol',
+    });
+  });
+
   it('degrades an over-bound envelope rather than throwing', () => {
     // Size is not a shape violation. Throwing here would destroy the mandatory
     // record write over an optional attachment.
-    for (const entries of [
-      [{ type: 'session_meta', payload: { id: 'x'.repeat(17 * 1024 * 1024) } }],
-      Array.from({ length: 5001 }, () => ({ type: 'event_msg' })),
-    ]) {
-      expect(() =>
-        parseRuntimeObservationEnvelope({
-          provider: 'codex',
-          observedAt: OBSERVED_AT,
-          entries,
-        }),
-      ).not.toThrow();
-      expect(projectRuntimeObservationFacts('codex', entries)).toBeNull();
-    }
+    const entries = Array.from({ length: 5001 }, () => ({ type: 'event_msg' }));
+    expect(() =>
+      parseRuntimeObservationEnvelope({
+        provider: 'codex',
+        observedAt: OBSERVED_AT,
+        entries,
+      }),
+    ).not.toThrow();
+    expect(projectRuntimeObservationFacts('codex', entries)).toBeNull();
+    expect(projectRuntimeObservation('codex', entries).reason).toMatch(
+      /too large/i,
+    );
+  });
+
+  it('does not measure size by serializing the envelope', () => {
+    // A single huge unread field is not a bound violation: it is never read,
+    // so it costs nothing. Treating it as one required serializing it first.
+    const entries = [
+      {
+        type: 'session_meta',
+        payload: {
+          id: 'sess',
+          thread_source: 'user',
+          source: 'exec',
+          base_instructions: 'x'.repeat(17 * 1024 * 1024),
+        },
+      },
+    ];
+    expect(runtimeObservationEnvelopeExceedsBounds(entries)).toBe(false);
+    expect(projectRuntimeObservationFacts('codex', entries)).toMatchObject({
+      lineage: 'root',
+    });
   });
 
   it('rejects unknown keys, bad shapes, and content-bearing envelopes', () => {

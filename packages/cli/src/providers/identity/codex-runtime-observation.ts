@@ -1,9 +1,4 @@
-import {
-  buildRuntimeObservation,
-  observationIdentifier as observedValue,
-  type ConfiguredInvocationForObservation,
-  type RuntimeObservation,
-} from './oat-dispatch-record';
+import { observationIdentifier as observedValue } from './oat-dispatch-record';
 
 /**
  * Codex rollout metadata parsing.
@@ -314,14 +309,6 @@ export function extractCodexRuntimeMetadata(
 }
 
 /**
- * Produce one source-qualified Codex runtime observation.
- *
- * Returns `not-reported` when nothing metadata-shaped is present, when the
- * observation time is not a timestamp, or when the session correlates to a
- * different request. A declined correlation is deliberately silent rather than
- * attributed: another session's identity is not evidence about this request.
- */
-/**
  * Neutral observation facts for the cross-provider projection.
  *
  * Nothing of the rollout's own shape escapes this module: the caller receives
@@ -345,34 +332,4 @@ export function observeCodexRuntimeFacts(entries: readonly unknown[]): {
     serviceTier: metadata.serviceTier,
     correlation: metadata.requestId,
   };
-}
-
-export function parseCodexRuntimeObservation(input: {
-  entries: readonly unknown[];
-  observedAt: string;
-  requestId?: string;
-  configured?: ConfiguredInvocationForObservation | null;
-}): RuntimeObservation {
-  const metadata = extractCodexRuntimeMetadata(input.entries);
-  if (metadata === null) return { status: 'not-reported' };
-  if (
-    input.requestId !== undefined &&
-    metadata.requestId !== null &&
-    metadata.requestId !== input.requestId
-  ) {
-    return { status: 'not-reported' };
-  }
-  return buildRuntimeObservation({
-    provider: 'codex',
-    source: CODEX_OBSERVATION_SOURCE,
-    observedAt: input.observedAt,
-    metadata: {
-      childLineage: metadata.childLineage,
-      role: metadata.role,
-      model: metadata.model,
-      effort: metadata.effort,
-      serviceTier: metadata.serviceTier,
-    },
-    configured: input.configured ?? null,
-  });
 }

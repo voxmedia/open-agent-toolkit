@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CODEX_OBSERVATION_SOURCE,
   extractCodexRuntimeMetadata,
-  parseCodexRuntimeObservation,
+  observeCodexRuntimeFacts,
 } from './codex-runtime-observation';
 import {
   DEPTH_1_ROLLOUT,
   DEPTH_2_ROLLOUT,
   ROOT_ROLLOUT,
 } from './codex-runtime-observation.fixtures';
-
-const OBSERVED_AT = '2026-09-02T12:00:00.000Z';
 
 const ROOT_ID = '01a06402-2861-7421-821a-137187a03f7f';
 const DEPTH_1_ID = '01a06402-4d66-74f1-a706-f69cde1516f6';
@@ -259,78 +256,46 @@ describe('codex lineage resolution', () => {
   });
 });
 
-describe('parseCodexRuntimeObservation against captured rollouts', () => {
-  const configuredDepth1 = {
-    role: 'oat-phase-implementer-gpt-5-6-terra-high',
-    model: 'gpt-5.6-terra',
-    effort: 'high',
-    serviceTier: null,
-  };
-
-  it('reports a matching depth-1 observation', () => {
-    expect(
-      parseCodexRuntimeObservation({
-        entries: DEPTH_1_ROLLOUT,
-        observedAt: OBSERVED_AT,
-        configured: configuredDepth1,
-      }),
-    ).toEqual({
-      status: 'reported',
-      provider: 'codex',
-      childLineage: 'depth-1',
+describe('observeCodexRuntimeFacts', () => {
+  it('emits only neutral facts from a real depth-1 rollout', () => {
+    expect(observeCodexRuntimeFacts(DEPTH_1_ROLLOUT)).toEqual({
+      lineage: 'depth-1',
       role: 'oat-phase-implementer-gpt-5-6-terra-high',
       model: 'gpt-5.6-terra',
       effort: 'high',
-      source: CODEX_OBSERVATION_SOURCE,
-      observedAt: OBSERVED_AT,
-      match: 'matching',
-      comparedAxes: ['role', 'model', 'effort'],
+      serviceTier: null,
+      correlation: null,
     });
   });
 
-  it('reports a mismatch when the real child is not the configured one', () => {
+  it('carries a declared correlation through for the boundary to check', () => {
+    // The parser reports what the session declared; declining on a mismatch is
+    // the write boundary's job, on the path that actually persists records.
     expect(
-      parseCodexRuntimeObservation({
-        entries: DEPTH_2_ROLLOUT,
-        observedAt: OBSERVED_AT,
-        configured: configuredDepth1,
-      }),
-    ).toMatchObject({ match: 'mismatching', model: 'gpt-5.6-luna' });
+      observeCodexRuntimeFacts([
+        subagentMeta({ requestId: 'dispatch-other' }),
+        turnContext({ model: 'gpt-5.6-sol' }),
+      ])?.correlation,
+    ).toBe('dispatch-other');
   });
 
-  it('never copies requested values when parsing finds nothing', () => {
-    const observation = parseCodexRuntimeObservation({
-      entries: [conversationEntry()],
-      observedAt: OBSERVED_AT,
-      configured: configuredDepth1,
-    });
-    expect(observation).toEqual({ status: 'not-reported' });
-    expect(JSON.stringify(observation)).not.toContain('gpt-5.6-terra');
+  it('returns nothing when no session metadata is present', () => {
+    expect(observeCodexRuntimeFacts([conversationEntry()])).toBeNull();
+    expect(observeCodexRuntimeFacts([])).toBeNull();
   });
 
-  it('declines correlation when the session names a different request', () => {
-    expect(
-      parseCodexRuntimeObservation({
-        entries: [subagentMeta({ requestId: 'dispatch-other' })],
-        observedAt: OBSERVED_AT,
-        requestId: 'dispatch-native-1',
-        configured: configuredDepth1,
-      }),
-    ).toEqual({ status: 'not-reported' });
-  });
-
-  it('refuses a non-datetime observation time and a non-array input', () => {
-    expect(
-      parseCodexRuntimeObservation({
-        entries: ROOT_ROLLOUT,
-        observedAt: 'yesterday',
-      }),
-    ).toEqual({ status: 'not-reported' });
-    expect(
-      parseCodexRuntimeObservation({
-        entries: 'rollout.jsonl' as unknown as readonly unknown[],
-        observedAt: OBSERVED_AT,
-      }),
-    ).toEqual({ status: 'not-reported' });
+  it('never leaks the rollout shape into the fact set', () => {
+    const serialized = JSON.stringify(
+      observeCodexRuntimeFacts(DEPTH_2_ROLLOUT),
+    );
+    for (const providerKey of [
+      'session_meta',
+      'session_id',
+      'thread_source',
+      'agent_role',
+      'parent_thread_id',
+    ]) {
+      expect(serialized, providerKey).not.toContain(providerKey);
+    }
   });
 });

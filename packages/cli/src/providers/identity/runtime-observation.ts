@@ -1,13 +1,7 @@
 import { z } from 'zod';
 
-import {
-  observeClaudeRuntimeFacts,
-  parseClaudeRuntimeObservation,
-} from './claude-runtime-observation';
-import {
-  observeCodexRuntimeFacts,
-  parseCodexRuntimeObservation,
-} from './codex-runtime-observation';
+import { observeClaudeRuntimeFacts } from './claude-runtime-observation';
+import { observeCodexRuntimeFacts } from './codex-runtime-observation';
 import type { GenericDispatchRecord } from './generic-dispatch-record';
 import {
   buildRuntimeObservation,
@@ -54,7 +48,6 @@ const OBSERVING_PROVIDERS: ReadonlySet<string> = new Set(['codex', 'claude']);
  * work at a durable-write boundary.
  */
 const MAX_ENVELOPE_ENTRIES = 5000;
-const MAX_ENVELOPE_BYTES = 16 * 1024 * 1024;
 
 /**
  * Envelope shape only. Size is deliberately *not* enforced here.
@@ -74,18 +67,25 @@ const runtimeObservationEnvelopeSchema = z
   .strict();
 
 /**
- * True when the envelope is too large to project. Bounded work at a
- * durable-write boundary, stated in the same terms as every other dispatch
- * bound, but degrading rather than fatal.
+ * True when the envelope is too large to project. Degrading rather than fatal.
+ *
+ * Bounded by entry count alone, and deliberately not by serialized size. An
+ * earlier revision measured bytes with `JSON.stringify`, which did the very
+ * unbounded work the bound exists to prevent — serializing tens of megabytes to
+ * conclude they were too big — and, worse, *read every conversation field on
+ * the way*. That put the one read of `content` in the codebase inside the
+ * bounding step, while the parsers themselves touched nothing.
+ *
+ * Entry count is O(1) and reads nothing. It is a sufficient bound because
+ * projection work is O(entries x a fixed allowlist of scalar keys) and each
+ * value read is length-capped at 256 characters by the shared identifier
+ * validator, so a single entry cannot carry unbounded cost no matter how large
+ * its unread fields are.
  */
 export function runtimeObservationEnvelopeExceedsBounds(
   entries: readonly unknown[],
 ): boolean {
-  if (entries.length > MAX_ENVELOPE_ENTRIES) return true;
-  return (
-    new TextEncoder().encode(JSON.stringify(entries) ?? 'null').length >
-    MAX_ENVELOPE_BYTES
-  );
+  return entries.length > MAX_ENVELOPE_ENTRIES;
 }
 
 /**
@@ -131,21 +131,58 @@ export function projectRuntimeObservationFacts(
   provider: string,
   entries: readonly unknown[],
 ): ObservedRuntimeFacts | null {
-  if (!providerSupportsRuntimeObservation(provider)) return null;
-  if (!Array.isArray(entries)) return null;
-  if (runtimeObservationEnvelopeExceedsBounds(entries)) return null;
+  return projectRuntimeObservation(provider, entries).facts;
+}
+
+/**
+ * Why an observation degraded. `null` reason means facts were produced.
+ */
+export interface ProjectedRuntimeObservation {
+  facts: ObservedRuntimeFacts | null;
+  reason: string | null;
+}
+
+export function projectRuntimeObservation(
+  provider: string,
+  entries: readonly unknown[],
+): ProjectedRuntimeObservation {
+  if (!providerSupportsRuntimeObservation(provider)) {
+    return {
+      facts: null,
+      reason: `provider ${provider} exposes no runtime observation channel`,
+    };
+  }
+  if (!Array.isArray(entries)) {
+    return { facts: null, reason: 'observation metadata was not a list' };
+  }
+  if (runtimeObservationEnvelopeExceedsBounds(entries)) {
+    return {
+      facts: null,
+      reason: `observation metadata is too large to project (${entries.length} entries, limit ${MAX_ENVELOPE_ENTRIES})`,
+    };
+  }
   const facts =
     provider === 'codex'
       ? observeCodexRuntimeFacts(entries)
       : observeClaudeRuntimeFacts(entries);
-  if (facts === null) return null;
+  if (facts === null) {
+    return {
+      facts: null,
+      reason: 'observation metadata reported no identity facts',
+    };
+  }
   // Re-emit through the owned key list so only declared facts can escape.
   const projected: ObservedRuntimeFacts = {};
   for (const key of OBSERVED_RUNTIME_FACT_KEYS) {
     const value = facts[key];
     if (typeof value === 'string' && value !== '') projected[key] = value;
   }
-  return Object.keys(projected).length > 0 ? projected : null;
+  return Object.keys(projected).length > 0
+    ? { facts: projected, reason: null }
+    : {
+        facts: null,
+        reason: 'observation metadata reported no identity facts',
+      };
 }
 
 /**
@@ -162,7 +199,12 @@ export function observationFromFacts(input: {
   facts: ObservedRuntimeFacts | null;
 }): RuntimeObservation {
   if (input.facts === null) return { status: 'not-reported' };
-  const { correlation: _correlation, lineage, ...axes } = input.facts;
+  const { correlation, lineage, ...axes } = input.facts;
+  // Declared-correlation guard, on the path that actually writes records.
+  // A session that names a different request is not evidence about this one.
+  if (correlation != null && correlation !== input.record.request_id) {
+    return { status: 'not-reported' };
+  }
   return buildRuntimeObservation({
     provider: input.provider,
     source: input.source,
@@ -185,33 +227,4 @@ export function parseRuntimeObservationEnvelope(
   value: unknown,
 ): RuntimeObservationEnvelope {
   return runtimeObservationEnvelopeSchema.parse(value);
-}
-
-/**
- * Normalize one provider metadata envelope into a runtime observation.
- *
- * Returns `not-reported` when the provider exposes no metadata channel, when
- * the envelope does not describe the record's own provider, or when parsing
- * finds nothing. The record is never mutated.
- */
-export function normalizeRuntimeObservation(input: {
-  record: GenericDispatchRecord;
-  envelope: RuntimeObservationEnvelope;
-}): RuntimeObservation {
-  const { record, envelope } = input;
-  if (envelope.provider !== record.provider) {
-    return { status: 'not-reported' };
-  }
-  if (!providerSupportsRuntimeObservation(envelope.provider)) {
-    return { status: 'not-reported' };
-  }
-  const parserInput = {
-    entries: envelope.entries,
-    observedAt: envelope.observedAt,
-    requestId: record.request_id,
-    configured: configuredInvocationForObservation(record),
-  };
-  return envelope.provider === 'codex'
-    ? parseCodexRuntimeObservation(parserInput)
-    : parseClaudeRuntimeObservation(parserInput);
 }
