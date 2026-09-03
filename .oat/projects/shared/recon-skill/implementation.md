@@ -326,7 +326,7 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 
 - **Date:** 2026-09-03
 - **Mode:** inline root review by explicit user direction; no subagents
-- **Reviewed range:** `1a64048cb..1385fd1e102e3b2e56997577537b0b9788f615fa`
+- **Reviewed range:** `1a64048cb..1385fd1e1351eb5a02dfb6cd50e2cc11a21ffbbc`
 - **Artifact:** `reviews/p-rev9-review-2026-09-03T163000Z.md`
 - **Reconnaissance:** not-attempted
 - **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
@@ -1431,6 +1431,14 @@ This document tracks resumable execution of the reviewed quick-workflow plan.
 - Policy: no disposition has been applied yet. The structured review must be
   received durably before the configured `onFailure: block` remediation policy
   can consume an attempt or authorize fixes.
+
+#### Authorized exit-gate re-run — 2026-09-03T17:28:01Z
+
+- Operator explicitly authorized a fresh exit-gate re-run with target
+  `cursor-fable-5-1-high` after the Revision 9 phase review passed.
+- Basis: reviewed head `1385fd1e1351eb5a02dfb6cd50e2cc11a21ffbbc` against
+  `origin/main` with implementation fingerprint
+  `sha256:effective-delta-v1:a87272b3d2e5b1c4802cd90522628387fbfd14b6c474006284d9cf033acaa24d`.
 
 <!-- orchestration-runs-end -->
 
