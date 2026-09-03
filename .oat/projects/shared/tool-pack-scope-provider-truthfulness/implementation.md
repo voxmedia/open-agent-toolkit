@@ -2697,24 +2697,84 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- One shared evidence model that separates requested tool-pack scope from
+  realized placement, so declared intent is never rendered as installed.
+- Provider capability, materialization, runtime visibility and restart state
+  reported as source-qualified facts, with user-scope agents materialized to
+  every active configured provider or a named fail-closed reason.
+- Safe adoption and detachment of exact provider collection aliases, with
+  manifest tracking and fail-closed handling of unsafe links.
+- An independent repository-guidance choice for a project-level `AGENTS.md`,
+  created when absent and otherwise offered as a zero-write manual patch.
+- Dispatch provenance: one neutral generic dispatch record plus namespaced
+  `oat` evidence, with closed pre-start rejection codes, immutable configured
+  controls, exactly one fallback per trigger, and an append-only project
+  journal.
+- Optional metadata-only runtime observation for Codex and Claude, correlated
+  against the immutable configured invocation and never authoritative over it.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- The interactive picker labels packs from realized placement, and a `User
+scope` selection no longer widens to `project + user`.
+- Claude user-scope agents are materialized to `~/.claude/agents/` and are
+  reachable; unsupported provider/content pairs report a named reason.
+- OAT never modifies an existing repository `AGENTS.md`. It creates the file
+  when absent and otherwise emits a deterministic manual patch with a non-zero
+  exit code.
+- New command `oat project dispatch record`, which validates and records
+  dispatch evidence and never launches a provider.
+- Dispatch records are bounded at 64 KiB and reject credential, prompt,
+  message, transcript and role-content keys.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/tools/shared/pack-evidence.ts` - layered,
+  source-qualified pack evidence
+- `packages/cli/src/providers/shared/registry.ts` - provider capability and
+  materialization matrix
+- `packages/cli/src/engine/collection-sync.ts` - collection alias adoption and
+  detachment
+- `packages/cli/src/commands/init/tools/shared/agents-md.ts` - fail-closed
+  project guidance
+- `packages/cli/src/providers/identity/generic-dispatch-record.ts` - neutral
+  record schema, bounds and sensitive-key classification
+- `packages/cli/src/providers/identity/oat-dispatch-record.ts` - namespaced
+  evidence, immutable controls, fallback authorization
+- `packages/cli/src/commands/project/dispatch/record.ts` - validation,
+  redaction boundary and append-only persistence
+- `packages/cli/src/providers/identity/runtime-observation.ts` - neutral
+  six-key observation projection
+- `packages/cli/src/fs/io.ts` - create-only `link` publication and the
+  contained writer lock
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- All eight Definition-of-Done gates green at the reviewed head, forced under
+  an isolated `HOME` with zero cache replays: `check`, `type-check`, `test`
+  (5,503 passing), `build`, `check:skill-bumps`, `release:check-versions`,
+  `release:validate`, `build:docs`.
+- Twelve independent review rounds across seven phases plus a final
+  cross-phase review.
+- Live provider verification rather than fixtures alone: a real nested Codex
+  dispatch (root, depth-1, depth-2) and full-corpus sweeps through the
+  production input path — 1,596 Codex rollouts and 2,740 Claude transcripts,
+  zero refusals.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Journal publication is append-only and `link`-only. Updates write
+  `dispatch/<request-id>@<NNNN>.json` and superseded revisions are never
+  pruned, because a clobbering `rename` could destroy pre-existing data under
+  an apply-time directory swap.
+- `AGENTS.md` guidance is fail-closed manual-patch rather than automatic
+  refresh, by operator decision after a reproduced filesystem race.
+- Codex fork classification was removed rather than re-implemented: no
+  `source.type` shape exists in any of 1,594 local rollouts.
+- Record and evidence-field size bounds were added; they did not exist in the
+  design.
+- `not-exposed` is reserved vocabulary for a genuinely absent axis and has no
+  producer; an unreported axis is absent from the observation instead.
 
 ## References
 

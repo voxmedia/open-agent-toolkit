@@ -9,6 +9,17 @@ oat_template: false
 
 # Design: Tool-Pack Scope, Provider Reachability, and Dispatch Truthfulness
 
+> **Supersession notice (2026-09-03).** Passages in this document that describe
+> a single `dispatch/<request-id>.json` persistence surface, automatic
+> `AGENTS.md` mutation, or per-axis `not-exposed` reporting were superseded
+> during implementation and are retained as design history. The shipped
+> contracts are: append-only `link`-only journal publication with
+> `<request-id>@<NNNN>.json` revisions; fail-closed manual-patch guidance that
+> never modifies an existing `AGENTS.md`; and an unreported axis being absent
+> from the observation, with `not-exposed` reserved for a genuinely absent axis
+> and no producer. Phase numbering in this document is 0-indexed where
+> `plan.md` is 1-indexed. See `implementation.md` for what shipped.
+
 ## Overview
 
 This design confirms discovery's chosen direction: a shared layered evidence

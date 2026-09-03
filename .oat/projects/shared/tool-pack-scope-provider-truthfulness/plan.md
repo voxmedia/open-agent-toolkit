@@ -18,6 +18,14 @@ oat_template: false
 
 # Implementation Plan: Tool-Pack Scope, Provider Reachability, and Dispatch Truthfulness
 
+> **Supersession notice (2026-09-03).** Task text describing a single
+> `dispatch/<request-id>.json` journal file and per-axis `not-exposed`
+> reporting was superseded during Phases 6 and 7. The shipped journal is
+> append-only with `<request-id>@<NNNN>.json` revisions, and an unreported axis
+> is absent from the observation. The closing status line below reflects an
+> earlier phase; `implementation.md` and `state.md` are authoritative for
+> completion.
+
 > Execute with `oat-project-implement`. Phase p01 is a hard landing gate: no
 > shared-source implementation starts until the diagnostics predecessor is
 > accepted, landed, and present in this branch's ancestry.

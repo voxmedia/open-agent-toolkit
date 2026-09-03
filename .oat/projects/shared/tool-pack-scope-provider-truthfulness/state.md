@@ -110,23 +110,26 @@ oat_project_explainer:
 
 **Status:** Implementation complete — ready for final review and PR
 **Started:** 2026-08-29
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-03
 
 ## Current Phase
 
-Implementation - Phase 6 is complete and passed independent review round 4
-with 0 Critical and 0 Important findings. It took three bounded fix rounds:
-round 2 disproved round 1's publication-safety claim, and the operator
-directed eliminating the destructive class, which made journal publication
-append-only and `link`-only. Phase 7 runtime observation is next.
+Implementation complete. All seven phases and 30/30 tasks are done, with
+twelve independent review rounds plus a final cross-phase review. Phase 6
+required three bounded fix rounds after round 2 disproved round 1's
+publication-safety claim and the operator directed eliminating the destructive
+class, making journal publication append-only and `link`-only. Phase 7
+required four rounds after a live nested Codex dispatch showed the lineage
+parser reported every session as `root`; both provider parsers were rebuilt
+against real artifacts. All eight Definition-of-Done gates pass at `0.2.52`.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — requirements confirmed)
-- **Design:** `design.md` (complete — Phase 4 directory-transition alignment applied)
-- **Plan:** `plan.md` (complete — ready for `oat-project-implement`)
-- **Implementation:** `implementation.md` (in progress — Phase 6 closed, Phase 7 active)
+- **Design:** `design.md` (complete — carries a supersession notice; `implementation.md` is authoritative for what shipped)
+- **Plan:** `plan.md` (complete — carries a supersession notice for the journal layout and observation vocabulary)
+- **Implementation:** `implementation.md` (complete — Final Summary filled)
 
 ## Progress
 
