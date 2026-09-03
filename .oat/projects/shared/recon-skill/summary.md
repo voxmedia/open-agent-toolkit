@@ -51,7 +51,7 @@ judgment with the consuming agent.
   lifecycle, integration, and adversarial test coverage. All 36 planned and
   revision tasks completed across revisions p-rev1 through p-rev9, and the
   configured cross-family implementation exit gate passed. Lockstep public
-  packages bumped to `0.2.53`.
+  packages bumped to `0.2.54`.
 
 ## Key Decisions
 

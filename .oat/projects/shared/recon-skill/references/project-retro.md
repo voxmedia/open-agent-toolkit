@@ -77,7 +77,7 @@ inferred from successful later runs.
 | Distribution        | Research-pack ownership with same-scope utility dependencies and current-only user-agent materialization               |
 | Execution           | 36 of 36 planned and revision tasks complete across four phases and nine revisions (`p-rev1` through `p-rev9`)         |
 | Assurance           | Terminal phase reviews, post-rebase final reviews, and configured cross-family gate passed with zero blocking findings |
-| Release preparation | Lockstep CLI `0.2.53` metadata and all repository completion gates passed                                              |
+| Release preparation | Lockstep CLI `0.2.54` metadata and all repository completion gates passed                                              |
 | PR                  | At generation time, PR #248 was open, non-draft, merge-clean, and green at head `1364ea13c`                            |
 | Boundary            | PR merge, project archival, discovery integration, and broader research-skill integration were not part of this run    |
 

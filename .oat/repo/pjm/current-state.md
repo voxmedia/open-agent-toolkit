@@ -53,7 +53,7 @@ copying their content here. -->
   `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head
   `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87` and passed the configured
   Important threshold; its Medium and Minor findings are dispositioned.
-- CLI `0.2.53` (`recon-skill`, implementation complete and user-approved; PR
+- CLI `0.2.54` (`recon-skill`, implementation complete and user-approved; PR
   #248 open) adds the provider-neutral `recon` skill and
   `recon-worker` to the research pack. Approved homogeneous worker waves now
   gather, verify, challenge, cover, and reconcile bounded evidence into one
