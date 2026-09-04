@@ -67,7 +67,7 @@ assets }` plus an index signature; none of the design's activation,
   - Hard-coded `providers: []` at successful-outcome construction:
     `init/tools/index.ts:1584,1638,1860`, `update/index.ts:386`,
     `remove/index.ts:353,363`, plus `not-run` defaults in
-    `update-tools.ts:433,442,466`, `remove-tools.ts:499,525,568`,
+    `update-tools.ts:445,454,478`, `remove-tools.ts:601,627,670`,
     `init/tools/index.ts:1166,1828,1978`.
   - `auto-sync.ts:5-12` and `install/index.ts:23-43` — auto-sync spawns
     `oat sync` and discards stdout, dropping the evidence that
@@ -150,7 +150,9 @@ part of this outcome landed; refresh rather than duplicate.
   `userManagedRoleMaterialization`; `status/index.ts`, `doctor/index.ts`
   — thread the context.
 - Tests named in the test plan; docs
-  `apps/oat-docs/docs/cli-utilities/tool-packs.md:240-266`.
+  `apps/oat-docs/docs/cli-utilities/tool-packs.md:282-308` (section
+  "User-scope agent projection is provider-capability driven"; PR #248 added
+  pack-dependency sections above it).
 - Five public package manifests.
 
 ### Out of scope
@@ -227,7 +229,7 @@ provider line.
 
 ### 6. Docs, bump, gates
 
-Update `tool-packs.md:240-266`; bump the five packages; run the eight
+Update `tool-packs.md:282-308`; bump the five packages; run the eight
 AGENTS.md gates in order with captured exit codes.
 
 ## Test plan
@@ -266,9 +268,13 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
-Revalidate against current `origin/main`, the backlog item, the two decision
-records, and the registry and sync payload shapes when substantial time
-passes, main advances materially from `dd41adb9bed53aa2389e911b601615fc2b26f0b7`, another PR
+Re-anchored 2026-09-04 after PR #248, which added pack dependencies
+(`pack-dependencies.ts`, `pack-lifecycle.ts`, `pack-reconcile.ts`,
+`scoped-pack-intent.ts`) and `userMaterializable` agent markers without
+touching `pack-evidence.ts`, `auto-sync.ts`, list, or info; the `providers: []`
+literals are unchanged. Revalidate against current `origin/main`, the backlog
+item, the two decision records, and the registry and sync payload shapes when
+substantial time passes, main advances materially from `dd41adb9bed53aa2389e911b601615fc2b26f0b7`, another PR
 passes `providers` to `projectPackEvidence`, or a load-bearing claim cannot
 be reproduced.
 

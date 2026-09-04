@@ -69,8 +69,9 @@ working unchanged.
   - `.agents/skills/create-agnostic-skill/SKILL.md:101,175,177,203` and
     `create-oat-skill/SKILL.md:20,70` — templates teach top-level
     `version: 1.0.0`.
-  - `apps/oat-docs/docs/contributing/skills.md:156-165` — documents the
-    top-level field and the bump gate.
+  - `apps/oat-docs/docs/contributing/skills.md:182-188` — documents the
+    top-level field and the bump gate (PR #248 inserted pack-dependency
+    guidance above it).
   - Live inventory: 80 bundled skills carry a top-level `version`; two
     (`oat-repo-improve`, `triage-oat-issues`) already carry a `metadata`
     block (author only). None carries `metadata.version`.

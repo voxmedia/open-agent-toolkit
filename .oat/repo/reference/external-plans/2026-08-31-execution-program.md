@@ -248,6 +248,15 @@ wrapper project, implementation branch, or implementation PR has started.
   Filed `BL-260904-stabilize-the-collection` for the collection-detach test
   flake observed on #253's CI (main passed on identical code); unplanned
   until reproduced.
+- **2026-09-04 (PR #248)** — Rebased onto `7c90b220a` (recon evidence
+  packets, 113 files). Incremental drift for all 29 plans: adjacent only
+  (`validation/skills.test.ts` recon pins, `oat-config.ts` `tools.requiredBy`
+  leases, autonomy-contract inventory, bundle and bundled-docs contract
+  tests) plus small anchor shifts re-applied in the manifest-restamp,
+  provider-reachability, skill-version, and skill-script plans. PR #248 also
+  added four backlog items; `BL-260901-make-terminal-project-status`
+  (high/S) is plan-ready and unplanned, the recon-integration and
+  corrective-revision items need discovery.
 - **2026-09-04 (issue #258)** — Added the skill-versioning plan (Agent Skills
   spec `metadata.version`) as W6 group 2; coverage 29/29 (27 READY,
   2 BLOCKED). The bundled-skill migration is a separate backlog item outside

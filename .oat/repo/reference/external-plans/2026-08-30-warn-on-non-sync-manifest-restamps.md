@@ -52,11 +52,11 @@ that no changes were required.
 ManifestV2)`) always replaces `manifest.oatVersion` with `OAT_VERSION`
     and validates through `ManifestV2Schema` immediately before atomic save;
     `loadManifest` (`:37-82`) silently upgrades V1 files to V2 in memory.
-  - `packages/cli/src/commands/init/index.ts:1249` saves every processed scope
+  - `packages/cli/src/commands/init/index.ts:1246` saves every processed scope
     without first reporting version skew.
   - `packages/cli/src/commands/remove/skill/remove-skill.ts:359-367` derives a
     new manifest and saves it without preserving/restating the old producer.
-  - `packages/cli/src/commands/status/index.ts:1501-1505` can save an adopted
+  - `packages/cli/src/commands/status/index.ts:1508-1512` can save an adopted
     manifest without an advisory, after a collection-migration block
     (`:1282-1390`) that may set `migrationAborted` and mutate the manifest.
   - `packages/cli/src/commands/sync/index.ts:302` (`detectVersionSkew`) defines plain
@@ -195,7 +195,7 @@ separation, equality suppression, and one diagnostic per affected scope.
 
 ### 3. Reconcile and cover status adoption
 
-Cover the status-owned `saveManifest` path (`status/index.ts:1501`). Place the
+Cover the status-owned `saveManifest` path (`status/index.ts:1508`). Place the
 advisory after the collection-migration block and immediately before the save,
 using the original loaded version, and prove the `migrationAborted` path emits
 no restamp advisory. Add a test that establishes JSON status is
@@ -271,7 +271,8 @@ Stop and report instead of improvising when:
 ## Revalidation Before Execution
 
 Refreshed 2026-09-03 against `origin/main` after PR #255 (truthfulness) and
-PR #256 merged; all seven evidence anchors and the new engine save sites were
+PR #256 merged, and re-anchored 2026-09-04 after PR #248 (recon packets)
+shifted the init and status save sites by a few lines without changing them; all seven evidence anchors and the new engine save sites were
 re-verified on that tree and the checklist below is applied in the steps
 above. If a later PR touches `manifest/manager.ts`, the status
 collection-migration block, or `runSyncApply`, repeat the re-anchor.

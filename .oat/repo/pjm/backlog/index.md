@@ -221,6 +221,7 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
 | BL-260902-make-autonomous-project-recap  | Make autonomous project recap capability-aware and non-blocking                                       | open   | high     | task       | M        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task       | M        |
+| BL-260901-make-terminal-project-status   | Make terminal project status agree with completed revision plans                                      | open   | high     | task       | S        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills                                      | open   | high     | task       | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260902-recover-committed-review       | Recover committed review artifacts from post-selection gate failures                                  | open   | high     | task       | M        |
@@ -229,6 +230,7 @@
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260902-validate-every-shipped-skill   | Validate every shipped skill-to-script reference against its pack manifest                            | open   | high     | task       | M        |
 | BL-260902-add-an-exclusion-mechanism     | Add an exclusion mechanism to oat docs generate-index                                                 | open   | medium   | feature    | S        |
+| BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                            | open   | medium   | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                     | open   | medium   | feature    | L        |
@@ -253,6 +255,8 @@
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task       |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                 | open   | medium   | feature    | M        |
+| BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
+| BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
 | BL-260902-keep-pjm-init-provider         | Keep instruction-sync pointer files out of documentation content trees                                | open   | medium   | task       | M        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260902-make-consolidated-project      | Make consolidated-project retirement checks semantic                                                  | open   | medium   | task       | M        |
