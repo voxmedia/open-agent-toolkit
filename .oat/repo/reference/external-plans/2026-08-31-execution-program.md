@@ -37,10 +37,10 @@ wrapper project, implementation branch, or implementation PR has started.
 | W2   | Skill contract truthfulness          | 5     | composed | Awaiting operator composition approval; no execution started. |
 | W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started. |
-| W5   | Program-intake follow-ups            | 10    | composed | Awaiting operator composition approval; no execution started. |
-| W6   | Truthfulness residue                 | 4     | composed | Awaiting operator composition approval; no execution started. |
+| W5   | Program-intake follow-ups            | 11    | composed | Awaiting operator composition approval; no execution started. |
+| W6   | Truthfulness residue                 | 5     | composed | Awaiting operator composition approval; no execution started. |
 
-## Wave Table (coverage: 29 plans = 29 index rows; verified 2026-09-04)
+## Wave Table (coverage: 31 plans = 31 index rows; verified 2026-09-04)
 
 | Plan                                                                                                                                                      | Index                                                            | Wave | Ordering notes                                                                                                      | Status  |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -73,6 +73,8 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md)        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
 | [Preserve `__proto__`-named config keys through JSON parsing](./2026-09-03-preserve-proto-named-config-keys.md)                                           | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
 | [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md)                                                | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | group 2 after the pr-final lane (shared version pins)                                                               | pending |
+| [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md)                | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W5   | group 4 beside the active-pointer lane; disjoint surface                                                            | pending |
+| [Diagnose canonical skills missing from a provider view at resolution time](./2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md)        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | group 2 after the provider-reachability lane (shared `info-tool.ts`)                                                | pending |
 
 ## Program-wide integration rules
 
@@ -186,7 +188,9 @@ wrapper project, implementation branch, or implementation PR has started.
   autonomous recap capability-aware (after `oat config unset`, adding its
   optional seam keys to the unset family test).
 - **Group 4:** Defer activeProject clearing on archive completions, after the
-  recap lane releases `oat-project-complete/SKILL.md`.
+  recap lane releases `oat-project-complete/SKILL.md`; make terminal project
+  status agree with completed revision plans (control-plane parser and
+  recommender, disjoint from every other lane).
 - **Group 5:** Make consolidated-project retirement semantic, after the
   active-pointer and quick-resume lanes.
 - **Cross-wave prerequisites:** W4 merged. Before dispatch, re-read every W5
@@ -208,8 +212,10 @@ wrapper project, implementation branch, or implementation PR has started.
   review-ledger paths before the final PR; preserve `__proto__`-named config
   keys.
 - **Group 2:** Honor `metadata.version` as the canonical skill version, after
-  the pr-final lane releases the version pins in `validation/skills.test.ts`.
-  Its bulk-migration follow-up stays outside the program.
+  the pr-final lane releases the version pins in `validation/skills.test.ts`
+  (its bulk-migration follow-up stays outside the program); diagnose
+  canonical skills missing from a provider view in `oat tools info`, after
+  the reachability lane releases `info-tool.ts`.
 - **Cross-wave prerequisites:** W5 merged, so the shared contract-test seams
   the pr-final lane extends are settled. Apply the PR #190 landing-event rows
   in the pr-final and config-key plans if that draft merges first.
@@ -261,6 +267,12 @@ wrapper project, implementation branch, or implementation PR has started.
   spec `metadata.version`) as W6 group 2; coverage 29/29 (27 READY,
   2 BLOCKED). The bundled-skill migration is a separate backlog item outside
   the program.
+- **2026-09-04 (status and diagnostic)** — Added the terminal
+  project-status plan (root cause: the control-plane parser drops
+  `## Phase p01:` and `## Revision Phase p-rev1:` headings, and the recommender
+  never reads `lifecycle`) to W5 group 4 and the provider-view diagnostic
+  (hosted in `oat tools info`, status untouched) to W6 group 2. Coverage
+  31/31 (29 READY, 2 BLOCKED). Ledger: W5 = 11 lanes, W6 = 5.
 
 - **2026-09-02** — Rebased the program branch onto `origin/main`
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced

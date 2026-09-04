@@ -11,9 +11,10 @@ labels:
   - cli
 assignee: null
 created: 2026-09-01T20:03:37.272Z
-updated: 2026-09-01T20:03:37.272Z
+updated: 2026-09-04T22:34:57Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-04-make-terminal-project-status-agree-with-revision-plans.md
 ---
 
 ## Description

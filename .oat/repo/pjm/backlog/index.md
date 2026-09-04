@@ -4,6 +4,9 @@
 
 ## Curated Overview
 
+- 2026-09-04: `BL-260901-make-terminal-project-status` and
+  `BL-260904-diagnose-canonical-skills` now carry external plans in the
+  execution program (W5 and W6).
 - 2026-09-04: issue #258 became `BL-260904-honor-metadata-version` (planned,
   W6) and `BL-260904-migrate-bundled-skills-from` (bulk migration after the
   program).
