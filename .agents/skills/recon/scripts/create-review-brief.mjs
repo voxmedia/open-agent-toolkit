@@ -5,7 +5,7 @@ import { dirname, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { canonicalJson, hashFile } from './lib/canonical-json.mjs';
-import { issue, isObject } from './lib/contracts.mjs';
+import { issue, isObject, validateArtifactShape } from './lib/contracts.mjs';
 import { assertSafeOutputPath } from './lib/safe-path.mjs';
 
 const commonKeys = [
@@ -38,9 +38,51 @@ const forbiddenKeys = new Set([
   'dossierPath',
 ]);
 
+const reviewSourceFields = {
+  repository: ['root', 'revision', 'dirty', 'contentHashes'],
+  file: ['path', 'contentHash'],
+  url: ['url', 'capturePath', 'captureDigest', 'validatorState'],
+  'command-output': [
+    'argv',
+    'cwd',
+    'exitStatus',
+    'outputPath',
+    'outputDigest',
+    'environmentNames',
+  ],
+  'connected-resource': [
+    'system',
+    'resourceId',
+    'resourceVersion',
+    'retrievalToken',
+    'capturePath',
+    'captureDigest',
+  ],
+};
+const commonReviewSourceFields = [
+  'id',
+  'kind',
+  'available',
+  'authority',
+  'observedAt',
+  'validationState',
+];
+
 function selectedClaims(ledger, claimIds) {
   const selected = claimIds ? new Set(claimIds) : null;
   return ledger.claims.filter((claim) => !selected || selected.has(claim.id));
+}
+
+function projectReviewSource(source) {
+  const kindFields = reviewSourceFields[source.kind];
+  if (!kindFields) {
+    throw new Error(`Cannot project unknown source kind ${source.kind}`);
+  }
+  return Object.fromEntries(
+    [...commonReviewSourceFields, ...kindFields]
+      .filter((key) => Object.hasOwn(source, key))
+      .map((key) => [key, structuredClone(source[key])]),
+  );
 }
 
 function verificationBrief(input) {
@@ -68,6 +110,14 @@ function verificationBrief(input) {
       };
     }),
   }));
+  const declaredSourceIds = new Set(
+    input.manifest.sources.map((source) => source.id),
+  );
+  for (const sourceId of sourceIds) {
+    if (!declaredSourceIds.has(sourceId)) {
+      throw new Error(`Evidence references missing source ${sourceId}`);
+    }
+  }
   return {
     kind: 'recon.review-brief',
     schemaVersion: 1,
@@ -85,7 +135,7 @@ function verificationBrief(input) {
     claims: projectedClaims,
     sources: input.manifest.sources
       .filter((source) => sourceIds.has(source.id))
-      .map((source) => structuredClone(source)),
+      .map(projectReviewSource),
   };
 }
 
@@ -323,6 +373,7 @@ export function validateReviewBrief(brief) {
       }
     }
   }
+  errors.push(...validateArtifactShape(brief).errors);
   return { valid: errors.length === 0, errors };
 }
 

@@ -1379,6 +1379,197 @@ function validateDossier(value, errors) {
   }
 }
 
+const reviewSourceKindFields = {
+  repository: ['root', 'revision', 'dirty', 'contentHashes'],
+  file: ['path', 'contentHash'],
+  url: ['url', 'capturePath', 'captureDigest', 'validatorState'],
+  'command-output': [
+    'argv',
+    'cwd',
+    'exitStatus',
+    'outputPath',
+    'outputDigest',
+    'environmentNames',
+  ],
+  'connected-resource': [
+    'system',
+    'resourceId',
+    'resourceVersion',
+    'retrievalToken',
+    'capturePath',
+    'captureDigest',
+  ],
+};
+const commonReviewSourceFields = [
+  'id',
+  'kind',
+  'available',
+  'authority',
+  'observedAt',
+  'validationState',
+];
+
+function validateReviewBriefSource(source, index, errors) {
+  const path = `$.sources[${index}]`;
+  if (!isObject(source)) {
+    errors.push(
+      issue(
+        'INVALID_SOURCE_DESCRIPTOR',
+        'Verification brief sources must be objects',
+        path,
+      ),
+    );
+    return;
+  }
+  for (const key of commonReviewSourceFields) {
+    if (key === 'available') continue;
+    requiredString(source, key, errors, path);
+  }
+  if (typeof source.available !== 'boolean') {
+    errors.push(
+      issue(
+        'MISSING_REQUIRED_FIELD',
+        'available must be a boolean',
+        `${path}.available`,
+      ),
+    );
+  }
+  if (!sourceValidationStates.includes(source.validationState)) {
+    errors.push(
+      issue(
+        'INVALID_SOURCE_VALIDATION_STATE',
+        'Unknown source validation state',
+        `${path}.validationState`,
+      ),
+    );
+  }
+  const kindFields = reviewSourceKindFields[source.kind];
+  if (!kindFields) {
+    errors.push(
+      issue('INVALID_SOURCE_KIND', 'Unknown source kind', `${path}.kind`),
+    );
+    return;
+  }
+  closedObject(
+    source,
+    new Set([...commonReviewSourceFields, ...kindFields]),
+    errors,
+    path,
+  );
+
+  if (source.kind === 'repository') {
+    requiredString(source, 'root', errors, path);
+    requiredString(source, 'revision', errors, path);
+    requiredObject(source, 'contentHashes', errors, path);
+    if (typeof source.dirty !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'dirty must be a boolean',
+          `${path}.dirty`,
+        ),
+      );
+    }
+  } else if (source.kind === 'file') {
+    requiredString(source, 'path', errors, path);
+    requiredString(source, 'contentHash', errors, path);
+    if (!isDigest(source.contentHash)) {
+      errors.push(
+        issue(
+          'INVALID_SOURCE_DESCRIPTOR',
+          'contentHash must be a sha256 digest',
+          `${path}.contentHash`,
+        ),
+      );
+    }
+  } else if (source.kind === 'url') {
+    requiredString(source, 'url', errors, path);
+    const hasDirectCapture =
+      Object.hasOwn(source, 'capturePath') ||
+      Object.hasOwn(source, 'captureDigest');
+    if (hasDirectCapture) {
+      requiredString(source, 'capturePath', errors, path);
+      requiredString(source, 'captureDigest', errors, path);
+      if (!isDigest(source.captureDigest)) {
+        errors.push(
+          issue(
+            'INVALID_SOURCE_DESCRIPTOR',
+            'captureDigest must be a sha256 digest',
+            `${path}.captureDigest`,
+          ),
+        );
+      }
+    }
+    if (Object.hasOwn(source, 'validatorState')) {
+      requiredObject(source, 'validatorState', errors, path);
+      closedObject(
+        source.validatorState,
+        new Set(['etag', 'lastModified', 'capturePath', 'captureDigest']),
+        errors,
+        `${path}.validatorState`,
+      );
+    }
+    if (!hasDirectCapture && !isObject(source.validatorState)) {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'URL sources require a capture or validator state',
+          path,
+        ),
+      );
+    }
+  } else if (source.kind === 'command-output') {
+    requiredArray(source, 'argv', errors, path);
+    requiredString(source, 'cwd', errors, path);
+    requiredInteger(source, 'exitStatus', errors, path);
+    requiredString(source, 'outputPath', errors, path);
+    requiredString(source, 'outputDigest', errors, path);
+    requiredArray(source, 'environmentNames', errors, path);
+    if (!isDigest(source.outputDigest)) {
+      errors.push(
+        issue(
+          'INVALID_SOURCE_DESCRIPTOR',
+          'outputDigest must be a sha256 digest',
+          `${path}.outputDigest`,
+        ),
+      );
+    }
+  } else {
+    requiredString(source, 'system', errors, path);
+    requiredString(source, 'resourceId', errors, path);
+    const hasVersion =
+      (typeof source.resourceVersion === 'string' &&
+        source.resourceVersion.trim().length > 0) ||
+      (typeof source.retrievalToken === 'string' &&
+        source.retrievalToken.trim().length > 0);
+    const hasCapture =
+      Object.hasOwn(source, 'capturePath') ||
+      Object.hasOwn(source, 'captureDigest');
+    if (hasCapture) {
+      requiredString(source, 'capturePath', errors, path);
+      requiredString(source, 'captureDigest', errors, path);
+      if (!isDigest(source.captureDigest)) {
+        errors.push(
+          issue(
+            'INVALID_SOURCE_DESCRIPTOR',
+            'captureDigest must be a sha256 digest',
+            `${path}.captureDigest`,
+          ),
+        );
+      }
+    }
+    if (!hasVersion && !hasCapture) {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'Connected sources require a version, retrieval token, or capture',
+          path,
+        ),
+      );
+    }
+  }
+}
+
 function validateReviewBriefArtifact(value, errors) {
   for (const key of ['id', 'runId', 'mode', 'createdAt']) {
     requiredString(value, key, errors);
@@ -1436,6 +1627,9 @@ function validateReviewBriefArtifact(value, errors) {
           `$.claims[${index}].evidence[${evidenceIndex}]`,
         );
       }
+    }
+    for (const [index, source] of (value.sources ?? []).entries()) {
+      validateReviewBriefSource(source, index, errors);
     }
   } else if (value.mode === 'adversary') {
     requiredObject(value, 'scope', errors);

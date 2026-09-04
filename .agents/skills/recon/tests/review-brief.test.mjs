@@ -8,6 +8,7 @@ import {
   validateReviewBrief,
   writeReviewBrief,
 } from '../scripts/create-review-brief.mjs';
+import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
 import { createPacketFixture } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
@@ -53,7 +54,68 @@ test('verification projection contains only claims, excerpts, locators, and sour
     'locator',
     'sourceId',
   ]);
+  assert.deepEqual(Object.keys(brief.sources[0]).sort(), [
+    'authority',
+    'available',
+    'contentHash',
+    'id',
+    'kind',
+    'observedAt',
+    'path',
+    'validationState',
+  ]);
   assert.equal(validateReviewBrief(brief).valid, true);
+});
+
+test('verification projection rejects evidence whose source is undeclared', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const manifest = structuredClone(fixture.manifest);
+  manifest.sources = [];
+
+  assert.throws(
+    () =>
+      createReviewBrief({
+        mode: 'verify',
+        id: 'brief-missing-source',
+        createdAt: '2026-08-31T00:03:00.000Z',
+        manifest,
+        ledger: fixture.ledger,
+      }),
+    /^Error: Evidence references missing source source-1$/,
+  );
+});
+
+test('verification source validation rejects unblinded and unexpected properties', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const valid = createReviewBrief({
+    mode: 'verify',
+    id: 'brief-closed-source',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+  });
+
+  for (const [property, value] of [
+    ['credentials', { token: 'not-a-real-secret' }],
+    ['provenance', { path: 'raw/dossiers/source.json' }],
+  ]) {
+    const candidate = structuredClone(valid);
+    candidate.sources[0][property] = value;
+    for (const validate of [validateReviewBrief, validateArtifactShape]) {
+      const result = validate(candidate);
+      assert.equal(result.valid, false, property);
+      assert.ok(
+        result.errors.some(
+          (error) =>
+            error.code === 'UNKNOWN_FIELD' &&
+            error.path === `$.sources[0].${property}`,
+        ),
+        `${property}: ${JSON.stringify(result, null, 2)}`,
+      );
+    }
+  }
 });
 
 test('adversarial projection contains only scope, questions, and provisional statements', async () => {
