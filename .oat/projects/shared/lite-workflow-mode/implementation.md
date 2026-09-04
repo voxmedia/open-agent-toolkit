@@ -24,16 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
+| Phase 2 | pending | 2     | 0/2       |
+| Phase 3 | pending | 2     | 0/2       |
+| Phase 4 | pending | 2     | 0/2       |
+| Phase 5 | pending | 2     | 0/2       |
+| Phase 6 | pending | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/15 tasks completed
+
+Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Single Mode Definition and Lite Scaffold
 
 **Status:** in_progress
 **Started:** 2026-09-04
@@ -57,7 +63,7 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Export an array-derived WorkflowMode with lite
 
 **Status:** completed / in_progress / pending / blocked
 **Commit:** {sha} (if completed)
@@ -85,7 +91,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add the plan-lite.md template and register it in the bundle inventory
 
 **Status:** pending
 **Commit:** -
@@ -96,12 +102,12 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Routing
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Add LITE_ROUTES to the recommender
 
 **Status:** pending
 **Commit:** -
