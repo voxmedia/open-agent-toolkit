@@ -67,11 +67,19 @@ review scope, not a correctness boundary.
 
 ## Dependencies
 
-| Type              | Dependency                                                                                            | Required state                                                                                          | Current state            |
-| ----------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Soft coordination | [BL-260706-front-load-recurring-gate](../../pjm/backlog/items/BL-260706-front-load-recurring-gate.md) | Avoid duplicating any future generic brief guidance; this plan owns only the phase-time call-site rule. | Open, broader mechanism. |
+| Type              | Dependency                                                                                                                                                       | Required state                                                                                              | Current state            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Soft coordination | [BL-260706-front-load-recurring-gate](../../pjm/backlog/items/BL-260706-front-load-recurring-gate.md)                                                            | Avoid duplicating any future generic brief guidance; this plan owns only the phase-time call-site rule.     | Open, broader mechanism. |
+| Soft ordering     | W2 group 3 plan [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md) | Runs before this plan; both edit `.agents/agents/oat-phase-implementer.md`, so never in one parallel group. | Pending.                 |
 
 There are no unsatisfied hard dependencies.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                              | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                      | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None (`.agents/agents/oat-phase-implementer.md` is not in the #190 surface). | None.                                                                  |
 
 ## Drift check
 

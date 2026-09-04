@@ -49,7 +49,7 @@ and MDX builds stay clean after a sync.
 - Planned at: `origin/main` commit
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
-  - `packages/cli/src/commands/pjm/init.ts:50-55` — comment and
+  - `packages/cli/src/commands/pjm/init.ts:58-63` (re-anchored 2026-09-04) — comment and
     `INSTRUCTIONS_SYNC_HINT`: `oat pjm init` never writes `CLAUDE.md` shims;
     ownership stays with `oat instructions sync`.
   - `packages/cli/src/commands/instructions/instructions.utils.ts:27-37` —
@@ -78,20 +78,21 @@ and MDX builds stay clean after a sync.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                                            | Required state                                                                                           | Current state          |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Satisfied     | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance                                                          | Keep `pjm doctor` accepting repo-level pointers.                                                         | Merged at `9aef8f81a`. |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                     | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize.                         | Pending.               |
-| Soft ordering | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | Runs after this plan; both edit `packages/cli/src/config/oat-config.ts`, so never in one parallel group. | Pending.               |
+| Type          | Dependency                                                                                                                                            | Required state                                                                                                                     | Current state          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Satisfied     | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance                                                          | Keep `pjm doctor` accepting repo-level pointers.                                                                                   | Merged at `9aef8f81a`. |
+| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                     | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize.                                                   | Pending.               |
+| Soft ordering | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | Runs after this plan; both edit `packages/cli/src/config/oat-config.ts`, so never in one parallel group.                           | Pending.               |
+| Soft ordering | W5 group 2 plan [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                       | Runs after this plan so its family-coverage test includes `documentation.instructionPointerExcludes`; never in one parallel group. | Pending.               |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                                                                         | Required update                                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `pjm/init.ts` (read-only anchor here), `commands/shared/agents-md.ts`, and provider-sync docs pages; not the instructions scan or sync. | Re-run the drift check and re-anchor the `init.ts:50-55` citation; confirm no new pointer writer was added to `agents-md.ts`. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | No       | None of the in-scope files.                                                                                                             | None.                                                                                                                                                                                                                          |
+| Event                                                                                | Affected | Files in common                                                                                                                                                                                                                                                                                                                                                                           | Required update                                                                                            |
+| ------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Yes      | `packages/cli/src/config/oat-config.ts` (the `documentation` parser moved from `:1195-1226` to `:1243-1275`; anchor step 2 on `if (isRecord(parsed.documentation))`), `pjm/init.ts` (`INSTRUCTIONS_SYNC_HINT` now `:58-63`), `provider-sync/commands.md` (`## oat instructions sync` now `:193`), `pjm/init.test.ts` (`exposes a sync next-step hint` now `:217`), `shared/agents-md.ts`. | Re-anchor the four citations above by symbol before editing; the instructions scan and sync are unchanged. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No       | None of the in-scope files.                                                                                                                                                                                                                                                                                                                                                               | None.                                                                                                      |
 
 ## Drift check
 
@@ -128,13 +129,14 @@ exclusion option, STOP and refresh this plan.
 - `packages/cli/src/commands/instructions/sync/sync.ts` and
   `validate/validate.ts` — read config and pass exclusions.
 - `packages/cli/src/config/oat-config.ts` — parse an explicit opt-out list
-  (for example `documentation.instructionPointerExcludes`) beside `root`.
+  (`documentation.instructionPointerExcludes`, the exact key the `oat config
+unset` plan's family-coverage test relies on) beside `root`.
 - Tests: `instructions.utils.test.ts`, `sync/sync.test.ts`,
   `validate/validate.test.ts`, `instructions.integration.test.ts`,
   `oat-config.test.ts`.
 - Docs: `apps/oat-docs/docs/provider-sync/instruction-sync.md` and
   `provider-sync/commands.md:165`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -208,7 +210,7 @@ Pattern: the existing carve-in scan cases in `instructions.utils.test.ts`.
 - `re-run is idempotent with no create actions`.
 - `sync.test.ts`: `plans no create for an excluded docs directory`; `still
 plans create for a non-excluded sibling`.
-- `pjm/init.test.ts:188` (`exposes a sync next-step hint`) stays green as the
+- `pjm/init.test.ts:217` (`exposes a sync next-step hint`) stays green as the
   proof that init remains pointer-free.
 
 ## Done criteria

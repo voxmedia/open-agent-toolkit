@@ -59,25 +59,29 @@ a contract test guards the template so the rule cannot silently regress.
   - `references/plan-template.md` section list — no `## Dependencies`,
     `## Landing-event impact`, or `## Revalidation Before Execution`; the
     practiced plans have all three (for example
-    `2026-08-30-warn-on-non-sync-manifest-restamps.md:79`, `:264`).
+    `2026-08-30-warn-on-non-sync-manifest-restamps.md:84`, `:271`; every
+    2026-09-02 plan carries a full landing-event table, for example
+    `2026-09-02-defer-activeproject-clearing-on-archive-completions.md`).
   - `.oat/repo/pjm/backlog/reviews/priority-alignment.md:47-70` — the
     operator rule and the clause "until that item ships, apply this section
     as the operator rule".
   - `SKILL.md:213-222` — reverse links exist item → plan only.
-  - `packages/cli/src/validation/skills.test.ts:5296` — pins
-    `oat-repo-improve` at `2.1.2`; `:5338`, `:5413` and
-    `skills-bundled-docs-contract.test.ts:1770` guard only root bindings and a
-    heading. Nothing guards `plan-template.md`.
-  - `pack-manifest.ts:279` — `oat-repo-improve` is a utility-pack,
+  - `packages/cli/src/validation/skills.test.ts:5330` — pins
+    `oat-repo-improve` at `2.1.2`; `:5372`, `:5447` and
+    `skills-bundled-docs-contract.test.ts:1571` (`binds repo-improve dispatch
+and orchestration references independently`) guard only root bindings and
+    a heading (re-anchored 2026-09-04). Nothing guards `plan-template.md`.
+  - `pack-manifest.ts:276-285` — `oat-repo-improve` is a utility-pack,
     user-scope-default, bundled asset, so installed copies predate any change.
 - Constraining decisions: none govern external plans; the rule lives in the
   alignment artifact. Recording it as a decision is offered, not required.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                           | Required state                                                                         | Current state |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md) | Land first; both edit `validation/skills.test.ts`, and its rule justifies step 4 here. | Pending (W3). |
+| Type             | Dependency                                                                                                                                                            | Required state                                                                                                   | Current state |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                  | Land first; both edit `validation/skills.test.ts`, and its rule justifies step 4 here.                           | Pending (W3). |
+| Soft ordering    | W5 group 2 plan [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md) | Runs before this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group. | Pending.      |
 
 There are no unsatisfied hard dependencies.
 
@@ -108,7 +112,7 @@ re-anchor before editing.
   `pnpm exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`.
 - Implementation pattern: the practiced plan
   `2026-08-30-warn-on-non-sync-manifest-restamps.md` and this plan's own
-  structure; `skills-bundled-docs-contract.test.ts:1770` for the test shape.
+  structure; `skills-bundled-docs-contract.test.ts:1571` for the test shape.
 - Shipped skills require the five-package lockstep bump.
 
 ## Scope
@@ -127,10 +131,10 @@ re-anchor before editing.
   execution-status callout, `## Dependencies`, `## Landing-event impact`,
   `## Revalidation Before Execution`, a STOP condition for unsatisfied hard
   dependencies, and Quality Gate assertions. Keep example rows short.
-- `skills.test.ts:5296` version pin; a new contract case in
-  `skills-bundled-docs-contract.test.ts`.
+- `skills.test.ts:5330` version pin; a new contract case in
+  `skills-bundled-docs-contract.test.ts` (pattern `:1571`).
 - `apps/oat-docs/docs/workflows/skills/repo-improve.md:36-46`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -177,14 +181,15 @@ structure renders.
 Steps 4, 5, and 6 as scoped above; Success Criteria; Troubleshooting entry for
 a dependency-blocked candidate.
 
-**Verify:** `pnpm exec vitest run src/validation/skills.test.ts` after step 4.
+**Verify:** `pnpm oat:validate-skills` → exit 0 and
+`pnpm exec oxfmt --check '.agents/skills/oat-repo-improve/**/*.md'` → clean.
 
 ### 4. Add the executable backstop and bump the version
 
 New case in `skills-bundled-docs-contract.test.ts` asserting the readiness
 clause and columns in the skill and the three sections plus status enum in
 the template, and that `git rev-parse --short HEAD` is absent; update the
-`:5296` pin; bump `oat-repo-improve` `version:`.
+`:5330` pin; bump `oat-repo-improve` `version:`.
 
 **Verify:** `pnpm exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 → pass; `pnpm run check:skill-bumps` → pass.
@@ -201,7 +206,7 @@ captured exit codes.
 - `requires plan readiness to be evaluated separately from execution readiness`.
 - `plan template carries typed dependencies, landing events, execution status, and revalidation`.
 - `plan provenance pins the full origin/main SHA`.
-- Version pin tuple updated at `skills.test.ts:5296`.
+- Version pin tuple updated at `skills.test.ts:5330`.
 - Regression proved: the template can no longer silently lose the contract.
 
 ## Done criteria

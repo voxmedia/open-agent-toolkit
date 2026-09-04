@@ -78,6 +78,13 @@ evidence instead of refusing it as unjournaled.
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 Run before editing:

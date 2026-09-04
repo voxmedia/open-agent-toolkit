@@ -43,7 +43,10 @@ recovery guidance. The six diagnostic codes that have no emitter today gain
 emitters. Human output names the provider; JSON carries the structured
 evidence. `oat tools list` and `oat tools info` stop reporting
 unmaterialized user agents when an active Codex or Cursor adapter supplies
-managed roles.
+managed roles. That list/info correction is a separate defect kept in this
+plan deliberately: it is a one-argument change on the same
+`projectRenderablePackEvidence` seam step 5 rewires, and splitting it would
+put two lanes on `info-tool.ts` in one wave.
 
 ## Source and live evidence
 
@@ -154,7 +157,7 @@ part of this outcome landed; refresh rather than duplicate.
   `apps/oat-docs/docs/cli-utilities/tool-packs.md:282-308` (section
   "User-scope agent projection is provider-capability driven"; PR #248 added
   pack-dependency sections above it).
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 

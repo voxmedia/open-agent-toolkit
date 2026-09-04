@@ -84,10 +84,10 @@ first.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                       | Required update                                                                                                          |
-| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | No       | `docs/init/index.ts` only (different command).                                        | Re-run the drift check. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`. | Re-anchor the config key-union, `KEY_ORDER`, and set-branch line numbers before editing step 3; no behavioral change.    |
+| Event                                                                                | Affected | Files in common                                                                                                     | Required update                                                                                                          |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | No       | `docs/init/index.ts` only (different command).                                                                      | Re-run the drift check. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`, `reference/cli-reference.md`. | Re-anchor the config key-union, `KEY_ORDER`, and set-branch line numbers before editing step 3; no behavioral change.    |
 
 ## Drift check
 
@@ -126,10 +126,12 @@ prerequisite, not drift. Any other change to path resolution is a STOP.
   branch.
 - Tests: `generator.test.ts`, `index-generate/index.test.ts`,
   `config/index.test.ts`, `oat-config.test.ts`.
-- Docs: `docs-tooling/commands.md:119-150`, `reference/cli-reference.md`
-  config section, `cli-utilities/configuration.md` if it enumerates
-  `documentation.*`.
-- Five public package manifests.
+- Docs: `docs-tooling/commands.md:119-150` (command owner),
+  `cli-utilities/configuration.md:90-94` (config-key owner), and
+  `reference/oat-directory-structure.md:113-124` (schema table);
+  `reference/cli-reference.md:16-19` only if its `docs generate-index` line
+  enumerates options.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -163,24 +165,29 @@ names the path-resolution change.
 Add a library-free matcher supporting `**`, `*`, and trailing `/`; thread it
 through the recursion; prune emptied directories.
 
-**Verify:** `pnpm exec vitest run src/commands/docs/index-generate/generator.test.ts`
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/docs/index-generate/generator.test.ts`
 → new cases pass; the four existing `generateIndex` cases unchanged.
 
 ### 3. Add the config key and command surface
 
-`oat-config.ts`: `documentation.excludes` parsed as a trimmed string array.
+`oat-config.ts`: `documentation.excludes` parsed as a trimmed, de-duplicated,
+order-preserving string array; invalid entries (non-string, empty) are
+rejected with the existing config error shape.
 `config/index.ts`: union, `KEY_ORDER`, catalog, and an array-valued set branch
-that clears the key on an empty value.
+with one grammar: `oat config set documentation.excludes "a/**,b.md"` splits
+on commas and trims; an empty string clears the key; `get` renders the array
+as the same comma-joined form in human output and as a JSON array; unknown
+flags and non-string values error with exit 1.
 
-**Verify:** `pnpm exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
-→ round-trip cases pass.
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/config/oat-config.test.ts src/commands/config/index.test.ts`
+→ round-trip, clear, duplicate, and invalid-input cases pass.
 
 ### 4. Add the repeatable flag
 
 Register `--exclude <glob>` with a variadic collector at `index.ts:143-148`;
 merge flags after config defaults.
 
-**Verify:** `pnpm exec vitest run src/commands/docs/index-generate/index.test.ts`
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/docs/index-generate/index.test.ts`
 → accumulation and precedence cases pass.
 
 ### 5. Document and bump

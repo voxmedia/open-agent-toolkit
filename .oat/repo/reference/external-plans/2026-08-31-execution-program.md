@@ -67,7 +67,7 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)          | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W2   | group 3 after the named-skill loading lane                                                                          | pending |
 | [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)               | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 4 after the recap lane; before the consolidation plan                                                         | pending |
 | [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 5 after active-pointer and quick-resume                                                                       | pending |
-| [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after `oat config unset`                                                                                    | pending |
+| [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3                                                                                                             | pending |
 | [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the skill-script lane                                                                                 | pending |
 | [Populate provider reachability evidence across pack and lifecycle surfaces](./2026-09-03-populate-provider-reachability-evidence.md)                     | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
 | [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md)        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
@@ -83,9 +83,12 @@ wrapper project, implementation branch, or implementation PR has started.
 - Create one wrapper OAT project and one integration PR per wave. Keep lane
   commits reviewable inside the wrapper branch and record all reconciliations in
   its orchestration log.
-- Public package versions and `pnpm-lock.yaml` are fan-in surfaces. Parallel
-  lanes must not retain competing version bumps; choose one lockstep version
-  above freshly fetched `origin/main` during integration.
+- Lockstep release files (the five public package manifests,
+  `packages/cli/assets/public-package-versions.json`, and `pnpm-lock.yaml`)
+  are owned exclusively by the wave fan-in step: no implementation lane edits
+  them, so parallel lanes never share that write surface. The fan-in makes one
+  lockstep bump above freshly fetched `origin/main` after all lane commits and
+  regenerates the version asset through the build.
 - Run each lane's focused gates before fan-in, then run the repository's full
   definition-of-done gate sequence on the integrated wave branch. Fetch current
   `origin/main` immediately before release-version validation.
@@ -203,7 +206,7 @@ wrapper project, implementation branch, or implementation PR has started.
   which three lanes edit in sequence; and the shared skill contract-test
   files) arranged in five groups so each seam is touched by at most one lane
   per group and the Wave 4 index ordering (docs-index exclusions →
-  instruction-sync → unset → recap) is honored; every lane follows a freshly
+  instruction-sync → unset) is honored; every lane follows a freshly
   merged wave that owns adjacent prose.
 
 ## Wave 6: Truthfulness residue
@@ -273,6 +276,19 @@ wrapper project, implementation branch, or implementation PR has started.
   never reads `lifecycle`) to W5 group 4 and the provider-view diagnostic
   (hosted in `oat tools info`, status untouched) to W6 group 2. Coverage
   31/31 (29 READY, 2 BLOCKED). Ledger: W5 = 11 lanes, W6 = 5.
+- **2026-09-04 (independent review)** — Five independent review lanes (three
+  Codex, two Claude) covered all 31 plans. Corpus-wide fixes: lockstep release
+  files are now owned by the wave fan-in and no lane writes them; every
+  2026-08-30 plan gained a landing-event table; reciprocal never-parallel rows
+  now exist for every shared write surface. Substantive fixes: the
+  active-pointer guard keys on `IS_DURABLE_PROJECT` (local scope never
+  archives); the terminal-status plan normalizes heading dialect and task-id
+  padding; the docs-index plan pins a derivation rule for the ambiguous
+  `documentation.root` and propagates the `CliError` exit code; the recap plan
+  moved its optional config step to `BL-260904-add-recap-seam-config-keys`;
+  decision-record steps carry PJM preconditions; stale anchors from PRs #248
+  and #255 were refreshed. Review record:
+  `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
 - **2026-09-02** — Rebased the program branch onto `origin/main`
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced

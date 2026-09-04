@@ -50,8 +50,12 @@ before any output write, while explicit path flags remain explicit overrides.
   - `packages/cli/src/commands/docs/index-generate/index.test.ts:102-182`
     explicitly locks in the config rewrite and repository-root `index.md`
     behavior that the backlog item rejects.
-  - `.oat/config.json:28-33` already names
-    `apps/oat-docs/docs` and `apps/oat-docs/index.md` as the authoritative paths.
+  - `.oat/config.json:29-34` sets `documentation.root` to `apps/oat-docs` (the
+    docs **app** root, whose source pages live under `apps/oat-docs/docs`) and
+    `documentation.index` to `apps/oat-docs/index.md`. The reference example in
+    `apps/oat-docs/docs/reference/oat-directory-structure.md:160` uses
+    `apps/docs/docs` (a docs **source** directory) for the same key, so the
+    key's meaning is ambiguous today and this plan must pin the derivation.
   - `apps/oat-docs/AGENTS.md:47` already records the exact safe explicit
     invocation used by this repository; it needs verification, not a blind
     rewrite.
@@ -70,11 +74,19 @@ before any output write, while explicit path flags remain explicit overrides.
 
 ## Dependencies
 
-| Type | Dependency                                                              | Required state                                                    | Current state                                        |
-| ---- | ----------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| Soft | [Issue #239](https://github.com/voxmedia/open-agent-toolkit/issues/239) | Recheck only if it changes the same option/config resolver first. | Open; concerns exclusion rather than path ownership. |
+| Type          | Dependency                                                                                                                     | Required state                                                                                                                              | Current state                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Soft          | [Issue #239](https://github.com/voxmedia/open-agent-toolkit/issues/239)                                                        | Recheck only if it changes the same option/config resolver first.                                                                           | Open; concerns exclusion rather than path ownership. |
+| Soft ordering | W1 group 2 plan [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md) | Runs after this plan; both edit `index-generate/index.ts`, `index.test.ts`, and `docs-tooling/commands.md`, so never in one parallel group. | Pending.                                             |
 
 There are no unsatisfied hard dependencies.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
 
 ## Drift check
 
@@ -116,8 +128,7 @@ or superseded.
   configured default and immutable config contract.
 - `apps/oat-docs/AGENTS.md` — verify its explicit command remains correct; edit
   only if live text no longer matches the tested safe invocation.
-- Five public package manifests and `pnpm-lock.yaml` — required release
-  bookkeeping.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -136,7 +147,11 @@ stray `index.md` and can silently replace the configured docs-app index path.
 
 The safe contract is configuration-first for omitted values:
 
-- omitted `--docs-dir` → `documentation.root`, resolved from repo root;
+- omitted `--docs-dir` → derived from `documentation.root` resolved from the
+  repo root: if `<root>/docs` exists and `<root>` itself is not a docs source
+  tree (no top-level `*.md` pages), use `<root>/docs`; otherwise use `<root>`.
+  Record the chosen directory in human and JSON output so an operator can see
+  the derivation. Document this rule in `oat-directory-structure.md`;
 - omitted `--output` → `documentation.index`, resolved from repo root;
 - an explicitly supplied path → resolved from `context.cwd`;
 - any omitted value without a non-empty configured path → error before calling
@@ -150,8 +165,11 @@ The safe contract is configuration-first for omitted values:
 In `index.ts`, make both command options distinguishable as omitted versus
 explicit. Resolve the repository root and read config before generating. Add a
 small resolver that returns absolute docs/output paths using the contract above
-and throws `CliError` exit code 2 with an actionable flag/config message when an
-omitted value has no usable configuration.
+and throws `CliError` with `exitCode: 2` and an actionable flag/config message
+when an omitted value has no usable configuration. The command wrapper at
+`index.ts:118-129` currently sets `process.exitCode = 1` for every error; make it
+propagate `error.exitCode` when the error is a `CliError` (see
+`packages/cli/src/errors/cli-error.ts`) so the documented exit code is real.
 
 Keep explicit paths CWD-relative for backward compatibility. Validate all
 inputs before generation and remove `writeOatConfig`, `relative`, and the
@@ -232,6 +250,10 @@ than replay stale cache evidence.
 
 Stop and report instead of improvising when:
 
+- the configured `documentation.root` is neither a docs source directory nor a
+  parent of one (the derivation rule above cannot pick a directory), or the
+  docs owner rejects the derivation rule; record the decision instead of
+  guessing;
 - live config schema no longer names both `documentation.root` and
   `documentation.index`;
 - an existing caller demonstrably relies on generation mutating config;

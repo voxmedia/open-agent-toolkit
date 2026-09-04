@@ -60,12 +60,13 @@ plan-readiness discriminator is defined once and referenced everywhere.
     no documented resume branch for an existing incomplete quick project.
   - `oat_workflow_mode` is the canonical mode field (`oat-project-plan:19,110`,
     `oat-project-progress:174,197`, `oat-project-next:130`; written by
-    `oat-project-quick-start:150` and
+    `oat-project-quick-start:152` and
     `packages/cli/src/commands/project/new/scaffold.ts:36,123,163`).
   - No `packages/cli/src/commands/project/next/` exists; routing lives only in
     skill prose.
-  - `review-skill-contracts.test.ts:1660` (`routes absent-checkout synced and
-local-only projects through all-scope selection`) is the nearest routing
+  - `review-skill-contracts.test.ts:1677` (`routes absent-checkout synced and
+local-only projects through all-scope selection`; re-anchored 2026-09-04
+    after PR #255) is the nearest routing
     contract test; no quick-mode routing test exists.
 - Constraining decisions: none.
 
@@ -81,10 +82,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                            | Required update                                                                                                                                                              |
-| ------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `.agents/docs/autonomy-contract.md` (inventory line refs). | Rebase; re-run the inventory test; re-map plan/quick-start rows if shifted. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `.agents/docs/autonomy-contract.md`.                       | Same.                                                                                                                                                                        |
+| Event                                                                                | Affected | Files in common                                                                                                                    | Required update                                                                                                                                                              |
+| ------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `.agents/docs/autonomy-contract.md` (inventory line refs), `review-skill-contracts.test.ts` (+17 lines; pattern case now `:1677`). | Rebase; re-run the inventory test; re-map plan/quick-start rows if shifted. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes      | `.agents/docs/autonomy-contract.md`, `apps/oat-docs/docs/workflows/projects/picking-up-projects.md` (in scope here).               | Re-read the mirror sentence in `picking-up-projects.md` before editing; re-run the inventory test.                                                                           |
 
 ## Drift check
 
@@ -177,7 +178,7 @@ then the eight AGENTS.md gates.
 
 ## Test plan
 
-Pattern: `review-skill-contracts.test.ts:1660`.
+Pattern: `review-skill-contracts.test.ts:1677`.
 
 - `routes incomplete quick projects to quick-start from plan, progress, and next`.
 - `explains why spec-driven planning stops and names a recoverable continuation`.

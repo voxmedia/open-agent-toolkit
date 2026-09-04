@@ -48,9 +48,9 @@ for the release-shaped change.
 - Verified evidence:
   - `.agents/skills/oat-doctor/SKILL.md:148-165` labels its inline inventory a
     source of truth but omits the brainstorm pack.
-  - `packages/cli/src/commands/tools/shared/pack-manifest.ts:22-31` and
-    `:324-328` include `brainstorm` and `oat-brainstorm` in the canonical pack
-    manifest.
+  - `packages/cli/src/commands/tools/shared/pack-manifest.ts:32` and
+    `:346-349` include `brainstorm` and `oat-brainstorm` in the canonical pack
+    manifest (re-anchored 2026-09-04 after PR #248).
   - `.agents/skills/oat-brainstorm/SKILL.md:188-195` says a conversation-only
     Node-missing note is state that doctor can pick up later; doctor has no
     persisted input that could satisfy that promise.
@@ -58,8 +58,9 @@ for the release-shaped change.
     `:79-85` requires `oat config get/set` shell commands.
   - `.agents/skills/analyze/SKILL.md:50-60` advertises nine steps, while
     `:224-245` and the remaining workflow use ten-step denominators.
-  - `packages/cli/src/validation/skills.test.ts:6431-6463` is the existing
-    pack-aware corpus-test seam, but no test binds these four claims.
+  - `packages/cli/src/validation/skills.test.ts` has no existing seam for these
+    four claims; the new test group stands alone (resolve any pattern by test
+    title, not line, after PRs #248 and #255 grew the file).
 - Related decisions:
   - [DR-260731-canonical-policy](../decisions/DR-260731-canonical-policy.md)
     makes `.agents/skills` the canonical edit surface.
@@ -77,6 +78,13 @@ for the release-shaped change.
 | Soft ordering | W2 group 3 plan [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)      | Runs after this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.              | Pending.                                 |
 
 No external project or unshipped code dependency blocks execution.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
 
 ## Drift check
 
@@ -265,6 +273,10 @@ Update or supersede stale instructions before import or execution.
 
 ## Review focus
 
+- Batch rationale: the four contracts are independently shippable and were
+  selected as one cohesive release batch by the backlog review; if a lane
+  prefers to split them, keep one lockstep bump at the wave fan-in and one
+  corpus test group per contract.
 - Check that the test has one authoritative list rather than two drifting lists.
 - Confirm the brainstorm change removes only the unsupported future claim.
 - Confirm frontmatter and progress assertions test semantics, not incidental

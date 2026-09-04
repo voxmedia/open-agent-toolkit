@@ -68,6 +68,13 @@ proves the docs copy is genuinely covered.
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -101,7 +108,7 @@ longer has a mirror, refresh the inventory and do not recreate duplication.
 - Current explainer-kit reference/docs mirror mapping.
 - The docs mirror only if a minimal wording or explicit source cross-link is
   necessary to make ownership clear.
-- Five public package versions and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -127,7 +134,10 @@ Within `contracts.test.mjs`, record the canonical reference path and current
 docs-app mirror path as a small named matrix. Confirm both passages express:
 
 - current `publish-receipt/v2` consumption;
-- complete manifest and catalog evidence;
+- complete manifest evidence (the docs mirror at `explainer-kit.md:434-441`
+  names receipt completeness and manifest artifacts but not catalog evidence;
+  either narrow the shared matrix to that common set or scope an explicit docs
+  edit that adds the catalog requirement and names the canonical owner);
 - immutable/read-only `publish-receipt/v1` replay; and
 - rejection of the obsolete “complete `PublishReceiptV1`” claim.
 

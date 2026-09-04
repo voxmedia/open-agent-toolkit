@@ -70,6 +70,13 @@ contract and remains intentionally cheaper than a file inventory or checksum.
 
 There are no unsatisfied hard dependencies for this plan itself.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -104,12 +111,13 @@ inventory/checksum contract changed materially.
   deterministic structural validation after metadata/version validation.
 - `packages/cli/src/fs/assets.test.ts` — complete fixture construction plus
   metadata-only, missing-directory, and non-directory cases.
-- `packages/cli/scripts/bundle-assets.sh` — verification source only; change it
-  only if live producer output contradicts the declared invariant.
-- Five public package manifests and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
+- `packages/cli/scripts/bundle-assets.sh` — evidence only; if its output no
+  longer creates the seven named directories, that is the STOP condition below,
+  not a repair target.
 - Per-file manifests, hashes, checksums, or exhaustive asset enumeration.
 - Validating every bundled skill/template document.
 - Changing `OAT_ASSETS_DIR` precedence or fallback behavior.

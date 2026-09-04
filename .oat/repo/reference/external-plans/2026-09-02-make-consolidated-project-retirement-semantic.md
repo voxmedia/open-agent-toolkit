@@ -58,8 +58,8 @@ the fields are recorded and that the sweep precedes archive.
   - `oat-project-complete/SKILL.md:966-975` — retirement is single-project
     and physical (`recordRetired`), not a prose sweep.
   - `.oat/projects/archived/gate-execution-contract-hardening/state.md:5-9` —
-    the precedent records absorbed backlog IDs in `associated_issues` but no
-    absorbed slugs.
+    the analogue: `associated_issues` holds `type: backlog` refs generally; no
+    field records absorbed project slugs.
   - `.oat/projects/archived/gate-execution-contract-hardening/references/project-retro.md:206-227`,
     `:253-268` — "Project retirement is semantic"; the prescribed sweep by
     slug, backlog ID, and ownership language; retro item UP-01 filed as #250
@@ -77,20 +77,21 @@ the fields are recorded and that the sweep precedes archive.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                    | Required state                                                                                        | Current state |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------- |
-| Soft ordering    | Sibling plan [Defer activeProject clearing](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)              | Land first; it restructures the Step 6 → 8 → 12 spine that this sweep hooks before.                   | Pending.      |
-| Soft ordering    | Sibling plan [Route incomplete quick projects to quick-start](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md) | Land first; both edit quick-start Step 0.5 and bump the same `version:` line.                         | Pending.      |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                    | Write any "run skill X" prose with an explicit load-and-follow clause so its corpus test stays green. | Pending (W2). |
+| Type             | Dependency                                                                                                                                            | Required state                                                                                                                                                          | Current state |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft ordering    | Sibling plan [Defer activeProject clearing](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)                                      | Land first; it restructures the Step 6 → 8 → 12 spine that this sweep hooks before.                                                                                     | Pending.      |
+| Soft ordering    | Sibling plan [Route incomplete quick projects to quick-start](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)                         | Land first; both edit quick-start Step 0.5 and bump the same `version:` line.                                                                                           | Pending.      |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                            | Write any "run skill X" prose with an explicit load-and-follow clause so its corpus test stays green.                                                                   | Pending (W2). |
+| Soft ordering    | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | Runs before this plan; both edit `oat-project-complete/SKILL.md` (and its single `version:` line) and `review-skill-contracts.test.ts`, so never in one parallel group. | Pending.      |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                                                     | Required update                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17 lines) and `.agents/docs/autonomy-contract.md` (only if a gate row is added). | Rebase and re-anchor the `:1134` and `:1152` indexOf anchors; re-run the inventory test if the contract was touched. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `review-skill-contracts.test.ts`, `.agents/docs/autonomy-contract.md`.                                              | Same re-anchor; neither event edits the quick-start or complete skills.                                                                                                                                               |
+| Event                                                                                | Affected | Files in common                                                                                                                              | Required update                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17 lines) and `.agents/docs/autonomy-contract.md` (only if a gate row is added).                          | Re-anchor the `:1134` ordering case; re-run the inventory test if the contract was touched. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes      | `review-skill-contracts.test.ts`, `.agents/docs/autonomy-contract.md`, `apps/oat-docs/docs/workflows/projects/lifecycle.md` (in scope here). | Re-anchor the test case and re-read `lifecycle.md` before editing; neither event edits the quick-start or complete skills.                                                                   |
 
 ## Drift check
 
@@ -125,7 +126,7 @@ If Step 0.5 or the Step 8 archive block moved, re-anchor before editing.
   Step 8 archive block; `version:` bump.
 - `review-skill-contracts.test.ts` — two new cases.
 - `apps/oat-docs/docs/workflows/projects/lifecycle.md` — sweep description.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -155,12 +156,18 @@ write `absorbed_projects: [<slug>]` and `absorbed_backlog_ids: [<BL-id>]` to
 
 ### 2. Add the retirement sweep before archive
 
-Before the Step 8 `ARCHIVE_OUTPUT=$(oat project archive ...)` block, add: read
-the two fields; grep the four surfaces for each slug and ID and for
+Before the Step 8 `ARCHIVE_OUTPUT=$(oat project archive ...)` block, add: run
+`oat pjm doctor --json` and skip the sweep with a one-line note when
+`adoption.state` is not `declared` or `inferred-legacy` (this skill ships to
+repositories without PJM); otherwise read the two fields; grep the four
+surfaces for each slug and ID and for
 future-oriented ownership language tied to them; exempt prose that clearly
 describes past state; each remaining hit becomes a named finding with a
 required disposition (fix now or accept as historical) recorded in the
-project log before archive.
+project log before archive. In autonomous completion, where no prompt is
+allowed, record every finding as an advisory warning in the project log and
+continue, mirroring the warn-and-continue precedent at
+`completion-and-closeout.md:773`.
 
 **Verify:** same command → green; ordering holds.
 
@@ -202,6 +209,8 @@ both skill versions and the five packages; format.
 
 Stop and report instead of improvising when:
 
+- the executing repository has no PJM adoption and the sweep cannot be skipped
+  cleanly (the skill must degrade, never fail closeout for a missing surface);
 - the sweep design requires a user prompt (new autonomy gate row);
 - the sibling active-pointer plan has not landed and the Step 8 region is
   being restructured concurrently;

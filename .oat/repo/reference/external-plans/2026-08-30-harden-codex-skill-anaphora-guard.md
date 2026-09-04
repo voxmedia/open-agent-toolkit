@@ -71,6 +71,13 @@ independently classifies the selected model as a direct-API specialist route.
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -102,7 +109,7 @@ new semantic boundary. Do not preserve clause indexes from this baseline.
   detection for anaphoric clauses immediately following below-floor guidance.
 - Permanent negative cases for “In that case” and “Then.”
 - Preservation test for the explicit direct-API specialist exception.
-- Five public package versions and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 

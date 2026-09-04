@@ -67,8 +67,10 @@ gate contract documents that recovery means re-validation, never re-review.
     its own `artifact_validation_failed` guard; corroboration, invocation
     check, threshold, handoff, and result writing after it are unguarded and
     fall to the catch-all. That is the #232 incident shape.
-  - `packages/cli/src/commands/gate/index.test.ts:5943` and `:5984` — the only
-    two assertions on this envelope; neither pins recovery or a step name.
+  - `packages/cli/src/commands/gate/index.test.ts:5945`, `:5984`, and the
+    branch-local route-receipt case at `:6640` — the three assertions on this
+    envelope; none pins recovery or a step name (the `:6640` case has no
+    resolved artifact, so the recovery branch must stay inert there).
   - `packages/cli/src/commands/gate/index.ts:2680-2712` — PR #246's
     `artifact_missing` envelope shape that must stay byte-stable.
   - `apps/oat-docs/docs/cli-utilities/workflow-gates.md:293-316` — status
@@ -89,11 +91,12 @@ gate contract documents that recovery means re-validation, never re-review.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                        | Current state                                                           |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Satisfied        | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) gate execution contracts                                                                                      | Preserve `artifact_missing`, `targeting_correlation_failed`, and structured-command envelopes byte-for-byte.          | Merged at `511ffff38`; contracts pinned by `validation/skills.test.ts`. |
-| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not change lifecycle-event identity or receive consumption; record the envelope-shape choice as a decision record. | Project still in discovery; this item is listed as one of its children. |
-| Soft integration | Sibling plan [Retry gate project-log finalization](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)                                                       | Land this plan first in a shared wave; both edit disjoint regions of `gate/index.ts` and `index.test.ts`.             | Pending.                                                                |
+| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                                                                                                                                                        | Current state                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Satisfied        | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) gate execution contracts                                                                                      | Preserve `artifact_missing`, `targeting_correlation_failed`, and structured-command envelopes byte-for-byte.                                                                                                                                                          | Merged at `511ffff38`; contracts pinned by `validation/skills.test.ts`. |
+| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not change lifecycle-event identity or receive consumption; record the envelope-shape choice as a decision record.                                                                                                                                                 | Project still in discovery; this item is listed as one of its children. |
+| Soft integration | Sibling plan [Retry gate project-log finalization](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)                                                       | Land this plan first in a shared wave; both edit disjoint regions of `gate/index.ts` and `index.test.ts`, and both append to the status table and incident-to-regression table in `workflow-gates.md`, so the docs hunk must be rebased; never in one parallel group. | Pending.                                                                |
+| Soft ordering    | W5 group 2 plan [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                                  | Runs after this plan; both edit `apps/oat-docs/docs/reference/cli-reference.md`, so never in one parallel group.                                                                                                                                                      | Pending.                                                                |
 
 There are no unsatisfied hard dependencies.
 
@@ -139,11 +142,14 @@ new post-selection segment is a STOP until this plan is refreshed.
   recover in the catch, and extend `writeReviewGateUnexpectedFailure` with
   `postSelection: { step, code }`.
 - `packages/cli/src/commands/gate/index.test.ts` — the cases in the test plan.
+- `packages/cli/src/commands/gate/configured-gate.integration.test.ts` and
+  `gate-hardening.integration.test.ts` — assertion additions only (step 4); no
+  production edits.
 - `apps/oat-docs/docs/cli-utilities/workflow-gates.md` and
   `apps/oat-docs/docs/reference/cli-reference.md` — recovery contract prose
   and the incident-to-regression row.
 - One decision record for the envelope additions via `oat decision new`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -192,7 +198,8 @@ Extend `writeReviewGateUnexpectedFailure` (`index.ts:2594`) to include
 constructor name) and append `(post-selection step: <step>)` to the human
 error line. Keep `status` and `outcome` unchanged.
 
-**Verify:** same command; the two existing cases assert the new field.
+**Verify:** same command; the three existing cases assert the new field and
+the `:6640` case still yields `review_failed`.
 
 ### 3. Recover a validating committed artifact
 
@@ -219,8 +226,8 @@ envelopes are byte-identical to today.
 
 Add the recovery paragraph and status-table entry to `workflow-gates.md`
 (`:293-316`) and an incident-to-regression row (`:800-809`); add one clause to
-`cli-reference.md:144` without disturbing the regex-pinned `artifact_missing`
-sentence. Record the additive-field decision with `oat decision new`. Bump the
+`cli-reference.md:145` (the `oat gate review` bullet) without disturbing the regex-pinned `artifact_missing`
+sentence. Record the additive-field decision: Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`. Bump the
 five lockstep packages above fresh `origin/main`.
 
 **Verify:** `pnpm check` and `pnpm exec vitest run src/validation/skills.test.ts` → pass.

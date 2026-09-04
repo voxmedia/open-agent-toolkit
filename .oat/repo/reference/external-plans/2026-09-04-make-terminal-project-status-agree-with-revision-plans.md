@@ -49,7 +49,7 @@ revision phase as work to resume. JSON and human status already read one
   [BL-260901-make-terminal-project-status — Make terminal project status agree with completed revision plans](../../pjm/backlog/items/BL-260901-make-terminal-project-status.md)
 - Planned at: `origin/main` commit `6b9a15841dab949ed83fa174286396e063da721d` on `2026-09-04`.
 - Verified evidence:
-  - `packages/cli/src/commands/project/status.ts:46-56,110-160` — the CLI
+  - `packages/cli/src/commands/project/status.ts:47-57,110-160` — the CLI
     renders `getProjectState` from `@open-agent-toolkit/control-plane`; human
     and JSON output read the same `ProjectState`.
   - `packages/control-plane/src/state/tasks.ts:4` —
@@ -68,8 +68,8 @@ revision phase as work to resume. JSON and human status already read one
     `state.lifecycle` is parsed (`project.ts:58`) but never read by the
     recommender.
   - Reproduced read-only with the real parser: archived
-    `subagent-implement-refactor` (nine `## Phase p0N:` headings) parses two
-    phases, reports 0/6, and recommends implement; `retire-archived-synced-project`
+    `subagent-implement-refactor` (seven `## Phase p0N:` headings plus two
+    `## Phase p-revN:`) parses two phases, reports 0/6, and recommends implement; `retire-archived-synced-project`
     (canonical `## Phase N:` plus `## Phase p-rev1:`) reports 15/15 correctly.
   - `packages/cli/src/commands/project/validate-plan/validate-plan.ts:96-103`
     derives phase ids from task headings; an in-repo precedent for
@@ -121,15 +121,16 @@ editing.
 
 - `packages/control-plane/src/state/tasks.ts` — widen the two heading
   patterns to accept `## Phase N:`, `## Phase pNN:`, `## Phase p-revN:`, and
-  `## Revision Phase (p-rev)?N:`, normalizing to one declared phase id;
-  preserve the cross-phase guard at `:82-87`.
+  `## Revision Phase (p-rev)?N:`, normalizing to one declared phase id and one
+  revision/ordinary kind; zero-pad ids in `parseTaskHeading` (`:163-192`) to
+  match; keep the cross-phase guard at `:82-87` on the normalized values.
 - `packages/control-plane/src/recommender/router.ts:154-162` — terminal
   guard: when `state.lifecycle === 'complete'` (or `currentTaskId` is null
   and the phase status is `complete`/`pr_open`; pick one rule and state it),
   do not return the revision-resume recommendation.
 - Tests: `tasks.test.ts`, `router.test.ts`, `project.test.ts` (end-to-end
   fixture, acceptance criterion 4).
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -165,11 +166,19 @@ behavior change.
 ### 2. Widen heading recognition
 
 Update `tasks.ts:4,6,124-161` so `1`, `p1`, `p01`, and `p-rev1` normalize
-to one declared phase id; keep the `:82-87` dialect guard; add a negative
-case proving a task whose id belongs to another phase is still rejected.
+to one declared phase id, and update `parseTaskHeading` (`:163-192`) to
+zero-pad ordinary ids the same way (it emits `p${digits}` unpadded today,
+`:185-190`). Then normalize the dialect too: treat `## Phase p-revN:` and
+`## Revision Phase p-revN:` as one revision kind so the `:82-87` guard compares
+the normalized phase id plus a normalized revision/ordinary kind rather than
+the raw heading spelling; otherwise `workflow-friction`'s
+`## Revision Phase p-rev1:` heading with `### Task prev1-t01:` tasks still
+drops every task. Keep a negative case proving a task whose id belongs to
+another phase is still rejected.
 
 **Verify:** same command → the `:94-127` negative expectations still hold;
-`## Phase p01:` and `## Revision Phase p-rev1:` cases pass.
+`## Phase p01:` + `p01-t01`, `## Phase 1:` + `p1-t01`, and
+`## Revision Phase p-rev1:` + `prev1-t01` cases pass.
 
 ### 3. Add the terminal guard
 
@@ -178,7 +187,7 @@ projects under the chosen rule; document the rule in a comment.
 
 **Verify:** `pnpm exec vitest run src/recommender/router.test.ts` → the new
 terminal case returns a non-implement skill;
-`routes incomplete revision work back to implement` (`:199`) still passes for
+`routes incomplete revision work back to implement` (`:198`) still passes for
 `lifecycle: 'active'`.
 
 ### 4. Add the end-to-end fixture
@@ -193,15 +202,19 @@ phases and two `p-revN` phases, all `**Status:** completed`,
 
 ### 5. Bump and gate
 
-Bump the five packages above fresh `origin/main`; run the eight AGENTS.md
-gates in order with captured exit codes, forcing an uncached test run.
+Bump the five packages above fresh `origin/main` (or leave that to the wave
+fan-in); run the eight AGENTS.md gates in order with captured exit codes.
+
+**Verify:** `HOME=$(mktemp -d) pnpm exec turbo run test --force` → exit 0 with
+no `cache hit, replaying logs`; `git fetch origin main && pnpm release:check-versions`
+→ exit 0.
 
 ## Test plan
 
 - `tasks.test.ts` (pattern `:94`): `counts phases declared with padded phase
 ids`; `counts revision phases declared as Revision Phase p-revN`; `keeps
 rejecting a task id that belongs to a different phase`.
-- `router.test.ts` (pattern `:199`, `makeState` at `:6`): `does not resume
+- `router.test.ts` (pattern `:198`, `makeState` at `:6`): `does not resume
 implement for a terminal project whose revision phases are complete`;
   `still resumes implement when revision tasks remain and lifecycle is active`;
   blocked and partial cases if the guard keys on phase status.

@@ -91,6 +91,13 @@ ManifestV2)`) always replaces `manifest.oatVersion` with `OAT_VERSION`
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                 | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                         | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None (init, remove-skill, status, sync, manifest are outside the #190 surface). | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -132,7 +139,7 @@ this plan is refreshed.
   diagnostics project.
 - `packages/cli/src/commands/sync/index.ts`, `apply.ts`, shared types, and tests —
   reuse the common comparison where practical and acknowledge restamp-only apply.
-- Five public package manifests and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -216,7 +223,9 @@ against the enlarged JSON payload (`collectionOperations`, `operationResults`,
 case. Preserve `No changes required.` only when no operation or restamp occurs.
 JSON already exposes `versionSkew`; do not add a second redundant field there.
 
-**Verify:** existing sync tests around lines 570-601 assert the new message,
+**Verify:** the restamp-only and true no-op cases in `sync/index.test.ts`
+(`:1310-1347`, the block whose comment says the restamp is the only mutation)
+assert the new message,
 continued restamp, unchanged exit code, and no false success text.
 
 ### 5. Apply release bookkeeping and full gates

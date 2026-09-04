@@ -141,7 +141,7 @@ schema is a STOP.
 - Docs: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (`oat tools info`
   section, `:505`) and `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
   ("Drift states", `:67`).
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -154,8 +154,10 @@ schema is a STOP.
 
 ## Current state
 
-`oat tools info` knows the canonical toolkit but not the manifest or
-provider views; `oat status` knows drift but not names or versions and
+`oat tools info` resolves the name by scanning each scope's canonical skill
+directory (`scanTools` at `info-tool.ts:104-112`), so canonical presence is
+known before the not-found path at `:149-155` fires; it knows nothing about
+the manifest or provider views; `oat status` knows drift but not names or versions and
 never suggests a sync. The detector already classifies every state the
 diagnostic needs except additive-versus-removed, which is derivable from
 whether a manifest entry exists. For `symlink` and `collection` strategies

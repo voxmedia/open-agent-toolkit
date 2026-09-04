@@ -31,10 +31,11 @@ created: '2026-09-02T23:59:00Z'
 
 ## Outcome
 
-For every archive-enabled completion scope, `oat-project-complete` keeps the
-`activeProject` pointer until `oat project archive` returns a validated
-receipt, then clears it in Step 12. Non-archive completions keep the
-immediate clear. An interruption after `complete-state` but before archive
+For every completion that will actually archive (`SHOULD_ARCHIVE` and
+`IS_DURABLE_PROJECT`, that is shared and synced scopes), `oat-project-complete`
+keeps the `activeProject` pointer until `oat project archive` returns a
+validated receipt, then clears it in Step 12. Local projects never archive and
+keep the immediate clear, as do non-archive completions. An interruption after `complete-state` but before archive
 resumes directly at the archive step from the retained pointer, without
 replaying Steps 2–8 and without appending a second completion seal. Contract
 tests execute the Step 6 guard across scopes and pin the ordering.
@@ -50,10 +51,10 @@ tests execute the Step 6 guard across scopes and pin the ordering.
   - `.agents/skills/oat-project-complete/SKILL.md:702-716` — Step 6 retains
     the pointer only for `PROJECT_SCOPE == "synced" && SHOULD_ARCHIVE ==
 "true"`; every other scope clears immediately.
-  - `SKILL.md:110-113`, `:930-932` — `IS_DURABLE_PROJECT` is true for shared
-    and synced, and Step 8 archives whenever archive is enabled and the
-    project is durable, so shared archive completions run with a cleared
-    pointer.
+  - `SKILL.md:127-129`, `:678`, `:932` — `IS_DURABLE_PROJECT` is true only for
+    shared and synced; `complete-state` and Step 8 both gate on
+    `SHOULD_ARCHIVE && IS_DURABLE_PROJECT`, so local projects never archive and
+    shared archive completions run with a cleared pointer.
   - `SKILL.md:1471-1486` — Step 12's deferred clear is synced-only and
     validates the terminal receipt through `finalize-synced-archive.mjs`.
   - `SKILL.md:88-122` — the resume entry (`execute-synced-archive-entry.mjs`,
@@ -63,10 +64,12 @@ tests execute the Step 6 guard across scopes and pin the ordering.
   - `SKILL.md:963-968` — the shared/local archive receipt shape
     (`status: "ok"`, `mode: "apply"`, non-empty `archivePath`).
   - `review-skill-contracts.test.ts:1134` (ordering guard, contains
-    `'No project-log append may follow the seal'` at `:1170`), `:1560`
-    (asserts the synced-scoped sentence `'before Step 12, retain the active
-pointer, and let the next invocation resume'` at `:1620-1623`), and the
-    bash-guard evaluator `executeFinalProjectPushGuard` at `:34-68`.
+    `'No project-log append may follow the seal'` at `:1189`), `:1577`
+    (`syncs the open PR description after archive so blob links keep
+resolving`, asserting the synced-scoped sentence `'before Step 12, retain
+the active pointer, and let the next invocation resume'` at `:1638`; the
+    sentence lives at `SKILL.md:1465`), and the bash-guard evaluator
+    `executeFinalProjectPushGuard` at `:35-68`.
 - Constraining decisions:
   [DR-260831-durability-before-retirement](../decisions/DR-260831-durability-before-retirement.md)
   (authorizes deferring retirement until durability succeeds),
@@ -85,10 +88,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                         | Required update                                                                                                                                              |
-| ------------------------------------------------------------------------------------ | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17). | Rebase and re-anchor the `:1134`, `:1152`, `:1560` anchors. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `review-skill-contracts.test.ts`.       | Same re-anchor; the completion skill is not in either diff.                                                                                                  |
+| Event                                                                                | Affected | Files in common                                                                                                                        | Required update                                                                                                           |
+| ------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17).                                                                                                | Anchors re-applied 2026-09-04: `:1134`, `:1189`, `:1577`, `:1638`.                                                        |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes      | `review-skill-contracts.test.ts`, `apps/oat-docs/docs/workflows/projects/lifecycle.md`, `picking-up-projects.md` (both in scope here). | Re-anchor the test cases and re-read both docs pages before editing; the completion skill itself is not in the #190 diff. |
 
 ## Drift check
 
@@ -119,13 +122,16 @@ If Step 6, Step 12, or the resume entry changed, re-anchor before editing.
 
 - `oat-project-complete/SKILL.md` — Step 6 guard (`:709-716`), Step 12 clear
   (`:1476-1486`), the resume entry (`:88-140`), and the retention sentence at
-  `:1002`; `version:` bump.
-- `oat-project-complete/scripts/` — a non-synced receipt validator (new
-  script) with a test under `tests/` following
-  `resolve-synced-archive-entry.test.mjs`.
+  `:1005-1006`; `version:` bump.
+- `oat-project-complete/scripts/` — a new `validate-durable-archive-receipt.mjs`
+  for shared-scope archive receipts, with a test under `tests/` following
+  `resolve-synced-archive-entry.test.mjs`. Do not reuse or rename the existing
+  `validate-nonarchive-lifecycle-receipt.mjs` (`SKILL.md:51,68,1181`), which
+  validates non-archive synced lifecycle commits, a different concept with a
+  similar name.
 - `review-skill-contracts.test.ts` — three new cases.
 - Docs: `lifecycle.md:333-335`, `picking-up-projects.md`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -147,14 +153,15 @@ interruption after `complete-state` leaves no resumable state.
 
 ### 1. Generalize the Step 6 guard
 
-Change the guard at `:709` to retain the pointer whenever
-`SHOULD_ARCHIVE == "true"` and the scope will archive (shared, synced, and
-local-with-archive), keeping the `else` immediate clear for non-archive
-completions.
+Change the guard at `:709` to `SHOULD_ARCHIVE == "true" && IS_DURABLE_PROJECT
+== "true"`, mirroring the `complete-state` gate at `:678`, so shared joins
+synced in retaining the pointer. Local scope is never durable and keeps the
+`else` immediate clear, as do non-archive completions; a guard keyed on
+`SHOULD_ARCHIVE` alone would strand local pointers.
 
 **Verify:** `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
-→ green, including `:1560` after its sentence is deliberately widened in the
-same commit.
+→ green, including `:1577` after the sentence at `SKILL.md:1465` is
+deliberately widened in the same commit.
 
 ### 2. Generalize the Step 12 clear
 
@@ -191,14 +198,14 @@ Update the two docs pages; bump the skill and the five packages; format.
 ## Test plan
 
 - `retains the active pointer until archive validates for every archive-enabled scope`
-  → retain for (synced,true), (shared,true), (local,true); clear for all
-  (·,false).
+  → retain for (synced,true) and (shared,true); clear for (local,true) because
+  local is never durable, and for every (·,false).
 - `clears the deferred pointer only after a validated archive receipt` →
   `archiveIndex < step12ClearIndex`.
 - `resumes an interrupted archive completion without a second completion seal`
   → resume branch names shared/local; `'No project-log append may follow the
 seal'` still present.
-- Existing `:1117`, `:1134`, `:1175`, `:1278`, `:1388`, `:1560` green.
+- Existing `:1117`, `:1134`, `:1175`, `:1278`, `:1388`, `:1577` green.
 
 ## Done criteria
 
@@ -216,7 +223,8 @@ Stop and report instead of improvising when:
 
 - shared or local archive receipts lack enough terminal evidence to validate
   (then a CLI receipt addition is needed and the estimate changes);
-- widening the guard would strand pointers for projects that never archive;
+- widening the guard beyond `SHOULD_ARCHIVE && IS_DURABLE_PROJECT` would strand
+  pointers for local projects, which never archive;
 - the synced finalizer would need to accept non-synced input (use a separate
   validator instead); or
 - a named verification gate fails twice after one bounded correction.

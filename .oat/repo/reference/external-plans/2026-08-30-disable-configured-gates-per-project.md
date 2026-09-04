@@ -80,9 +80,16 @@ progress makes the deliberate posture visible to reviewers.
 | Satisfied predecessor | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated. | Satisfied at merge `511ffff3822cebdc81e4380452652fe801e2bfb8`; revalidated on the current planning baseline. |
 | Preserved contract    | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md) / `artifact_missing` terminal behavior | Preserve synchronous headless completion and cause-specific fail-closed behavior when adding a pre-launch disabled resolution.                        | Delivered by PR #246; this plan does not alter launch or artifact-result semantics.                          |
 
-| Soft integration | `tool-pack-scope-provider-truthfulness` project (in flight; one integrated PR) | After it merges, re-anchor `oat-project-plan-writing/SKILL.md:271-392` (its branch adds a dispatch-lineage paragraph and bumps the skill to 1.2.21) and `config/user-sync-config.ts` (+16 lines), then bump the skill again if edited. | Not merged; verified read-only on 2026-09-02 at `27b978528`. It does not touch gate resolve/execute code. |
+| Satisfied revalidation | `tool-pack-scope-provider-truthfulness` merged as PR #255 (`a06e9713a`, 2026-09-03) | Re-anchor `oat-project-plan-writing/SKILL.md:271-392` (now bumped to 1.2.21 with a dispatch-lineage paragraph) and `config/user-sync-config.ts` (+16 lines) before editing. | Landed; drift confirmed 2026-09-03 and re-run 2026-09-04. |
 
 There are no unsatisfied hard dependencies.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                                                                | Required update                                                                                                                      |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                        | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                               |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes              | `packages/cli/src/commands/gate/*` (resolve/execute), `apps/oat-docs/docs/cli-utilities/configuration.md`, `workflow-gates.md` | If #190 merges first: re-anchor the gate resolve/execute seam and both docs pages before editing; if this lands first, #190 rebases. |
 
 ## Drift check
 
@@ -125,7 +132,11 @@ this plan is refreshed.
 - Gate-aware lifecycle callers that must pass resolved project context.
 - Explicit configured-but-disabled evidence in implementation closeout/status.
 - `oat-project-progress` visibility and workflow/project-config docs.
-- Contract/unit tests, skill versions, managed views, package versions, and lockfile.
+- The project-state frontmatter allowlist and preserve-on-write path
+  (`packages/cli/src/commands/shared/frontmatter.ts:17`
+  `PROJECT_STATE_FRONTMATTER_FIELDS`, its predicate, and `frontmatter.test.ts`),
+  so state writers never drop the new key.
+- Contract/unit tests, skill versions, and managed views.
 
 ### Out of scope
 
@@ -187,7 +198,7 @@ maps with an actionable project/state path; absence means follow configuration.
 Add focused parser tests and preserve unknown unrelated frontmatter fields on
 writes.
 
-**Verify:** shared frontmatter/project-state tests pass for absent, valid,
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/shared/frontmatter.test.ts src/commands/project` → shared frontmatter/project-state tests pass for absent, valid,
 malformed, duplicate, and round-trip cases.
 
 ### 2. Add backward-compatible project-aware gate resolution
@@ -203,7 +214,7 @@ For a project-disabled configured gate, preserve `configuredGate`, set
 configuration, emit `not_configured`; an override without a configured gate is
 still visible in project progress but does not fabricate configuration.
 
-**Verify:** gate command tests cover all config layers, absent state, each
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/gate` → gate command tests cover all config layers, absent state, each
 resolution, malformed state, explicit path/name/active project, and legacy
 no-project compatibility.
 
@@ -220,7 +231,7 @@ Preserve an explicit existing map on resume/import. In non-interactive mode,
 do not prompt or write a new map. Never modify config layers. Run this procedure
 adjacent to, but independently from, phase-gate setup.
 
-**Verify:** skill contract tests prove prompt eligibility, per-gate choices,
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/init/tools/shared/project-start-preflight-contracts.test.ts src/validation/skills.test.ts` → skill contract tests prove prompt eligibility, per-gate choices,
 preservation, no-config suppression, and non-interactive no-write behavior.
 
 ### 4. Consume the project-aware resolution at gate boundaries
@@ -236,7 +247,7 @@ specific `project_disabled` value while retaining configured resolution and a
 not-launched launch state. Keep completion allowed because the operator chose
 the project override; preserve all other closeout freshness and snapshot rules.
 
-**Verify:** lifecycle contract tests prove no launch, distinct disposition,
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts` → lifecycle contract tests prove no launch, distinct disposition,
 durable source, configured command preservation, and unchanged no-gate/passed/
 failed paths.
 
@@ -247,7 +258,7 @@ the gate-aware skill keys. Update workflow-gates and project configuration docs
 with precedence, interactive/non-interactive behavior, evidence vocabulary,
 and the explicit phase/autonomous exclusions.
 
-**Verify:** focused progress/skill contracts and `pnpm build:docs` pass.
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/validation/skills.test.ts` and, from the root, `pnpm build:docs` → pass.
 
 ### 6. Refresh views, version, and run complete gates
 
@@ -306,6 +317,10 @@ or supersede it if a revalidation trigger fires.
 
 ## Review focus
 
+- Size: this plan spans state schema, gate resolution, several lifecycle
+  skills, closeout visibility, and docs. If the executing lane finds the pieces
+  cannot ship as one reviewable change, import it with
+  `oat-project-import-plan` and split by contract rather than trimming scope.
 - Scrutinize backward compatibility of `oat gate resolve` without `--project`.
 - Verify disabled is explicit, durable, and never conflated with gate outcome.
 - Confirm setup preserves existing state and non-interactive safety.

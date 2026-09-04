@@ -45,13 +45,16 @@ test fails when a script is removed or renamed. The one-off
 - Source issue: [#199](https://github.com/voxmedia/open-agent-toolkit/issues/199)
 - Planned at: `origin/main` commit
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
-- Verified evidence:
+- Verified evidence (PR #255 rewrote the contract-test file after planning;
+  no line number cited into it below survives, so resolve every anchor by
+  symbol or test title: `listSkillDirs` is now `:140`, `manifestFixture`
+  `:888`, the tracking-script case `:1613`):
   - `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts:1812-1848`
     — `resolves shared tracking scripts from each loaded skill scope` is a bare
     substring gate on `resolve-tracking.sh` that never consults the manifest.
   - `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts:377-380`
     — checks manifest → bundle only; never enumerates skill-declared paths.
-  - `packages/cli/src/commands/tools/shared/pack-manifest.ts:83-94` —
+  - `packages/cli/src/commands/tools/shared/pack-manifest.ts:89-96` —
     `script(name, sharedOwner?)` yields `destination: .oat/scripts/<name>`,
     the join key.
   - `pack-manifest.ts:222` and the workflows-pack entries — the docs pack ships
@@ -60,8 +63,8 @@ test fails when a script is removed or renamed. The one-off
     `scripts/` inside the skill directory and references no `.oat/scripts/`
     path; re-anchor the workflows-pack lines before editing.
   - Live sweep: 11 references to `.oat/scripts/resolve-tracking.sh` across
-    six skills (four docs-pack, two workflows-pack); no references to the
-    other two scripts; two bare `.oat/scripts/` prose mentions (negative
+    five skills (four docs-pack, one workflows-pack:
+    `oat-repo-knowledge-index`); no references to the other two scripts; two bare `.oat/scripts/` prose mentions (negative
     cases).
   - `types.ts:28-45` — `PackAssetDefinition` with `kind: 'script'`; no
     owning-pack helper exists anywhere in `packages/cli/src`.
@@ -73,10 +76,11 @@ test fails when a script is removed or renamed. The one-off
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                              | Required state                                                                                                              | Current state |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)    | Independent; this plan is an instance of that authoring rule.                                                               | Pending (W3). |
-| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md) | Runs before this plan; both edit `packages/cli/src/commands/tools/shared/pack-manifest.ts`, so never in one parallel group. | Pending.      |
+| Type             | Dependency                                                                                                                                        | Required state                                                                                                              | Current state |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                              | Independent; this plan is an instance of that authoring rule.                                                               | Pending (W3). |
+| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                           | Runs before this plan; both edit `packages/cli/src/commands/tools/shared/pack-manifest.ts`, so never in one parallel group. | Pending.      |
+| Soft ordering    | W5 group 3 plan [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md) | Runs after this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group.             | Pending.      |
 
 There are no unsatisfied hard dependencies.
 
@@ -121,7 +125,7 @@ a STOP.
 - `skills-bundled-docs-contract.test.ts` — the general contract case; fold or
   retain `:1812` so its `$SCOPE_ROOT` shell-shape assertions survive.
 - Optional `findPackForAsset` export in `pack-manifest.ts` (no data change).
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -131,7 +135,7 @@ a STOP.
 
 ## Current state
 
-Six skills reference one script; both owning packs ship it because commit
+Five skills reference one script; both owning packs ship it because commit
 `4eed6fa7` added it to the workflows pack. Nothing prevents a future skill
 from naming a script its pack does not ship. `sharedOwner` means one script
 can legitimately live in two packs, so the check must accept membership in

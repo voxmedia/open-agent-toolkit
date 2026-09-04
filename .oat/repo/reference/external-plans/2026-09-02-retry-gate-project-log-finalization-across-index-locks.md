@@ -89,11 +89,11 @@ failure without changing the gate result` holds a real `.git/index.lock`
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                  | Current state                                                 |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Soft integration | Sibling plan [Recover committed review artifacts](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md)                                              | Land first in a shared wave; rebase this plan's `gate/index.ts` hunks after it.                                                 | Pending.                                                      |
-| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not touch lifecycle-event consumption or receive routing; record the receipt shape as a decision.                            | Project in discovery; this item is listed as a child.         |
-| Design decision  | Receipt location                                                                                                                                                                 | One decision record chooses `tmpdir()/oat-gate-runs/` (existing precedent, not reboot-durable) or a gitignored repo-local path. | Unresolved; decide in step 4 before writing the receipt code. |
+| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                                                                 | Current state                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Soft integration | Sibling plan [Recover committed review artifacts](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md)                                              | Land first in a shared wave; rebase this plan's `gate/index.ts` hunks and its `workflow-gates.md` status-table and incident-table hunks after it; never in one parallel group. | Pending.                                                      |
+| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not touch lifecycle-event consumption or receive routing; record the receipt shape as a decision.                                                                           | Project in discovery; this item is listed as a child.         |
+| Design decision  | Receipt location                                                                                                                                                                 | One decision record chooses `tmpdir()/oat-gate-runs/` (existing precedent, not reboot-durable) or a gitignored repo-local path.                                                | Unresolved; decide in step 4 before writing the receipt code. |
 
 There are no unsatisfied hard dependencies.
 
@@ -140,9 +140,11 @@ STOP until this plan is refreshed.
   idempotency key with an `already-appended` result branch.
 - `packages/cli/src/commands/gate/index.test.ts` — the cases below.
 - `apps/oat-docs/docs/cli-utilities/workflow-gates.md` — finalization,
-  retry bound, receipt, incident-to-regression row.
-- One decision record for the receipt shape and location.
-- Five public package manifests.
+  retry bound, receipt, incident-to-regression row (`reference/cli-reference.md`
+  is watch-only in the drift check; no edit planned).
+- One decision record for the receipt shape and location (Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`.)
+- `.gitignore` — only if the decision chooses a repo-local receipt path.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -186,8 +188,9 @@ and an existing-entry scan returning `status: 'already-appended'`. Have
 In `commitReviewGateProjectLog` add `classifyGitLockFailure(stderr, lockPath)`
 returning `transient-index-lock | persistent-index-lock | other` (persistent
 when the lock's mtime is unchanged across the whole retry window). Retry
-`add`/`commit` with a declared `PROJECT_LOG_COMMIT_ATTEMPTS` bound and an
-injectable sleep. Return `{ committed, error?, lockClass?, attempts }`. Never
+`add`/`commit` with `PROJECT_LOG_COMMIT_ATTEMPTS = 3` and an injectable sleep
+defaulting to 250 ms, 500 ms, 1000 ms between attempts (the window the
+mtime-unchanged check spans). Return `{ committed, error?, lockClass?, attempts }`. Never
 unlink the lock.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts -t 'index lock'`

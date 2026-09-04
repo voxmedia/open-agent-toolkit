@@ -48,8 +48,8 @@ match `set`.
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/commands/config/index.ts:2852-3010` —
-    `createConfigCommand` registers `get`, `set`, `adopt`, `list`, `dump`,
-    `describe`; no `unset`. The only `'unset'` strings are display defaults.
+    `createConfigCommand` registers `get`, `set`, `adopt`, `list`, and
+    `describe`; `dump` is registered from the sibling `dump.ts`; no `unset`. The only `'unset'` strings are display defaults.
   - `:2866-3007` — the surface-flag trio and mutual-exclusion check live
     inline in the `set` action; not factored out.
   - `:1353-1427` — `validateSurfaceForKey`, the per-key restriction table;
@@ -73,20 +73,20 @@ match `set`.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                        | Required state                                                                                     | Current state            |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                 | Land first so the family-coverage test includes `documentation.excludes`.                          | Pending (BLOCKED on W1). |
-| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Land first so the family-coverage test includes its `documentation.*` opt-out key.                 | Pending (W5 group 1).    |
-| Soft ordering | Sibling plan [Make the autonomous recap capability-aware](./2026-09-02-make-autonomous-project-recap-capability-aware.md)         | Runs after this plan and must extend the family-coverage test with its optional `recapSeams` keys. | Pending (W5 group 3).    |
+| Type          | Dependency                                                                                                                                                                | Required state                                                                                                    | Current state                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------ |
+| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                                         | Land first so the family-coverage test includes `documentation.excludes`.                                         | If it has not landed (it is BLOCKED on W1), omit that key from the coverage table and note the gap. | Pending (BLOCKED on W1). |
+| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                                         | Land first so the family-coverage test includes its `documentation.*` opt-out key.                                | Pending (W5 group 1).                                                                               |
+| Soft ordering | W5 group 1 plan [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | Runs before this plan; both edit `apps/oat-docs/docs/reference/cli-reference.md`, so never in one parallel group. | Pending.                                                                                            |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                       | Required update                                                                                                                                                                              |
-| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | No       | None.                                                                                 | None. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch.                                                                                       |
-| `review-plan-workflow` (draft PR #190) merges                                        | Yes      | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`. | If #190 merges first: re-anchor the subcommand registration, the `set` action, `validateSurfaceForKey`, and `KEY_ORDER`; re-run the family-coverage test. If this lands first: #190 rebases. |
+| Event                                                                                | Affected | Files in common                                                                                                     | Required update                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | No       | None.                                                                                                               | None. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch.                                                                                       |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes      | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`, `reference/cli-reference.md`. | If #190 merges first: re-anchor the subcommand registration, the `set` action, `validateSurfaceForKey`, and `KEY_ORDER`; re-run the family-coverage test. If this lands first: #190 rebases. |
 
 ## Drift check
 
@@ -118,8 +118,10 @@ before editing.
   helper extracted from `set`; `unsetConfigValue` mirroring every family
   with parent pruning; `runUnset`; `unset` registration after `set`.
 - `packages/cli/src/commands/config/index.test.ts` — the cases below.
-- Docs: `config-and-local-state.md:117-128`, `cli-reference.md:152-162`.
-- Five public package manifests.
+- Docs: `config-and-local-state.md:117-128`, `cli-reference.md:152-162`, and
+  `cli-utilities/configuration.md:23-24,52-53` (the three `get/set/list/describe`
+  surface mentions).
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 

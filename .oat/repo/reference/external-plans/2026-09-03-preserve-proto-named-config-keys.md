@@ -118,7 +118,7 @@ editing.
 - `project-tools-config.test.ts` — disk round-trip case; retire the
   scope-out comment.
 - One decision record via `oat decision new`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -164,7 +164,8 @@ comment at `:257-262`.
 
 ### 5. Decide, bump, gate
 
-Record the null-prototype read policy with `oat decision new`; bump the five
+Record the null-prototype read policy (proposed title: "OAT config reads
+construct null-prototype objects and preserve `__proto__`-named keys"). Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`. Then bump the five
 packages; run the eight AGENTS.md gates in order with captured exit codes.
 
 ## Test plan
@@ -189,6 +190,8 @@ packages; run the eight AGENTS.md gates in order with captured exit codes.
 
 Stop and report instead of improvising when:
 
+- `oat pjm doctor --json` reports adoption `none` or `partial-initialization`
+  (the decision record cannot be written; initialize with `oat pjm init` first);
 - any consumer suite fails under null prototypes (an unaudited assumption
   exists; a normalization layer is needed instead);
 - the `SyntaxError` message or `line:column` output changes;

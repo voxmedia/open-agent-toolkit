@@ -68,9 +68,10 @@ prevents the clauses from regressing.
   - `packages/cli/src/validation/autonomy-gate-inventory.test.ts:332-371` —
     requires the autonomy contract to be byte-identical across its four skill
     mirrors and current against HEAD.
-  - `packages/cli/src/validation/skills.test.ts:3325` (`makes handle continuity
-alternatives compatible with exact-target recovery`), `:3277` (`defines an
-isolated fresh same-target recovery continuation mode`), `:3181`/`:3258`
+  - `packages/cli/src/validation/skills.test.ts:3359` (`makes handle continuity
+alternatives compatible with exact-target recovery`), `:3311` (`defines an
+isolated fresh same-target recovery continuation mode`), `:3215` and the
+    dirty-worktree chain inside it (re-anchored 2026-09-04; filter by test title)
     (dirty-worktree stop chain) — the regexes the new prose must keep
     satisfying.
   - `grep -rn "recovered_patch\|git diff --cached" packages/cli/src` → no
@@ -84,6 +85,7 @@ isolated fresh same-target recovery continuation mode`), `:3181`/`:3258`
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
 | Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                    | Both bump `oat-project-implement`; land in one wave group and coordinate the single `version:` bump.           | Pending (W2). |
 | Soft integration | Any plan editing `.agents/docs/autonomy-contract.md` in the same wave                                                                         | Serialize inventory edits; the file has four byte-identical mirrors.                                           | See W2/W3.    |
+| Soft ordering    | W3 group 1 plan [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                                      | Runs after this plan; both edit `.agents/agents/oat-phase-implementer.md`, so never in one parallel group.     | Pending.      |
 | Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                       | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group. | Pending.      |
 | Soft ordering    | W3 group 2 plan [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md) | Runs after this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.  | Pending.      |
 
@@ -136,7 +138,7 @@ build-time copies.
   refresh only.
 - `apps/oat-docs/docs/workflows/projects/implementation-execution.md:141-143`
   — one mirror sentence.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -169,8 +171,8 @@ continuation event (`cont-<project>-<phase>-fix-N`). State "a fresh child
 never starts on a dirty tree". Qualify `:266-267` so a saved, named patch is
 not the blocking kind of dirt.
 
-**Verify:** `pnpm exec vitest run src/validation/skills.test.ts` → `:3325`,
-`:3181`, and `:3258` still pass.
+**Verify:** `pnpm exec vitest run src/validation/skills.test.ts -t 'recovery'` →
+the handle-continuity, flake/recovery, and isolated-recovery cases still pass.
 
 ### 2. Add `recovered_patch` to both briefs
 
@@ -178,11 +180,13 @@ Add `recovered_patch: { path, stat }` (optional) to the YAML at
 `phase-execution.md:283-306` and `oat-phase-implementer.md:445-465`, plus the
 child clause in step 2.
 
-**Verify:** same command → `:3277` passes with the new field present.
+**Verify:** same command → `defines an isolated fresh same-target recovery
+continuation mode` passes with the new field present.
 
 ### 3. Add the contract test
 
-Copy `:3325`'s two-file loop into
+Copy the two-file loop from `makes handle continuity alternatives compatible
+with exact-target recovery` (`:3359`) into
 `prescribes patch-and-restore before a fresh child continues on a dirty tree`
 asserting the clean-base regex, the ordered five-step chain, and
 `recovered_patch` in both files. Revert step 1 locally to prove it fails.
@@ -205,7 +209,7 @@ Bump `oat-project-implement` `version:` and the five packages; format.
 
 ## Test plan
 
-- `skills.test.ts`: the new case above; existing `:3325`, `:3277`, `:3181`
+- `skills.test.ts`: the new case above; existing `:3359`, `:3311`, `:3215`
   unchanged and green.
 - `autonomy-gate-inventory.test.ts`: all four cases green.
 - Regression proved: the sequence and `recovered_patch` cannot be dropped from
@@ -225,7 +229,7 @@ Bump `oat-project-implement` `version:` and the five packages; format.
 Stop and report instead of improvising when:
 
 - the prose cannot be added without relaxing the `:255-262` terminal-stop
-  list or breaking `skills.test.ts:3258`;
+  list or breaking the dirty-worktree chain pinned inside `skills.test.ts:3215`;
 - a design needs a new prompt site (then an autonomy gate row is required and
   the scope changes);
 - PR #190 merged first and the handle-loss branch no longer matches the

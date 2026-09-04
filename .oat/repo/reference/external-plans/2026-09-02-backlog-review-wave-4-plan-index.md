@@ -67,8 +67,9 @@ not an `oat-project-import-plan` target.
   `oat-project-complete`; sequence 7 and 9 before 10, and 11 before 9 (the
   recap and active-pointer plans both edit the completion skill and must
   never share a parallel group).
-- Plan 11's optional config keys follow plan 6 and extend its family test;
-  plan 12 follows plan 5 because they share a contract-test file.
+- Plan 11's optional config keys moved to `BL-260904-add-recap-seam-config-keys`
+  (outside the program), so it shares no config seam; plan 12 follows plan 5
+  because they share a contract-test file.
 - Plans 11 and 12 follow the W2 named-skill and W3 executable-backstops lanes
   respectively because they share skills or contract-test files.
 - Every plan lists `tool-pack-scope-provider-truthfulness` and PR #190 in a

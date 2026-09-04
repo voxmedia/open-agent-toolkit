@@ -69,6 +69,13 @@ will repair the supplied path.
 
 The first hard dependency is unsatisfied, so execution remains blocked.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 After satisfying the hard dependency and before editing:
@@ -104,8 +111,7 @@ source-aware remedy design. Missing that branch is a STOP condition.
 - `packages/cli/src/fs/assets.test.ts` — paired assertions for missing root,
   wrong-type root, missing/invalid metadata, version mismatch, and missing
   required directory.
-- Five public package manifests and `pnpm-lock.yaml` when this ships in a
-  separate release-shaped change.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -182,9 +188,12 @@ If implemented as a separate PR, bump all five public packages together and
 update `pnpm-lock.yaml`. If explicitly batched directly after the structural
 plan in one PR, preserve exactly one final lockstep bump for the combined diff.
 
-**Verify:** run the repository Definition of Done in order, fetching
-`origin/main` immediately before `release:check-versions`; every command exits
-zero and the assets suite executes rather than replaying stale cache output.
+**Verify:** in order, each with its own captured exit code: `pnpm check`,
+`pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`,
+`git fetch origin main && pnpm release:check-versions`, `pnpm release:validate`,
+`pnpm build:docs` → all exit 0; and from `packages/cli`,
+`pnpm exec vitest run src/fs/assets.test.ts` → the focused assets suite
+executes (no `cache hit, replaying logs`).
 
 ## Test plan
 

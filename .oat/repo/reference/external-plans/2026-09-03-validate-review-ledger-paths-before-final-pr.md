@@ -65,7 +65,8 @@ guard's position; the pinned Step 2 block is untouched.
     ledger path is invisible in a PR diff.
   - Pins: `validation/skills.test.ts:4118-4131` (the Step 2 awk/grep block,
     verbatim), `:4047-4056` (append-ordered events), `:2776` and `:4000`
-    (version `1.6.0`); `review-skill-contracts.test.ts:1538`;
+    (version `1.6.0`); `review-skill-contracts.test.ts:1134` (ordering guard)
+    and `:1538` (adjacent, unrelated);
     `post-implement-sequence-contracts.test.ts:779-788` (a Step 3 string
     spanning a hard newline); `autonomy-gate-inventory.test.ts:360-368`
     (byte-equal autonomy-contract mirror).
@@ -87,9 +88,9 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                         | Affected | Files in common                                                                                           | Required update                                                                                                 |
-| --------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `review-plan-workflow` (draft PR #190) merges | Minor    | `.agents/docs/autonomy-contract.md` (mirrored into pr-final's `references/docs/`), review-provide skills. | Rebase; re-copy the autonomy-contract mirror byte-for-byte and re-run the inventory test; no prose change here. |
+| Event                                         | Affected | Files in common                                                                                                                                                                | Required update                                                   |
+| --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `review-plan-workflow` (draft PR #190) merges | Minor    | None written here: pr-final's `references/docs/autonomy-contract.md` is a symlink to `.agents/docs/autonomy-contract.md`, and the review-provide skills are read-only sources. | Rebase and re-run the inventory test; no copy and no plan change. |
 
 ## Drift check
 
@@ -125,7 +126,7 @@ If Step 0.5, Step 2, or the version pins moved, re-anchor before editing.
 - `validation/skills.test.ts` — version pins at `:2776` and `:4000`; one
   new case.
 - `review-skill-contracts.test.ts` — one new case.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -147,7 +148,9 @@ path; only a human reading the ledger catches it.
 
 ### 1. Add the ledger-path guard
 
-Immediately before the `gh pr create` prerequisites, add a new block: for
+Immediately before Step 5 splits into its synced and non-synced `gh pr create`
+paths (`:369-380` and `:411-416`), add one new block both paths pass through:
+for
 every Artifact cell in `## Reviews` that is not `-`, require
 `test -e "$PROJECT_PATH/$ARTIFACT"`; on a miss stop with a named gate code
 and the offending row. Do not modify the Step 2 block.
@@ -182,10 +185,12 @@ the eight AGENTS.md gates in order.
 
 - `skills.test.ts` (pattern `:4118`): `validates every Reviews ledger
 artifact path before creating the final PR` — guard text present and
-  positioned after the create prerequisites and before `:415`.
-- `review-skill-contracts.test.ts` (pattern `:1538`): `archives only
-terminal review artifacts during pr-final preflight` — exclusion clause
-  and enumerated rewrite list present.
+  positioned before both `gh pr create` paths (`:378` and `:415`).
+- `review-skill-contracts.test.ts` (pattern: the indexOf ordering guard at
+  `:1134`; the summary-handling case at `:1538` is unrelated): `archives only
+terminal review artifacts during pr-final preflight` — exclusion clause and
+  enumerated rewrite list present, and the guard precedes both `gh pr create`
+  paths.
 - Regression proved: a dangling ledger path cannot reach `gh pr create`; a
   late final review is never moved before it is consumed.
 
@@ -203,7 +208,7 @@ Stop and report instead of improvising when:
 - the fix would edit the pinned Step 2 block or reflow Step 3;
 - the guard would need CI-side verification (archived reviews are ignored;
   it is a runtime skill guard);
-- the autonomy-contract root changed and the mirror is out of date; or
+- the autonomy-contract symlink is broken or replaced by a copy; or
 - a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution

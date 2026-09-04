@@ -86,6 +86,13 @@ running an out-of-tree TypeScript shim or reconstructing fields by hand.
 
 No unsatisfied hard dependency blocks execution.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                                    | Required update                                                                                                                   |
+| ------------------------------------------------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                            | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                            |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes              | `.agents/skills/oat-project-review-provide/SKILL.md`, `oat-project-review-provide-remote/SKILL.md` | If #190 merges first: re-anchor the review-provide stamp guidance and bump those skills again; if this lands first, #190 rebases. |
+
 ## Drift check
 
 Run before editing:
@@ -169,7 +176,7 @@ Import `formatDispatchStamp` into the dispatch-ceiling command. When
 Keep the field absent when report context is absent. Preserve human output,
 blocked/error exit codes, report construction, and all report meanings.
 
-**Verify:** CLI package typecheck passes with no copied grammar logic.
+**Verify:** `pnpm type-check` → passes; `grep -n 'Dispatch: scope=' packages/cli/src/commands/project/dispatch-ceiling/index.ts` → no hand-built grammar outside `formatDispatchStamp`.
 
 ### 2. Lock the additive output and canonical equality
 
@@ -182,7 +189,7 @@ or action is supplied.
 Do not duplicate the expected full field order in every resolver test; the
 identity stamp suite remains the grammar authority.
 
-**Verify:** run dispatch-ceiling, `stamp.test.ts`, and `dispatch-report.test.ts`
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/project/dispatch-ceiling src/providers/identity/stamp.test.ts src/providers/identity/dispatch-report.test.ts` → present, absent, error, and byte-equality cases pass; run dispatch-ceiling, `stamp.test.ts`, and `dispatch-report.test.ts`
 focused suites; all pass.
 
 ### 3. Replace shim-oriented orchestrator guidance
@@ -196,7 +203,7 @@ dispatch/audit metadata. Keep a warning that callers must not hand-assemble it.
 Update affected contract tests to require the field-based route and reject a
 normal-path shim. Bump each changed skill exactly once.
 
-**Verify:** focused review/implement skill contract and bundle-consistency tests
+**Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts` → focused review/implement skill contract and bundle-consistency tests
 pass, and `rg` finds no canonical instruction requiring an out-of-tree shim.
 
 ### 4. Update documentation and release bookkeeping
@@ -209,7 +216,7 @@ five public packages together, and update `pnpm-lock.yaml`.
 Do not edit generated CLI assets directly; normal build/release validation owns
 their generated form.
 
-**Verify:** `pnpm build:docs`, skill bump checks, and release validation pass.
+**Verify:** `pnpm build:docs`, `pnpm run check:skill-bumps`, and `pnpm release:validate` → exit 0.
 
 ### 5. Run complete gates
 
