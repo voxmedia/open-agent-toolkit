@@ -77,10 +77,11 @@ guard's position; the pinned Step 2 block is untouched.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                 | Required state                                                                        | Current state |
-| ---------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | W5 lanes that add cases to `skills.test.ts` and `review-skill-contracts.test.ts`                           | Sequence after W5 so the version pins and new cases do not collide.                   | Pending.      |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | Its sweep covers pr-final; write any new skill pointer with a load-and-follow clause. | Pending (W2). |
+| Type             | Dependency                                                                                                                 | Required state                                                                                                   | Current state         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Soft integration | W5 lanes that add cases to `skills.test.ts` and `review-skill-contracts.test.ts`                                           | Sequence after W5 so the version pins and new cases do not collide.                                              | Pending.              |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                 | Its sweep covers pr-final; write any new skill pointer with a load-and-follow clause.                            | Pending (W2).         |
+| Soft ordering    | W6 group 2 plan [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md) | Runs after this plan; both edit the version pins in `validation/skills.test.ts`, so never in one parallel group. | Pending (W6 group 2). |
 
 There are no unsatisfied hard dependencies.
 
