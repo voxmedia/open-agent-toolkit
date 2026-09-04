@@ -1,7 +1,7 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: pr_open
+status: post_merge_complete
 scope: nine new untriaged issues (#232-#234, #237-#239, #250-#252) plus the eleven rows left pending by the 2026-08-29 record
 baseline_sha: 49aeb5075971180b48c131bbd2b21b82d455bfc9
 triage_pr: 253
@@ -56,7 +56,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-recover-committed-review` (high / task / M) as a `review-gate-integrity` child.
 - Priority and size rationale: High because autonomous runs loop or stop on a false blocker; M because the fix spans envelope schema, recovery logic, contract prose, and focused tests.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-233 — Classify review findings as content vs bookkeeping
 
@@ -70,7 +70,7 @@ updated: 2026-09-03
 - Backlog action: Linked #233 on `BL-260711-skip-re-review-for-bookkeeping`; no new item.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-234 — Patch-and-restore recovery when a child handle is lost with staged work
 
@@ -84,7 +84,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-document-patch-and-restore` (medium / task / S).
 - Priority and size rationale: Medium because a workaround exists by hand; S because it is skill prose, a brief-template field, and one contract assertion.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-237 — Test-only descendants force a full implement exit-gate generation
 
@@ -98,7 +98,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-decide-test-only-freshness` (medium / idea / S) labeled `needs-discussion`; excluded from planning until decided.
 - Priority and size rationale: Idea scope because the mechanism choice is open; S for the decision record itself.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-238 — `oat pjm init` writes provider-view pointers into documentation content trees
 
@@ -112,7 +112,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-keep-pjm-init-provider` (medium / task / M), retitled during plan reconnaissance to "Keep instruction-sync pointer files out of documentation content trees" because `oat instructions sync`, not `oat pjm init`, writes the pointers.
 - Priority and size rationale: Medium because affected repositories can delete the pointers; M because placement policy, opt-out config, fixture tests, and docs are all involved.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-239 — `oat docs generate-index` has no exclusion mechanism
 
@@ -126,7 +126,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-add-an-exclusion-mechanism` (medium / feature / S).
 - Priority and size rationale: S because it is one command option plus a config key and focused tests on an existing seam.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-250 — Make consolidated-project retirement checks semantic
 
@@ -140,7 +140,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-make-consolidated-project` (medium / task / M).
 - Priority and size rationale: M because it touches consolidation records, a sweep procedure, and tests across two skills.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-251 — Define a retro receipt path after project-log sealing
 
@@ -154,7 +154,7 @@ updated: 2026-09-03
 - Backlog action: Folded into `BL-260902-append-only-lifecycle-history` as its third acceptance criterion; excluded from planning until the receipt location is designed.
 - Priority and size rationale: Covered by the combined item rationale below.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-252 — Clear activeProject only after completion durability receipts exist
 
@@ -168,7 +168,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-defer-activeproject-clearing` (medium / task / S).
 - Priority and size rationale: S because the ordering change reuses the synced mechanism; medium because only interrupted non-synced archives are affected.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-199 — Make tracking helper references pack-integrity checked
 
@@ -182,7 +182,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-validate-every-shipped-skill` (high / task / M).
 - Priority and size rationale: High because a miss silently ships a broken bundled workflow; M for syntax-aware extraction, owning-pack diagnostics, fixtures, and a mutation proof.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-204 — Make project-recap fact projection artifact-driven
 
@@ -196,7 +196,7 @@ updated: 2026-09-03
 - Backlog action: None.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-205 — Make discovery knowledge-index policy configurable and documentation-aware
 
@@ -210,7 +210,7 @@ updated: 2026-09-03
 - Backlog action: Linked #205 on `BL-260830-make-documentation-aware`.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-206 — Make review continuation ranges self-validating
 
@@ -224,7 +224,7 @@ updated: 2026-09-03
 - Backlog action: Appended a continuation-range acceptance criterion and the #206 link to `BL-260729-implement-reviewplan-first`.
 - Priority and size rationale: Inherits the parent item (high / feature / L).
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-207 — Add a consolidated scope decision at the review cap
 
@@ -238,7 +238,7 @@ updated: 2026-09-03
 - Backlog action: Appended a consolidated cap-decision criterion and the #207 link to `BL-260818-distinguish-operator-directed`.
 - Priority and size rationale: Inherits the parent item.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-209 — Retro should preserve or add to a finished retro
 
@@ -252,7 +252,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-append-only-lifecycle-history` (medium / feature / M) covering #209, #210, and #251.
 - Priority and size rationale: M because retro, project-log append, and receipt persistence rules span two skills and the CLI log command; medium because each has a manual workaround.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-210 — Lifecycle complete should not freeze the project log
 
@@ -266,7 +266,7 @@ updated: 2026-09-03
 - Backlog action: Covered by `BL-260902-append-only-lifecycle-history` with its own acceptance criterion.
 - Priority and size rationale: See #209.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-213 — Gate project-log finalization vs transient Git index locks
 
@@ -280,7 +280,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-retry-gate-project-log` (high / task / M) as a `review-gate-integrity` child.
 - Priority and size rationale: High because a transient lock converts a passing review into a failed gate; M for retry, classification, idempotency, receipt, and simulated-lock tests.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-214 — Allow passing-gate receive to file deferred follow-ups
 
@@ -294,7 +294,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-file-deferred-repository` (medium / feature / M) as a `review-gate-integrity` child; excluded from planning until the receipt schema settles after ReviewPlan.
 - Priority and size rationale: M because filing must preserve receipt identity and be idempotent.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-228 — User-scope packs misreport placement and do not project agents
 
@@ -308,7 +308,7 @@ updated: 2026-09-03
 - Backlog action: Linked #228 on `BL-260829-make-tool-pack-scope-selection`.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ### GH-230 — Implementation-tail project recap cannot run unattended on a fresh machine
 
@@ -322,7 +322,7 @@ updated: 2026-09-03
 - Backlog action: Created `BL-260902-make-autonomous-project-recap` (high / task / M).
 - Priority and size rationale: High because it blocks autonomous closeout; M because it needs a capability probe, a recorded skip policy, receipt shape, and tests.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-03 after PR #253 merged (`dd41adb9b`); receipt posted on PR #253.
 
 ## Open concerns
 
@@ -339,7 +339,9 @@ updated: 2026-09-03
 
 ## Resume instructions
 
-After PR #253 merges, invoke:
+Completed 2026-09-03: labels and comments applied to twenty issues, #204 and
+#228 closed, receipt posted on PR #253. #211 remains open pending operator
+approval. The original instruction was:
 
 ```text
 /triage-oat-issues resume post-merge PR #253

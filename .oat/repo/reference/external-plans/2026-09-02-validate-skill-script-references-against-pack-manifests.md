@@ -54,8 +54,11 @@ test fails when a script is removed or renamed. The one-off
   - `packages/cli/src/commands/tools/shared/pack-manifest.ts:83-94` —
     `script(name, sharedOwner?)` yields `destination: .oat/scripts/<name>`,
     the join key.
-  - `pack-manifest.ts:216`, `:242-251` — the docs pack ships one script; the
-    workflows pack ships three.
+  - `pack-manifest.ts:222` and the workflows-pack entries — the docs pack ships
+    one script; the workflows pack ships three. PR #248 added pack
+    dependencies (+124 lines) and the recon skill, which ships its own
+    `scripts/` inside the skill directory and references no `.oat/scripts/`
+    path; re-anchor the workflows-pack lines before editing.
   - Live sweep: 11 references to `.oat/scripts/resolve-tracking.sh` across
     six skills (four docs-pack, two workflows-pack); no references to the
     other two scripts; two bare `.oat/scripts/` prose mentions (negative
