@@ -1032,9 +1032,12 @@ describe('sync engine integration', () => {
         const replacementStat = await lstat(providerDir);
         if (
           manifest.collections[0]?.createdLink &&
-          manifest.collections[0].createdLink.inode === replacementStat.ino
+          manifest.collections[0].createdLink.inode ===
+            String(replacementStat.ino)
         ) {
-          manifest.collections[0].createdLink.inode = replacementStat.ino + 1;
+          manifest.collections[0].createdLink.inode = String(
+            replacementStat.ino + 1,
+          );
         }
       }
       if (kind === 'unverifiable') {
