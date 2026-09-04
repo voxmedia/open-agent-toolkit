@@ -1,3 +1,0 @@
-{"type":"gate-run-marker","runId":"0be8f993-4d99-4fb2-9402-310d07353216","path":"/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/0be8f993-4d99-4fb2-9402-310d07353216.json"}
-{"type":"gate-start","target":"claude-fable-skip-permissions","runtime":"claude","timeoutMs":2400000,"timeoutSource":"config"}
-Failed to authenticate: OAuth session expired and could not be refreshed

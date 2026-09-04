@@ -2,12 +2,12 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-03
+oat_last_updated: 2026-09-04
 oat_generated: true
 oat_template: false
 oat_template_name: summary
-oat_summary_last_task: prev9-t03
-oat_summary_revision_count: 9
+oat_summary_last_task: p07-t03
+oat_summary_revision_count: 11
 oat_summary_includes_revisions:
   - p-rev1
   - p-rev2
@@ -18,6 +18,8 @@ oat_summary_includes_revisions:
   - p-rev7
   - p-rev8
   - p-rev9
+  - p06
+  - p07
 ---
 
 # Summary: recon-skill
@@ -48,10 +50,10 @@ judgment with the consuming agent.
   dependency leases, reconciliation across install/update/remove lifecycles, and
   user-scope provider materialization for the worker definition.
 - Documentation, generated assets, release metadata, and focused contract,
-  lifecycle, integration, and adversarial test coverage. All 36 planned and
-  revision tasks completed across revisions p-rev1 through p-rev9, and the
-  configured cross-family implementation exit gate passed. Lockstep public
-  packages bumped to `0.2.54`.
+  lifecycle, integration, and adversarial test coverage. All 43 planned,
+  revision, and remote-review fix tasks completed across phases p01–p04,
+  revisions p-rev1–p-rev9, and remote-review fix phases Phase 6 and Phase 7.
+  Lockstep public packages bumped to `0.2.54`.
 
 ## Key Decisions
 
@@ -141,6 +143,14 @@ completed passes, provenance, and unresolved gaps.
 - **p-rev8–p-rev9 — Exit gate findings closure.** Withdrew valid-but-unpublishable
   generations, transitioned rejected claims honestly to `unsupported`, validated
   synthesis referential integrity, and bound `ValidatedRun` to publishability.
+- **Phase 6 — Remote PR review fixes (Round 2).** Transitioned uncertain and
+  omitted reviews to unresolved, prevented non-covered claims from reaching
+  verified, enforced exact projections on adversarial brief statements, allowed
+  unresolved claims to transition to verified, and added legal coverage gap downgrades.
+- **Phase 7 — Remote PR review fixes (Round 3).** Validated string-only synthesis
+  references, enforced transition target match across all ledger revisions, and
+  required declared sources with closed, exact selective-blind projections in
+  verification briefs.
 
 ## Follow-up Items
 
@@ -231,3 +241,11 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 ### 2026-09-03 · structural · oat gate review · final
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:3 exit=0 status=ok artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T173922Z.md
+
+### 2026-09-03 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/recon-skill/references/project-retro.md evidence_used=archived-review-markdown,backlog-records,decision-records,gate-receipts,github-pr-status,lifecycle-artifacts,pr-artifact,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=1 upstream=2 apply=skipped filing=skipped
+
+### 2026-09-03 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-skill/reviews/final-review-2026-09-03T233226Z.md
