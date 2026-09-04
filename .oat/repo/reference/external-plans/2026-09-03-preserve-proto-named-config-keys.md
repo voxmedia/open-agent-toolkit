@@ -14,7 +14,7 @@ oat_issue_url: null
 created: '2026-09-03T22:30:00Z'
 ---
 
-# Preserve **proto**-named config keys through JSON parsing
+# Preserve `__proto__`-named config keys through JSON parsing
 
 > [!NOTE]
 > This is an external implementation plan, not a canonical OAT project
@@ -43,7 +43,7 @@ null-prototype config-read policy.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260903-preserve-proto-named-config — Preserve **proto**-named config keys through jsonc parsing](../../pjm/backlog/items/BL-260903-preserve-proto-named-config.md)
+  [BL-260903-preserve-proto-named-config — Preserve `__proto__`-named config keys through jsonc parsing](../../pjm/backlog/items/BL-260903-preserve-proto-named-config.md)
 - Planned at: `origin/main` commit `dd41adb9bed53aa2389e911b601615fc2b26f0b7` on `2026-09-03`.
 - Verified evidence:
   - `packages/cli/src/config/json.ts:13-27` — `parseJsonConfig` calls

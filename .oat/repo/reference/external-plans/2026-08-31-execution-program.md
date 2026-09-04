@@ -38,9 +38,9 @@ wrapper project, implementation branch, or implementation PR has started.
 | W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W5   | Program-intake follow-ups            | 10    | composed | Awaiting operator composition approval; no execution started. |
-| W6   | Truthfulness residue                 | 3     | composed | Awaiting operator composition approval; no execution started. |
+| W6   | Truthfulness residue                 | 4     | composed | Awaiting operator composition approval; no execution started. |
 
-## Wave Table (coverage: 28 plans = 28 index rows; verified 2026-09-03)
+## Wave Table (coverage: 29 plans = 29 index rows; verified 2026-09-04)
 
 | Plan                                                                                                                                                      | Index                                                            | Wave | Ordering notes                                                                                                      | Status  |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -71,7 +71,8 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the skill-script lane                                                                                 | pending |
 | [Populate provider reachability evidence across pack and lifecycle surfaces](./2026-09-03-populate-provider-reachability-evidence.md)                     | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
 | [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md)        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
-| [Preserve **proto**-named config keys through JSON parsing](./2026-09-03-preserve-proto-named-config-keys.md)                                             | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
+| [Preserve `__proto__`-named config keys through JSON parsing](./2026-09-03-preserve-proto-named-config-keys.md)                                           | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
+| [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md)                                                | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | group 2 after the pr-final lane (shared version pins)                                                               | pending |
 
 ## Program-wide integration rules
 
@@ -206,11 +207,15 @@ wrapper project, implementation branch, or implementation PR has started.
 - **Parallel group 1:** Populate provider reachability evidence; validate
   review-ledger paths before the final PR; preserve `__proto__`-named config
   keys.
+- **Group 2:** Honor `metadata.version` as the canonical skill version, after
+  the pr-final lane releases the version pins in `validation/skills.test.ts`.
+  Its bulk-migration follow-up stays outside the program.
 - **Cross-wave prerequisites:** W5 merged, so the shared contract-test seams
   the pr-final lane extends are settled. Apply the PR #190 landing-event rows
   in the pr-final and config-key plans if that draft merges first.
-- **Composition rationale:** Three write-disjoint lanes that only share the
-  lockstep manifests; run under one wave-level bump. Kept out of W5 because
+- **Composition rationale:** Three write-disjoint lanes plus one ordered
+  successor; all share only the lockstep manifests, so run under one
+  wave-level bump. Kept out of W5 because
   its five groups already allocate every contract-test seam.
 
 ## Revalidation record
@@ -243,6 +248,10 @@ wrapper project, implementation branch, or implementation PR has started.
   Filed `BL-260904-stabilize-the-collection` for the collection-detach test
   flake observed on #253's CI (main passed on identical code); unplanned
   until reproduced.
+- **2026-09-04 (issue #258)** — Added the skill-versioning plan (Agent Skills
+  spec `metadata.version`) as W6 group 2; coverage 29/29 (27 READY,
+  2 BLOCKED). The bundled-skill migration is a separate backlog item outside
+  the program.
 
 - **2026-09-02** — Rebased the program branch onto `origin/main`
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced
