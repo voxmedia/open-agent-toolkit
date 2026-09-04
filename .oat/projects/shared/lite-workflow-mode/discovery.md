@@ -237,9 +237,10 @@ steps. Reuses the implement skill and all state.md readers unchanged.
    final review at the ceiling model, PR.
 5. **Lifecycle cut:** separate discovery/design/spec files; design-depth
    decision; requirements gate; phase-gate configuration and phase-boundary
-   pauses; plan artifact review loop and disposition; state sync and
-   dashboard refresh as user-facing steps; summary, document, and retro
-   default off.
+   pauses; state sync and dashboard refresh as user-facing steps; summary,
+   document, and retro default off. The plan artifact review loop is
+   retained in structured mode because it adds no user pause; only its
+   separate disposition step is folded into plan completion.
 6. **Interview is batched and critical:** one round, a second only for
    questions the first created; "just proceed" records careful assumptions.
 7. **Implement skill reused as a single phase:** ceiling caps the reviewer,

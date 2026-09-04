@@ -302,6 +302,11 @@ oat project promote <project-path> --to quick [--json]
   reference; mark complete and commit; hand off to implement.
 - Blocked: no design or spec authoring, no multi-phase plans, no
   implementation code.
+- The skill keeps `oat_gateable: true` and carries a Gate Execution step by
+  reference to quick-start's contract, so a configured exit gate runs after
+  the artifact review loop. The review loop itself runs in structured mode
+  and adds no user pause; the single approval gate before planning remains
+  the only pause before implementation.
 
 ### 7. Mode-aware prose updates
 
@@ -315,6 +320,15 @@ One line or branch each:
 - Spec-driven planner stop branch (lite: "run oat-project-lite").
 - Discover skill mode router (lite: continue with `oat-project-lite` or
   `oat-project-progress`).
+- Pr-progress requirement source (lite: plan.md Summary and Validation
+  Criteria).
+- Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume
+  `workflow_mode` at runtime and enumerate three modes today. Both gain
+  `lite` (reviewer: input enum, Mode Contract line, read rule,
+  requirement-source line, plan-review upstream set; implementer: input enum
+  and an Artifact Reads bullet). Without this, a lite project's plan review,
+  final review, and phase dispatch fall to the spec-driven default and record
+  spurious artifact-missing gaps.
 - Progress and next routing tables.
 - Brainstorm fold-back (lite with no PR: `oat-project-lite`; open PR:
   `oat-project-revise`).
