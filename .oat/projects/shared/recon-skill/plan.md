@@ -1987,6 +1987,95 @@ Commit with:
 git commit -m "fix(p06-t04): allow unresolved claims to transition to verified"
 ```
 
+## Phase 7: Remote PR Review Fixes (Round 3)
+
+Source: `reviews/archived/remote-pr-248-review-2026-09-04T001500Z.md`
+(2026-09-04). Cursor Bugbot feedback on PR #248 identified three Medium
+findings covering non-string synthesis reference validation, transition matching
+across revisions, and verification brief source descriptor completeness.
+
+### Task p07-t01: (review) Validate that synthesis key claims and unresolved questions contain only strings that resolve
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test showing that non-string entries in `synthesis.keyClaimIds` or `synthesis.unresolvedQuestionIds` currently pass validation because the check only inspects `typeof id === 'string'`.
+
+**Step 2: Implement fix**
+
+Update `validateLedger` in `contracts.mjs` to require all entries in `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds` to be non-empty strings that resolve to existing claims or questions, rejecting non-string entries with a schema error.
+
+**Step 3: Verify targeted behavior**
+
+Run focused tests confirming non-string entries are rejected with appropriate error codes.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p07-t01): require string references in synthesis key claims and questions"
+```
+
+### Task p07-t02: (review) Enforce that final transitions match current claim status across all ledger revisions
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test showing that in revision > 1, a claim whose last transition has `to !== claim.status` is currently accepted if `claim.status !== 'provisional'`, because `CLAIM_TRANSITION_MISMATCH` is guarded by `value.revision === 1`.
+
+**Step 2: Implement fix**
+
+Update `validateLedger` in `contracts.mjs` so that across all revisions (when a transition exists for a claim), the latest transition's `to` target must match `claim.status`.
+
+**Step 3: Verify targeted behavior**
+
+Run focused tests confirming transition status mismatches are rejected on later revisions.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p07-t02): enforce transition target match across all ledger revisions"
+```
+
+### Task p07-t03: (review) Ensure verification briefs require declared sources and close source projections
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/create-review-brief.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/review-brief.test.mjs`
+
+**Step 1: Analyze failure context**
+
+Add a test showing that when evidence references a source not in `manifest.sources`, `createReviewBrief` produces a brief without that source descriptor instead of throwing an error, and shape validation on `recon.review-brief` fails to reject undeclared or unblinded extra source fields.
+
+**Step 2: Implement fix**
+
+In `verificationBrief`, verify that every referenced `sourceId` exists in `manifest.sources` (throw descriptive error if missing). Project only required blinded source fields (`id`, `kind`, `authority`, `observedAt`, `validationState`, plus kind-specific required keys) and validate in `contracts.mjs` that `brief.sources` entries are closed against unexpected fields.
+
+**Step 3: Verify targeted behavior**
+
+Run focused tests verifying missing sources throw and unblinded/extra fields are rejected.
+
+**Step 4: Verify project commands and commit**
+
+Commit with:
+
+```bash
+git commit -m "fix(p07-t03): validate required sources and close source projections in verification briefs"
+```
+
 ## Reviews
 
 | Scope          | Type     | Status          | Date       | Artifact                                                               | Reviewed Head                            | Invocation | Gate Target                   |
@@ -2025,6 +2114,7 @@ git commit -m "fix(p06-t04): allow unresolved claims to transition to verified"
 | plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                             |
 | github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                             |
 | github-pr #248 | remote   | fixes_added     | 2026-09-03 | `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`          | -                                        | -          | -                             |
+| github-pr #248 | remote   | fixes_added     | 2026-09-04 | `reviews/archived/remote-pr-248-review-2026-09-04T001500Z.md`          | 99b6f37a776c5620c0ba37d0a19b7c0754597b17 | auto       | -                             |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
@@ -2089,8 +2179,11 @@ task is needed.
   reviews to unresolved, prevent non-covered claims from reaching verified, enforce
   exact projections on adversarial brief statements, and allow unresolved claims
   to transition to verified.
+- Phase 7: 3 tasks — correct remote-review findings (Round 3): validate synthesis string
+  references, enforce transition target match across all revisions, and require declared
+  sources with closed projections in verification briefs.
 
-**Total: 40 tasks**
+**Total: 43 tasks**
 
 After all tasks and implementation reviews pass, the project is ready for the
 final code-review and PR-publication workflows.
