@@ -49,7 +49,7 @@ function bulletLines(values, empty = 'None.') {
 }
 
 export function renderPacketDocument(validatedRun) {
-  const { manifest, ledger, topology } = assertValidatedRun(validatedRun);
+  const { manifest, ledger } = assertValidatedRun(validatedRun);
   const evidenceById = new Map(
     ledger.evidence.map((evidence) => [evidence.id, evidence]),
   );
@@ -63,9 +63,6 @@ export function renderPacketDocument(validatedRun) {
       claim.status === 'unsupported' ||
       (claim.challenges ?? []).length > 0,
   );
-  const failedStages = topology.stages
-    .map(({ stage }) => stage)
-    .filter((stage) => stage.status !== 'complete');
   const omittedGaps = manifest.gaps.filter((gap) =>
     /PASS_(?:FAILED|OMITTED)/.test(gap.code),
   );
@@ -141,15 +138,11 @@ export function renderPacketDocument(validatedRun) {
     '',
     '## Failed or Omitted Passes',
     '',
-    ...bulletLines([
-      ...failedStages.map(
-        (stage) =>
-          `**${escapeInline(stage.mode)}:** ${escapeInline(stage.status)}${stage.message ? ` — ${escapeInline(stage.message)}` : ''}`,
-      ),
-      ...omittedGaps.map(
+    ...bulletLines(
+      omittedGaps.map(
         (gap) => `**${escapeInline(gap.code)}:** ${escapeInline(gap.message)}`,
       ),
-    ]),
+    ),
     '',
     '## Provenance',
     '',
@@ -320,15 +313,9 @@ export async function renderValidatedPacket(
       achievedProfile: run.achievedProfile,
       claimCounts: claimCounts(ledger),
       gapCount: manifest.gaps.length,
-      failedOrOmittedPasses: [
-        ...run.topology.stages
-          .map(({ stage }) => stage)
-          .filter((stage) => stage.status !== 'complete')
-          .map((stage) => stage.mode),
-        ...manifest.gaps
-          .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
-          .map((gap) => gap.code),
-      ],
+      failedOrOmittedPasses: manifest.gaps
+        .filter((gap) => /PASS_(?:FAILED|OMITTED)/.test(gap.code))
+        .map((gap) => ({ code: gap.code, message: gap.message })),
       digest,
     };
     await assertCanonicalPacketBytes(run);

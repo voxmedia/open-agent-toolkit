@@ -4,13 +4,9 @@ import { readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { hashCanonicalJson, hashFile, sha256 } from './lib/canonical-json.mjs';
 import {
-  canonicalJson,
-  hashCanonicalJson,
-  hashFile,
-  sha256,
-} from './lib/canonical-json.mjs';
-import {
+  approvalFingerprintInput,
   isDigest,
   isObject,
   issue,
@@ -25,13 +21,11 @@ import {
 } from './lib/safe-path.mjs';
 import { createValidatedRun } from './lib/validated-run.mjs';
 
-const requiredStages = {
-  quick: ['map', 'gather', 'compile', 'locator-validation'],
+const requiredPasses = {
+  quick: ['map', 'gather'],
   standard: [
     'map',
     'gather',
-    'compile',
-    'locator-validation',
     'semantic-verification',
     'adversarial',
     'coverage',
@@ -40,8 +34,6 @@ const requiredStages = {
   thorough: [
     'map',
     'gather',
-    'compile',
-    'locator-validation',
     'semantic-verification',
     'adversarial',
     'coverage',
@@ -664,11 +656,9 @@ async function reopenEvidence(
   return true;
 }
 
-const stageArtifactContract = {
+const passContracts = {
   map: { kind: 'recon.raw-dossier', mode: 'map' },
   gather: { kind: 'recon.raw-dossier', mode: 'gather' },
-  compile: { kind: 'recon.raw-dossier', mode: 'compile' },
-  'locator-validation': { kind: 'recon.raw-dossier', mode: 'verify' },
   'semantic-verification': {
     kind: 'recon.review-result',
     reviewKind: 'semantic',
@@ -679,7 +669,6 @@ const stageArtifactContract = {
     kind: 'recon.review-result',
     reviewKind: 'reconciliation',
   },
-  'redundant-gather': { kind: 'recon.raw-dossier', mode: 'gather' },
   'redundant-verification': {
     kind: 'recon.review-result',
     reviewKind: 'redundant-verification',
@@ -690,259 +679,185 @@ const stageArtifactContract = {
   },
 };
 
-function stageArtifactIsComplete(
-  stage,
-  artifactsById,
-  runId,
-  approvalFingerprint,
-  approvalExecution,
-) {
-  const approvalProjection = approvalExecution?.approvalProjection;
-  const contract = stageArtifactContract[stage.mode];
-  if (!contract || stage.status !== 'complete') return false;
-  if (!Array.isArray(stage.artifactIds) || stage.artifactIds.length !== 1) {
-    return false;
-  }
-  const artifact = artifactsById.get(stage.artifactIds[0])?.value;
-  if (
-    !artifact ||
-    artifact.kind !== contract.kind ||
-    artifact.runId !== runId ||
-    (contract.mode && artifact.mode !== contract.mode) ||
-    (contract.reviewKind && artifact.reviewKind !== contract.reviewKind) ||
-    (artifact.laneId ?? artifact.reviewerLane) !== stage.laneId ||
-    ('status' in artifact && artifact.status !== 'complete') ||
-    ('outcome' in artifact && artifact.outcome !== 'complete')
-  ) {
-    return false;
-  }
-  if (
-    !Array.isArray(stage.dispatchReceiptIds) ||
-    stage.dispatchReceiptIds.length !== 4
-  ) {
-    return false;
-  }
-  const receipts = stage.dispatchReceiptIds.map(
-    (id) => artifactsById.get(id)?.value,
-  );
-  const approvedReceipt = receipts.find(
-    (receipt) => receipt?.state === 'approved',
-  );
-  const acceptedReceipt = receipts.find(
-    (receipt) => receipt?.state === 'accepted',
-  );
-  const completedReceipt = receipts.find(
-    (receipt) => receipt?.state === 'completed',
-  );
-  const approvalTime = Date.parse(approvalExecution?.approvedAt);
-  const recheckTime = Date.parse(
-    approvalExecution?.catalogRecheck?.observed_at,
-  );
-  const acceptedTime = Date.parse(
-    acceptedReceipt?.launchAcceptance?.acceptedAt,
-  );
-  const completedTime = Date.parse(
-    completedReceipt?.terminalOutcome?.completedAt,
-  );
-  const originalCatalog = approvalProjection?.catalog_observation;
-  if (
-    receipts.some(
-      (receipt) =>
-        receipt?.kind !== 'recon.dispatch-receipt' ||
-        receipt.runId !== runId ||
-        receipt.stageId !== stage.id ||
-        receipt.laneId !== stage.laneId ||
-        !receipt.approvalProjection ||
-        typeof receipt.approvalCanonicalJson !== 'string' ||
-        receipt.approvalFingerprint !== approvalFingerprint ||
-        receipt.approvalCanonicalJson !== canonicalJson(approvalProjection) ||
-        hashCanonicalJson(receipt.approvalProjection) !== approvalFingerprint ||
-        receipt.approvalCanonicalJson !==
-          canonicalJson(receipt.approvalProjection) ||
-        canonicalJson(receipt.approvalProjection) !==
-          canonicalJson(approvalProjection) ||
-        (receipt.state !== 'prepared' &&
-          (receipt.approvedAt !== approvalExecution.approvedAt ||
-            !approvalExecution.approvalEvidence ||
-            !receipt.approvalEvidence ||
-            canonicalJson(receipt.approvalEvidence) !==
-              canonicalJson(approvalExecution.approvalEvidence))) ||
-        (['accepted', 'completed'].includes(receipt.state) &&
-          (!approvalExecution.catalogRecheck ||
-            !receipt.catalogRecheck ||
-            canonicalJson(receipt.catalogRecheck) !==
-              canonicalJson(approvalExecution.catalogRecheck))),
-    ) ||
-    !receipts.some((receipt) => receipt.state === 'prepared') ||
-    !approvedReceipt ||
-    !acceptedReceipt ||
-    !completedReceipt ||
-    JSON.stringify(completedReceipt.artifactIds) !==
-      JSON.stringify(stage.artifactIds) ||
-    !acceptedReceipt.launchAcceptance ||
-    !completedReceipt.launchAcceptance ||
-    canonicalJson(acceptedReceipt.launchAcceptance) !==
-      canonicalJson(completedReceipt.launchAcceptance) ||
-    !originalCatalog ||
-    !approvalExecution.catalogRecheck ||
-    approvalExecution.catalogRecheck.id === originalCatalog.id ||
-    !Number.isFinite(approvalTime) ||
-    !Number.isFinite(recheckTime) ||
-    !Number.isFinite(acceptedTime) ||
-    !Number.isFinite(completedTime) ||
-    recheckTime <= approvalTime ||
-    recheckTime >= acceptedTime ||
-    completedTime < acceptedTime
-  ) {
-    return false;
-  }
-  return true;
-}
+const assuranceReviewKinds = new Set([
+  'semantic',
+  'adversarial',
+  'coverage',
+  'redundant-verification',
+  'contradiction-resolution',
+]);
 
-function approvedRequiredLanes(approvalProjection) {
-  return (approvalProjection?.execution?.waves ?? []).flatMap((wave) =>
-    (wave.lanes ?? [])
-      .filter(() => wave.conditional === false)
-      .map((lane) => ({ waveId: wave.wave_id, laneId: lane.lane_id })),
+// A gap names a pass only when the mode appears as a whole token; `gather`
+// must not be satisfied by a `redundant-gather` gap.
+function gapNamesMode(gap, mode) {
+  return (
+    (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
+    gap.material === true &&
+    typeof gap.message === 'string' &&
+    new RegExp(`(?:^|[^a-z-])${mode}(?:$|[^a-z-])`).test(gap.message)
   );
 }
 
-function validateStageTopology(
-  manifest,
-  artifactsById,
-  runId,
-  approvalFingerprint,
-  errors,
-) {
-  const requiredLanes = approvedRequiredLanes(
-    manifest.execution?.approvalProjection,
+function artifactIsComplete(artifact) {
+  return (
+    (!('status' in artifact) || artifact.status === 'complete') &&
+    (!('outcome' in artifact) || artifact.outcome === 'complete')
   );
-  const plannedByLane = new Map(
-    (manifest.execution?.approvalProjection?.execution?.waves ?? []).flatMap(
-      (wave) =>
-        (wave.lanes ?? []).map((lane) => [
-          lane.lane_id,
-          { waveId: wave.wave_id, required: !wave.conditional },
-        ]),
-    ),
-  );
-  const stageByLane = new Map();
-  const completeArtifactIdsByMode = new Map();
-  for (const stage of manifest.stages ?? []) {
-    const planned = plannedByLane.get(stage.laneId);
-    if (!planned || planned.waveId !== stage.waveId) {
+}
+
+const reviewWaveMode = {
+  semantic: 'semantic-verification',
+  adversarial: 'adversarial',
+  coverage: 'coverage',
+  reconciliation: 'reconciliation',
+  'redundant-verification': 'redundant-verification',
+  'contradiction-resolution': 'contradiction-resolution',
+};
+
+function laneWaveMatches(wave, value) {
+  if (value.kind === 'recon.raw-dossier') {
+    return wave.mode === 'redundant-gather'
+      ? value.mode === 'gather'
+      : wave.mode === value.mode;
+  }
+  return reviewWaveMode[value.reviewKind] === wave.mode;
+}
+
+function validateApprovedLanes(manifest, artifactsById, errors) {
+  const lanes = new Map();
+  for (const wave of manifest.execution?.waves ?? []) {
+    for (const lane of wave.lanes ?? []) {
+      lanes.set(lane.laneId, { wave, lane });
+    }
+  }
+  const written = new Set();
+  for (const [id, { reference, value }] of artifactsById) {
+    if (value.runId !== manifest.run.id) continue;
+    const laneId =
+      value.kind === 'recon.raw-dossier'
+        ? value.laneId
+        : value.kind === 'recon.review-result'
+          ? value.reviewerLane
+          : null;
+    if (laneId === null) continue;
+    const approved = lanes.get(laneId);
+    if (
+      !approved ||
+      (value.kind === 'recon.raw-dossier' &&
+        approved.wave.waveId !== value.waveId) ||
+      !laneWaveMatches(approved.wave, value)
+    ) {
       errors.push(
         issue(
-          'UNAPPROVED_STAGE_TOPOLOGY',
-          `Stage ${stage.id} is not the exact approved wave and lane`,
-          stage.id,
+          'UNAPPROVED_LANE',
+          `Artifact ${id} was not written by an approved lane of a matching wave`,
+          id,
         ),
       );
       continue;
     }
-    if (stageByLane.has(stage.laneId)) {
+    const root = approved.lane.writeRoot;
+    if (reference.path !== root && !reference.path.startsWith(`${root}/`)) {
       errors.push(
         issue(
-          'DUPLICATE_LANE_STAGE',
-          `Lane ${stage.laneId} has multiple terminal stages`,
-          stage.id,
+          'LANE_WRITE_PATH_VIOLATION',
+          `Artifact ${id} is outside its approved lane write root ${root}`,
+          id,
         ),
       );
+    }
+    // Only a complete artifact settles a lane; a failed or partial artifact
+    // still needs a material outcome gap.
+    if (artifactIsComplete(value)) written.add(laneId);
+  }
+  for (const [laneId, { wave }] of lanes) {
+    // The canonical ledger is the compile outcome; it carries no lane identity.
+    if (wave.conditional || wave.mode === 'compile' || written.has(laneId)) {
       continue;
     }
-    stageByLane.set(stage.laneId, stage);
-    const artifactIsComplete = stageArtifactIsComplete(
-      stage,
-      artifactsById,
-      runId,
-      approvalFingerprint,
-      manifest.execution,
+    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
+      gapNamesMode(gap, wave.mode),
     );
-    if (stage.status === 'complete' && !artifactIsComplete) {
+    if (!hasOutcomeEvidence) {
       errors.push(
         issue(
-          'INCOMPLETE_DECLARED_STAGE',
-          `Stage ${stage.id} is declared complete without its exact artifact and receipt contract`,
-          stage.id,
+          'MISSING_LANE_OUTCOME',
+          `Approved lane ${laneId} has neither a result nor a material ${wave.mode} outcome gap`,
+          `lane:${laneId}`,
         ),
       );
     }
-    if (stage.status !== 'complete') {
-      const expectedGapCode =
-        stage.status === 'failed' ? 'PASS_FAILED' : 'PASS_OMITTED';
-      const hasOutcomeEvidence =
-        typeof stage.message === 'string' &&
-        stage.message.length > 0 &&
-        (manifest.gaps ?? []).some(
-          (gap) =>
-            gap.code === expectedGapCode &&
-            gap.material === true &&
-            gap.message?.includes(stage.mode),
-        );
-      if (!hasOutcomeEvidence) {
-        errors.push(
-          issue(
-            'MISSING_STAGE_OUTCOME_EVIDENCE',
-            `Stage ${stage.id} lacks material ${expectedGapCode} diagnostics`,
-            stage.id,
-          ),
-        );
+  }
+}
+
+function collectCompletePasses(artifactsById, runId) {
+  const passes = new Map();
+  for (const [id, { value }] of artifactsById) {
+    if (value.runId !== runId || !artifactIsComplete(value)) continue;
+    for (const [mode, contract] of Object.entries(passContracts)) {
+      if (
+        value.kind === contract.kind &&
+        (contract.mode ? value.mode === contract.mode : true) &&
+        (contract.reviewKind ? value.reviewKind === contract.reviewKind : true)
+      ) {
+        const ids = passes.get(mode) ?? [];
+        ids.push(id);
+        passes.set(mode, ids);
       }
     }
-    if (artifactIsComplete) {
-      const ids = completeArtifactIdsByMode.get(stage.mode) ?? [];
-      ids.push(stage.artifactIds[0]);
-      completeArtifactIdsByMode.set(stage.mode, ids);
-    }
   }
-  for (const lane of requiredLanes) {
-    if (!stageByLane.has(lane.laneId)) {
-      errors.push(
-        issue(
-          'MISSING_APPROVED_LANE_STAGE',
-          `Approved required lane ${lane.laneId} has no terminal stage`,
-          `lane:${lane.laneId}`,
-        ),
-      );
-    }
-  }
-  for (const mode of requiredStages[manifest.run.requestedProfile] ?? []) {
-    if (![...stageByLane.values()].some((stage) => stage.mode === mode)) {
-      errors.push(
-        issue(
-          'MISSING_REQUESTED_STAGE_OUTCOME',
-          `Requested ${manifest.run.requestedProfile} profile lacks an explicit ${mode} outcome`,
-          `stage:${mode}`,
-        ),
-      );
-    }
-  }
-  return { requiredLanes, stageByLane, completeArtifactIdsByMode };
+  const gatherLanes = new Set(
+    (passes.get('gather') ?? []).map(
+      (id) => artifactsById.get(id).value.laneId,
+    ),
+  );
+  if (gatherLanes.size >= 2)
+    passes.set('redundant-gather', passes.get('gather'));
+  for (const ids of passes.values()) ids.sort();
+  return passes;
 }
 
-function deriveAchievedProfile(topology) {
+function deriveAchievedProfile(passes) {
   let achieved = null;
   for (const profile of profiles) {
-    const complete = requiredStages[profile].every((mode) => {
-      const lanes = topology.requiredLanes.filter(
-        (lane) => topology.stageByLane.get(lane.laneId)?.mode === mode,
-      );
-      return (
-        lanes.length > 0 &&
-        lanes.every((lane) => {
-          const stage = topology.stageByLane.get(lane.laneId);
-          return (
-            stage &&
-            topology.completeArtifactIdsByMode
-              .get(mode)
-              ?.includes(stage.artifactIds[0])
-          );
-        })
-      );
-    });
-    if (complete) achieved = profile;
+    if (requiredPasses[profile].every((mode) => passes.has(mode))) {
+      achieved = profile;
+    }
   }
   return achieved;
+}
+
+function validatePassOutcomes(manifest, passes, errors) {
+  for (const mode of requiredPasses[manifest.run.requestedProfile] ?? []) {
+    if (passes.has(mode)) continue;
+    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
+      gapNamesMode(gap, mode),
+    );
+    if (!hasOutcomeEvidence) {
+      errors.push(
+        issue(
+          'MISSING_PASS_OUTCOME_EVIDENCE',
+          `Requested ${manifest.run.requestedProfile} profile lacks a complete ${mode} result and a material PASS_FAILED or PASS_OMITTED gap naming it`,
+          `pass:${mode}`,
+        ),
+      );
+    }
+  }
+}
+
+function collectAssuranceReviewIds(artifactsById, runId) {
+  const ids = new Set();
+  for (const [id, { value }] of artifactsById) {
+    if (
+      value.kind === 'recon.review-result' &&
+      value.runId === runId &&
+      assuranceReviewKinds.has(value.reviewKind) &&
+      artifactIsComplete(value)
+    ) {
+      ids.add(id);
+    }
+  }
+  return ids;
 }
 
 function sameReference(left, right) {
@@ -952,12 +867,11 @@ function sameReference(left, right) {
 function resolveTerminalReconciliation(
   artifactsById,
   artifactsByPath,
-  topology,
+  passes,
   reconciliationRequired,
   errors,
 ) {
-  const terminalId =
-    topology.completeArtifactIdsByMode.get('reconciliation')?.[0];
+  const terminalId = passes.get('reconciliation')?.[0];
   const reconciliationResults = [...artifactsById.values()].filter(
     ({ value }) =>
       value.kind === 'recon.review-result' &&
@@ -972,7 +886,7 @@ function resolveTerminalReconciliation(
     errors.push(
       issue(
         'SHADOW_RECONCILIATION',
-        'The packet must contain exactly its one receipted terminal reconciliation',
+        'The packet must contain exactly its one complete terminal reconciliation',
         terminalId ?? '$.artifacts',
       ),
     );
@@ -1165,47 +1079,13 @@ function validateReviewBindings(
   }
 }
 
-const assuranceStageModeByReviewKind = new Map([
-  ['semantic', 'semantic-verification'],
-  ['adversarial', 'adversarial'],
-  ['coverage', 'coverage'],
-  ['redundant-verification', 'redundant-verification'],
-  ['contradiction-resolution', 'contradiction-resolution'],
-]);
-
-function validateReceiptedAssuranceReviews(artifactsById, topology, errors) {
-  const receipted = new Set();
-  for (const [reviewKind, mode] of assuranceStageModeByReviewKind) {
-    for (const id of topology.completeArtifactIdsByMode.get(mode) ?? []) {
-      const artifact = artifactsById.get(id)?.value;
-      if (artifact?.reviewKind === reviewKind) receipted.add(id);
-    }
-  }
-  for (const { value } of artifactsById.values()) {
-    if (
-      value.kind === 'recon.review-result' &&
-      assuranceStageModeByReviewKind.has(value.reviewKind) &&
-      !receipted.has(value.id)
-    ) {
-      errors.push(
-        issue(
-          'UNRECEIPTED_ASSURANCE_REVIEW',
-          `Assurance result ${value.id} is not the exact artifact of a completed approved stage`,
-          value.id,
-        ),
-      );
-    }
-  }
-  return receipted;
-}
-
 function validateReconciliation(
   manifest,
   ledger,
   artifactsById,
   reconciliationContext,
-  topology,
-  receiptedReviewIds,
+  passes,
+  assuranceReviewIds,
   exactEvidence,
   reconciliationRequired,
   errors,
@@ -1295,14 +1175,14 @@ function validateReconciliation(
     if (
       !authorization ||
       authorization.disposition !== 'rejected' ||
-      !receiptedReviewIds.has(authorization.reviewId) ||
+      !assuranceReviewIds.has(authorization.reviewId) ||
       !reconciliation.incorporatedReviewIds.includes(authorization.reviewId) ||
       disposition?.disposition !== 'rejected'
     ) {
       errors.push(
         issue(
           'UNAUTHORIZED_CLAIM_REMOVAL',
-          `Claim ${claimId} lacks a receipted typed review disposition authorizing removal`,
+          `Claim ${claimId} lacks a complete typed review disposition authorizing removal`,
           claimId,
         ),
       );
@@ -1520,8 +1400,8 @@ function validateReconciliation(
   }
   const incorporated = new Set(reconciliation.incorporatedReviewIds ?? []);
   if (
-    receiptedReviewIds.size !== incorporated.size ||
-    [...receiptedReviewIds].some((id) => !incorporated.has(id))
+    assuranceReviewIds.size !== incorporated.size ||
+    [...assuranceReviewIds].some((id) => !incorporated.has(id))
   ) {
     errors.push(
       issue(
@@ -1532,9 +1412,7 @@ function validateReconciliation(
     );
   }
 
-  const coverageResults = (
-    topology.completeArtifactIdsByMode.get('coverage') ?? []
-  )
+  const coverageResults = (passes.get('coverage') ?? [])
     .map((id) => artifactsById.get(id)?.value)
     .filter(Boolean);
   const coverageDispositions = new Map(
@@ -1678,7 +1556,7 @@ function validateDerivedSourceGaps(manifest, ledger, errors) {
 function validateAssurance(validatedRun, errors) {
   const { manifest, ledger, achievedProfile } = validatedRun;
   const exactEvidence = new Set(validatedRun.exactEvidenceIds);
-  const receiptedReviewIds = new Set(validatedRun.receiptedReviewIds);
+  const assuranceReviewIds = new Set(validatedRun.assuranceReviewIds);
   const artifactsById = new Map(
     validatedRun.artifacts.map((artifact) => [artifact.id, artifact]),
   );
@@ -1784,11 +1662,11 @@ function validateAssurance(validatedRun, errors) {
           );
           continue;
         }
-        if (!receiptedReviewIds.has(reviewId)) {
+        if (!assuranceReviewIds.has(reviewId)) {
           errors.push(
             issue(
-              'UNRECEIPTED_ASSURANCE_REVIEW',
-              `Review ${reviewId} is not the exact receipted stage result`,
+              'INCOMPLETE_INDEPENDENT_REVIEW',
+              `Review ${reviewId} is not a complete same-run assurance result`,
               claim.id,
             ),
           );
@@ -2041,56 +1919,16 @@ export async function compileValidatedRun(packetDirectory) {
     errors.push(issue('RUN_ID_MISMATCH', 'Manifest and ledger run IDs differ'));
   }
 
-  if (manifest?.execution?.approvalProjection) {
-    const projection = manifest.execution.approvalProjection;
-    const expected = hashCanonicalJson(projection);
-    if (
-      expected !== manifest.execution.approvalFingerprint ||
-      canonicalJson(projection) !== manifest.execution.approvalCanonicalJson
-    ) {
+  if (isObject(manifest?.execution?.approval)) {
+    const expected = hashCanonicalJson(
+      approvalFingerprintInput(manifest.execution),
+    );
+    if (manifest.execution.approval.fingerprint !== expected) {
       errors.push(
         issue(
           'APPROVAL_FINGERPRINT_MISMATCH',
-          'Prepared projection no longer matches its canonical approval fingerprint',
-          '$.execution.approvalFingerprint',
-        ),
-      );
-    }
-    if (
-      manifest.execution.approvalEvidence?.fingerprint !== expected ||
-      manifest.execution.approvalEvidence?.type !== 'explicit-user-approval'
-    ) {
-      errors.push(
-        issue(
-          'APPROVAL_EVIDENCE_MISMATCH',
-          'Approval evidence does not bind the canonical prepared projection',
-          '$.execution.approvalEvidence',
-        ),
-      );
-    }
-    const observation = projection.catalog_observation;
-    const recheck = manifest.execution.catalogRecheck;
-    if (
-      !recheck ||
-      recheck.source !== observation?.source ||
-      recheck.dispatch_context !== observation?.dispatch_context ||
-      recheck.relevant_catalog_fingerprint !==
-        observation?.relevant_catalog_fingerprint
-    ) {
-      errors.push(
-        issue(
-          'CATALOG_RECHECK_MISMATCH',
-          'Catalog recheck does not retain the approved live catalog identity',
-          '$.execution.catalogRecheck',
-        ),
-      );
-    }
-    if (projection.run_id !== manifest.run?.id) {
-      errors.push(
-        issue(
-          'RUN_ID_MISMATCH',
-          'Prepared projection and packet manifest run IDs differ',
-          '$.execution.approvalProjection.run_id',
+          'Approved execution envelope no longer matches its approval fingerprint',
+          '$.execution.approval.fingerprint',
         ),
       );
     }
@@ -2209,25 +2047,20 @@ export async function compileValidatedRun(packetDirectory) {
         exactEvidence.add(evidence.id);
       }
     }
-    const topology = validateStageTopology(
-      manifest,
+    validateApprovedLanes(manifest, artifactsById, errors);
+    const passes = collectCompletePasses(artifactsById, manifest.run.id);
+    const achievedProfile = deriveAchievedProfile(passes);
+    validatePassOutcomes(manifest, passes, errors);
+    const assuranceReviewIds = collectAssuranceReviewIds(
       artifactsById,
       manifest.run.id,
-      manifest.execution.approvalFingerprint,
-      errors,
-    );
-    const achievedProfile = deriveAchievedProfile(topology);
-    const receiptedReviewIds = validateReceiptedAssuranceReviews(
-      artifactsById,
-      topology,
-      errors,
     );
     const reconciliationRequired =
       achievedProfile === 'standard' || achievedProfile === 'thorough';
     const reconciliationContext = resolveTerminalReconciliation(
       artifactsById,
       artifactsByPath,
-      topology,
+      passes,
       reconciliationRequired,
       errors,
     );
@@ -2244,8 +2077,8 @@ export async function compileValidatedRun(packetDirectory) {
       ledger,
       artifactsById,
       reconciliationContext,
-      topology,
-      receiptedReviewIds,
+      passes,
+      assuranceReviewIds,
       exactEvidence,
       reconciliationRequired,
       errors,
@@ -2278,9 +2111,9 @@ export async function compileValidatedRun(packetDirectory) {
         ledger,
         artifactsById,
         exactEvidence,
-        topology,
+        passes,
         achievedProfile,
-        receiptedReviewIds,
+        assuranceReviewIds,
         reconciliationContext,
       });
       validateAssurance(validatedRun, errors);
