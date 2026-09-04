@@ -139,6 +139,8 @@ test('verification source validation requires unique descriptors for every evide
     manifest: fixture.manifest,
     ledger: fixture.ledger,
   });
+  assert.equal(validateReviewBrief(valid).valid, true);
+  assert.equal(validateArtifactShape(valid).valid, true);
 
   const missing = structuredClone(valid);
   missing.sources = [];
@@ -151,6 +153,14 @@ test('verification source validation requires unique descriptors for every evide
   const duplicate = structuredClone(valid);
   duplicate.sources.push(structuredClone(duplicate.sources[0]));
   assertInvalidBrief(duplicate, 'DUPLICATE_ID');
+
+  const unreferenced = structuredClone(valid);
+  unreferenced.sources.push({
+    ...structuredClone(unreferenced.sources[0]),
+    id: 'source-unreferenced',
+    path: `${unreferenced.sources[0].path}.other`,
+  });
+  assertInvalidBrief(unreferenced, 'UNREFERENCED_SOURCE_DESCRIPTOR');
 });
 
 test('verification URL sources require complete validator provenance', async () => {

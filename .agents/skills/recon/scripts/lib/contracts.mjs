@@ -1708,19 +1708,19 @@ function validateReviewBriefArtifact(value, errors) {
     }
     if (Array.isArray(value.sources)) {
       duplicateIds(value.sources, '$.sources', errors);
-      const sourceIds = new Set(
+      const suppliedSourceIds = new Set(
         value.sources
           .map((source) => source?.id)
           .filter((id) => typeof id === 'string'),
       );
+      const referencedSourceIds = new Set();
       for (const [claimIndex, claim] of (value.claims ?? []).entries()) {
         for (const [evidenceIndex, evidence] of (
           claim.evidence ?? []
         ).entries()) {
-          if (
-            typeof evidence?.sourceId === 'string' &&
-            !sourceIds.has(evidence.sourceId)
-          ) {
+          if (typeof evidence?.sourceId !== 'string') continue;
+          referencedSourceIds.add(evidence.sourceId);
+          if (!suppliedSourceIds.has(evidence.sourceId)) {
             errors.push(
               issue(
                 'MISSING_SOURCE_DESCRIPTOR',
@@ -1729,6 +1729,20 @@ function validateReviewBriefArtifact(value, errors) {
               ),
             );
           }
+        }
+      }
+      for (const [index, source] of value.sources.entries()) {
+        if (
+          typeof source?.id === 'string' &&
+          !referencedSourceIds.has(source.id)
+        ) {
+          errors.push(
+            issue(
+              'UNREFERENCED_SOURCE_DESCRIPTOR',
+              `Verification brief source ${source.id} is not referenced by any claim evidence`,
+              `$.sources[${index}].id`,
+            ),
+          );
         }
       }
     }
