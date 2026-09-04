@@ -1,10 +1,10 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: approved
+status: pr_open
 scope: post-merge cleanup of labeled issues overtaken by merged PRs (#211, #197, #203) plus triage-record hygiene
 baseline_sha: 83d8c9f2e1c317870040148212db40d40007f7af
-triage_pr: null
+triage_pr: 259
 created: 2026-09-04
 updated: 2026-09-04
 ---
@@ -117,8 +117,8 @@ updated: 2026-09-04
 
 ## Resume instructions
 
-After the triage PR merges, invoke:
+After PR #259 merges, invoke:
 
 ```text
-/triage-oat-issues resume post-merge PR #<number>
+/triage-oat-issues resume post-merge PR #259
 ```
