@@ -1307,7 +1307,10 @@ function validateLedger(value, errors) {
       }
       continue;
     }
-    if (value.revision === 1 && lastTransition?.to !== claim.status) {
+    if (
+      (value.revision === 1 || lastTransition) &&
+      lastTransition?.to !== claim.status
+    ) {
       errors.push(
         issue(
           'CLAIM_TRANSITION_MISMATCH',

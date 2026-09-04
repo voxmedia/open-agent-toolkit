@@ -5,6 +5,7 @@ import { afterEach, test } from 'node:test';
 
 import { createReviewBrief } from '../scripts/create-review-brief.mjs';
 import { hashFile } from '../scripts/lib/canonical-json.mjs';
+import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
 import { reconcileLedger } from '../scripts/reconcile-ledger.mjs';
 import { renderPacketDocument } from '../scripts/render-packet.mjs';
 import {
@@ -98,6 +99,23 @@ async function replaceCatalogRecheck(packet, catalogRecheck) {
   }
   await writeJson(packet.manifestPath, packet.manifest);
 }
+
+test('later ledger revisions reject final transitions that mismatch claim status', async () => {
+  const packet = await fixture();
+  const ledger = await readJson(packet.claimsPath);
+  assert.equal(ledger.revision, 2);
+  ledger.transitions.find((transition) => transition.claimId === 'claim-1').to =
+    'contested';
+
+  const validation = validateArtifactShape(ledger);
+  assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
+  assert.ok(
+    validation.errors.some(
+      (error) => error.code === 'CLAIM_TRANSITION_MISMATCH',
+    ),
+    JSON.stringify(validation, null, 2),
+  );
+});
 
 test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
   const packet = await fixture();
