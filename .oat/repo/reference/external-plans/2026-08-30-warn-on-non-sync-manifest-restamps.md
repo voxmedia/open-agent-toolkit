@@ -6,9 +6,9 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260826-warn-on-silent-oatversion.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
-oat_execution_status: BLOCKED
+oat_external_plan_commit: cf01598937cd508329dba9651835488a0c5096a8
+oat_external_plan_date: '2026-09-03'
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260826-warn-on-silent-oatversion
 oat_issue_url: null
@@ -25,12 +25,13 @@ created: '2026-08-30T23:40:20Z'
 > Begin with the drift check. Follow the steps and verification gates in order.
 > If a STOP condition occurs, stop and report instead of improvising.
 
-> [!CAUTION]
-> **Execution status: BLOCKED. Do not import or execute this plan** until the
-> [scope-adoption-diagnostics project](../../../projects/shared/scope-adoption-diagnostics/state.md)
-> is completed and its implementation is merged into `origin/main`. Then
-> revalidate `packages/cli/src/commands/status/index.ts` and its output/tests
-> before changing any file.
+> [!IMPORTANT]
+> **Execution status: READY.** The `tool-pack-scope-provider-truthfulness`
+> project merged as PR #255 (`a06e9713a`, CLI 0.2.52) and PR #256 followed
+> (0.2.53). The 2026-09-03 refresh re-anchored every evidence line on that
+> tree: Manifest V2 landed, new engine save sites exist, status gained a
+> collection-migration block, and no part of this outcome was implemented.
+> Execute against a lockstep version above `0.2.53`.
 
 ## Outcome
 
@@ -45,45 +46,58 @@ that no changes were required.
 - Source backlog item:
   [BL-260826-warn-on-silent-oatversion — Warn on silent oatVersion restamps outside sync](../../pjm/backlog/items/BL-260826-warn-on-silent-oatversion.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `cf01598937cd508329dba9651835488a0c5096a8` on `2026-09-03`.
 - Verified evidence:
-  - `packages/cli/src/manifest/manager.ts:81-94` always replaces
-    `manifest.oatVersion` with `OAT_VERSION` immediately before atomic save.
-  - `packages/cli/src/commands/init/index.ts:1196` saves every processed scope
+  - `packages/cli/src/manifest/manager.ts:106-119` (`saveManifest(path,
+ManifestV2)`) always replaces `manifest.oatVersion` with `OAT_VERSION`
+    and validates through `ManifestV2Schema` immediately before atomic save;
+    `loadManifest` (`:37-82`) silently upgrades V1 files to V2 in memory.
+  - `packages/cli/src/commands/init/index.ts:1249` saves every processed scope
     without first reporting version skew.
-  - `packages/cli/src/commands/remove/skill/remove-skill.ts:339-350` derives a
+  - `packages/cli/src/commands/remove/skill/remove-skill.ts:359-367` derives a
     new manifest and saves it without preserving/restating the old producer.
-  - `packages/cli/src/commands/status/index.ts:1218-1222` can save an adopted
-    manifest in the active diagnostics-owned surface without an advisory.
-  - `packages/cli/src/commands/sync/index.ts:250-274` already defines plain
+  - `packages/cli/src/commands/status/index.ts:1501-1505` can save an adopted
+    manifest without an advisory, after a collection-migration block
+    (`:1282-1390`) that may set `migrationAborted` and mutate the manifest.
+  - `packages/cli/src/commands/sync/index.ts:302` (`detectVersionSkew`) defines plain
     string-inequality skew semantics, and PR #217 made sync warn before apply.
-  - `packages/cli/src/commands/sync/apply.ts:95-115` keys restamping off that
-    diagnostic, but `:184-192` still prints `No changes required.` when the
-    version refresh is the only mutation.
-  - `packages/cli/src/commands/sync/index.test.ts:570-601` locks in both the
-    restamp-only mutation and the misleading no-change message.
+  - `packages/cli/src/commands/sync/apply.ts` keys restamping off that
+    diagnostic, but `:498-499` still prints `No changes required.` whenever
+    `summary.plannedOperations === 0`, including when the version refresh is
+    the only mutation.
+  - `packages/cli/src/commands/sync/index.test.ts:1324-1326` and `:1545` lock in
+    both the restamp-only mutation and the coupled advisory.
+  - `packages/cli/src/engine/execute-plan.ts:679` and `:970` are engine save
+    sites reached only through sync's `executeSyncPlan`; they inherit sync's
+    advisory and are enumerated here so the done criteria are complete.
 - Related implementation history:
   - [PR #217 — fix(sync): warn on manifest/CLI version skew before any mutation (wave 2)](https://github.com/voxmedia/open-agent-toolkit/pull/217)
     is the behavior precedent, not duplicate unfinished work.
   - [Surface sync producer and invoker version skew before mutation](./2026-08-19-warn-sync-version-skew.md)
     is the implemented predecessor plan.
+  - [PR #249 — Correct scope and adoption diagnostics](https://github.com/voxmedia/open-agent-toolkit/pull/249)
+    completed the ownership dependency at
+    `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; its
+    [project summary](../project-summaries/20260831-scope-adoption-diagnostics.md)
+    records the delivered status and inventory contracts.
 
 ## Dependencies
 
-| Type           | Dependency                                                                                                                                                                                           | Required state                                                                                                                                      | Current state                                                                                                 |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Hard ownership | [scope-adoption-diagnostics](../../../projects/shared/scope-adoption-diagnostics/state.md) / [BL-260827-correct-scope-and-adoption](../../pjm/backlog/items/BL-260827-correct-scope-and-adoption.md) | Project completed; implementation merged to `origin/main`; `status/index.ts`, its JSON/human output, and tests revalidated on that merged baseline. | Active outside this planning branch; repository snapshot is not authoritative for final implementation state. |
-| Soft precedent | [PR #217](https://github.com/voxmedia/open-agent-toolkit/pull/217) and [its external plan](./2026-08-19-warn-sync-version-skew.md)                                                                   | Preserve pre-mutation, non-blocking, plain-identity comparison semantics.                                                                           | Merged/implemented.                                                                                           |
+| Type                  | Dependency                                                                                                                                                                      | Required state                                                                                                                                      | Current state                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Satisfied predecessor | [PR #249](https://github.com/voxmedia/open-agent-toolkit/pull/249) / [BL-260827-correct-scope-and-adoption](../../pjm/backlog/archived/BL-260827-correct-scope-and-adoption.md) | Project completed; implementation merged to `origin/main`; `status/index.ts`, its JSON/human output, and tests revalidated on that merged baseline. | Satisfied at merge `2c6005d64f45a19e8b9eedbc977959b066d3eda0`; status mutation remains interactive-only.                               |
+| Satisfied integration | `tool-pack-scope-provider-truthfulness` project / [BL-260829-make-tool-pack-scope-selection](../../pjm/backlog/archived/BL-260829-make-tool-pack-scope-selection.md)            | Merged to `origin/main`; this plan refreshed against the merged tree.                                                                               | Satisfied at merge `a06e9713a3efa9659775af341073b54c226eee24` (PR #255); refreshed 2026-09-03 with PR #256 (`cf0159893`) also on main. |
+| Soft precedent        | [PR #217](https://github.com/voxmedia/open-agent-toolkit/pull/217) and [its external plan](./2026-08-19-warn-sync-version-skew.md)                                              | Preserve pre-mutation, non-blocking, plain-identity comparison semantics.                                                                           | Merged/implemented.                                                                                                                    |
 
-The ownership dependency is unsatisfied, so execution remains blocked.
+There are no unsatisfied hard dependencies.
 
 ## Drift check
 
-After the hard dependency is verified and before editing:
+Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/manifest/manager.ts packages/cli/src/manifest/manager.test.ts packages/cli/src/commands/init packages/cli/src/commands/remove/skill packages/cli/src/commands/status packages/cli/src/commands/sync packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat cf01598937cd508329dba9651835488a0c5096a8..origin/main -- packages/cli/src/manifest/manager.ts packages/cli/src/manifest/manager.test.ts packages/cli/src/commands/init packages/cli/src/commands/remove/skill packages/cli/src/commands/status packages/cli/src/commands/sync packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/execute-plan.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 Reproduce each save call and determine whether the diagnostics project added,
@@ -140,16 +154,19 @@ output exposes the diagnostic.
 Use one structured shape with `scope`, `producingVersion`, and
 `invokingVersion`. Human output must identify the command/scope and both
 versions. JSON commands must add an array field and emit no warning text.
-Status's save path is interactive; if the completed diagnostics project adds a
-JSON mutation path, that new path must receive equivalent structured evidence.
+Status's delivered save path remains interactive-only. Add the human advisory
+immediately before its save and add a focused negative contract proving JSON
+status does not mutate or claim restamp evidence.
 
 ## Implementation steps
 
 ### 1. Extract a reusable version-restamp diagnostic
 
-In `manifest/manager.ts` (or a same-directory explicit helper), export a pure
-function that returns producing/invoking versions only when they differ by
-plain string identity. Keep absent-manifest and invalid-manifest behavior in
+In `manifest/manager.ts` (or a same-directory explicit helper exported through
+`manifest/index.ts`), export a pure function over `ManifestV2` that returns
+producing/invoking versions only when they differ by plain string identity.
+Rule explicitly that the silent V1→V2 `version` upgrade performed by
+`loadManifest` is out of scope for the advisory; only `oatVersion` is reported. Keep absent-manifest and invalid-manifest behavior in
 the existing loader/schema. Make sync's scoped detector wrap or reuse this
 helper so comparison semantics cannot diverge.
 
@@ -178,12 +195,11 @@ separation, equality suppression, and one diagnostic per affected scope.
 
 ### 3. Reconcile and cover status adoption
 
-On the completed diagnostics-project baseline, locate every status-owned
-`saveManifest` path. For interactive adoption, warn immediately before save
-using the original loaded version. If status can mutate under JSON mode after
-the dependency lands, add the same structured field to its payload without
-mixing human text; otherwise add a test that establishes the mutation is
-interactive-only.
+Cover the status-owned `saveManifest` path (`status/index.ts:1501`). Place the
+advisory after the collection-migration block and immediately before the save,
+using the original loaded version, and prove the `migrationAborted` path emits
+no restamp advisory. Add a test that establishes JSON status is
+non-mutating and therefore does not emit applied-restamp evidence.
 
 Do not alter drift status, exit codes, remediation, or adoption eligibility.
 
@@ -192,8 +208,10 @@ restamp and an equal version remains quiet.
 
 ### 4. Make restamp-only sync output truthful
 
-In `runSyncApply`, distinguish zero content/provider operations with non-empty
-`versionSkew` from a true no-op. Emit a stable semantic message such as
+In `runSyncApply` (`apply.ts:498-499`), distinguish
+`summary.plannedOperations === 0 && versionSkew.length > 0` from a true no-op
+against the enlarged JSON payload (`collectionOperations`, `operationResults`,
+`providerRefreshAdvice`). Emit a stable semantic message such as
 `Manifest version refreshed; no content changes required.` for the restamp-only
 case. Preserve `No changes required.` only when no operation or restamp occurs.
 JSON already exposes `versionSkew`; do not add a second redundant field there.
@@ -226,7 +244,8 @@ stand in for execution evidence.
 
 ## Done criteria
 
-- [ ] Every non-sync save site reports stale producer evidence before restamp.
+- [ ] Every non-sync save site reports stale producer evidence before restamp;
+      the two `engine/execute-plan.ts` sites are documented as sync-covered.
 - [ ] Human output names scope and both versions exactly once.
 - [ ] JSON output carries equivalent structured evidence and no human warning.
 - [ ] Equal/absent manifests do not produce false diagnostics.
@@ -240,8 +259,8 @@ stand in for execution evidence.
 
 Stop and report instead of improvising when:
 
-- the scope-adoption-diagnostics implementation is not completed and merged;
-- import or execution is attempted while `oat_execution_status` is `BLOCKED`;
+- PR #249's canonical scope-owned observations or exception-safe status output
+  would be changed instead of preserved;
 - status ownership or output changed without revalidation;
 - a caller cannot preserve the pre-save producing version;
 - JSON output would require mixing human warning text into stdout;
@@ -251,16 +270,17 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
-Revalidation is mandatory after the hard dependency lands. Compare this plan
-with current `origin/main`, both linked backlog items, the completed project,
-PR #217, the predecessor external plan, every `saveManifest` call site, output
-schemas, and focused tests. Revalidate again when substantial time passes,
-main advances materially, cited contracts/intent change, another PR implements
-part of the outcome, or any load-bearing silent-restamp claim no longer
-reproduces.
+Refreshed 2026-09-03 against `origin/main` after PR #255 (truthfulness) and
+PR #256 merged; all seven evidence anchors and the new engine save sites were
+re-verified on that tree and the checklist below is applied in the steps
+above. If a later PR touches `manifest/manager.ts`, the status
+collection-migration block, or `runSyncApply`, repeat the re-anchor.
 
-Refresh or supersede the plan before changing its execution status or importing
-it for implementation.
+Revalidate again against PR #217, the predecessor external plan, every
+`saveManifest` call site, output schemas, and focused tests when substantial
+time passes, main advances materially, cited contracts/intent change, another
+PR implements part of the outcome, or any load-bearing silent-restamp claim no
+longer reproduces.
 
 ## Review focus
 

@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260714-executable-backstops.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260714-executable-backstops
@@ -43,7 +43,7 @@ for runtime/lifecycle truth. The guidance is itself contract-tested.
 - Source backlog item:
   [BL-260714-executable-backstops — Executable backstops for contract claims](../../pjm/backlog/items/BL-260714-executable-backstops.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `.agents/skills/create-oat-skill/SKILL.md:109-120` has a specific autonomy
     inventory maintenance rule, but no general rule for standing claims.
@@ -74,7 +74,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/skills/create-oat-skill .agents/skills/oat-project-design packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/project/log packages/cli/src/validation/skills.test.ts
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- .agents/skills/create-oat-skill .agents/skills/oat-project-design packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/project/log packages/cli/src/validation/skills.test.ts
 ```
 
 If the authoring or design section moved, remap the semantic insertion point.
@@ -224,7 +224,7 @@ Stop and report instead of improvising when:
 Revalidate against current `origin/main`, the source backlog item, both cited
 skills, all three precedent mechanisms, and the focused validation test when
 main advances materially from
-`845462e78468265c7e2e2b2f6c64731472731ecb`, cited paths or intent change,
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, cited paths or intent change,
 another PR implements this guidance, or a load-bearing absence cannot be
 reproduced. Refresh or supersede the plan before executing stale evidence.
 

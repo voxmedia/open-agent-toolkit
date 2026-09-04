@@ -6,9 +6,9 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260712-per-project-override.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
-oat_execution_status: BLOCKED
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260712-per-project-override
 oat_issue_url: null
@@ -25,12 +25,11 @@ created: '2026-08-30T23:49:30Z'
 > Begin with the drift check. Follow the steps and verification gates in order.
 > If a STOP condition occurs, stop and report instead of improvising.
 
-> [!CAUTION]
-> **Execution status: BLOCKED. Do not import or execute this plan** until the
-> consolidated `gate-execution-contract-hardening` project has completed, its
-> implementation is merged into `origin/main`, and its structured gate-command
-> contract has been revalidated. That project combines the headless/no-yield and
-> structured-output predecessors and changes the same CLI/lifecycle surfaces.
+> [!IMPORTANT]
+> **Execution status: READY.** The consolidated gate project completed and
+> merged as PR #246. Revalidation against its delivered structured-command and
+> missing-artifact contracts found no project-override implementation and
+> preserved the additive project-aware resolution seam used by this plan.
 
 ## Outcome
 
@@ -45,14 +44,15 @@ progress makes the deliberate posture visible to reviewers.
 - Source backlog item:
   [BL-260712-per-project-override — Per-project override to disable configured external gates](../../pjm/backlog/items/BL-260712-per-project-override.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/config/oat-config.ts:181-214` models configured skill gates
     only at config layers.
   - `packages/cli/src/config/resolve.ts:240-257` returns only the effective raw
     `GateConfig | null`, without source or project state.
-  - `packages/cli/src/commands/gate/index.ts:2906-2917` makes `oat gate resolve`
-    read only effective config; `:3680-3688` has no project option.
+  - `packages/cli/src/commands/gate/index.ts:2948-2958` still makes
+    `oat gate resolve` read only effective config; its command registration at
+    `:3747-3756` still has no project option.
   - `.oat/templates/state.md:1-79` has phase/implementation gate fields but no
     `oat_skill_gate_overrides` map.
   - `.agents/skills/oat-project-plan-writing/SKILL.md:271-392` is the shared
@@ -60,33 +60,37 @@ progress makes the deliberate posture visible to reviewers.
     choices.
   - Quick-start, plan, and import-plan already own setup/persistence boundaries;
     current gate execution calls appear in
-    `.agents/skills/oat-project-quick-start/SKILL.md:721-770`,
+    `.agents/skills/oat-project-quick-start/SKILL.md:721-787`,
     `.agents/skills/oat-project-plan/SKILL.md:536`, and
     `.agents/skills/oat-project-import-plan/SKILL.md:452`.
 - Consolidated predecessor:
-  - `gate-execution-contract-hardening` owns
-    [BL-260726-validate-structured-output](../../pjm/backlog/items/BL-260726-validate-structured-output.md)
-    and [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md).
+  - [PR #246 — Harden gate execution contracts](https://github.com/voxmedia/open-agent-toolkit/pull/246)
+    completed `gate-execution-contract-hardening`, including
+    [BL-260726-validate-structured-output](../../pjm/backlog/archived/BL-260726-validate-structured-output.md)
+    and [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md).
   - The retained project ref is
-    `refs/oat/projects/gate-execution-contract-hardening`; do not plan from the
-    older separate project dossiers after the consolidated implementation lands.
+    [`gate-execution-contract-hardening.json`](../../../projects/synced/gate-execution-contract-hardening.json),
+    and its delivered summary is
+    [Gate Execution Contract Hardening](../project-summaries/20260831-gate-execution-contract-hardening.md).
 
 ## Dependencies
 
-| Type              | Dependency                                                                                                                                             | Required state                                                                                                                                        | Current state                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Hard              | `gate-execution-contract-hardening`, including [BL-260726-validate-structured-output](../../pjm/backlog/items/BL-260726-validate-structured-output.md) | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated. | In flight outside this baseline; authoritative tracker has not reached durable completion on main. |
-| Soft coordination | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/items/BL-260826-gate-targets-must-not-yield.md)                                              | Preserve its headless terminal behavior when adding a pre-launch disabled resolution.                                                                 | Consolidated into the same in-flight project.                                                      |
+| Type                  | Dependency                                                                                                                                          | Required state                                                                                                                                        | Current state                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Satisfied predecessor | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated. | Satisfied at merge `511ffff3822cebdc81e4380452652fe801e2bfb8`; revalidated on the current planning baseline. |
+| Preserved contract    | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md) / `artifact_missing` terminal behavior | Preserve synchronous headless completion and cause-specific fail-closed behavior when adding a pre-launch disabled resolution.                        | Delivered by PR #246; this plan does not alter launch or artifact-result semantics.                          |
 
-The hard dependency is unsatisfied, so execution remains blocked.
+| Soft integration | `tool-pack-scope-provider-truthfulness` project (in flight; one integrated PR) | After it merges, re-anchor `oat-project-plan-writing/SKILL.md:271-392` (its branch adds a dispatch-lineage paragraph and bumps the skill to 1.2.21) and `config/user-sync-config.ts` (+16 lines), then bump the skill again if edited. | Not merged; verified read-only on 2026-09-02 at `27b978528`. It does not touch gate resolve/execute code. |
+
+There are no unsatisfied hard dependencies.
 
 ## Drift check
 
-After the dependency is satisfied and before editing:
+Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
 ```
 
 Re-run all current gate resolve/execute focused tests on the delivered baseline.
@@ -138,6 +142,12 @@ The effective-config resolver knows whether a gate exists but not which project
 is executing. Project setup already persists phase-gate posture, and every
 gate-aware skill has a project path before launching its lifecycle gate. The
 least disruptive CLI extension is therefore opt-in project context:
+
+PR #246 added conservative validation for recognized direct lifecycle review
+commands and cause-specific `artifact_missing` handling. It did not add
+project state to `oat gate resolve`, change its legacy `GateConfig | null`
+output, or add an override field to `state.md`; this plan composes with those
+delivered contracts rather than replacing them.
 
 - without `--project`, preserve the existing raw `GateConfig | null` JSON;
 - with `--project <path-or-name>`, resolve the project using the same canonical
@@ -274,8 +284,8 @@ fresh `origin/main` fetch before version validation.
 
 Stop and report instead of improvising when:
 
-- the consolidated gate project is not completed and merged;
-- import or execution is attempted while `oat_execution_status` is `BLOCKED`;
+- PR #246's structured-command or `artifact_missing` contracts cannot be
+  preserved by the project-aware resolution design;
 - its delivered resolver/envelope makes this opt-in compatibility design stale;
 - project resolution cannot use the established active/name/path contract;
 - a disabled gate would need to masquerade as passed, missing, or failed;
@@ -284,14 +294,15 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
-Revalidation is mandatory after the hard dependency lands. Compare this plan
-with current `origin/main`, both predecessor backlog items, the consolidated
-project/ref, source item, config/state schemas, every gate-aware lifecycle call,
-and focused tests. Revalidate again when substantial time passes, main advances
-materially, cited contracts or intent change, another PR implements part of the
-outcome, or a load-bearing current-state claim cannot be reproduced.
+The prerequisite-merge revalidation was completed against PR #246 and current
+`origin/main`. Revalidate again against the source item, config/state schemas,
+every gate-aware lifecycle call, and focused tests when substantial time
+passes, main advances materially, cited contracts or intent change, another PR
+implements part of the outcome, or a load-bearing current-state claim cannot
+be reproduced.
 
-Refresh or supersede this plan and verify the exact unblock state before import.
+Run the drift check and confirm this plan remains `READY` before import. Refresh
+or supersede it if a revalidation trigger fires.
 
 ## Review focus
 
