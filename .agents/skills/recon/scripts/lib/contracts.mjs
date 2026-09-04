@@ -1064,7 +1064,15 @@ function validateLedger(value, errors) {
     );
     if (Array.isArray(value.synthesis.keyClaimIds)) {
       for (const [index, claimId] of value.synthesis.keyClaimIds.entries()) {
-        if (typeof claimId === 'string' && !claimIds.has(claimId)) {
+        if (typeof claimId !== 'string' || claimId.trim().length === 0) {
+          errors.push(
+            issue(
+              'INVALID_ARRAY_ENTRY',
+              'keyClaimIds entries must be non-empty strings',
+              `$.synthesis.keyClaimIds[${index}]`,
+            ),
+          );
+        } else if (!claimIds.has(claimId)) {
           errors.push(
             issue(
               'SYNTHESIS_REFERENCE_MISSING',
@@ -1085,7 +1093,15 @@ function validateLedger(value, errors) {
         index,
         questionId,
       ] of value.synthesis.unresolvedQuestionIds.entries()) {
-        if (typeof questionId === 'string' && !questionIds.has(questionId)) {
+        if (typeof questionId !== 'string' || questionId.trim().length === 0) {
+          errors.push(
+            issue(
+              'INVALID_ARRAY_ENTRY',
+              'unresolvedQuestionIds entries must be non-empty strings',
+              `$.synthesis.unresolvedQuestionIds[${index}]`,
+            ),
+          );
+        } else if (!questionIds.has(questionId)) {
           errors.push(
             issue(
               'SYNTHESIS_REFERENCE_MISSING',

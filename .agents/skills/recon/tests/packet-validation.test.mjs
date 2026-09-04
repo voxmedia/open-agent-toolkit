@@ -1328,3 +1328,14 @@ test('validation categorically rejects when synthesis references missing claim o
   await persist(missingQuestion);
   await expectInvalid(missingQuestion, 'SYNTHESIS_REFERENCE_MISSING');
 });
+
+test('validation rejects non-string synthesis claim and question references', async () => {
+  for (const key of ['keyClaimIds', 'unresolvedQuestionIds']) {
+    for (const invalidEntry of [42, { id: 'claim-1' }, true, '', '   ']) {
+      const packet = await makePacket();
+      packet.ledger.synthesis[key].push(invalidEntry);
+      await persist(packet);
+      await expectInvalid(packet, 'INVALID_ARRAY_ENTRY');
+    }
+  }
+});
