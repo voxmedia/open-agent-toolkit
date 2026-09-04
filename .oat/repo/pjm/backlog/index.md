@@ -4,6 +4,13 @@
 
 ## Curated Overview
 
+- 2026-09-04 brainstorm scaffolded the active `lite-workflow-mode` project
+  (quick mode) to add a third, lighter workflow mode for single-sitting
+  changes. The companion rename that makes `quick` the default mode and
+  `spec-driven` the explicit escalation is tracked separately in
+  `BL-260904-make-quick-the-default-oat` at L scope; it should follow, not
+  precede, the lite mode landing so the mode ladder is renamed once.
+
 - 2026-09-02 program-intake triage
   ([record](../triage/2026-09-02-program-intake-triage.md)) created twelve
   `BL-260902-*` items from GitHub issues #199, #209/#210/#251, #213, #214,
@@ -265,6 +272,7 @@
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260902-make-consolidated-project      | Make consolidated-project retirement checks semantic                                                  | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
+| BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                     | open   | medium   | feature    | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates                                             | open   | medium   | feature    | M        |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                  | open   | medium   | feature    | M        |
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                            | open   | medium   | feature    | M        |
