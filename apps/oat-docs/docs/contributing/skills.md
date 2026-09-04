@@ -140,6 +140,32 @@ Codex, so a canonical fix must survive bundling and Codex sync as well. No test
 yet gates the generated `.claude` or `.cursor` agent views, so regenerate and
 spot-check those by hand.
 
+### Declare cross-pack dependencies in the pack manifest
+
+When a shipped skill depends on assets owned by another pack, declare exact
+asset IDs in `PACK_MANIFEST` instead of duplicating those assets or relying on
+ambient installation. Pack dependencies are same-scope: installation and
+update acquire a `tools.requiredBy.<owner-pack>` lease, while a direct install
+of the owner remains represented separately by `tools.<owner-pack>: true`.
+
+The owner pack keeps asset ownership. Removal releases only the caller's lease
+and may delete a dependency asset only when neither direct owner intent nor
+another pack lease retains it. Migration acquires and verifies destination
+leases before releasing the source leases. Keep dependency graphs acyclic,
+deduplicate edges, and make every dependency asset support the caller's scope.
+
+### Mark user-materializable pack agents explicitly
+
+Set `userMaterializable: true` only on a managed agent that supports user
+scope and has a bundled canonical source. User sync derives eligible agents
+from installed pack inventory, validates the installed and bundled definitions,
+and projects only those declared agents through active provider adapters.
+
+Do not use this marker to expose arbitrary user Markdown or to transfer role
+ownership to a provider view. Canonical/provider destination collisions fail
+closed, and removal keeps the projection while another installed pack or
+direct managed-role intent still retains the canonical agent.
+
 ## Contract components
 
 - Mode assertion (purpose, blocked/allowed activities)

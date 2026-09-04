@@ -43,6 +43,9 @@ export interface ApplyPackReconcileDependencies {
   writeIntent: (
     operation: Extract<PackReconcileOperation, { kind: 'write-intent' }>,
   ) => Promise<void>;
+  writeLease?: (
+    operation: Extract<PackReconcileOperation, { kind: 'write-lease' }>,
+  ) => Promise<void>;
   inventory: () => Promise<ScopedPackInventory>;
   sync?: (input: {
     scope: PackReconcilePlan['scope'];
@@ -73,6 +76,7 @@ function operationPath(operation: PackReconcileOperation): string | null {
     case 'remove-file':
       return operation.path;
     case 'write-intent':
+    case 'write-lease':
       return null;
   }
 }
@@ -118,16 +122,42 @@ function assertExpectedInventory(
   if (
     inventory.pack !== plan.pack ||
     inventory.scope !== plan.scope ||
-    inventory.completeness !== plan.expectedCompleteness
+    (plan.expectedCompleteness !== null &&
+      inventory.completeness !== plan.expectedCompleteness)
   ) {
     throw new Error(
       `Pack ${plan.pack} ${plan.scope} verification expected ${plan.expectedCompleteness} but found ${inventory.completeness}`,
     );
   }
+  if (plan.expectedAssetStatuses) {
+    const invalid = inventory.assets.filter(({ definition, status }) => {
+      const expected = plan.expectedAssetStatuses?.[definition.id];
+      return expected !== undefined && status !== expected;
+    });
+    if (invalid.length > 0) {
+      throw new Error(
+        `Pack ${plan.pack} ${plan.scope} verification expected selected asset states: ${invalid.map(({ definition, status }) => `${definition.id} expected ${plan.expectedAssetStatuses?.[definition.id]} (${status})`).join(', ')}`,
+      );
+    }
+  } else if (plan.expectedAssetStatus) {
+    const invalid = inventory.assets.filter(
+      ({ definition, status }) =>
+        plan.selectedAssetIds.includes(definition.id) &&
+        status !== plan.expectedAssetStatus,
+    );
+    if (invalid.length > 0) {
+      throw new Error(
+        `Pack ${plan.pack} ${plan.scope} verification expected selected assets ${plan.expectedAssetStatus}: ${invalid.map(({ definition, status }) => `${definition.id} (${status})`).join(', ')}`,
+      );
+    }
+  }
   if (plan.action === 'remove') return;
   const drifted = inventory.assets.filter(
     ({ definition, status }) =>
-      definition.ownership[plan.scope] === 'managed' && status !== 'current',
+      definition.ownership[plan.scope] === 'managed' &&
+      (plan.expectedCompleteness !== null ||
+        plan.selectedAssetIds.includes(definition.id)) &&
+      status !== 'current',
   );
   if (drifted.length > 0) {
     throw new Error(
@@ -156,13 +186,13 @@ export async function applyPackReconcilePlan(
   }
 
   const applied: PackReconcileOperation[] = [];
-  const intents: Array<
-    Extract<PackReconcileOperation, { kind: 'write-intent' }>
+  const stateOperations: Array<
+    Extract<PackReconcileOperation, { kind: 'write-intent' | 'write-lease' }>
   > = [];
 
   for (const operation of plan.operations) {
-    if (operation.kind === 'write-intent') {
-      intents.push(operation);
+    if (operation.kind === 'write-intent' || operation.kind === 'write-lease') {
+      stateOperations.push(operation);
       continue;
     }
     const path = operationPath(operation);
@@ -207,12 +237,21 @@ export async function applyPackReconcilePlan(
 
   const verifiedInventory = await dependencies.inventory();
   assertExpectedInventory(plan, verifiedInventory);
-  for (const intent of intents) {
-    await dependencies.writeIntent(intent);
-    applied.push(intent);
+  for (const operation of stateOperations) {
+    if (operation.kind === 'write-intent') {
+      await dependencies.writeIntent(operation);
+    } else {
+      if (!dependencies.writeLease) {
+        throw new Error('Pack dependency reconciliation requires writeLease');
+      }
+      await dependencies.writeLease(operation);
+    }
+    applied.push(operation);
   }
   const inventory =
-    intents.length > 0 ? await dependencies.inventory() : verifiedInventory;
+    stateOperations.length > 0
+      ? await dependencies.inventory()
+      : verifiedInventory;
   assertExpectedInventory(plan, inventory);
 
   const shouldSync = plan.changedCanonicalPaths.length > 0 && dependencies.sync;

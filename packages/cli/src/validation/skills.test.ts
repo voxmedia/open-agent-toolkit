@@ -5163,7 +5163,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.4$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.5$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.4$/m);
@@ -5326,7 +5326,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.4'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.5'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
     ] as const;
@@ -6634,5 +6634,24 @@ describe('validateOatSkills', () => {
     expect(content).not.toContain('oat backlog generate-id');
     expect(content).not.toContain('oat backlog regenerate-index');
     expect(content).not.toContain('ITEM_PATH=');
+  });
+});
+
+describe('recon canonical contracts', () => {
+  it('keeps the recon skill and worker provider-neutral and versioned', async () => {
+    const [skill, worker] = await Promise.all([
+      readRepoFile('.agents/skills/recon/SKILL.md'),
+      readRepoFile('.agents/agents/recon-worker.md'),
+    ]);
+
+    expect(skill).toMatch(/^name:\s*recon$/m);
+    expect(skill).toMatch(/^version:\s*1\.0\.1$/m);
+    expect(skill).toMatch(/provider-neutral/i);
+    expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
+    expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
+    expect(skill).toMatch(/same\s+approved model and effort/i);
+    expect(skill).toMatch(/packet directory/i);
+    expect(worker).toMatch(/never interact with the user/i);
+    expect(worker).toMatch(/never dispatch/i);
   });
 });

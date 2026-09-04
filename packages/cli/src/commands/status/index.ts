@@ -81,6 +81,7 @@ import {
   type CanonicalEntry,
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
+  type ScanBundledManagedAgentsOptions,
   mergeUserScopeMaterializationEntries,
   scanBundledManagedAgents,
   scanCanonical,
@@ -273,7 +274,9 @@ interface StatusDependencies {
     scope: ConcreteScope,
     targets?: readonly CanonicalScanTarget[],
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: (
+    options?: ScanBundledManagedAgentsOptions,
+  ) => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
@@ -972,14 +975,18 @@ async function collectScopeReports(
           )
       : [...activeProviderNames],
   );
+  const providerCanonicalEntries =
+    scope === 'user'
+      ? mergeUserScopeMaterializationEntries(
+          canonicalEntries,
+          await dependencies.scanBundledManagedAgents({ scopeRoot }),
+        )
+      : canonicalEntries;
   const extensionCanonicalEntries =
     scope === 'user' &&
     (activeExtensionProviders.has('codex') ||
       activeExtensionProviders.has('cursor'))
-      ? mergeUserScopeMaterializationEntries(
-          canonicalEntries,
-          await dependencies.scanBundledManagedAgents(),
-        )
+      ? providerCanonicalEntries
       : canonicalEntries;
   const codexExtensionPlan = activeExtensionProviders.has('codex')
     ? await dependencies.computeCodexProjectExtensionPlan(
@@ -1049,7 +1056,7 @@ async function collectScopeReports(
     }
 
     for (const mapping of mappings) {
-      for (const canonicalEntry of canonicalEntries) {
+      for (const canonicalEntry of providerCanonicalEntries) {
         if (canonicalEntry.type !== mapping.contentType) {
           continue;
         }
@@ -1085,7 +1092,7 @@ async function collectScopeReports(
             adapter.name,
             providerDir,
             manifest,
-            canonicalEntries,
+            providerCanonicalEntries,
             source.mapping,
           )
         ).map((report) => ({ provider: adapter.name, report })),
@@ -1136,7 +1143,7 @@ async function collectScopeReports(
   if (codexExtensionPlan) {
     const codexStrays = await dependencies.detectCodexRoleStrays(
       scopeRoot,
-      canonicalEntries,
+      providerCanonicalEntries,
       new Set(codexExtensionPlan.managedRoles),
     );
     for (const codexStray of codexStrays) {

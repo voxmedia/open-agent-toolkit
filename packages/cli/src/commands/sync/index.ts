@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
@@ -313,6 +313,16 @@ function detectVersionSkew(
   return { scope, producingVersion, invokingVersion };
 }
 
+function isPathWithin(root: string, candidate: string): boolean {
+  const relativePath = relative(resolve(root), resolve(candidate));
+  return (
+    relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${sep}`) &&
+      !isAbsolute(relativePath))
+  );
+}
+
 async function computePlans(
   context: CommandContext,
   dependencies: ContextualSyncDependencies,
@@ -391,9 +401,26 @@ async function computePlans(
       scope,
       scanTargets,
     );
+    const managedAgents =
+      scope === 'user'
+        ? await dependencies.scanBundledManagedAgents({ scopeRoot })
+        : [];
+    const ordinaryCanonical =
+      scope === 'user'
+        ? [
+            ...canonical,
+            ...managedAgents.filter(({ canonicalPath }) =>
+              isPathWithin(join(scopeRoot, '.agents', 'agents'), canonicalPath),
+            ),
+          ]
+        : canonical;
+    const materializationCanonical =
+      scope === 'user'
+        ? mergeUserScopeMaterializationEntries(canonical, managedAgents)
+        : canonical;
     if (canonicalFilter?.mode === 'remove') {
       const existing = new Set(
-        canonical.map(({ canonicalPath }) =>
+        ordinaryCanonical.map(({ canonicalPath }) =>
           relative(scopeRoot, canonicalPath).replaceAll('\\', '/'),
         ),
       );
@@ -444,7 +471,7 @@ async function computePlans(
       ) ?? [];
 
     const plan = await dependencies.computeSyncPlan({
-      canonical,
+      canonical: ordinaryCanonical,
       adapters: resolved.activeAdapters,
       manifest,
       scope,
@@ -455,18 +482,11 @@ async function computePlans(
       ...(scope === 'user' ? { extensionOwnedCanonicalPathsByProvider } : {}),
     });
 
-    const extensionCanonical =
-      scope === 'user' && enabledExtensions.length > 0
-        ? mergeUserScopeMaterializationEntries(
-            canonical,
-            await dependencies.scanBundledManagedAgents(),
-          )
-        : canonical;
     const materializationExtensionPlans = await Promise.all(
       enabledExtensions.map((extension) =>
         extension.computePlan({
           scopeRoot,
-          canonicalEntries: extensionCanonical,
+          canonicalEntries: materializationCanonical,
           allowedCanonicalPaths: canonicalFilter?.paths,
           options: { userConfigDir: join(context.home, '.oat') },
         }),
@@ -486,7 +506,7 @@ async function computePlans(
       scopeRoot,
       manifestPath,
       manifest,
-      canonical,
+      canonical: ordinaryCanonical,
       activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,

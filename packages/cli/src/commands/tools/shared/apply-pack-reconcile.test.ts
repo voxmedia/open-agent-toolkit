@@ -172,6 +172,71 @@ describe('applyPackReconcilePlan', () => {
     expect(writeIntent).not.toHaveBeenCalled();
   });
 
+  it('verifies mixed selected dependency states per asset', async () => {
+    const mixedPlan: PackReconcilePlan = {
+      ...plan(),
+      action: 'remove',
+      operations: [],
+      expectedCompleteness: null,
+      expectedAssetStatus: null,
+      expectedAssetStatuses: {
+        'skill:oat-brainstorm': 'current',
+        'skill:oat-idea-new': 'missing',
+      },
+      selectedAssetIds: ['skill:oat-brainstorm', 'skill:oat-idea-new'],
+    };
+    const mixedInventory = inventory('partial');
+    mixedInventory.assets = [
+      {
+        definition: {
+          id: 'skill:oat-brainstorm',
+          kind: 'skill',
+          source: 'skills/oat-brainstorm',
+          destination: '.agents/skills/oat-brainstorm',
+          scopes: ['user'],
+          ownership: { user: 'managed' },
+        },
+        path: '/scope/.agents/skills/oat-brainstorm',
+        status: 'current',
+        installedVersion: '1.0.0',
+        bundledVersion: '1.0.0',
+      },
+      {
+        definition: {
+          id: 'skill:oat-idea-new',
+          kind: 'skill',
+          source: 'skills/oat-idea-new',
+          destination: '.agents/skills/oat-idea-new',
+          scopes: ['user'],
+          ownership: { user: 'managed' },
+        },
+        path: '/scope/.agents/skills/oat-idea-new',
+        status: 'missing',
+        installedVersion: null,
+        bundledVersion: null,
+      },
+    ];
+
+    await expect(
+      applyPackReconcilePlan(mixedPlan, '/scope', {
+        resolveManagedRoots: async () => roots,
+        writeGenerated: vi.fn(),
+        inventory: async () => mixedInventory,
+        writeIntent: vi.fn(),
+      }),
+    ).resolves.toMatchObject({ inventory: mixedInventory });
+
+    mixedInventory.assets[1]!.status = 'current';
+    await expect(
+      applyPackReconcilePlan(mixedPlan, '/scope', {
+        resolveManagedRoots: async () => roots,
+        writeGenerated: vi.fn(),
+        inventory: async () => mixedInventory,
+        writeIntent: vi.fn(),
+      }),
+    ).rejects.toThrow(/oat-idea-new expected missing \(current\)/);
+  });
+
   it('returns final inventory after intent persistence', async () => {
     let intentWritten = false;
     const result = await applyPackReconcilePlan(plan(), '/scope', {

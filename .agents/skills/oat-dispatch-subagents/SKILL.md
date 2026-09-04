@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.2.4
+version: 1.2.5
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -128,6 +128,11 @@ decomposition.
 
 The optional policy and ceiling are already-resolved inputs. Do not infer where
 they came from or resolve project state to obtain them.
+
+The optional `operation` is `prepare`, `execute`, or `dispatch`. `prepare` and
+`execute` form the approval-bound two-step path below. When `operation` is
+omitted, treat it as `operation: dispatch` and preserve the existing one-step
+selection-and-launch path for backwards compatibility.
 
 ## Native Dispatch Lineage
 
@@ -370,9 +375,99 @@ Before explicit selection:
 Do not launch a diagnostic child solely to obtain a catalog the provider
 cannot expose before selection. Record the visibility timing instead.
 
+## Approval-Bound Preparation and Execution
+
+Use this path when a caller must show the exact selection and execution
+envelope for approval before any child starts. The caller still owns the user
+interaction; this skill produces and validates the approval evidence.
+
+### `operation: prepare`
+
+Preparation is selection-only. It must observe the live catalog in the exact
+dispatch context and return a complete prepared dispatch record without
+launching, reserving capacity, or obtaining a child handle.
+
+Before selecting a target:
+
+1. Classify all planned and conditional waves before selection. Record every
+   wave's `task_class` and `model_class_floor`.
+2. Compute the run-wide maximum model-class floor using the durable task-class
+   order. Conditional waves count even when the caller may later skip them.
+3. Select one exact target at or above that maximum floor and pin it across all
+   prepared waves. The pin includes provider, dispatch context, route, role,
+   model and selector granularity, effort, reasoning mode, and service tier.
+   Do not weaken a wave floor, split the target, or silently substitute a
+   cheaper target. If one target cannot satisfy every wave, return a blocked
+   preparation.
+4. Materialize each wave's exact authority, deadline, retry limit,
+   concurrency, lane cap, scopes, lane IDs, context controls, fallback, and
+   canonical redacted payload digest. Record the catalog observation identity
+   and the fingerprint of the relevant selectable facts.
+5. Construct the canonical approval projection defined in
+   `references/record-schema.md`, return `dispatch_state: prepared`, and stop.
+
+The calling workflow may combine prepared wave records into a run manifest,
+but it must preserve the run ID, maximum floor, pinned target, per-wave axes,
+canonical approval fingerprint, and prepared timestamp byte-for-byte.
+
+### Approval
+
+The caller presents the complete approval projection and records explicit
+approval by changing only `dispatch_state`, `approved_at`, and the approval
+evidence fields allowed by the schema. Approval is valid only for the exact
+canonical fingerprint. Editing any bound axis creates a new preparation; it
+does not update an already approved record in place.
+
+### `operation: execute`
+
+Execution accepts one approved prepared record. Before invoking the launcher:
+
+1. Validate the prepared-record version, legal state, approval timestamp, and
+   approval fingerprint against the unchanged canonical projection.
+2. Re-observe the live catalog in the same dispatch context and compare the
+   current relevant selectable facts with the prepared observation. A new
+   unrelated candidate alone is not relevant drift; removal, renaming,
+   semantic change, or loss of selectability for an approved control is.
+3. Re-resolve the actual launch controls without choosing alternatives and
+   compare every approval-bound axis exactly. Provider-native opaque values
+   stay byte-for-byte exact.
+4. Refuse launch and mark the record `stale` when any comparison differs. The
+   caller must run `prepare` again and obtain reapproval.
+5. Launch the approved payload once. Record `accepted` only from positive
+   launcher acceptance; otherwise record `not-accepted`.
+
+A model change is model drift. An effort change is effort drift. A provider
+change is provider drift. A route change is route drift. A role change is role
+drift. A service tier change is service tier drift. An authority change is
+authority drift. A deadline change is deadline drift. A concurrency change is
+concurrency drift. A lane cap change is lane cap drift. A relevant catalog
+change is catalog drift. The same fail-closed rule covers reasoning mode,
+selector granularity, retry limit, writable roots, context controls, fallback,
+wave topology, scope, lane identity, payload digest, floor, or pinned-target
+drift. Never adjust one of these controls to make execution fit the current
+surface.
+
+Launch acceptance remains terminal for replacement eligibility. After a
+prepared launch is accepted, no alternate route, replacement, or target
+substitution is allowed. Only continuation through the already accepted handle
+is permitted. A linked fresh same-target launch is forbidden, regardless of
+the generic caller lifecycle recovery exception. If that accepted handle is
+lost or cannot resume, record the terminal outcome and stop; the approval-bound
+record never authorizes a second child.
+
+### One-Step Backwards Compatibility
+
+Existing callers may omit `operation` or provide `operation: dispatch`. This
+retains exactly the current one-step selection-and-launch flow in
+Full-Information Selection: observe, select, record, and launch once in the
+same operation. Do not require those callers to invent a prepared record,
+approval timestamp, or approval fingerprint. New approval-bound callers must
+use `prepare` and `execute`; they may not collapse that path into `dispatch`.
+
 ## Full-Information Selection
 
-For every dispatch:
+For every legacy one-step dispatch and for the selection portion of
+`operation: prepare`:
 
 1. Validate the caller request and capability state.
 2. Resolve provider, context, role class, optional task class and model-class
@@ -387,8 +482,14 @@ For every dispatch:
 7. Record route, selection source, selection reason, candidates, catalog
    source, model, effort, reasoning mode, service tier, guidance version,
    authority, and deadline.
-8. Launch once.
-9. Record launch acceptance separately from child outcome and runtime identity.
+8. For `operation: prepare`, construct the prepared record and return without
+   launch. Do not continue into the legacy launch steps.
+9. For a legacy one-step dispatch only, launch once.
+10. Record launch acceptance separately from child outcome and runtime identity.
+
+The following diagram is the legacy one-step flow. Approval-bound preparation
+stops after selection and record construction; its later `execute` operation
+performs the separately approved launch.
 
 ```mermaid
 flowchart TD

@@ -302,6 +302,36 @@ describe('oat-config', () => {
     });
   });
 
+  it('normalizes sorted deduplicated dependency leases independently of direct intent', async () => {
+    const repoRoot = await createRepoRoot();
+    const configPath = join(repoRoot, '.oat', 'config.json');
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        tools: {
+          research: true,
+          requiredBy: {
+            utility: ['research', 'brainstorm', 'research', 42],
+            workflows: [],
+            unknown: ['research'],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toEqual({
+      version: 1,
+      tools: {
+        research: true,
+        requiredBy: {
+          utility: ['brainstorm', 'research'],
+        },
+      },
+    });
+  });
+
   it('reads and writes PJM adoption config round-trip', async () => {
     const repoRoot = await createRepoRoot();
 

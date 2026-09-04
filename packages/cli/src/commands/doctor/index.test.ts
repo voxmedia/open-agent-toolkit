@@ -1963,6 +1963,9 @@ config_file = "agents/${roleName}.toml"
     );
     expect(packCheck?.message).not.toContain('/tmp/home/.agents');
     expect(packCheck?.message).toContain(
+      'manifest-declared user-materializable agents',
+    );
+    expect(packCheck?.message).toContain(
       'canonical instruction reads are unaffected',
     );
     // `oat tools update` cannot repair a scope limitation, so no recovery

@@ -128,6 +128,14 @@ interface PackAssetTarget {
   scopeRoot: string;
 }
 
+function isRootUpdateCandidate(inventory: ScopedPackInventory): boolean {
+  return (
+    inventory.intent.direct ||
+    (inventory.intent.state === 'legacy-inferred' &&
+      inventory.completeness === 'complete')
+  );
+}
+
 export async function updateTools(
   target: UpdateTarget,
   scopes: ConcreteScope[],
@@ -167,7 +175,11 @@ export async function updateTools(
           scopeRoot,
           assetsRoot,
         });
-        if (!hasScopedPackRealizationEvidence(before)) continue;
+        if (
+          !isRootUpdateCandidate(before) ||
+          !hasScopedPackRealizationEvidence(before)
+        )
+          continue;
         requests.push({
           pack: definition.name,
           scope,

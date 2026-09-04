@@ -313,14 +313,11 @@ async function collectStraysDefault(
     activeAdapters ??
     (await getActiveAdapters(getDefaultAdapters(), scopeRoot));
   const candidates: InitStrayCandidate[] = [];
-  const hasMaterializationAdapter = adaptersToScan.some(
-    (adapter) => adapter.name === 'codex' || adapter.name === 'cursor',
-  );
-  const materializationCanonicalEntries =
-    scope === 'user' && hasMaterializationAdapter
+  const providerCanonicalEntries =
+    scope === 'user'
       ? mergeUserScopeMaterializationEntries(
           canonicalEntries,
-          await scanBundledManagedAgents(),
+          await scanBundledManagedAgents({ scopeRoot }),
         )
       : canonicalEntries;
   const codexExtensionPlan = adaptersToScan.some(
@@ -328,7 +325,7 @@ async function collectStraysDefault(
   )
     ? await computeCodexProjectExtensionPlan(
         scopeRoot,
-        materializationCanonicalEntries,
+        providerCanonicalEntries,
         undefined,
         { userConfigDir },
       )
@@ -338,7 +335,7 @@ async function collectStraysDefault(
   )
     ? await computeCursorProjectExtensionPlan(
         scopeRoot,
-        materializationCanonicalEntries,
+        providerCanonicalEntries,
         undefined,
         { userConfigDir },
       )
@@ -372,7 +369,7 @@ async function collectStraysDefault(
             adapter.name,
             providerDir,
             manifest,
-            canonicalEntries,
+            providerCanonicalEntries,
             source.mapping,
           )
         ).map((report) => ({ provider: adapter.name, report })),
@@ -394,7 +391,7 @@ async function collectStraysDefault(
   if (adaptersToScan.some((adapter) => adapter.name === 'codex')) {
     const codexStrays = await detectCodexRoleStrays(
       scopeRoot,
-      canonicalEntries,
+      providerCanonicalEntries,
       new Set(codexExtensionPlan!.managedRoles),
     );
     for (const stray of codexStrays) {

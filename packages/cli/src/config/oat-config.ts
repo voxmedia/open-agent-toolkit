@@ -890,19 +890,23 @@ function normalizeWorkflowConfig(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
-export type OatToolsConfig = Partial<
-  Record<
-    | 'core'
-    | 'ideas'
-    | 'docs'
-    | 'workflows'
-    | 'utility'
-    | 'project-management'
-    | 'research'
-    | 'brainstorm',
-    boolean
-  >
+export type OatToolPackName =
+  | 'core'
+  | 'ideas'
+  | 'docs'
+  | 'workflows'
+  | 'utility'
+  | 'project-management'
+  | 'research'
+  | 'brainstorm';
+
+export type OatToolsRequiredByConfig = Partial<
+  Record<OatToolPackName, OatToolPackName[]>
 >;
+
+export type OatToolsConfig = Partial<Record<OatToolPackName, boolean>> & {
+  requiredBy?: OatToolsRequiredByConfig;
+};
 
 export interface OatPjmConfig {
   initialized?: boolean;
@@ -918,7 +922,7 @@ const VALID_TOOL_PACKS = [
   'project-management',
   'research',
   'brainstorm',
-] as const satisfies readonly (keyof OatToolsConfig)[];
+] as const satisfies readonly OatToolPackName[];
 
 function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   if (!isRecord(value)) {
@@ -929,6 +933,29 @@ function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   for (const pack of VALID_TOOL_PACKS) {
     if (typeof value[pack] === 'boolean') {
       tools[pack] = value[pack];
+    }
+  }
+  if (isRecord(value.requiredBy)) {
+    const requiredBy: OatToolsRequiredByConfig = {};
+    for (const pack of VALID_TOOL_PACKS) {
+      const leases = value.requiredBy[pack];
+      if (!Array.isArray(leases)) continue;
+      const normalized = [
+        ...new Set(
+          leases.filter(
+            (lease): lease is OatToolPackName =>
+              typeof lease === 'string' &&
+              lease !== pack &&
+              (VALID_TOOL_PACKS as readonly string[]).includes(lease),
+          ),
+        ),
+      ].sort();
+      if (normalized.length > 0) {
+        requiredBy[pack] = normalized;
+      }
+    }
+    if (Object.keys(requiredBy).length > 0) {
+      tools.requiredBy = requiredBy;
     }
   }
   return Object.keys(tools).length > 0 ? tools : undefined;

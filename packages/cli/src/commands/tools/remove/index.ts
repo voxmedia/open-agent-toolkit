@@ -159,7 +159,7 @@ export function createToolsRemoveCommand(
         return;
       }
 
-      if (!dryRun && target.kind !== 'name') {
+      if (!dryRun && target.kind !== 'name' && !dependencies.reconcilePacks) {
         const packs = target.kind === 'pack' ? [target.pack] : [...VALID_PACKS];
         let stage: 'intent-write' | 'final-inventory' = 'intent-write';
         let currentPack = packs[0]!;

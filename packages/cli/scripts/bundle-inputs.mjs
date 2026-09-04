@@ -74,6 +74,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'analyze',
     'compare',
     'deep-research',
+    'recon',
     'skeptic',
     'synthesize',
   ]),
@@ -81,6 +82,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-codebase-mapper.md',
     'oat-phase-implementer.md',
     'oat-reviewer.md',
+    'recon-worker.md',
     'skeptical-evaluator.md',
   ]),
   templateFiles: Object.freeze([

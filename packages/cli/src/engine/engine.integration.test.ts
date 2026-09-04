@@ -1029,6 +1029,16 @@ describe('sync engine integration', () => {
           'dir',
         );
         await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
+        const replacementStat = await lstat(providerDir);
+        if (
+          manifest.collections[0]?.createdLink &&
+          manifest.collections[0].createdLink.inode ===
+            String(replacementStat.ino)
+        ) {
+          manifest.collections[0].createdLink.inode = String(
+            replacementStat.ino + 1,
+          );
+        }
       }
       if (kind === 'unverifiable') {
         delete (

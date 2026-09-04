@@ -953,6 +953,21 @@ describe('skills bundled docs contract', () => {
     expect(manifestAgents).toEqual(canonicalAgents);
   });
 
+  it('keeps recon dispatch dependencies installed-scope owned with a visible generic-role fallback', () => {
+    const content = readFileSync(join(SKILLS_DIR, 'recon', 'SKILL.md'), 'utf8');
+
+    expect(content).toContain('`oat-dispatch-subagents/SKILL.md`');
+    expect(content).toContain('`subagent-orchestration/SKILL.md`');
+    expect(content).toMatch(
+      /\$\{SKILL_DIR\}\/\.\.[\s\S]+\$\{HOME\}\/\.agents\/skills[\s\S]+<repo-root>\/\.agents\/skills/,
+    );
+    expect(content).toContain('dependency read to that same scope');
+    expect(content).toContain('visible generic role fallback');
+    expect(content).toContain('scripts/validate-packet.mjs');
+    expect(content).toContain('scripts/render-packet.mjs');
+    expect(collectCrossSkillTargets(content, 'recon')).toEqual([]);
+  });
+
   it('skips only the materialized references/docs subtree', () => {
     const fixtureRoot = mkdtempSync(join(tmpdir(), 'oat-authored-markdown-'));
     const materializedDocsDir = join(fixtureRoot, 'references', 'docs');

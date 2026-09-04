@@ -9,7 +9,9 @@ import {
 } from '@app/command-context';
 import { confirmAction } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { dependencyRetainedAssetIds } from '@commands/tools/shared/pack-dependencies';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackDependencyLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import { isPackName, PACK_NAMES } from '@commands/tools/shared/pack-manifest';
 import {
   resolveSharedOwnerRetentions,
@@ -18,6 +20,7 @@ import {
 } from '@commands/tools/shared/pack-reconcile';
 import {
   hasScopedPackOwnershipEvidence,
+  readScopedPackIntent,
   writeScopedPackIntent,
 } from '@commands/tools/shared/scoped-pack-intent';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
@@ -123,6 +126,14 @@ async function defaultExecuteDestination(
   runtime: MigrationCommandRuntime,
 ): Promise<PackMigrationOutcome> {
   return executeMigrationDestination(preview, destinationRoot, {
+    acquireDependencies: async () =>
+      reconcilePackDependencyLifecycles({
+        pack: preview.pack,
+        scope: preview.to,
+        scopeRoot: destinationRoot,
+        assetsRoot: runtime.assetsRoot,
+        action: 'migrate-destination',
+      }),
     applyDependencies: {
       writeGenerated: async (operation) =>
         writeGenerated(destinationRoot, operation),
@@ -157,6 +168,14 @@ async function defaultCompleteSourceRemoval(
 ): Promise<PackMigrationOutcome> {
   const preview = destination.preview;
   return completeMigrationSourceRemoval(destination, input, {
+    releaseDependencies: async () =>
+      reconcilePackDependencyLifecycles({
+        pack: preview.pack,
+        scope: preview.from,
+        scopeRoot: input.sourceRoot,
+        assetsRoot: runtime.assetsRoot,
+        action: 'remove',
+      }),
     inventory: async () =>
       inventoryScopedPack({
         pack: preview.pack,
@@ -183,6 +202,14 @@ async function defaultCompleteSourceRemoval(
         hasOwnershipEvidence: async (pack, scope, scopeRoot) =>
           hasScopedPackOwnershipEvidence({ pack, scope, scopeRoot }),
       }),
+    resolveRetainedDependencyAssetIds: async () => {
+      const intent = await readScopedPackIntent({
+        pack: preview.pack,
+        scope: preview.from,
+        scopeRoot: input.sourceRoot,
+      });
+      return dependencyRetainedAssetIds(preview.pack, intent.requiredBy);
+    },
     sync: async ({ scope, canonicalPaths }) =>
       runSync({
         context: runtime.context,

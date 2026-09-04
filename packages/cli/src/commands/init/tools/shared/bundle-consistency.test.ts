@@ -455,6 +455,38 @@ describe('bundle asset inventory consistency', () => {
   );
 
   it(
+    'bundles recon runtime helpers and its managed worker without test fixtures',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-recon-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        for (const path of [
+          ['skills', 'recon', 'SKILL.md'],
+          ['skills', 'recon', 'references', 'packet-contract.md'],
+          ['skills', 'recon', 'scripts', 'validate-packet.mjs'],
+          ['skills', 'recon', 'scripts', 'lib', 'contracts.mjs'],
+          ['agents', 'recon-worker.md'],
+        ]) {
+          expect(existsSync(join(assetsRoot, ...path)), path.join('/')).toBe(
+            true,
+          );
+        }
+        expect(existsSync(join(assetsRoot, 'skills', 'recon', 'tests'))).toBe(
+          false,
+        );
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
     'bundles workflow skills with canonical dispatch policy prompt guidance',
     () => {
       const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));

@@ -962,15 +962,15 @@ function collectPackStateFindings(
           continue;
         }
         if (diagnostic.code === 'user-agent-unmaterialized') {
-          // A documented scope limitation rather than drift: `oat tools update`
-          // cannot repair it, so no recovery command is offered and the check
-          // stays a pass. The message still names every affected agent so the
-          // absent capability is not reported as a complete pack.
+          // A manifest eligibility boundary rather than drift: `oat tools
+          // update` cannot repair it, so no recovery command is offered and the
+          // check stays a pass. The message still names every affected agent so
+          // the absent capability is not reported as a complete pack.
           findings.push({
             pack: inventory.pack,
             scope,
             code: 'user-agent-unmaterialized',
-            detail: `${diagnostic.paths.length} user-scope agent(s) lack native provider-role materialization; canonical instruction reads are unaffected, and active Codex or Cursor materialization supplies only the bundled managed roles, so install this pack at project scope to materialize the affected agents`,
+            detail: `${diagnostic.paths.length} user-scope agent(s) lack native provider-role materialization; canonical instruction reads are unaffected, and active Codex or Cursor materialization supplies only built-in managed roles and manifest-declared user-materializable agents, so install this pack at project scope to materialize the affected agents`,
             paths: diagnostic.paths,
             recovery: null,
           });

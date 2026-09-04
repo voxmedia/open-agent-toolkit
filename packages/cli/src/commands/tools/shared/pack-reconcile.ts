@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import type { ConcreteScope } from '@shared/types';
 
+import type { PackDependencyLease } from './pack-dependencies';
 import type { ScopedPackInventory } from './pack-inventory';
 import { getPackDefinition, PACK_MANIFEST } from './pack-manifest';
 import type {
@@ -38,6 +39,13 @@ export type PackReconcileOperation =
       pack: PackName;
       scope: ConcreteScope;
       enabled: boolean;
+    }
+  | {
+      kind: 'write-lease';
+      pack: PackName;
+      scope: ConcreteScope;
+      requiredBy: PackName;
+      enabled: boolean;
     };
 
 export interface PackReconcilePlan {
@@ -45,9 +53,13 @@ export interface PackReconcilePlan {
   scope: ConcreteScope;
   action: PackReconcileAction;
   operations: readonly PackReconcileOperation[];
-  expectedCompleteness: PackCompleteness;
+  expectedCompleteness: PackCompleteness | null;
+  selectedAssetIds: readonly string[];
+  expectedAssetStatus: 'current' | 'missing' | null;
+  expectedAssetStatuses?: Readonly<Record<string, 'current' | 'missing'>>;
   changedCanonicalPaths: readonly string[];
   retainedAssets: readonly PackSharedOwnerRetention[];
+  retainedDependencyAssetIds: readonly string[];
 }
 
 export interface PackSharedOwnerRetention {
@@ -65,6 +77,9 @@ export interface PlanPackReconcileInput {
   action: PackReconcileAction;
   inventory: ScopedPackInventory;
   retainedAssets?: readonly PackSharedOwnerRetention[];
+  retainedDependencyAssetIds?: readonly string[];
+  assetIds?: readonly string[];
+  dependency?: PackDependencyLease;
 }
 
 export interface ResolveSharedOwnerRetentionsInput {
@@ -205,6 +220,7 @@ function removalOperation(
   if (input.retainedAssets?.some(({ assetId }) => assetId === asset.id)) {
     return null;
   }
+  if (input.retainedDependencyAssetIds?.includes(asset.id)) return null;
   const observed = input.inventory.assets.find(
     ({ definition }) => definition.id === asset.id,
   );
@@ -231,17 +247,35 @@ export function planPackReconcile(
   if (!packDefinition.allowedScopes.includes(input.scope)) {
     throw new Error(`Pack ${input.pack} does not allow ${input.scope} scope`);
   }
-  const applicableAssets = packDefinition.assets.filter(({ scopes }) =>
+  const allApplicableAssets = packDefinition.assets.filter(({ scopes }) =>
     scopes.includes(input.scope),
   );
+  const requestedAssetIds = new Set(input.assetIds ?? []);
+  if (requestedAssetIds.size > 0) {
+    for (const assetId of requestedAssetIds) {
+      if (!allApplicableAssets.some(({ id }) => id === assetId)) {
+        throw new Error(
+          `Pack ${input.pack} dependency selected unknown or out-of-scope asset ${assetId}`,
+        );
+      }
+    }
+  }
+  const applicableAssets =
+    requestedAssetIds.size > 0
+      ? allApplicableAssets.filter(({ id }) => requestedAssetIds.has(id))
+      : allApplicableAssets;
   const changedCanonicalPaths: string[] = [];
   const operations: PackReconcileOperation[] = [];
   const retainedAssets = input.retainedAssets ?? [];
 
+  const directDependencyRetention =
+    input.dependency?.lease === 'release' && input.inventory.intent.direct;
   for (const asset of applicableAssets) {
     const assetOperations =
       input.action === 'remove'
-        ? [removalOperation(asset, input)].filter(
+        ? [
+            directDependencyRetention ? null : removalOperation(asset, input),
+          ].filter(
             (operation): operation is PackReconcileOperation =>
               operation !== null,
           )
@@ -253,17 +287,33 @@ export function planPackReconcile(
     }
   }
 
-  const desiredIntent = input.action !== 'remove';
-  if (
-    input.inventory.intent.enabled !== desiredIntent ||
-    (desiredIntent && input.inventory.intent.source !== 'declared')
-  ) {
-    operations.push({
-      kind: 'write-intent',
-      pack: input.pack,
-      scope: input.scope,
-      enabled: desiredIntent,
-    });
+  if (input.dependency) {
+    const desiredLease = input.dependency.lease === 'acquire';
+    const hasLease = input.inventory.intent.requiredBy.includes(
+      input.dependency.requiredBy,
+    );
+    if (hasLease !== desiredLease) {
+      operations.push({
+        kind: 'write-lease',
+        pack: input.pack,
+        scope: input.scope,
+        requiredBy: input.dependency.requiredBy,
+        enabled: desiredLease,
+      });
+    }
+  } else {
+    const desiredIntent = input.action !== 'remove';
+    if (
+      input.inventory.intent.direct !== desiredIntent ||
+      (desiredIntent && input.inventory.intent.source !== 'declared')
+    ) {
+      operations.push({
+        kind: 'write-intent',
+        pack: input.pack,
+        scope: input.scope,
+        enabled: desiredIntent,
+      });
+    }
   }
 
   const managedAssets = applicableAssets.filter(
@@ -271,7 +321,8 @@ export function planPackReconcile(
   );
   const retainedPresent = managedAssets.filter(
     (asset) =>
-      retainedAssets.some(({ assetId }) => assetId === asset.id) &&
+      (retainedAssets.some(({ assetId }) => assetId === asset.id) ||
+        input.retainedDependencyAssetIds?.includes(asset.id)) &&
       input.inventory.assets.some(
         ({ definition, status }) =>
           definition.id === asset.id && status !== 'missing',
@@ -283,6 +334,31 @@ export function planPackReconcile(
       : retainedPresent === managedAssets.length
         ? 'complete'
         : 'partial';
+  const retainedSelectedAssets = applicableAssets.filter(
+    (asset) =>
+      retainedAssets.some(({ assetId }) => assetId === asset.id) ||
+      input.retainedDependencyAssetIds?.includes(asset.id),
+  ).length;
+  const expectedSelectedRemovalStatus =
+    retainedSelectedAssets === 0
+      ? 'missing'
+      : retainedSelectedAssets === applicableAssets.length
+        ? 'current'
+        : null;
+  const expectedAssetStatuses =
+    requestedAssetIds.size === 0
+      ? undefined
+      : (Object.fromEntries(
+          applicableAssets.map((asset) => [
+            asset.id,
+            input.action !== 'remove' ||
+            directDependencyRetention ||
+            retainedAssets.some(({ assetId }) => assetId === asset.id) ||
+            input.retainedDependencyAssetIds?.includes(asset.id)
+              ? 'current'
+              : 'missing',
+          ]),
+        ) satisfies Record<string, 'current' | 'missing'>);
 
   return {
     pack: input.pack,
@@ -290,9 +366,22 @@ export function planPackReconcile(
     action: input.action,
     operations,
     expectedCompleteness:
-      input.action === 'remove' ? expectedRemovalCompleteness : 'complete',
+      requestedAssetIds.size > 0
+        ? null
+        : input.action === 'remove'
+          ? expectedRemovalCompleteness
+          : 'complete',
+    selectedAssetIds: applicableAssets.map(({ id }) => id),
+    expectedAssetStatus:
+      requestedAssetIds.size === 0
+        ? null
+        : input.action !== 'remove' || directDependencyRetention
+          ? 'current'
+          : expectedSelectedRemovalStatus,
+    expectedAssetStatuses,
     changedCanonicalPaths: [...new Set(changedCanonicalPaths)],
     retainedAssets,
+    retainedDependencyAssetIds: input.retainedDependencyAssetIds ?? [],
   };
 }
 

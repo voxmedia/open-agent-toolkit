@@ -34,7 +34,10 @@ export {
   writeDirectorySentinel,
 } from './markers';
 export { assertSafeProviderMutationPath } from './provider-path-safety';
-export type { CanonicalEntry } from './scanner';
+export type {
+  CanonicalEntry,
+  ScanBundledManagedAgentsOptions,
+} from './scanner';
 export {
   materializationCanonicalPathAllowed,
   mergeUserScopeMaterializationEntries,
