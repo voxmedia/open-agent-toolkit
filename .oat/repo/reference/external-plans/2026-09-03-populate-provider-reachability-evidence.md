@@ -95,11 +95,12 @@ assets }` plus an index signature; none of the design's activation,
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                | Required state                                                                          | Current state |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------- |
-| Satisfied     | PR #255 `tool-pack-scope-provider-truthfulness`                                                                           | Registry, evidence types, and sync JSON evidence exist on main.                         | Merged.       |
-| Soft ordering | `BL-260903-retire-deprecated-pack` (unplanned)                                                                            | Run after this plan; it removes deprecated placement and then finds no dead codes left. | Open.         |
-| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4) owns `sync/apply.ts` output | Consume the sync JSON; do not reshape it.                                               | Pending (W4). |
+| Type          | Dependency                                                                                                                                      | Required state                                                                                                            | Current state         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Satisfied     | PR #255 `tool-pack-scope-provider-truthfulness`                                                                                                 | Registry, evidence types, and sync JSON evidence exist on main.                                                           | Merged.               |
+| Soft ordering | `BL-260903-retire-deprecated-pack` (unplanned)                                                                                                  | Run after this plan; it removes deprecated placement and then finds no dead codes left.                                   | Open.                 |
+| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4) owns `sync/apply.ts` output                       | Consume the sync JSON; do not reshape it.                                                                                 | Pending (W4).         |
+| Soft ordering | W6 group 2 plan [Diagnose canonical skills missing from a provider view](./2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md) | Runs after this plan; both edit `info-tool.ts`, `info-tool.test.ts`, and `tool-packs.md`, so never in one parallel group. | Pending (W6 group 2). |
 
 There are no unsatisfied hard dependencies.
 
