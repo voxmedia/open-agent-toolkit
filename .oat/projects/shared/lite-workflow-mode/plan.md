@@ -13,7 +13,6 @@ oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
 oat_template: true
-oat_template_name: plan
 ---
 
 # Implementation Plan: lite-workflow-mode
@@ -26,7 +25,7 @@ oat_template_name: plan
 
 **Tech Stack:** TypeScript ESM, Commander, vitest, pnpm/Turborepo, markdown skills and templates, Fumadocs.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): export WORKFLOW_MODES with lite`
+**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add lite to WORKFLOW_MODES`
 
 ## Planning Checklist
 
@@ -39,9 +38,9 @@ oat_template_name: plan
 
 ## Parallelism
 
-Phase 1 is the foundation: it changes the shared `WorkflowMode` declaration, which every later phase compiles against, so nothing can run beside it.
+Phase 1 is the foundation: it changes the shared `WorkflowMode` declaration, which every later phase compiles against, and exports the two scaffold helpers the promote command reuses, so nothing can run beside it.
 
-Phase 2 (routing) and Phase 3 (promote command and split hardening) both depend only on Phase 1 and have disjoint write sets. Phase 2 writes `packages/control-plane/src/recommender/router.ts`, `packages/cli/src/commands/state/generate.ts`, and their tests. Phase 3 writes a new `packages/cli/src/commands/project/promote/` directory, one registration line in `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/project/split/run.ts`, and their tests. Neither touches the other's files, each has independent scoped verification, and neither depends on the other's behavior. They are declared as one parallel group.
+Phase 2 (routing) and Phase 3 (promote command and split hardening) both depend only on Phase 1 and have disjoint write sets. Phase 2 writes `packages/control-plane/src/recommender/router.ts`, `packages/cli/src/commands/state/generate.ts`, and their tests. Phase 3 writes a new `packages/cli/src/commands/project/promote/` directory, one registration line in `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/project/split/run.ts`, the split runner test under `split/__tests__/`, and the help snapshot. Neither touches the other's files, each has independent scoped verification, and neither depends on the other's behavior. They are declared as one parallel group.
 
 Phase 4 (the lite entry skill plus the end-to-end integration test) needs both routing and scaffold merged, so it follows the group. Phase 5 (mode-aware prose across many skills, the import-plan offer, and the skill-contract test rewrite) shares `packages/cli/src/validation/skills.test.ts` with Phase 4's pack-manifest assertions and edits many skill files, so it stays sequential. Phase 6 (docs, triage, lockstep bump, release validation, manual run) must be last because the version gates compare against the final diff.
 
@@ -63,22 +62,20 @@ _No explicit constraints. Runtime selection chooses within the project ceiling._
 
 **Files:**
 
-- Modify: `packages/control-plane/src/types.ts`
+- Modify: `packages/control-plane/src/types.ts` (the constant and derived type live here; `index.ts` already re-exports `./types`)
 - Modify: `packages/control-plane/src/state/parser.ts`
-- Modify: `packages/control-plane/src/index.ts` (export `WORKFLOW_MODES`)
 - Modify: `packages/control-plane/src/state/parser.test.ts`
-- Modify: `packages/control-plane/src/project.ts` (only if a `Record<WorkflowMode, ...>` there fails to compile)
 
 **Step 1: Write test (RED)**
 
-Add parser cases: `oat_workflow_mode: lite` parses to `'lite'`; `oat_workflow_mode: bogus` still normalizes to `null`; `WORKFLOW_MODES` is exported and contains exactly `spec-driven`, `quick`, `import`, `lite` in that order.
+Add parser cases: `oat_workflow_mode: lite` parses to `'lite'`; `oat_workflow_mode: bogus` still normalizes to `null`; `WORKFLOW_MODES` is importable from the package root and contains exactly `spec-driven`, `quick`, `import`, `lite` in that order.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts`
-Expected: new cases fail (RED)
+Expected: the `lite` case and the `WORKFLOW_MODES` import fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Move the mode list to a single exported constant and derive the type from it:
+In `types.ts`, replace the union with a single exported constant and derive the type from it:
 
 ```typescript
 export const WORKFLOW_MODES = [
@@ -90,30 +87,72 @@ export const WORKFLOW_MODES = [
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 ```
 
-Parser imports `WORKFLOW_MODES` instead of its local copy. Re-export from the package index.
+Parser imports `WORKFLOW_MODES` from `../types` and deletes its local array.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-Remove the now-duplicate local array in the parser. No other behavior change.
+None beyond the deleted duplicate.
 
 **Step 4: Verify**
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/control-plane exec vitest run`
-Expected: type-check clean; control-plane suite green
+Expected: type-check clean; control-plane suite green. Note: `getWorkflowRoutes` in the recommender has a `default` branch, so control-plane compiles before Phase 2 adds lite routes.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/index.ts packages/control-plane/src/state/parser.test.ts
-git commit -m "feat(p01-t01): export array-derived WORKFLOW_MODES with lite"
+git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts
+git commit -m "feat(p01-t01): add lite to array-derived WORKFLOW_MODES"
 ```
 
 ---
 
-### Task p01-t02: Unify the scaffold mode type and add source/target template mapping
+### Task p01-t02: Add the plan-lite.md template and register it in the bundle inventory
+
+**Files:**
+
+- Create: `.oat/templates/plan-lite.md`
+- Modify: `.oat/templates/state.md` (enum comment `spec-driven | quick | import | lite`)
+- Modify: `.oat/templates/plan.md` (enum comment `spec-driven | quick | imported | lite`)
+- Modify: `packages/cli/scripts/bundle-inputs.mjs` (`templateFiles` gains `plan-lite.md`)
+- Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (workflow template list near the `state.md ... project-retro.md` block gains `plan-lite.md`)
+
+**Step 1: Write test (RED)**
+
+The bundle inventory is explicit, not a directory copy: `bundle-inputs.mjs` lists template names and `bundle-consistency.test.ts` asserts the manifest and the bundle agree. Add `plan-lite.md` to the pack-manifest template list first and run the consistency test.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+Expected: "bundles every workflow template" fails because `bundle-inputs.mjs` does not list `plan-lite.md`, and "only bundles templates that exist" fails because the file is absent (RED)
+
+**Step 2: Implement (GREEN)**
+
+Author `plan-lite.md` with frontmatter (`oat_plan_source: lite`, `oat_plan_parallel_groups: []`, import fields null, `oat_template: true`, `oat_template_name: plan-lite`) and sections in this order: title, goal line, `## Summary`, `## Decisions`, `## Assumptions`, `## Out of Scope`, `## Validation Criteria` (each criterion names its check command), `## Parallelism` (single sentence: one phase, sequential), `## Phase 1: {Phase Name}` with two example tasks in the standard grammar, `## Reviews` (same table as `plan.md`, including `spec` and `design` rows), `## Implementation Complete`, `## References`. Use only placeholders that `applyTemplateReplacements` resolves; copy the allowed set from `.oat/templates/plan.md`. Add `plan-lite.md` to `bundle-inputs.mjs` `templateFiles`. Update the two enum comments.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+Run `pnpm exec oxfmt --write .oat/templates/plan-lite.md`.
+
+**Step 4: Verify**
+
+Run: `test -f .oat/templates/plan-lite.md && pnpm exec oxfmt --check .oat/templates/plan-lite.md && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Expected: file present and formatted; existing scaffold suite unchanged (lite is not scaffolded yet)
+
+**Step 5: Commit**
+
+```bash
+git add .oat/templates/plan-lite.md .oat/templates/state.md .oat/templates/plan.md packages/cli/scripts/bundle-inputs.mjs packages/cli/src/commands/tools/shared/pack-manifest.ts
+git commit -m "feat(p01-t02): add plan-lite template to the bundle inventory"
+```
+
+---
+
+### Task p01-t03: Unify the scaffold mode type, add source/target mapping, scaffold lite
 
 **Files:**
 
@@ -124,10 +163,10 @@ git commit -m "feat(p01-t01): export array-derived WORKFLOW_MODES with lite"
 
 **Step 1: Write test (RED)**
 
-Scaffold tests: `--mode lite` creates exactly `state.md`, `plan.md`, `implementation.md` and no `discovery.md`; the created `plan.md` contains a `## Validation Criteria` heading (proving it came from `plan-lite.md`); the existing spec-driven, quick, and import "creates ... artifacts only" tests are unchanged and still pass. Index tests: `--mode lite` passes through; the option's choices equal `WORKFLOW_MODES`.
+Scaffold tests: `--mode lite` creates exactly `state.md`, `plan.md`, `implementation.md` and no `discovery.md`; the created `plan.md` contains a `## Validation Criteria` heading (proving it came from `plan-lite.md`); extend the "renders every real $mode scaffold artifact without unresolved OAT placeholders" `it.each` with `lite`; the existing spec-driven, quick, and import "creates ... artifacts only" tests are unchanged. Index tests: `--mode lite` passes through; the option's choices equal `WORKFLOW_MODES`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
-Expected: lite cases fail (RED)
+Expected: every lite case fails because `TEMPLATES_BY_MODE` has no lite key and the CLI rejects the choice (RED)
 
 **Step 2: Implement (GREEN)**
 
@@ -136,9 +175,10 @@ Expected: lite cases fail (RED)
 - Copy loop resolves `source` through `resolveTemplateSource` and writes to `target`; `createdFiles` records the target name.
 - Add the lite `STATE_TEMPLATE_BY_MODE` entry: phase `plan`, status `in_progress`, HiLL checkpoints `[]`, artifacts naming plan and implementation only, next milestone "run oat-project-lite".
 - Build `--mode` choices from `WORKFLOW_MODES`; keep the default `spec-driven`.
+- Export `applyTemplateReplacements` and `resolveTemplateSource` (currently module-private) so the Phase 3 promote command can reuse them without touching this file. Note `applyTemplateReplacements(template, projectName, today, nowUtc, mode)` reads `STATE_TEMPLATE_BY_MODE[mode]`, so callers rendering quick artifacts must pass `'quick'`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
-Expected: pass (GREEN). This task depends on p01-t03's template existing on disk; implement t03's template file first if the render test needs it, but commit them separately.
+Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
@@ -146,55 +186,14 @@ Ensure the normalizer keeps the three existing modes byte-identical: add an asse
 
 **Step 4: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/cli type-check`
-Expected: no errors; every `Record<WorkflowMode, ...>` now has a lite entry
+Run: `pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new`
+Expected: no errors; every `Record<WorkflowMode, ...>` now has a lite entry; the bundle-tier test "uses bundled templates when neither installed tier exists" still passes for lite because p01-t02 registered the template
 
 **Step 5: Commit**
 
 ```bash
 git add packages/cli/src/commands/project/new/scaffold.ts packages/cli/src/commands/project/new/index.ts packages/cli/src/commands/project/new/index.test.ts packages/cli/src/commands/project/new/scaffold.test.ts
-git commit -m "feat(p01-t02): scaffold lite projects from plan-lite template"
-```
-
----
-
-### Task p01-t03: Add the plan-lite.md template and mode enum comments
-
-**Files:**
-
-- Create: `.oat/templates/plan-lite.md`
-- Modify: `.oat/templates/state.md` (enum comment `spec-driven | quick | import | lite`)
-- Modify: `.oat/templates/plan.md` (enum comment `spec-driven | quick | imported | lite`)
-- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts` (the `it.each` placeholder-free render test gains `lite`)
-
-**Step 1: Write test (RED)**
-
-Extend the "renders every real $mode scaffold artifact without unresolved OAT placeholders" `it.each` with `lite`.
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts -t "renders every real"`
-Expected: lite fails because the template is missing (RED)
-
-**Step 2: Implement (GREEN)**
-
-Author `plan-lite.md` with frontmatter (`oat_plan_source: lite`, `oat_plan_parallel_groups: []`, import fields null, `oat_template: true`, `oat_template_name: plan-lite`) and sections in this order: title, goal line, `## Summary`, `## Decisions`, `## Assumptions`, `## Out of Scope`, `## Validation Criteria` (each criterion names its check command), `## Parallelism` (single sentence: one phase, sequential), `## Phase 1: {Phase Name}` with two example tasks in the standard grammar, `## Reviews` (same table as `plan.md`, including `spec` and `design` rows), `## Implementation Complete`, `## References`. Use only placeholders that `applyTemplateReplacements` resolves; check the existing `plan.md` template for the allowed set.
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts -t "renders every real"`
-Expected: pass (GREEN)
-
-**Step 3: Refactor**
-
-Run `pnpm exec oxfmt --write .oat/templates/plan-lite.md` and confirm the file still renders.
-
-**Step 4: Verify**
-
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
-Expected: entire scaffold suite green. Note the bundle step copies `.oat/templates` into CLI assets at build time; no manual mirror.
-
-**Step 5: Commit**
-
-```bash
-git add .oat/templates/plan-lite.md .oat/templates/state.md .oat/templates/plan.md packages/cli/src/commands/project/new/scaffold.test.ts
-git commit -m "feat(p01-t03): add plan-lite template and lite enum comments"
+git commit -m "feat(p01-t03): scaffold lite projects from the plan-lite template"
 ```
 
 ---
@@ -246,10 +245,10 @@ git commit -m "test(p01-t04): update help snapshot for lite mode choice"
 
 **Step 1: Write test (RED)**
 
-Cases for mode `lite`: plan in_progress tier 3 → `oat-project-lite`; plan in_progress tier 2 → `oat-project-implement`; plan complete tier 1 → `oat-project-implement`; implement in_progress → `oat-project-implement`; discovery phase under lite falls through to the current-phase default without throwing.
+Load-bearing assertion: mode `lite`, plan in_progress tier 3 → `oat-project-lite`. This is the only case that can fail today, because `getWorkflowRoutes` falls back to `SPEC_DRIVEN_ROUTES` for unknown modes and that table already routes tier 2, plan complete, and implement to `oat-project-implement`. Add those three as regression guards, plus a discovery-phase lite case asserting the current-phase default and no throw.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
-Expected: lite cases fail (RED)
+Expected: the tier-3 case fails (RED); guards pass
 
 **Step 2: Implement (GREEN)**
 
@@ -276,7 +275,7 @@ git commit -m "feat(p02-t01): route lite projects in the recommender"
 
 ---
 
-### Task p02-t02: Add lite rows to the dashboard route map
+### Task p02-t02: Add the lite planning row to the dashboard route map
 
 **Files:**
 
@@ -285,14 +284,14 @@ git commit -m "feat(p02-t01): route lite projects in the recommender"
 
 **Step 1: Write test (RED)**
 
-Extend "routes computeNextStep correctly for spec-driven/quick/import modes" with lite fixtures: `lite:plan:in_progress` → `oat-project-lite`; `lite:plan:complete` → `oat-project-implement`; the rendered dashboard table shows `| Mode | lite |`.
+Load-bearing assertion: `lite:plan:in_progress` → `oat-project-lite` (today the shared map yields `oat-project-plan`). Regression guards: `lite:plan:complete` → `oat-project-implement` already holds via `sharedMap['plan:complete']`, and the rendered dashboard table shows `| Mode | lite |` once Phase 1 parses lite. Extend the existing "routes computeNextStep correctly for spec-driven/quick/import modes" case with these fixtures.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`
-Expected: lite cases fail (RED)
+Expected: the in_progress case fails (RED); guards pass
 
 **Step 2: Implement (GREEN)**
 
-Add the two `lite:plan:*` entries to `routeMap` with reasons "Continue lite planning" and "Begin lite implementation".
+Add only the `lite:plan:in_progress` entry to `routeMap` with reason "Continue lite planning". Do not duplicate the `plan:complete` route that `sharedMap` already provides.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`
 Expected: pass (GREEN)
@@ -310,7 +309,7 @@ Expected: no errors
 
 ```bash
 git add packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts
-git commit -m "feat(p02-t02): route lite projects on the repo dashboard"
+git commit -m "feat(p02-t02): route lite planning on the repo dashboard"
 ```
 
 ---
@@ -322,20 +321,20 @@ git commit -m "feat(p02-t02): route lite projects on the repo dashboard"
 **Files:**
 
 - Modify: `packages/cli/src/commands/project/split/run.ts`
-- Modify: `packages/cli/src/commands/project/split/run.test.ts` (or the nearest existing test file for `recordDetectedRecommendation`)
+- Modify: `packages/cli/src/commands/project/split/__tests__/run.test.ts`
 
 **Step 1: Write test (RED)**
 
-Negative control first: with an active project that has no `discovery.md`, `recordDetectedRecommendation` currently calls `appendFile` and would create the file. Assert that it does not append and instead reports a skipped recommendation record. Preserve the fixture and expected outcome in the test description.
+Negative control first. Model a new case on the non-interactive detected-origin tests in `split/__tests__/run.test.ts` (around lines 300-360), but omit the `discovery.md` pre-write. Assert that `appendFile` is not called and that the result reports the recommendation record as skipped. On current code `appendFile` is called and would create the file. Preserve the fixture and expected outcome in the test description.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/run.test.ts`
-Expected: fails on current code (RED, proves the guard is load-bearing)
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts`
+Expected: the new case fails on current code (RED, proves the guard is load-bearing)
 
 **Step 2: Implement (GREEN)**
 
-Check existence via the dependencies' file-exists helper before appending; when absent, return a structured "skipped: no discovery.md for mode" result and log one line.
+Check existence via the injected file-exists dependency before appending; when absent, return a structured "skipped: no discovery.md for this project" result and log one line.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/run.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
@@ -350,7 +349,7 @@ Expected: split suite green
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/split/run.ts packages/cli/src/commands/project/split/run.test.ts
+git add packages/cli/src/commands/project/split/run.ts packages/cli/src/commands/project/split/__tests__/run.test.ts
 git commit -m "fix(p03-t01): skip split recommendation append when discovery.md is absent"
 ```
 
@@ -364,6 +363,7 @@ git commit -m "fix(p03-t01): skip split recommendation append when discovery.md 
 - Create: `packages/cli/src/commands/project/promote/promote.ts`
 - Create: `packages/cli/src/commands/project/promote/promote.test.ts`
 - Modify: `packages/cli/src/commands/project/index.ts` (register the subcommand)
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts` (if the new subcommand appears in a golden)
 
 **Step 1: Write test (RED)**
 
@@ -378,14 +378,18 @@ Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Follow the `complete-discovery` command shape for Commander wiring and dependency injection. Reuse `resolveTemplateSource` and `applyTemplateReplacements` from the scaffold module for the discovery and quick plan renders. Perform all file writes, then resolve scope with the same fail-closed helper the CLI uses elsewhere, then commit only the project paths (or `oat project push` for synced). Refusals happen before any write.
+Follow the `complete-discovery` command shape for Commander wiring and dependency injection. Ordering is strict:
+
+1. Read-only validation: mode is `lite`, `--to` is `quick`, `references/lite-plan.md` is absent, and scope resolves through the same fail-closed helper the CLI uses elsewhere. Any failure refuses before any write.
+2. Every file write: render `discovery.md` and the fresh quick `plan.md` with the exported `applyTemplateReplacements` (pass `'quick'`) and `resolveTemplateSource` from the scaffold module; move `plan.md` to `references/lite-plan.md`; update `state.md`.
+3. Only after every write succeeded: `git add` the exact project paths and commit, or `oat project push` for synced scope.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-Extract the lite section parser into a small pure function with its own tests so import-plan (Phase 5) can reuse it.
+Extract the lite section parser into a small pure function with its own tests so import-plan guidance (Phase 5) can reference its shape.
 
 **Step 4: Verify**
 
@@ -410,19 +414,20 @@ git commit -m "feat(p03-t02): add oat project promote --to quick for lite projec
 - Create: `.agents/skills/oat-project-lite/SKILL.md`
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (`WORKFLOW_SKILL_NAMES`)
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.test.ts`
+- Modify: `packages/cli/scripts/bundle-inputs.mjs` (`skills` gains `oat-project-lite`)
 
 **Step 1: Write test (RED)**
 
-Pack-manifest test asserts `oat-project-lite` is in the workflows pack. Run `pnpm oat:validate-skills` to see the validator reject the missing skill.
+Pack-manifest test asserts `oat-project-lite` is in the workflows pack. Add the name to `WORKFLOW_SKILL_NAMES` and run the bundle-consistency test: "bundles every workflow skill" fails until `bundle-inputs.mjs` lists it.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
 Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Write the skill at `version: 1.0.0` with frontmatter matching `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 2.5 escalation check calling `oat project promote "$PROJECT_PATH" --to quick --json` and stopping with a pointer to quick-start, Step 3 author `plan.md` sections and single-phase tasks in plan-writing grammar, Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference, Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria.
+Write the skill at `version: 1.0.0` with frontmatter matching `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 2.5 escalation check calling `oat project promote "$PROJECT_PATH" --to quick --json` and stopping with a pointer to quick-start, Step 3 author `plan.md` sections and single-phase tasks in plan-writing grammar, Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference, Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria. Add `oat-project-lite` to `bundle-inputs.mjs` `skills`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts && pnpm oat:validate-skills`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
@@ -432,12 +437,12 @@ Run `pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md` and `pnpm
 **Step 4: Verify**
 
 Run: `pnpm oat:validate-skills && pnpm run cli -- sync --scope all --dry-run`
-Expected: validator green; sync dry-run lists the new skill for provider views without drift errors
+Expected: validator green for the authored skill; sync dry-run lists the new skill for provider views without drift errors
 
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts
+git add .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs
 git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 ```
 
@@ -451,7 +456,7 @@ git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 
 **Step 1: Write test (RED)**
 
-Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier): (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) after writing a minimal lite plan, `project promote x --to quick` yields a quick project whose dashboard routes to quick-start and whose `references/lite-plan.md` exists.
+Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier), named "project new creates lite-mode scaffold artifacts and routes to oat-project-lite" and "project promote --to quick converts a lite project": (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) after writing a minimal lite plan, `project promote x --to quick` yields a quick project whose dashboard routes to quick-start and whose `references/lite-plan.md` exists.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts -t "lite"`
 Expected: fail before the assertions are satisfied (RED)
@@ -493,6 +498,7 @@ git commit -m "test(p04-t02): cover lite scaffold, dashboard routing, and promot
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (plan case for lite, version bump)
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (lite proceeds with reduced-assurance note, version bump)
 - Modify: `.agents/skills/oat-project-plan/SKILL.md` (lite stop branch, version bump)
+- Modify: `.agents/skills/oat-project-discover/SKILL.md` (lite route: "continue with `oat-project-lite` / `oat-project-progress`", version bump)
 - Modify: `.agents/skills/oat-project-progress/SKILL.md` (Lite mode routing table, version bump)
 - Modify: `.agents/skills/oat-project-next/SKILL.md` (Lite routing table, version bump)
 - Modify: `.agents/skills/oat-brainstorm/SKILL.md` (fold-back handoff row, version bump)
@@ -502,31 +508,37 @@ git commit -m "test(p04-t02): cover lite scaffold, dashboard routing, and promot
 
 **Step 1: Write test (RED)**
 
-Rewrite the progress/next mode-section slicing to find all four markers by position (`**Spec-Driven mode**`, `**Quick mode**`, `**Import mode**`, `**Lite mode**`) and assert lite routing text in both skills. Add review-contract assertions that review-provide's plan case and pr-final's gate mention lite alongside quick and import.
+Skill-contract changes, using each skill's real marker strings:
+
+- Progress: markers are `**Spec-Driven mode (`, `**Quick mode (`, `**Import mode (`; add `**Lite mode (`oat_workflow_mode: lite`):**` after the import block and make the import slice end at `**Lite mode` instead of running to end of file.
+- Next: markers are `**Spec-Driven Mode**`, `**Quick Mode:**`, `**Import Mode:**`; add `**Lite Mode:**` before `### Step 4:`, make the import slice end at `**Lite Mode:**`, and slice the lite table from `**Lite Mode:**` to `### Step 4:`.
+- Assert lite routing text in both skills (plan tier 3 → `oat-project-lite`).
+- Review-provide and pr-final: assert lite proceeds without spec or design and carries the reduced-assurance note. Keep the review-provide sentence "reviewing `design` in `quick/import` mode requires only `discovery.md`" byte-identical (review-skill-contracts.test.ts asserts it literally) and add lite guidance as a separate line.
+- Update every pinned version assertion for the bumped skills in `skills.test.ts` (find them with `grep -n "toBe('2.3.1')\|toBe('1.5.3')\|toBe('1.0.12')\|toBe('1.3.0')\|'1.4.6'\|'1.2.21'\|'1.6.0'"` before editing) to the new versions chosen in Step 2.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
-Expected: fail (RED)
+Expected: fail on the lite assertions and the version pins (RED)
 
 **Step 2: Implement (GREEN)**
 
-Apply each one-line or one-branch change listed in design component 7. Bump each changed skill's `version:` once (patch for prose-only additions, minor for progress/next which gain a routing table).
+Apply each one-line or one-branch change listed in design component 7, plus the discover skill's lite route. Bump each changed skill's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-`pnpm exec oxfmt --write '.agents/skills/**/*.md'` on the touched files only.
+`pnpm exec oxfmt --write` on the touched skill files only.
 
 **Step 4: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps`
-Expected: both green (fetch `origin/main` first for the bump gate)
+Run: `pnpm oat:validate-skills && git fetch origin main && pnpm run check:skill-bumps`
+Expected: both green
 
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement .agents/skills/oat-project-plan-writing .agents/skills/oat-project-review-provide .agents/skills/oat-project-pr-final .agents/skills/oat-project-plan .agents/skills/oat-project-progress .agents/skills/oat-project-next .agents/skills/oat-brainstorm .agents/skills/oat-project-promote-spec-driven packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-implement .agents/skills/oat-project-plan-writing .agents/skills/oat-project-review-provide .agents/skills/oat-project-pr-final .agents/skills/oat-project-plan .agents/skills/oat-project-discover .agents/skills/oat-project-progress .agents/skills/oat-project-next .agents/skills/oat-brainstorm .agents/skills/oat-project-promote-spec-driven packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p05-t01): add lite branches to mode-aware skills"
 ```
 
@@ -536,21 +548,21 @@ git commit -m "feat(p05-t01): add lite branches to mode-aware skills"
 
 **Files:**
 
-- Modify: `.agents/skills/oat-project-import-plan/SKILL.md` (new step after normalization, Step 5 state write branch, version bump)
-- Modify: `packages/cli/src/validation/skills.test.ts` (assert the offer text and origin-preserving state write)
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md` (new Step 3.5, Step 4.25 skip note, Step 5 state write branch, version bump)
+- Modify: `packages/cli/src/validation/skills.test.ts` (new test named "import-plan offers lite for single-phase plans and preserves import provenance"; update the import-plan version pin)
 
 **Step 1: Write test (RED)**
 
-Assert the import-plan skill contains the lite-offer step (single phase, no parallel groups, offer with recommendation) and that the accepted branch writes `oat_workflow_mode: lite` while keeping `oat_workflow_origin: imported` and the `oat_import_*` fields.
+Assert the import-plan skill contains a `### Step 3.5: Lite Offer` heading between Step 3 normalization and Step 4 metadata, that the offer fires only for one `## Phase` heading with empty `oat_plan_parallel_groups`, and that the accepted branch writes `oat_workflow_mode: lite` in Step 5 while keeping `oat_workflow_origin: imported` and the `oat_import_*` fields, and skips Step 4.25 phase-gate setup.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "import-plan"`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "import-plan offers lite"`
 Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Add Step 4.5 "Lite Offer" to import-plan: detect one `## Phase` heading and empty `oat_plan_parallel_groups`; present the offer via AskUserQuestion with lite recommended; on accept, reshape `plan.md` into the `plan-lite.md` section order, lifting Summary, Decisions, Assumptions, and Out of Scope from the external plan's prose where present and otherwise writing explicit assumptions, and deriving Validation Criteria from task verification steps; set `oat_plan_source: imported` unchanged and mode `lite` in Step 5. Reference the section parser extracted in p03-t02 for shape guidance.
+Add Step 3.5 "Lite Offer" after Step 3: detect one `## Phase` heading and empty `oat_plan_parallel_groups`; present the offer via AskUserQuestion with lite recommended and the tradeoff stated (single-phase plans can still be multi-session work); on accept, reshape `plan.md` into the `plan-lite.md` section order, lifting Summary, Decisions, Assumptions, and Out of Scope from the external plan's prose where present and otherwise writing explicit assumptions, and deriving Validation Criteria from task verification steps. Note in Step 4.25 that an accepted lite offer skips phase-gate setup. In Step 5, write `oat_workflow_mode: lite` on the accepted branch with origin and import fields preserved; `oat_plan_source` stays `imported`. Bump the skill version and its pin.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "import-plan"`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "import-plan offers lite"`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
@@ -559,7 +571,7 @@ Format the skill file.
 
 **Step 4: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps`
+Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 Expected: green
 
 **Step 5: Commit**
@@ -669,7 +681,7 @@ git commit -m "chore(p06-t02): bump lockstep package versions for lite mode"
 **Files:**
 
 - Modify: `.oat/projects/shared/lite-workflow-mode/implementation.md` (record the run)
-- Modify: provider views regenerated by `oat sync --scope all` (`.claude/skills/...`, `.oat/sync/manifest.json`)
+- Modify: `.claude/skills/oat-project-lite` and `.oat/sync/manifest.json` (regenerated by `oat sync --scope all`)
 
 **Step 1: Write test (RED)**
 
@@ -690,7 +702,7 @@ Record in implementation.md: the commands run, the number of user pauses observe
 **Step 5: Commit**
 
 ```bash
-git add .claude .oat/sync/manifest.json .oat/projects/shared/lite-workflow-mode/implementation.md
+git add .claude/skills/oat-project-lite .oat/sync/manifest.json .oat/projects/shared/lite-workflow-mode/implementation.md
 git commit -m "chore(p06-t03): sync provider views and record manual lite run"
 ```
 
@@ -736,7 +748,7 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 4 tasks - single mode definition, lite scaffold, plan-lite template, help snapshot
+- Phase 1: 4 tasks - single mode definition, plan-lite template and bundle inventory, lite scaffold, help snapshot
 - Phase 2: 2 tasks - recommender and dashboard routing
 - Phase 3: 2 tasks - split-detector guard, promote command
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
