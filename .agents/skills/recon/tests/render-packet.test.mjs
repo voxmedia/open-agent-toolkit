@@ -557,19 +557,9 @@ test('renderValidatedPacket throws categorical error on non-publishable run stat
       validation.validatedRun.artifacts.map((a) => [a.id, a]),
     ),
     exactEvidence: new Set(validation.validatedRun.exactEvidenceIds),
-    topology: {
-      requiredLanes: validation.validatedRun.topology.requiredLanes,
-      stageByLane: new Map(
-        validation.validatedRun.topology.stages.map((s) => [s.laneId, s.stage]),
-      ),
-      completeArtifactIdsByMode: new Map(
-        Object.entries(
-          validation.validatedRun.topology.completeArtifactIdsByMode,
-        ),
-      ),
-    },
+    passes: new Map(Object.entries(validation.validatedRun.passes)),
     achievedProfile: validation.validatedRun.achievedProfile,
-    receiptedReviewIds: new Set(validation.validatedRun.receiptedReviewIds),
+    assuranceReviewIds: new Set(validation.validatedRun.assuranceReviewIds),
     reconciliationContext: null,
   });
 
@@ -750,30 +740,40 @@ test('consumer handoff contains only directory and compact status', async () => 
   assert.doesNotMatch(JSON.stringify(result), /alpha evidence|raw\/dossiers/i);
 });
 
-test('partial rendering reports normalized failed and omitted stage outcomes', async () => {
+test('partial rendering reports failed and omitted pass outcomes', async () => {
   const fixture = await createPacketFixture({
     profile: 'standard',
     requestedProfile: 'standard',
     achievedProfile: 'quick',
     status: 'partial',
-    failedStageMode: 'semantic-verification',
+    failedPassMode: 'semantic-verification',
   });
   tempRoots.push(fixture.tempRoot);
   const validation = await compileValidatedRun(fixture.packetRoot);
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
-  const normalizedOutcomes = validation.validatedRun.topology.stages
-    .map(({ stage }) => stage)
-    .filter((stage) => stage.status !== 'complete');
+  assert.equal(
+    validation.validatedRun.passes['semantic-verification'],
+    undefined,
+  );
+  const outcomeGaps = fixture.manifest.gaps.filter((gap) =>
+    /PASS_(?:FAILED|OMITTED)/.test(gap.code),
+  );
   const result = await renderValidatedPacket(validation.validatedRun);
   assert.deepEqual(
-    result.failedOrOmittedPasses.filter((value) => !value.startsWith('PASS_')),
-    normalizedOutcomes.map((stage) => stage.mode),
+    result.failedOrOmittedPasses,
+    outcomeGaps.map(({ code, message }) => ({ code, message })),
+  );
+  assert.ok(
+    result.failedOrOmittedPasses.some(
+      (pass) =>
+        pass.code === 'PASS_FAILED' &&
+        pass.message.includes('semantic-verification'),
+    ),
   );
   const document = await readFile(
     join(fixture.packetRoot, 'packet.md'),
     'utf8',
   );
-  for (const stage of normalizedOutcomes) {
-    assert.match(document, new RegExp(`${stage.mode}.*${stage.status}`, 'i'));
-  }
+  assert.match(document, /semantic-verification was failed/i);
+  assert.match(document, /adversarial was omitted/i);
 });

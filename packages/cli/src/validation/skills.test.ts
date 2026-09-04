@@ -5163,7 +5163,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.5$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.6$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.4$/m);
@@ -5326,7 +5326,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.5'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.6'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
     ] as const;
@@ -6645,7 +6645,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(skill).toMatch(/^version:\s*1\.0\.1$/m);
+    expect(skill).toMatch(/^version:\s*1\.1\.0$/m);
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);

@@ -405,3 +405,71 @@ test('brief output rejects symlinked ancestors before creating a new file', asyn
   );
   await assert.rejects(readFile(join(outside, 'new.json'), 'utf8'));
 });
+
+test('canonical ledger validation rejects malformed claim evidence links before brief creation', async () => {
+  const fixture = await createPacketFixture({ profile: 'quick' });
+  tempRoots.push(fixture.tempRoot);
+  const ledger = JSON.parse(await readFile(fixture.claimsPath, 'utf8'));
+  const validControl = validateArtifactShape(ledger);
+  assert.equal(validControl.valid, true, JSON.stringify(validControl));
+
+  const cases = [
+    ['string link', ['evidence-1'], 'INVALID_EVIDENCE_LINK'],
+    [
+      'open object',
+      [{ evidenceId: 'evidence-1', relation: 'supports', note: 'x' }],
+      'UNKNOWN_FIELD',
+    ],
+    [
+      'unknown relation',
+      [{ evidenceId: 'evidence-1', relation: 'mentions' }],
+      'INVALID_EVIDENCE_RELATION',
+    ],
+    [
+      'unresolved evidence',
+      [{ evidenceId: 'evidence-missing', relation: 'supports' }],
+      'UNRESOLVED_EVIDENCE_LINK',
+    ],
+    [
+      'duplicate link',
+      [
+        { evidenceId: 'evidence-1', relation: 'supports' },
+        { evidenceId: 'evidence-1', relation: 'qualifies' },
+      ],
+      'DUPLICATE_EVIDENCE_LINK',
+    ],
+    [
+      'empty evidenceId',
+      [{ evidenceId: '', relation: 'supports' }],
+      'MISSING_REQUIRED_FIELD',
+    ],
+  ];
+  for (const [name, links, code] of cases) {
+    const candidate = structuredClone(ledger);
+    candidate.claims[0].evidence = links;
+    const validation = validateArtifactShape(candidate);
+    assert.equal(validation.valid, false, name);
+    assert.ok(
+      validation.errors.some(
+        (error) =>
+          error.code === code && error.path.startsWith('$.claims[0].evidence'),
+      ),
+      `${name}: expected ${code}, got ${validation.errors.map((error) => error.code).join(', ')}`,
+    );
+  }
+
+  // The consumer boundary: a string link that slipped past validation would
+  // make brief creation fail on link.evidenceId, so validation must run first.
+  const malformed = structuredClone(ledger);
+  malformed.claims[0].evidence = ['evidence-1'];
+  assert.throws(() =>
+    createReviewBrief({
+      id: 'brief-malformed',
+      mode: 'verify',
+      createdAt: '2026-08-31T00:03:00.000Z',
+      manifest: fixture.manifest,
+      ledger: malformed,
+      claimIds: ['claim-1'],
+    }),
+  );
+});

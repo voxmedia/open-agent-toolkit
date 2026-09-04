@@ -7,6 +7,7 @@ import {
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
+import { approvalFingerprintInput } from '../../scripts/lib/contracts.mjs';
 import { reconcileLedger } from '../../scripts/reconcile-ledger.mjs';
 import { renderPacket } from '../../scripts/render-packet.mjs';
 import {
@@ -14,9 +15,26 @@ import {
   validateArtifactFile,
 } from '../../scripts/validate-artifact.mjs';
 import {
-  createApprovalBinding,
+  approveExecution,
   createPacketFixture,
 } from '../fixtures/packet-fixture.mjs';
+
+// Failure categories reported to the user. A controller failure is never
+// reported as a worker failure.
+export const failureCategories = Object.freeze({
+  worker: 'worker',
+  dispatch: 'provider-dispatch',
+  contract: 'contract-validation',
+  source: 'source-availability',
+});
+
+const failureCategoryByCode = {
+  READ_ONLY_AUTHORITY_UNAVAILABLE: failureCategories.source,
+  STRICT_AUTHORITY_UNAVAILABLE: failureCategories.dispatch,
+  LAUNCHER_CAPABILITY_UNAVAILABLE: failureCategories.dispatch,
+  DISPATCH_AXIS_DRIFT: failureCategories.dispatch,
+  STRUCTURAL_VALIDATION_FAILED: failureCategories.contract,
+};
 
 const requiredRootNames = [
   'sourceRoot',
@@ -40,14 +58,16 @@ function validateRoots(roots) {
   );
 }
 
-function stopped(directory, status, reason) {
+function stopped(directory, status, reason, { launched = false } = {}) {
   return {
     directory,
     status,
     requestedProfile: null,
     achievedProfile: null,
-    launched: false,
+    launched,
     reason,
+    failureCategory:
+      failureCategoryByCode[reason] ?? failureCategories.contract,
   };
 }
 
@@ -58,6 +78,7 @@ async function writeFailure(packetRoot, code, message) {
     kind: 'recon.failure',
     schemaVersion: 1,
     code,
+    category: failureCategoryByCode[code] ?? failureCategories.contract,
     message,
   });
   return path;
@@ -108,112 +129,66 @@ export async function runFakeRecon(options = {}) {
     requestedProfile,
     achievedProfile,
     status,
-    failedStageMode: options.workerFailure,
+    failedPassMode: options.workerFailure,
     roots,
   });
   fixture.manifest.sources[0].authority = authorityLevel;
 
   const role =
     options.workerRoleAvailable === false ? 'generic' : 'recon-worker';
-  const approvalProjection = structuredClone(
-    fixture.manifest.execution.approvalProjection,
-  );
-  approvalProjection.selection.role_name = role;
-  approvalProjection.selection.role_selector = role;
-  approvalProjection.execution.pinned_target.role_selector = role;
-  for (const wave of approvalProjection.execution.waves) {
-    wave.authority = authorityLevel;
-  }
-  const approvalBinding = createApprovalBinding(approvalProjection);
-  const dispatchRoot = join(roots.packetRoot, 'raw', 'dispatch');
-  await mkdir(dispatchRoot, { recursive: true });
-  const prepared = {
-    kind: 'recon.dispatch-receipt',
-    schemaVersion: 1,
-    id: 'dispatch-prepared',
-    runId: fixture.manifest.run.id,
-    stageId: 'dispatch-preflight',
-    laneId: 'lane-controller',
-    state: 'prepared',
-    approvalProjection,
-    approvalCanonicalJson: approvalBinding.approvalCanonicalJson,
-    approvalFingerprint: approvalBinding.approvalFingerprint,
-    approvedAt: null,
-    approvalEvidence: null,
-    catalogRecheck: null,
-    launchAcceptance: null,
-    terminalOutcome: null,
-  };
-  const preparedPath = join(dispatchRoot, 'prepared.json');
-  await writeJson(preparedPath, prepared);
-  const approved = {
-    ...prepared,
-    id: 'dispatch-approved',
-    state: 'approved',
-    approvedAt: approvalBinding.approvedAt,
-    approvalEvidence: approvalBinding.approvalEvidence,
-  };
-  const approvedPath = join(dispatchRoot, 'approved.json');
-  await writeJson(approvedPath, approved);
+  // The generic-role fallback is fixed before approval: the approved envelope
+  // names the role that will actually run.
+  const execution = approveExecution({
+    ...fixture.manifest.execution,
+    role,
+    authority: authorityLevel,
+  });
+  fixture.manifest.execution = execution;
 
-  const acceptedProjection = structuredClone(approvalProjection);
-  if (options.dispatchDrift?.effort) {
-    acceptedProjection.selection.effort_selector = options.dispatchDrift.effort;
+  // Launch-capability preflight. Before any worker launches, the controller
+  // confirms the live launch surface can satisfy the approved envelope. When
+  // it cannot, the run stays at awaiting-approval with nothing launched.
+  if (options.launcherCapabilities) {
+    const missing = ['role', 'model', 'effort', 'authority'].filter(
+      (axis) => options.launcherCapabilities[axis] === false,
+    );
+    if (missing.length > 0) {
+      fixture.manifest.run.status = 'awaiting-approval';
+      fixture.manifest.run.achievedProfile = null;
+      await fixture.persist();
+      await writeFailure(
+        roots.packetRoot,
+        'LAUNCHER_CAPABILITY_UNAVAILABLE',
+        `The launch surface cannot satisfy the approved ${missing.join(', ')}; no worker was launched.`,
+      );
+      return stopped(
+        roots.packetRoot,
+        'awaiting-approval',
+        'LAUNCHER_CAPABILITY_UNAVAILABLE',
+      );
+    }
   }
-  if (hashCanonicalJson(acceptedProjection) !== prepared.approvalFingerprint) {
+
+  // Drift check: the axes actually launched must match the approved
+  // fingerprint byte-for-byte; otherwise renewed approval is required.
+  const launched = structuredClone(approvalFingerprintInput(execution));
+  if (options.dispatchDrift?.effort) {
+    launched.effort = options.dispatchDrift.effort;
+  }
+  if (hashCanonicalJson(launched) !== execution.approval.fingerprint) {
     fixture.manifest.run.status = 'awaiting-approval';
     fixture.manifest.run.achievedProfile = null;
-    fixture.manifest.stages = [];
-    fixture.manifest.execution = approvalBinding;
     await fixture.persist();
     await writeFailure(
       roots.packetRoot,
       'DISPATCH_AXIS_DRIFT',
-      'The accepted fake dispatch axes differ from the approved envelope.',
+      'The launched dispatch axes differ from the approved envelope.',
     );
     return stopped(
       roots.packetRoot,
       'awaiting-approval',
       'DISPATCH_AXIS_DRIFT',
     );
-  }
-
-  const accepted = {
-    ...approved,
-    id: 'dispatch-accepted',
-    state: 'accepted',
-    catalogRecheck: approvalBinding.catalogRecheck,
-    launchAcceptance: {
-      status: 'accepted',
-      acceptedAt: '2026-08-31T00:01:00.000Z',
-      handle: 'handle-controller',
-    },
-  };
-  const acceptedPath = join(dispatchRoot, 'accepted.json');
-  await writeJson(acceptedPath, accepted);
-
-  fixture.manifest.execution = approvalBinding;
-  for (const stage of fixture.manifest.stages) {
-    for (const receiptId of stage.dispatchReceiptIds) {
-      const reference = fixture.manifest.artifacts.find((item) =>
-        item.path.endsWith(`${receiptId}.json`),
-      );
-      const path = join(roots.packetRoot, reference.path);
-      const receipt = JSON.parse(await readFile(path, 'utf8'));
-      receipt.approvalProjection = approvalProjection;
-      receipt.approvalCanonicalJson = approvalBinding.approvalCanonicalJson;
-      receipt.approvalFingerprint = approvalBinding.approvalFingerprint;
-      receipt.approvedAt =
-        receipt.state === 'prepared' ? null : approvalBinding.approvedAt;
-      receipt.approvalEvidence =
-        receipt.state === 'prepared' ? null : approvalBinding.approvalEvidence;
-      receipt.catalogRecheck =
-        receipt.state === 'accepted' || receipt.state === 'completed'
-          ? approvalBinding.catalogRecheck
-          : null;
-      await writeJson(path, receipt);
-      reference.digest = await hashFile(path);
-    }
   }
 
   if (requestedProfile !== 'quick' && !degraded) {
@@ -322,17 +297,6 @@ export async function runFakeRecon(options = {}) {
     );
     reconciliationReference.digest = await hashFile(reconciliationPath);
   }
-  for (const [path, file] of [
-    ['raw/dispatch/prepared.json', preparedPath],
-    ['raw/dispatch/approved.json', approvedPath],
-    ['raw/dispatch/accepted.json', acceptedPath],
-  ]) {
-    const validation = await validateArtifactFile(file);
-    if (!validation.valid)
-      throw new Error(`Invalid fake dispatch receipt: ${path}`);
-    fixture.manifest.artifacts.push({ path, digest: await hashFile(file) });
-  }
-
   if (requestedProfile !== 'quick' && !degraded) {
     for (const relativePath of [
       'reviews/briefs/verify.json',
@@ -363,7 +327,7 @@ export async function runFakeRecon(options = {}) {
     fixture.manifest.gaps.push({
       id: 'gap-worker-failure',
       code: 'PASS_FAILED',
-      message: `${options.workerFailure} failed after accepted launch; no replacement was dispatched.`,
+      message: `${options.workerFailure} lane ${options.laneOutcome ?? 'failed'} after accepted launch; no replacement was dispatched.`,
       material: true,
     });
   }
@@ -415,6 +379,7 @@ export async function runFakeRecon(options = {}) {
         roots.packetRoot,
         'failed',
         'STRUCTURAL_VALIDATION_FAILED',
+        { launched: true },
       );
     }
     throw new Error('Structural failure fixture unexpectedly rendered');
@@ -450,12 +415,32 @@ export async function runFakeRecon(options = {}) {
         roots.packetRoot,
         'failed',
         'STRUCTURAL_VALIDATION_FAILED',
+        { launched: true },
       );
     }
     throw error;
   }
-  if (options.invalidOutput) {
-    return { ...result, quarantinedPath, ledgerPreserved };
+  const failures = [];
+  if (options.workerFailure) {
+    failures.push({
+      category: failureCategories.worker,
+      pass: options.workerFailure,
+      laneOutcome: options.laneOutcome ?? 'failed',
+    });
   }
-  return result;
+  if (options.invalidOutput) {
+    failures.push({
+      category: failureCategories.contract,
+      pass: 'compile',
+      laneOutcome: 'completed',
+    });
+    return {
+      ...result,
+      launched: true,
+      failures,
+      quarantinedPath,
+      ledgerPreserved,
+    };
+  }
+  return { ...result, launched: true, failures };
 }

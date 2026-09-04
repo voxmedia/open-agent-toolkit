@@ -13,7 +13,6 @@ a new version rather than accepting untyped fields.
 ├── claims.json
 ├── reviews/
 │   ├── briefs/
-│   ├── locator-validation.json
 │   ├── semantic/
 │   ├── adversarial/
 │   ├── coverage/
@@ -21,7 +20,6 @@ a new version rather than accepting untyped fields.
 └── raw/
     ├── dossiers/
     ├── drafts/
-    ├── dispatch/
     ├── quarantine/
     └── failure.json
 ```
@@ -36,16 +34,9 @@ An artifact reference is `{ "path": "packet-relative/path", "digest":
 "sha256:<64 lowercase hex>" }`. Paths must remain inside the packet directory.
 Digests cover the exact bytes on disk.
 
-Approval evidence embeds the existing `oat-dispatch-approval/v1` canonical
-prepared projection without reducing or renaming its fields. Fingerprints use
-canonical JSON: UTF-8, object keys sorted lexicographically, array order
-preserved, no insignificant whitespace, and SHA-256 with the `sha256:` prefix.
-The stored canonical JSON text and fingerprint cover the whole projection.
-Every `writable_roots`, `escalate_when`, and `candidates_considered` member is a
-non-empty string. These arrays use stable sorted-set form: entries are unique
-and lexicographically ordered before approval, and packet validation rejects
-nulls, empty strings, duplicates, or unstable ordering rather than normalizing
-them after approval.
+Fingerprints use canonical JSON: UTF-8, object keys sorted lexicographically,
+array order preserved, no insignificant whitespace, and SHA-256 with the
+`sha256:` prefix.
 
 ## One Validation Boundary
 
@@ -53,18 +44,15 @@ Version 1 compiles persisted packet inputs exactly once into one non-persisted,
 deeply immutable `ValidatedRun`. This value is an internal normalized graph,
 not an artifact kind, schema version, file, cache, or caller-selectable profile.
 Assurance derivation and rendering accept only `ValidatedRun`; they never
-reopen or independently reinterpret raw manifest, ledger, review, receipt, or
+reopen or independently reinterpret raw manifest, ledger, review, or
 reconciliation artifacts.
 
 Construction is all-or-nothing. A valid graph contains:
 
-- one complete `oat-dispatch-approval/v1` projection with its request,
-  selection, every planned and conditional wave, per-wave task class and model
-  floor, lane scope, authority and authorization scope, writable roots,
-  fallback and context controls, payload digest, run maximum floor, pinned
-  target, and original live catalog identity;
-- one exact approved wave/lane topology, with one terminal stage and matching
-  accepted/completed receipt resolution for every required lane;
+- one approved execution envelope whose canonical fingerprint matches the
+  recorded explicit user approval;
+- complete typed same-run artifacts, each written by an approved wave and lane,
+  from which the achieved profile is derived;
 - exactly one terminal reconciliation for standard or thorough runs and one
   immutable canonical prior-ledger identity used by all review, transition,
   addition, and removal checks;
@@ -80,22 +68,11 @@ Construction is all-or-nothing. A valid graph contains:
 - derived claim assurance, achieved profile, material gaps, and publication
   status.
 
-Reject partial approval envelopes, omitted receipt axes, unknown selection
-shapes, duplicate or shadow reconciliation results, symlink root aliases,
-retargeted roots, raw secret-bearing stale excerpts, and caller-downgraded gap
-materiality. Equivalent-looking inputs do not excuse a failed invariant.
-
-The approved, accepted, and completed receipts carry the manifest's exact
-`approvedAt` value. The accepted and completed receipts also carry one
-identical launch-acceptance record, including the accepted child handle; a
-different terminal handle is a replacement and fails validation. The catalog
-recheck is a distinct observation from the projection's original catalog
-observation, occurs strictly after approval and strictly before launch
-acceptance, and retains the approved catalog source, context, and relevant
-fingerprint. The completed receipt's terminal timestamp is parseable and cannot
-precede launch acceptance; equality is valid at the contract's millisecond
-precision. Copied, non-fresh, or causally impossible receipt evidence cannot
-support publication.
+Reject approval fingerprint drift, unknown execution fields, artifacts from
+unapproved lanes, duplicate or shadow reconciliation results, symlink root
+aliases, retargeted roots, raw secret-bearing stale excerpts, and
+caller-downgraded gap materiality. Equivalent-looking inputs do not excuse a
+failed invariant.
 
 ## Manifest
 
@@ -105,24 +82,77 @@ support publication.
 - `request`: objective, questions, included/excluded scope, stable context
   references, confirmed output path;
 - discriminated `sources`;
-- `execution`: exact prepared projection, canonical JSON, fingerprint,
-  explicit-user approval evidence, approval timestamp, and fresh catalog
-  recheck. The projection is identical to the dispatch dependency's canonical
-  v1 object rather than a packet-local summary;
-- `stages`: `recon.stage-result` records whose single artifact ID, lane, and
-  exact `waveId` plus prepared/approved/accepted/completed receipt IDs bind
-  every completed pass to one hashed same-run artifact of the required kind;
+- `execution`: the approved execution envelope described below;
 - `artifacts`: direct references; and
 - `gaps`: categorical omitted, unavailable, stale, or failed work, each with an
   explicit boolean `material` classification and affected source, claim, and
   coverage-finding IDs when applicable.
 
+### Execution Envelope
+
+`execution` is a closed object binding exactly what the user approved:
+
+- `provider`, `route`, `role`, `model`, `effort`: non-empty strings;
+- `reasoningMode`, `serviceTier`: string or `null`;
+- `authority`: `provider-enforced` or `contract-enforced`;
+- `maxConcurrency`, `deadlineSeconds`: integers of at least 1; `retryLimit`:
+  integer of at least 0;
+- `waves`: closed `{ waveId, mode, taskClass, lanes, conditional }` records
+  with a unique wave identity, a mode from the wave-mode set, a task class from
+  the durable task-class order, and at least one closed
+  `{ laneId, scope, writeRoot }` lane whose identity is unique across the run
+  and whose write root is a packet-relative path; and
+- `approval`: `{ type: "explicit-user-approval", approvedAt, fingerprint }`.
+
+The fingerprint is the canonical SHA-256 of `execution` with `approval`
+removed. Validation recomputes it; any difference is
+`APPROVAL_FINGERPRINT_MISMATCH`. The envelope records what will run, not proof
+that a launcher ran it. Launch acceptance and per-lane terminal outcomes are
+reported in the controller's status and as `PASS_FAILED` gaps, not as packet
+artifacts.
+
+Wave modes are `map`, `gather`, `compile`, `semantic-verification`,
+`adversarial`, `coverage`, `reconciliation`, `redundant-gather`,
+`redundant-verification`, and `contradiction-resolution`.
+
+### Passes and Achieved Profile
+
 Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`,
-or `failed`. The validator—not a worker—derives achieved profile.
-It derives rigor from the exact required wave/lane/stage multiset, never from a
-set of mode names. Every approved required lane has one terminal stage; only
-lanes whose typed artifact is named by matching accepted and completed receipts
-can contribute to achieved rigor.
+or `failed`. The validator, not a worker, derives the achieved profile from
+complete typed artifacts of the same run:
+
+| Pass                       | Complete artifact                                            |
+| -------------------------- | ------------------------------------------------------------ |
+| `map`                      | a `recon.raw-dossier` with mode `map`                        |
+| `gather`                   | a `recon.raw-dossier` with mode `gather`                     |
+| `semantic-verification`    | a `recon.review-result` with kind `semantic`                 |
+| `adversarial`              | a `recon.review-result` with kind `adversarial`              |
+| `coverage`                 | a `recon.review-result` with kind `coverage`                 |
+| `reconciliation`           | a `recon.review-result` with kind `reconciliation`           |
+| `redundant-gather`         | complete `gather` dossiers from at least two distinct lanes  |
+| `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`   |
+| `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution` |
+
+`quick` requires `map` and `gather`; the canonical ledger itself is the
+compile result, so an approved `compile` lane needs no separate artifact, and
+locator validation is performed by the validator.
+`standard` adds `semantic-verification`, `adversarial`, `coverage`, and
+`reconciliation`. `thorough` adds `redundant-gather`,
+`redundant-verification`, and `contradiction-resolution`.
+
+Every dossier records the approved `waveId` and `laneId` that wrote it; every
+review result records its approved `reviewerLane`. The lane must belong to a
+wave whose mode matches the artifact (a semantic result to a
+`semantic-verification` wave, a gather dossier to a `gather` or
+`redundant-gather` wave, and so on); otherwise the artifact is
+`UNAPPROVED_LANE`. The artifact path must equal or sit under the lane's
+approved `writeRoot`; otherwise it is `LANE_WRITE_PATH_VIOLATION`. Every
+non-conditional approved lane must either have written an artifact or be
+covered by a material `PASS_FAILED` or `PASS_OMITTED` gap naming its wave
+mode; otherwise the packet fails with `MISSING_LANE_OUTCOME`. Each required
+pass of the requested profile that has no complete artifact must likewise be
+named by such a gap, or the packet fails with
+`MISSING_PASS_OUTCOME_EVIDENCE`.
 
 ## Source Descriptors and Locators
 
@@ -162,11 +192,22 @@ mismatch invalidates the locator. Only `exact` and `redacted-exact` states are
 assurance-eligible. Managed packet, capture, repository, and output paths reject
 both ancestor and final-component symlinks before reads, hashes, or writes.
 
+Source preflight runs these checks on the candidate manifest and ledger before
+any review brief is created, so ineligible sources and broken locators are
+found before the expensive review passes rather than at publication.
+
 ## Claim Ledger
 
 `recon.claim-ledger` version 1 contains run ID, monotonic revision, direct input
 references, synthesis, evidence, claims, unresolved questions, and explicit
 claim transitions.
+
+Every claim evidence link is a closed `{ evidenceId, relation }` object whose
+`evidenceId` resolves to an evidence record in the same ledger and whose
+`relation` is `supports`, `contradicts`, `qualifies`, or `context`. A claim
+links each evidence record at most once. String links, open objects, unknown
+relations, unresolved IDs, and duplicates fail `validate-artifact.mjs` before
+any review brief can consume the ledger.
 
 Claim states are categorical:
 
@@ -186,27 +227,27 @@ incoming transition; the genesis exception cannot be reused.
 
 Quick packets never contain `verified` claims. Standard and thorough claims need
 recorded independent semantic, adversarial, and coverage reviews. Every review
-ID resolves to a unique, complete, typed, hashed result bound to the exact
-immutable brief digest, the claim's required disposition, and the matching
-accepted/completed stage receipts. An unreceipted result cannot contribute
-assurance or reconciliation. A material unresolved challenge or coverage
-finding prevents verification. A run with contested claims may publish as
-`complete` when all declared questions and claims are resolved or
-characterized; contested claims are rendered under "Contradictions and
-Qualifications". If an unresolved challenge represents an unanswered question
-or missing source evidence that leaves investigation incomplete, it must be
-recorded as a material gap in `manifest.gaps` and the run published as
-`partial`. Review workers propose; only a reconciler writes
-a new ledger candidate. Reconciliation binds the prior ledger reference and
-revision, the next revision, the exact receipted review-result set, and the exact
-canonical claim transitions. Standard and thorough output is exactly the next
-revision of the bound prior ledger; revision one cannot bypass reconciliation.
-It also binds additions, removals, and every prior/current state change;
-preserves statement, evidence-link, and qualification continuity; accepts new
-evidence only when an incorporated review supplied the exact record plus a
-closed `{ evidenceId, claimId, relation }` association to one of that review's
-disposition claims; preserves every unaffected evidence link byte-for-byte; and
-requires a receipted typed rejection disposition before removing a prior claim.
+ID resolves to a unique, complete, typed, hashed result from an approved lane,
+bound to the exact immutable brief digest and the claim's required disposition.
+An incomplete or unapproved result cannot contribute assurance or
+reconciliation. A material unresolved challenge or coverage finding prevents
+verification. A run with contested claims may publish as `complete` when all
+declared questions and claims are resolved or characterized; contested claims
+are rendered under "Contradictions and Qualifications". If an unresolved
+challenge represents an unanswered question or missing source evidence that
+leaves investigation incomplete, it must be recorded as a material gap in
+`manifest.gaps` and the run published as `partial`. Review workers propose;
+only a reconciler writes a new ledger candidate. Reconciliation binds the prior
+ledger reference and revision, the next revision, the exact complete
+assurance-review set, and the exact canonical claim transitions. Standard and
+thorough output is exactly the next revision of the bound prior ledger;
+revision one cannot bypass reconciliation. It also binds additions, removals,
+and every prior/current state change; preserves statement, evidence-link, and
+qualification continuity; accepts new evidence only when an incorporated review
+supplied the exact record plus a closed `{ evidenceId, claimId, relation }`
+association to one of that review's disposition claims; preserves every
+unaffected evidence link byte-for-byte; and requires a typed rejection
+disposition from a complete review before removing a prior claim.
 
 ## Evidence and Secret Redaction
 
@@ -223,34 +264,25 @@ branch; source ineligibility never bypasses persistence safety.
 
 ## Other Artifacts
 
-- `recon.raw-dossier`: assignment identity, mode, inputs/exclusions, findings,
-  uncertainty, contradictions, gaps, and outcome.
+- `recon.raw-dossier`: assignment identity, approved wave and lane, mode,
+  inputs/exclusions, findings, uncertainty, contradictions, gaps, and outcome.
 - `recon.review-brief`: immutable selective-blind projection and digest.
-- `recon.review-result`: review kind, lane, exact brief reference,
+- `recon.review-result`: review kind, approved lane, exact brief reference,
   permitted/excluded inputs, dispositions, new evidence, closed typed
   claim/evidence associations, coverage findings, unresolved issues, and
   completion status. Every new evidence record has at least one exact
   association, and an association cannot name evidence absent from that result
-  or a claim without a disposition in that result. Reconciliation results replace the
-  brief reference with prior-ledger/revision, additions/removals, exact
-  transitions, and coverage-disposition bindings. Coverage findings are closed
-  records bound to affected claims and exact manifest gaps. Accepted material
-  gaps require a legal downgrade for every affected claim; a resolved finding
-  instead names exact typed evidence. Non-material coverage gaps downgrade
-  verified claims and transition provisional claims to unresolved, while
-  existing supported claims remain supported without verified promotion.
-  Thorough redundant verification and
-  contradiction resolution are claim-bearing typed review results, not raw
-  dossiers: they bind immutable briefs, claim dispositions, and explicit
-  affected-contradiction dispositions.
-- `recon.stage-result`: stable stage ID, mode, lane, status, exactly one output
-  artifact ID, accepted/completed receipt IDs, and safe diagnostics.
-- `recon.dispatch-receipt`: immutable prepared, approved, accepted, or
-  completed evidence. Every state repeats the exact canonical projection,
-  canonical JSON, and fingerprint. Approved and later states bind the same
-  explicit approval evidence; accepted and completed states bind the fresh
-  catalog recheck and launch acceptance; completed binds the terminal outcome
-  and artifact IDs.
+  or a claim without a disposition in that result. Reconciliation results
+  replace the brief reference with prior-ledger/revision, additions/removals,
+  exact transitions, and coverage-disposition bindings. Coverage findings are
+  closed records bound to affected claims and exact manifest gaps. Accepted
+  material gaps require a legal downgrade for every affected claim; a resolved
+  finding instead names exact typed evidence. Non-material coverage gaps
+  downgrade verified claims and transition provisional claims to unresolved,
+  while existing supported claims remain supported without verified promotion.
+  Thorough redundant verification and contradiction resolution are
+  claim-bearing typed review results, not raw dossiers: they bind immutable
+  briefs, claim dispositions, and explicit affected-contradiction dispositions.
 
 Create immutable mode-specific review projections with
 `scripts/create-review-brief.mjs`. Verification briefs expose only claim
@@ -268,15 +300,14 @@ record under `raw/quarantine/`. Never promote invalid output.
 
 Run `scripts/validate-packet.mjs <packet-dir>` before rendering or publication.
 It delegates to the single validation boundary, which validates schemas, IDs,
-references, containment, hashes, source reopening, locators, the complete
-approval and receipt selection, exact topology, the one terminal
-reconciliation, legal transitions, secret-safe persistence, derived gaps,
-assurance, and requested vs achieved profile. Candidate validation is
-non-destructive for canonical diagnostic artifacts, but a non-publishable
-candidate withdraws any existing `packet.md` and does not authorize rendering.
-Only a valid `complete` or honest `partial` candidate is publishable, so a
-rejected canonical generation cannot retain a consumer entry point from another
-generation.
+references, containment, hashes, source reopening, locators, the approval
+fingerprint, approved lanes, pass outcomes, the one terminal reconciliation,
+legal transitions, secret-safe persistence, derived gaps, assurance, and
+requested vs achieved profile. Candidate validation is non-destructive for
+canonical diagnostic artifacts, but a non-publishable candidate withdraws any
+existing `packet.md` and does not authorize rendering. Only a valid `complete`
+or honest `partial` candidate is publishable, so a rejected canonical
+generation cannot retain a consumer entry point from another generation.
 
 `complete` requires the requested profile and no material gap. `partial` is
 valid when either a lower profile was achieved or at least one material gap is
@@ -301,7 +332,9 @@ dossier content.
 
 This boundary does not add another schema version, review pass, persisted
 intermediate, generalized plugin artifact kind, saved validation profile,
-provider behavior, or integration surface. It does not change p01 dispatch,
-research-pack distribution, documentation, backlog integrations,
-`quick`/`standard`/`thorough`, selective blindness, categorical claim states,
-honest partial publication, or directory-only handoff.
+provider behavior, or integration surface. It does not require launcher-emitted
+dispatch receipts; reintroduce those only when a launcher exists that produces
+them itself. It does not change research-pack distribution, documentation,
+backlog integrations, `quick`/`standard`/`thorough`, selective blindness,
+categorical claim states, honest partial publication, or directory-only
+handoff.

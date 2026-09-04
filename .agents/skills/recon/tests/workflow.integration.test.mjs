@@ -47,14 +47,15 @@ for (const profile of ['quick', 'standard', 'thorough']) {
     assert.equal(result.achievedProfile, profile);
     assert.equal(result.directory, injectedRoots.packetRoot);
     assert.match(result.digest, /^sha256:[a-f0-9]{64}$/);
-    assert.equal(
-      JSON.parse(
-        await readFile(
-          join(injectedRoots.packetRoot, 'raw', 'dispatch', 'accepted.json'),
-          'utf8',
-        ),
-      ).state,
-      'accepted',
+    assert.equal(result.launched, true);
+    assert.deepEqual(result.failures, []);
+    const manifest = JSON.parse(
+      await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+    );
+    assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
+    assert.equal(manifest.execution.model, 'fixture-model');
+    await assert.rejects(
+      readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
     );
   });
 }
@@ -69,11 +70,75 @@ test('worker failure publishes an honest lower-assurance partial', async () => {
   assert.equal(result.status, 'partial');
   assert.equal(result.requestedProfile, 'standard');
   assert.equal(result.achievedProfile, 'quick');
-  assert.ok(result.failedOrOmittedPasses.includes('PASS_FAILED'));
+  assert.ok(
+    result.failedOrOmittedPasses.some(
+      (pass) =>
+        pass.code === 'PASS_FAILED' &&
+        pass.message.includes('semantic-verification'),
+    ),
+  );
+  assert.deepEqual(result.failures, [
+    {
+      category: 'worker',
+      pass: 'semantic-verification',
+      laneOutcome: 'failed',
+    },
+  ]);
   assert.match(
     await readFile(join(injectedRoots.packetRoot, 'packet.md'), 'utf8'),
     /semantic-verification/i,
   );
+});
+
+test('a cancelled accepted lane publishes an honest partial labelled as a worker outcome', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    workerFailure: 'adversarial',
+    laneOutcome: 'cancelled',
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'partial');
+  assert.equal(result.achievedProfile, 'quick');
+  assert.deepEqual(result.failures, [
+    { category: 'worker', pass: 'adversarial', laneOutcome: 'cancelled' },
+  ]);
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.ok(
+    manifest.gaps.some(
+      (gap) =>
+        gap.code === 'PASS_FAILED' &&
+        gap.material === true &&
+        /adversarial lane cancelled/.test(gap.message),
+    ),
+  );
+});
+
+test('an unsupported launch surface stops before any worker launch', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'standard',
+    launcherCapabilities: { role: true, model: true, effort: false },
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'awaiting-approval');
+  assert.equal(result.launched, false);
+  assert.equal(result.failureCategory, 'provider-dispatch');
+  const failure = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'failure.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(failure.code, 'LAUNCHER_CAPABILITY_UNAVAILABLE');
+  assert.equal(failure.category, 'provider-dispatch');
+  await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.equal(manifest.run.status, 'awaiting-approval');
 });
 
 test('generic worker-role fallback is fixed before approval', async () => {
@@ -84,20 +149,11 @@ test('generic worker-role fallback is fixed before approval', async () => {
     roots: injectedRoots,
   });
   assert.equal(result.status, 'complete');
-  const prepared = JSON.parse(
-    await readFile(
-      join(injectedRoots.packetRoot, 'raw', 'dispatch', 'prepared.json'),
-      'utf8',
-    ),
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
   );
-  const approved = JSON.parse(
-    await readFile(
-      join(injectedRoots.packetRoot, 'raw', 'dispatch', 'approved.json'),
-      'utf8',
-    ),
-  );
-  assert.equal(prepared.approvalProjection.selection.role_selector, 'generic');
-  assert.equal(approved.approvalProjection.selection.role_selector, 'generic');
+  assert.equal(manifest.execution.role, 'generic');
+  assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
 });
 
 test('dispatch-axis drift stops before accepted launch and publication', async () => {
@@ -109,11 +165,7 @@ test('dispatch-axis drift stops before accepted launch and publication', async (
   });
   assert.equal(result.status, 'awaiting-approval');
   assert.equal(result.launched, false);
-  await assert.rejects(
-    readFile(
-      join(injectedRoots.packetRoot, 'raw', 'dispatch', 'accepted.json'),
-    ),
-  );
+  assert.equal(result.failureCategory, 'provider-dispatch');
   await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
 });
 
@@ -246,7 +298,9 @@ test('parent handoff is directory-only and never leaks dossier contents', async 
     'digest',
     'directory',
     'failedOrOmittedPasses',
+    'failures',
     'gapCount',
+    'launched',
     'requestedProfile',
     'status',
   ]);
@@ -423,7 +477,7 @@ test('standard workflow retains a genuine adversarial contradiction as contested
   );
 });
 
-test('thorough workflow receipts claim-bearing redundant and contradiction results', async () => {
+test('thorough workflow emits claim-bearing redundant and contradiction results', async () => {
   const injectedRoots = await roots();
   await runFakeRecon({ profile: 'thorough', roots: injectedRoots });
   const redundant = JSON.parse(

@@ -68,6 +68,18 @@ copying their content here. -->
   discovery/quick-start integration and broader analysis and research
   integration remain separately tracked in `BL-260830-integrate-recon-with-oat`
   and `BL-260830-integrate-recon-across`.
+- CLI `0.2.55` (recon receipt-chain removal, 2026-09-04) removes the
+  prepared/approved/accepted/completed dispatch receipts, catalog recheck, and
+  typed stage topology from the recon packet contract and reverts the
+  `prepare`/`execute` operations from `oat-dispatch-subagents`, because no
+  live launcher produced those records and every real run failed publication.
+  The manifest now carries a compact fingerprint-bound execution envelope; the
+  achieved profile derives from complete typed artifacts written by approved
+  lanes; claim evidence links are closed objects validated before brief
+  creation; the skill adds a launch-capability preflight, deadline semantics
+  that forbid manual interruption of accepted lanes, and worker vs
+  provider/dispatch vs contract vs source failure categories. See
+  `DR-260904-remove-dispatch-receipt-chain`.
 - CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows
