@@ -2106,6 +2106,9 @@ git commit -m "fix(p07-t03): validate required sources and close source projecti
 | final          | code     | passed          | 2026-09-03 | reviews/archived/final-review-2026-09-03T173922Z.md                    | e28b5355b00620024db09ac13a0008da82917edd | gate       | cursor-fable-5-1-high         |
 | p06            | code     | fixes_completed | 2026-09-03 | `reviews/p06-review-2026-09-03T214500Z.md`                             | 984e8243dd7c03072049b8098c1775f053e1bb45 | manual     | -                             |
 | p06            | code     | passed          | 2026-09-03 | `reviews/p06-review-2026-09-03T225829Z.md`                             | a0647dacd8438cc2fd91adedce872a0eaa0658ea | manual     | -                             |
+| p07            | code     | fixes_completed | 2026-09-04 | `reviews/p07-review-2026-09-04T012000Z.md`                             | 996f99a21e1ee4386b5b3b1a3664589f88344093 | manual     | -                             |
+| p07            | code     | fixes_completed | 2026-09-04 | `reviews/p07-review-2026-09-04T014000Z.md`                             | 9926cb5f3425c6a4b5ce680afc0b8f262fb34fdd | manual     | -                             |
+| p07            | code     | passed          | 2026-09-04 | `reviews/p07-review-2026-09-04T015000Z.md`                             | 1a0ef5953d95b9f39110b7fac580803579ca0170 | manual     | -                             |
 | final          | code     | received        | 2026-09-03 | `reviews/final-review-2026-09-03T233226Z.md`                           | 1388df613064ed86440558b8e83af8c7337d128c | gate       | cursor-fable-5-1-high         |
 | spec           | artifact | pending         | -          | -                                                                      | -                                        | -          | -                             |
 | design         | artifact | passed          | 2026-08-31 | `reviews/archived/design-self-review-2026-08-31T005342Z.md`            | -                                        | -          | -                             |
@@ -2113,8 +2116,8 @@ git commit -m "fix(p07-t03): validate required sources and close source projecti
 | plan           | artifact | fixes_completed | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T011757Z.md`          | -                                        | -          | -                             |
 | plan           | artifact | passed          | 2026-08-31 | `reviews/archived/artifact-plan-review-2026-08-31T012704Z.md`          | -                                        | -          | -                             |
 | github-pr #248 | remote   | fixes_completed | 2026-09-01 | `reviews/archived/remote-pr-248-review-2026-09-01T224825Z.md`          | -                                        | -          | -                             |
-| github-pr #248 | remote   | fixes_added     | 2026-09-03 | `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`          | -                                        | -          | -                             |
-| github-pr #248 | remote   | fixes_added     | 2026-09-04 | `reviews/archived/remote-pr-248-review-2026-09-04T001500Z.md`          | 99b6f37a776c5620c0ba37d0a19b7c0754597b17 | auto       | -                             |
+| github-pr #248 | remote   | fixes_completed | 2026-09-03 | `reviews/archived/remote-pr-248-review-2026-09-03T212825Z.md`          | -                                        | -          | -                             |
+| github-pr #248 | remote   | fixes_completed | 2026-09-04 | `reviews/archived/remote-pr-248-review-2026-09-04T001500Z.md`          | 99b6f37a776c5620c0ba37d0a19b7c0754597b17 | auto       | -                             |
 
 For code reviews, `Reviewed Head` is the full 40-character SHA at the head of
 the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate
