@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- 2026-09-03: the program-intake triage completed post-merge (PR #253);
+  three `BL-260903-*` residue items from PR #255 now carry external plans
+  scheduled as W6, and `BL-260904-stabilize-the-collection` records a CI
+  flake in the collection-detach path pending reproduction.
 - 2026-09-02 program-intake triage
   ([record](../triage/2026-09-02-program-intake-triage.md)) created twelve
   `BL-260902-*` items from GitHub issues #199, #209/#210/#251, #213, #214,
@@ -300,6 +304,7 @@
 | BL-260827-override-aware-remedy-text     | Override-aware remedy text in assets-root fail-closed errors                                          | open   | low      | task       | XS       |
 | BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                            | open   | low      | task       | S        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
+| BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                               | open   | low      | task       | S        |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                               | open   | low      | task       | XS       |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                   | open   | low      | task       | S        |
 

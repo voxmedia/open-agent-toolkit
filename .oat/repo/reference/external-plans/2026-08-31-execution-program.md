@@ -8,6 +8,7 @@ oat_program_indexes:
   - .oat/repo/reference/external-plans/2026-08-30-backlog-review-wave-2-plan-index.md
   - .oat/repo/reference/external-plans/2026-08-30-backlog-review-wave-3-plan-index.md
   - .oat/repo/reference/external-plans/2026-09-02-backlog-review-wave-4-plan-index.md
+  - .oat/repo/reference/external-plans/2026-09-03-backlog-review-wave-5-plan-index.md
 created: '2026-08-31T05:24:43Z'
 ---
 
@@ -37,8 +38,9 @@ wrapper project, implementation branch, or implementation PR has started.
 | W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started. |
 | W5   | Program-intake follow-ups            | 10    | composed | Awaiting operator composition approval; no execution started. |
+| W6   | Truthfulness residue                 | 3     | composed | Awaiting operator composition approval; no execution started. |
 
-## Wave Table (coverage: 25 plans = 25 index rows; verified 2026-09-02)
+## Wave Table (coverage: 28 plans = 28 index rows; verified 2026-09-03)
 
 | Plan                                                                                                                                                      | Index                                                            | Wave | Ordering notes                                                                                                      | Status  |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -67,6 +69,9 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 5 after active-pointer and quick-resume                                                                       | pending |
 | [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after `oat config unset`                                                                                    | pending |
 | [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md)                         | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the skill-script lane                                                                                 | pending |
+| [Populate provider reachability evidence across pack and lifecycle surfaces](./2026-09-03-populate-provider-reachability-evidence.md)                     | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
+| [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md)        | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
+| [Preserve **proto**-named config keys through JSON parsing](./2026-09-03-preserve-proto-named-config-keys.md)                                             | [Wave 5 index](./2026-09-03-backlog-review-wave-5-plan-index.md) | W6   | parallel group 1; one wave-level lockstep bump                                                                      | pending |
 
 ## Program-wide integration rules
 
@@ -196,6 +201,18 @@ wrapper project, implementation branch, or implementation PR has started.
   instruction-sync → unset → recap) is honored; every lane follows a freshly
   merged wave that owns adjacent prose.
 
+## Wave 6: Truthfulness residue
+
+- **Parallel group 1:** Populate provider reachability evidence; validate
+  review-ledger paths before the final PR; preserve `__proto__`-named config
+  keys.
+- **Cross-wave prerequisites:** W5 merged, so the shared contract-test seams
+  the pr-final lane extends are settled. Apply the PR #190 landing-event rows
+  in the pr-final and config-key plans if that draft merges first.
+- **Composition rationale:** Three write-disjoint lanes that only share the
+  lockstep manifests; run under one wave-level bump. Kept out of W5 because
+  its five groups already allocate every contract-test seam.
+
 ## Revalidation record
 
 - **2026-09-02 (intake)** — Added the Wave 4 index (12 plans) from the
@@ -220,6 +237,12 @@ wrapper project, implementation branch, or implementation PR has started.
   PR #255 also created eight `BL-260903-*` items (residue, retro feedback, two
   pre-existing defects) and left `BL-260724` open by operator decision; none
   enter this program yet. No new GitHub issues since the intake triage.
+- **2026-09-03 (residue planned)** — PR #253 merged (`dd41adb9b`) and the
+  post-merge triage resume ran. Added the Wave 5 index (3 plans from the
+  `BL-260903-*` residue) as a new W6; coverage 28/28 (26 READY, 2 BLOCKED).
+  Filed `BL-260904-stabilize-the-collection` for the collection-detach test
+  flake observed on #253's CI (main passed on identical code); unplanned
+  until reproduced.
 
 - **2026-09-02** — Rebased the program branch onto `origin/main`
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` (PR #254, retire archived synced
