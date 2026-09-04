@@ -1,7 +1,7 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: pr_open
+status: post_merge_complete
 scope: GitHub issue #258 only
 baseline_sha: dd41adb9bed53aa2389e911b601615fc2b26f0b7
 triage_pr: 257
@@ -53,7 +53,7 @@ updated: 2026-09-04
   findings, two templates, docs, and runtime consumers.
 - Approval: Approved by the operator on 2026-09-04 ("work it into one of the
   waves").
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-04 after PR #257 merged (`83d8c9f2e`): `tracked-in-backlog` and a linking comment on #258; receipt posted on PR #257.
 
 ## Open concerns
 
