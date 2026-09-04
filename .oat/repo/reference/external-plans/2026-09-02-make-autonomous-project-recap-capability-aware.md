@@ -99,10 +99,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                                                                                                           | Required update                                                                |
-| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` merges | Minor    | `review-skill-contracts.test.ts` (+17), `.agents/docs/autonomy-contract.md` (inventory).                                  | Rebase; re-anchor the `:195`, `:265`, `:312` cases; re-run the inventory test. |
-| `review-plan-workflow` (draft PR #190) merges  | Minor    | `review-skill-contracts.test.ts`, `oat-project-implement/SKILL.md` (not `completion-and-closeout.md`), autonomy contract. | Same re-anchor; confirm `completion-and-closeout.md:771-793` is unchanged.     |
+| Event                                                                                | Affected | Files in common                                                                                                           | Required update                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17), `.agents/docs/autonomy-contract.md` (inventory).                                  | Rebase; re-anchor the `:195`, `:265`, `:312` cases; re-run the inventory test. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `review-skill-contracts.test.ts`, `oat-project-implement/SKILL.md` (not `completion-and-closeout.md`), autonomy contract. | Same re-anchor; confirm `completion-and-closeout.md:771-793` is unchanged.                                                                                                      |
 
 ## Drift check
 

@@ -83,10 +83,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                                                                             | Required update                                                                        |
-| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` merges | Minor    | `validation/skills.test.ts` (new case), `skills-bundled-docs-contract.test.ts` (rewritten). | Rebase; re-anchor the `:5296` version pin and the `:1770` pattern case before editing. |
-| `review-plan-workflow` (draft PR #190) merges  | No       | None.                                                                                       | None.                                                                                  |
+| Event                                                                                | Affected | Files in common                                                                             | Required update                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `validation/skills.test.ts` (new case), `skills-bundled-docs-contract.test.ts` (rewritten). | Rebase; re-anchor the `:5296` version pin and the `:1770` pattern case before editing. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No       | None.                                                                                       | None.                                                                                                                                                                                   |
 
 ## Drift check
 

@@ -80,10 +80,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                                            | Required update                                                             |
-| ---------------------------------------------- | -------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` merges | Minor    | `.agents/docs/autonomy-contract.md` (inventory line refs). | Rebase; re-run the inventory test; re-map plan/quick-start rows if shifted. |
-| `review-plan-workflow` (draft PR #190) merges  | Minor    | `.agents/docs/autonomy-contract.md`.                       | Same.                                                                       |
+| Event                                                                                | Affected | Files in common                                            | Required update                                                                                                                                                              |
+| ------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `.agents/docs/autonomy-contract.md` (inventory line refs). | Rebase; re-run the inventory test; re-map plan/quick-start rows if shifted. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `.agents/docs/autonomy-contract.md`.                       | Same.                                                                                                                                                                        |
 
 ## Drift check
 

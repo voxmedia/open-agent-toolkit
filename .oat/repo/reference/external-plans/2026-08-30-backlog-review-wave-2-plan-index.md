@@ -37,23 +37,23 @@ not an `oat-project-import-plan` target.
 
 ## Recommended order
 
-| Order | Plan                                                                                                                               | Source item                              | Execution | Depends on                                                                                                                | Rationale                                                                                                                     |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1     | [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                     | `BL-260826-emit-the-dispatch-stamp-from` | BLOCKED   | Accepted additive-report policy; `tool-pack-scope-provider-truthfulness` merged and anchors refreshed; issue #211 is soft | Smallest independent CLI/skill contract; execution waits for the in-flight truthfulness merge that rewrites its cited skills. |
-| 2     | [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | `BL-260718-mandatory-skill-load-clause`  | READY     | PR #246 revalidation satisfied; PR #190 remains soft                                                                      | Independent policy/corpus fix; repeat its sweep if PR #190's integration tip changes first.                                   |
-| 3     | [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md)              | `BL-260712-per-project-override`         | READY     | PR #246 merged and delivered gate contracts revalidated                                                                   | Additive project resolution preserves the consolidated delivered contract.                                                    |
+| Order | Plan                                                                                                                               | Source item                              | Execution | Depends on                                                                                           | Rationale                                                                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1     | [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                     | `BL-260826-emit-the-dispatch-stamp-from` | READY     | Accepted additive-report policy; PR #255 merged and anchors refreshed 2026-09-03; issue #211 is soft | Smallest independent CLI/skill contract; scheduled in W4 beside the other delivered-project follow-ups. |
+| 2     | [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | `BL-260718-mandatory-skill-load-clause`  | READY     | PR #246 revalidation satisfied; PR #190 remains soft                                                 | Independent policy/corpus fix; repeat its sweep if PR #190's integration tip changes first.             |
+| 3     | [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md)              | `BL-260712-per-project-override`         | READY     | PR #246 merged and delivered gate contracts revalidated                                              | Additive project resolution preserves the consolidated delivered contract.                              |
 
 ## Dependency notes
 
 - Plans 1 and 2 are peer lanes, not a serial chain. They share release/version
   files and may touch review skill guidance, so concurrent branches must
   coordinate or rebase before merge.
-- Plan 1 was revalidated on 2026-09-02: resolver, report, and stamp code are
-  unchanged on `origin/main` and on the in-flight
-  `tool-pack-scope-provider-truthfulness` branch, which implements no stamp but
-  bumps and edits all three cited skills and adds `oat project dispatch
-record`. It is blocked on that merge plus a trivial anchor refresh, and the
-  execution program schedules it in W4 rather than W1.
+- Plan 1 was revalidated on 2026-09-02 and refreshed on 2026-09-03 after the
+  `tool-pack-scope-provider-truthfulness` project merged as PR #255: resolver,
+  report, and stamp code are unchanged, no stamp was implemented, the three
+  cited skills were bumped with dispatch-lineage prose, and
+  `oat project dispatch record` is recorded as a separate out-of-scope surface.
+  It is execution-ready and scheduled in W4.
 - Plan 2 was re-swept after PR #246 and after PR #254 (no new bare execution
   pointers). Re-sweep lifecycle call sites again if
   [PR #190](https://github.com/voxmedia/open-agent-toolkit/pull/190) changes

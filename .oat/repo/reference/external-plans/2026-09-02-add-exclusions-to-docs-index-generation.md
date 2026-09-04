@@ -83,10 +83,10 @@ first.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                                                                       | Required update                                                                                                       |
-| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` merges | No       | `docs/init/index.ts` only (different command).                                        | Re-run the drift check.                                                                                               |
-| `review-plan-workflow` (draft PR #190) merges  | Minor    | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`. | Re-anchor the config key-union, `KEY_ORDER`, and set-branch line numbers before editing step 3; no behavioral change. |
+| Event                                                                                | Affected | Files in common                                                                       | Required update                                                                                                          |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | No       | `docs/init/index.ts` only (different command).                                        | Re-run the drift check. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `commands/config/index.ts`, `config/index.test.ts`, `cli-utilities/configuration.md`. | Re-anchor the config key-union, `KEY_ORDER`, and set-branch line numbers before editing step 3; no behavioral change.    |
 
 ## Drift check
 

@@ -84,10 +84,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                         | Required update                                             |
-| ---------------------------------------------- | -------- | --------------------------------------- | ----------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` merges | Minor    | `review-skill-contracts.test.ts` (+17). | Rebase and re-anchor the `:1134`, `:1152`, `:1560` anchors. |
-| `review-plan-workflow` (draft PR #190) merges  | Minor    | `review-skill-contracts.test.ts`.       | Same re-anchor; the completion skill is not in either diff. |
+| Event                                                                                | Affected | Files in common                         | Required update                                                                                                                                              |
+| ------------------------------------------------------------------------------------ | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `review-skill-contracts.test.ts` (+17). | Rebase and re-anchor the `:1134`, `:1152`, `:1560` anchors. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor    | `review-skill-contracts.test.ts`.       | Same re-anchor; the completion skill is not in either diff.                                                                                                  |
 
 ## Drift check
 

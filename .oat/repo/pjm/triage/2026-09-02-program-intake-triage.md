@@ -6,7 +6,7 @@ scope: nine new untriaged issues (#232-#234, #237-#239, #250-#252) plus the elev
 baseline_sha: 49aeb5075971180b48c131bbd2b21b82d455bfc9
 triage_pr: 253
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # Program-intake triage: new issues and pending 2026-08-29 rows
@@ -304,7 +304,7 @@ updated: 2026-09-02
 - Confidence: 96%.
 - Evidence: `BL-260829-make-tool-pack-scope-selection` (urgent / feature / L) owns it and the `tool-pack-scope-provider-truthfulness` project is at its release task.
 - Existing coverage: Full coverage.
-- Proposed GitHub action: Keep open; add `tracked-in-backlog`; comment linking the item and project. Close only when the truthfulness PR merges and the item is archived.
+- Proposed GitHub action: Add `tracked-in-backlog` and comment linking the archived item and PR #255 (merged 2026-09-03 at `a06e9713a`), then close: the merge and archival conditions in the approved row are both met. Note the residue items `BL-260903-retire-deprecated-pack` and `BL-260903-populate-provider-reachability` in the closing comment.
 - Backlog action: Linked #228 on `BL-260829-make-tool-pack-scope-selection`.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-02 as one consolidated set.
@@ -328,8 +328,12 @@ updated: 2026-09-02
 
 - #204 closes as `invalid`; if the reporter later supplies a public
   reproduction against current tooling, reopen rather than argue in the thread.
-- #228 stays open until the `tool-pack-scope-provider-truthfulness` PR merges;
-  its comment should say so explicitly.
+- #228's close condition was met on 2026-09-03 (PR #255 merged, item
+  archived); the resume closes it with the PR link.
+- #211 was outside this run (already `tracked-in-backlog`) but its item
+  `BL-260826-populate-native-subagent` was archived by PR #255; closing #211
+  with the PR #255 link and the residue pointer
+  `BL-260903-close-claude-runtime-lineage` needs operator approval at resume.
 - #237 and #251 are decision-gated; their backlog records carry
   `needs-discussion` semantics and must not be planned until decided.
 
