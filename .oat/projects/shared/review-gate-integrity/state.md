@@ -21,6 +21,12 @@ associated_issues:
     ref: BL-260711-add-activity-aware-gate
   - type: backlog
     ref: BL-260720-add-oat-project-complete-auto
+  - type: backlog
+    ref: BL-260902-recover-committed-review
+  - type: backlog
+    ref: BL-260902-retry-gate-project-log
+  - type: backlog
+    ref: BL-260902-file-deferred-repository
   - type: project
     ref: review-plan-workflow
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -96,7 +102,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-08-29T15:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-02T23:49:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260827-fail-closed-on-partial-or.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260827-fail-closed-on-partial-or
@@ -41,7 +41,7 @@ contract and remains intentionally cheaper than a file inventory or checksum.
 - Source backlog item:
   [BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles](../../pjm/backlog/items/BL-260827-fail-closed-on-partial-or.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/fs/assets.ts:28-67` validates only metadata shape and
     `oatVersion`; it never checks bundle content.
@@ -75,7 +75,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 Stop if the producer's directory set, asset validation boundary, or an existing
@@ -232,7 +232,7 @@ history, producer script, validator, tests, and downstream plan when:
 
 - a dependency landed after this plan was written;
 - substantial time elapsed or main advanced materially from
-  `845462e78468265c7e2e2b2f6c64731472731ecb`;
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9`;
 - a cited asset, test, producer, or release contract changed;
 - linked backlog/project/decision intent changed;
 - another PR implemented part of the outcome; or

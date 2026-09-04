@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260826-deterministic-smoke-tier-leaks.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260826-deterministic-smoke-tier-leaks
@@ -45,7 +45,7 @@ evidence instead of refusing it as unjournaled.
 - Source backlog item:
   [BL-260826-deterministic-smoke-tier-leaks — Deterministic smoke tier leaks worktrees](../../pjm/backlog/items/BL-260826-deterministic-smoke-tier-leaks.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `tools/smoke/deterministic/provider.mjs:110-132` runs `git worktree add` at
     lines 114-126 and calls `registerNestedSmokeResource` only afterward at
@@ -84,7 +84,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- tools/smoke/deterministic/deterministic.test.mjs tools/smoke/deterministic/provider.mjs tools/smoke/runner/journal.mjs tools/smoke/runner/journal.test.mjs tools/smoke/runner/cleanup.mjs tools/smoke/runner/cleanup.test.mjs tools/smoke/runner/provision.mjs tools/smoke/runner/provision.test.mjs tools/smoke/runner/run-smoke.mjs tools/smoke/runner/run-smoke.test.mjs tools/smoke/CONTRACT.md apps/oat-docs/docs/contributing/smoke-testing.md
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- tools/smoke/deterministic/deterministic.test.mjs tools/smoke/deterministic/provider.mjs tools/smoke/runner/journal.mjs tools/smoke/runner/journal.test.mjs tools/smoke/runner/cleanup.mjs tools/smoke/runner/cleanup.test.mjs tools/smoke/runner/provision.mjs tools/smoke/runner/provision.test.mjs tools/smoke/runner/run-smoke.mjs tools/smoke/runner/run-smoke.test.mjs tools/smoke/CONTRACT.md apps/oat-docs/docs/contributing/smoke-testing.md
 ```
 
 If ownership schema, deterministic phase creation, or cleanup corroboration
@@ -279,7 +279,7 @@ Stop and report instead of improvising when:
 Revalidate against current `origin/main`, the source backlog item, PR #215, the
 bounded signal-wait plan, deterministic creation, journal/cleanup schema and
 tests, run-smoke signal ordering, and smoke contract/docs when main advances
-materially from `845462e78468265c7e2e2b2f6c64731472731ecb`, any ownership
+materially from `49aeb5075971180b48c131bbd2b21b82d455bfc9`, any ownership
 surface changes, another PR adds pre-creation intent, or the transaction gap
 cannot be reproduced. Refresh or supersede stale schema decisions before work.
 

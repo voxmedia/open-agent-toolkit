@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260718-fix-oat-docs-generate-index.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260718-fix-oat-docs-generate-index
@@ -42,7 +42,7 @@ before any output write, while explicit path flags remain explicit overrides.
 - Source backlog item:
   [BL-260718-fix-oat-docs-generate-index — Fix oat docs generate-index cwd-relative defaults in monorepos](../../pjm/backlog/items/BL-260718-fix-oat-docs-generate-index.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/commands/docs/index-generate/index.ts:71-97` resolves both
     defaults against `context.cwd`, writes the output, and then rewrites
@@ -82,7 +82,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-test "$(git rev-parse origin/main)" = "845462e78468265c7e2e2b2f6c64731472731ecb" || git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/commands/docs/index-generate .oat/config.json apps/oat-docs/AGENTS.md apps/oat-docs/docs/docs-tooling/commands.md apps/oat-docs/docs/reference/oat-directory-structure.md
+test "$(git rev-parse origin/main)" = "49aeb5075971180b48c131bbd2b21b82d455bfc9" || git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/commands/docs/index-generate .oat/config.json apps/oat-docs/AGENTS.md apps/oat-docs/docs/docs-tooling/commands.md apps/oat-docs/docs/reference/oat-directory-structure.md
 ```
 
 If any cited path changed, compare the live behavior with this plan before
@@ -247,7 +247,7 @@ issue #239, cited files, and focused tests when any of the following is true:
 
 - a hard or soft dependency changed after planning;
 - substantial time has elapsed or `origin/main` advanced materially from
-  `845462e78468265c7e2e2b2f6c64731472731ecb`;
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9`;
 - any cited config, command, docs, or test contract changed;
 - linked backlog, issue, decision, or project intent changed;
 - another PR implemented part of the outcome; or
