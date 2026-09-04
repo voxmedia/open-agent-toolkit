@@ -62,9 +62,12 @@ for runtime/lifecycle truth. The guidance is itself contract-tested.
 
 ## Dependencies
 
-| Type          | Dependency                                                             | Required state                                                                            | Current state                     |
-| ------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| Soft evidence | Autonomy gate inventory, bundled-docs contract, and project-log rollup | Keep as illustrative implementations; revalidate names and behavior if any changes first. | Present on the planning baseline. |
+| Type          | Dependency                                                                                                                                                       | Required state                                                                                                 | Current state                     |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Soft evidence | Autonomy gate inventory, bundled-docs contract, and project-log rollup                                                                                           | Keep as illustrative implementations; revalidate names and behavior if any changes first.                      | Present on the planning baseline. |
+| Soft ordering | W2 group 2 plan [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)               | Runs before this plan; both edit `create-oat-skill/SKILL.md`, so never in one parallel group.                  | Pending.                          |
+| Soft ordering | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                                          | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group. | Pending.                          |
+| Soft ordering | W2 group 3 plan [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md) | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group. | Pending.                          |
 
 There are no unsatisfied hard dependencies.
 

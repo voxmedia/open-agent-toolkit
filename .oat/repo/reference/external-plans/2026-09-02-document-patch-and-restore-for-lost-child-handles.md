@@ -80,10 +80,12 @@ isolated fresh same-target recovery continuation mode`), `:3181`/`:3258`
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                 | Required state                                                                                       | Current state |
-| ---------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | Both bump `oat-project-implement`; land in one wave group and coordinate the single `version:` bump. | Pending (W2). |
-| Soft integration | Any plan editing `.agents/docs/autonomy-contract.md` in the same wave                                      | Serialize inventory edits; the file has four byte-identical mirrors.                                 | See W2/W3.    |
+| Type             | Dependency                                                                                                                                    | Required state                                                                                                 | Current state |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                    | Both bump `oat-project-implement`; land in one wave group and coordinate the single `version:` bump.           | Pending (W2). |
+| Soft integration | Any plan editing `.agents/docs/autonomy-contract.md` in the same wave                                                                         | Serialize inventory edits; the file has four byte-identical mirrors.                                           | See W2/W3.    |
+| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                       | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group. | Pending.      |
+| Soft ordering    | W3 group 2 plan [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md) | Runs after this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.  | Pending.      |
 
 There are no unsatisfied hard dependencies.
 

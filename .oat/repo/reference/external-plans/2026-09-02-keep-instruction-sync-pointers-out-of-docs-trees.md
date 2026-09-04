@@ -78,10 +78,11 @@ and MDX builds stay clean after a sync.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                        | Required state                                                                   | Current state          |
-| ------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------- |
-| Satisfied     | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance      | Keep `pjm doctor` accepting repo-level pointers.                                 | Merged at `9aef8f81a`. |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md) | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize. | Pending.               |
+| Type          | Dependency                                                                                                                                            | Required state                                                                                           | Current state          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Satisfied     | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance                                                          | Keep `pjm doctor` accepting repo-level pointers.                                                         | Merged at `9aef8f81a`. |
+| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                     | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize.                         | Pending.               |
+| Soft ordering | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | Runs after this plan; both edit `packages/cli/src/config/oat-config.ts`, so never in one parallel group. | Pending.               |
 
 There are no unsatisfied hard dependencies.
 

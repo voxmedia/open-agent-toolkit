@@ -73,9 +73,10 @@ test fails when a script is removed or renamed. The one-off
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                           | Required state                                                | Current state |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------- |
-| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md) | Independent; this plan is an instance of that authoring rule. | Pending (W3). |
+| Type             | Dependency                                                                                                              | Required state                                                                                                              | Current state |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)    | Independent; this plan is an instance of that authoring rule.                                                               | Pending (W3). |
+| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md) | Runs before this plan; both edit `packages/cli/src/commands/tools/shared/pack-manifest.ts`, so never in one parallel group. | Pending.      |
 
 There are no unsatisfied hard dependencies.
 

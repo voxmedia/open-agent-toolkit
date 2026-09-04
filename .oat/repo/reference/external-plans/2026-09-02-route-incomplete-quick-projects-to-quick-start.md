@@ -71,10 +71,11 @@ local-only projects through all-scope selection`) is the nearest routing
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                  | Required state                                                                                      | Current state |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------- |
-| Soft ordering    | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md) | Land this plan first; both edit quick-start Step 0.5 and its `version:` line.                       | Pending.      |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                  | Write every routing pointer with an explicit load-and-follow clause so its corpus test stays green. | Pending (W2). |
+| Type             | Dependency                                                                                                                                                  | Required state                                                                                                                  | Current state |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft ordering    | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                 | Land this plan first; both edit quick-start Step 0.5 and its `version:` line.                                                   | Pending.      |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                  | Write every routing pointer with an explicit load-and-follow clause so its corpus test stays green.                             | Pending (W2). |
+| Soft ordering    | W5 group 4 plan [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md) | Runs after this plan; both edit `apps/oat-docs/docs/workflows/projects/picking-up-projects.md`, so never in one parallel group. | Pending.      |
 
 There are no unsatisfied hard dependencies.
 
