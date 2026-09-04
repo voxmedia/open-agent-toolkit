@@ -273,6 +273,27 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
 
   silentLane.manifest.run.status = 'partial';
   silentLane.manifest.gaps.push({
+    id: 'gap-substring',
+    code: 'PASS_FAILED',
+    message: 'redundant-gather was omitted before writing.',
+    material: true,
+    sourceIds: [],
+    claimIds: [],
+    coverageFindingIds: [],
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const substring = await validatePacket(silentLane.packetRoot);
+  assert.ok(
+    substring.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-gather-2',
+    ),
+    'a redundant-gather gap must not cover a gather lane',
+  );
+  silentLane.manifest.gaps.pop();
+
+  silentLane.manifest.gaps.push({
     id: 'gap-lane-gather-2',
     code: 'PASS_FAILED',
     message: 'gather lane lane-gather-2 was cancelled before writing.',

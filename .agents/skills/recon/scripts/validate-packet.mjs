@@ -687,6 +687,17 @@ const assuranceReviewKinds = new Set([
   'contradiction-resolution',
 ]);
 
+// A gap names a pass only when the mode appears as a whole token; `gather`
+// must not be satisfied by a `redundant-gather` gap.
+function gapNamesMode(gap, mode) {
+  return (
+    (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
+    gap.material === true &&
+    typeof gap.message === 'string' &&
+    new RegExp(`(?:^|[^a-z-])${mode}(?:$|[^a-z-])`).test(gap.message)
+  );
+}
+
 function artifactIsComplete(artifact) {
   return (
     (!('status' in artifact) || artifact.status === 'complete') &&
@@ -764,11 +775,8 @@ function validateApprovedLanes(manifest, artifactsById, errors) {
     if (wave.conditional || wave.mode === 'compile' || written.has(laneId)) {
       continue;
     }
-    const hasOutcomeEvidence = (manifest.gaps ?? []).some(
-      (gap) =>
-        (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
-        gap.material === true &&
-        gap.message?.includes(wave.mode),
+    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
+      gapNamesMode(gap, wave.mode),
     );
     if (!hasOutcomeEvidence) {
       errors.push(
@@ -822,11 +830,8 @@ function deriveAchievedProfile(passes) {
 function validatePassOutcomes(manifest, passes, errors) {
   for (const mode of requiredPasses[manifest.run.requestedProfile] ?? []) {
     if (passes.has(mode)) continue;
-    const hasOutcomeEvidence = (manifest.gaps ?? []).some(
-      (gap) =>
-        (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
-        gap.material === true &&
-        gap.message?.includes(mode),
+    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
+      gapNamesMode(gap, mode),
     );
     if (!hasOutcomeEvidence) {
       errors.push(
