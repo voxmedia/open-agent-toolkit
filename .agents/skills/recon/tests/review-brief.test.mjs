@@ -21,6 +21,17 @@ afterEach(async () => {
   );
 });
 
+function assertInvalidBrief(brief, code) {
+  for (const validate of [validateReviewBrief, validateArtifactShape]) {
+    const result = validate(brief);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+    assert.ok(
+      result.errors.some((error) => error.code === code),
+      `expected ${code}: ${JSON.stringify(result, null, 2)}`,
+    );
+  }
+}
+
 test('verification projection contains only claims, excerpts, locators, and sources', async () => {
   const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
@@ -115,6 +126,67 @@ test('verification source validation rejects unblinded and unexpected properties
         `${property}: ${JSON.stringify(result, null, 2)}`,
       );
     }
+  }
+});
+
+test('verification source validation requires unique descriptors for every evidence source', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const valid = createReviewBrief({
+    mode: 'verify',
+    id: 'brief-complete-sources',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+  });
+
+  const missing = structuredClone(valid);
+  missing.sources = [];
+  assertInvalidBrief(missing, 'MISSING_SOURCE_DESCRIPTOR');
+
+  const unknown = structuredClone(valid);
+  unknown.claims[0].evidence[0].sourceId = 'source-unknown';
+  assertInvalidBrief(unknown, 'MISSING_SOURCE_DESCRIPTOR');
+
+  const duplicate = structuredClone(valid);
+  duplicate.sources.push(structuredClone(duplicate.sources[0]));
+  assertInvalidBrief(duplicate, 'DUPLICATE_ID');
+});
+
+test('verification URL sources require complete validator provenance', async () => {
+  const fixture = await createPacketFixture();
+  tempRoots.push(fixture.tempRoot);
+  const valid = createReviewBrief({
+    mode: 'verify',
+    id: 'brief-url-validator-state',
+    createdAt: '2026-08-31T00:03:00.000Z',
+    manifest: fixture.manifest,
+    ledger: fixture.ledger,
+  });
+  valid.sources[0] = {
+    id: valid.sources[0].id,
+    kind: 'url',
+    available: true,
+    authority: 'provider-enforced',
+    observedAt: '2026-08-31T00:00:00.000Z',
+    validationState: 'pinned',
+    url: 'https://example.test/evidence',
+    validatorState: { etag: '"fixture-v1"' },
+  };
+  assert.equal(validateReviewBrief(valid).valid, true);
+  assert.equal(validateArtifactShape(valid).valid, true);
+
+  const empty = structuredClone(valid);
+  empty.sources[0].validatorState = {};
+  assertInvalidBrief(empty, 'INVALID_SOURCE_DESCRIPTOR');
+
+  for (const validatorState of [
+    { capturePath: 'raw/captures/url.txt' },
+    { captureDigest: `sha256:${'a'.repeat(64)}` },
+  ]) {
+    const partial = structuredClone(valid);
+    partial.sources[0].validatorState = validatorState;
+    assertInvalidBrief(partial, 'INVALID_SOURCE_DESCRIPTOR');
   }
 });
 

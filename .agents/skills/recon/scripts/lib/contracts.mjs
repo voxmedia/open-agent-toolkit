@@ -1484,10 +1484,10 @@ function validateReviewBriefSource(source, index, errors) {
     }
   } else if (source.kind === 'url') {
     requiredString(source, 'url', errors, path);
-    const hasDirectCapture =
+    const hasDirectCaptureFields =
       Object.hasOwn(source, 'capturePath') ||
       Object.hasOwn(source, 'captureDigest');
-    if (hasDirectCapture) {
+    if (hasDirectCaptureFields) {
       requiredString(source, 'capturePath', errors, path);
       requiredString(source, 'captureDigest', errors, path);
       if (!isDigest(source.captureDigest)) {
@@ -1500,16 +1500,91 @@ function validateReviewBriefSource(source, index, errors) {
         );
       }
     }
+    const hasDirectCapture =
+      typeof source.capturePath === 'string' &&
+      source.capturePath.trim().length > 0 &&
+      isDigest(source.captureDigest);
+    let hasValidValidatorState = false;
+    let hasValidatorCapture = false;
     if (Object.hasOwn(source, 'validatorState')) {
       requiredObject(source, 'validatorState', errors, path);
-      closedObject(
-        source.validatorState,
-        new Set(['etag', 'lastModified', 'capturePath', 'captureDigest']),
-        errors,
-        `${path}.validatorState`,
+      if (isObject(source.validatorState)) {
+        const validatorPath = `${path}.validatorState`;
+        closedObject(
+          source.validatorState,
+          new Set(['etag', 'lastModified', 'capturePath', 'captureDigest']),
+          errors,
+          validatorPath,
+        );
+        const validatorKeys = Object.keys(source.validatorState);
+        const hasValidatorCaptureFields =
+          Object.hasOwn(source.validatorState, 'capturePath') ||
+          Object.hasOwn(source.validatorState, 'captureDigest');
+        if (Object.hasOwn(source.validatorState, 'etag')) {
+          requiredString(source.validatorState, 'etag', errors, validatorPath);
+        }
+        if (Object.hasOwn(source.validatorState, 'lastModified')) {
+          requiredString(
+            source.validatorState,
+            'lastModified',
+            errors,
+            validatorPath,
+          );
+        }
+        if (hasValidatorCaptureFields) {
+          requiredString(
+            source.validatorState,
+            'capturePath',
+            errors,
+            validatorPath,
+          );
+          requiredString(
+            source.validatorState,
+            'captureDigest',
+            errors,
+            validatorPath,
+          );
+          hasValidatorCapture =
+            typeof source.validatorState.capturePath === 'string' &&
+            source.validatorState.capturePath.trim().length > 0 &&
+            isDigest(source.validatorState.captureDigest);
+          if (!hasValidatorCapture) {
+            errors.push(
+              issue(
+                'INVALID_SOURCE_DESCRIPTOR',
+                'validatorState capturePath and captureDigest must form a complete sha256-bound pair',
+                validatorPath,
+              ),
+            );
+          }
+        }
+        hasValidValidatorState =
+          (typeof source.validatorState.etag === 'string' &&
+            source.validatorState.etag.trim().length > 0) ||
+          (typeof source.validatorState.lastModified === 'string' &&
+            source.validatorState.lastModified.trim().length > 0) ||
+          hasValidatorCapture;
+        if (validatorKeys.length === 0 || !hasValidValidatorState) {
+          errors.push(
+            issue(
+              'INVALID_SOURCE_DESCRIPTOR',
+              'validatorState must contain an etag, lastModified value, or complete capture pair',
+              validatorPath,
+            ),
+          );
+        }
+      }
+    }
+    if (hasDirectCapture && hasValidatorCapture) {
+      errors.push(
+        issue(
+          'DUAL_URL_CAPTURE',
+          'URL sources cannot declare direct and validatorState capture pairs',
+          path,
+        ),
       );
     }
-    if (!hasDirectCapture && !isObject(source.validatorState)) {
+    if (!hasDirectCapture && !hasValidValidatorState) {
       errors.push(
         issue(
           'MISSING_REQUIRED_FIELD',
@@ -1630,6 +1705,32 @@ function validateReviewBriefArtifact(value, errors) {
     }
     for (const [index, source] of (value.sources ?? []).entries()) {
       validateReviewBriefSource(source, index, errors);
+    }
+    if (Array.isArray(value.sources)) {
+      duplicateIds(value.sources, '$.sources', errors);
+      const sourceIds = new Set(
+        value.sources
+          .map((source) => source?.id)
+          .filter((id) => typeof id === 'string'),
+      );
+      for (const [claimIndex, claim] of (value.claims ?? []).entries()) {
+        for (const [evidenceIndex, evidence] of (
+          claim.evidence ?? []
+        ).entries()) {
+          if (
+            typeof evidence?.sourceId === 'string' &&
+            !sourceIds.has(evidence.sourceId)
+          ) {
+            errors.push(
+              issue(
+                'MISSING_SOURCE_DESCRIPTOR',
+                `Evidence source ${evidence.sourceId} does not resolve to a verification brief source`,
+                `$.claims[${claimIndex}].evidence[${evidenceIndex}].sourceId`,
+              ),
+            );
+          }
+        }
+      }
     }
   } else if (value.mode === 'adversary') {
     requiredObject(value, 'scope', errors);
