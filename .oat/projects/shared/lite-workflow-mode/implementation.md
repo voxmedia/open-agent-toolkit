@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-04
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-09-05
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: lite-workflow-mode
 
 **Started:** 2026-09-04
-**Last Updated:** 2026-09-04
+**Last Updated:** 2026-09-05
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 3     | 0/3       |
-| Phase 3 | pending | 3     | 0/3       |
-| Phase 4 | pending | 2     | 0/2       |
-| Phase 5 | pending | 4     | 0/4       |
-| Phase 6 | pending | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | pending  | 3     | 0/3       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 2     | 0/2       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 0/19 tasks completed
+**Total:** 4/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -41,64 +41,95 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase 1: Single Mode Definition and Lite Scaffold
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-04
+**Completed:** 2026-09-05
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added `lite` to the exported, array-derived workflow-mode declaration and state parser.
+- Added the bundled `plan-lite.md` template and registered its source-to-target scaffold mapping.
+- Added `--mode lite` project scaffolding while preserving existing mode outputs.
+- Updated the CLI help snapshot for the fourth workflow-mode choice.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/control-plane/src/types.ts` and `state/parser.ts` - canonical mode declaration and parsing.
+- `.oat/templates/plan-lite.md` and bundle inventories - lite plan scaffold source.
+- `packages/cli/src/commands/project/new/` - lite scaffold mapping and tests.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused control-plane and CLI suites, `pnpm check`, `pnpm type-check`, `pnpm test`, and `pnpm build`.
+- Result: pass; independent review found 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- No design or plan divergence. The root-owned launch journal was excluded from every task commit and committed separately before review.
 
 ### Task p01-t01: Export an array-derived WorkflowMode with lite
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** 824384fdd5860351ab2f963a0240d9f01e2aa674
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Consumers can import the ordered `WORKFLOW_MODES` constant, and state parsing accepts `lite` while still normalizing unknown modes to null.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/control-plane/src/types.ts` - canonical mode list and derived type.
+- `packages/control-plane/src/state/parser.ts` - shared declaration consumption.
+- `packages/control-plane/src/state/parser.test.ts` - lite and invalid-mode coverage.
+- `packages/control-plane/README.md` - public export documentation.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: control-plane type-check and full control-plane Vitest suite.
+- Result: pass.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- None.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
 ### Task p01-t02: Add the plan-lite.md template and register it in the bundle inventory
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 459d6626c40112dc481d69b12171ef568c1f9db3
 
-**Notes:**
+**Outcome:** Added and bundled the lite plan template; updated mode comments in the shared templates.
 
-- {Notes will be added during implementation}
+**Verification:** Bundle consistency, template formatting, and existing scaffold tests passed.
+
+---
+
+### Task p01-t03: Unify the scaffold mode type, add source/target mapping, scaffold lite
+
+**Status:** completed
+**Commit:** 16d5b2354b9c2319af763fab0b4a84091854d07a
+
+**Outcome:** Lite projects scaffold `state.md`, `plan.md`, and `implementation.md` from the source-mapped template while existing mode artifact lists remain unchanged.
+
+**Verification:** CLI type-check, project/new tests, and build-backed bundled-tier coverage passed.
+
+---
+
+### Task p01-t04: Regenerate the help snapshot for the lite choice
+
+**Status:** completed
+**Commit:** 3427d2176a86b3f6a95219f6557b4d4798a6f1a2
+
+**Outcome:** CLI help advertises `lite` as the fourth project workflow mode.
+
+**Verification:** Help snapshot and project/new suites passed.
 
 ---
 
@@ -137,25 +168,35 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Dispatch Records
 
-- **p01 implementation:** accepted request `lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47`; durable record `dispatch/lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47.json`; target `oat-phase-implementer-gpt-5-6-sol-medium`; returned `DONE` at `3427d2176a86b3f6a95219f6557b4d4798a6f1a2`; independent phase review pending.
+- **p01 implementation:** accepted request `lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47`; durable record `dispatch/lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47.json`; target `oat-phase-implementer-gpt-5-6-sol-medium`; returned `DONE` at `3427d2176a86b3f6a95219f6557b4d4798a6f1a2`.
 - Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-medium`).
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+- **p01 review:** accepted request `lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26`; durable record `dispatch/lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p01-review-2026-09-05T204609Z.md`; verdict passed with no findings.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review  | Fix Loops | Outcome        |
-| ----- | -------------- | ------- | --------- | -------------- |
-| p01   | DONE (4/4)     | pending | 0         | pending review |
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p01   | DONE (4/4)     | passed | 0         | pass    |
 
 #### Outstanding Items
 
-- Independent root-owned review for `p01`.
+- Next schedule entry: parallel group `p02 + p03`.
 
 ---
 
 ## Implementation Log
 
 ### 2026-09-05
+
+#### Phase p01 completed and reviewed
+
+**Implementation range:** `2e998b0c12969130fc85d9873e02014904ac6798..3427d2176a86b3f6a95219f6557b4d4798a6f1a2`
+**Review artifact:** `reviews/code-p01-review-2026-09-05T204609Z.md`
+**Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 0.
+**Next:** execute the declared parallel group `p02 + p03`.
 
 #### Review Received: plan (gate)
 

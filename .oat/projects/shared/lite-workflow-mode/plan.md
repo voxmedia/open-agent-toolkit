@@ -921,28 +921,28 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
-| p01    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| p02    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| p03    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| p04    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| p05    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| p06    | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| final  | code     | pending  | -          | -                                                           | -             | -          | -                        |
-| spec   | artifact | pending  | -          | -                                                           | -             | -          | -                        |
-| design | artifact | pending  | -          | -                                                           | -             | -          | -                        |
-| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed   | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md               | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                        |
+| p02    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| p03    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| p04    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| p05    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| p06    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

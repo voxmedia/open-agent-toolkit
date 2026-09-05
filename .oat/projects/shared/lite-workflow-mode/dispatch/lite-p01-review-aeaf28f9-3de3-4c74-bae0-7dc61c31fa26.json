@@ -1,0 +1,87 @@
+{
+  "request_id": "lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Independently review the Phase p01 implementation range against project artifacts",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-review-20260905T204312Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-05T20:43:12.000Z"
+  },
+  "authority": "review-artifact-only",
+  "role_selector": "oat-reviewer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-reviewer-gpt-5-6-sol-high"],
+  "selection_reason": "gate-target",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-5-6-sol-high",
+    "fork_turns": "none",
+    "scope": "p01",
+    "range_head": "3427d2176a86b3f6a95219f6557b4d4798a6f1a2",
+    "output_mode": "artifact"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "in-progress",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p01-review",
+    "native-spawn-accepted",
+    "canonical-role:project"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block"
+  },
+  "authorization_scope": "lite-workflow-mode-p01-review",
+  "expected_output": "One timestamped p01 review artifact and brief artifact-mode confirmation",
+  "verification_evidence": "Full reviewed head, exact range, severity counts, code references, and required reconnaissance signal",
+  "escalate_when": [
+    "authoritative range is invalid",
+    "review artifact contract cannot be satisfied",
+    "unexpected code mutation is observed"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.1",
+      "contentDigest": "sha256:1e2987f2cb1d74e9c13203a45ba39de13c7a52624059985f154c04dbed87a0d4",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
