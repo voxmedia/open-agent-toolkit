@@ -7,14 +7,17 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
-import { applyTemplateReplacements } from '@commands/project/new/scaffold';
+import {
+  applyTemplateReplacements,
+  resolveTemplateSource as defaultResolveTemplateSource,
+} from '@commands/project/new/scaffold';
 import type { GitRunner } from '@commands/project/sync/git';
 import type { PushResult } from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
@@ -145,7 +148,7 @@ interface Harness {
 function createHarness(
   repoRoot: string,
   json = false,
-  options: { failWriteFile?: string } = {},
+  options: { failWriteFile?: string; liteTemplatePath?: string } = {},
 ): Harness {
   const capture = createLoggerCapture();
   const events: string[] = [];
@@ -173,6 +176,10 @@ function createHarness(
     }),
     resolveProjectRoot: async () => repoRoot,
     resolveProjectsRoot: async () => '.oat/projects/shared',
+    resolveTemplateSource: async (userOatRoot, templateRepoRoot, file) =>
+      file === 'plan-lite.md' && options.liteTemplatePath
+        ? options.liteTemplatePath
+        : defaultResolveTemplateSource(userOatRoot, templateRepoRoot, file),
     mkdir: async (...args: Parameters<typeof mkdir>) => {
       events.push(`mkdir:${String(args[0])}`);
       return mkdir(...args);
@@ -452,6 +459,44 @@ describe('oat project promote', () => {
     ).resolves.toContain('oat_template: true');
   });
 
+  it('refuses the repository canonical untouched lite template without writing', async () => {
+    const repositoryRoot = resolve(process.cwd(), '../..');
+    const canonicalTemplatePath = join(
+      repositoryRoot,
+      '.oat',
+      'templates',
+      'plan-lite.md',
+    );
+    const canonicalTemplate = await readFile(canonicalTemplatePath, 'utf8');
+    const repoRoot = await createRepo();
+    const { projectPath, projectRoot } = await seedRepo(repoRoot, {
+      plan: canonicalTemplate,
+    });
+    const originalState = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    const { capture, command, gitRunner, pushSynced } = createHarness(
+      repoRoot,
+      true,
+      { liteTemplatePath: canonicalTemplatePath },
+    );
+
+    await runCommand(command, projectPath, 'quick', true);
+
+    expect(process.exitCode).toBe(1);
+    expect(capture.jsonPayloads).toEqual([
+      { status: 'refused', reason: 'invalid-lite-plan', files: [] },
+    ]);
+    await expectNoPromotionWrites(
+      projectRoot,
+      canonicalTemplate,
+      originalState,
+    );
+    await expect(
+      readFile(join(projectRoot, 'references', 'lite-plan.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(gitRunner.run).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
+  });
+
   it('emits the promoted JSON contract', async () => {
     const repoRoot = await createRepo();
     const { projectPath } = await seedRepo(repoRoot);
@@ -564,20 +609,20 @@ describe('oat project promote', () => {
     },
   );
 
-  it('refuses a scaffold placeholder in a required section without any write', async () => {
+  it('accepts legitimate authored brace syntax in a required section', async () => {
     const repoRoot = await createRepo();
     const plan = litePlanContent().replace(
       'Ship safe behavior.',
-      '{Summarize the requested behavior}',
+      'Render authored JSON such as `{ "ok": true }` without rewriting braces.',
     );
     const { projectPath, projectRoot } = await seedRepo(repoRoot, { plan });
-    const originalState = await readFile(join(projectRoot, 'state.md'), 'utf8');
-    const { command, gitRunner } = createHarness(repoRoot);
+    const { command } = createHarness(repoRoot);
 
     await runCommand(command, projectPath);
 
-    expect(process.exitCode).toBe(1);
-    await expectNoPromotionWrites(projectRoot, plan, originalState);
-    expect(gitRunner.run).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+    await expect(
+      readFile(join(projectRoot, 'references', 'lite-plan.md'), 'utf8'),
+    ).resolves.toBe(plan);
   });
 });

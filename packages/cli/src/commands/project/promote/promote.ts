@@ -137,18 +137,48 @@ function extractSection(content: string, heading: string): string | null {
   return body.length > 0 ? body : null;
 }
 
-export function parseLitePlanSections(
-  planContent: string,
-): LitePlanSections | null {
+function extractLitePlanSections(planContent: string): LitePlanSections | null {
   const sections: Partial<LitePlanSections> = {};
   for (const [heading, key] of LITE_SECTION_HEADINGS) {
     const body = extractSection(planContent, heading);
-    if (!body || /\{[^{}\n]+\}/.test(body)) {
-      return null;
-    }
+    if (!body) return null;
     sections[key] = body;
   }
   return sections as LitePlanSections;
+}
+
+function containsUnresolvedTemplateContent(
+  sections: LitePlanSections,
+  templateSections: LitePlanSections,
+): boolean {
+  return LITE_SECTION_HEADINGS.some(([, key]) => {
+    const content = sections[key];
+    const templateContent = templateSections[key];
+    if (content === templateContent) return true;
+
+    const markers =
+      templateContent
+        .match(/\[[^\]\n]+\]|\{[^{}\n]+\}/g)
+        ?.filter((marker) => !/^\[\s*\]$/.test(marker)) ?? [];
+    return markers.some((marker) => content.includes(marker));
+  });
+}
+
+export function parseLitePlanSections(
+  planContent: string,
+  liteTemplateContent?: string,
+): LitePlanSections | null {
+  const sections = extractLitePlanSections(planContent);
+  if (!sections || !liteTemplateContent) return sections;
+
+  const templateSections = extractLitePlanSections(liteTemplateContent);
+  if (
+    !templateSections ||
+    containsUnresolvedTemplateContent(sections, templateSections)
+  ) {
+    return null;
+  }
+  return sections;
 }
 
 function readObjectFrontmatter(
@@ -314,7 +344,20 @@ async function promoteProject(
     };
   }
 
-  const sections = parseLitePlanSections(planContent);
+  const userOatRoot = join(context.home, '.oat');
+  let liteTemplateContent: string;
+  try {
+    const liteTemplatePath = await dependencies.resolveTemplateSource(
+      userOatRoot,
+      repoRoot,
+      'plan-lite.md',
+    );
+    liteTemplateContent = await dependencies.readFile(liteTemplatePath, 'utf8');
+  } catch {
+    return { status: 'refused', reason: 'template-unreadable', files: [] };
+  }
+
+  const sections = parseLitePlanSections(planContent, liteTemplateContent);
   if (!sections) {
     return { status: 'refused', reason: 'invalid-lite-plan', files: [] };
   }
@@ -335,7 +378,6 @@ async function promoteProject(
   let quickPlanContent: string;
   let quickStateContent: string;
   try {
-    const userOatRoot = join(context.home, '.oat');
     const [discoveryTemplatePath, quickPlanTemplatePath] = await Promise.all([
       dependencies.resolveTemplateSource(userOatRoot, repoRoot, 'discovery.md'),
       dependencies.resolveTemplateSource(userOatRoot, repoRoot, 'plan.md'),
