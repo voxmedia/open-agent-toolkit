@@ -115,6 +115,48 @@ export interface JiraMutationPreview {
   };
 }
 
+export interface JiraReadObservationInput {
+  action: SemanticAction;
+  hostCapability: JiraHostCapabilityObservation;
+  observedAt: string;
+  outcome: 'found' | 'not-found' | 'temporary-failure';
+  observation?: SanitizedProviderObservation;
+}
+
+export interface JiraReadResult {
+  classification:
+    | 'current'
+    | 'moved'
+    | 'partial'
+    | 'inaccessible'
+    | 'temporarily-unavailable';
+  issue: NormalizedRemoteIssue | null;
+  preservePriorEvidence: boolean;
+  reasons: string[];
+}
+
+export interface JiraMetadataObservation {
+  provider: 'jira';
+  context: ProviderContext;
+  capabilityEvidenceDigest: string;
+  purpose: 'create' | 'update' | 'transition';
+  availability: 'available' | 'authorization-required' | 'partial';
+  metadataEvidenceDigest: string;
+  writableFields: JiraMutationField[];
+  transitions: string[];
+}
+
+export interface JiraDiscussionObservation {
+  provider: 'jira';
+  context: ProviderContext;
+  stableId: string;
+  availability: 'available' | 'rate-limited' | 'permission-denied';
+  capabilityEvidenceDigest: string;
+  requestedCursor: string | null;
+  nextCursor: string | null;
+  items: Array<{ id: string; body: string; observedAt: string }>;
+}
+
 const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/;
 const ISSUE_ID = /^[1-9][0-9]*$/;
 const URL_REFERENCE =
@@ -421,6 +463,233 @@ export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
   });
 }
 
+export function classifyJiraReadObservation(
+  input: JiraReadObservationInput,
+): JiraReadResult {
+  if (
+    !validJiraActionDigest(input.action) ||
+    input.action.intent.kind !== 'issue'
+  ) {
+    return unavailableJiraRead('inaccessible', ['read-action-invalid']);
+  }
+  if (!Number.isFinite(Date.parse(input.observedAt))) {
+    throw new Error('Jira read classification requires a valid timestamp.');
+  }
+  const capability = validateJiraHostCapability(
+    'read',
+    input.action.context,
+    input.hostCapability,
+    ['stable-identity', 'title', 'status', 'revision', 'project-context'],
+  );
+  if (
+    !capability.valid ||
+    input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+  ) {
+    return unavailableJiraRead('inaccessible', [
+      ...capability.reasons,
+      ...(input.action.intent.capabilityEvidenceDigest !==
+      input.hostCapability.evidenceDigest
+        ? ['capability-evidence-mismatch']
+        : []),
+    ]);
+  }
+  if (input.outcome === 'temporary-failure') {
+    return unavailableJiraRead('temporarily-unavailable', [
+      'temporary-host-failure',
+    ]);
+  }
+  if (input.outcome === 'not-found' || !input.observation) {
+    return unavailableJiraRead('inaccessible', [
+      input.outcome === 'not-found'
+        ? 'absence-not-authoritative'
+        : 'read-observation-missing',
+    ]);
+  }
+  const observation = input.observation;
+  if (
+    observation.provider !== 'jira' ||
+    !contextsEqual(input.action.context, observation.context) ||
+    observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    observation.fields.issueId !== input.action.intent.issueId
+  ) {
+    return unavailableJiraRead('inaccessible', [
+      'observation-attribution-mismatch',
+    ]);
+  }
+  let issue: NormalizedRemoteIssue;
+  try {
+    issue = normalizeJiraIssueObservation(observation);
+  } catch {
+    return unavailableJiraRead('partial', ['read-observation-incomplete']);
+  }
+  if (issue.stableId !== input.action.intent.stableId) {
+    return unavailableJiraRead('inaccessible', [
+      'observation-identity-mismatch',
+    ]);
+  }
+  const currentKey = input.action.intent.currentKey;
+  const moved =
+    typeof currentKey === 'string' &&
+    observation.fields.key !== currentKey &&
+    Array.isArray(observation.fields.historicalKeys) &&
+    observation.fields.historicalKeys.includes(currentKey);
+  const revisionWeak =
+    !observation.revision.token && !observation.revision.updatedAt;
+  return {
+    classification: moved ? 'moved' : 'current',
+    issue,
+    preservePriorEvidence: false,
+    reasons: revisionWeak ? ['revision-evidence-weak'] : [],
+  };
+}
+
+export function validateJiraMetadataObservation(input: {
+  action: SemanticAction;
+  hostCapability: JiraHostCapabilityObservation;
+  observation: JiraMetadataObservation;
+}): ObservationValidation {
+  const reasons: string[] = [];
+  if (
+    !validJiraActionDigest(input.action) ||
+    input.action.operation !== 'read' ||
+    input.action.intent.kind !== 'metadata'
+  ) {
+    reasons.push('metadata-action-invalid');
+  }
+  const capability = validateJiraHostCapability(
+    'read',
+    input.action.context,
+    input.hostCapability,
+    [
+      'metadata',
+      ...(input.action.intent.purpose === 'transition'
+        ? (['transitions'] as JiraSemanticField[])
+        : []),
+    ],
+  );
+  reasons.push(...capability.reasons);
+  if (
+    input.observation.provider !== 'jira' ||
+    !contextsEqual(input.action.context, input.observation.context)
+  ) {
+    reasons.push('observation-context-mismatch');
+  }
+  if (
+    input.observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest
+  ) {
+    reasons.push('capability-evidence-mismatch');
+  }
+  if (input.observation.purpose !== input.action.intent.purpose)
+    reasons.push('metadata-purpose-mismatch');
+  if (input.observation.availability !== 'available')
+    reasons.push(input.observation.availability);
+  if (!input.observation.metadataEvidenceDigest)
+    reasons.push('metadata-evidence-missing');
+  if (
+    input.observation.writableFields.some(
+      (field) =>
+        !['title', 'description', 'priority', 'status', 'annotation'].includes(
+          field,
+        ),
+    )
+  ) {
+    reasons.push('metadata-field-invalid');
+  }
+  return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
+}
+
+export function validateJiraDiscussionReadObservation(input: {
+  action: SemanticAction;
+  hostCapability: JiraHostCapabilityObservation;
+  observation: JiraDiscussionObservation;
+}): {
+  classification: 'page' | 'rate-limited' | 'permission-denied' | 'invalid';
+  page: {
+    items: Array<{
+      id: string;
+      body: string;
+      observedAt: string;
+      contentSuppressed: boolean;
+    }>;
+    nextCursor: string | null;
+  } | null;
+  persistable: false;
+  reasons: string[];
+} {
+  const invalid = (reasons: string[]) => ({
+    classification: 'invalid' as const,
+    page: null,
+    persistable: false as const,
+    reasons,
+  });
+  if (
+    !validJiraActionDigest(input.action) ||
+    input.action.operation !== 'read-discussion' ||
+    input.observation.provider !== 'jira' ||
+    !contextsEqual(input.action.context, input.observation.context) ||
+    input.observation.stableId !== input.action.intent.stableId ||
+    input.observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.requestedCursor !== input.action.intent.cursor
+  ) {
+    return invalid(['discussion-evidence-mismatch']);
+  }
+  if (input.observation.availability !== 'available') {
+    return {
+      classification: input.observation.availability,
+      page: null,
+      persistable: false,
+      reasons: [input.observation.availability],
+    };
+  }
+  const limit = Number(input.action.intent.limit);
+  const pageBytes = input.observation.items.reduce(
+    (total, item) => total + Buffer.byteLength(item.id + item.body, 'utf8'),
+    0,
+  );
+  if (
+    input.observation.items.length > limit ||
+    pageBytes > JIRA_DISCUSSION_LIMITS.maxPageBytes ||
+    input.observation.items.some(
+      (item) =>
+        !item.id ||
+        Buffer.byteLength(item.id, 'utf8') >
+          JIRA_DISCUSSION_LIMITS.maxIdBytes ||
+        Buffer.byteLength(item.body, 'utf8') >
+          JIRA_DISCUSSION_LIMITS.maxBodyBytes ||
+        !Number.isFinite(Date.parse(item.observedAt)),
+    ) ||
+    (input.observation.nextCursor !== null &&
+      Buffer.byteLength(input.observation.nextCursor, 'utf8') >
+        JIRA_DISCUSSION_LIMITS.maxCursorBytes)
+  ) {
+    return invalid(['discussion-page-out-of-bounds']);
+  }
+  return {
+    classification: 'page',
+    page: {
+      items: input.observation.items.map((item) => {
+        const contentSuppressed = containsSensitiveContentSignal(item.body);
+        return {
+          ...item,
+          body: contentSuppressed ? WHOLE_FIELD_SUPPRESSION_MARKER : item.body,
+          contentSuppressed,
+        };
+      }),
+      nextCursor: input.observation.nextCursor,
+    },
+    persistable: false,
+    reasons: [],
+  };
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -455,11 +724,53 @@ export const jiraAdapter: ProviderAdapter = {
   },
   validateObservation(action, observation): ObservationValidation {
     const reasons: string[] = [];
+    if (action.operation === 'read-discussion') {
+      return {
+        valid: false,
+        reasons: ['typed-validator-required:read-discussion'],
+      };
+    }
+    if (!validJiraActionDigest(action)) reasons.push('action-evidence-invalid');
     if (action.provider !== 'jira' || observation.provider !== 'jira')
       reasons.push('provider-mismatch');
     if (!contextsEqual(action.context, observation.context))
       reasons.push('context-mismatch');
-    return { valid: reasons.length === 0, reasons };
+    const capability = parseJiraHostCapability(
+      observation.fields.hostCapability,
+    );
+    if (!capability) reasons.push('capability-evidence-missing');
+    else {
+      const validation = validateJiraHostCapability(
+        action.operation,
+        action.context,
+        capability,
+      );
+      reasons.push(...validation.reasons);
+      if (
+        observation.capabilityEvidenceDigest !==
+          action.intent.capabilityEvidenceDigest ||
+        capability.evidenceDigest !== action.intent.capabilityEvidenceDigest
+      ) {
+        reasons.push('capability-evidence-mismatch');
+      }
+    }
+    if (action.operation === 'read' && action.intent.kind === 'issue') {
+      try {
+        const issue = normalizeJiraIssueObservation(observation);
+        if (issue.stableId !== action.intent.stableId)
+          reasons.push('observation-identity-mismatch');
+      } catch {
+        reasons.push('observation-invalid');
+      }
+    }
+    if (
+      action.operation === 'read' &&
+      action.intent.kind === 'metadata' &&
+      typeof observation.fields.metadataEvidenceDigest !== 'string'
+    ) {
+      reasons.push('metadata-evidence-missing');
+    }
+    return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
   },
   verificationFields(action): string[] {
     return action.operation === 'read' ? ['stable-identity'] : [];
@@ -609,6 +920,52 @@ function jiraAction(
       }),
     },
   };
+}
+
+function validJiraActionDigest(action: SemanticAction): boolean {
+  if (action.provider !== 'jira' || !hasPinnedJiraContext(action.context))
+    return false;
+  const { actionDigest, ...intent } = action.intent;
+  return (
+    typeof actionDigest === 'string' &&
+    actionDigest ===
+      semanticDigest({
+        provider: 'jira',
+        operation: action.operation,
+        context: action.context,
+        intent,
+      })
+  );
+}
+
+function unavailableJiraRead(
+  classification: 'partial' | 'inaccessible' | 'temporarily-unavailable',
+  reasons: string[],
+): JiraReadResult {
+  return { classification, issue: null, preservePriorEvidence: true, reasons };
+}
+
+function parseJiraHostCapability(
+  value: unknown,
+): JiraHostCapabilityObservation | null {
+  if (
+    !isRecord(value) ||
+    value.provider !== 'jira' ||
+    !isRecord(value.context) ||
+    !Array.isArray(value.operations) ||
+    !Array.isArray(value.observableFields) ||
+    typeof value.accountId !== 'string' ||
+    typeof value.siteId !== 'string' ||
+    typeof value.projectId !== 'string' ||
+    typeof value.evidenceDigest !== 'string'
+  ) {
+    return null;
+  }
+  return value as unknown as JiraHostCapabilityObservation;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function assertJiraObservation(

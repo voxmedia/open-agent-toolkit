@@ -3,6 +3,8 @@ import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider
 import { describe, expect, it } from 'vitest';
 
 import {
+  classifyJiraReadObservation,
+  jiraAdapter,
   normalizeJiraIssueObservation,
   parseJiraIssueReference,
   planJiraDiscussionRead,
@@ -10,6 +12,8 @@ import {
   planJiraMutation,
   planJiraRead,
   previewJiraMutation,
+  validateJiraDiscussionReadObservation,
+  validateJiraMetadataObservation,
   type JiraHostCapabilityObservation,
 } from './jira';
 
@@ -73,6 +77,8 @@ export const jiraCapability: JiraHostCapabilityObservation = {
   ],
   evidenceDigest: 'sha256:jira-capability',
 };
+
+jiraObservation.fields.hostCapability = jiraCapability;
 
 describe('Jira Cloud identity and normalization', () => {
   it('parses current key and cloud browse references', () => {
@@ -302,5 +308,124 @@ describe('Jira semantic mutation intents', () => {
     expect(() =>
       planJiraMutation({ ...update, approvedPreviewDigest: 'sha256:stale' }),
     ).toThrow('approval');
+  });
+});
+
+describe('Jira read and metadata observations', () => {
+  const readAction = () =>
+    planJiraRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'OLD-42',
+      stepId: 'jira-refresh',
+    });
+
+  it('validates exact-context sanitized issue evidence and detects a moved key', () => {
+    const action = readAction();
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: jiraObservation,
+      }),
+    ).toMatchObject({ classification: 'moved', preservePriorEvidence: false });
+    expect(jiraAdapter.validateObservation(action, jiraObservation)).toEqual({
+      valid: true,
+      reasons: [],
+    });
+  });
+
+  it('fails closed on authorization, context mismatch, partial response, and temporary failure', () => {
+    const action = readAction();
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: {
+          ...jiraCapability,
+          availability: 'authorization-required',
+        },
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: jiraObservation,
+      }).classification,
+    ).toBe('inaccessible');
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...jiraObservation,
+          fields: { ...jiraObservation.fields, title: undefined },
+        },
+      }).classification,
+    ).toBe('partial');
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'temporary-failure',
+      }).classification,
+    ).toBe('temporarily-unavailable');
+  });
+
+  it('validates normalized metadata and bounded non-persistent discussion pages', () => {
+    const metadataAction = planJiraMetadataRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      purpose: 'transition',
+      issueId: '10042',
+    });
+    expect(
+      validateJiraMetadataObservation({
+        action: metadataAction,
+        hostCapability: jiraCapability,
+        observation: {
+          provider: 'jira',
+          context: jiraContext,
+          capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+          purpose: 'transition',
+          availability: 'available',
+          metadataEvidenceDigest: 'sha256:jira-metadata',
+          writableFields: ['status'],
+          transitions: ['Done'],
+        },
+      }),
+    ).toEqual({ valid: true, reasons: [] });
+    const discussionAction = planJiraDiscussionRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      stableId: 'jira:site_01:10042',
+      cursor: null,
+      limit: 2,
+    });
+    expect(
+      validateJiraDiscussionReadObservation({
+        action: discussionAction,
+        hostCapability: jiraCapability,
+        observation: {
+          provider: 'jira',
+          context: jiraContext,
+          stableId: 'jira:site_01:10042',
+          availability: 'available',
+          capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+          requestedCursor: null,
+          nextCursor: null,
+          items: [
+            {
+              id: 'comment-1',
+              body: 'Useful context',
+              observedAt: '2026-09-05T12:00:00.000Z',
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ classification: 'page', persistable: false });
   });
 });
