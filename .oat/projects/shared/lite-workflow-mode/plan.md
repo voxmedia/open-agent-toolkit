@@ -921,28 +921,28 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed          | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md               | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                        |
-| p02    | code     | passed          | 2026-09-05 | reviews/code-p02-review-2026-09-05T210504Z.md               | 948434796085b5c537542213fd562194827a822c | manual     | -                        |
-| p03    | code     | passed          | 2026-09-05 | reviews/code-p03-review-2026-09-05T210747Z.md               | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                        |
-| p04    | code     | passed          | 2026-09-05 | reviews/code-p04-review-2026-09-05T223510Z.md               | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                        |
-| p05    | code     | fixes_completed | 2026-09-05 | reviews/code-p05-review-2026-09-05T230902Z.md               | 3e250f86c64ffa424467a066ef1664d4465fea50 | manual     | -                        |
-| p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                        |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | received        | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
+| p01    | code     | passed   | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md               | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                        |
+| p02    | code     | passed   | 2026-09-05 | reviews/code-p02-review-2026-09-05T210504Z.md               | 948434796085b5c537542213fd562194827a822c | manual     | -                        |
+| p03    | code     | passed   | 2026-09-05 | reviews/code-p03-review-2026-09-05T210747Z.md               | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                        |
+| p04    | code     | passed   | 2026-09-05 | reviews/code-p04-review-2026-09-05T223510Z.md               | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                        |
+| p05    | code     | passed   | 2026-09-05 | reviews/p05-review-2026-09-05T231617Z.md                    | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                        |
+| p06    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| final  | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
+| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
+| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

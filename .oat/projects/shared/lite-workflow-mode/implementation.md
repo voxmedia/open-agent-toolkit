@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-05
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 4     | 4/4       |
-| Phase 2 | complete  | 3     | 3/3       |
-| Phase 3 | complete  | 3     | 3/3       |
-| Phase 4 | complete  | 2     | 2/2       |
-| Phase 5 | in review | 4     | 4/4       |
-| Phase 6 | pending   | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | pending  | 3     | 0/3       |
 
 **Total:** 16/19 tasks completed
 
@@ -261,7 +261,7 @@ this bounded adaptation, so no plan rewrite is required.
 
 ## Phase 5: Mode-Aware Skills and Import-to-Lite Offer
 
-**Status:** in review
+**Status:** complete
 **Started:** 2026-09-05
 
 ### Phase Summary
@@ -343,26 +343,38 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p05 implementation:** accepted request `lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4`; durable record `dispatch/lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `1612122f03d605b9062f7b50b0806b1882f87714` with four task commits and no recovery attempts.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/p05-review-2026-09-05T231617Z.md`.
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review  | Fix Loops | Outcome   |
-| ----- | -------------- | ------- | --------- | --------- |
-| p01   | DONE (4/4)     | passed  | 0         | pass      |
-| p02   | DONE (3/3)     | passed  | 1         | pass      |
-| p03   | DONE (3/3)     | passed  | 1         | pass      |
-| p04   | DONE (2/2)     | passed  | 0         | pass      |
-| p05   | DONE (4/4)     | pending | 0         | in-review |
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p01   | DONE (4/4)     | passed | 0         | pass    |
+| p02   | DONE (3/3)     | passed | 1         | pass    |
+| p03   | DONE (3/3)     | passed | 1         | pass    |
+| p04   | DONE (2/2)     | passed | 0         | pass    |
+| p05   | DONE (4/4)     | passed | 2         | pass    |
 
 #### Outstanding Items
 
-- Independent p05 review is next; p06 starts only after a passing disposition.
+- Phase p06 implementation, validation, provider-view sync, and release gates remain.
 
 ---
 
 ## Implementation Log
 
 ### 2026-09-05
+
+#### Phase p05 completed and reviewed
+
+**Implementation range:** `2565cb77a3067fb1dbfd44cce2af391582787e4e..c11a1150239dc179c60b0b82defc9c350999955d`
+**Review artifact:** `reviews/p05-review-2026-09-05T231617Z.md`
+**Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 2.
+**Review orchestration:** the initial review attempted reconnaissance; its
+required evidence is preserved in
+`reviews/code-p05-review-2026-09-05T225758Z.md`. Both re-reviews reported
+reconnaissance not attempted and therefore contain no orchestration section.
+**Next:** execute `p06`.
 
 #### p05 review received — fix loop 1
 

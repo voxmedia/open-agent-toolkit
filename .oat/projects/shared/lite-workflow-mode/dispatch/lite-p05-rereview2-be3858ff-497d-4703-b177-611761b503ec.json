@@ -44,14 +44,16 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p05-rereview2",
     "native-spawn-accepted",
     "canonical-role:project"
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Review artifact reviews/p05-review-2026-09-05T231617Z.md passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings."
+  ],
   "continuation_events": [
     {
       "id": "p05-rereview2-after-fix2",
