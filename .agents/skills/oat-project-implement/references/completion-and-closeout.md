@@ -686,10 +686,16 @@ resolution:
 ```bash
 # BEGIN LITE CLOSEOUT RESOLUTION CONTRACT
 if [ "$WORKFLOW_MODE" = "lite" ]; then
+  if [ "${PHASE_REVIEW_STATUS:-}" != "passed" ] || [ "${FINAL_REVIEW_STATUS:-}" != "passed" ]; then
+    echo "oat: lite closeout requires passed phase and final reviews" >&2
+    exit 65
+  fi
   FINAL_CHECKPOINT_EXISTS="false"
   APPROVAL="not_required"
   AWAITING_APPROVAL_REACHABLE="false"
   AUTONOMOUS_APPROVAL_REACHABLE="false"
+  PROJECT_RECAP_REACHABLE="false"
+  ORDERED_CLOSEOUT=("phase-review" "final-review")
   PRE_APPROVAL=()
   for STEP in ${LITE_PRE_APPROVAL:-}; do
     case "$STEP" in
@@ -708,6 +714,7 @@ if [ "$WORKFLOW_MODE" = "lite" ]; then
   done
   [ "$PR_PRESENT" = "true" ] || PRE_APPROVAL+=("pr")
   POST_APPROVAL=()
+  ORDERED_CLOSEOUT+=("${PRE_APPROVAL[@]}" "complete")
 fi
 # END LITE CLOSEOUT RESOLUTION CONTRACT
 ```
@@ -831,12 +838,16 @@ checkpoint protocol to gate bookkeeping, final HiLL bookkeeping, and completion
 bookkeeping. A mixed commit, missing child transition, or non-state path in the
 checkpoint-persistence commit fails closed as stale.
 
-**Implementation-Tail Project Recap:**
+**Implementation-Tail Project Recap (non-lite only):**
 
 The final-closeout orchestrator owns one project-recap gate. Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval. Preserve the stored order of all other pre-approval steps and the existing final review sequence; the recap gate does not replace or repeat either.
 
-For lite, "before final HiLL approval" means before sequence completion; the
-lite branch still never enters a final approval algorithm.
+This entire project-recap subsection applies only to non-lite workflows. For
+lite, do not resolve recap intent, inspect recap runs, invoke
+`oat-explainer-kit`, run the terminal-outcome guard, or let recap block
+closeout. The lite contract sets `PROJECT_RECAP_REACHABLE=false` and proceeds
+from the required reviews through its stored optional steps to `pr` and
+sequence completion.
 
 Before generating, inspect the active project's explainer runs. A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs. A merely present, incomplete, wrong-recipe, or stale manifest does not satisfy this check.
 

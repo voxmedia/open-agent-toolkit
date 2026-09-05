@@ -6825,6 +6825,8 @@ describe('lite mode skill contracts', () => {
           OAT_PLAN_HILL_PHASES: '[]',
           OAT_AUTONOMOUS: '1',
           GENERIC_PRE_APPROVAL: 'summary document pr',
+          PHASE_REVIEW_STATUS: 'passed',
+          FINAL_REVIEW_STATUS: 'passed',
         },
       },
     );
@@ -6911,7 +6913,7 @@ describe('lite mode skill contracts', () => {
         '/bin/bash',
         [
           '-c',
-          `${closeoutContract}\nprintf 'pre=%s\\npost=%s\\napproval=%s\\n' "${'${PRE_APPROVAL[*]}'}" "${'${POST_APPROVAL[*]}'}" "$APPROVAL"`,
+          `${closeoutContract}\nprintf 'pre=%s\\npost=%s\\napproval=%s\\nrecap=%s\\norder=%s\\n' "${'${PRE_APPROVAL[*]}'}" "${'${POST_APPROVAL[*]}'}" "$APPROVAL" "$PROJECT_RECAP_REACHABLE" "${'${ORDERED_CLOSEOUT[*]}'}"`,
         ],
         {
           env: {
@@ -6923,6 +6925,8 @@ describe('lite mode skill contracts', () => {
             LITE_PRE_APPROVAL: litePreApproval,
             OAT_PLAN_HILL_PHASES: '[]',
             OAT_AUTONOMOUS: '1',
+            PHASE_REVIEW_STATUS: 'passed',
+            FINAL_REVIEW_STATUS: 'passed',
           },
         },
       );
@@ -6932,10 +6936,26 @@ describe('lite mode skill contracts', () => {
     expect(await runCloseout()).toContain(
       'pre=pr\npost=\napproval=not_required',
     );
+    expect(await runCloseout()).toContain(
+      'recap=false\norder=phase-review final-review pr complete',
+    );
     expect(await runCloseout('summary pr')).toContain(
       'pre=summary pr\npost=\napproval=not_required',
     );
+    expect(await runCloseout('summary pr')).toContain(
+      'recap=false\norder=phase-review final-review summary pr complete',
+    );
     expect(await runCloseout('summary retro pr')).not.toContain('retro');
+    await expect(
+      execFileAsync('/bin/bash', ['-c', closeoutContract ?? 'exit 1'], {
+        env: {
+          ...process.env,
+          WORKFLOW_MODE: 'lite',
+          PHASE_REVIEW_STATUS: 'passed',
+          FINAL_REVIEW_STATUS: 'pending',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 65 });
 
     const { stdout: prRoute } = await execFileAsync(
       '/bin/bash',
