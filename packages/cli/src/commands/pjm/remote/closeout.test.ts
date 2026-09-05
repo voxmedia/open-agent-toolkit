@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   closeoutBindings,
+  resumeCloseoutOperation,
   type CloseoutJournal,
   type CloseoutStore,
 } from './closeout';
@@ -65,6 +66,171 @@ describe('per-binding composite closeout', () => {
       result.operations[0]?.substeps.map((step) => step.authority),
     ).toEqual(['user-approved', 'autonomous']);
   });
+
+  it.each(['annotation', 'transition'] as const)(
+    'recovers a crash after verified %s without repeating it',
+    async (crashKind) => {
+      const store = memoryStore();
+      const created = await closeoutBindings(
+        {
+          batchId: 'batch_closeout_001',
+          projectPath: 'project',
+          now: NOW,
+          plans: [
+            {
+              bindingId: 'bnd_closeout_001',
+              operationId: 'op_closeout_001',
+              provider: 'linear',
+              purposes: ['source', 'planning'],
+              annotation: {
+                authority: 'autonomous',
+                sourceDigest: 'sha256:a',
+                previewDigest: 'sha256:a-preview',
+              },
+              transition: {
+                authority: 'autonomous',
+                sourceDigest: 'sha256:t',
+                previewDigest: 'sha256:t-preview',
+              },
+            },
+          ],
+        },
+        store,
+      );
+      const calls: string[] = [];
+      await expect(
+        resumeCloseoutOperation(
+          created.operations[0]!,
+          store,
+          async (step) => {
+            calls.push(step.kind);
+            return 'verified';
+          },
+          (point) => {
+            if (point === `after-${crashKind}`) throw new Error('crash');
+          },
+        ),
+      ).rejects.toThrow('crash');
+      const persisted = store.operations.get('op_closeout_001')!;
+      const completedBeforeRestart = persisted.substeps
+        .filter((step) => step.state === 'verified')
+        .map((step) => step.kind);
+      const resumedCalls: string[] = [];
+      const resumed = await resumeCloseoutOperation(
+        persisted,
+        store,
+        async (step) => {
+          resumedCalls.push(step.kind);
+          return 'verified';
+        },
+      );
+
+      expect(resumedCalls).not.toContain(crashKind);
+      expect(
+        resumed.substeps.filter((step) => step.state === 'verified'),
+      ).toHaveLength(crashKind === 'annotation' ? 2 : 2);
+      expect(completedBeforeRestart).toContain(crashKind);
+    },
+  );
+
+  it('resumes a crash before annotation from the first unfinished safe step', async () => {
+    const store = memoryStore();
+    const created = await closeoutBindings(
+      {
+        batchId: 'batch_closeout_001',
+        projectPath: 'project',
+        now: NOW,
+        plans: [
+          {
+            bindingId: 'bnd_closeout_001',
+            operationId: 'op_closeout_001',
+            provider: 'linear',
+            purposes: ['source'],
+            annotation: {
+              authority: 'autonomous',
+              sourceDigest: 'sha256:a',
+              previewDigest: 'sha256:a-preview',
+            },
+          },
+        ],
+      },
+      store,
+    );
+    await expect(
+      resumeCloseoutOperation(
+        created.operations[0]!,
+        store,
+        async () => 'verified',
+        (point) => {
+          if (point === 'before-annotation') throw new Error('crash');
+        },
+      ),
+    ).rejects.toThrow('crash');
+    const calls: string[] = [];
+    await resumeCloseoutOperation(
+      store.operations.get('op_closeout_001')!,
+      store,
+      async (step) => {
+        calls.push(step.kind);
+        return 'verified';
+      },
+    );
+    expect(calls).toEqual(['annotation']);
+  });
+
+  it.each(['uncertain', 'rejected'] as const)(
+    'does not retry an attempted %s substep and preserves partial state',
+    async (terminalState) => {
+      const store = memoryStore();
+      const operation: CloseoutJournal = {
+        schemaVersion: 1,
+        operationId: 'op_closeout_001',
+        bindingId: 'bnd_closeout_001',
+        provider: 'linear',
+        projectPath: 'project',
+        previewDigest: 'sha256:preview',
+        state: 'partial',
+        substeps: [
+          {
+            stepId: 'op_closeout_001_annotation',
+            kind: 'annotation',
+            state: 'verified',
+            previewDigest: 'sha256:a',
+            authority: 'autonomous',
+            authoritySourceDigest: 'sha256:a-policy',
+            approvalRequirement: 'none',
+            dependsOn: [],
+          },
+          {
+            stepId: 'op_closeout_001_transition',
+            kind: 'transition',
+            state: terminalState,
+            previewDigest: 'sha256:t',
+            authority: 'autonomous',
+            authoritySourceDigest: 'sha256:t-policy',
+            approvalRequirement: 'none',
+            dependsOn: ['op_closeout_001_annotation'],
+          },
+        ],
+        createdAt: NOW,
+        updatedAt: NOW,
+      };
+      store.operations.set(operation.operationId, operation);
+      const calls: string[] = [];
+      const resumed = await resumeCloseoutOperation(
+        operation,
+        store,
+        async (step) => {
+          calls.push(step.kind);
+          return 'verified';
+        },
+      );
+
+      expect(calls).toEqual([]);
+      expect(resumed.state).toBe('partial');
+      expect(resumed.substeps[1]?.state).toBe(terminalState);
+    },
+  );
 
   it('deduplicates a combined purpose into one composite operation', async () => {
     const result = await closeoutBindings(

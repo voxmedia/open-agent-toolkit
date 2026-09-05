@@ -69,6 +69,16 @@ export interface CloseoutResult {
   operations: CloseoutJournal[];
 }
 
+export type CloseoutCrashPoint =
+  | 'before-annotation'
+  | 'after-annotation'
+  | 'before-transition'
+  | 'after-transition';
+
+export type ExecuteCloseoutStep = (
+  step: CloseoutSubstep,
+) => Promise<'verified' | 'uncertain' | 'rejected' | 'blocked' | 'failed'>;
+
 export async function closeoutBindings(
   input: CloseoutInput,
   store: CloseoutStore,
@@ -113,6 +123,77 @@ export async function closeoutBindings(
   );
   await store.writeBatch(batch);
   return { batch, operations };
+}
+
+export async function resumeCloseoutOperation(
+  journal: CloseoutJournal,
+  store: CloseoutStore,
+  executeStep: ExecuteCloseoutStep,
+  crash?: (point: CloseoutCrashPoint) => void,
+  now: () => string = () => new Date().toISOString(),
+): Promise<CloseoutJournal> {
+  let current = cloneJournal(journal);
+  for (let index = 0; index < current.substeps.length; index += 1) {
+    const step = current.substeps[index]!;
+    if (step.state === 'verified') continue;
+    if (
+      [
+        'attempt-started',
+        'verification-pending',
+        'partial',
+        'uncertain',
+        'rejected',
+      ].includes(step.state)
+    ) {
+      continue;
+    }
+    if (step.state === 'blocked' || step.state === 'failed') continue;
+    const dependenciesVerified = step.dependsOn.every((dependencyId) =>
+      current.substeps.some(
+        (candidate) =>
+          candidate.stepId === dependencyId && candidate.state === 'verified',
+      ),
+    );
+    if (!dependenciesVerified) continue;
+
+    crash?.(`before-${step.kind}`);
+    current.substeps[index] = { ...step, state: 'attempt-started' };
+    current = withReducedState(current, now());
+    await store.writeOperation(current);
+
+    const outcome = await executeStep(current.substeps[index]!);
+    current.substeps[index] = {
+      ...current.substeps[index]!,
+      state: outcome,
+    };
+    current = withReducedState(current, now());
+    await store.writeOperation(current);
+    crash?.(`after-${step.kind}`);
+  }
+  current = withReducedState(current, now());
+  await store.writeOperation(current);
+  return current;
+}
+
+function withReducedState(
+  journal: CloseoutJournal,
+  updatedAt: string,
+): CloseoutJournal {
+  return {
+    ...journal,
+    state: reduceCloseoutState(journal.substeps),
+    updatedAt,
+  };
+}
+
+function cloneJournal(journal: CloseoutJournal): CloseoutJournal {
+  return {
+    ...journal,
+    substeps: journal.substeps.map((step) => ({
+      ...step,
+      dependsOn: [...step.dependsOn],
+    })),
+  };
 }
 
 function buildCloseoutJournal(
