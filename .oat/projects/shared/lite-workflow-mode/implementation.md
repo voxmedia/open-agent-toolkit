@@ -284,6 +284,17 @@ Confirms the prior four resolved. Remaining, awaiting user disposition:
 - M2: sync runs before the lockstep bump, leaving `.oat/sync/manifest.json`
   version-stale; p06-t03 must rerun sync after the bump.
 
+**Disposition (2026-09-05):** user chose to apply all five and complete the
+plan under explicit override without a seventh gate run. Resolved in
+artifacts: I1 → promote readiness keys off the five authored sections, not
+`oat_template`; I2 → implementer lite reads cover the phase plus all five
+contract sections; I3 → lite skill gains the artifact-persistence contract
+with scoped commits before pauses and before the gate, plus a test; M1 →
+reviewer and pr-progress lite requirement source is all five sections; M2 →
+p06-t03 reruns sync after the bump and stages the manifest. Plan marked
+complete and ready for `oat-project-implement`; the override and residual
+risk are recorded in plan.md `## Reviews`.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04

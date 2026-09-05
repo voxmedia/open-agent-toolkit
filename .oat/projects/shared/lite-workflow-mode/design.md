@@ -283,7 +283,9 @@ oat project promote <project-path> --to quick [--json]
 - Only `lite` to `quick` is accepted in this project. Other pairs error with
   a pointer to the spec-driven promotion skill.
 - Refuses if `references/lite-plan.md` already exists, the mode is not
-  lite, or the lite plan still carries unresolved template content. Runs
+  lite, or any of the five spec sections is missing or still holds a
+  scaffold placeholder. The `oat_template` flag is ignored: lite keeps it
+  set until completion so routing stays with the entry skill. Runs
   no git operations before every file write has succeeded.
 - A CLI command because every step is mechanical and the skill-level
   spec-driven promotion has shown that prose mechanics drift.
@@ -311,6 +313,9 @@ oat project promote <project-path> --to quick [--json]
   canonical autonomy-contract gate inventory and follows that contract under
   `OAT_AUTONOMOUS=1`, so a headless lite run never stops at an
   inventory-gap.
+- The skill commits `plan.md`, `state.md`, and `implementation.md` in
+  scoped commits before every user pause and before Gate Execution, so the
+  gate reviewer always sees a committed baseline.
 - The skill keeps `oat_gateable: true` and carries a Gate Execution step by
   reference to quick-start's contract, so a configured exit gate runs after
   the artifact review loop. The review loop itself runs in structured mode
@@ -342,8 +347,8 @@ One line or branch each:
 - Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume
   `workflow_mode` at runtime and enumerate three modes today. Both gain
   `lite` (reviewer: input enum, Mode Contract line, read rule,
-  requirement-source line, plan-review upstream set; implementer: input enum
-  and an Artifact Reads bullet). Without this, a lite project's plan review,
+  requirement-source line, plan-review upstream set; implementer: input enum and an Artifact Reads bullet covering the phase
+  section plus all five contract sections). Without this, a lite project's plan review,
   final review, and phase dispatch fall to the spec-driven default and record
   spurious artifact-missing gaps.
 - Progress and next routing tables.
