@@ -249,6 +249,9 @@ export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
 - Leave the two tables duplicated. Merging them is a separate refactor and
   would widen this diff into unrelated modes.
+- Closeout route: for lite, a passed final review routes to
+  `oat-project-pr-final` without requiring `summary.md`. Every other mode
+  keeps the summary-first closeout.
 
 ### 5. Promote command
 
@@ -320,6 +323,14 @@ One line or branch each:
 - Spec-driven planner stop branch (lite: "run oat-project-lite").
 - Discover skill mode router (lite: continue with `oat-project-lite` or
   `oat-project-progress`).
+- Implement skill checkpoint bypass: lite resolves HiLL checkpoint state as
+  none without relying on the empty-list convention, skips the workflow
+  preference, checkpoint, and auto-review prompts, and has no final HiLL
+  approval. Per-phase root review and final review are unchanged.
+- Collapsed closeout: the implement closeout sequence for lite is PR only,
+  with summary and document opt-in and retro never added; next routes a
+  passed final review to pr-final; pr-final synthesizes the PR body from
+  plan.md and implementation.md instead of generating summary.md.
 - Pr-progress requirement source (lite: plan.md Summary and Validation
   Criteria).
 - Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume

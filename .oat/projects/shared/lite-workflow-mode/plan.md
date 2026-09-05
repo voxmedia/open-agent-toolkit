@@ -314,6 +314,46 @@ git commit -m "feat(p02-t02): route lite planning on the repo dashboard"
 
 ---
 
+### Task p02-t03: Route a lite project's passed final review straight to PR creation
+
+**Files:**
+
+- Modify: `packages/control-plane/src/recommender/router.ts`
+- Modify: `packages/control-plane/src/recommender/router.test.ts`
+- Modify: `packages/cli/src/commands/state/generate.ts` and `generate.test.ts` (only if the dashboard's implement-complete route also prefers summary)
+
+**Step 1: Write test (RED)**
+
+Load-bearing assertion: mode `lite`, implement phase, final review `passed`, no complete `summary.md` → `oat-project-pr-final`. Today the closeout branch near router.ts:199-211 returns `oat-project-summary` whenever the summary artifact is missing or incomplete, regardless of mode. Regression guard: the same state under `quick` still routes to `oat-project-summary`.
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
+Expected: the lite case fails (RED); the quick guard passes
+
+**Step 2: Implement (GREEN)**
+
+In the closeout branch, when `state.workflowMode === 'lite'`, skip the summary requirement and return `oat-project-pr-final` with reason "Final review passed; lite mode synthesizes the PR from plan and implementation". Leave every other mode unchanged. Check `generate.ts` for an equivalent implement-complete route and mirror it if present.
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+None.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`
+Expected: green
+
+**Step 5: Commit**
+
+```bash
+git add packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts
+git commit -m "feat(p02-t03): route lite closeout from passed final review to pr-final"
+```
+
+---
+
 ## Phase 3: Promote Command and Split Hardening
 
 ### Task p03-t01: Guard the split detector's discovery.md append
@@ -415,7 +455,7 @@ git commit -m "feat(p03-t02): add oat project promote --to quick for lite projec
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (`WORKFLOW_SKILL_NAMES`)
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.test.ts`
 - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`skills` gains `oat-project-lite`)
-- Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep)
+- Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep; plus a new test "oat-project-lite enforces the single-pause interaction contract" asserting the skill has exactly one interview step that batches questions, a conditional second round only for questions the first created, a promote call at the escalation check, exactly one AskUserQuestion approval gate before plan completion, and no HiLL checkpoint or phase-gate setup step)
 
 **Step 1: Write test (RED)**
 
@@ -588,6 +628,88 @@ git commit -m "feat(p05-t02): offer lite mode for single-phase imported plans"
 
 ---
 
+### Task p05-t03: Bypass implementation checkpoint prompts for lite projects
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/plan-and-resume.md` (Step 2.5 lite branch)
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (final HiLL approval lite branch)
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (same single version bump as p05-t01; do not bump twice)
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Assert that plan-and-resume.md Step 2.5 contains a lite branch stating: when `oat_workflow_mode` is `lite`, checkpoint state is resolved as "none" without reading `oat_plan_hill_phases` semantics (an empty list means every phase for other modes, so lite must not rely on it), the workflow-preference prompt, the standard checkpoint prompt, and the auto-review preference prompt are all skipped, and `oat_auto_review_at_hill_checkpoints` is written as `false` with a `# lite: no checkpoints` comment. Assert completion-and-closeout.md states that lite has no final HiLL approval step and proceeds from a passed final review to closeout. Assert the phase-execution payload comment notes lite is always a single phase.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite bypasses implementation checkpoints"`
+Expected: fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+Add the lite branch at the top of Step 2.5 in plan-and-resume.md, before the autonomous checkpoint resolution, so it applies in both interactive and autonomous runs. Add the lite branch to the final HiLL section of completion-and-closeout.md. Keep the per-phase root review and the final review unchanged; only HiLL approval pauses are removed.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite bypasses implementation checkpoints"`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+Format the touched reference files.
+
+**Step 4: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps`
+Expected: green
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/references/plan-and-resume.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-implement/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "feat(p05-t03): bypass HiLL checkpoint prompts for lite projects"
+```
+
+---
+
+### Task p05-t04: Collapse the post-implementation path for lite
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (lite closeout sequence)
+- Modify: `.agents/skills/oat-project-next/SKILL.md` (lite: passed final review → `oat-project-pr-final`; same single bump as p05-t01)
+- Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (Step 3.0 lite branch; same single bump as p05-t01)
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Assert: completion-and-closeout.md resolves the lite pre-approval sequence to `[pr]` with summary and document opt-in only when explicitly configured, and never adds retro; oat-project-next routes a lite project with a passed final review to `oat-project-pr-final` rather than `oat-project-summary`; pr-final Step 3.0 states that for lite it does not generate `summary.md` and synthesizes the PR body from plan.md Summary, Decisions, Validation Criteria, and implementation.md Final Summary, with the reduced-assurance note.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite collapses closeout"`
+Expected: fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+Add the three branches. Keep the default sequence for every other mode byte-identical.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite collapses closeout"`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+Format the touched skill files.
+
+**Step 4: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm run check:skill-bumps && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: green
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "feat(p05-t04): collapse lite closeout to PR creation"
+```
+
+---
+
 ## Phase 6: Docs, Triage, Release Gates, and Manual Run
 
 ### Task p06-t01: Document lite mode and update the triage table
@@ -602,6 +724,7 @@ git commit -m "feat(p05-t02): offer lite mode for single-phase imported plans"
 - Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md` (lite artifact list)
 - Modify: `apps/oat-docs/docs/workflows/skills/index.md` (mention `oat-project-lite`)
 - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (gate-aware skill lists near lines 65 and 528 gain `oat-project-lite`)
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md` (the plan-producing workflows that run the structured plan review loop gain `oat-project-lite`)
 
 **Step 1: Write test (RED)**
 
@@ -623,7 +746,7 @@ Expected: both `exit=0`; confirm neither was a cache replay
 **Step 5: Commit**
 
 ```bash
-git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md
 git commit -m "docs(p06-t01): document lite workflow mode"
 ```
 
@@ -654,12 +777,14 @@ None.
 
 **Step 4: Verify**
 
-Run the full definition-of-done sequence, capturing each exit code:
+Run the full definition-of-done sequence in AGENTS.md order, capturing each exit code. `pnpm test` is gate 3 and includes the release tests; the forced Turbo run is supplemental evidence, not a substitute:
 
 ```bash
 pnpm check > g1.log 2>&1; echo "check=$?"
 pnpm type-check > g2.log 2>&1; echo "type=$?"
-HOME=$(mktemp -d) pnpm exec turbo run test --force > g3.log 2>&1; echo "test=$?"
+pnpm test > g3.log 2>&1; echo "test=$?"
+# Supplemental evidence that gate 3 was not a cache replay (it also runs test:release):
+HOME=$(mktemp -d) pnpm exec turbo run test --force > g3a.log 2>&1; echo "test-forced=$?"
 pnpm test:smoke > g3b.log 2>&1; echo "smoke=$?"
 pnpm test:skills > g3c.log 2>&1; echo "skills=$?"
 pnpm build > g4.log 2>&1; echo "build=$?"
@@ -720,18 +845,18 @@ git commit -m "chore(p06-t03): sync provider views and record manual lite run"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-04 | reviews/artifact-plan-review-2026-09-04T231105Z.md | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target              |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------------ |
+| p01    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| p02    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| p03    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| p04    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| p05    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| p06    | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| final  | code     | pending  | -          | -                                                           | -             | -          | -                        |
+| spec   | artifact | pending  | -          | -                                                           | -             | -          | -                        |
+| design | artifact | pending  | -          | -                                                           | -             | -          | -                        |
+| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -755,13 +880,13 @@ cell; never truncate a widened row back to five columns.
 **Summary:**
 
 - Phase 1: 4 tasks - single mode definition, plan-lite template and bundle inventory, lite scaffold, help snapshot
-- Phase 2: 2 tasks - recommender and dashboard routing
+- Phase 2: 3 tasks - recommender and dashboard routing, lite closeout route
 - Phase 3: 2 tasks - split-detector guard, promote command
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
-- Phase 5: 2 tasks - mode-aware skill branches, import-to-lite offer
+- Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 3 tasks - docs and triage, lockstep bump and gates, manual run and sync
 
-**Total:** 15 tasks across 6 phases
+**Total:** 18 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 
