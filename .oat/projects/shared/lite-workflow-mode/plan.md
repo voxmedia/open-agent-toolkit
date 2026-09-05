@@ -924,8 +924,8 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 | Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
 | ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
 | p01    | code     | passed   | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md               | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                        |
-| p02    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
-| p03    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
+| p02    | code     | passed   | 2026-09-05 | reviews/code-p02-review-2026-09-05T210504Z.md               | 948434796085b5c537542213fd562194827a822c | manual     | -                        |
+| p03    | code     | passed   | 2026-09-05 | reviews/code-p03-review-2026-09-05T210747Z.md               | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                        |
 | p04    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
 | p05    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
 | p06    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |

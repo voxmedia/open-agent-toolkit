@@ -88,6 +88,14 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 verdict=pass; fix_loops=0; review=reviews/code-p01-review-2026-09-05T204609Z.md; reviewed_head=3427d2176a86b3f6a95219f6557b4d4798a6f1a2
 
+### 2026-09-05 · structural · oat-project-implement · p02
+
+verdict=pass; fix_loops=1; review=reviews/code-p02-review-2026-09-05T210504Z.md; reviewed_head=948434796085b5c537542213fd562194827a822c; merge=d8e94966424e10b5616a09abc62d758e15ac672c
+
+### 2026-09-05 · structural · oat-project-implement · p03
+
+verdict=pass; fix_loops=1; review=reviews/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

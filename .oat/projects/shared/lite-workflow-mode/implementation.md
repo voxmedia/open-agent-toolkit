@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-05
-oat_current_task_id: p02-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -27,13 +27,13 @@ oat_generated: false
 | Phase   | Status   | Tasks | Completed |
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | pending  | 3     | 0/3       |
-| Phase 3 | pending  | 3     | 0/3       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
 | Phase 4 | pending  | 2     | 0/2       |
 | Phase 5 | pending  | 4     | 0/4       |
 | Phase 6 | pending  | 3     | 0/3       |
 
-**Total:** 4/19 tasks completed
+**Total:** 10/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -135,13 +135,78 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase 2: Routing
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-09-05
+**Completed:** 2026-09-05
+
+### Phase Summary
+
+Added lite-specific recommender and dashboard planning routes, plus direct
+post-review closeout to `oat-project-pr-final`. Review loop 1 added the missing
+explicit lite implement-in-progress regression guard. The passing re-review is
+`reviews/code-p02-review-2026-09-05T210504Z.md`.
 
 ### Task p02-t01: Add LITE_ROUTES to the recommender
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c76c7b4201a496296891305c28e73713fcb86664
+
+**Outcome:** Added and tested the dedicated lite workflow route table. Review
+fix `948434796085b5c537542213fd562194827a822c` completed the planned regression
+coverage.
+
+### Task p02-t02: Add the lite planning row to the dashboard route map
+
+**Status:** completed
+**Commit:** 3ecf8bf19812dbe314ba30840e2a772b5b267f78
+
+**Outcome:** Routed in-progress lite planning and exposed the lite entry command.
+
+### Task p02-t03: Route a lite project's passed final review straight to PR creation
+
+**Status:** completed
+**Commit:** ea89574a806808064089a41f5e6da5c4a174a39f
+
+**Outcome:** Lite closeout now bypasses summary/document steps while quick mode
+retains its existing behavior.
+
+---
+
+## Phase 3: Promote Command and Split Hardening
+
+**Status:** complete
+**Started:** 2026-09-05
+**Completed:** 2026-09-05
+
+### Phase Summary
+
+Guarded split recommendations from creating absent discovery artifacts, added
+transactional lite-to-quick promotion, and enforced lite plan invariants.
+Review loop 1 aligned authored-plan detection with the real canonical lite
+template. The passing re-review is
+`reviews/code-p03-review-2026-09-05T210747Z.md`.
+
+### Task p03-t01: Guard the split detector's discovery.md append
+
+**Status:** completed
+**Commit:** d7b547c52c2e813c157d6a890b6036e0e4dcd26d
+
+### Task p03-t02: Implement `oat project promote --to quick`
+
+**Status:** completed
+**Commit:** 976dcdaefb9a2ed2a7a4a925f1e1a43589e06e02
+
+**Outcome:** Added validated, scope-aware promotion with no-write refusals and
+post-write persistence. Review fix
+`4b1eb65a41ffe179793cd9eca7e7f3d963ec6766` rejects the untouched canonical
+template while preserving authored brace syntax and `oat_template: true`.
+
+### Task p03-t03: Enforce the single-phase invariant for lite plans in validate-plan
+
+**Status:** completed
+**Commit:** cac3dea3e8e6c6ece08c7f846a39e1c626e561b5
+
+---
 
 ---
 
@@ -174,16 +239,20 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p01 review:** accepted request `lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26`; durable record `dispatch/lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p01-review-2026-09-05T204609Z.md`; verdict passed with no findings.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+- **p02:** implementation, initial review, one fix, and passing re-review are recorded under `dispatch/lite-p02-*.json`; final reviewed head `948434796085b5c537542213fd562194827a822c`.
+- **p03:** implementation, initial review, one fix, and passing re-review are recorded under `dispatch/lite-p03-*.json`; final reviewed head `4b1eb65a41ffe179793cd9eca7e7f3d963ec6766`.
 
 #### Phase Outcomes
 
 | Phase | Implementation | Review | Fix Loops | Outcome |
 | ----- | -------------- | ------ | --------- | ------- |
 | p01   | DONE (4/4)     | passed | 0         | pass    |
+| p02   | DONE (3/3)     | passed | 1         | pass    |
+| p03   | DONE (3/3)     | passed | 1         | pass    |
 
 #### Outstanding Items
 
-- Next schedule entry: parallel group `p02 + p03`.
+- Next schedule entry: `p04`.
 
 ---
 
@@ -197,6 +266,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Review artifact:** `reviews/code-p01-review-2026-09-05T204609Z.md`
 **Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 0.
 **Next:** execute the declared parallel group `p02 + p03`.
+
+#### Parallel group p02 + p03 completed, reviewed, and merged
+
+**p02:** reviewed head `948434796085b5c537542213fd562194827a822c`;
+passing artifact `reviews/code-p02-review-2026-09-05T210504Z.md`; fix loops 1;
+merged at `d8e94966424e10b5616a09abc62d758e15ac672c`.
+
+**p03:** reviewed head `4b1eb65a41ffe179793cd9eca7e7f3d963ec6766`;
+passing artifact `reviews/code-p03-review-2026-09-05T210747Z.md`; fix loops 1;
+merged at `2e922483fe01afce019a77a38e632abb87c17eb5`.
+
+**Fan-in verification:** p02 focused suites and both package type-checks passed;
+p03's five focused suites (124 tests) and CLI type-check passed.
+
+**Next:** implement and review `p04`.
 
 #### Review Received: plan (gate)
 
