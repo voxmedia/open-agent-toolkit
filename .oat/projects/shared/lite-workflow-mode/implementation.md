@@ -379,6 +379,15 @@ Lite-focused tests pass 13/13; mutation controls categorically failed when each
 guard was neutralized and passed after restoration. Full p05 verification,
 skill validation, bump checks, lint, and format passed. Awaiting re-review.
 
+#### p05 re-review 1 received — fix loop 2
+
+**Review artifact:** `reviews/code-p05-review-2026-09-05T230902Z.md`
+**Reviewed head:** `3e250f86c64ffa424467a066ef1664d4465fea50`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor.
+**Disposition:** queue a bounded fix that makes the implementation-tail
+project-recap gate explicitly non-lite and extends the behavioral closeout
+contract test so default lite execution cannot invoke or block on recap.
+
 #### Phase p04 completed and reviewed
 
 **Implementation range:** `90824ab273eb75612b5abfd00462413c010e26da..3e89f14de30836512bb5aa16e46b7a68323503bd`
