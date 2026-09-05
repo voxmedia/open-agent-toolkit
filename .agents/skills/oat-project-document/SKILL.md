@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.8.1
+version: 1.8.2
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
@@ -195,6 +195,16 @@ adoption could not be determined — the usual causes are `jq` missing from
 ### Step 2: Read Project Artifacts
 
 Read all available project artifacts to build an understanding of what was built.
+
+For `oat_workflow_mode: lite`, use the reduced artifact contract instead of
+the numbered artifact list below. Read the five `plan.md` sections `Summary`,
+`Decisions`, `Assumptions`, `Out of Scope`, and `Validation Criteria`, then read
+`implementation.md` task outcomes and `Final Summary (for PR/docs)` as the
+shipped results. A lite project accepts `discovery.md`, `spec.md`, and
+`design.md` as absent; do not read or require them. Build the documentation
+delta from what actually shipped and continue with code verification.
+
+For every other workflow mode, read the numbered artifact list below.
 
 **Read in order:**
 

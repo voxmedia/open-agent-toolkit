@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.5.1
+version: 1.5.2
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -117,7 +117,16 @@ test -f "$PROJECT_PATH/implementation.md"
 
 ### Step 2: Read Project Artifacts
 
-Read all available artifacts for synthesis:
+For `oat_workflow_mode: lite`, use the reduced artifact contract and skip the
+ordinary artifact list below. Read the five `plan.md` sections `Summary`,
+`Decisions`, `Assumptions`, `Out of Scope`, and `Validation Criteria`, then read
+`implementation.md` for task outcomes and the shipped results in `Final
+Summary (for PR/docs)`. Read `state.md` only for routing metadata. A lite
+project accepts `discovery.md`, `spec.md`, and `design.md` as absent; do not
+read or require them. Ground the summary in what actually shipped, with
+`implementation.md` taking precedence over the plan.
+
+For every other workflow mode, read all available artifacts for synthesis:
 
 - `"$PROJECT_PATH/discovery.md"` — initial request, decisions, constraints
 - `"$PROJECT_PATH/spec.md"` — requirements, goals (optional — may not exist in quick mode)

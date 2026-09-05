@@ -697,6 +697,26 @@ legacy or structured preference, normalize legacy values before snapshotting:
 These legacy mappings remain unchanged. Structured preferences additionally
 accept `retro` in `postApproval`; `retro` is invalid in `preApproval`.
 
+For `oat_workflow_mode: lite`, deterministically replace that normalized
+preference before snapshotting it. The generic
+`workflow.postImplementSequence` value is not a lite opt-in to summary or
+documentation. Read only the explicit
+`workflow.postImplementSequence.lite.preApproval` override for those opt-ins:
+
+- The default with no lite-specific override is `[pr]`.
+- Filter a lite-specific override to `summary`, `document`, and `pr`, remove
+  duplicates while retaining its order, and append `pr` when it is absent. For
+  example, `[summary, pr]` remains unchanged.
+- Resolve `postApproval` to `[]`. A lite closeout never includes `retro`, even
+  when the generic preference or autonomous default includes it.
+
+This transformation applies in interactive and autonomous execution alike.
+Persist the resulting arrays as the immutable sequence snapshot and set
+`approval: not_required`; the lite-specific override changes optional work,
+not the absence of a HiLL approval checkpoint. The generic configured and
+autonomous-default preference resolution immediately below applies only to
+non-lite workflows; it must not overwrite the lite transformation.
+
 If `OAT_AUTONOMOUS=1` and the preference is unset, use the inventory's
 autonomous lifecycle-tail default:
 
@@ -838,10 +858,11 @@ approval, destructive-change risk, or missing-credential boundary. When
 autonomy is inactive, the explicit user approval/decline/defer behavior above
 is unchanged.
 
-If the preference is unset and autonomy is inactive, do not create a sequence
-snapshot. Retain the existing next-step prompt only after final approval when a
-final checkpoint is configured. Under autonomy, the default snapshot above
-always resolves the unset case.
+For non-lite workflows, if the preference is unset and autonomy is inactive,
+do not create a sequence snapshot. Retain the existing next-step prompt only
+after final approval when a final checkpoint is configured. Under autonomy,
+the default snapshot above always resolves the unset case. The lite branch
+always snapshots its deterministic `[pr]` default.
 
 ### Step 16: Mark Implementation Complete
 

@@ -215,6 +215,15 @@ sequence step.
 
 **Step 3.0: Check for summary.md**
 
+For `oat_workflow_mode: lite`, do not generate, refresh, or require
+`summary.md`. Synthesize the PR summary directly from the `plan.md` `Summary`,
+`Decisions`, and `Validation Criteria` sections plus the
+`implementation.md` `Final Summary (for PR/docs)` shipped results. This is the
+explicit reduced assurance path: absent `discovery.md`, `spec.md`, and
+`design.md` are valid and must not block PR creation. Then continue to Step 3.1
+only for the remaining available artifacts; do not invoke
+`oat-project-summary` for lite.
+
 Check if `{PROJECT_PATH}/summary.md` exists:
 
 - If `summary.md` is missing or stale, refresh it automatically before proceeding.

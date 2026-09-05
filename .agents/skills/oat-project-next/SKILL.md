@@ -405,6 +405,12 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
 - If `FINAL_ROW` has `Status="passed"`:
   → Continue to 5.5
 
+**Lite closeout route:** If `oat_workflow_mode: lite`, a passed final review
+routes directly to `oat-project-pr-final` before the summary check below.
+Announce: "Final review passed — creating final PR". Optional lite summary or
+documentation work is owned by the immutable implementation closeout snapshot,
+not this fallback router.
+
 **5.5: Summary not done**
 
 Read `{PROJECT_PATH}/summary.md`:

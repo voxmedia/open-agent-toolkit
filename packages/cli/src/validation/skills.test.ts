@@ -2841,8 +2841,8 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.1'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.1'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.1'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.7'],
     ] as const;
@@ -6808,6 +6808,73 @@ describe('lite mode skill contracts', () => {
     expect(finalHill).toMatch(/lite[\s\S]{0,100}no final HiLL approval step/i);
     expect(finalHill).toMatch(/passed\s+final review[\s\S]{0,180}closeout/i);
     expect(phaseExecution).toContain('lite is always a single phase');
+  });
+
+  it('lite collapses closeout', async () => {
+    const [closeout, next, prFinal, summary, document] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+      ),
+      readRepoFile('.agents/skills/oat-project-next/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-pr-final/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-summary/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-document/SKILL.md'),
+    ]);
+    const closeoutStep = closeout.slice(
+      closeout.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+      closeout.indexOf('### Step 16:'),
+    );
+    const nextFinalRoutes = next.slice(
+      next.indexOf('**5.4: Final code review not passed**'),
+      next.indexOf('### Step 6:'),
+    );
+    const prSummary = prFinal.slice(
+      prFinal.indexOf('**Step 3.0: Check for summary.md**'),
+      prFinal.indexOf('**Step 3.1:'),
+    );
+
+    expect(closeoutStep).toMatch(
+      /lite[\s\S]{0,500}workflow\.postImplementSequence\.lite\.preApproval/i,
+    );
+    expect(closeoutStep).toMatch(
+      /generic[\s\S]{0,160}workflow\.postImplementSequence[\s\S]{0,220}not[\s\S]{0,120}opt-in/i,
+    );
+    expect(closeoutStep).toMatch(
+      /default[\s\S]{0,120}`\[pr\]`[\s\S]{0,300}`\[summary, pr\]`[\s\S]{0,120}unchanged/i,
+    );
+    expect(closeoutStep).toMatch(/lite[\s\S]{0,500}never[\s\S]{0,80}`retro`/i);
+    expect(nextFinalRoutes).toMatch(
+      /oat_workflow_mode[\s\S]{0,120}lite[\s\S]{0,220}oat-project-pr-final/i,
+    );
+    expect(nextFinalRoutes.indexOf('oat_workflow_mode: lite')).toBeLessThan(
+      nextFinalRoutes.indexOf('**5.5: Summary not done**'),
+    );
+    expect(prSummary).toMatch(
+      /lite[\s\S]{0,120}do not[\s\S]{0,120}summary\.md/i,
+    );
+    expect(prSummary).toMatch(
+      /plan\.md[\s\S]{0,240}Summary[\s\S]{0,160}Decisions[\s\S]{0,160}Validation Criteria/i,
+    );
+    expect(prSummary).toMatch(
+      /implementation\.md[\s\S]{0,180}Final Summary[\s\S]{0,180}reduced assurance/i,
+    );
+
+    for (const [name, content] of [
+      ['summary', summary],
+      ['document', document],
+    ] as const) {
+      expect(content, name).toMatch(
+        /lite[\s\S]{0,500}Summary[\s\S]{0,180}Decisions[\s\S]{0,180}Assumptions[\s\S]{0,180}Out of Scope[\s\S]{0,180}Validation Criteria/i,
+      );
+      expect(content, name).toMatch(
+        /implementation\.md[\s\S]{0,220}(?:shipped results|what actually shipped)/i,
+      );
+      expect(content, name).toMatch(
+        /discovery\.md[\s\S]{0,120}spec\.md[\s\S]{0,120}design\.md[\s\S]{0,160}absent/i,
+      );
+    }
+    expect(summary.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(document.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.8.2');
   });
 
   it('routes lite projects through progress and next', async () => {
