@@ -222,7 +222,22 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 
 **Minimum viable summary:** Overview + What Was Implemented + Key Decisions. All other sections are included only when they have content worth preserving.
 
-**Section sources:**
+**Lite section sources:**
+
+Use this table only for `oat_workflow_mode: lite`. It maps every canonical lite
+plan section and shipped implementation results without requiring discovery,
+spec, or design artifacts.
+
+| Summary Section      | Primary Lite Sources                                          |
+| -------------------- | ------------------------------------------------------------- |
+| Overview             | plan.md `Summary`; implementation.md `Final Summary`          |
+| What Was Implemented | implementation.md shipped results and task outcomes           |
+| Key Decisions        | plan.md `Decisions`; implementation.md accepted decisions     |
+| Tradeoffs Made       | plan.md `Assumptions`; implementation.md decisions            |
+| Follow-up Items      | plan.md `Out of Scope`; implementation.md deferred results    |
+| Integration Notes    | plan.md `Validation Criteria`; implementation.md test results |
+
+**Non-lite section sources:**
 
 | Section                        | Primary Sources                                                        |
 | ------------------------------ | ---------------------------------------------------------------------- |

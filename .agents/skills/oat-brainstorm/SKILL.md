@@ -505,13 +505,50 @@ End mode assertion when the backlog-add hands control back.
 
 #### 9g — Promote to new OAT project
 
-The slug and workflow mode (`quick` vs `spec-driven`) were confirmed at step 8. Run:
+The slug and workflow mode (`lite`, `quick`, or `spec-driven`) were confirmed at
+step 8. Run:
 
 ```bash
 oat project new <slug> --mode <mode>
 ```
 
-This scaffolds the project directory under `.oat/projects/<scope>/<slug>/` with the standard core files (state.md, discovery.md, etc.).
+This scaffolds the project directory under `.oat/projects/<scope>/<slug>/` with
+the files owned by the selected mode.
+
+**Lite branch:** When mode is `lite`, use and preserve `<project>/plan.md` as
+the canonical artifact. Fill its `Summary`, `Decisions`, `Assumptions`, `Out of
+Scope`, and `Validation Criteria` sections from the synthesized payload without
+replacing an already populated section or the scaffolded `## Phase 1`. Do not
+create, write, or complete `discovery.md` or `design.md`. Set the project state
+to plan/in-progress with `oat_ready_for: oat-project-lite`, print the
+`oat-project-lite` handoff, and stop.
+
+Use this branch contract to validate the lite scaffold before the handoff:
+
+```bash
+# BEGIN LITE PROJECT PROMOTION CONTRACT
+if [ "$PROMOTION_MODE" = "lite" ]; then
+  LITE_PLAN_PATH="$PROMOTED_PROJECT/plan.md"
+  if [ ! -f "$LITE_PLAN_PATH" ]; then
+    mkdir -p "$PROMOTED_PROJECT"
+    printf '%s\n' '# Plan' '' '## Summary' '' '## Decisions' '' \
+      '## Assumptions' '' '## Out of Scope' '' '## Validation Criteria' '' \
+      '## Phase 1' > "$LITE_PLAN_PATH"
+  fi
+  if [ -e "$PROMOTED_PROJECT/discovery.md" ]; then
+    echo "oat: lite promotion must not create discovery.md" >&2
+    exit 64
+  fi
+  NEXT_SKILL="oat-project-lite"
+else
+  LITE_PLAN_PATH=""
+  NEXT_SKILL="oat-project-quick-start-or-design"
+fi
+# END LITE PROJECT PROMOTION CONTRACT
+```
+
+**Quick/spec-driven branch:** Only for those two modes, continue with the
+discovery flow below.
 
 Then **write a field-filled `discovery.md`** at `<project>/discovery.md` using the synthesized payload:
 
@@ -536,7 +573,7 @@ Print a pointer to the next skill, e.g.:
 
 **Stop here. Do NOT inline-execute the next phase.** The deliberate transition is the point — the user runs the next skill at their own pace.
 
-End mode assertion.
+End mode assertion after the selected branch stops.
 
 #### 9h — Active-project router (3-way picker)
 

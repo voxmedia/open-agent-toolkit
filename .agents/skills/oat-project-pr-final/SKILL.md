@@ -215,6 +215,20 @@ sequence step.
 
 **Step 3.0: Check for summary.md**
 
+Resolve the structurally exclusive route first:
+
+```bash
+# BEGIN LITE PR SUMMARY ROUTE CONTRACT
+if [ "$WORKFLOW_MODE" = "lite" ]; then
+  PR_SUMMARY_STRATEGY="lite-artifacts"
+  GENERIC_SUMMARY_REACHABLE="false"
+else
+  PR_SUMMARY_STRATEGY="summary-md"
+  GENERIC_SUMMARY_REACHABLE="true"
+fi
+# END LITE PR SUMMARY ROUTE CONTRACT
+```
+
 For `oat_workflow_mode: lite`, do not generate, refresh, or require
 `summary.md`. Synthesize the PR summary directly from the `plan.md` `Summary`,
 `Decisions`, and `Validation Criteria` sections plus the
@@ -222,9 +236,11 @@ For `oat_workflow_mode: lite`, do not generate, refresh, or require
 explicit reduced assurance path: absent `discovery.md`, `spec.md`, and
 `design.md` are valid and must not block PR creation. Then continue to Step 3.1
 only for the remaining available artifacts; do not invoke
-`oat-project-summary` for lite.
+`oat-project-summary` for lite. This branch ends Step 3.0 and jumps directly to
+Step 3.1.
 
-Check if `{PROJECT_PATH}/summary.md` exists:
+**Non-lite branch only:** If the route contract sets
+`GENERIC_SUMMARY_REACHABLE=true`, check if `{PROJECT_PATH}/summary.md` exists:
 
 - If `summary.md` is missing or stale, refresh it automatically before proceeding.
 - Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.

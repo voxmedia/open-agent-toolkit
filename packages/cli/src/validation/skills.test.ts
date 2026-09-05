@@ -6807,6 +6807,31 @@ describe('lite mode skill contracts', () => {
     );
     expect(finalHill).toMatch(/lite[\s\S]{0,100}no final HiLL approval step/i);
     expect(finalHill).toMatch(/passed\s+final review[\s\S]{0,180}closeout/i);
+    const resolutionContract = finalHill.match(
+      /# BEGIN LITE CLOSEOUT RESOLUTION CONTRACT\n([\s\S]*?)# END LITE CLOSEOUT RESOLUTION CONTRACT/,
+    )?.[1];
+    expect(resolutionContract).toBeDefined();
+
+    const { stdout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${resolutionContract}\nprintf 'checkpoint=%s\\napproval=%s\\nawaiting=%s\\nautonomous=%s\\n' "$FINAL_CHECKPOINT_EXISTS" "$APPROVAL" "$AWAITING_APPROVAL_REACHABLE" "$AUTONOMOUS_APPROVAL_REACHABLE"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          WORKFLOW_MODE: 'lite',
+          OAT_PLAN_HILL_PHASES: '[]',
+          OAT_AUTONOMOUS: '1',
+          GENERIC_PRE_APPROVAL: 'summary document pr',
+        },
+      },
+    );
+    expect(stdout).toContain('checkpoint=false');
+    expect(stdout).toContain('approval=not_required');
+    expect(stdout).toContain('awaiting=false');
+    expect(stdout).toContain('autonomous=false');
     expect(phaseExecution).toContain('lite is always a single phase');
   });
 
@@ -6832,6 +6857,12 @@ describe('lite mode skill contracts', () => {
       prFinal.indexOf('**Step 3.0: Check for summary.md**'),
       prFinal.indexOf('**Step 3.1:'),
     );
+    const closeoutContract = closeoutStep.match(
+      /# BEGIN LITE CLOSEOUT RESOLUTION CONTRACT\n([\s\S]*?)# END LITE CLOSEOUT RESOLUTION CONTRACT/,
+    )?.[1];
+    const prContract = prSummary.match(
+      /# BEGIN LITE PR SUMMARY ROUTE CONTRACT\n([\s\S]*?)# END LITE PR SUMMARY ROUTE CONTRACT/,
+    )?.[1];
 
     expect(closeoutStep).toMatch(
       /lite[\s\S]{0,500}workflow\.postImplementSequence\.lite\.preApproval/i,
@@ -6858,6 +6889,92 @@ describe('lite mode skill contracts', () => {
     expect(prSummary).toMatch(
       /implementation\.md[\s\S]{0,180}Final Summary[\s\S]{0,180}reduced assurance/i,
     );
+    expect(closeoutContract).toBeDefined();
+    expect(prContract).toBeDefined();
+
+    const config = JSON.parse(await readRepoFile('.oat/config.json')) as {
+      workflow: {
+        postImplementSequence: {
+          preApproval: string[];
+          postApproval: string[];
+        };
+      };
+    };
+    expect(config.workflow.postImplementSequence.preApproval).toEqual([
+      'summary',
+      'document',
+      'pr',
+    ]);
+
+    const runCloseout = async (litePreApproval = '') => {
+      const { stdout } = await execFileAsync(
+        '/bin/bash',
+        [
+          '-c',
+          `${closeoutContract}\nprintf 'pre=%s\\npost=%s\\napproval=%s\\n' "${'${PRE_APPROVAL[*]}'}" "${'${POST_APPROVAL[*]}'}" "$APPROVAL"`,
+        ],
+        {
+          env: {
+            ...process.env,
+            WORKFLOW_MODE: 'lite',
+            GENERIC_PRE_APPROVAL:
+              config.workflow.postImplementSequence.preApproval.join(' '),
+            GENERIC_POST_APPROVAL: 'retro',
+            LITE_PRE_APPROVAL: litePreApproval,
+            OAT_PLAN_HILL_PHASES: '[]',
+            OAT_AUTONOMOUS: '1',
+          },
+        },
+      );
+      return stdout;
+    };
+
+    expect(await runCloseout()).toContain(
+      'pre=pr\npost=\napproval=not_required',
+    );
+    expect(await runCloseout('summary pr')).toContain(
+      'pre=summary pr\npost=\napproval=not_required',
+    );
+    expect(await runCloseout('summary retro pr')).not.toContain('retro');
+
+    const { stdout: prRoute } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${prContract}\nprintf 'strategy=%s\\ngeneric=%s\\n' "$PR_SUMMARY_STRATEGY" "$GENERIC_SUMMARY_REACHABLE"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(prRoute).toContain('strategy=lite-artifacts');
+    expect(prRoute).toContain('generic=false');
+
+    const neutralizedCloseout = closeoutContract?.replace(
+      '[ "$WORKFLOW_MODE" = "lite" ]',
+      '[ "$WORKFLOW_MODE" = "__neutralized__" ]',
+    );
+    const { stdout: rejectedCloseout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${neutralizedCloseout}\nprintf 'pre=%s|approval=%s' "${'${PRE_APPROVAL[*]}'}" "$APPROVAL"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(rejectedCloseout).not.toBe('pre=pr|approval=not_required');
+
+    const neutralizedPr = prContract?.replace(
+      '[ "$WORKFLOW_MODE" = "lite" ]',
+      '[ "$WORKFLOW_MODE" = "__neutralized__" ]',
+    );
+    const { stdout: rejectedPr } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${neutralizedPr}\nprintf 'strategy=%s|generic=%s' "$PR_SUMMARY_STRATEGY" "$GENERIC_SUMMARY_REACHABLE"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(rejectedPr).toBe('strategy=summary-md|generic=true');
 
     for (const [name, content] of [
       ['summary', summary],
@@ -6873,6 +6990,24 @@ describe('lite mode skill contracts', () => {
         /discovery\.md[\s\S]{0,120}spec\.md[\s\S]{0,120}design\.md[\s\S]{0,160}absent/i,
       );
     }
+    const liteSummarySources = summary.slice(
+      summary.indexOf('**Lite section sources:**'),
+      summary.indexOf('**Non-lite section sources:**'),
+    );
+    for (const source of [
+      'Summary',
+      'Decisions',
+      'Assumptions',
+      'Out of Scope',
+      'Validation Criteria',
+      'implementation.md',
+    ]) {
+      expect(liteSummarySources).toContain(source);
+    }
+    expect(liteSummarySources).not.toMatch(/discovery\.md|spec\.md|design\.md/);
+    expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
+      '`Assumptions`',
+    );
     expect(summary.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
     expect(document.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.8.2');
   });
@@ -6977,7 +7112,11 @@ describe('lite mode skill contracts', () => {
     const contract = content.match(
       /# BEGIN LITE FOLD-BACK CONTRACT\n([\s\S]*?)# END LITE FOLD-BACK CONTRACT/,
     )?.[1];
+    const promotionContract = content.match(
+      /# BEGIN LITE PROJECT PROMOTION CONTRACT\n([\s\S]*?)# END LITE PROJECT PROMOTION CONTRACT/,
+    )?.[1];
     expect(contract).toBeDefined();
+    expect(promotionContract).toBeDefined();
     expect(content).toMatch(
       /\| lite\s+\| none \/ closed\s+\| `oat-project-lite`/,
     );
@@ -7018,6 +7157,65 @@ describe('lite mode skill contracts', () => {
     await expect(
       readFile(join(root, 'discovery.md'), 'utf8'),
     ).rejects.toThrow();
+
+    const promotedRoot = await mkdtemp(join(tmpdir(), 'oat-lite-promotion-'));
+    tempDirs.push(promotedRoot);
+    const { stdout: promotion } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${promotionContract}\nprintf 'next=%s\\nplan=%s\\n' "$NEXT_SKILL" "$LITE_PLAN_PATH"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PROMOTION_MODE: 'lite',
+          PROMOTED_PROJECT: promotedRoot,
+        },
+      },
+    );
+    expect(promotion).toContain('next=oat-project-lite');
+    expect(promotion).toContain(`plan=${join(promotedRoot, 'plan.md')}`);
+    expect(await readFile(join(promotedRoot, 'plan.md'), 'utf8')).toContain(
+      '## Validation Criteria',
+    );
+    await expect(
+      readFile(join(promotedRoot, 'discovery.md'), 'utf8'),
+    ).rejects.toThrow();
+
+    await writeFile(join(promotedRoot, 'plan.md'), 'preserved plan\n', 'utf8');
+    await execFileAsync('/bin/bash', ['-c', promotionContract ?? 'exit 1'], {
+      env: {
+        ...process.env,
+        PROMOTION_MODE: 'lite',
+        PROMOTED_PROJECT: promotedRoot,
+      },
+    });
+    expect(await readFile(join(promotedRoot, 'plan.md'), 'utf8')).toBe(
+      'preserved plan\n',
+    );
+
+    const neutralizedPromotion = promotionContract?.replace(
+      '[ "$PROMOTION_MODE" = "lite" ]',
+      '[ "$PROMOTION_MODE" = "__neutralized__" ]',
+    );
+    const rejectedRoot = await mkdtemp(join(tmpdir(), 'oat-lite-rejected-'));
+    tempDirs.push(rejectedRoot);
+    const { stdout: rejectedPromotion } = await execFileAsync(
+      '/bin/bash',
+      ['-c', `${neutralizedPromotion}\nprintf 'next=%s' "$NEXT_SKILL"`],
+      {
+        env: {
+          ...process.env,
+          PROMOTION_MODE: 'lite',
+          PROMOTED_PROJECT: rejectedRoot,
+        },
+      },
+    );
+    expect(rejectedPromotion).not.toBe('next=oat-project-lite');
+    await expect(
+      readFile(join(rejectedRoot, 'plan.md'), 'utf8'),
+    ).rejects.toThrow();
   });
 
   it('exposes lite from every declared project-entry surface', async () => {
@@ -7053,7 +7251,36 @@ describe('lite mode skill contracts', () => {
       'oat_phase_status: in_progress',
       'oat_ready_for: null',
     ].join('\n');
-    expect(persistedLiteResumeFixture).toContain('oat_workflow_mode: lite');
+    const persistedState = Object.fromEntries(
+      persistedLiteResumeFixture
+        .split('\n')
+        .map((line) => line.split(/:\s*/, 2)),
+    );
+    const routeTable = autonomous.slice(
+      autonomous.indexOf('| Persisted state'),
+      autonomous.indexOf('### Step 2:'),
+    );
+    const liteResumeRoute = routeTable.match(
+      /\| Lite plan incomplete\s+\| `([^`]+)`/,
+    )?.[1];
+    const resolvedResumeRoute =
+      persistedState.oat_workflow_mode === 'lite' &&
+      persistedState.oat_phase === 'plan' &&
+      persistedState.oat_phase_status === 'in_progress'
+        ? liteResumeRoute
+        : undefined;
+    expect(resolvedResumeRoute).toBe('oat-project-lite');
+    const neutralizedState = {
+      ...persistedState,
+      oat_workflow_mode: 'quick',
+    };
+    expect(
+      neutralizedState.oat_workflow_mode === 'lite' &&
+        neutralizedState.oat_phase === 'plan' &&
+        neutralizedState.oat_phase_status === 'in_progress'
+        ? liteResumeRoute
+        : undefined,
+    ).toBeUndefined();
     expect(autonomous).toMatch(/Lite:[\s\S]{0,220}single-sitting/i);
     expect(autonomous).toMatch(/Lite plan incomplete[^\n]*`oat-project-lite`/);
     expect(autonomous).toContain('Workflow mode: {lite | quick | spec-driven}');
@@ -7078,11 +7305,20 @@ describe('lite mode skill contracts', () => {
         .map((entry) => join(agentRoot, entry.name)),
     ];
     const inventoryPatterns = [
-      /quick or spec-driven/i,
-      /spec-driven or quick/i,
+      /quick\s+(?:or|vs\.?|versus|compared (?:with|to))\s+spec-driven/i,
+      /spec-driven\s+(?:or|vs\.?|versus|compared (?:with|to))\s+quick/i,
       /quick\/import/i,
       /oat-project-quick-start.*oat-project-new|oat-project-new.*oat-project-quick-start/i,
     ];
+    for (const survivor of [
+      'quick vs spec-driven',
+      'spec-driven versus quick',
+      'quick compared with spec-driven',
+    ]) {
+      expect(inventoryPatterns.some((pattern) => pattern.test(survivor))).toBe(
+        true,
+      );
+    }
     const allowlist = [
       'reviewing `design` in `quick/import` mode requires only `discovery.md`',
       'oat_workflow_mode: quick` or `oat_workflow_mode: import',
