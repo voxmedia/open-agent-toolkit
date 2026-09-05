@@ -15,6 +15,7 @@ import {
   planJiraMutation,
   planJiraRead,
   previewJiraMutation,
+  validateJiraDuplicateSearchObservation,
   verifyJiraMutationObservation,
   type JiraHostCapabilityObservation,
   type JiraMutationField,
@@ -351,5 +352,96 @@ describe('Jira remote lifecycle integration', () => {
     expect(JSON.stringify(action)).not.toMatch(
       /command|executable|arguments|catalog|query language/i,
     );
+  });
+
+  it('recovers one duplicate only after pinned capability, identity, and context verification', () => {
+    const action = planJiraDuplicateSearch({
+      context,
+      hostCapability: capability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42'],
+      maxResults: 20,
+    });
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action,
+        hostCapability: capability,
+        observation: {
+          provider: 'jira',
+          context,
+          availability: 'available',
+          capabilityEvidenceDigest: capability.evidenceDigest,
+          queryDigest: String(action.intent.queryDigest),
+          observedAt: '2026-09-05T12:00:00.000Z',
+          results: [
+            {
+              issueId: '10042',
+              stableId: 'jira:site_01:10042',
+              keys: ['NEW-42', 'OLD-42'],
+              context,
+              matchedBy: 'historical-key',
+              matchedHistoricalKey: 'OLD-42',
+              stableIdentityVerified: true,
+              contextVerified: true,
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: 'jira:site_01:10042',
+    });
+  });
+
+  it('does not treat lagging or ambiguous duplicate evidence as recoverable', () => {
+    const action = planJiraDuplicateSearch({
+      context,
+      hostCapability: capability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42'],
+      maxResults: 20,
+    });
+    const base = {
+      provider: 'jira' as const,
+      context,
+      capabilityEvidenceDigest: capability.evidenceDigest,
+      queryDigest: String(action.intent.queryDigest),
+      observedAt: '2026-09-05T12:00:00.000Z',
+      results: [],
+    };
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action,
+        hostCapability: capability,
+        observation: { ...base, availability: 'lagging' },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'lagging' });
+    const candidate = {
+      issueId: '10042',
+      stableId: 'jira:site_01:10042',
+      keys: ['OLD-42'],
+      context,
+      matchedBy: 'historical-key' as const,
+      matchedHistoricalKey: 'OLD-42',
+      stableIdentityVerified: true,
+      contextVerified: true,
+    };
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action,
+        hostCapability: capability,
+        observation: {
+          ...base,
+          availability: 'available',
+          results: [
+            candidate,
+            { ...candidate, issueId: '10043', stableId: 'jira:site_01:10043' },
+          ],
+        },
+      }),
+    ).toMatchObject({ accepted: false, classification: 'ambiguous' });
   });
 });

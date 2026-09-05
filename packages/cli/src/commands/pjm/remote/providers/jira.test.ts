@@ -14,6 +14,7 @@ import {
   planJiraRead,
   previewJiraMutation,
   validateJiraDiscussionReadObservation,
+  validateJiraDuplicateSearchObservation,
   validateJiraMetadataObservation,
   verifyJiraMutationObservation,
   type JiraHostCapabilityObservation,
@@ -660,5 +661,172 @@ describe('Jira duplicate-search intents', () => {
         historicalKeys: ['OLD-42', 'OLD-42'],
       }),
     ).toThrow('bounds');
+  });
+});
+
+describe('Jira duplicate-search observations', () => {
+  const action = () =>
+    planJiraDuplicateSearch({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42'],
+      maxResults: 2,
+    });
+
+  function observation(
+    searchAction: ReturnType<typeof action>,
+    results: Array<{
+      issueId: string;
+      stableId: string;
+      keys: string[];
+      context: typeof jiraContext;
+      matchedBy: 'provenance' | 'reserved-binding' | 'historical-key';
+      matchedProvenanceToken?: string;
+      matchedReservedBindingId?: string;
+      matchedHistoricalKey?: string;
+      stableIdentityVerified: boolean;
+      contextVerified: boolean;
+    }>,
+  ) {
+    return {
+      provider: 'jira' as const,
+      context: jiraContext,
+      availability: 'available' as const,
+      capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+      queryDigest: String(searchAction.intent.queryDigest),
+      observedAt: '2026-09-05T12:00:00.000Z',
+      results,
+    };
+  }
+
+  const candidate = {
+    issueId: '10042',
+    stableId: 'jira:site_01:10042',
+    keys: ['NEW-42', 'OLD-42'],
+    context: jiraContext,
+    matchedBy: 'provenance' as const,
+    matchedProvenanceToken: 'origin:local:item-42',
+    stableIdentityVerified: true,
+    contextVerified: true,
+  };
+
+  it('accepts exactly one stable issue-ID/context match from provenance or a planned key', () => {
+    const searchAction = action();
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: observation(searchAction, [candidate]),
+      }),
+    ).toEqual({
+      accepted: true,
+      classification: 'one-verified-match',
+      stableId: 'jira:site_01:10042',
+      reasons: [],
+    });
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: observation(searchAction, [
+          {
+            ...candidate,
+            matchedBy: 'historical-key',
+            matchedProvenanceToken: undefined,
+            matchedHistoricalKey: 'OLD-42',
+          },
+        ]),
+      }).classification,
+    ).toBe('one-verified-match');
+  });
+
+  it('returns no-match, bounded ambiguity, unavailable, and lagging explicitly', () => {
+    const searchAction = action();
+    const base = observation(searchAction, []);
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: base,
+      }),
+    ).toMatchObject({ accepted: true, classification: 'no-match' });
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: observation(searchAction, [
+          candidate,
+          { ...candidate, issueId: '10043', stableId: 'jira:site_01:10043' },
+        ]),
+      }).classification,
+    ).toBe('ambiguous');
+    for (const availability of ['unavailable', 'lagging'] as const) {
+      expect(
+        validateJiraDuplicateSearchObservation({
+          action: searchAction,
+          hostCapability: jiraCapability,
+          observation: { ...base, availability },
+        }).classification,
+      ).toBe(availability);
+    }
+  });
+
+  it('rejects mismatched context, query, capability, and unverified identity', () => {
+    const searchAction = action();
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: {
+          ...observation(searchAction, [candidate]),
+          queryDigest: 'sha256:wrong',
+        },
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: observation(searchAction, [
+          { ...candidate, stableIdentityVerified: false },
+        ]),
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: searchAction,
+        hostCapability: jiraCapability,
+        observation: {
+          ...observation(searchAction, []),
+          context: { ...jiraContext, projectId: 'other' },
+        },
+      }).classification,
+    ).toBe('invalid');
+  });
+
+  it('rejects a forged incomplete search action even for an empty result', () => {
+    const searchAction = action();
+    const forged = {
+      ...searchAction,
+      intent: {
+        ...searchAction.intent,
+        query: { provenanceToken: 'origin:local:item-42' },
+      },
+    };
+    expect(
+      validateJiraDuplicateSearchObservation({
+        action: forged,
+        hostCapability: jiraCapability,
+        observation: observation(searchAction, []),
+      }),
+    ).toMatchObject({ accepted: false, classification: 'invalid' });
+    expect(
+      jiraAdapter.validateObservation(searchAction, jiraObservation),
+    ).toEqual({
+      valid: false,
+      reasons: ['typed-validator-required:search-duplicates'],
+    });
   });
 });

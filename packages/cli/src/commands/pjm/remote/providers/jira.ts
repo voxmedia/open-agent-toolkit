@@ -186,6 +186,42 @@ export interface JiraDuplicateSearchPlanInput {
   maxResults: number;
 }
 
+export interface JiraDuplicateCandidate {
+  issueId: string;
+  stableId: string;
+  keys: string[];
+  context: ProviderContext;
+  matchedBy: 'provenance' | 'reserved-binding' | 'historical-key';
+  matchedProvenanceToken?: string;
+  matchedReservedBindingId?: string;
+  matchedHistoricalKey?: string;
+  stableIdentityVerified: boolean;
+  contextVerified: boolean;
+}
+
+export interface JiraDuplicateSearchObservation {
+  provider: 'jira';
+  context: ProviderContext;
+  availability: 'available' | 'unavailable' | 'lagging';
+  capabilityEvidenceDigest: string;
+  queryDigest: string;
+  observedAt: string;
+  results: JiraDuplicateCandidate[];
+}
+
+export interface JiraDuplicateSearchValidationResult {
+  accepted: boolean;
+  classification:
+    | 'no-match'
+    | 'one-verified-match'
+    | 'ambiguous'
+    | 'unavailable'
+    | 'lagging'
+    | 'invalid';
+  stableId: string | null;
+  reasons: string[];
+}
+
 const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/;
 const ISSUE_ID = /^[1-9][0-9]*$/;
 const URL_REFERENCE =
@@ -876,6 +912,101 @@ export function planJiraDuplicateSearch(
   });
 }
 
+export function validateJiraDuplicateSearchObservation(input: {
+  action: SemanticAction;
+  hostCapability: JiraHostCapabilityObservation;
+  observation: JiraDuplicateSearchObservation;
+}): JiraDuplicateSearchValidationResult {
+  const invalid = (
+    classification: JiraDuplicateSearchValidationResult['classification'],
+    reasons: string[],
+  ): JiraDuplicateSearchValidationResult => ({
+    accepted: classification === 'no-match',
+    classification,
+    stableId: null,
+    reasons,
+  });
+  if (!validJiraDuplicateAction(input.action)) {
+    return invalid('invalid', ['search-action-invalid']);
+  }
+  const capability = validateJiraHostCapability(
+    'search-duplicates',
+    input.action.context,
+    input.hostCapability,
+    ['stable-identity', 'project-context'],
+  );
+  if (
+    !capability.valid ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.provider !== 'jira' ||
+    !contextsEqual(input.observation.context, input.action.context) ||
+    input.observation.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.observation.queryDigest !== input.action.intent.queryDigest ||
+    !Number.isFinite(Date.parse(input.observation.observedAt))
+  ) {
+    return invalid('invalid', [
+      'search-evidence-mismatch',
+      ...capability.reasons,
+    ]);
+  }
+  if (input.observation.availability === 'unavailable') {
+    return invalid('unavailable', ['search-unavailable']);
+  }
+  if (input.observation.availability === 'lagging') {
+    return invalid('lagging', ['search-result-lag']);
+  }
+  const maxResults = Number(
+    (input.action.intent.resultContract as Record<string, unknown>).maxResults,
+  );
+  if (input.observation.results.length > maxResults) {
+    return invalid('invalid', ['search-results-out-of-bounds']);
+  }
+  const query = input.action.intent.query as Record<string, unknown>;
+  const historicalKeys = query.historicalKeys as string[];
+  for (const candidate of input.observation.results) {
+    if (
+      !ISSUE_ID.test(candidate.issueId) ||
+      candidate.stableId !==
+        canonicalJiraStableId(
+          input.action.context.siteId!,
+          candidate.issueId,
+        ) ||
+      candidate.keys.length > 64 ||
+      new Set(candidate.keys).size !== candidate.keys.length ||
+      candidate.keys.some((key) => !ISSUE_KEY.test(key)) ||
+      !candidate.stableIdentityVerified ||
+      !candidate.contextVerified ||
+      !contextsEqual(candidate.context, input.action.context)
+    ) {
+      return invalid('invalid', ['candidate-identity-or-context-unverified']);
+    }
+    const matched =
+      (candidate.matchedBy === 'provenance' &&
+        candidate.matchedProvenanceToken === query.provenanceToken) ||
+      (candidate.matchedBy === 'reserved-binding' &&
+        candidate.matchedReservedBindingId === query.reservedBindingId) ||
+      (candidate.matchedBy === 'historical-key' &&
+        typeof candidate.matchedHistoricalKey === 'string' &&
+        historicalKeys.includes(candidate.matchedHistoricalKey) &&
+        candidate.keys.includes(candidate.matchedHistoricalKey));
+    if (!matched) {
+      return invalid('invalid', ['candidate-match-evidence-invalid']);
+    }
+  }
+  if (input.observation.results.length === 0) return invalid('no-match', []);
+  if (input.observation.results.length > 1) {
+    return invalid('ambiguous', ['multiple-matches']);
+  }
+  return {
+    accepted: true,
+    classification: 'one-verified-match',
+    stableId: input.observation.results[0]!.stableId,
+    reasons: [],
+  };
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -915,10 +1046,13 @@ export const jiraAdapter: ProviderAdapter = {
   },
   validateObservation(action, observation): ObservationValidation {
     const reasons: string[] = [];
-    if (action.operation === 'read-discussion') {
+    if (
+      action.operation === 'read-discussion' ||
+      action.operation === 'search-duplicates'
+    ) {
       return {
         valid: false,
-        reasons: ['typed-validator-required:read-discussion'],
+        reasons: [`typed-validator-required:${action.operation}`],
       };
     }
     const mutation = ['create', 'update', 'transition', 'annotate'].includes(
@@ -1003,11 +1137,16 @@ export const jiraAdapter: ProviderAdapter = {
     return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
   },
   verificationFields(action): string[] {
+    if (action.operation === 'search-duplicates')
+      return ['typed:search-duplicates'];
     return action.operation === 'read'
       ? ['stable-identity']
       : mutationVerificationFields(action);
   },
   verify(action, issue): FieldVerification[] {
+    if (action.operation === 'search-duplicates') {
+      return [{ field: 'typed:search-duplicates', status: 'unavailable' }];
+    }
     if (
       ['create', 'update', 'transition', 'annotate'].includes(action.operation)
     ) {
@@ -1323,6 +1462,62 @@ function validJiraMutationAction(action: SemanticAction): boolean {
       requireStableIdentity: true,
       requireExactContext: true,
       fields: fieldMask,
+    })
+  );
+}
+
+function validJiraDuplicateAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'jira' ||
+    action.operation !== 'search-duplicates' ||
+    !hasPinnedJiraContext(action.context) ||
+    !isRecord(action.intent.query) ||
+    !isRecord(action.intent.resultContract) ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    !validJiraActionDigest(action)
+  ) {
+    return false;
+  }
+  const query = action.intent.query;
+  const historicalKeys = query.historicalKeys;
+  const maxResults = Number(action.intent.resultContract.maxResults);
+  if (
+    typeof query.provenanceToken !== 'string' ||
+    !query.provenanceToken ||
+    Buffer.byteLength(query.provenanceToken, 'utf8') > 512 ||
+    typeof query.reservedBindingId !== 'string' ||
+    !query.reservedBindingId ||
+    Buffer.byteLength(query.reservedBindingId, 'utf8') > 128 ||
+    !Array.isArray(historicalKeys) ||
+    historicalKeys.length > 64 ||
+    new Set(historicalKeys).size !== historicalKeys.length ||
+    historicalKeys.some(
+      (key) => typeof key !== 'string' || !ISSUE_KEY.test(key),
+    ) ||
+    query.siteId !== action.context.siteId ||
+    query.projectId !== action.context.projectId ||
+    !Number.isInteger(maxResults) ||
+    maxResults < 1 ||
+    maxResults > 100
+  ) {
+    return false;
+  }
+  const expectedQuery = {
+    provenanceToken: query.provenanceToken,
+    reservedBindingId: query.reservedBindingId,
+    historicalKeys,
+    siteId: action.context.siteId,
+    projectId: action.context.projectId,
+  };
+  return (
+    semanticValuesEqual(query, expectedQuery) &&
+    action.intent.queryDigest === semanticDigest(expectedQuery) &&
+    semanticValuesEqual(action.intent.resultContract, {
+      maxResults,
+      classifications: ['no-match', 'one-match', 'ambiguous'],
+      requireStableIssueId: true,
+      requireExactContext: true,
+      matchStatus: 'evidence-until-identity-and-context-verified',
     })
   );
 }
