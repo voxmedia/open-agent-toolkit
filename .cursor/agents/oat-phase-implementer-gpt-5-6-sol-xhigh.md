@@ -32,7 +32,7 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, or `import`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, or `lite`;
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;
@@ -122,6 +122,9 @@ Read each required artifact once at phase start:
 - `quick`: phase section from plan and discovery; design/spec when present;
 - `import`: phase section from plan and imported plan; design/spec when
   present.
+- `lite`: read the whole plan.md requirements contract: the assigned phase
+  section plus Summary, Decisions, Assumptions, Out of Scope, and Validation
+  Criteria. Discovery, spec, and design are absent by design.
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing.

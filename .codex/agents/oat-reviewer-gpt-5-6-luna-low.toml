@@ -49,7 +49,7 @@ You will be given a "Review Scope" block including:
 - **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
 - **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **analysis_artifact**: For `type: analysis`, path to the severity-rated analysis artifact to fact-check.
-- **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
@@ -121,6 +121,7 @@ Use workflow mode to determine required evidence:
 - **spec-driven**: `spec.md`, `design.md`, `plan.md` are expected.
 - **quick**: `discovery.md` + `plan.md` are expected (`spec.md`/`design.md` optional if present).
 - **import**: `plan.md` is expected (`references/imported-plan.md` preferred; `spec.md`/`design.md` optional).
+- **lite**: `plan.md` and `implementation.md` are expected; discovery, spec, and design are absent by design.
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.
@@ -143,6 +144,7 @@ Read available artifacts to understand what SHOULD have been built:
    - `spec-driven`: read `spec.md` and `design.md`.
    - `quick`: read `discovery.md` and `plan.md`; read `spec.md`/`design.md` only if they exist.
    - `import`: read `plan.md` and `references/imported-plan.md` (if present); read `spec.md`/`design.md` only if they exist.
+   - `lite`: read `plan.md` and `implementation.md`; do not require discovery, spec, design, or an import reference.
 3. For `type: analysis`, read `analysis_artifact` and then inspect only the cited evidence sources needed to verify its findings:
    - `scope: docs`: consult the docs contract, docs navigation/index files, and cited docs source files relevant to the analysis.
    - `scope: agent-instructions`: consult the repo/root instruction files, provider instruction files, and cited skill/agent instruction files relevant to the analysis.
@@ -167,6 +169,7 @@ For each requirement in scope, use the best available requirement source by mode
 - `spec-driven`: `spec.md` (primary), `design.md` mapping (secondary)
 - `quick`: `discovery.md` + `plan.md`
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
+- `lite`: all five requirements-contract sections in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria
 
 Then verify:
 
@@ -206,6 +209,7 @@ Treat the artifact as a product deliverable. Verify it is:
      - `spec-driven`: spec + design
      - `quick`: discovery (+ spec/design if present)
      - `import`: imported-plan reference (+ discovery/spec/design if present)
+     - `lite`: plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria
    - For import-mode `plan` reviews, bias findings toward canonical-format conformance and completeness. Do not rewrite the imported author's intent merely to match OAT house style.
 
 4. **Actionable**
@@ -227,7 +231,7 @@ Treat the artifact as a product deliverable. Verify it is:
 
 This step applies to **code reviews** only.
 
-If `design.md` is absent in quick/import mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue.
+If `design.md` is absent in quick/import/lite mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue.
 
 For each design decision relevant to scope:
 

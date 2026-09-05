@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-05
-oat_current_task_id: p06-t01
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | complete    | 4     | 4/4       |
+| Phase 6 | in_progress | 3     | 2/3       |
 
-**Total:** 16/19 tasks completed
+**Total:** 18/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -302,6 +302,103 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 ---
 
 ---
+
+## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
+
+**Status:** in_progress
+**Started:** 2026-09-05
+
+### Task p06-t01: Document lite workflow mode
+
+**Status:** completed
+**Commit:** a2fa453b3b339da34cf9a20d8b70635112b8cc10
+
+**Outcome:**
+
+- Documented the lite workflow across repository guidance and the docs site.
+- Regenerated the docs index and kept the generated output stable.
+
+**Verification:**
+
+- `pnpm check` — exit 0; applicable tasks executed with cache misses while
+  unchanged dependency work replayed cache.
+- `pnpm build:docs` — exit 0; the docs build executed with a cache miss.
+- Re-running the index generator left `apps/oat-docs/index.md` unchanged.
+
+### Task p06-t02: Sync provider views and run the lite workflow manually
+
+**Status:** completed
+
+**Outcome:**
+
+- Ran `pnpm run cli -- sync --scope all`; the generated Codex and Cursor role
+  views, sync manifest, and Claude `oat-project-lite` link were refreshed.
+- Exercised a disposable lite project from scaffold through one task, phase and
+  final reviews, configured exit gate, and PR-description generation.
+- Verified the lite default closeout selected only `[pr]`: no `summary.md`,
+  discovery, spec, or design artifact was generated, and no documentation
+  workflow ran.
+- Declined external PR creation as scoped; no push, `gh pr create`, or other
+  GitHub mutation was attempted.
+
+**Manual run evidence:**
+
+- Scratch worktree: `/tmp/oat-lite-smoke.vbCixM/worktree` (disposable and
+  removed after evidence capture).
+- Interview: one root-brokered batched response covering outcome, decisions,
+  assumptions, exclusions, and `grep -qx 'Lite smoke verification.'
+lite-smoke-note.md` validation.
+- Approval pauses: 1; the root approved the single-phase plan exactly once.
+- Scratch dispatch policy: root-brokered `managed high`, persisted only in the
+  disposable project.
+- Implementation commit: `e6ff245ad3a492473c4196a90fbf9f6605d18536`;
+  exact-content verification passed and the task changed only
+  `lite-smoke-note.md`.
+- Phase reviewer: `oat-reviewer-gpt-5-6-sol-high`, zero findings. Final
+  lifecycle reviewer used the same exact managed-high target and found zero
+  Critical/Important findings; its bookkeeping-only Medium was corrected.
+- Configured exit gate: cross-family Claude/Fable run
+  `c96eec11-8e6d-45c8-8bcc-0427b2f2db42`, exit 0, receive eligible, zero
+  Critical/Important/Medium and four Minor artifact-hygiene findings addressed
+  by the non-pausing judgment sweep.
+- PR artifact: `pr/project-pr-2026-09-05.md`, SHA-256
+  `bb1815244aa27dc74428217dc05685d2520c5e4cc46b5d99771517541aa365c9`.
+
+**Commands and results:**
+
+- `pnpm run worktree:init` — exit 0.
+- `pnpm run cli -- project new lite-smoke --mode lite` — exit 0.
+- `pnpm run cli -- project validate-plan --project-path
+.oat/projects/shared/lite-smoke` — exit 0.
+- `grep -qx 'Lite smoke verification.' lite-smoke-note.md` — exit 0.
+- `pnpm lint`, `pnpm type-check`, and `pnpm build` — exit 0.
+- `HOME=$(mktemp -d) pnpm exec turbo run test --force` — exit 1 with zero
+  cached tasks: 5,514 tests passed and two unrelated baseline skill-contract
+  tests failed (`autonomy-gate-inventory` and
+  `post-implement-sequence-contracts`). The phase task and scoped reviews did
+  not change production code to mask those failures.
+
+**Friction recorded:**
+
+- A delegated phase implementer cannot invoke the root-only user-input channel,
+  so the root brokered one batched interview response and the single approval.
+- The skill's positional `project validate-plan` example is stale; the current
+  CLI requires `--project-path`.
+- Dispatch resolution needed the explicit scratch-only `managed high` choice;
+  this was lifecycle configuration, not another interview or approval pause.
+- Worktree initialization emitted a non-blocking S3 archive-sync warning for
+  unavailable AWS credentials.
+- Scaffold hook formatting briefly left an index/worktree mismatch for the
+  scratch `state.md`; restoring only that exact staged path resolved it without
+  touching user work.
+- Two exit-gate launches were rejected before acceptance (empty project value,
+  then `/tmp` versus `/private/tmp` containment). Both receipts were preserved;
+  the third launch used the canonical path and completed on its accepted
+  handle.
+
+### Task p06-t03: Bump lockstep public package versions and run release gates
+
+**Status:** pending
 
 ## Orchestration Runs
 
