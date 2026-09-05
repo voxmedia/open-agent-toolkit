@@ -250,6 +250,16 @@ disposition:
   `oat-project-document`; p02-t03 must make `generate.ts` unconditional
   and assert lite routes to pr-final.
 
+**Disposition (2026-09-05):** user chose to apply all four and authorized a
+sixth gate run. Resolved in artifacts: I1 → lite skill authors plan.md before
+the escalation check, promote refuses unresolved template content, and the
+integration test starts from an untouched scaffold; I2 → p04-t01 owns the
+canonical `.agents/docs/autonomy-contract.md` and
+`autonomy-gate-inventory.test.ts` (root count 16); M1 → autonomous ALLOWED
+Activities and Success Criteria updated and asserted; M2 → p02-t03 makes
+generate.ts unconditional with a lite-to-pr-final assertion. Design
+components 5 and 6 updated for the ordering and refusal.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04

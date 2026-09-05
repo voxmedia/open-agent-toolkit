@@ -282,8 +282,9 @@ oat project promote <project-path> --to quick [--json]
 
 - Only `lite` to `quick` is accepted in this project. Other pairs error with
   a pointer to the spec-driven promotion skill.
-- Refuses if `references/lite-plan.md` already exists or the mode is not
-  lite. Runs no git operations before every file write has succeeded.
+- Refuses if `references/lite-plan.md` already exists, the mode is not
+  lite, or the lite plan still carries unresolved template content. Runs
+  no git operations before every file write has succeeded.
 - A CLI command because every step is mechanical and the skill-level
   spec-driven promotion has shown that prose mechanics drift.
 
@@ -298,9 +299,10 @@ oat project promote <project-path> --to quick [--json]
 - Steps: git preflight by reference to quick-start's contract; resolve active
   project or scaffold with `--mode lite`; read repo knowledge; batched
   critical interview, one round plus one conditional round, "just proceed"
-  records careful assumptions; escalation check, calling promote if the task
-  list will not fit one sitting or a design decision is unresolvable; author
-  `plan.md`; single approval gate; dispatch ceiling resolution by reference
+  records careful assumptions; author `plan.md` from the interview result; escalation check on the
+  authored plan, calling promote if the task list will not fit one sitting
+  or a design decision is unresolvable (promotion consumes the authored
+  sections, so interview content is never lost); single approval gate; dispatch ceiling resolution by reference
   to the shared contract, no phase-gate setup; plan artifact review loop by
   reference; mark complete and commit; hand off to implement.
 - Blocked: no design or spec authoring, no multi-phase plans, no

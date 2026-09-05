@@ -321,18 +321,19 @@ git commit -m "feat(p02-t02): route lite planning on the repo dashboard"
 
 - Modify: `packages/control-plane/src/recommender/router.ts`
 - Modify: `packages/control-plane/src/recommender/router.test.ts`
-- Modify: `packages/cli/src/commands/state/generate.ts` and `generate.test.ts` (only if the dashboard's implement-complete route also prefers summary)
+- Modify: `packages/cli/src/commands/state/generate.ts`
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
 
 **Step 1: Write test (RED)**
 
-Load-bearing assertion: mode `lite`, implement phase, final review `passed`, no complete `summary.md` → `oat-project-pr-final`. Today the closeout branch near router.ts:199-211 returns `oat-project-summary` whenever the summary artifact is missing or incomplete, regardless of mode. Regression guard: the same state under `quick` still routes to `oat-project-summary`.
+Load-bearing assertion: mode `lite`, implement phase, final review `passed`, no complete `summary.md` → `oat-project-pr-final`. Today the closeout branch near router.ts:199-211 returns `oat-project-summary` whenever the summary artifact is missing or incomplete, regardless of mode. Regression guard: the same state under `quick` still routes to `oat-project-summary`. Dashboard load-bearing assertion: lite, implement phase complete, `oat_docs_updated` unset → `oat-project-pr-final`; today `computeNextStep` sends that state to `oat-project-document`. Guard: quick in the same state still routes to `oat-project-document`.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
 Expected: the lite case fails (RED); the quick guard passes
 
 **Step 2: Implement (GREEN)**
 
-In the closeout branch, when `state.workflowMode === 'lite'`, skip the summary requirement and return `oat-project-pr-final` with reason "Final review passed; lite mode synthesizes the PR from plan and implementation". Leave every other mode unchanged. Check `generate.ts` for an equivalent implement-complete route and mirror it if present.
+In the closeout branch, when `state.workflowMode === 'lite'`, skip the summary requirement and return `oat-project-pr-final` with reason "Final review passed; lite mode synthesizes the PR from plan and implementation". Leave every other mode unchanged. In `generate.ts`, add a lite branch to the implement-complete route so unset docs state routes to `oat-project-pr-final`; other modes keep the documentation route.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
 Expected: pass (GREEN)
@@ -411,7 +412,7 @@ git commit -m "fix(p03-t01): skip split recommendation append when discovery.md 
 Unit tests against a temp project directory:
 
 - Happy path: lite plan with all five spec sections → `discovery.md` has Initial Request from Summary, Key Decisions from Decisions, Assumptions, Out of Scope, Success Criteria from Validation Criteria; `references/lite-plan.md` is byte-equal to the original `plan.md`; new `plan.md` is the quick template render; `state.md` reads mode `quick`, phase `discovery`, status `complete`, `oat_ready_for: oat-project-quick-start`, stamped `oat_project_state_updated`; `oat_workflow_origin` unchanged for both `native` and `imported` fixtures.
-- Refusals, each asserting no file was written: mode is `quick`; `references/lite-plan.md` already exists; `--to spec-driven`; scope resolution fails.
+- Refusals, each asserting no file was written: mode is `quick`; `references/lite-plan.md` already exists; `--to spec-driven`; scope resolution fails; the lite `plan.md` still carries unresolved template content (`oat_template: true` in frontmatter or any `{...}` scaffold placeholder in the five spec sections), so a scaffold that was never authored can never be promoted.
 - `--json` emits `{ status: 'promoted' | 'refused', reason, files }`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
@@ -421,7 +422,7 @@ Expected: fail (RED)
 
 Follow the `complete-discovery` command shape for Commander wiring and dependency injection only. For scope and persistence, follow `packages/cli/src/commands/project/split/run.ts`: import `resolveProjectScope` from `@commands/shared/project-scope` (refuse when it returns null), and inject `gitRunner` (`defaultGitRunner` and `GitRunner` from `@commands/project/sync/git`) and `pushSynced` (from `@commands/project/sync/ref-sync`) as dependencies so tests can stub them. Ordering is strict:
 
-1. Read-only validation: mode is `lite`, `--to` is `quick`, `references/lite-plan.md` is absent, and `resolveProjectScope` returns a scope. Any failure refuses before any write.
+1. Read-only validation: mode is `lite`, `--to` is `quick`, `references/lite-plan.md` is absent, the lite plan has no unresolved template content, and `resolveProjectScope` returns a scope. Any failure refuses before any write.
 2. Every file write: render `discovery.md` and the fresh quick `plan.md` with the exported `applyTemplateReplacements` (pass `'quick'`) and `resolveTemplateSource` from the scaffold module; move `plan.md` to `references/lite-plan.md`; update `state.md`.
 3. Only after every write succeeded: `gitRunner` adds the exact project paths and commits, or `pushSynced` for synced scope.
 
@@ -498,21 +499,21 @@ git commit -m "feat(p03-t03): reject multi-phase lite plans in validate-plan"
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.test.ts`
 - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`skills` gains `oat-project-lite`)
 - Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md` (gate inventory gains `LITE-01` inherited dirty tree, `LITE-02` missing name or description, `LITE-03` batched interview, `LITE-04` escalation to quick, `LITE-05` plan approval gate, `LITE-06` dispatch-ladder scope, `LITE-07` project dispatch policy, `LITE-08` artifact-review findings, `LITE-09` exit gate; each with interactive behavior, autonomous resolution, classification, and provenance mirroring the QS rows)
-- Modify: `.agents/skills/oat-project-quick-start/SKILL.md` (patch version bump because its references changed)
+- Modify: `packages/cli/src/validation/autonomy-gate-inventory.test.ts` (expected skill-root count 15 → 16; stable prompt-site keys for every `oat-project-lite` prompt; mirrored-contract equality checks preserved)
 - Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep; plus a new test "oat-project-lite enforces the single-pause interaction contract" asserting the skill has exactly one interview step that batches questions, a conditional second round only for questions the first created, a promote call at the escalation check, exactly one AskUserQuestion approval gate before plan completion, and no HiLL checkpoint or phase-gate setup step; and a test "oat-project-lite registers every interactive gate in the autonomy inventory" asserting every prompt in the skill cites a `LITE-0N` row that exists in the inventory and that the skill loads the autonomy contract under `OAT_AUTONOMOUS=1`)
 
 **Step 1: Write test (RED)**
 
-Pack-manifest test asserts `oat-project-lite` is in the workflows pack. Add `oat-project-lite` to both gateable-skill lists in `skills.test.ts` so the `### Gate Execution` and `oat gate ` invocation assertions cover it. Add the name to `WORKFLOW_SKILL_NAMES` and run the bundle-consistency test: "bundles every workflow skill" fails until `bundle-inputs.mjs` lists it.
+Pack-manifest test asserts `oat-project-lite` is in the workflows pack. Add `oat-project-lite` to both gateable-skill lists in `skills.test.ts` so the `### Gate Execution` and `oat gate ` invocation assertions cover it. Add the `LITE-01..09` rows and the `## HEAD prompt-site coverage` mappings for `oat-project-lite/SKILL.md` to the canonical `.agents/docs/autonomy-contract.md` and raise the expected root count in `autonomy-gate-inventory.test.ts` to 16; that test fails until the skill file exists with matching prompt sites. Add the name to `WORKFLOW_SKILL_NAMES` and run the bundle-consistency test: "bundles every workflow skill" fails until `bundle-inputs.mjs` lists it.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/autonomy-gate-inventory.test.ts`
 Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Write the skill at `version: 1.0.0`. Its Mode Assertion states: when `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` from the quick-start skill, keep `OAT_NON_INTERACTIVE=1`, and resolve every interactive decision through its `LITE-0N` row (batched interview answers from repository evidence with recorded assumptions; escalation by the documented heuristic; approval gate auto-confirmed with the requirement set recorded; ladder scope and policy per the QS-08 and QS-09 rules; artifact-review findings per IMPORT-08's shape; exit gate per the shared contract), stopping at a boundary only where the row says so. Frontmatter matches `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 2.5 escalation check calling `oat project promote "$PROJECT_PATH" --to quick --json` and stopping with a pointer to quick-start, Step 3 author `plan.md` sections and single-phase tasks in plan-writing grammar, Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference (structured mode, no user pause), a `### Gate Execution` step by reference to quick-start's Gate Execution contract (the skill keeps `oat_gateable: true`, so a configured gate runs after artifact review and before completion), Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria. Add `oat-project-lite` to `bundle-inputs.mjs` `skills`.
+Write the skill at `version: 1.0.0`. Its Mode Assertion states: when `OAT_AUTONOMOUS=1`, read the canonical `.agents/docs/autonomy-contract.md` (the skill-local `references/docs/autonomy-contract.md` views are symlinks to it), keep `OAT_NON_INTERACTIVE=1`, and resolve every interactive decision through its `LITE-0N` row (batched interview answers from repository evidence with recorded assumptions; escalation by the documented heuristic; approval gate auto-confirmed with the requirement set recorded; ladder scope and policy per the QS-08 and QS-09 rules; artifact-review findings per IMPORT-08's shape; exit gate per the shared contract), stopping at a boundary only where the row says so. Frontmatter matches `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 3 author `plan.md` from the interview result: Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and the single-phase task list in plan-writing grammar, written to disk before any escalation decision, Step 3.5 escalation check that reads the now-populated plan and calls `oat project promote "$PROJECT_PATH" --to quick --json` when the task list will not fit one sitting or a design decision is unresolvable, stopping with a pointer to quick-start (promotion consumes the authored sections, so interview content is never lost), Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference (structured mode, no user pause), a `### Gate Execution` step by reference to quick-start's Gate Execution contract (the skill keeps `oat_gateable: true`, so a configured gate runs after artifact review and before completion), Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria. Add `oat-project-lite` to `bundle-inputs.mjs` `skills`.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts src/validation/autonomy-gate-inventory.test.ts`
 Expected: pass (GREEN)
 
 **Step 3: Refactor**
@@ -527,7 +528,7 @@ Expected: validator green for the authored skill; sync dry-run lists the new ski
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-lite/SKILL.md .agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/skills.test.ts
+git add .agents/skills/oat-project-lite/SKILL.md .agents/docs/autonomy-contract.md packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/skills.test.ts
 git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 ```
 
@@ -541,7 +542,7 @@ git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 
 **Step 1: Write test (RED)**
 
-Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier), named "project new creates lite-mode scaffold artifacts and routes to oat-project-lite" and "project promote --to quick converts a lite project": (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) after writing a minimal lite plan, `project promote x --to quick` yields a quick project whose dashboard routes to quick-start and whose `references/lite-plan.md` exists.
+Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier), named "project new creates lite-mode scaffold artifacts and routes to oat-project-lite" and "project promote --to quick converts a lite project": (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) starting from the untouched lite scaffold, write interview-derived Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections plus one task into plan.md exactly as the skill's Step 3 would, then `project promote x --to quick`, and assert each of those answers appears verbatim in the resulting discovery.md, the project is quick, the dashboard routes to quick-start, and `references/lite-plan.md` exists; (c) `project promote x --to quick` against the untouched scaffold is refused for unresolved template content and writes nothing.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts -t "lite"`
 Expected: fail before the assertions are satisfied (RED)
@@ -587,7 +588,7 @@ git commit -m "test(p04-t02): cover lite scaffold, dashboard routing, and promot
 - Modify: `.agents/skills/oat-project-progress/SKILL.md` (Lite mode routing table, version bump)
 - Modify: `.agents/skills/oat-project-next/SKILL.md` (Lite routing table, version bump)
 - Modify: `.agents/skills/oat-brainstorm/SKILL.md` (fold-back handoff row; fold-back artifact selection gains a lite rule: when `oat_workflow_mode` is `lite`, `ARTIFACT_PATH` is `plan.md`, the appended section is `## Brainstorming Update` above `## Phase 1`, and the confirmation and commit wording name plan.md; version bump)
-- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (new-goal review-density selection gains the lite heuristic for single-sitting goals; the resume routing table gains "Lite plan incomplete → `oat-project-lite`"; the completion report's workflow-mode field accepts `lite`; version bump and pin update if present)
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (new-goal review-density selection gains the lite heuristic for single-sitting goals; the resume routing table gains "Lite plan incomplete → `oat-project-lite`"; the completion report's workflow-mode field accepts `lite`; ALLOWED Activities and Success Criteria no longer limit selection to quick or spec-driven; version bump and pin update if present)
 - Modify: `.agents/skills/oat-project-promote-spec-driven/SKILL.md` (state that lite promotes via quick, version bump)
 - Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (lite requirement source is plan.md Summary and Validation Criteria, version bump)
 - Modify: `.agents/agents/oat-reviewer.md` (`lite` in the workflow_mode input, a Mode Contract line stating plan.md is expected and discovery/spec/design are absent by design, the Step 1 read rule, the Step 3 requirement-source line pointing at plan.md Summary, Decisions, and Validation Criteria, and the plan-review upstream set; version bump)
@@ -605,7 +606,7 @@ Skill-contract changes, using each skill's real marker strings:
 - Review-provide and pr-final: assert lite proceeds without spec or design and carries the reduced-assurance note. Keep the review-provide sentence "reviewing `design` in `quick/import` mode requires only `discovery.md`" byte-identical (review-skill-contracts.test.ts asserts it literally) and add lite guidance as a separate line.
 - Assert that both agent files name `lite` in their mode inputs and that the reviewer's Mode Contract has a lite line.
 - Assert the brainstorm fold-back rule: for lite, artifact selection resolves to `plan.md`, and add a filesystem-level contract test (temp lite project with only plan.md, state.md, implementation.md) proving the documented fold-back append lands in `plan.md` and creates no `discovery.md`.
-- Assert the autonomous skill's new-goal selection names lite with its heuristic, its resume table routes an incomplete lite plan to `oat-project-lite`, and its report accepts `lite`; add a persisted-lite resume fixture.
+- Assert the autonomous skill's new-goal selection names lite with its heuristic, its resume table routes an incomplete lite plan to `oat-project-lite`, its report accepts `lite`, and no quick-or-spec-driven-only selection sentence remains in its ALLOWED Activities or Success Criteria; add a persisted-lite resume fixture.
 - Update every pinned version assertion for the bumped skills and agents in `skills.test.ts` and `review-skill-contracts.test.ts` (find them with `grep -n "'2\.3\.1'\|'1\.5\.3'\|'1\.0\.12'\|'1\.3\.0'\|'1\.4\.6'\|'1\.2\.21'\|'1\.6\.0'\|'2\.2\.2'\|'1\.2\.1'\|'1\.1\.1'"` across both files before editing; several pins are bare array entries without `toBe`, the reviewer agent is pinned at 1.2.1 in both files, and the `'1.1.1'` hit for `oat-review-provide-remote` near line 5331 is out of scope and must not change) to the new versions chosen in Step 2.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
