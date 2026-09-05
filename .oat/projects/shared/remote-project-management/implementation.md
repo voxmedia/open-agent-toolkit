@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | in_progress | 9     | 9/9       |
-| Phase 6    | pending     | 10    | 0/10      |
-| Phase 7    | pending     | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | pending   | 10    | 0/10      |
+| Phase 7    | pending   | 10    | 0/10      |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
 
 **Total:** 58/84 tasks completed
 
@@ -839,8 +839,8 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** in progress — operator-extension fix loop 3/3 resolved the sole
-remaining Important finding; independent review 4/4 is pending.
+**Status:** completed — independent operator-extension review 4/4 passed with
+zero findings after fix loop 3/3.
 **Started:** 2026-09-02
 **Implementation head:** a0a5eca48b40b1a75c6761c9c79406f290f82543
 
@@ -925,7 +925,10 @@ remaining Important finding; independent review 4/4 is pending.
 - Root independently verified the four-file boundary, clean diff, and focused
   suite at 93/93. The implementer passed the full remote suite at 544/544 plus
   lint, type-check, build, formatting, diff, and provider-neutrality checks.
-  Independent operator-extension review 4/4 is next; Phase 6 has not started.
+  Independent operator-extension review 4/4 passed with zero Critical,
+  Important, Medium, or Minor findings at
+  `reviews/p05-operator-review-2026-09-05T223153Z.md`. Reconnaissance was not
+  attempted. Phase 5 is complete and `p06-t01` is next.
 
 ---
 
@@ -1822,7 +1825,7 @@ continuation_events:
   - p05-operator-fix-3-20260905-a17cb8971
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 3/3
+review_rounds: 4/4
 fix_loops: 3/3
 review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
 review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
@@ -1845,7 +1848,11 @@ operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
 fix_3_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
 fix_3_outcome: done
-phase_outcome: operator_extension_review_pending
+review_4_artifact: reviews/p05-operator-review-2026-09-05T223153Z.md
+review_4_head: a0a5eca48b40b1a75c6761c9c79406f290f82543
+review_4_findings: 0 critical, 0 important, 0 medium, 0 minor
+review_4_reconnaissance: not-attempted
+phase_outcome: passed_operator_extension
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1898,7 +1905,10 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   boundary.
 - Root independently passed the focused suite at 93/93; the implementer passed
   the remote suite at 544/544 plus lint, types, build, format, diff, and
-  provider-neutrality checks. Review 4/4 is pending; Phase 6 did not start.
+  provider-neutrality checks.
+- Independent operator-extension review 4/4 passed with zero findings at exact
+  reviewed head `a0a5eca48b40b1a75c6761c9c79406f290f82543`;
+  reconnaissance was not attempted. Phase 5 is complete and `p06-t01` is next.
 
 <!-- orchestration-runs-end -->
 
@@ -2000,7 +2010,7 @@ Track test execution during implementation.
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review 4 pending  |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review passed     |
 
 ## Final Summary (for PR/docs)
 

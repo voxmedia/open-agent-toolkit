@@ -1,7 +1,7 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t01
 oat_last_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
-oat_blockers: ['Phase 5 independent operator-extension review 4/4 is pending']
+oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -40,10 +40,13 @@ oat_phase_recovery_policy:
     p05:
       used_attempts: 0
       pending_attempt: null
+    p06:
+      used_attempts: 0
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:28:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:33:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -55,10 +58,9 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented and the
-operator-extension fix resolved the sole remaining Important public read
-verification defect in `a0a5eca48`; the focused and remote suites pass 93/93
-and 544/544. Independent review 4/4 is pending. Phase 6 has not started.
+Phase 6 — Jira Cloud Semantic Adapter. Phase 5 passed independent
+operator-extension review 4/4 with zero findings after fix loop 3/3. Phase 6 is
+unblocked and `p06-t01` is next.
 
 ## Artifacts
 
@@ -66,7 +68,7 @@ and 544/544. Independent review 4/4 is pending. Phase 6 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 operator review pending)
+- **Implementation:** implementation.md (in progress; Phase 6 ready)
 
 ## Progress
 
@@ -180,17 +182,16 @@ and 544/544. Independent review 4/4 is pending. Phase 6 has not started.
 - ✓ Operator authorized one bounded extension fix/review cycle
 - ✓ Phase 5 operator-extension fix loop 3/3 committed as `a0a5eca48`
 - ✓ Expanded Phase 5 live suite passed 93/93 and remote suite passed 544/544
-- ⧗ Independent Phase 5 operator-extension review 4/4 pending
+- ✓ Independent Phase 5 operator-extension review 4/4 passed with zero findings
+- ✓ Phase 5 completed after 4/4 reviews and 3/3 fix loops
+- ⧗ Phase 6 `p06-t01` ready
 
 ## Blockers
 
-No active implementation defect is known after operator-extension fix loop 3/3,
-but Phase 6 remains blocked until independent review 4/4 passes. The
-branch-level lockstep version gate remains preserved for planned `p08-t05`
-release work.
+None. The branch-level lockstep version gate remains preserved for planned
+`p08-t05` release work.
 
 ## Next Milestone
 
-Run independent Phase 5 operator-extension review 4/4 over the full phase range
-ending at `a0a5eca48b40b1a75c6761c9c79406f290f82543`. Require zero Critical and
-zero Important findings before Phase 6.
+Implement Phase 6 tasks `p06-t01` through `p06-t10` in order, beginning with
+Jira Cloud issue normalization in `p06-t01`.
