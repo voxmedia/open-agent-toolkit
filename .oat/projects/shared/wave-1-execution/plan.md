@@ -132,12 +132,11 @@ two assets files), and the two lanes inside each group share nothing.
 ## Dispatch Profile
 
 _No per-phase overrides. Runtime selection applies, capped by the project's named
-dispatch policy in `state.md` (managed / `high`; resolver preflight returned
-`claude` → `opus`); provider-specific model/effort selection is owned by
-runtime resolution, not this plan. Cross-model review requirements are embedded
-in all four lanes: p01 and p04 change configuration resolution and file-writing
-safety in the docs index generator; p02 and p03 change fail-closed asset-bundle
-validation and its remedies._
+dispatch policy in `state.md` (managed / `high`); provider-specific model/effort
+selection is owned by runtime resolution, not this plan. Cross-model review
+requirements are embedded in all four lanes: p01 and p04 change configuration
+resolution and file-writing safety in the docs index generator; p02 and p03
+change fail-closed asset-bundle validation and its remedies._
 
 ## Drift Refresh Record (2026-09-05, vs `a1fd7cd41031719c4db85276fceee402f6045e9c`)
 
@@ -145,7 +144,7 @@ validation and its remedies._
 evidence (one bounded read-only recon agent, Opus, native dispatch); each lane
 re-runs its own drift check in its worktree. `BASE_SHA` equals `origin/main` at
 dispatch time. Draft PR #190 is unchanged at
-`63161897dd40a66e1b29cf19e286665895c40dde` (228 files); every landing-event row
+`63161897dd40a66e1b29cf19e286665895c40dde` (217 files); every landing-event row
 that names it stays a forecast until it merges.
 
 - **p01 — use configured docs index paths:** MINOR-DRIFT. Drift diff touches only
@@ -188,8 +187,10 @@ that names it stays a forecast until it merges.
   `oat-directory-structure.md` from its shared-file list (ordering conclusion
   unchanged); p04's PR #190 row under-reports three shared files
   (`oat-config.ts`, `oat-config.test.ts`, `oat-directory-structure.md`). If
-  PR #190 merges before p04 dispatches, the p04 brief must re-anchor against all
-  seven overlapping files, and the fan-in bump is recomputed above the new main.
+  PR #190 merges before p04 dispatches, the p04 brief must re-anchor against the six
+  write-surface overlaps (`commands/config/index.ts`, `config/index.test.ts`,
+  `cli-utilities/configuration.md`, `oat-config.ts`, `oat-config.test.ts`,
+  `oat-directory-structure.md`; `reference/cli-reference.md` is verify-only), and the fan-in bump is recomputed above the new main.
 - **Rule-1 coverage audit:** every lane's drift-check pathspec covers its write
   surface; no addendum needed.
 
@@ -340,16 +341,16 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-05 | reviews/artifact-plan-review-2026-09-05T224504Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p03    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p04    | code     | pending | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending | -          | -                                                           | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

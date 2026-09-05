@@ -71,6 +71,22 @@ with this wave's drift record. Rule: one orchestrator per worktree — confirm
 **Skill signal (gap):** the skill has no "claim the tree" step; a session
 restart can leave the prior instance running.
 
+### 2026-09-05 · project · feedback · correction (plan-gate m1)
+
+Correction note for the duplicate-orchestrator entry above: the restored
+branch base is `a1fd7cd41031719c4db85276fceee402f6045e9c` (full SHA per
+standing rule 5).
+
+### 2026-09-05 · structural · oat gate review · plan
+
+Plan gate run `ace386d5-d88b-43e4-bccc-3fd12f3cc7ad` (target
+`codex-5-6-sol-xhigh`, cross-family vs the Claude root) returned blocked:
+0 Critical / 1 Important / 1 Medium / 1 Minor. All three resolved in-artifact
+(Dispatch Profile made runtime-neutral; PR #190 count corrected to 217 files
+with six write-surface overlaps; full-SHA correction note). Artifact:
+`reviews/archived/artifact-plan-review-2026-09-05T224504Z.md`; verification
+records in `implementation.md` under "Review Received: plan".
+
 ### 2026-09-05 · project · friction · session
 
 The orchestrator session restarted during the drift-refresh recon dispatch; the

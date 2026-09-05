@@ -108,6 +108,54 @@ oat_generated: false
 
 ---
 
+## Autonomy Gate Provenance
+
+- `IMPLEMENT-08` (subagent delegation): authorized once for this run for
+  `oat-phase-implementer` and `oat-reviewer` within the plan's bounded phase
+  and review scopes; native Claude Code Task dispatch (Tier 1). Operator
+  approval 2026-09-05 ("let it rip"), covering PR creation and merge by the
+  root orchestrator once required gates pass.
+- `IMPLEMENT-03` / `IMPLEMENT-04` (checkpoints): `oat_plan_hill_phases: ['p04']`
+  (final phase; `workflow.hillCheckpointDefault: final`) and
+  `oat_auto_review_at_hill_checkpoints: true` explicit in `plan.md`.
+- Dispatch policy preflight: `oat project dispatch-ceiling resolve --provider claude --preflight --task-class default-implementation --report-scope implementation-preflight --report-action implementation`
+  → `resolved`, managed / `high`, source `project-state`, value `opus`
+  (Task model argument mechanism).
+
+### Review Received: plan
+
+**Date:** 2026-09-05
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T224504Z.md
+(gate run `ace386d5-d88b-43e4-bccc-3fd12f3cc7ad`, target `codex-5-6-sol-xhigh`,
+threshold important, blocking)
+
+**Findings:** Critical 0, Important 1, Medium 1, Minor 1. Artifact review: no
+plan tasks created; all findings resolved in-artifact (auto-disposition, gate
+mode).
+
+**Disposition and verification records:**
+
+- `I1` Dispatch Profile embedded `claude → opus` → resolve_in_artifact. What:
+  removed the provider/model observation; profile now names only the managed
+  `high` policy. How: `rg -n 'claude|opus' plan.md` under `## Dispatch Profile`
+  returns nothing. Where: `plan.md` `## Dispatch Profile`; the historical
+  resolution stays as orchestration evidence in this file's Autonomy Gate
+  Provenance.
+- `M1` PR #190 count and overlap set → resolve_in_artifact. What: 228 → 217
+  files (`gh api repos/voxmedia/open-agent-toolkit/pulls/190` `changed_files`
+  = 217, head unchanged `63161897dd40a66e1b29cf19e286665895c40dde`); "seven
+  overlapping files" → six write-surface overlaps named, `cli-reference.md`
+  marked verify-only. How: `rg -n '228 files|seven overlapping' plan.md`
+  returns nothing; `rg -n '217 files' plan.md` returns one hit. Where:
+  `plan.md` Drift Refresh Record.
+- `m1` Abbreviated base SHA in the log → resolve_in_artifact. What:
+  append-only correction entry with the full SHA. How: `rg -n 'a1fd7cd41031719c4db85276fceee402f6045e9c' orchestration-log.md`
+  returns the correction entry. Where: `orchestration-log.md`.
+- Post-fix validation: `oat project validate-plan --project-path <project>` →
+  "Plan validation passed."
+
+**Next:** dispatch group 1 (p01, p02) via `oat-project-implement`.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
