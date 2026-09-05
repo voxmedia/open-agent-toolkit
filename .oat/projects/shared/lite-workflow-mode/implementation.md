@@ -151,6 +151,36 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Plan totals updated to 18 tasks. Gate re-run scheduled as attempt 2 of 2.
 
+#### Review Received: plan (gate, attempt 2 of 2) — gate attempts exhausted
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T141656Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run ff7adc88-ece9-4773-a263-47be33ba27db, blocked at threshold important
+**Findings:** Critical 0, Important 4, Medium 2, Minor 0
+
+The configured gate (`onFailure: block`, `maxAttempts: 2`) has exhausted its
+attempts. Per the quick-start Gate Execution contract the plan stays
+`in_progress` and is not handed to implementation without an explicit human
+decision. Accumulated feedback awaiting disposition:
+
+- I1: `oat-project-lite` has no autonomous decision contract. p04-t01 does
+  not add inventory entries for its interactive decisions (interview,
+  escalation, approval gate, dispatch policy, artifact-review disposition,
+  exit gate) or require `OAT_AUTONOMOUS=1` handling, so a headless lite run
+  can stop at an inventory-gap.
+- I2: The single-phase invariant is advisory. No validator or implement
+  preflight rejects a lite plan later edited to multiple phases, while
+  p05-t03 bypasses checkpoints purely from the mode value.
+- I3: p06-t01 omits the generated `apps/oat-docs/index.md`, which the docs
+  build regenerates and which must be committed with page title or
+  description changes.
+- I4: p06-t02 runs the full gate sequence before p06-t03 regenerates
+  provider views and edits implementation.md, so the recorded evidence does
+  not cover the terminal tree.
+- M1: p05-t01 Step 2 says "apply every change in design component 7", which
+  now overlaps p05-t03 and p05-t04.
+- M2: p05-t02, p05-t03, p05-t04 say "format the files" without the concrete
+  file-scoped `pnpm exec oxfmt --write <files>` command.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
