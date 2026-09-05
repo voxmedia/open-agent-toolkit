@@ -5151,7 +5151,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan-writing', '1.2.22'],
       ['oat-project-plan', '1.4.7'],
       ['oat-project-quick-start', '2.3.7'],
-      ['oat-project-import-plan', '1.4.11'],
+      ['oat-project-import-plan', '1.4.12'],
       ['oat-project-review-provide', '1.5.4'],
     ] as const;
 
@@ -6727,6 +6727,49 @@ describe('lite mode skill contracts', () => {
       tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
     );
     tempDirs.length = 0;
+  });
+
+  it('import-plan offers lite for single-phase plans and preserves import provenance', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+    const normalization = content.indexOf(
+      '### Step 3: Normalize Into Canonical OAT plan.md',
+    );
+    const offer = content.indexOf('### Step 3.5: Lite Offer');
+    const metadata = content.indexOf('### Step 4: Update Plan Metadata');
+    const offerSection = content.slice(offer, metadata);
+    const phaseGate = content.slice(
+      content.indexOf('### Step 4.25: Configure Optional Phase Gate Review'),
+      content.indexOf('### Step 4.5:'),
+    );
+    const stateWrite = content.slice(
+      content.indexOf('### Step 5: Update Project State'),
+      content.indexOf('### Step 5.5:'),
+    );
+
+    expect(normalization).toBeGreaterThanOrEqual(0);
+    expect(offer).toBeGreaterThan(normalization);
+    expect(metadata).toBeGreaterThan(offer);
+    expect(offerSection).toMatch(/exactly one `## Phase` heading/i);
+    expect(offerSection).toMatch(
+      /`oat_plan_parallel_groups`[\s\S]{0,100}empty/i,
+    );
+    expect(offerSection).toMatch(
+      /AskUserQuestion[\s\S]{0,180}lite[\s\S]{0,120}Recommended/i,
+    );
+    expect(offerSection).toMatch(
+      /single-phase plans can still be multi-session\s+work/i,
+    );
+    expect(offerSection).toMatch(
+      /Summary[\s\S]{0,220}Decisions[\s\S]{0,220}Assumptions[\s\S]{0,220}Out of Scope[\s\S]{0,220}Validation Criteria/i,
+    );
+    expect(phaseGate).toMatch(/lite offer was accepted[\s\S]{0,120}skip/i);
+    expect(stateWrite).toContain('oat_workflow_mode: lite');
+    expect(stateWrite).toContain('oat_workflow_origin: imported');
+    expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
+    expect(stateWrite).toContain('oat_plan_source: imported');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.12');
   });
 
   it('routes lite projects through progress and next', async () => {

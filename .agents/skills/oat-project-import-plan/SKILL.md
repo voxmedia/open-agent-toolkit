@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.11
+version: 1.4.12
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -221,6 +221,44 @@ Dispatch Profile import handling:
   effort preferences.
 - Do not generate Dispatch Profile recommendation rows during import.
 
+### Step 3.5: Lite Offer
+
+After normalization, count exact level-two phase headings. Offer lite only when
+the normalized plan has exactly one `## Phase` heading and
+`oat_plan_parallel_groups` is present as an empty list. Any additional phase or
+any declared parallel group keeps the project in import mode without an offer.
+
+When eligible, use AskUserQuestion with these choices:
+
+1. **Run as lite (Recommended)** — use the single authored plan contract and
+   collapsed single-phase lifecycle.
+2. **Keep import mode** — preserve the standard imported-plan lifecycle.
+
+State the tradeoff verbatim: "Single-phase plans can still be multi-session
+work; choose import mode when the author intentionally kept a longer-running
+project in one phase."
+
+If accepted, set an in-memory `LITE_OFFER_ACCEPTED=true` decision for the
+remaining steps and reshape `plan.md` into the `plan-lite.md` section order:
+
+1. Summary
+2. Decisions
+3. Assumptions
+4. Out of Scope
+5. Validation Criteria
+6. Parallelism
+7. the single Phase and its tasks
+8. Reviews, Implementation Complete, and References
+
+Lift Summary, Decisions, Assumptions, and Out of Scope from the external plan's
+prose when present. Where prose is absent, write an explicit assumption that
+names the missing source detail instead of leaving a template placeholder.
+Derive Validation Criteria from the tasks' verification steps and retain their
+commands or manual checks. Preserve the external source at
+`references/imported-plan.md`, keep `oat_plan_source: imported`, and preserve
+all `oat_import_*` fields; accepting lite changes execution mode, not import
+provenance.
+
 ### Step 4: Update Plan Metadata
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
@@ -290,6 +328,10 @@ After normalization has produced stable phase IDs and before Step 4.5 starts
 the import-aware plan artifact review, invoke the `Shared Phase Gate Review Setup
 Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
 same import step and inherits its result.
+
+When the Step 3.5 lite offer was accepted, skip Step 4.25 phase-gate setup
+entirely. Lite has one phase and no phase-gate prompts; continue directly to
+the import-aware plan artifact review while preserving imported provenance.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
 through the shared contract without probing, prompting, or mutation. Resumed or
@@ -386,8 +428,10 @@ them before stopping. Never expose a partially reviewed imported plan to
 
 Set `"$PROJECT_PATH/state.md"` frontmatter:
 
-- `oat_workflow_mode: import`
+- `oat_workflow_mode: lite` when `LITE_OFFER_ACCEPTED=true`; otherwise `oat_workflow_mode: import`
 - `oat_workflow_origin: imported`
+- preserve `oat_import_reference`, `oat_import_source_path`, `oat_import_provider`, and any other `oat_import_*` fields
+- keep `oat_plan_source: imported` in `plan.md` on both branches
 - `oat_phase: plan`
 - `oat_phase_status: complete`
 - `oat_current_task: null`
@@ -522,7 +566,7 @@ Report:
 - ✅ Canonical `plan.md` generated with OAT task structure.
 - ✅ `plan.md` metadata marks `oat_plan_source: imported`.
 - ✅ `plan.md` records the import-aware plan artifact review row unless `workflow.autoArtifactReview.plan` was explicitly disabled.
-- ✅ `state.md` marks `oat_workflow_mode: import`.
+- ✅ `state.md` marks `oat_workflow_mode: lite` when the single-phase lite offer was accepted, otherwise `import`; imported origin and `oat_import_*` provenance remain intact.
 - ✅ `implementation.md` is present and resumable.
 - ✅ `oat_plan_hill_phases` left unset in frontmatter (deferred to `oat-project-implement` Step 2.5).
 - ✅ `## Planning Checklist` items left unchecked (HiLL configuration deferred to implementation).
