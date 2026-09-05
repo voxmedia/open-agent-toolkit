@@ -31,15 +31,14 @@ import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
 import { dirExists, fileExists } from '@fs/io';
+import type { WorkflowMode } from '@open-agent-toolkit/control-plane';
 import { assertValidProjectStateContent } from '@validation/project-state';
-
-export type ProjectScaffoldMode = 'spec-driven' | 'quick' | 'import';
 
 export interface ScaffoldProjectOptions {
   repoRoot: string;
   projectName: string;
   scope?: ProjectScope;
-  mode?: ProjectScaffoldMode;
+  mode?: WorkflowMode;
   force?: boolean;
   setActive?: boolean;
   refreshDashboard?: boolean;
@@ -71,7 +70,7 @@ export type CommitScaffoldStatus =
   | 'failed';
 
 export interface ScaffoldProjectResult {
-  mode: ProjectScaffoldMode;
+  mode: WorkflowMode;
   scope: ProjectScope;
   projectsRoot: string;
   projectPath: string;
@@ -111,7 +110,9 @@ const DEFAULT_DEPENDENCIES: ScaffoldProjectDependencies = {
   setActiveProject,
 };
 
-const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
+type TemplateEntry = string | { source: string; target: string };
+
+const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
   'spec-driven': [
     'state.md',
     'discovery.md',
@@ -122,7 +123,19 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   ],
   quick: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
   import: ['state.md', 'plan.md', 'implementation.md'],
+  lite: [
+    'state.md',
+    { source: 'plan-lite.md', target: 'plan.md' },
+    'implementation.md',
+  ],
 };
+
+function normalizeTemplateEntry(entry: TemplateEntry): {
+  source: string;
+  target: string;
+} {
+  return typeof entry === 'string' ? { source: entry, target: entry } : entry;
+}
 
 const OAT_PLACEHOLDER_PATTERN = /(?<!\{)\{\s*(OAT_[A-Z0-9_]+)\s*\}(?!\})/g;
 
@@ -136,10 +149,7 @@ interface StateTemplateContent {
   nextMilestone: string;
 }
 
-const STATE_TEMPLATE_BY_MODE: Record<
-  ProjectScaffoldMode,
-  StateTemplateContent
-> = {
+const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
   'spec-driven': {
     hillCheckpoints: "['discovery', 'design']",
     phase: 'discovery',
@@ -202,6 +212,22 @@ const STATE_TEMPLATE_BY_MODE: Record<
     nextMilestone:
       'Run `oat-project-import-plan` to normalize the external plan',
   },
+  lite: {
+    hillCheckpoints: '[]',
+    phase: 'plan',
+    status: 'Plan',
+    currentPhase: 'Plan - Authoring a single-phase lite plan',
+    artifacts: [
+      '- **Plan:** `plan.md` (scaffolded lite template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded template — not started)',
+    ],
+    progress: [
+      '- ✓ Lite project scaffolded',
+      '- ✓ Plan and implementation artifacts scaffolded',
+      '- ⧗ Awaiting critical interview and plan authoring',
+    ],
+    nextMilestone: 'Run `oat-project-lite` to author and approve the plan',
+  },
 };
 
 function replaceOatPlaceholders(
@@ -251,12 +277,12 @@ function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
-function applyTemplateReplacements(
+export function applyTemplateReplacements(
   template: string,
   projectName: string,
   today: string,
   nowUtc: string,
-  mode: ProjectScaffoldMode,
+  mode: WorkflowMode,
 ): string {
   const stateContent = STATE_TEMPLATE_BY_MODE[mode];
   const oatReplacements = {
@@ -356,40 +382,40 @@ async function scaffoldModeTemplates(
   repoRoot: string,
   absoluteProjectPath: string,
   projectName: string,
-  mode: ProjectScaffoldMode,
+  mode: WorkflowMode,
   today: string,
   nowUtc: string,
 ): Promise<{ createdFiles: string[]; skippedFiles: string[] }> {
   const createdFiles: string[] = [];
   const skippedFiles: string[] = [];
 
-  for (const templateFile of TEMPLATES_BY_MODE[mode]) {
-    const src = await resolveTemplateSource(
-      userOatRoot,
-      repoRoot,
-      templateFile,
-    );
-    const dest = join(absoluteProjectPath, templateFile);
+  for (const entry of TEMPLATES_BY_MODE[mode]) {
+    const { source, target } = normalizeTemplateEntry(entry);
+    const src = await resolveTemplateSource(userOatRoot, repoRoot, source);
+    const dest = join(absoluteProjectPath, target);
 
     if (await fileExists(dest)) {
-      skippedFiles.push(templateFile);
+      skippedFiles.push(target);
       continue;
     }
 
     const template = await readFile(src, 'utf8');
-    const rendered = applyTemplateReplacements(
+    let rendered = applyTemplateReplacements(
       template,
       projectName,
       today,
       nowUtc,
       mode,
     );
-    assertNoUnresolvedOatPlaceholders(rendered, templateFile);
-    if (templateFile === 'state.md') {
+    if (mode === 'lite' && target === 'plan.md') {
+      rendered = rendered.replace(/^---\n/, '---\noat_template: true\n');
+    }
+    assertNoUnresolvedOatPlaceholders(rendered, source);
+    if (target === 'state.md') {
       assertValidProjectStateContent(rendered, { filePath: dest });
     }
     await writeFile(dest, rendered, 'utf8');
-    createdFiles.push(templateFile);
+    createdFiles.push(target);
   }
 
   return { createdFiles, skippedFiles };
@@ -418,7 +444,7 @@ async function scaffoldProjectLog(
   return 'created';
 }
 
-async function resolveTemplateSource(
+export async function resolveTemplateSource(
   userOatRoot: string,
   repoRoot: string,
   templateFile: string,
@@ -439,7 +465,7 @@ async function resolveTemplateSource(
 
 async function ensureStructure(
   absoluteProjectPath: string,
-  mode: ProjectScaffoldMode,
+  mode: WorkflowMode,
 ): Promise<void> {
   await mkdir(absoluteProjectPath, { recursive: true });
   await mkdir(join(absoluteProjectPath, 'reviews'), { recursive: true });

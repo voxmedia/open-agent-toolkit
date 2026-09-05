@@ -36,6 +36,7 @@ const PROJECT_TEMPLATE_NAMES = [
   'spec.md',
   'design.md',
   'plan.md',
+  'plan-lite.md',
   'implementation.md',
   'project-log.md',
 ] as const;
@@ -72,6 +73,7 @@ async function seedTemplates(repoRoot: string): Promise<void> {
     'spec.md',
     'design.md',
     'plan.md',
+    'plan-lite.md',
     'implementation.md',
     'project-index.md',
     'project-log.md',
@@ -1186,6 +1188,30 @@ describe('scaffoldProject', () => {
     ).resolves.toContain('# Implementation Plan: bundled-floor');
   });
 
+  it('uses the bundled lite template when neither installed tier exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await rm(join(repoRoot, '.oat', 'templates'), {
+      recursive: true,
+      force: true,
+    });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'bundled-lite-floor',
+      mode: 'lite',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+
+    await expect(
+      readFile(join(repoRoot, result.projectPath, 'plan.md'), 'utf8'),
+    ).resolves.toContain('## Validation Criteria');
+  });
+
   it('resolves partial template tiers independently for every file', async () => {
     const repoRoot = await createRepoRoot();
     const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
@@ -1264,6 +1290,7 @@ describe('scaffoldProject', () => {
     },
     { mode: 'quick' as const, hillCheckpoints: [], phase: 'discovery' },
     { mode: 'import' as const, hillCheckpoints: [], phase: 'plan' },
+    { mode: 'lite' as const, hillCheckpoints: [], phase: 'plan' },
   ])(
     'renders every real $mode scaffold artifact without unresolved OAT placeholders',
     async ({ mode, hillCheckpoints, phase }) => {
@@ -1785,6 +1812,83 @@ describe('scaffoldProject', () => {
     expect(state).toContain(
       'Run `oat-project-import-plan` to normalize the external plan',
     );
+  });
+
+  it('creates lite mode artifacts only from the lite plan template', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'lite-mode',
+      mode: 'lite',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    expect(result.createdFiles).toEqual([
+      'state.md',
+      'plan.md',
+      'implementation.md',
+    ]);
+    const projectRoot = join(repoRoot, result.projectPath);
+    for (const file of ['state.md', 'plan.md', 'implementation.md']) {
+      await expect(
+        readFile(join(projectRoot, file), 'utf8'),
+      ).resolves.toBeDefined();
+    }
+    for (const file of ['discovery.md', 'spec.md', 'design.md']) {
+      await expect(readFile(join(projectRoot, file), 'utf8')).rejects.toThrow();
+    }
+
+    const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
+    expect(plan).toContain('## Validation Criteria');
+    expect(plan).toContain('oat_template: true');
+
+    const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    expect(state).toContain('oat_workflow_mode: lite');
+    expect(state).toContain('oat_phase: plan');
+    expect(state).toContain('- **Plan:** `plan.md`');
+    expect(state).toContain('- **Implementation:** `implementation.md`');
+    expect(state).not.toContain('- **Discovery:**');
+    expect(state).toContain('Run `oat-project-lite`');
+  });
+
+  it.each([
+    {
+      mode: 'spec-driven' as const,
+      expected: [
+        'state.md',
+        'discovery.md',
+        'spec.md',
+        'design.md',
+        'plan.md',
+        'implementation.md',
+      ],
+    },
+    {
+      mode: 'quick' as const,
+      expected: ['state.md', 'discovery.md', 'plan.md', 'implementation.md'],
+    },
+    {
+      mode: 'import' as const,
+      expected: ['state.md', 'plan.md', 'implementation.md'],
+    },
+  ])('preserves the $mode created file list', async ({ mode, expected }) => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: `unchanged-${mode}`,
+      mode,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    expect(result.createdFiles).toEqual(expected);
   });
 
   it('does not reject when refreshDashboardCallback throws', async () => {
