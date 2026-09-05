@@ -260,6 +260,30 @@ Activities and Success Criteria updated and asserted; M2 → p02-t03 makes
 generate.ts unconditional with a lite-to-pr-final assertion. Design
 components 5 and 6 updated for the ordering and refusal.
 
+#### Review Received: plan (gate, third user-override run)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T181952Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 6fa8b8ba-a09c-4168-8adc-6d2ce707dd74, blocked at threshold important
+**Findings:** Critical 0, Important 3, Medium 2, Minor 0
+
+Confirms the prior four resolved. Remaining, awaiting user disposition:
+
+- I1: the template-content refusal added in the previous round makes
+  `oat_template: true` alone a promote refusal, but plan-lite.md scaffolds
+  with that flag and the lite skill does not clear it before the escalation
+  check, so the planned happy path is contradictory. Readiness must key off
+  the authored sections, not the flag.
+- I2: the phase implementer's lite Artifact Reads bullet reads only the
+  phase section, so a dispatched implementer never sees Summary, Decisions,
+  Assumptions, Out of Scope, or Validation Criteria.
+- I3: the lite skill's only commit is after the gate; `oat gate review`
+  refuses a modified or untracked core-artifact baseline. A scoped commit is
+  needed before every pause and before Gate Execution.
+- M1: the reviewer's lite requirement source omits Assumptions and Out of
+  Scope.
+- M2: sync runs before the lockstep bump, leaving `.oat/sync/manifest.json`
+  version-stale; p06-t03 must rerun sync after the bump.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
