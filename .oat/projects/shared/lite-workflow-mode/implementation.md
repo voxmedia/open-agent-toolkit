@@ -128,6 +128,29 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 <!-- orchestration-runs-end -->
 
+### Run 1 — 2026-09-05
+
+**Branch:** `simple-project`
+**Tier:** Tier 1 — subagents
+**Dispatch policy:** managed `high` (Codex)
+**Schedule:** `p01` → parallel `p02 + p03` → `p04` → `p05` → `p06`
+
+#### Dispatch Records
+
+- **p01 implementation:** accepted request `lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47`; durable record `dispatch/lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47.json`; target `oat-phase-implementer-gpt-5-6-sol-medium`; returned `DONE` at `3427d2176a86b3f6a95219f6557b4d4798a6f1a2`; independent phase review pending.
+- Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-medium`).
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Phase Outcomes
+
+| Phase | Implementation | Review  | Fix Loops | Outcome        |
+| ----- | -------------- | ------- | --------- | -------------- |
+| p01   | DONE (4/4)     | pending | 0         | pending review |
+
+#### Outstanding Items
+
+- Independent root-owned review for `p01`.
+
 ---
 
 ## Implementation Log
