@@ -349,6 +349,22 @@ because each round's fixes land in one commit.
   bypass of summary/document/retro and the body's source.
 - m1 → resolved: forced-Turbo comment corrected.
 
+#### Review Received: plan (gate run 10)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T200630Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 598b9999-1a5c-4a5e-8238-aea6d521f04e, blocked (2 Important, 2 Medium)
+
+- I1 → resolved: p05-t01's review-provide change now covers every
+  mode-sensitive branch and passes `workflow_mode` explicitly in the Review
+  Scope payload, with artifact-plan and code-final contract tests.
+- I2 → resolved: p02-t02 adds `oat-project-lite` to the dashboard's Quick
+  Commands entry list with a no-project assertion.
+- M1 → resolved: p04-t01 adds the project-start-preflight and
+  post-implement-sequence contract suites and requires the skill to carry
+  the exact testable preflight and gate clauses.
+- M2 → resolved: p04-t01 adds `oat-doctor`'s workflow-pack inventory with
+  bump and pin.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
