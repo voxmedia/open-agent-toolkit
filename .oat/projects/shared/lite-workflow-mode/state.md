@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06-t01
-oat_last_commit: 1612122f03d605b9062f7b50b0806b1882f87714
+oat_last_commit: 3e250f86c64ffa424467a066ef1664d4465fea50
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -86,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:59:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T23:05:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -118,7 +118,8 @@ Phase 4 - Lite Entry Skill and End-to-End Test
 - ✓ `p04-t02` end-to-end coverage and Phase 4 verification complete
 - ✓ Phase 4 independently reviewed with no findings
 - ✓ Phase 5 implementation and verification complete
-- ⧗ p05 fix loop 1 in progress for 3 Important and 2 Medium findings
+- ✓ p05 fix loop 1 resolved 3 Important and 2 Medium findings
+- ⧗ Independent p05 re-review pending
 
 ## Blockers
 
@@ -126,4 +127,4 @@ None.
 
 ## Next Milestone
 
-Complete p05 fix loop 1 and run independent re-review.
+Run and disposition independent p05 re-review 1.
