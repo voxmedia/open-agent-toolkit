@@ -1,8 +1,7 @@
 ---
 oat_current_task: p06-t01
-oat_last_commit: 3e250f86c64ffa424467a066ef1664d4465fea50
-oat_blockers:
-  - p06 invalid-run abort awaiting explicit relaunch authorization
+oat_last_commit: 8a6df9515a678fc2f3c3e3e2c1d2c6551471b7bb
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T23:18:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T23:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -127,11 +126,11 @@ Phase 6 - Documentation, Provider Sync, Smoke Run, and Release Gates
 
 ## Blockers
 
-- Phase p06 dispatch `lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a`
-  terminated before edits because its recorded phase base preceded the launch
-  journal commit. Relaunch requires explicit authorization.
+None. The user explicitly authorized one corrected Phase 6 relaunch on
+2026-09-05 after dispatch `lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a`
+terminated before edits.
 
 ## Next Milestone
 
-After explicit authorization, create a corrected p06 dispatch whose phase base
-equals the accepted launch HEAD, then implement and independently review Phase 6.
+Create the corrected p06 dispatch from the committed authorization baseline,
+then implement and independently review Phase 6.

@@ -365,6 +365,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-05
 
+#### p06 corrected relaunch authorized
+
+The user explicitly authorized one corrected Phase 6 relaunch after the prior
+`INVALID_RUN_ABORT`. The replacement retains the exact managed-high Codex
+target and hard-reasoning classification, and must use the committed
+authorization baseline as both `phase_base_head` and `expected_base_sha`.
+
 #### p06 invalid-run abort before implementation
 
 **Dispatch:** `lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a`
