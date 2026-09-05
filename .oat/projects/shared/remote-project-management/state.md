@@ -41,8 +41,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p06:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p06-recovery-01-read-verification-20260905
+        original_request: p06-implementation-20260905-50d46710b
+        original_task: p06-t01
+        original_commit: 4e234aafe80f75cc5cd14685ecf6403f08cb4eaa
+        discovered_by: phase-wide self-review after focused and full remote verification
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: b16811bc5d2105b0055a576144831488a1382c6d
+        status: pending
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
