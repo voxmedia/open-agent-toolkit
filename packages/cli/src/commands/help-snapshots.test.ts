@@ -1225,7 +1225,7 @@ describe('help output snapshots', () => {
 
       Options:
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
-                            default: "spec-driven")
+                            "lite", default: "spec-driven")
         --scope <scope>     Project scope (choices: "shared", "local", "synced")
         --force             Allow a duplicate slug in another scope; scaffold remains
                             non-destructive
