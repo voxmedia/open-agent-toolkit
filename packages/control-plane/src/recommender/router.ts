@@ -206,7 +206,10 @@ function getPostImplementationRecommendation(
   const summaryArtifact = state.artifacts.find(
     (artifact) => artifact.type === 'summary',
   );
-  if (!summaryArtifact || summaryArtifact.status !== 'complete') {
+  if (
+    state.workflowMode !== 'lite' &&
+    (!summaryArtifact || summaryArtifact.status !== 'complete')
+  ) {
     return {
       skill: 'oat-project-summary',
       reason: 'Final review passed but summary is not complete',
@@ -216,7 +219,10 @@ function getPostImplementationRecommendation(
   if (state.phaseStatus !== 'pr_open') {
     return {
       skill: 'oat-project-pr-final',
-      reason: 'Summary is complete and the final PR has not been opened',
+      reason:
+        state.workflowMode === 'lite'
+          ? 'Final review passed; lite mode synthesizes the PR from plan and implementation'
+          : 'Summary is complete and the final PR has not been opened',
     };
   }
 

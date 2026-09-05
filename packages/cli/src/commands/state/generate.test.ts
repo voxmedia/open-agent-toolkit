@@ -362,6 +362,43 @@ describe('generateStateDashboard', () => {
     expect(liteComplete.recommendedStep).toBe('oat-project-implement');
   });
 
+  it('routes lite implement closeout directly to pr-final without documentation', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/closeout-proj';
+
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'implement',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'lite',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+    await writeLocalConfig(root, { activeProject: projectPath });
+
+    const lite = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-17',
+      git: mockGit,
+    });
+    expect(lite.recommendedStep).toBe('oat-project-pr-final');
+
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'implement',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+
+    const quick = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-17',
+      git: mockGit,
+    });
+    expect(quick.recommendedStep).toBe('oat-project-document');
+  });
+
   it('lists multiple available projects', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

@@ -434,6 +434,12 @@ function computeNextStep(
 
   // Implementation complete — recommend docs sync if not yet done, then PR
   if (state.phase === 'implement' && state.phaseStatus === 'complete') {
+    if (state.workflowMode === 'lite') {
+      return {
+        step: 'oat-project-pr-final',
+        reason: 'Generate final PR description from plan and implementation',
+      };
+    }
     if (!state.docsUpdated || state.docsUpdated === '') {
       return {
         step: 'oat-project-document',

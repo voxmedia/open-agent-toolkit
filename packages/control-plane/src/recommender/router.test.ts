@@ -457,6 +457,42 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-summary');
   });
 
+  it('routes lite passed final review without summary directly to pr-final', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'lite',
+      reviews: [makeReview({ scope: 'final', status: 'passed' })],
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: false,
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-pr-final',
+      reason:
+        'Final review passed; lite mode synthesizes the PR from plan and implementation',
+    });
+  });
+
+  it('keeps quick passed final review without summary on the summary route', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
+      reviews: [makeReview({ scope: 'final', status: 'passed' })],
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: false,
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-summary');
+  });
+
   it('routes to pr-final when summary is complete and no PR is open', () => {
     const state = makeState({
       phase: 'implement',
