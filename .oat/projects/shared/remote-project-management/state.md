@@ -1,7 +1,10 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: cfccc8a3ad837350be33fb03faeb451463bd61ed
-oat_blockers: []
+oat_current_task: null
+oat_last_commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+oat_blockers:
+  [
+    'Phase 7 production command routing requires operator-authorized recovery scope expansion into service.ts and service.test.ts',
+  ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -49,7 +52,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T23:18:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T23:29:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,10 +64,13 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 7 — Cross-Provider Convergence and Recovery. Phase 6 passed final normal
-review round 3 with zero findings at `cfccc8a3a`; Jira passed 59/59 and remote
-passed 603/603. Phase 6 is complete after 3/3 reviews and 2/3 fix loops.
-`p07-t01` is next.
+Phase 7 — Cross-Provider Convergence and Recovery. All 10 tasks are committed
+through `390f21157`; union 165/165, remote 665/665, and smoke 141/141 pass.
+Phase-wide production-dispatch inspection found that the new commands fall
+through to shared-storage handling and lack production store bridges. Recovery
+requires operator authorization to expand into `service.ts` and
+`service.test.ts`; no attempt has been consumed and Phase 7 review has not
+started.
 
 ## Artifacts
 
@@ -72,7 +78,7 @@ passed 603/603. Phase 6 is complete after 3/3 reviews and 2/3 fix loops.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 7 started)
+- **Implementation:** implementation.md (blocked; Phase 7 recovery direction required)
 
 ## Progress
 
@@ -199,14 +205,21 @@ passed 603/603. Phase 6 is complete after 3/3 reviews and 2/3 fix loops.
   and remote passed 603/603
 - ✓ Final normal Phase 6 review round 3 passed with zero findings
 - ✓ Phase 6 completed after 3/3 reviews and 2/3 fix loops
-- ⧗ Phase 7 started; `p07-t01` is next
+- ✓ Phase 7 tasks `p07-t01` through `p07-t10` completed in 10 ordered commits
+- ✓ Phase 7 union passed 165/165, remote passed 665/665, and smoke passed 141/141
+- ⚠ Phase 7 production-dispatch self-review found a composition defect
+- ⛔ Phase 7 recovery requires operator-authorized expansion into `service.ts`
+  and `service.test.ts`; usage remains 0/10 and no edit was made
 
 ## Blockers
 
-No active implementation blocker. The branch-level lockstep version gate
-remains preserved for planned `p08-t05` release work.
+Phase 7 is blocked on operator direction for the production-routing recovery
+scope. The branch-level lockstep version gate remains preserved for planned
+`p08-t05` release work.
 
 ## Next Milestone
 
-Implement `p07-t01` and continue Phase 7 in plan order through `p07-t10`, then
-run the configured phase review contract before beginning Phase 8.
+Authorize or decline one bounded same-target Phase 7 recovery that adds
+production dispatch/store bridges and tests in `service.ts`, `service.test.ts`,
+and the existing Phase 7 modules. Phase review follows only after recovery
+passes.

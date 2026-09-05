@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase 7 production command routing requires an operator-authorized recovery scope expansion into service.ts and service.test.ts.
 oat_last_updated: 2026-09-05
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,20 +25,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | completed   | 9     | 9/9       |
-| Phase 6    | completed   | 10    | 10/10     |
-| Phase 7    | in_progress | 10    | 0/10      |
-| Phase 8    | pending     | 6     | 0/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | blocked   | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | completed | 10    | 10/10     |
+| Phase 7    | blocked   | 10    | 10/10     |
+| Phase 8    | pending   | 6     | 0/6       |
+| Revision 1 | blocked   | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
 
-**Total:** 68/84 tasks completed
+**Total:** 78/84 tasks completed
 
 ---
 
@@ -1024,7 +1025,9 @@ zero findings after fix loop 3/3.
 
 ## Phase 7: Cross-Provider Convergence and Recovery
 
-**Status:** in progress — `p07-t01` is next.
+**Status:** blocked — all ten planned tasks are committed, but phase-wide
+production-dispatch self-review found a composition defect that requires an
+operator-authorized file-boundary expansion before recovery.
 **Started:** 2026-09-05
 
 ### Phase Boundary
@@ -1036,6 +1039,44 @@ zero findings after fix loop 3/3.
   end-to-end command workflows.
 - The approved provider-neutral privacy and host-discovery contract remains
   unchanged. Release/version gates remain deferred to Phase 8.
+
+### Task Commits
+
+- `p07-t01` — `777b69d362a12f69ca39a66c1afe278014993ef9`
+- `p07-t02` — `7827d51d07af344517620f8646216cfdc0fdf253`
+- `p07-t03` — `e2ebb6fa0b22aea261a9f48808c53e97cd28901e`
+- `p07-t04` — `fc3188bd7fd6f27f2e90cf864f43ff135ae7262e`
+- `p07-t05` — `18ba5f44e544fee6a55d3f4d6dc2c4ccaf666236`
+- `p07-t06` — `2149457a8423007c1adf0e25276987a3ca583e5a`
+- `p07-t07` — `6705410c1d8fcf2390c42703f6f8ad78a03f5a2e`
+- `p07-t08` — `2829f8dcfa797d533f155ee61112d3925ba09a14`
+- `p07-t09` — `b292ecb38d275f3730405d62d77730cd1200496d`
+- `p07-t10` — `390f21157181e2b5cfd5d83ad582ed0aa00bba60`
+
+### Recovery Event p07-recovery-01-production-command-routing-20260905
+
+- Phase/task: p07 / p07-t10
+- Original request: p07-implementation-20260905-2dfc9275c
+- Original commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+- Defect class: composition
+- Discovered by: phase-wide production-dispatch self-review
+- Disposition: direction-required
+- Authorization: operator changed-scope authorization required
+- Attempt: 0/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: -
+- Verification: focused union 165/165; remote 665/665; full smoke 141/141;
+  scoped smoke 1/1; CLI lint, type-check, build, format, diff, file-boundary,
+  and provider-neutrality checks passed, but production dispatcher inspection
+  failed.
+- Reason: `index.ts` registers closeout, discussion, resolution, doctor, and
+  migration through `createProductionRemoteRunner()`, while `service.ts`
+  dispatches only the pre-Phase-7 operations and otherwise falls through to
+  shared-storage handling. Production store bridges are absent. Correcting the
+  composition requires `service.ts` and `service.test.ts`, outside the declared
+  Phase 7 task boundary.
+- Ledger: no attempt was reserved, no recovery edit occurred, usage remains
+  0/10, and `pending_attempt` remains null.
 
 ---
 
@@ -2103,6 +2144,66 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   zero findings at `cfccc8a3a`; Jira passed 59/59, remote passed 603/603, and
   all requested static and boundary checks passed. Phase 6 completed after 3/3
   reviews and 2/3 fix loops; `p07-t01` is next.
+
+### Run 10 — Phase p07
+
+```yaml
+request_id: p07-implementation-20260905-2dfc9275c
+caller: oat-project-implement
+scope: p07
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+phase_base_head: 2dfc9275c28875fc614dad941df8cb7022db7cb3
+phase_head: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+task_commits:
+  - 777b69d362a12f69ca39a66c1afe278014993ef9
+  - 7827d51d07af344517620f8646216cfdc0fdf253
+  - e2ebb6fa0b22aea261a9f48808c53e97cd28901e
+  - fc3188bd7fd6f27f2e90cf864f43ff135ae7262e
+  - 18ba5f44e544fee6a55d3f4d6dc2c4ccaf666236
+  - 2149457a8423007c1adf0e25276987a3ca583e5a
+  - 6705410c1d8fcf2390c42703f6f8ad78a03f5a2e
+  - 2829f8dcfa797d533f155ee61112d3925ba09a14
+  - b292ecb38d275f3730405d62d77730cd1200496d
+  - 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+launch_status: accepted
+child_outcome: direction-required
+continuation_events:
+  - p07-recovery-01-production-command-routing-20260905
+recovery_usage: 0/10
+pending_attempt: null
+review_rounds: 0/3
+fix_loops: 0/3
+phase_outcome: composition_defect_direction_required
+```
+
+**Implementation dispatch:** Dispatch: scope=p07 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- Ten ordered task commits remain immutable and within their declared task
+  boundaries.
+- Automated verification passed at union 165/165, remote 665/665, full smoke
+  141/141, and scoped smoke 1/1, with lint, types, build, format, diff,
+  file-boundary, and provider-neutrality checks passing.
+- Phase-wide production-dispatch inspection found that the new command surface
+  is not routed through production services. The implementer stopped before
+  recovery reservation or edit because the correction requires a non-mechanical
+  scope expansion into `service.ts` and `service.test.ts`.
+- Recovery usage remains 0/10 with no pending attempt. Phase review has not
+  started.
 
 <!-- orchestration-runs-end -->
 
