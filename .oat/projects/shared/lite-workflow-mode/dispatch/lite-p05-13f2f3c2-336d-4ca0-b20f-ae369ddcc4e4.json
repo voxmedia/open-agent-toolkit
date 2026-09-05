@@ -42,7 +42,7 @@
     "parallel_group": []
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p05",
     "native-spawn-accepted",

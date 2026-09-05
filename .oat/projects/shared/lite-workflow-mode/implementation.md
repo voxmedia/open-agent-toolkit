@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | complete  | 4     | 4/4       |
+| Phase 2 | complete  | 3     | 3/3       |
+| Phase 3 | complete  | 3     | 3/3       |
+| Phase 4 | complete  | 2     | 2/2       |
+| Phase 5 | in review | 4     | 4/4       |
+| Phase 6 | pending   | 3     | 0/3       |
 
-**Total:** 12/19 tasks completed
+**Total:** 16/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -259,6 +259,48 @@ this bounded adaptation, so no plan rewrite is required.
 
 ---
 
+## Phase 5: Mode-Aware Skills and Import-to-Lite Offer
+
+**Status:** in review
+**Started:** 2026-09-05
+
+### Phase Summary
+
+Added lite-aware branches across project entry, progress, review, agent,
+autonomous, import, checkpoint, and closeout contracts. Single-phase imports can
+opt into lite while preserving import provenance; lite implementation skips HiLL
+pauses but retains phase/final reviews; default closeout proceeds directly to PR.
+
+### Task p05-t01: Add lite branches to mode-aware skills
+
+**Status:** completed
+**Commit:** 18a52d3d15901ffd459639bdcd2e5180414c4772
+**Verification:** RED exposed seven mode-contract gaps; GREEN passed 231/231
+focused tests, skill validation, bump checks, lint, and format.
+
+### Task p05-t02: Offer lite for single-phase imported plans
+
+**Status:** completed
+**Commit:** 235e213c056f0cc715fd48fe76130638b0e018a4
+**Verification:** Targeted and full skill tests passed; imported origin, plan
+source, and all import provenance fields remain explicit.
+
+### Task p05-t03: Bypass implementation checkpoint prompts for lite projects
+
+**Status:** completed
+**Commit:** 3bc966e6f09c758582e08ff064fa3e445274103e
+**Verification:** Lite bypass tests, skill validation, bump checks, lint, and
+format passed; per-phase and final review remain required.
+
+### Task p05-t04: Collapse the post-implementation path for lite
+
+**Status:** completed
+**Commit:** 1612122f03d605b9062f7b50b0806b1882f87714
+**Verification:** Default `[pr]`, lite-specific summary/document opt-ins, no
+retro, and reduced-artifact closeout paths passed the full contract suite.
+
+---
+
 ---
 
 ## Orchestration Runs
@@ -298,19 +340,23 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p04 review:** accepted request `lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117`; durable record `dispatch/lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p04-review-2026-09-05T223510Z.md`; verdict passed with no findings.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
+- **p05 implementation:** accepted request `lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4`; durable record `dispatch/lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `1612122f03d605b9062f7b50b0806b1882f87714` with four task commits and no recovery attempts.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
+- Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review | Fix Loops | Outcome |
-| ----- | -------------- | ------ | --------- | ------- |
-| p01   | DONE (4/4)     | passed | 0         | pass    |
-| p02   | DONE (3/3)     | passed | 1         | pass    |
-| p03   | DONE (3/3)     | passed | 1         | pass    |
-| p04   | DONE (2/2)     | passed | 0         | pass    |
+| Phase | Implementation | Review  | Fix Loops | Outcome   |
+| ----- | -------------- | ------- | --------- | --------- |
+| p01   | DONE (4/4)     | passed  | 0         | pass      |
+| p02   | DONE (3/3)     | passed  | 1         | pass      |
+| p03   | DONE (3/3)     | passed  | 1         | pass      |
+| p04   | DONE (2/2)     | passed  | 0         | pass      |
+| p05   | DONE (4/4)     | pending | 0         | in-review |
 
 #### Outstanding Items
 
-- Next schedule entry: `p05`.
+- Independent p05 review is next; p06 starts only after a passing disposition.
 
 ---
 
