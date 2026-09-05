@@ -44,7 +44,7 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p04-recovery2",
     "operator-authorized-recovery-attempt-2",

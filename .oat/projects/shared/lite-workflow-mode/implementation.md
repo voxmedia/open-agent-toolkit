@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p04 recovery attempt 1 failed; attempt 2 requires operator direction
+oat_blockers: []
 oat_last_updated: 2026-09-05
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -260,6 +259,26 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-05
+
+#### p04 recovery attempt 2 completed
+
+### Recovery Event p04-recovery-2-bundled-autonomy-inventory
+
+- Phase/task: p04 / p04-t01
+- Original request: lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36
+- Original commit: 6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d
+- Defect class: composition
+- Discovered by: `HOME=$(mktemp -d) pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli`
+- Disposition: recovered
+- Authorization: operator-extension
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 479d2f1a1c0ebbe3e64445d3af14d5bcde3e18b1
+- Verification: both focused commands passed before and after commit; the isolated-HOME uncached CLI suite passed before and after commit with 328 files and 5,503 tests
+- Reason: added the traveling skill-local autonomy-contract reference, matching symlink, and required wildcard inventory mapping within the operator-authorized bounded scope.
+
+**Settled ledger:** attempt 2 is validated with `used_attempts: 2` and
+`pending_attempt: null`. The Phase 4 blocker is cleared; resume `p04-t02`.
 
 #### p04 recovery attempt 1 failed safely
 
