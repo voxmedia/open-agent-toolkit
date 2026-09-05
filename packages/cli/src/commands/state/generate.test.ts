@@ -362,6 +362,46 @@ describe('generateStateDashboard', () => {
     expect(liteComplete.recommendedStep).toBe('oat-project-implement');
   });
 
+  it('routes only promoted quick discovery completion back through quick-start', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/promoted-quick';
+    await writeLocalConfig(root, { activeProject: projectPath });
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'discovery',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+      oat_ready_for: 'oat-project-quick-start',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+
+    const promoted = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-09-05',
+      git: mockGit,
+    });
+    expect(promoted.recommendedStep).toBe('oat-project-quick-start');
+    expect(promoted.recommendedReason).toBe(
+      'Continue the promoted quick workflow',
+    );
+
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'discovery',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+      oat_ready_for: 'null',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+    const ordinary = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-09-05',
+      git: mockGit,
+    });
+    expect(ordinary.recommendedStep).toBe('oat-project-plan');
+  });
+
   it('routes lite implement closeout directly to pr-final without documentation', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);

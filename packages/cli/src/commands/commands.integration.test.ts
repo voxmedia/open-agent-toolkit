@@ -1,3 +1,4 @@
+import { execFile as execFileCallback } from 'node:child_process';
 import {
   lstat,
   mkdir,
@@ -9,13 +10,17 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import { createProgram } from '@app/create-program';
 import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
 import { resolveAssetsRoot } from '@fs/assets';
+import { getProjectState } from '@open-agent-toolkit/control-plane';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { registerCommands } from './index';
+
+const execFile = promisify(execFileCallback);
 
 // Commands that accept --scope as a local option. Only these get the
 // auto-injected `--scope project` in the integration helper so that
@@ -44,6 +49,80 @@ async function createWorkspace(): Promise<string> {
   await mkdir(join(root, '.cursor'), { recursive: true });
   await mkdir(join(root, '.codex'), { recursive: true });
   return root;
+}
+
+async function initializeGitRepository(root: string): Promise<void> {
+  await execFile('git', ['init', '--quiet'], { cwd: root });
+  await execFile('git', ['config', 'user.name', 'OAT Integration Test'], {
+    cwd: root,
+  });
+  await execFile('git', ['config', 'user.email', 'oat-test@example.invalid'], {
+    cwd: root,
+  });
+}
+
+function replaceMarkdownSection(
+  content: string,
+  heading: string,
+  body: string,
+): string {
+  const marker = `## ${heading}`;
+  const headingStart = content.indexOf(marker);
+  const bodyStart = headingStart + marker.length;
+  const nextHeading = content.indexOf('\n## ', bodyStart);
+  expect(headingStart, `${marker} exists`).toBeGreaterThanOrEqual(0);
+  expect(nextHeading, `${marker} has a following section`).toBeGreaterThan(
+    bodyStart,
+  );
+  return `${content.slice(0, bodyStart)}\n\n${body.trim()}\n${content.slice(nextHeading)}`;
+}
+
+async function authorLitePlan(projectPath: string): Promise<string> {
+  const planPath = join(projectPath, 'plan.md');
+  let plan = await readFile(planPath, 'utf8');
+  for (const [heading, body] of [
+    ['Summary', 'Ship the exact lite workflow behavior.'],
+    ['Decisions', '- Keep promotion mechanical and lossless.'],
+    ['Assumptions', '- The bundle tier is the template source.'],
+    ['Out of Scope', '- Spec-driven planning.'],
+    [
+      'Validation Criteria',
+      '- [ ] The promoted discovery preserves every interview answer — Check: `pnpm test`',
+    ],
+  ] as const) {
+    plan = replaceMarkdownSection(plan, heading, body);
+  }
+  plan = plan.replace(
+    /^## Phase 1:[\s\S]*?(?=^## Reviews$)/m,
+    [
+      '## Phase 1: Implement Lite Behavior',
+      '',
+      '### Task p01-t01: Preserve authored answers',
+      '',
+      '**Files:**',
+      '',
+      '- Modify: `src/lite.ts`',
+      '',
+      '**Step 1: Implement**',
+      '',
+      'Preserve the authored lite answers during promotion.',
+      '',
+      '**Step 2: Verify**',
+      '',
+      'Run: `pnpm test`',
+      'Expected: pass',
+      '',
+      '**Step 3: Commit**',
+      '',
+      '```bash',
+      'git add src/lite.ts',
+      'git commit -m "feat(p01-t01): preserve lite answers"',
+      '```',
+      '',
+    ].join('\n'),
+  );
+  await writeFile(planPath, plan, 'utf8');
+  return plan;
 }
 
 async function runCli(
@@ -952,6 +1031,213 @@ describe('CLI command integration', () => {
     expect(state).toContain(
       'Complete discovery and generate a quick implementation plan',
     );
+  });
+
+  it('project new creates lite-mode scaffold artifacts and routes to oat-project-lite', async () => {
+    const root = await createWorkspace();
+    const isolatedHome = await mkdtemp(join(tmpdir(), 'oat-cli-lite-home-'));
+    tempDirs.push(root, isolatedHome);
+    const previousHome = process.env.HOME;
+    process.env.HOME = isolatedHome;
+
+    try {
+      const scaffold = await runCli(root, [
+        'project',
+        'new',
+        'lite-route',
+        '--mode',
+        'lite',
+        '--scope',
+        'shared',
+        '--no-dashboard',
+        '--no-commit',
+      ]);
+      expect(scaffold.exitCode).toBe(0);
+
+      const refresh = await runCli(root, ['state', 'refresh']);
+      expect(refresh.exitCode).toBe(0);
+      const dashboard = await readFile(join(root, '.oat', 'state.md'), 'utf8');
+      expect(dashboard).toContain('| Mode | lite |');
+      expect(dashboard).toContain(
+        '**oat-project-lite** - Continue lite planning',
+      );
+
+      const projectPath = join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'lite-route',
+      );
+      const scaffoldedPlan = await readFile(
+        join(projectPath, 'plan.md'),
+        'utf8',
+      );
+      expect(scaffoldedPlan).toContain('oat_template: true');
+      expect((await getProjectState(projectPath)).recommendation.skill).toBe(
+        'oat-project-lite',
+      );
+
+      const authoredPlan = await authorLitePlan(projectPath);
+      expect(authoredPlan).toContain('oat_template: true');
+      expect((await getProjectState(projectPath)).recommendation.skill).toBe(
+        'oat-project-lite',
+      );
+
+      await writeFile(
+        join(projectPath, 'plan.md'),
+        authoredPlan
+          .replace('oat_status: in_progress', 'oat_status: complete')
+          .replace(
+            'oat_ready_for: null',
+            'oat_ready_for: oat-project-implement',
+          )
+          .replace(
+            'oat_phase_status: in_progress',
+            'oat_phase_status: complete',
+          )
+          .replace('oat_template: true', 'oat_template: false'),
+        'utf8',
+      );
+      expect((await getProjectState(projectPath)).recommendation.skill).toBe(
+        'oat-project-implement',
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('project promote --to quick converts a lite project', async () => {
+    const root = await createWorkspace();
+    const isolatedHome = await mkdtemp(join(tmpdir(), 'oat-cli-lite-home-'));
+    tempDirs.push(root, isolatedHome);
+    await initializeGitRepository(root);
+    const previousHome = process.env.HOME;
+    process.env.HOME = isolatedHome;
+
+    try {
+      for (const projectName of ['lite-untouched', 'lite-authored']) {
+        const scaffold = await runCli(root, [
+          'project',
+          'new',
+          projectName,
+          '--mode',
+          'lite',
+          '--scope',
+          'shared',
+          '--no-dashboard',
+          '--no-commit',
+        ]);
+        expect(scaffold.exitCode).toBe(0);
+      }
+
+      const untouchedPath = join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'lite-untouched',
+      );
+      const untouchedPlan = await readFile(
+        join(untouchedPath, 'plan.md'),
+        'utf8',
+      );
+      const untouchedState = await readFile(
+        join(untouchedPath, 'state.md'),
+        'utf8',
+      );
+      const refused = await runCli(
+        root,
+        [
+          'project',
+          'promote',
+          '.oat/projects/shared/lite-untouched',
+          '--to',
+          'quick',
+        ],
+        ['--json'],
+      );
+      expect(refused.exitCode).toBe(1);
+      expect(JSON.parse(refused.stdout)).toEqual({
+        status: 'refused',
+        reason: 'invalid-lite-plan',
+        files: [],
+      });
+      await expect(
+        readFile(join(untouchedPath, 'plan.md'), 'utf8'),
+      ).resolves.toBe(untouchedPlan);
+      await expect(
+        readFile(join(untouchedPath, 'state.md'), 'utf8'),
+      ).resolves.toBe(untouchedState);
+      await expect(
+        lstat(join(untouchedPath, 'discovery.md')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(
+        lstat(join(untouchedPath, 'references', 'lite-plan.md')),
+      ).rejects.toMatchObject({ code: 'ENOENT' });
+
+      const authoredPath = join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'lite-authored',
+      );
+      const authoredPlan = await authorLitePlan(authoredPath);
+      expect(authoredPlan).toContain('oat_template: true');
+
+      const promoted = await runCli(
+        root,
+        [
+          'project',
+          'promote',
+          '.oat/projects/shared/lite-authored',
+          '--to',
+          'quick',
+        ],
+        ['--json'],
+      );
+      const promotedPayload = JSON.parse(promoted.stdout);
+      expect(promotedPayload).toMatchObject({
+        status: 'promoted',
+        reason: 'promoted',
+      });
+      expect(promoted.exitCode).toBe(0);
+
+      const discovery = await readFile(
+        join(authoredPath, 'discovery.md'),
+        'utf8',
+      );
+      for (const answer of [
+        'Ship the exact lite workflow behavior.',
+        '- Keep promotion mechanical and lossless.',
+        '- The bundle tier is the template source.',
+        '- Spec-driven planning.',
+        '- [ ] The promoted discovery preserves every interview answer — Check: `pnpm test`',
+      ]) {
+        expect(discovery).toContain(answer);
+      }
+      const promotedState = await readFile(
+        join(authoredPath, 'state.md'),
+        'utf8',
+      );
+      expect(promotedState).toContain('oat_workflow_mode: quick');
+      await expect(
+        readFile(join(authoredPath, 'references', 'lite-plan.md'), 'utf8'),
+      ).resolves.toBe(authoredPlan);
+
+      const refresh = await runCli(root, ['state', 'refresh']);
+      expect(refresh.exitCode).toBe(0);
+      const dashboard = await readFile(join(root, '.oat', 'state.md'), 'utf8');
+      expect(dashboard).toContain('| Mode | quick |');
+      expect(dashboard).toContain(
+        '**oat-project-quick-start** - Continue the promoted quick workflow',
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
   });
 
   it('cleanup subcommands parse successfully', async () => {

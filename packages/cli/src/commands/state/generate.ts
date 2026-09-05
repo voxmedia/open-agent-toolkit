@@ -41,6 +41,7 @@ export interface GenerateStateResult {
 interface ProjectState {
   phase: string;
   phaseStatus: string;
+  readyFor: string;
   currentTask: string;
   lifecycle: string;
   pauseTimestamp: string;
@@ -163,6 +164,8 @@ async function readProjectState(
     (await parseFrontmatterField(stateFile, 'oat_phase')) || 'unknown';
   const phaseStatus =
     (await parseFrontmatterField(stateFile, 'oat_phase_status')) || 'unknown';
+  const readyForRaw = await parseFrontmatterField(stateFile, 'oat_ready_for');
+  const readyFor = readyForRaw && readyForRaw !== 'null' ? readyForRaw : '';
   let currentTask = await parseFrontmatterField(stateFile, 'oat_current_task');
   if (!currentTask || currentTask === 'null') currentTask = '-';
   const lifecycle =
@@ -201,6 +204,7 @@ async function readProjectState(
   return {
     phase,
     phaseStatus,
+    readyFor,
     currentTask,
     lifecycle,
     pauseTimestamp,
@@ -354,6 +358,18 @@ function computeNextStep(
     return {
       step: phaseSkillMap[state.phase] ?? 'oat-project-progress',
       reason: `Complete ${state.phase} HiLL approval before advancing`,
+    };
+  }
+
+  if (
+    state.workflowMode === 'quick' &&
+    state.phase === 'discovery' &&
+    state.phaseStatus === 'complete' &&
+    state.readyFor === 'oat-project-quick-start'
+  ) {
+    return {
+      step: 'oat-project-quick-start',
+      reason: 'Continue the promoted quick workflow',
     };
   }
 
