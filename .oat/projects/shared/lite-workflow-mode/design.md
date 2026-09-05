@@ -344,7 +344,10 @@ One line or branch each:
 - Collapsed closeout: the implement closeout sequence for lite is PR only,
   with summary and document opt-in and retro never added; next routes a
   passed final review to pr-final; pr-final synthesizes the PR body from
-  plan.md and implementation.md instead of generating summary.md.
+  plan.md and implementation.md instead of generating summary.md. Because
+  this repository configures summary and document before pr, both skills
+  gain lite branches that read the five plan.md contract sections and
+  implementation.md and accept absent discovery, spec, and design.
 - Pr-progress requirement source (lite: plan.md Summary and Validation
   Criteria).
 - Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume

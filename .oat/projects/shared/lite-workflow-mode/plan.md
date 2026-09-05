@@ -27,7 +27,7 @@ oat_template: false
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add lite to WORKFLOW_MODES`
 
-**Formatting Contract:** every task's Step 3 runs the repository's write command `pnpm exec oxfmt --write <files>` over every file that task created or edited, listed explicitly. Never format a project `state.md` (oxfmt corrupts its YAML frontmatter; edit it with targeted replacements). Never format generated or sync-managed outputs (`apps/oat-docs/index.md` is regenerated, not formatted; `.oat/sync/manifest.json`, `.codex/agents/`, `.cursor/agents/`, and `.claude/skills/` are owned by `oat sync`; `pnpm-lock.yaml` is owned by pnpm).
+**Formatting Contract:** every task's Step 3 runs the repository's write command `pnpm exec oxfmt --write <files>` over every file that task created or edited, listed explicitly. Never format a project `state.md` or the `.oat/templates/state.md` template (oxfmt corrupts their commented YAML frontmatter blocks; edit them with targeted replacements). p01-t02's omission of the template from its format command is deliberate. Never format generated or sync-managed outputs (`apps/oat-docs/index.md` is regenerated, not formatted; `.oat/sync/manifest.json`, `.codex/agents/`, `.cursor/agents/`, and `.claude/skills/` are owned by `oat sync`; `pnpm-lock.yaml` is owned by pnpm).
 
 ## Planning Checklist
 
@@ -509,7 +509,7 @@ git commit -m "feat(p03-t03): reject multi-phase lite plans in validate-plan"
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (`WORKFLOW_SKILL_NAMES`)
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.test.ts`
 - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`skills` gains `oat-project-lite`)
-- Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md` (gate inventory gains `LITE-01` inherited dirty tree, `LITE-02` missing name or description, `LITE-03` batched interview, `LITE-04` escalation to quick, `LITE-05` plan approval gate, `LITE-06` dispatch-ladder scope, `LITE-07` project dispatch policy, `LITE-08` artifact-review findings, `LITE-09` exit gate; each with interactive behavior, autonomous resolution, classification, and provenance mirroring the QS rows)
+- Modify: `.agents/docs/autonomy-contract.md` (canonical; the skill-local `references/docs/autonomy-contract.md` paths are symlinked read-only views; gate inventory gains `LITE-01` inherited dirty tree, `LITE-02` missing name or description, `LITE-03` batched interview, `LITE-04` escalation to quick, `LITE-05` plan approval gate, `LITE-06` dispatch-ladder scope, `LITE-07` project dispatch policy, `LITE-08` artifact-review findings, `LITE-09` exit gate; each with interactive behavior, autonomous resolution, classification, and provenance mirroring the QS rows)
 - Modify: `packages/cli/src/validation/autonomy-gate-inventory.test.ts` (expected skill-root count 15 → 16; stable prompt-site keys for every `oat-project-lite` prompt; mirrored-contract equality checks preserved)
 - Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep, plus an assertion that a scoped-commit persistence step precedes the gate heading; plus a new test "oat-project-lite enforces the single-pause interaction contract" asserting the skill has exactly one interview step that batches questions, a conditional second round only for questions the first created, a promote call at the escalation check, exactly one AskUserQuestion approval gate before plan completion, and no HiLL checkpoint or phase-gate setup step; and a test "oat-project-lite registers every interactive gate in the autonomy inventory" asserting every prompt in the skill cites a `LITE-0N` row that exists in the inventory and that the skill loads the autonomy contract under `OAT_AUTONOMOUS=1`)
 
@@ -531,7 +531,7 @@ Expected: pass (GREEN)
 
 Run `pnpm exec oxlint .agents/skills`.
 
-Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs .agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/validation/skills.test.ts`
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs .agents/docs/autonomy-contract.md packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -737,25 +737,27 @@ git commit -m "feat(p05-t03): bypass HiLL checkpoint prompts for lite projects"
 - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (lite closeout sequence)
 - Modify: `.agents/skills/oat-project-next/SKILL.md` (lite: passed final review → `oat-project-pr-final`; same single bump as p05-t01)
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (Step 3.0 lite branch; same single bump as p05-t01)
+- Modify: `.agents/skills/oat-project-summary/SKILL.md` (lite branch: Overview and Key Decisions come from plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria; shipped results from implementation.md; discovery/spec/design accepted as absent; version bump and pin update)
+- Modify: `.agents/skills/oat-project-document/SKILL.md` (lite branch: requirements and design source is the five plan.md contract sections; do not read discovery.md unconditionally; accept absent spec/design beyond the existing quick carve-out; version bump and pin update)
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Step 1: Write test (RED)**
 
-Assert: completion-and-closeout.md resolves the lite pre-approval sequence to `[pr]` with summary and document opt-in only when explicitly configured, and never adds retro; oat-project-next routes a lite project with a passed final review to `oat-project-pr-final` rather than `oat-project-summary`; pr-final Step 3.0 states that for lite it does not generate `summary.md` and synthesizes the PR body from plan.md Summary, Decisions, Validation Criteria, and implementation.md Final Summary, with the reduced-assurance note.
+Assert: the summary and document skills each carry a lite branch that names all five plan.md contract sections as the requirements source and implementation.md as the shipped-result source, and neither reads discovery.md unconditionally; this matters because this repository's configured closeout sequence runs summary and document before pr, so lite's opt-in path is exercised here by default. Assert: completion-and-closeout.md resolves the lite pre-approval sequence to `[pr]` with summary and document opt-in only when explicitly configured, and never adds retro; oat-project-next routes a lite project with a passed final review to `oat-project-pr-final` rather than `oat-project-summary`; pr-final Step 3.0 states that for lite it does not generate `summary.md` and synthesizes the PR body from plan.md Summary, Decisions, Validation Criteria, and implementation.md Final Summary, with the reduced-assurance note.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite collapses closeout"`
 Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Add the three branches. Keep the default sequence for every other mode byte-identical.
+Add the five branches (closeout sequence, next, pr-final, summary, document). Keep the default sequence for every other mode byte-identical.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite collapses closeout"`
 Expected: pass (GREEN)
 
 **Step 3: Refactor and format**
 
-Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md packages/cli/src/validation/skills.test.ts`
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -765,7 +767,7 @@ Expected: green
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md packages/cli/src/validation/skills.test.ts
+git add .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-document/SKILL.md packages/cli/src/validation/skills.test.ts
 git commit -m "feat(p05-t04): collapse lite closeout to PR creation"
 ```
 
@@ -870,7 +872,7 @@ Expected: pass (GREEN)
 
 **Step 3: Refactor and format**
 
-Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/package.json packages/cli/assets/public-package-versions.json` Do not format `pnpm-lock.yaml`, `.oat/sync/manifest.json`, or the sync-managed agent and skill views.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json` Do not format `pnpm-lock.yaml`, `.oat/sync/manifest.json`, or the sync-managed agent and skill views.
 
 **Step 4: Verify**
 
@@ -928,7 +930,7 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/artifact-plan-review-2026-09-05T190345Z.md          | -             | -          | -                        |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

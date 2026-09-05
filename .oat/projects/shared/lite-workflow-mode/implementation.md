@@ -314,6 +314,22 @@ User directed (2026-09-05) to keep running the gate until a round returns
 zero Important findings; the plan stays `oat_status: complete` between rounds
 because each round's fixes land in one commit.
 
+#### Review Received: plan (gate run 8)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T190345Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 8e1638d8-2134-49aa-b637-c8bc32c9b9d3, blocked (1 Important, 1 Medium, 1 Minor)
+
+- I1 → resolved: p05-t04 adds lite branches, tests, bumps, and pins for
+  `oat-project-summary` and `oat-project-document`, since the repository's
+  configured closeout runs both before pr. Design component 7 updated.
+- M1 → partly resolved, partly rejected with rationale: the four lockstep
+  package manifests were added to p06-t03's format command.
+  `.oat/templates/state.md` is deliberately excluded: it carries the same
+  commented YAML policy blocks as a project state.md and oxfmt corrupts
+  them (observed in this session). The Formatting Contract now states this.
+- m1 → resolved: p04-t01 names the canonical `.agents/docs/autonomy-contract.md`
+  in Files and format lists; skill-local paths are read-only symlinks.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
