@@ -225,6 +225,31 @@ filesystem-level test; M1 → p03-t03 tests a pure `validateLitePlan` with
 separate categorical errors; M2 → p01-t01 adds the control-plane README and
 p06-t01 adds the CLI reference page.
 
+#### Review Received: plan (gate, second user-override run)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T152744Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 3cdd06f5-4e71-4c06-ba1b-fa3354108f1d, blocked at threshold important
+**Findings:** Critical 0, Important 2, Medium 2, Minor 0
+
+Confirms all four prior findings resolved. Remaining, awaiting user
+disposition:
+
+- I1: the lite skill's step order runs the escalation check (and promote)
+  before the interview result is written into plan.md, so promotion would
+  archive template content and lose the interview. Fix: author the spec
+  sections first, then escalate; promote refuses unresolved template
+  placeholders; add an end-to-end test from an untouched scaffold.
+- I2: the canonical autonomy contract is `.agents/docs/autonomy-contract.md`
+  (the quick-start reference is a mirrored view) and
+  `packages/cli/src/validation/autonomy-gate-inventory.test.ts` enforces
+  root count, prompt-site mapping, and mirror equality. p04-t01 must own
+  the canonical file and that test.
+- M1: `oat-project-autonomous` ALLOWED Activities and Success Criteria
+  still say quick or spec-driven only.
+- M2: the dashboard routes implement-complete with unset docs state to
+  `oat-project-document`; p02-t03 must make `generate.ts` unconditional
+  and assert lite routes to pr-final.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
