@@ -28,12 +28,12 @@ oat_generated: false
 | ------- | ------- | ----- | --------- |
 | Phase 1 | pending | 4     | 0/4       |
 | Phase 2 | pending | 3     | 0/3       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase 3 | pending | 3     | 0/3       |
 | Phase 4 | pending | 2     | 0/2       |
 | Phase 5 | pending | 4     | 0/4       |
 | Phase 6 | pending | 3     | 0/3       |
 
-**Total:** 0/18 tasks completed
+**Total:** 0/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -180,6 +180,21 @@ decision. Accumulated feedback awaiting disposition:
   now overlaps p05-t03 and p05-t04.
 - M2: p05-t02, p05-t03, p05-t04 say "format the files" without the concrete
   file-scoped `pnpm exec oxfmt --write <files>` command.
+
+**Disposition (2026-09-05):** user chose to apply all six findings and
+authorized one more gate run under explicit override of the exhausted
+`maxAttempts: 2` budget. Resolved in artifacts: I1 → p04-t01 autonomy
+inventory rows LITE-01..09 and contract test; I2 → new task p03-t03
+mode-aware validate-plan; I3 → p06-t01 regenerates and commits
+`apps/oat-docs/index.md`; I4 → p06-t02 (sync and manual run) and p06-t03
+(bump and full gates) swapped so gates run last; M1 → p05-t01 narrowed; M2 →
+concrete oxfmt commands. Plan totals now 19 tasks.
+
+**Process note:** gate run 8b5b74b0-f68a-43dc-866a-cee20bcdc5af
+(`reviews/archived/artifact-plan-review-2026-09-05T150544Z.md`) executed
+against the unchanged plan because the agent's edit script aborted before
+writing; its findings duplicate the previous run and were not separately
+dispositioned. The override run that reviews the corrected plan follows it.
 
 Chronological log of implementation progress.
 

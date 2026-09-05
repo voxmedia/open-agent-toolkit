@@ -40,7 +40,7 @@ oat_template: true
 
 Phase 1 is the foundation: it changes the shared `WorkflowMode` declaration, which every later phase compiles against, and exports the two scaffold helpers the promote command reuses, so nothing can run beside it.
 
-Phase 2 (routing) and Phase 3 (promote command and split hardening) both depend only on Phase 1 and have disjoint write sets. Phase 2 writes `packages/control-plane/src/recommender/router.ts`, `packages/cli/src/commands/state/generate.ts`, and their tests. Phase 3 writes a new `packages/cli/src/commands/project/promote/` directory, one registration line in `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/project/split/run.ts`, the split runner test under `split/__tests__/`, and the help snapshot. Neither touches the other's files, each has independent scoped verification, and neither depends on the other's behavior. They are declared as one parallel group.
+Phase 2 (routing) and Phase 3 (promote command and split hardening) both depend only on Phase 1 and have disjoint write sets. Phase 2 writes `packages/control-plane/src/recommender/router.ts`, `packages/cli/src/commands/state/generate.ts`, and their tests. Phase 3 writes a new `packages/cli/src/commands/project/promote/` directory, one registration line in `packages/cli/src/commands/project/index.ts`, `packages/cli/src/commands/project/split/run.ts`, the split runner test under `split/__tests__/`, the `validate-plan/` directory, and the help snapshot. Neither touches the other's files, each has independent scoped verification, and neither depends on the other's behavior. They are declared as one parallel group.
 
 Phase 4 (the lite entry skill plus the end-to-end integration test) needs both routing and scaffold merged, so it follows the group. Phase 5 (mode-aware prose across many skills, the import-plan offer, and the skill-contract test rewrite) shares `packages/cli/src/validation/skills.test.ts` with Phase 4's pack-manifest assertions and edits many skill files, so it stays sequential. Phase 6 (docs, triage, lockstep bump, release validation, manual run) must be last because the version gates compare against the final diff.
 
@@ -445,6 +445,47 @@ git commit -m "feat(p03-t02): add oat project promote --to quick for lite projec
 
 ---
 
+### Task p03-t03: Enforce the single-phase invariant for lite plans in validate-plan
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/validate-plan/validate-plan.ts`
+- Modify: `packages/cli/src/commands/project/validate-plan/index.ts` (read `oat_workflow_mode` from the project's `state.md`)
+- Modify: `packages/cli/src/commands/project/validate-plan/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/project/validate-plan/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+Negative control first, preserved as fixtures with their expected categorical outcome: a lite project whose `plan.md` contains two `## Phase` headings is rejected with a message naming the invariant; a lite project with exactly one phase passes; a quick project with two phases still passes (no behavior change for other modes); a lite project with `oat_plan_parallel_groups` non-empty is rejected.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan`
+Expected: the two lite rejection cases fail on current code (RED)
+
+**Step 2: Implement (GREEN)**
+
+Add a `validateLitePhaseCount(planContent, workflowMode)` check in `validate-plan.ts` that runs after `validateParallelGroups`; `index.ts` parses `state.md` frontmatter for the mode using the existing frontmatter helper and passes it through. Because the implement skill's preflight already runs `oat project validate-plan --project-path`, this single check enforces the invariant both at planning time and before implementation, so p05-t03's checkpoint bypass can never apply to a multi-phase plan.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+None.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan src/commands/help-snapshots.test.ts`
+Expected: green
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/validate-plan
+git commit -m "feat(p03-t03): reject multi-phase lite plans in validate-plan"
+```
+
+---
+
 ## Phase 4: Lite Entry Skill and End-to-End Test
 
 ### Task p04-t01: Author the oat-project-lite skill and register it in the workflows pack
@@ -455,7 +496,9 @@ git commit -m "feat(p03-t02): add oat project promote --to quick for lite projec
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (`WORKFLOW_SKILL_NAMES`)
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.test.ts`
 - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`skills` gains `oat-project-lite`)
-- Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep; plus a new test "oat-project-lite enforces the single-pause interaction contract" asserting the skill has exactly one interview step that batches questions, a conditional second round only for questions the first created, a promote call at the escalation check, exactly one AskUserQuestion approval gate before plan completion, and no HiLL checkpoint or phase-gate setup step)
+- Modify: `.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md` (gate inventory gains `LITE-01` inherited dirty tree, `LITE-02` missing name or description, `LITE-03` batched interview, `LITE-04` escalation to quick, `LITE-05` plan approval gate, `LITE-06` dispatch-ladder scope, `LITE-07` project dispatch policy, `LITE-08` artifact-review findings, `LITE-09` exit gate; each with interactive behavior, autonomous resolution, classification, and provenance mirroring the QS rows)
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md` (patch version bump because its references changed)
+- Modify: `packages/cli/src/validation/skills.test.ts` (the two explicit gateable-skill lists near lines 1741 and 1758 gain `oat-project-lite`, and the gate-ordering table in "runs lifecycle exit gates before their completion boundaries" gains a row: version `1.0.0`, finalizedHeading = the Step 6 review-loop heading, gateHeading `### Gate Execution`, completionHeading = the Step 7 heading, and the matching noGateNextStep; plus a new test "oat-project-lite enforces the single-pause interaction contract" asserting the skill has exactly one interview step that batches questions, a conditional second round only for questions the first created, a promote call at the escalation check, exactly one AskUserQuestion approval gate before plan completion, and no HiLL checkpoint or phase-gate setup step; and a test "oat-project-lite registers every interactive gate in the autonomy inventory" asserting every prompt in the skill cites a `LITE-0N` row that exists in the inventory and that the skill loads the autonomy contract under `OAT_AUTONOMOUS=1`)
 
 **Step 1: Write test (RED)**
 
@@ -466,7 +509,7 @@ Expected: fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Write the skill at `version: 1.0.0` with frontmatter matching `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 2.5 escalation check calling `oat project promote "$PROJECT_PATH" --to quick --json` and stopping with a pointer to quick-start, Step 3 author `plan.md` sections and single-phase tasks in plan-writing grammar, Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference (structured mode, no user pause), a `### Gate Execution` step by reference to quick-start's Gate Execution contract (the skill keeps `oat_gateable: true`, so a configured gate runs after artifact review and before completion), Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria. Add `oat-project-lite` to `bundle-inputs.mjs` `skills`.
+Write the skill at `version: 1.0.0`. Its Mode Assertion states: when `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` from the quick-start skill, keep `OAT_NON_INTERACTIVE=1`, and resolve every interactive decision through its `LITE-0N` row (batched interview answers from repository evidence with recorded assumptions; escalation by the documented heuristic; approval gate auto-confirmed with the requirement set recorded; ladder scope and policy per the QS-08 and QS-09 rules; artifact-review findings per IMPORT-08's shape; exit gate per the shared contract), stopping at a boundary only where the row says so. Frontmatter matches `oat-project-quick-start` (`oat_gateable: true`, `disable-model-invocation: true`, `user-invocable: true`, `allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion`). Required sections: Mode Assertion (blocked: no design or spec authoring, no multi-phase plans, no implementation code), Progress Indicators with the `OAT ▸ LITE` banner, Step 0 git preflight by reference to quick-start's contract, Step 0.5 resolve active project or scaffold with `--mode lite`, Step 1 read repo knowledge, Step 2 batched critical interview (one round, second round only for questions the first created, "just proceed" records careful assumptions), Step 2.5 escalation check calling `oat project promote "$PROJECT_PATH" --to quick --json` and stopping with a pointer to quick-start, Step 3 author `plan.md` sections and single-phase tasks in plan-writing grammar, Step 4 single approval gate via AskUserQuestion, Step 5 dispatch ceiling by reference to the shared contract with no phase-gate setup, Step 6 plan artifact review loop by reference (structured mode, no user pause), a `### Gate Execution` step by reference to quick-start's Gate Execution contract (the skill keeps `oat_gateable: true`, so a configured gate runs after artifact review and before completion), Step 7 mark complete, sync state, initialize implementation.md, commit, hand off to implement, Success Criteria. Add `oat-project-lite` to `bundle-inputs.mjs` `skills`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts`
 Expected: pass (GREEN)
@@ -483,7 +526,7 @@ Expected: validator green for the authored skill; sync dry-run lists the new ski
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/skills.test.ts
+git add .agents/skills/oat-project-lite/SKILL.md .agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/skills.test.ts
 git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 ```
 
@@ -566,7 +609,7 @@ Expected: fail on the lite assertions and the version pins (RED)
 
 **Step 2: Implement (GREEN)**
 
-Apply each one-line or one-branch change listed in design component 7, including the discover and pr-progress skills and both agent contracts. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
+Apply only the one-line or one-branch changes for the files listed in this task's Files section (implement payload enum, plan-writing table and enum, review-provide plan case, pr-final artifact gate, spec-driven planner stop branch, discover route, progress and next routing tables, brainstorm fold-back, promote-spec-driven note, pr-progress requirement source, and both agent contracts). Do not touch plan-and-resume.md, completion-and-closeout.md, or the closeout branches of next and pr-final; those belong to p05-t03 and p05-t04. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: pass (GREEN)
@@ -612,7 +655,7 @@ Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-Format the skill file.
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-import-plan/SKILL.md`
 
 **Step 4: Verify**
 
@@ -653,7 +696,7 @@ Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-Format the touched reference files.
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/plan-and-resume.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-implement/SKILL.md`
 
 **Step 4: Verify**
 
@@ -694,7 +737,7 @@ Expected: pass (GREEN)
 
 **Step 3: Refactor**
 
-Format the touched skill files.
+Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md`
 
 **Step 4: Verify**
 
@@ -725,6 +768,7 @@ git commit -m "feat(p05-t04): collapse lite closeout to PR creation"
 - Modify: `apps/oat-docs/docs/workflows/skills/index.md` (mention `oat-project-lite`)
 - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (gate-aware skill lists near lines 65 and 528 gain `oat-project-lite`)
 - Modify: `apps/oat-docs/docs/workflows/projects/reviews.md` (the plan-producing workflows that run the structured plan review loop gain `oat-project-lite`)
+- Modify: `apps/oat-docs/index.md` (generated; regenerate with the command in Step 3, never hand-edit)
 
 **Step 1: Write test (RED)**
 
@@ -736,78 +780,23 @@ Add the lite entries. In AGENTS.md the option reads: "Lite workflow — batched 
 
 **Step 3: Refactor**
 
-`pnpm exec oxfmt --write` on the touched markdown files.
+Run: `pnpm exec oxfmt --write AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md`, then regenerate the docs index: `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
 
 **Step 4: Verify**
 
-Run: `pnpm check > gate-check.log 2>&1; echo "exit=$?"; pnpm build:docs > gate-docs.log 2>&1; echo "exit=$?"`
-Expected: both `exit=0`; confirm neither was a cache replay
+Run: `pnpm check > gate-check.log 2>&1; echo "exit=$?"; pnpm build:docs > gate-docs.log 2>&1; echo "exit=$?"; git diff --quiet -- apps/oat-docs/index.md && echo "index stable"`
+Expected: both `exit=0`, and the docs build's own index regeneration leaves no diff (`index stable`); confirm neither gate was a cache replay
 
 **Step 5: Commit**
 
 ```bash
-git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md
+git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/index.md
 git commit -m "docs(p06-t01): document lite workflow mode"
 ```
 
 ---
 
-### Task p06-t02: Lockstep version bump and release gates
-
-**Files:**
-
-- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
-- Modify: `packages/cli/assets/public-package-versions.json` (if the release tooling requires it)
-
-**Step 1: Write test (RED)**
-
-Run: `git fetch origin main && pnpm release:check-versions`
-Expected: fails because versions equal `origin/main` (RED)
-
-**Step 2: Implement (GREEN)**
-
-Bump all five lockstep packages to the next patch (from 0.2.54 unless main moved) and regenerate the lockfile if it references package versions.
-
-Run: `pnpm release:check-versions`
-Expected: pass (GREEN)
-
-**Step 3: Refactor**
-
-None.
-
-**Step 4: Verify**
-
-Run the full definition-of-done sequence in AGENTS.md order, capturing each exit code. `pnpm test` is gate 3 and includes the release tests; the forced Turbo run is supplemental evidence, not a substitute:
-
-```bash
-pnpm check > g1.log 2>&1; echo "check=$?"
-pnpm type-check > g2.log 2>&1; echo "type=$?"
-pnpm test > g3.log 2>&1; echo "test=$?"
-# Supplemental evidence that gate 3 was not a cache replay (it also runs test:release):
-HOME=$(mktemp -d) pnpm exec turbo run test --force > g3a.log 2>&1; echo "test-forced=$?"
-pnpm test:smoke > g3b.log 2>&1; echo "smoke=$?"
-pnpm test:skills > g3c.log 2>&1; echo "skills=$?"
-pnpm build > g4.log 2>&1; echo "build=$?"
-pnpm run check:skill-bumps > g5.log 2>&1; echo "bumps=$?"
-pnpm release:check-versions > g6.log 2>&1; echo "versions=$?"
-pnpm release:validate > g7.log 2>&1; echo "validate=$?"
-pnpm build:docs > g8.log 2>&1; echo "docs=$?"
-pnpm lint > g9.log 2>&1; echo "lint=$?"
-pnpm format > g10.log 2>&1; echo "format=$?"
-```
-
-Expected: every line prints `=0`
-
-**Step 5: Commit**
-
-```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
-git commit -m "chore(p06-t02): bump lockstep package versions for lite mode"
-```
-
----
-
-### Task p06-t03: Manual lite run and sync of provider views
+### Task p06-t02: Manual lite run and sync of provider views
 
 **Files:**
 
@@ -834,7 +823,62 @@ Record in implementation.md: the commands run, the number of user pauses observe
 
 ```bash
 git add .claude/skills/oat-project-lite .codex/agents .cursor/agents .oat/sync/manifest.json .oat/projects/shared/lite-workflow-mode/implementation.md
-git commit -m "chore(p06-t03): sync provider views and record manual lite run"
+git commit -m "chore(p06-t02): sync provider views and record manual lite run"
+```
+
+---
+
+### Task p06-t03: Lockstep version bump and release gates
+
+**Files:**
+
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json` (if the release tooling requires it)
+
+**Step 1: Write test (RED)**
+
+Run: `git fetch origin main && pnpm release:check-versions`
+Expected: fails because versions equal `origin/main` (RED)
+
+**Step 2: Implement (GREEN)**
+
+Bump all five lockstep packages to the next patch (from 0.2.54 unless main moved) and regenerate the lockfile if it references package versions.
+
+Run: `pnpm release:check-versions`
+Expected: pass (GREEN)
+
+**Step 3: Refactor**
+
+None.
+
+**Step 4: Verify**
+
+This is the last task in the plan by design: p06-t02 has already regenerated provider views and recorded the manual run, so the evidence below covers the branch's terminal tree. Run the full definition-of-done sequence in AGENTS.md order, capturing each exit code. `pnpm test` is gate 3 and includes the release tests; the forced Turbo run is supplemental evidence, not a substitute. If anything changes after this task, repeat the whole sequence before the final commit:
+
+```bash
+pnpm check > g1.log 2>&1; echo "check=$?"
+pnpm type-check > g2.log 2>&1; echo "type=$?"
+pnpm test > g3.log 2>&1; echo "test=$?"
+# Supplemental evidence that gate 3 was not a cache replay (it also runs test:release):
+HOME=$(mktemp -d) pnpm exec turbo run test --force > g3a.log 2>&1; echo "test-forced=$?"
+pnpm test:smoke > g3b.log 2>&1; echo "smoke=$?"
+pnpm test:skills > g3c.log 2>&1; echo "skills=$?"
+pnpm build > g4.log 2>&1; echo "build=$?"
+pnpm run check:skill-bumps > g5.log 2>&1; echo "bumps=$?"
+pnpm release:check-versions > g6.log 2>&1; echo "versions=$?"
+pnpm release:validate > g7.log 2>&1; echo "validate=$?"
+pnpm build:docs > g8.log 2>&1; echo "docs=$?"
+pnpm lint > g9.log 2>&1; echo "lint=$?"
+pnpm format > g10.log 2>&1; echo "format=$?"
+```
+
+Expected: every line prints `=0`
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
+git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 ```
 
 ---
@@ -858,7 +902,7 @@ git commit -m "chore(p06-t03): sync provider views and record manual lite run"
 | design | artifact | pending  | -          | -                                                           | -             | -          | -                        |
 | plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/artifact-plan-review-2026-09-05T150544Z.md          | -             | -          | -                        |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -883,12 +927,12 @@ cell; never truncate a widened row back to five columns.
 
 - Phase 1: 4 tasks - single mode definition, plan-lite template and bundle inventory, lite scaffold, help snapshot
 - Phase 2: 3 tasks - recommender and dashboard routing, lite closeout route
-- Phase 3: 2 tasks - split-detector guard, promote command
+- Phase 3: 3 tasks - split-detector guard, promote command, lite single-phase validator
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
-- Phase 6: 3 tasks - docs and triage, lockstep bump and gates, manual run and sync
+- Phase 6: 3 tasks - docs and triage, manual run and sync, lockstep bump and gates (last)
 
-**Total:** 18 tasks across 6 phases
+**Total:** 19 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

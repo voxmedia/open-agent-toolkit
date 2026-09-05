@@ -305,6 +305,10 @@ oat project promote <project-path> --to quick [--json]
   reference; mark complete and commit; hand off to implement.
 - Blocked: no design or spec authoring, no multi-phase plans, no
   implementation code.
+- The skill registers every interactive decision as a `LITE-0N` row in the
+  canonical autonomy-contract gate inventory and follows that contract under
+  `OAT_AUTONOMOUS=1`, so a headless lite run never stops at an
+  inventory-gap.
 - The skill keeps `oat_gateable: true` and carries a Gate Execution step by
   reference to quick-start's contract, so a configured exit gate runs after
   the artifact review loop. The review loop itself runs in structured mode
@@ -351,6 +355,10 @@ One line or branch each:
 
 - The split detector's blind append to `discovery.md` gains an existence
   check so it never conjures a discovery file for import or lite projects.
+- `oat project validate-plan` becomes mode-aware: a lite plan must have
+  exactly one phase and no parallel groups. The implement preflight already
+  runs validate-plan, so the single-phase invariant is enforced before any
+  checkpoint bypass can apply.
 
 ### 9. Docs and triage
 
