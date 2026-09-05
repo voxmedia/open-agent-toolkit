@@ -14,7 +14,7 @@ oat_issue_url: https://github.com/voxmedia/open-agent-toolkit/issues/252
 created: '2026-09-02T23:59:00Z'
 ---
 
-# Defer activeProject clearing on shared and local archive completions
+# Defer activeProject clearing on shared archive completions
 
 > [!NOTE]
 > This is an external implementation plan, not a canonical OAT project
@@ -43,7 +43,7 @@ tests execute the Step 6 guard across scopes and pin the ordering.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260902-defer-activeproject-clearing — Defer activeProject clearing on shared and local archive completions](../../pjm/backlog/items/BL-260902-defer-activeproject-clearing.md)
+  [BL-260902-defer-activeproject-clearing — Defer activeProject clearing on shared and local archive completions (item title; the plan covers shared, the only non-synced durable scope)](../../pjm/backlog/items/BL-260902-defer-activeproject-clearing.md)
 - Source issue: [#252](https://github.com/voxmedia/open-agent-toolkit/issues/252)
 - Planned at: `origin/main` commit
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
@@ -61,7 +61,7 @@ tests execute the Step 6 guard across scopes and pin the ordering.
     routes `continue-active | archive-resumed`) is synced-only.
   - `SKILL.md:634-648` — the seal contract: "No project-log append may follow
     the seal"; a resume that replays Step 3.7 risks a second seal.
-  - `SKILL.md:963-968` — the shared/local archive receipt shape
+  - `SKILL.md:963-968` — the shared-scope archive receipt shape
     (`status: "ok"`, `mode: "apply"`, non-empty `archivePath`).
   - `review-skill-contracts.test.ts:1134` (ordering guard, contains
     `'No project-log append may follow the seal'` at `:1189`), `:1577`
@@ -165,14 +165,14 @@ deliberately widened in the same commit.
 
 ### 2. Generalize the Step 12 clear
 
-Keep the synced finalizer; for shared/local require `status: "ok"`,
+Keep the synced finalizer; for shared require `status: "ok"`,
 `mode: "apply"`, and non-empty `archivePath` re-validated from
 `ARCHIVE_OUTPUT` by the new validator script before
 `oat config set activeProject ""`.
 
 **Verify:** `pnpm test:skills` → new `.mjs` validator test passes.
 
-### 3. Add the shared/local resume branch
+### 3. Add the shared-scope resume branch
 
 At `:88-140`: a retained pointer plus `oat_lifecycle: complete`, archive
 enabled, and no `archivePath` routes directly to Step 8 without replaying
@@ -203,7 +203,7 @@ Update the two docs pages; bump the skill and the five packages; format.
 - `clears the deferred pointer only after a validated archive receipt` →
   `archiveIndex < step12ClearIndex`.
 - `resumes an interrupted archive completion without a second completion seal`
-  → resume branch names shared/local; `'No project-log append may follow the
+  → resume branch names shared scope only; `'No project-log append may follow the
 seal'` still present.
 - Existing `:1117`, `:1134`, `:1175`, `:1278`, `:1388`, `:1577` green.
 
@@ -211,7 +211,7 @@ seal'` still present.
 
 - [ ] Every archive-enabled scope retains the pointer until the receipt
       validates; non-archive completions clear immediately.
-- [ ] The interrupted-archive resume works for shared/local and never appends
+- [ ] The interrupted-archive resume works for shared scope and never appends
       a second seal.
 - [ ] Synced behavior from PR #254 is unchanged.
 - [ ] Three new contract tests fail on revert and pass on the change.
@@ -221,7 +221,7 @@ seal'` still present.
 
 Stop and report instead of improvising when:
 
-- shared or local archive receipts lack enough terminal evidence to validate
+- shared archive receipts lack enough terminal evidence to validate
   (then a CLI receipt addition is needed and the estimate changes);
 - widening the guard beyond `SHOULD_ARCHIVE && IS_DURABLE_PROJECT` would strand
   pointers for local projects, which never archive;

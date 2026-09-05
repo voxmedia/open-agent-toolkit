@@ -148,8 +148,12 @@ stray `index.md` and can silently replace the configured docs-app index path.
 The safe contract is configuration-first for omitted values:
 
 - omitted `--docs-dir` → derived from `documentation.root` resolved from the
-  repo root: if `<root>/docs` exists and `<root>` itself is not a docs source
-  tree (no top-level `*.md` pages), use `<root>/docs`; otherwise use `<root>`.
+  repo root: if `<root>/docs` is a directory, use it; otherwise use `<root>`.
+  This repository's root `apps/oat-docs` carries top-level `AGENTS.md`,
+  `CLAUDE.md`, and `index.md`, so any "looks like a docs tree" heuristic on
+  the root itself misclassifies it; the child-directory test is the only safe
+  rule, and the reference example `apps/docs/docs` has no `docs` child and
+  falls through to `<root>`.
   Record the chosen directory in human and JSON output so an operator can see
   the derivation. Document this rule in `oat-directory-structure.md`;
 - omitted `--output` → `documentation.index`, resolved from repo root;
@@ -250,10 +254,9 @@ than replay stale cache evidence.
 
 Stop and report instead of improvising when:
 
-- the configured `documentation.root` is neither a docs source directory nor a
-  parent of one (the derivation rule above cannot pick a directory), or the
-  docs owner rejects the derivation rule; record the decision instead of
-  guessing;
+- the configured `documentation.root` does not exist, or the docs owner
+  rejects the `<root>/docs`-first derivation rule; record the decision instead
+  of guessing;
 - live config schema no longer names both `documentation.root` and
   `documentation.index`;
 - an existing caller demonstrably relies on generation mutating config;
