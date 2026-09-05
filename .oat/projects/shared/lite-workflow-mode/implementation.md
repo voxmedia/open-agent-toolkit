@@ -295,6 +295,25 @@ p06-t03 reruns sync after the bump and stages the manifest. Plan marked
 complete and ready for `oat-project-implement`; the override and residual
 risk are recorded in plan.md `## Reviews`.
 
+#### Review Received: plan (gate run 7, stopping rule: zero Important)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T185313Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 29c33c25-c87b-4434-9096-396ccb28a7af, blocked (1 Important, 2 Medium)
+
+- I1 → resolved: `applyTemplateReplacements` strips `oat_template: true`;
+  p01-t03 now restores it for the lite plan target and p04-t02 gains a
+  control-plane recommendation test (d). Design component 2 updated.
+- M1 → resolved: every task's Step 3 is now "Refactor and format" with an
+  explicit `pnpm exec oxfmt --write <files>` over the task's created or
+  edited files; a plan-level Formatting Contract names the exclusions
+  (state.md, generated index, sync-managed outputs, lockfile).
+- M2 → resolved: discovery Question 10 and Key Decision 9 now describe the
+  durable-draft-first promotion order.
+
+User directed (2026-09-05) to keep running the gate until a round returns
+zero Important findings; the plan stays `oat_status: complete` between rounds
+because each round's fixes land in one commit.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04

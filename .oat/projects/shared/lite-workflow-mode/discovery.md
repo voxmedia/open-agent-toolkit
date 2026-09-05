@@ -150,10 +150,15 @@ reused by reference, as other skills already do. Single entry point:
 promotion. The lite plan's summary, decisions, and assumptions become
 discovery's initial request and key decisions; the task list is discarded and
 quick-start regenerates a phased plan; state.md flips mode; slug and branch
-survive. The trigger is the interview itself: if the batched answers yield a
-task list that will not fit one sitting, or surface a design decision the
-implementer cannot be trusted to make, propose promotion before writing the
-plan.
+survive. The trigger is the interview itself: if the batched answers yield a task
+list that will not fit one sitting, or surface a design decision the
+implementer cannot be trusted to make, propose promotion. Ordering
+(revised during design and plan review): the interview result is first
+written to plan.md as a durable pre-approval draft (still
+`oat_template: true`, not yet approved or complete), and the escalation
+check then runs against that draft so promotion consumes and preserves the
+answers. "Before the plan is written" in the original answer meant before
+plan completion, not before the draft exists.
 
 ### Question 11: Who commits when the executor dispatches subagents?
 
@@ -248,7 +253,9 @@ steps. Reuses the implement skill and all state.md readers unchanged.
 8. **One committer per run:** helper subagents never commit; parallel
    helpers opt-in per task for disjoint files only.
 9. **Escalation is promote-in-place to quick**, proposed by the interview
-   before the plan is written.
+   after the interview result is written to plan.md as a pre-approval draft
+   and before approval or completion, so promotion never loses interview
+   content.
 10. **New entry skill, not a quick-start flag.**
 
 ## Constraints

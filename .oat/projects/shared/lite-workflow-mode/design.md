@@ -207,8 +207,11 @@ export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
 **Design Decisions:**
 
-- No `references/` directory at scaffold time. The promote command creates it
-  when needed.
+- No `references/` directory at scaffold time. The promote command creates
+  it when needed.
+- The renderer strips `oat_template: true`; lite restores it on the rendered
+  `plan.md` so the boundary detector keeps routing to `oat-project-lite`
+  until the skill's completion boundary sets it false.
 
 ### 3. Lite plan template
 

@@ -27,6 +27,8 @@ oat_template: false
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add lite to WORKFLOW_MODES`
 
+**Formatting Contract:** every task's Step 3 runs the repository's write command `pnpm exec oxfmt --write <files>` over every file that task created or edited, listed explicitly. Never format a project `state.md` (oxfmt corrupts its YAML frontmatter; edit it with targeted replacements). Never format generated or sync-managed outputs (`apps/oat-docs/index.md` is regenerated, not formatted; `.oat/sync/manifest.json`, `.codex/agents/`, `.cursor/agents/`, and `.claude/skills/` are owned by `oat sync`; `pnpm-lock.yaml` is owned by pnpm).
+
 ## Planning Checklist
 
 - [x] Confirmed HiLL checkpoints with user
@@ -93,9 +95,11 @@ Parser imports `WORKFLOW_MODES` from `../types` and deletes its local array.
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
 None beyond the deleted duplicate.
+
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/README.md`
 
 **Step 4: Verify**
 
@@ -135,9 +139,9 @@ Author `plan-lite.md` with frontmatter (`oat_plan_source: lite`, `oat_plan_paral
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run `pnpm exec oxfmt --write .oat/templates/plan-lite.md`.
+Format every file this task created or edited: `pnpm exec oxfmt --write .oat/templates/plan-lite.md .oat/templates/plan.md packages/cli/scripts/bundle-inputs.mjs packages/cli/src/commands/tools/shared/pack-manifest.ts`
 
 **Step 4: Verify**
 
@@ -164,7 +168,7 @@ git commit -m "feat(p01-t02): add plan-lite template to the bundle inventory"
 
 **Step 1: Write test (RED)**
 
-Scaffold tests: `--mode lite` creates exactly `state.md`, `plan.md`, `implementation.md` and no `discovery.md`; the created `plan.md` contains a `## Validation Criteria` heading (proving it came from `plan-lite.md`); extend the "renders every real $mode scaffold artifact without unresolved OAT placeholders" `it.each` with `lite`; the existing spec-driven, quick, and import "creates ... artifacts only" tests are unchanged. Index tests: `--mode lite` passes through; the option's choices equal `WORKFLOW_MODES`.
+Scaffold tests: `--mode lite` creates exactly `state.md`, `plan.md`, `implementation.md` and no `discovery.md`; the created `plan.md` contains a `## Validation Criteria` heading (proving it came from `plan-lite.md`) and still carries `oat_template: true` in its frontmatter (the renderer strips it for other modes); extend the "renders every real $mode scaffold artifact without unresolved OAT placeholders" `it.each` with `lite`; the existing spec-driven, quick, and import "creates ... artifacts only" tests are unchanged. Index tests: `--mode lite` passes through; the option's choices equal `WORKFLOW_MODES`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
 Expected: every lite case fails because `TEMPLATES_BY_MODE` has no lite key and the CLI rejects the choice (RED)
@@ -176,14 +180,17 @@ Expected: every lite case fails because `TEMPLATES_BY_MODE` has no lite key and 
 - Copy loop resolves `source` through `resolveTemplateSource` and writes to `target`; `createdFiles` records the target name.
 - Add the lite `STATE_TEMPLATE_BY_MODE` entry: phase `plan`, status `in_progress`, HiLL checkpoints `[]`, artifacts naming plan and implementation only, next milestone "run oat-project-lite".
 - Build `--mode` choices from `WORKFLOW_MODES`; keep the default `spec-driven`.
+- `applyTemplateReplacements` strips `oat_template: true` and `oat_template_name` from every rendered artifact. For lite only, after rendering the `plan.md` target, restore `oat_template: true` in its frontmatter so the control-plane boundary detector keeps the untouched and authored-but-unapproved plan at tier 3 and `LITE_ROUTES` keeps ownership with `oat-project-lite`. Existing modes stay byte-identical because the restore is gated on `mode === 'lite'` and the plan target. The lite skill sets it `false` only at its Step 7 completion boundary.
 - Export `applyTemplateReplacements` and `resolveTemplateSource` (currently module-private) so the Phase 3 promote command can reuse them without touching this file. Note `applyTemplateReplacements(template, projectName, today, nowUtc, mode)` reads `STATE_TEMPLATE_BY_MODE[mode]`, so callers rendering quick artifacts must pass `'quick'`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
 Ensure the normalizer keeps the three existing modes byte-identical: add an assertion that each existing mode's `createdFiles` list matches the pre-change list.
+
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/project/new/scaffold.ts packages/cli/src/commands/project/new/index.ts packages/cli/src/commands/project/new/index.test.ts packages/cli/src/commands/project/new/scaffold.test.ts`
 
 **Step 4: Verify**
 
@@ -217,9 +224,9 @@ Update the golden string to the new choices output. Review the diff by eye: only
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/help-snapshots.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/help-snapshots.test.ts`
 
 **Step 4: Verify**
 
@@ -258,9 +265,11 @@ Add `LITE_ROUTES` mirroring `IMPORT_ROUTES` with `oat-project-lite` in the early
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
 None; the two routing tables intentionally stay separate (design decision 4).
+
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts`
 
 **Step 4: Verify**
 
@@ -297,9 +306,9 @@ Add only the `lite:plan:in_progress` entry to `routeMap` with reason "Continue l
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts`
 
 **Step 4: Verify**
 
@@ -338,9 +347,9 @@ In the closeout branch, when `state.workflowMode === 'lite'`, skip the summary r
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts`
 
 **Step 4: Verify**
 
@@ -379,9 +388,9 @@ Widen the dependencies pick so the guard can use the injected `exists` helper (w
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/split/__tests__/run.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/project/split/run.ts packages/cli/src/commands/project/split/__tests__/run.test.ts`
 
 **Step 4: Verify**
 
@@ -429,9 +438,11 @@ Follow the `complete-discovery` command shape for Commander wiring and dependenc
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
 Extract the lite section parser into a small pure function with its own tests so import-plan guidance (Phase 5) can reference its shape.
+
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/project/promote/index.ts packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts packages/cli/src/commands/project/index.ts packages/cli/src/commands/help-snapshots.test.ts`
 
 **Step 4: Verify**
 
@@ -470,9 +481,9 @@ Add the exported pure function `validateLitePlan(planContent, workflowMode)` in 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/project/validate-plan/validate-plan.ts packages/cli/src/commands/project/validate-plan/index.ts packages/cli/src/commands/project/validate-plan/validate-plan.test.ts packages/cli/src/commands/project/validate-plan/index.test.ts`
 
 **Step 4: Verify**
 
@@ -516,9 +527,11 @@ Write the skill at `version: 1.0.0`. Its Mode Assertion states: when `OAT_AUTONO
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts src/validation/skills.test.ts src/validation/autonomy-gate-inventory.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run `pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md` and `pnpm exec oxlint .agents/skills`.
+Run `pnpm exec oxlint .agents/skills`.
+
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs .agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -542,7 +555,7 @@ git commit -m "feat(p04-t01): add oat-project-lite entry skill"
 
 **Step 1: Write test (RED)**
 
-Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier), named "project new creates lite-mode scaffold artifacts and routes to oat-project-lite" and "project promote --to quick converts a lite project": (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) starting from the untouched lite scaffold, write interview-derived Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections plus one task into plan.md exactly as the skill's Step 3 would, then `project promote x --to quick`, and assert each of those answers appears verbatim in the resulting discovery.md, the project is quick, the dashboard routes to quick-start, and `references/lite-plan.md` exists; (c) `project promote x --to quick` against the untouched scaffold is refused because its spec sections are unauthored and writes nothing, while case (b)'s plan still carries `oat_template: true` and promotes.
+Two integration cases with an isolated HOME (see AGENTS.md on the bundle tier), named "project new creates lite-mode scaffold artifacts and routes to oat-project-lite" and "project promote --to quick converts a lite project": (a) `project new x --mode lite` then `state refresh` produces a dashboard with mode `lite` and next step `oat-project-lite`; (b) starting from the untouched lite scaffold, write interview-derived Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections plus one task into plan.md exactly as the skill's Step 3 would, then `project promote x --to quick`, and assert each of those answers appears verbatim in the resulting discovery.md, the project is quick, the dashboard routes to quick-start, and `references/lite-plan.md` exists; (c) `project promote x --to quick` against the untouched scaffold is refused because its spec sections are unauthored and writes nothing, while case (b)'s plan still carries `oat_template: true` and promotes; (d) through the control-plane recommendation (`getProjectState` on the scaffolded project, or `oat project status --json` if it exposes the recommendation), the untouched lite scaffold recommends `oat-project-lite`, an authored-but-unapproved plan still carrying `oat_template: true` recommends `oat-project-lite`, and a plan with `oat_status: complete`, `oat_ready_for: oat-project-implement`, and `oat_template: false` recommends `oat-project-implement`. Case (d) exercises the control-plane boundary tier, not only the dashboard's mode route map.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts -t "lite"`
 Expected: fail before the assertions are satisfied (RED)
@@ -554,9 +567,9 @@ Only test code; if a real defect surfaces, fix it in the owning module and note 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts -t "lite"`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/src/commands/commands.integration.test.ts`
 
 **Step 4: Verify**
 
@@ -619,9 +632,9 @@ Apply only the one-line or one-branch changes for the files listed in this task'
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-`pnpm exec oxfmt --write` on the touched skill files only.
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/phase-execution.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-discover/SKILL.md .agents/skills/oat-project-progress/SKILL.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-brainstorm/SKILL.md .agents/skills/oat-project-autonomous/SKILL.md .agents/skills/oat-project-promote-spec-driven/SKILL.md .agents/skills/oat-project-pr-progress/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 4: Verify**
 
@@ -658,9 +671,9 @@ Add Step 3.5 "Lite Offer" after Step 3: detect one `## Phase` heading and empty 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "import-plan offers lite"`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-import-plan/SKILL.md`
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-import-plan/SKILL.md packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -699,9 +712,9 @@ Add the lite branch at the top of Step 2.5 in plan-and-resume.md, before the aut
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite bypasses implementation checkpoints"`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/plan-and-resume.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-implement/SKILL.md`
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/plan-and-resume.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-implement/SKILL.md packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -740,9 +753,9 @@ Add the three branches. Keep the default sequence for every other mode byte-iden
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "lite collapses closeout"`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md`
+Format every file this task created or edited: `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-next/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md packages/cli/src/validation/skills.test.ts`
 
 **Step 4: Verify**
 
@@ -784,9 +797,11 @@ Not test-driven; markdownlint and the docs build are the checks.
 
 Add the lite entries. In AGENTS.md the option reads: "Lite workflow — batched interview → single plan.md with validation criteria → one approval → implement. Best for single-sitting changes: one component, one bug fix, one small refactor. → Use `oat-project-lite`." Heuristic line: "Single-sitting change with a clear outcome → Recommend lite."
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-Run: `pnpm exec oxfmt --write AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/docs/reference/cli-reference.md`, then regenerate the docs index: `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+Then regenerate the docs index (never format it): `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+
+Format every file this task created or edited: `pnpm exec oxfmt --write AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/docs/reference/cli-reference.md`
 
 **Step 4: Verify**
 
@@ -817,9 +832,9 @@ Not test-driven. This is the manual verification the testing strategy requires.
 
 Run `pnpm run cli -- sync --scope all` so the new skill appears in provider views. Then, in a scratch worktree or a throwaway branch, run `pnpm run cli -- project new lite-smoke --mode lite`, invoke `oat-project-lite` on a trivial change (for example, adding a one-line docs note), confirm the interview is one batched round, the approval gate fires once, the ceiling resolves, and `oat-project-implement` runs the single phase and final review. Delete the smoke project afterwards.
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write .oat/projects/shared/lite-workflow-mode/implementation.md`
 
 **Step 4: Verify**
 
@@ -853,9 +868,9 @@ Bump all five lockstep packages to the next patch (from 0.2.54 unless main moved
 Run: `pnpm release:check-versions`
 Expected: pass (GREEN)
 
-**Step 3: Refactor**
+**Step 3: Refactor and format**
 
-None.
+Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/package.json packages/cli/assets/public-package-versions.json` Do not format `pnpm-lock.yaml`, `.oat/sync/manifest.json`, or the sync-managed agent and skill views.
 
 **Step 4: Verify**
 
@@ -912,7 +927,7 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/artifact-plan-review-2026-09-05T185313Z.md          | -             | -          | -                        |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -929,7 +944,7 @@ cell; never truncate a widened row back to five columns.
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review run and recorded as passing (no Critical/Important)
 
-**Plan artifact review disposition (2026-09-05):** the structured `oat-reviewer` loop ran three attempts (bound 2) and the configured cross-family gate (`cursor-gpt-5-6-sol-xhigh`, threshold important) ran six times; every finding from all runs was resolved in this plan and `design.md` and is archived under `reviews/archived/`. The gate never returned clean: each run surfaced new mode-aware surfaces rather than regressions. The user explicitly overrode the exhausted gate budget on 2026-09-05 and directed completion without a further run after the sixth review's five findings were applied. The `plan` artifact rows therefore remain `received`, not `passed`. Residual risk: further mode-aware misses are expected to surface during implementation and are to be handled by per-phase root reviews and the final review, which run regardless.
+**Plan artifact review disposition (2026-09-05):** the structured `oat-reviewer` loop ran three attempts (bound 2) and the configured cross-family gate (`cursor-gpt-5-6-sol-xhigh`, threshold important) ran six times; every finding from all runs was resolved in this plan and `design.md` and is archived under `reviews/archived/`. The gate never returned clean: each run surfaced new mode-aware surfaces rather than regressions. The user explicitly overrode the exhausted gate budget on 2026-09-05, first directing completion after the sixth review, then choosing to keep running the gate until a round returns zero Important findings; each subsequent round's findings are applied and recorded below in implementation.md. The `plan` artifact rows therefore remain `received`, not `passed`. Residual risk: further mode-aware misses are expected to surface during implementation and are to be handled by per-phase root reviews and the final review, which run regardless.
 
 ---
 
