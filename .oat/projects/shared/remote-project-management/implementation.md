@@ -839,10 +839,10 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** in progress — the operator authorized one bounded extension: fix
-loop 3/3 and independent review 4/4 for the sole remaining Important finding.
+**Status:** in progress — operator-extension fix loop 3/3 resolved the sole
+remaining Important finding; independent review 4/4 is pending.
 **Started:** 2026-09-02
-**Implementation head:** e75f1d8e99edad72aa52442e31be9eec6116ae28
+**Implementation head:** a0a5eca48b40b1a75c6761c9c79406f290f82543
 
 ### Phase Summary
 
@@ -918,6 +918,14 @@ loop 3/3 and independent review 4/4 for the sole remaining Important finding.
   2026-09-05, the operator authorized one bounded extension: fix loop 3/3 and
   independent review 4/4 at the unchanged implementation/reviewer targets.
   Phase 6 has not started.
+- Operator-extension fix loop 3/3 ran as fresh same-target continuation
+  `p05-operator-fix-3-20260905-a17cb8971` because the original completed handle
+  was no longer resumable across sessions. It committed the exact four-file fix
+  as `a0a5eca48b40b1a75c6761c9c79406f290f82543`.
+- Root independently verified the four-file boundary, clean diff, and focused
+  suite at 93/93. The implementer passed the full remote suite at 544/544 plus
+  lint, type-check, build, formatting, diff, and provider-neutrality checks.
+  Independent operator-extension review 4/4 is next; Phase 6 has not started.
 
 ---
 
@@ -1795,7 +1803,7 @@ candidates_considered:
   - gpt-5.6-sol/medium
 selected_route: native
 phase_base_head: d5293b5649dbb3dd46a5b14590fb8fc411a0fd16
-phase_head: e75f1d8e99edad72aa52442e31be9eec6116ae28
+phase_head: a0a5eca48b40b1a75c6761c9c79406f290f82543
 task_commits:
   - 2ae26d36c64e54ce577c7bc5c3cd3aead419bbea
   - b1c97664b8b9c5088c61cb31b565231b19e16073
@@ -1811,10 +1819,11 @@ child_outcome: done
 continuation_events:
   - p05-review-fix-1-20260902-eed3fca5b
   - p05-review-fix-2-20260902-6c7c0c26c
+  - p05-operator-fix-3-20260905-a17cb8971
 recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 3/3
-fix_loops: 2/3
+fix_loops: 3/3
 review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
 review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
 review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
@@ -1834,7 +1843,9 @@ review_3_reconnaissance: not-attempted
 operator_extension_authorized: true
 operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
-phase_outcome: operator_extension_fix_pending
+fix_3_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
+fix_3_outcome: done
+phase_outcome: operator_extension_review_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1880,6 +1891,14 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - The operator authorized one bounded extension on 2026-09-05: fix loop 3/3
   and independent review 4/4 at the unchanged exact targets. Phase 6 remains
   blocked pending a passing review.
+- Operator-extension fix loop 3/3 used the fresh same-target continuation event
+  `p05-operator-fix-3-20260905-a17cb8971` because the original completed handle
+  was unavailable, and committed
+  `a0a5eca48b40b1a75c6761c9c79406f290f82543` within the exact four-file
+  boundary.
+- Root independently passed the focused suite at 93/93; the implementer passed
+  the remote suite at 544/544 plus lint, types, build, format, diff, and
+  provider-neutrality checks. Review 4/4 is pending; Phase 6 did not start.
 
 <!-- orchestration-runs-end -->
 
@@ -1981,7 +2000,7 @@ Track test execution during implementation.
 | rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 87/87; remote 538/538; checks passed   | 0      | blocked by review round 3  |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review 4 pending  |
 
 ## Final Summary (for PR/docs)
 

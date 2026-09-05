@@ -1,7 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: e75f1d8e99edad72aa52442e31be9eec6116ae28
-oat_blockers: ['Phase 5 operator-extension fix loop 3/3 is pending']
+oat_last_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
+oat_blockers: ['Phase 5 independent operator-extension review 4/4 is pending']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -43,7 +43,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:25:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:28:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -56,9 +56,9 @@ oat_generated: false
 ## Current Phase
 
 Phase 5 — Linear Semantic Adapter. All 9 planned tasks are implemented and the
-focused and remote suites pass 87/87 and 538/538. The operator authorized one
-bounded extension for the sole remaining Important public read verification
-defect: fix loop 3/3 and independent review 4/4. Phase 6 has not started.
+operator-extension fix resolved the sole remaining Important public read
+verification defect in `a0a5eca48`; the focused and remote suites pass 93/93
+and 544/544. Independent review 4/4 is pending. Phase 6 has not started.
 
 ## Artifacts
 
@@ -66,7 +66,7 @@ defect: fix loop 3/3 and independent review 4/4. Phase 6 has not started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 5 operator-extension fix pending)
+- **Implementation:** implementation.md (in progress; Phase 5 operator review pending)
 
 ## Progress
 
@@ -178,19 +178,19 @@ defect: fix loop 3/3 and independent review 4/4. Phase 6 has not started.
 - ⚠ Final normal Phase 5 review round 3 blocked with 0 Critical and 1 Important finding
 - ⛔ Phase 5 normal review governance exhausted at 3/3 reviews and 2/3 fix loops
 - ✓ Operator authorized one bounded extension fix/review cycle
-- ⧗ Phase 5 operator-extension fix loop 3/3 pending
+- ✓ Phase 5 operator-extension fix loop 3/3 committed as `a0a5eca48`
+- ✓ Expanded Phase 5 live suite passed 93/93 and remote suite passed 544/544
+- ⧗ Independent Phase 5 operator-extension review 4/4 pending
 
 ## Blockers
 
-Phase 5 public read verification can report stale capability evidence as
-verified even though validation rejects it. The operator-extension fix and
-independent review are authorized, but Phase 6 remains blocked until review 4/4
-passes. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+No active implementation defect is known after operator-extension fix loop 3/3,
+but Phase 6 remains blocked until independent review 4/4 passes. The
+branch-level lockstep version gate remains preserved for planned `p08-t05`
+release work.
 
 ## Next Milestone
 
-Run Phase 5 operator-extension fix loop 3/3, limited to the Important finding in
-`reviews/p05-review-2026-09-02T215328Z.md`, at the original exact implementer
-target. Then run independent review 4/4 and require zero Critical and zero
-Important findings before Phase 6.
+Run independent Phase 5 operator-extension review 4/4 over the full phase range
+ending at `a0a5eca48b40b1a75c6761c9c79406f290f82543`. Require zero Critical and
+zero Important findings before Phase 6.
