@@ -27,12 +27,9 @@ single-phase `plan.md` for `oat-project-implement`.
 resumable task commits, managed review, and a final gate while removing
 multi-phase planning ceremony.
 
-When `OAT_AUTONOMOUS=1`, read the canonical
-`.agents/docs/autonomy-contract.md`; installed skill-local
-`references/docs/autonomy-contract.md` views are read-only symlinks to that
-contract. Keep `OAT_NON_INTERACTIVE=1` set for the run. Resolve every
-interactive decision through its `LITE-0N` row and stop only where that row
-declares a boundary:
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and keep
+`OAT_NON_INTERACTIVE=1` set for the run. Resolve every interactive decision
+through its `LITE-0N` row and stop only where that row declares a boundary:
 
 - `LITE-01`: inherited dirty tree;
 - `LITE-02`: missing project name or description;
