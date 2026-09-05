@@ -1,7 +1,10 @@
 ---
 oat_current_task: null
 oat_last_commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
-oat_blockers: ['Phase 6 review round 1 is pending']
+oat_blockers:
+  [
+    'Phase 6 review round 1 found 3 Critical and 3 Important findings; bounded fix loop 1/3 is pending',
+  ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -46,7 +49,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:45:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:54:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -60,8 +63,8 @@ oat_generated: false
 
 Phase 6 — Jira Cloud Semantic Adapter. All 10 planned tasks and one bounded
 recovery are complete through `1903de1bc`; the Jira and remote suites pass
-42/42 and 586/586. Root-owned review round 1 is pending. Phase 7 has not
-started.
+42/42 and 586/586. Independent review round 1 found three Critical and three
+Important findings. Bounded fix loop 1/3 is pending; Phase 7 has not started.
 
 ## Artifacts
 
@@ -69,7 +72,7 @@ started.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 6 review pending)
+- **Implementation:** implementation.md (in progress; Phase 6 fixes pending)
 
 ## Progress
 
@@ -188,15 +191,16 @@ started.
 - ✓ Phase 6 tasks `p06-t01` through `p06-t10` completed in 10 ordered commits
 - ✓ Phase 6 bounded recovery attempt 1/10 committed as `1903de1bc`
 - ✓ Phase 6 Jira suite passed 42/42 and remote suite passed 586/586
-- ⧗ Phase 6 review round 1 pending
+- ⚠ Phase 6 review round 1 blocked with 3 Critical and 3 Important findings
 
 ## Blockers
 
-Phase 6 is gated on root-owned review round 1. The branch-level lockstep version
-gate remains preserved for planned `p08-t05` release work.
+Phase 6 is blocked on the six release-blocking review-round-1 findings. The
+branch-level lockstep version gate remains preserved for planned `p08-t05`
+release work.
 
 ## Next Milestone
 
-Run root-owned Phase 6 review round 1 over the full implementation range ending
-at `1903de1bc6295aa91454d6ca5080b59d1cdc4db9`. Do not begin Phase 7 until a
+Run bounded Phase 6 review-fix loop 1/3 through the accepted implementer, then
+independently re-review the full phase range. Do not begin Phase 7 until a
 review passes with zero Critical and zero Important findings.
