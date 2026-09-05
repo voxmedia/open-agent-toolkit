@@ -24,12 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                              | Status      | Tasks | Completed |
+| -------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 01 (use-configured-docs-index-paths)         | in_progress | 1     | 0/1       |
+| Phase 02 (validate-assets-bundle-structure)        | in_progress | 1     | 0/1       |
+| Phase 03 (make-assets-errors-override-aware)       | pending     | 1     | 0/1       |
+| Phase 04 (add-exclusions-to-docs-index-generation) | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/4 tasks completed
 
 ---
 

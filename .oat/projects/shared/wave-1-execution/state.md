@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -15,10 +15,26 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval (workflow.hillCheckpointDefault=final)
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
+    p02:
+      used_attempts: 0
+      pending_attempt: null
+    p03:
+      used_attempts: 0
+      pending_attempt: null
+    p04:
+      used_attempts: 0
+      pending_attempt: null
+# oat_phase_recovery_policy (reference): optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
 #   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
 #   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
@@ -84,19 +100,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:51:27.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Plan complete; awaiting the configured plan gate, then implementation
+**Status:** Implementing — group 1 (p01, p02) dispatched
 **Started:** 2026-09-05
 **Last Updated:** 2026-09-05
 
 ## Current Phase
 
-Plan - Wave 1 wrapper (four external plans: docs-index paths, asset-bundle
+Implement - group 1 lanes running in `.worktrees/wave-1/p01` and `p02`; plan gate passed (run `ace386d5`). Wave 1 wrapper (four external plans: docs-index paths, asset-bundle
 structure validation, then their two ordered successors) scaffolded from the
 `oat-wave-execute` templates; parallel groups composed from the wave-boundary
 drift refresh.
@@ -115,8 +131,9 @@ drift refresh.
 - ✓ Preflight: `wave-1-execution` created from `origin/main` `a1fd7cd41031719c4db85276fceee402f6045e9c`; install, build, type-check green
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
-- ⧗ Plan gate (configured cross-runtime artifact gate)
-- ⧗ Group 1 dispatch (p01, p02), fan-in, integration gates; then group 2 successors (p03, p04)
+- ✓ Plan gate passed after three in-artifact fixes (run `ace386d5`)
+- ⧗ Group 1 (p01, p02) dispatched at `ab7d5168d2cbd3199c257f73e7e2afdde40cc74b`; fan-in and integration gates pending
+- ⧗ Group 2 successors (p03, p04) after readiness checks
 
 ## Blockers
 
@@ -124,4 +141,4 @@ None
 
 ## Next Milestone
 
-Plan gate `passed`, then group 1 worktrees bootstrapped and dispatched
+Group 1 phase reports, root-owned reviews, fan-in with the single lockstep bump, integration gates
