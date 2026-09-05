@@ -82,6 +82,35 @@ describe('runRemoteDoctorChecks', () => {
     await expect(runRemoteDoctorChecks(paths)).resolves.toEqual([]);
   });
 
+  it('reports pending/stale records, missing verification, retention, and unavailable host capability', async () => {
+    const paths = await createPaths();
+    await writeFile(
+      join(paths.operationsDir, 'op_pending_001.json'),
+      JSON.stringify(operationRecord('op_pending_001', 'pending')),
+    );
+    const checks = await runRemoteDoctorChecks({
+      ...paths,
+      now: '2026-09-05T12:00:00.000Z',
+      staleAfterMs: 60_000,
+      retentionBreaches: ['bnd_binding_123:disallowed-field'],
+      hostCapabilityAvailability: [
+        { bindingId: 'bnd_binding_123', available: false },
+      ],
+    });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_operations'),
+    ).toMatchObject({
+      status: 'fail',
+      message: expect.stringMatching(/pending|stale/),
+    });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_retention'),
+    ).toMatchObject({ status: 'fail' });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_host_capability'),
+    ).toMatchObject({ status: 'fail' });
+  });
+
   it('reports schema/filename, dangling/duplicate identity, and metadata-state findings', async () => {
     const paths = await createPaths();
     const metadata = {

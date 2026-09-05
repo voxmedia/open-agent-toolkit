@@ -19,6 +19,13 @@ export interface RemoteDoctorInput {
   operationsDir: string;
   associatedBindingIds?: readonly string[];
   policy?: unknown;
+  now?: string;
+  staleAfterMs?: number;
+  retentionBreaches?: readonly string[];
+  hostCapabilityAvailability?: ReadonlyArray<{
+    bindingId: string;
+    available: boolean;
+  }>;
 }
 
 interface LoadedRecord<T> {
@@ -52,7 +59,9 @@ export async function runRemoteDoctorChecks(
     stateFiles.length > 0 ||
     operationFiles.length > 0 ||
     (input.associatedBindingIds?.length ?? 0) > 0 ||
-    input.policy !== undefined;
+    input.policy !== undefined ||
+    (input.retentionBreaches?.length ?? 0) > 0 ||
+    (input.hostCapabilityAvailability?.length ?? 0) > 0;
   if (!adopted) return [];
 
   const schemaFindings = collectSchemaFindings(
@@ -81,6 +90,12 @@ export async function runRemoteDoctorChecks(
     .map((file) => file.filename);
   const policyFindings = collectRemotePolicyFindings(input.policy);
   const concurrentBindings = collectConcurrentBindings(operations);
+  const operationalFindings = collectOperationalFindings(operations, input);
+  const retentionFindings = [...(input.retentionBreaches ?? [])].sort();
+  const unavailableCapabilities = (input.hostCapabilityAvailability ?? [])
+    .filter((entry) => !entry.available)
+    .map((entry) => entry.bindingId)
+    .sort();
 
   return [
     findingCheck(
@@ -121,7 +136,51 @@ export async function runRemoteDoctorChecks(
       'Concurrent active remote operation intents',
       concurrentBindings,
     ),
+    findingCheck(
+      'pjm:remote_operations',
+      'Remote operation freshness, terminal state, and verification evidence',
+      operationalFindings,
+    ),
+    findingCheck(
+      'pjm:remote_retention',
+      'Remote operational-state retention boundary',
+      retentionFindings,
+    ),
+    findingCheck(
+      'pjm:remote_host_capability',
+      'Current host semantic capability availability',
+      unavailableCapabilities,
+    ),
   ];
+}
+
+function collectOperationalFindings(
+  operations: RemoteOperationRecord[],
+  input: RemoteDoctorInput,
+): string[] {
+  const findings: string[] = [];
+  const visibleStates = new Set([
+    'pending',
+    'partial',
+    'uncertain',
+    'attempt-started',
+    'verification-pending',
+  ]);
+  const now = input.now ? Date.parse(input.now) : Number.NaN;
+  const staleAfterMs = input.staleAfterMs ?? Number.POSITIVE_INFINITY;
+  for (const operation of operations) {
+    if (visibleStates.has(operation.state)) {
+      findings.push(`${operation.operationId}:${operation.state}`);
+    }
+    const age = now - Date.parse(operation.updatedAt);
+    if (Number.isFinite(age) && age > staleAfterMs) {
+      findings.push(`${operation.operationId}:stale`);
+    }
+    if (operation.state === 'verified' && operation.verification.length === 0) {
+      findings.push(`${operation.operationId}:missing-verification`);
+    }
+  }
+  return [...new Set(findings)].sort();
 }
 
 async function loadRecords<T>(

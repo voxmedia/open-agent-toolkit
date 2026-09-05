@@ -17,6 +17,8 @@ export type RemoteLifecycleOperation =
   | 'closeout'
   | 'discussion'
   | 'resolve'
+  | 'doctor'
+  | 'migrate'
   | 'storage-transition'
   | 'operation-continue';
 
@@ -31,6 +33,8 @@ export interface RemoteCommandRequest {
   projectPath?: string;
   discussionLimit?: number;
   resolutionKind?: 'relink' | 'detach' | 'recreate';
+  migrationMode?: 'check' | 'apply';
+  migrationApprovalDigest?: string;
   createTarget?: {
     provider: string;
     localKind: 'backlog' | 'project';
@@ -167,6 +171,45 @@ export function createPjmRemoteCommand(
             bindingId: options.binding,
             providerRef,
             previewOperationId: options.applyPreview,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
+
+  remote
+    .command('doctor')
+    .description('Diagnose local remote-binding state without provider contact')
+    .action(async (_options: unknown, command: Command) => {
+      await execute({ operation: 'doctor' }, command, dependencies);
+    });
+
+  remote
+    .command('migrate')
+    .description('Check or apply an approved local-only remote migration')
+    .option('--check', 'Preview local migration candidates')
+    .option('--apply', 'Apply an exact approved local migration')
+    .option('--approval-digest <digest>', 'Approved check preview digest')
+    .action(
+      async (
+        options: {
+          check?: boolean;
+          apply?: boolean;
+          approvalDigest?: string;
+        },
+        command: Command,
+      ) => {
+        if (Boolean(options.check) === Boolean(options.apply)) {
+          throw new Error(
+            'Remote migrate requires exactly one of --check or --apply.',
+          );
+        }
+        await execute(
+          {
+            operation: 'migrate',
+            migrationMode: options.apply ? 'apply' : 'check',
+            migrationApprovalDigest: options.approvalDigest,
           },
           command,
           dependencies,

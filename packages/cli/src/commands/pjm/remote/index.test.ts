@@ -138,6 +138,36 @@ describe('remote resolution commands', () => {
   });
 });
 
+describe('remote doctor and migration commands', () => {
+  it.each([
+    [['doctor'], 'doctor', undefined],
+    [['migrate', '--check'], 'migrate', 'check'],
+    [['migrate', '--apply'], 'migrate', 'apply'],
+  ] as const)('registers %s', async (argv, operation, migrationMode) => {
+    const requests: RemoteCommandRequest[] = [];
+    const command = createPjmRemoteCommand({
+      resolveProjectRoot: async () => '/repo',
+      checkAdoption: async () => 'complete',
+      run: async (request) => {
+        requests.push(request);
+        return {
+          schemaVersion: 1,
+          status: 'needs-review',
+          operation,
+          projectRoot: request.projectRoot,
+          persisted: true,
+          results: [],
+          externalAction: null,
+          recovery: [],
+        };
+      },
+    });
+    await command.parseAsync([...argv], { from: 'user' });
+    expect(requests[0]).toMatchObject({ operation });
+    if (migrationMode) expect(requests[0]?.migrationMode).toBe(migrationMode);
+  });
+});
+
 async function adoptedRepository() {
   const repo = await mkdtemp(join(tmpdir(), 'oat-remote-live-'));
   tempDirs.push(repo);
