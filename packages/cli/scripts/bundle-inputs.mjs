@@ -40,6 +40,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-project-document',
     'oat-project-implement',
     'oat-project-import-plan',
+    'oat-project-lite',
     'oat-project-new',
     'oat-project-next',
     'oat-project-open',

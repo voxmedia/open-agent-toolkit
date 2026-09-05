@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 const PROJECT_START_SKILLS = [
   'oat-project-new',
   'oat-project-quick-start',
+  'oat-project-lite',
   'oat-project-import-plan',
 ] as const;
 

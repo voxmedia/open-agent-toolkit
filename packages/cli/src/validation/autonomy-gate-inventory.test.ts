@@ -368,14 +368,14 @@ describe('autonomy gate-inventory drift enforcement', () => {
     }
   });
 
-  it('keeps all fifteen autonomous skill roots mapped at repository HEAD', async () => {
+  it('keeps all sixteen autonomous skill roots mapped at repository HEAD', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const contract = await readFile(
       join(repoRoot, '.agents', 'docs', 'autonomy-contract.md'),
       'utf8',
     );
 
-    expect(parseInventory(contract).skillRoots).toHaveLength(15);
+    expect(parseInventory(contract).skillRoots).toHaveLength(16);
     await expect(assertInventoryCurrent(repoRoot)).resolves.toBeUndefined();
   });
 });

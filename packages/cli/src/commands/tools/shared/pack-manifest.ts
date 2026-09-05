@@ -135,6 +135,7 @@ const WORKFLOW_SKILL_NAMES = [
   'oat-project-document',
   'oat-project-implement',
   'oat-project-import-plan',
+  'oat-project-lite',
   'oat-project-new',
   'oat-project-next',
   'oat-project-open',

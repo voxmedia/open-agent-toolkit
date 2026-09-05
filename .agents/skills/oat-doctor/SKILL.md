@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.1.0
+version: 1.1.1
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -159,7 +159,8 @@ Workflow pack skills:
 
 - oat-project-capture, oat-project-clear-active, oat-project-complete
 - oat-project-design, oat-project-discover, oat-project-document
-- oat-project-implement, oat-project-import-plan, oat-project-new
+- oat-project-implement, oat-project-import-plan, oat-project-lite
+- oat-project-new
 - oat-project-open, oat-project-plan, oat-project-plan-writing
 - oat-project-pr-final, oat-project-pr-progress, oat-project-progress
 - oat-project-promote-spec-driven, oat-project-quick-start

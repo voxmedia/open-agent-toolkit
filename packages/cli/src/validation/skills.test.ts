@@ -1737,9 +1737,10 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('marks quick-start and import-plan as gateable lifecycle skills', async () => {
+  it('marks lite, quick-start, and import-plan as gateable lifecycle skills', async () => {
     for (const skillName of [
       'oat-project-quick-start',
+      'oat-project-lite',
       'oat-project-import-plan',
     ]) {
       const content = await readRepoFile(
@@ -1753,9 +1754,10 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('adds Gate Execution steps to quick-start and import-plan', async () => {
+  it('adds Gate Execution steps to lite, quick-start, and import-plan', async () => {
     for (const skillName of [
       'oat-project-quick-start',
+      'oat-project-lite',
       'oat-project-import-plan',
     ]) {
       const content = await readRepoFile(
@@ -1813,6 +1815,14 @@ describe('validateOatSkills', () => {
         completionHeading:
           '### Step 3.7: Record Review Disposition and Mark Plan Complete',
         noGateNextStep: 'Step 3.7',
+      },
+      {
+        skillName: 'oat-project-lite',
+        version: '1.0.0',
+        finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
+        gateHeading: '### Gate Execution',
+        completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
+        noGateNextStep: 'Step 7',
       },
       {
         skillName: 'oat-project-implement',
@@ -1889,6 +1899,66 @@ describe('validateOatSkills', () => {
       'plan artifact review precedes exit gate',
     ).toBeLessThan(gateIndex);
     expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
+  });
+
+  it('oat-project-lite enforces the single-pause interaction contract', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-lite/SKILL.md',
+    );
+    const interviewStart = content.indexOf(
+      '### Step 2: Batched Critical Interview',
+    );
+    const authoringStart = content.indexOf(
+      '### Step 3: Author the Single-Phase Plan',
+    );
+    const interview = content.slice(interviewStart, authoringStart);
+    const approvalStart = content.indexOf('### Step 4: Single Approval Gate');
+    const dispatchStart = content.indexOf(
+      '### Step 5: Resolve Dispatch Ceiling',
+    );
+    const approval = content.slice(approvalStart, dispatchStart);
+    const persistence = content.slice(
+      content.indexOf('## Artifact Persistence (Required)'),
+      content.indexOf('### Step 0 (Preflight): Inherited Git State'),
+    );
+
+    expect(interviewStart).toBeGreaterThanOrEqual(0);
+    expect(authoringStart).toBeGreaterThan(interviewStart);
+    expect(interview).toMatch(/one batched round/i);
+    expect(interview).toMatch(
+      /second round only for questions (?:that|which) the first round(?:'s answers)? created/i,
+    );
+    expect(interview).toMatch(/just proceed[\s\S]*careful assumptions/i);
+    expect(content).toContain(
+      'oat project promote "$PROJECT_PATH" --to quick --json',
+    );
+    expect(approval.match(/AskUserQuestion/g)).toHaveLength(1);
+    expect(content.match(/AskUserQuestion/g)).toHaveLength(2);
+    expect(content).not.toMatch(/^### .*HiLL/m);
+    expect(content).not.toMatch(/^### .*Phase Gate/m);
+    expect(content).not.toContain('oat_hill_checkpoints');
+    expect(persistence).toMatch(
+      /after Step 3[\s\S]*before the Step 4 approval gate/i,
+    );
+    expect(persistence).toMatch(/after Step 6[\s\S]*before Gate Execution/i);
+  });
+
+  it('oat-project-lite registers every interactive gate in the autonomy inventory', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-lite/SKILL.md',
+    );
+    const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
+
+    expect(content).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]*references\/docs\/autonomy-contract\.md/,
+    );
+    for (let gate = 1; gate <= 9; gate += 1) {
+      const gateId = `LITE-${String(gate).padStart(2, '0')}`;
+      expect(content, `${gateId} cited by skill`).toContain(gateId);
+      expect(contract, `${gateId} registered`).toMatch(
+        new RegExp(`^\\| ${gateId}\\s+\\|`, 'm'),
+      );
+    }
   });
 
   it('declares the implementation exit gate as a required top-level closeout capability', async () => {
