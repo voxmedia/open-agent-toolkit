@@ -76,6 +76,13 @@ const IMPORT_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'implement:in_progress:any': 'oat-project-implement',
 };
 
+const LITE_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
+  'plan:in_progress:3': 'oat-project-lite',
+  'plan:in_progress:2': 'oat-project-implement',
+  'plan:complete:1': 'oat-project-implement',
+  'implement:in_progress:any': 'oat-project-implement',
+};
+
 export function recommendSkill(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
@@ -290,6 +297,8 @@ function getWorkflowRoutes(
       return QUICK_ROUTES;
     case 'import':
       return IMPORT_ROUTES;
+    case 'lite':
+      return LITE_ROUTES;
     case 'spec-driven':
     default:
       return SPEC_DRIVEN_ROUTES;

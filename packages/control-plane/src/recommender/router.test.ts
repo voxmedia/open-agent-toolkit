@@ -140,6 +140,46 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-import-plan');
   });
 
+  it('routes lite projects across planning boundary tiers', () => {
+    const litePlan = (
+      boundaryTier: 1 | 2 | 3,
+      status: 'in_progress' | 'complete',
+    ) =>
+      makeState({
+        phase: 'plan',
+        phaseStatus: status,
+        workflowMode: 'lite',
+        artifacts: makeArtifacts({
+          type: 'plan',
+          boundaryTier,
+          status,
+        }),
+      });
+
+    expect(recommendSkill(litePlan(3, 'in_progress')).skill).toBe(
+      'oat-project-lite',
+    );
+    expect(recommendSkill(litePlan(2, 'in_progress')).skill).toBe(
+      'oat-project-implement',
+    );
+    expect(recommendSkill(litePlan(1, 'complete')).skill).toBe(
+      'oat-project-implement',
+    );
+  });
+
+  it('uses the current-phase default for a lite discovery state', () => {
+    const state = makeState({
+      phase: 'discovery',
+      workflowMode: 'lite',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-discover');
+  });
+
   it('uses oat-project-implement regardless of execution mode', () => {
     const state = makeState({
       phase: 'plan',
