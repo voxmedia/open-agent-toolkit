@@ -327,6 +327,33 @@ describe('oat project split run', () => {
     ).resolves.toContain('## Detected Split Recommendation');
   });
 
+  it('does not create discovery.md when recording a detected split recommendation without one', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
+    tempDirs.push(repoRoot);
+    await seedTemplates(repoRoot);
+    const activeRoot = join(repoRoot, '.oat', 'projects', 'shared', 'active');
+    await mkdir(activeRoot, { recursive: true });
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      `${JSON.stringify({ version: 1, activeProject: '.oat/projects/shared/active' })}\n`,
+      'utf8',
+    );
+    const planFile = await writePlanFile(
+      repoRoot,
+      document({ origin: 'detected-mid-stream', interactive: false }),
+    );
+    const { capture, command } = createHarness(repoRoot);
+
+    await runCommand(command, ['--plan-file', planFile, '--non-interactive']);
+
+    expect(process.exitCode).toBe(1);
+    await expect(exists(join(activeRoot, 'discovery.md'))).resolves.toBe(false);
+    expect(capture.info).toEqual([
+      'skipped split recommendation: no discovery.md for this project',
+    ]);
+  });
+
   it('fails fast for detected origins when OAT_NON_INTERACTIVE=1', async () => {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-split-run-'));
     tempDirs.push(repoRoot);
