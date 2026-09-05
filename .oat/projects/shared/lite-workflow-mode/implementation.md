@@ -196,6 +196,27 @@ against the unchanged plan because the agent's edit script aborted before
 writing; its findings duplicate the previous run and were not separately
 dispositioned. The override run that reviews the corrected plan follows it.
 
+#### Review Received: plan (gate, user-override run)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T151613Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run ec34beee-4419-4f09-beec-669c94a8462a, blocked at threshold important
+**Findings:** Critical 0, Important 2, Medium 2, Minor 0
+
+Confirms all six prior findings resolved. Remaining, awaiting user
+disposition:
+
+- I1: `oat-project-autonomous` selects only quick or spec-driven for new
+  goals and has no resume route for an in-progress lite plan; not in
+  p05-t01.
+- I2: brainstorm fold-back artifact selection still targets design.md or
+  discovery.md; a lite project has neither, so fold-back would create
+  discovery.md. p05-t01 only changes the handoff table row.
+- M1: p03-t03's non-empty-parallel-groups RED case already fails today via
+  the singleton-group rule; only the multi-phase clause is a true RED.
+- M2: p01-t01 omits `packages/control-plane/README.md` for the new public
+  `WORKFLOW_MODES` export; p06-t01 omits
+  `apps/oat-docs/docs/reference/cli-reference.md` for the promote command.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
