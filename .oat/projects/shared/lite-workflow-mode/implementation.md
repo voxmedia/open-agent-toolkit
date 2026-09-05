@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-05
-oat_current_task_id: p04-t02
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | pending  | 2     | 0/2       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | complete  | 4     | 4/4       |
+| Phase 2 | complete  | 3     | 3/3       |
+| Phase 3 | complete  | 3     | 3/3       |
+| Phase 4 | in review | 2     | 2/2       |
+| Phase 5 | pending   | 4     | 0/4       |
+| Phase 6 | pending   | 3     | 0/3       |
 
-**Total:** 10/19 tasks completed
+**Total:** 12/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -208,6 +208,52 @@ template while preserving authored brace syntax and `oat_template: true`.
 
 ---
 
+## Phase 4: Lite Entry Skill and End-to-End Test
+
+**Status:** in review
+**Started:** 2026-09-05
+
+### Phase Summary
+
+Added the `oat-project-lite` workflow entry skill, its autonomous gate inventory,
+bundle registration, and end-to-end coverage for scaffold, recommendation,
+dashboard, promotion, and completed-plan routing. The committed bundle reference
+defect was repaired append-only in recovery attempt 2.
+
+### Task p04-t01: Author the oat-project-lite skill and register it in the workflows pack
+
+**Status:** completed
+**Commit:** 6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d
+**Recovery commit:** 479d2f1a1c0ebbe3e64445d3af14d5bcde3e18b1
+
+**Outcome:** Added the skill, pack registration, autonomous gate inventory,
+contract coverage, and traveling skill-local autonomy reference.
+
+**Verification:** Skill contracts, validation, lint, format, skill-bump gate,
+and the isolated-HOME uncached CLI suite passed after recovery.
+
+### Task p04-t02: End-to-end lite scaffold, dashboard, and promotion
+
+**Status:** completed
+**Commit:** 3e89f14de30836512bb5aa16e46b7a68323503bd
+
+**Outcome:** Added integration coverage for lite scaffold/recommendation,
+untouched-plan refusal, authored-plan promotion, discovery preservation, and
+completed-plan routing.
+
+**Verification:** Lite E2E 2/2, dashboard 27/27, and the isolated-HOME forced
+CLI suite 5,506/5,506 passed before and after the task commit.
+
+**Intentional plan adaptation:** p04-t02's E2E test surfaced a real dashboard
+defect. Under the task's owning-module allowance, the implementation also
+updated `packages/cli/src/commands/state/generate.ts` and its unit test so a
+promoted quick project with `oat_ready_for: oat-project-quick-start` routes to
+quick-start, while ordinary completed quick discovery still routes to planning.
+The implementation is the source of truth; the plan's Step 2 already authorizes
+this bounded adaptation, so no plan rewrite is required.
+
+---
+
 ---
 
 ## Orchestration Runs
@@ -241,18 +287,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 - **p02:** implementation, initial review, one fix, and passing re-review are recorded under `dispatch/lite-p02-*.json`; final reviewed head `948434796085b5c537542213fd562194827a822c`.
 - **p03:** implementation, initial review, one fix, and passing re-review are recorded under `dispatch/lite-p03-*.json`; final reviewed head `4b1eb65a41ffe179793cd9eca7e7f3d963ec6766`.
+- **p04 implementation:** accepted request `lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36`; durable record `dispatch/lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `3e89f14de30836512bb5aa16e46b7a68323503bd` after one failed and one successful append-only recovery attempt.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review | Fix Loops | Outcome |
-| ----- | -------------- | ------ | --------- | ------- |
-| p01   | DONE (4/4)     | passed | 0         | pass    |
-| p02   | DONE (3/3)     | passed | 1         | pass    |
-| p03   | DONE (3/3)     | passed | 1         | pass    |
+| Phase | Implementation | Review  | Fix Loops | Outcome   |
+| ----- | -------------- | ------- | --------- | --------- |
+| p01   | DONE (4/4)     | passed  | 0         | pass      |
+| p02   | DONE (3/3)     | passed  | 1         | pass      |
+| p03   | DONE (3/3)     | passed  | 1         | pass      |
+| p04   | DONE (2/2)     | pending | 0         | in-review |
 
 #### Outstanding Items
 
-- Next schedule entry: `p04`.
+- Independent p04 review is next; p05 starts only after a passing disposition.
 
 ---
 

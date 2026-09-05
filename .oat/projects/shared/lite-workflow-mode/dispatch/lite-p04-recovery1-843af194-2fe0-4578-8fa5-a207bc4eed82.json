@@ -44,7 +44,7 @@
     "worktree": ".worktrees/lite-workflow-mode/p04-recovery1"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "failed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p04",
     "phase-standing-recovery",

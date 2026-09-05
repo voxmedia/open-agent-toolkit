@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t02
-oat_last_commit: 479d2f1a1c0ebbe3e64445d3af14d5bcde3e18b1
+oat_current_task: p05-t01
+oat_last_commit: 3e89f14de30836512bb5aa16e46b7a68323503bd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -86,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:24:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:30:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -115,7 +115,8 @@ Phase 4 - Lite Entry Skill and End-to-End Test
 - ✓ Phase 1 implemented and independently reviewed
 - ✓ Phases 2 and 3 implemented in parallel, corrected, independently reviewed, and merged
 - ✓ `p04-t01` implemented and its bundled autonomy reference recovered
-- ⧗ `p04-t02` end-to-end coverage in progress
+- ✓ `p04-t02` end-to-end coverage and Phase 4 verification complete
+- ⧗ Independent p04 review pending
 
 ## Blockers
 
@@ -123,4 +124,4 @@ None.
 
 ## Next Milestone
 
-Complete `p04-t02`, verify Phase 4, and run the independent phase review.
+Run and disposition the independent p04 phase review.

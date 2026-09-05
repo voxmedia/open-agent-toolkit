@@ -27,9 +27,7 @@
   "guidance_verified_at": "2026-07-25",
   "guidance_status": "fresh",
   "selection_source": "native-default",
-  "candidates_considered": [
-    "oat-phase-implementer-gpt-5-6-sol-high"
-  ],
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-high"],
   "selection_reason": "native-catalog",
   "selected_route": "native",
   "deadline_seconds": 5400,
@@ -44,7 +42,7 @@
     "parallel_group": []
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p04",
     "native-spawn-accepted",
