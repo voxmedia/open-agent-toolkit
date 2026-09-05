@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.3.4
+version: 1.3.5
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -233,7 +233,7 @@ ACTIVE_PROJECT_PR_STATUS=""
 if [ -n "$ACTIVE_PROJECT" ] && [ -f "$ACTIVE_PROJECT/state.md" ]; then
   ACTIVE_PROJECT_VALID="true"
   # Read state.md frontmatter — extract:
-  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick")
+  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick", "lite")
   #   oat_phase         → ACTIVE_PROJECT_PHASE       (e.g., "discovery", "design", "plan", "implement")
   #   oat_pr_status     → ACTIVE_PROJECT_PR_STATUS   (e.g., "none", "open", "closed")
 fi
@@ -396,8 +396,8 @@ The payload is staged in memory only — it is not persisted between conversatio
   - Capture as new idea → confirm slug.
   - Extend existing idea → confirm which idea (slug or path).
   - Doc-to-path → confirm path.
-  - Promote to new project → confirm slug + workflow mode (`quick` vs `spec-driven`, with skill proposing a default based on the chosen direction and scope signals).
-  - Active-project fold-back → confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
+  - Promote to new project → confirm slug + workflow mode (`lite`, `quick`, or `spec-driven`, with skill proposing a default based on the chosen direction and scope signals).
+  - Active-project fold-back → for lite confirm `plan.md`; otherwise confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
   - Active-project reference file → confirm filename (default `YYYY-MM-DD-<topic>.md`).
 
 - **`none`** (currently `Inline only` and `Summarize idea directly`): no per-field confirmation at this layer. For `Inline only`, write the closing summary directly. For `Summarize idea directly`, hand off — the downstream `oat-idea-summarize` surfaces its own summary for accept/refine review.
@@ -556,13 +556,24 @@ The 3-way router fires once per session. After convergence resumes (e.g., the us
 
 #### 9i — Active project: fold-back to upstream artifact
 
-Uniform across spec-driven and quick modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
+Uniform across spec-driven, quick, and lite modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
 
 **Step 1 — Pick upstream artifact.** Prefer the most-specific existing one:
 
+- For lite, always select `<ACTIVE_PROJECT>/plan.md`. Append `## Brainstorming Update` immediately above `## Phase 1`; lite has no discovery or design artifact.
 - `<ACTIVE_PROJECT>/design.md` if it exists (any mode — quick lightweight design counts).
 - Otherwise `<ACTIVE_PROJECT>/discovery.md`.
 - The user's signal during the conversation can override toward `discovery.md` even when `design.md` exists ("this is foundational" → discovery; "this is a design refinement" → design).
+
+Use this executable artifact-selection contract before confirming the path:
+
+```bash
+# BEGIN LITE FOLD-BACK CONTRACT
+if [ "$ACTIVE_PROJECT_MODE" = "lite" ]; then
+  ARTIFACT_PATH="$ACTIVE_PROJECT/plan.md"
+fi
+# END LITE FOLD-BACK CONTRACT
+```
 
 Confirm the chosen artifact with the user (minimal confirmation per `references/destinations.md`). Set `ARTIFACT_PATH` to the absolute path.
 
@@ -602,7 +613,7 @@ beside another dirty project file must take Step 4.
    ## Brainstorming Update: YYYY-MM-DD — <topic>
    ```
 
-   Section body contains: `chosenDirection` (with rationale), key decisions (extracted from the conversation), and a transcript appendix (`transcriptSessionNote`). Optionally include `openQuestions` and `nextSteps` if surfaced.
+   Section body contains: `chosenDirection` (with rationale), key decisions (extracted from the conversation), and a transcript appendix (`transcriptSessionNote`). Optionally include `openQuestions` and `nextSteps` if surfaced. In lite mode, insert this section above `## Phase 1` in `plan.md` rather than appending after the task plan.
 
 2. Persist **only** the artifact under the scope guard:
 
@@ -621,7 +632,7 @@ beside another dirty project file must take Step 4.
 
    For non-synced projects, use the explicit `--` filename form. **Never `git add -A`. Never directory globs.** Other working-tree paths are not touched by this commit. For synced projects, `FOLD_BACK_COMMIT_SHA` comes from the push JSON rather than the parent branch.
 
-3. `<artifact-basename>` is `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
+3. `<artifact-basename>` is `plan.md` for lite, otherwise `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
 
 4. If the guarded persistence succeeded → proceed to step 5 (handoff prompt).
 
@@ -695,7 +706,8 @@ Resolve the handoff target by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATU
 | ----------- | ---------------------------- | ------------------------- |
 | spec-driven | none / closed                | `oat-project-plan`        |
 | quick       | none / closed                | `oat-project-quick-start` |
-| either      | open (`oat_pr_status: open`) | `oat-project-revise`      |
+| lite        | none / closed                | `oat-project-lite`        |
+| any mode    | open (`oat_pr_status: open`) | `oat-project-revise`      |
 
 Print the handoff prompt template, substituting `<skill-name>`, `<artifact>`, `<hash>`, and `<subject>` from the actual branch commit or synced push receipt:
 
@@ -771,6 +783,6 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` only — never `design.md` — and does not auto-chain into the next phase.
 - ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
 - ✅ Fold-back persistence safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + exact-path branch commit for shared/local or validated `oat project push --json` for synced; dirty → three-option picker (persist-prior-first / mix / abort-to-reference-file); handoff prompt prints only after the scope-appropriate receipt succeeds.
-- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-revise` (either mode, open PR).
+- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-revise` (any mode, open PR).
 - ✅ Active-project 3-way router (related / independent / supplementary) fires before the standard pack-filtered picker when both `WORKFLOWS_INSTALLED == "true"` and `ACTIVE_PROJECT_VALID == "true"`.
 - ✅ Skill validates cleanly under `pnpm oat:validate-skills` (frontmatter contract, allowed-tools, mode-assertion structure).

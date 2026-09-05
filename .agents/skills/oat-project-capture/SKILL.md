@@ -1,6 +1,6 @@
 ---
 name: oat-project-capture
-version: 1.0.1
+version: 1.0.2
 description: Use when work happened outside the OAT project workflow and needs retroactive project tracking. Creates a full project from an existing branch and conversation context.
 disable-model-invocation: true
 user-invocable: true
@@ -24,7 +24,7 @@ Use when:
 Don't use when:
 
 - A project already exists for the current branch — use `oat-project-reconcile` instead
-- You haven't started any work yet — use `oat-project-quick-start` or `oat-project-new`
+- You haven't started any work yet — use `oat-project-lite` for single-sitting work, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work
 - You only need to map new commits to an existing plan — use `oat-project-reconcile`
 
 ## Prerequisites

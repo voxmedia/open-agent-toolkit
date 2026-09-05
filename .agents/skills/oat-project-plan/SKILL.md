@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.6
+version: 1.4.7
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -14,13 +14,16 @@ Transform detailed design into an executable implementation plan with bite-sized
 
 ## Prerequisites
 
-This skill is the plan authoring path for **spec-driven** projects only. Quick and import modes have dedicated entry skills that produce `plan.md` directly.
+This skill is the plan authoring path for **spec-driven** projects only. Quick,
+import, and lite modes have dedicated entry skills that produce `plan.md`
+directly.
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
 - **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
 - **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
+- **`lite`**: **Stop.** Tell the user: "Lite planning is owned by `oat-project-lite`; run it to author or resume the combined plan contract."
 
 ## Plan Format Contract
 
@@ -115,6 +118,15 @@ WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || e
 ```
 ⚠️  This project uses quick mode. Plan is produced by the quick workflow.
     Run the `oat-project-implement` skill to begin execution.
+```
+
+Exit skill.
+
+**Mode: `lite`** — **STOP.** Print:
+
+```
+⚠️  This project uses lite mode. Run `oat-project-lite` to author or resume
+    its combined requirements and single-phase plan.
 ```
 
 Exit skill.

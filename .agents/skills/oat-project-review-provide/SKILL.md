@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.5.3
+version: 1.5.4
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -306,6 +306,7 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
 - `spec-driven`: `spec.md`, `design.md`, `plan.md`
 - `quick`: `discovery.md`, `plan.md` (`spec.md`/`design.md` optional if present)
 - `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
+- `lite`: `plan.md`, `implementation.md` (`discovery.md`/`spec.md`/`design.md` are absent by design)
 
 **Required for artifact review:**
 
@@ -314,9 +315,10 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
   - reviewing `spec` requires `discovery.md`
   - reviewing `design` in `spec-driven` mode requires `spec.md`
   - reviewing `design` in `quick/import` mode requires only `discovery.md` (spec is skipped in these modes)
-  - in `quick/import` mode, missing `spec.md` must not be treated as a project review gate failure for `artifact design`; proceed with normal project-scoped review flow, artifact writing, and bookkeeping
+  - in `quick/import` mode (lite has no design artifact), missing `spec.md` must not be treated as a project review gate failure for `artifact design`; proceed with normal project-scoped review flow, artifact writing, and bookkeeping
   - reviewing `plan` in `spec-driven` mode requires `spec.md` + `design.md`
-  - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead
+  - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead; lite uses the separate rule below
+  - reviewing `plan` in `lite` mode requires only `plan.md`; its Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections are the complete upstream contract
 
 **If missing:** Report missing required artifacts for the current mode and stop if requirements are not met.
 
@@ -502,6 +504,8 @@ case "$SCOPE_TOKEN" in
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
     elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
+    elif [[ "$WORKFLOW_MODE" == "lite" ]]; then
+      FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md")
     else
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/references/imported-plan.md")
     fi
@@ -581,10 +585,12 @@ Build the "Review Scope" metadata for the reviewer:
 **Scope:** {scope}{optional: " (" + SCOPE_RANGE + ")"}
 **Date:** {today}
 
+- Workflow mode: {WORKFLOW_MODE}
+
 **Artifact Paths:**
 
-- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import)
-- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import)
+- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import/lite)
+- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import/lite)
 - Plan: {PROJECT_PATH}/plan.md
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md
@@ -621,6 +627,19 @@ Build the "Review Scope" metadata for the reviewer:
 - Use artifact-alignment framing when shipped implementation is defensible and the lifecycle artifact should be updated.
 - Do not force a code-defect framing for accepted design drift; `oat-project-review-receive` can convert artifact drift into alignment tasks or explicit deferrals.
 ```
+
+For `WORKFLOW_MODE=lite`, render the artifact-path portion of every artifact-plan
+and code-final Review Scope explicitly as:
+
+- Discovery: not required (absent by design)
+- Spec: not required (absent by design)
+- Design: not required (absent by design)
+- Import reference: not required
+- Plan: `{PROJECT_PATH}/plan.md` (Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria are the requirements contract)
+- Implementation: `{PROJECT_PATH}/implementation.md`
+
+Always pass the resolved workflow mode. Never omit it and let the reviewer fall
+back to its spec-driven default.
 
 ### Step 6: Execute Review (3-Tier Capability Model)
 
@@ -937,7 +956,7 @@ If running inline (Tier 3), execute the review and write artifact.
 **Review checklist (from oat-reviewer):**
 
 1. Verify scope (don't review out-of-scope changes)
-2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import)
+2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/Important/Medium/Minor)

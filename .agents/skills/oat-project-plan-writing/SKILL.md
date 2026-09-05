@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.21
+version: 1.2.22
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -86,7 +86,8 @@ then continue without formatting.
 ## Managed Dispatch Readiness and Review Contract
 
 All plan-producing workflows and their artifact reviews use this contract:
-spec-driven planning, quick-start, imported plans, and provider-plan-via-import.
+spec-driven planning, quick-start, lite planning, imported plans, and
+provider-plan-via-import.
 The contract runs before a plan becomes implementation-ready and immediately
 before each artifact review dispatch.
 
@@ -455,7 +456,7 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 
 ```yaml
 ---
-oat_plan_source: spec-driven | quick | imported # origin workflow mode
+oat_plan_source: spec-driven | quick | imported | lite # origin workflow mode
 oat_status: in_progress | complete # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
 # Optional after implementation confirmation:
@@ -559,10 +560,12 @@ Required inputs vary by workflow mode. The calling skill reads `oat_workflow_mod
 | `spec-driven` | Complete `design.md` (`oat_status: complete`)    | Yes         |
 | `quick`       | `discovery.md` + repo knowledge context          | No          |
 | `import`      | Preserved external source + normalized `plan.md` | No          |
+| `lite`        | `plan.md` only                                   | No          |
 
 - **`spec-driven`**: Plan is derived from a complete design document. All design components must be covered by tasks.
 - **`quick`**: Plan is generated directly from discovery decisions and repo knowledge. No design artifact is required.
 - **`import`**: External plan is preserved in `references/imported-plan.md` and normalized into canonical format. Subsequent edits follow this contract.
+- **`lite`**: `plan.md` is the sole requirements and implementation contract. It carries Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria before one sequential phase; no discovery, spec, or design artifact is required.
 
 ## Resume and Edit Guardrails
 

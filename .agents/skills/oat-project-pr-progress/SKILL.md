@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-version: 1.3.0
+version: 1.3.1
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
@@ -15,7 +15,7 @@ Create a progress PR description (typically at a plan phase boundary) and write 
 
 Generate a PR-ready summary that is:
 
-- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference)
+- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference; lite uses the five plan.md contract sections)
 - scoped to a specific phase (pNN) or an explicit git range
 - easy to paste into GitHub (or used with `gh pr create` if desired)
 
@@ -285,7 +285,7 @@ oat_project: { PROJECT_PATH }
 
 ## Goals / Non-Goals
 
-{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode, discovery/import reference in quick/import mode}
+{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode; discovery/import reference in quick/import mode; Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite}
 
 ## Changes
 

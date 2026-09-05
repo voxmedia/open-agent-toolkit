@@ -54,7 +54,7 @@ Before each phase:
      spec: {PROJECT_PATH}/spec.md
      implementation: {PROJECT_PATH}/implementation.md
      discovery: {PROJECT_PATH}/discovery.md
-   workflow_mode: {spec-driven|quick|import}
+   workflow_mode: {spec-driven|quick|import|lite} # lite is always a single phase
    active_provider: {codex|claude|cursor|other}
    phase_base_head: {PHASE_BASE_HEAD}
    worktree: {assigned checkout}

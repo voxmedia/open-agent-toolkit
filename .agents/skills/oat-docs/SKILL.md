@@ -1,6 +1,6 @@
 ---
 name: oat-docs
-version: 1.0.1
+version: 1.0.2
 description: Use when a user asks questions about OAT workflows, CLI commands, skill authoring, configuration, or project lifecycle. Answers questions by reading locally-bundled OAT documentation.
 argument-hint: '[question]'
 disable-model-invocation: false
@@ -145,7 +145,7 @@ Based on the docs, here's how OAT project workflows work: [answer]
 You can read more in `guide/workflow/lifecycle.md`.
 
 Would you like me to:
-- Start a new project? (I'd invoke oat-project-quick-start)
+- Start a new project? (I'd invoke oat-project-lite for single-sitting work, or oat-project-quick-start for a larger quick workflow)
 - Check your current project status? (I'd read your active project's state.md)
 ```
 
@@ -158,22 +158,27 @@ Would you like me to:
 **Response:**
 
 ```
-To create a new OAT project, you have two main approaches:
+To create a new OAT project, you have three main approaches:
 
-1. **Quick mode** (recommended for most tasks):
+1. **Lite mode** (recommended for single-sitting changes):
+   oat-project-lite <project-name> "project description"
+
+2. **Quick mode** (recommended for larger bounded work):
    oat-project-quick-start <project-name> "project description"
 
-2. **Spec-driven mode** (for complex features):
+3. **Spec-driven mode** (for complex features):
    oat-project-new <project-name>
 
-Quick mode goes straight from discovery to plan. Spec-driven mode adds
-formal spec and design phases. If you invoke quick mode with only a
+Lite combines the interview and requirements contract in one plan for a
+single sitting. Quick mode goes straight from discovery to plan. Spec-driven
+mode adds formal spec and design phases. If you invoke quick mode with only a
 project name, it should ask you for the missing project description
 before discovery starts.
 
 Both create a project directory under your projects root
 (default: .oat/projects/shared/<project-name>/) with standard artifacts:
-state.md, discovery.md, plan.md, and implementation.md.
+state.md, plan.md, and implementation.md; quick and spec-driven modes also use
+discovery.md.
 
 See: guide/workflow/lifecycle.md, guide/getting-started.md
 
