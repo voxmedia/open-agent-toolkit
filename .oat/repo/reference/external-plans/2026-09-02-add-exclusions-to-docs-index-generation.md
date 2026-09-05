@@ -72,12 +72,12 @@ post-processing the tracked manifest.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                                            | Required state                                                                                                            | Current state                                   |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Hard ordering | [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md) / `BL-260718-fix-oat-docs-generate-index`                          | Merged to `origin/main`; `index.ts:71-97` no longer calls `writeOatConfig`; the `generateIndex` dependency type is final. | Pending in W1; this plan is BLOCKED until then. |
-| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                     | Both edit `OatDocumentationConfig`; sequence.                                                                             | Pending.                                        |
-| Soft ordering | Sibling plan [Add oat config unset](./2026-09-02-add-oat-config-unset-command.md)                                                                     | Land this plan first so `unset` covers the new key.                                                                       | Pending.                                        |
-| Soft ordering | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | Runs after this plan; both edit `packages/cli/src/config/oat-config.ts`, so never in one parallel group.                  | Pending.                                        |
+| Type              | Dependency                                                                                                                                            | Required state                                                                                                                                   | Current state                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| Hard ordering     | [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md) / `BL-260718-fix-oat-docs-generate-index`                          | Merged to `origin/main`; `index.ts:71-97` no longer calls `writeOatConfig`; the `generateIndex` dependency type is final.                        | Pending in W1; this plan is BLOCKED until then. |
+| Soft ordering     | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                     | Both edit `OatDocumentationConfig`; sequence.                                                                                                    | Pending.                                        |
+| Soft ordering     | Sibling plan [Add oat config unset](./2026-09-02-add-oat-config-unset-command.md)                                                                     | Land this plan first so `unset` covers the new key.                                                                                              | Pending.                                        |
+| Related, distinct | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | No longer shares `oat-config.ts`: its optional config keys moved to `BL-260904-add-recap-seam-config-keys` (2026-09-05). No ordering constraint. | Pending.                                        |
 
 One hard dependency is unsatisfied: the W1 docs-index path plan must merge
 first.
@@ -109,8 +109,9 @@ prerequisite, not drift. Any other change to path resolution is a STOP.
 - Lint/format/docs: `pnpm check` and `pnpm build:docs` → pass.
 - Implementation pattern: Commander `Option` registration as at
   `index.ts:143-148`; config catalog entries as at `config/index.ts:343-355`.
-- Git/PR convention: shipped CLI surface; five-package lockstep bump; do not
-  push or open a PR unless instructed.
+- Git/PR convention: shipped CLI surface; the lockstep bump is owned by the
+  wave fan-in in lane mode (see Scope); do not push or open a PR unless
+  instructed.
 
 ## Scope
 
@@ -143,9 +144,16 @@ prerequisite, not drift. Any other change to path resolution is a STOP.
 ## Current state
 
 After the W1 plan, `runIndexGenerate` (`index.ts:71-111`) resolves paths from
-config first and no longer writes config. `generateIndex` recurses per
-subdirectory (`generator.ts:106-115`) and drops directories with no children,
-so exclusion must be evaluated on a path relative to the docs root inside the
+config first, writes `<documentation.root>/index.md` by default, refuses unsafe
+output targets, and writes config only for the Fumadocs manifest transition.
+`documentation.root` means the docs **app root**; the `<root>/docs`-when-
+directory derivation is the W1 plan's labeled compatibility rule for legacy
+source-root values, and this plan consumes that derived directory as the
+"docs root" for relative matching without re-deriving it. Fixtures here must
+use the W1 shape (`root: apps/docs` with pages under `apps/docs/docs`), not an
+independent root assumption. `generateIndex` recurses per subdirectory
+(`generator.ts:106-115`) and drops directories with no children, so exclusion
+must be evaluated on a path relative to the derived docs directory inside the
 recursion (or collect-then-filter), and a directory emptied by exclusion must
 not emit a heading. Glob semantics must be specified once: `**/CLAUDE.md`,
 `CLAUDE.md`, and `subdir/` all need defined behavior.
@@ -154,8 +162,10 @@ not emit a heading. Glob semantics must be specified once: `**/CLAUDE.md`,
 
 ### 1. Confirm the prerequisite landed
 
-Read `index.ts:71-97`. If it still calls `writeOatConfig`, STOP. Record the
-merge SHA of the W1 plan in the execution notes and set this plan `READY`.
+Read `index.ts:71-111`. If the default output is still `join(context.cwd,
+'index.md')` or `writeOatConfig` is still called unconditionally, STOP. Record
+the merge SHA of the W1 plan in the execution notes, note the derived docs
+directory the W1 plan reports, and set this plan `READY`.
 
 **Verify:** `git log --oneline -3 -- packages/cli/src/commands/docs/index-generate/index.ts`
 names the path-resolution change.
@@ -192,11 +202,18 @@ merge flags after config defaults.
 
 ### 5. Document and bump
 
-Update the docs pages and `--help` text; bump the five lockstep packages above
-fresh `origin/main`.
+Update the docs pages and `--help` text.
 
-**Verify:** `pnpm check && pnpm build:docs` → exit 0; then the eight AGENTS.md
-gates in order.
+**Lane mode (default under the execution program):** run the focused tests
+above, then `pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps`
+with captured exit codes. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
+
+**Verify:** `pnpm check && pnpm build:docs` → exit 0, plus the mode's named
+commands.
 
 ## Test plan
 
@@ -218,8 +235,12 @@ flags`; `flags extend rather than replace config excludes`.
       extend config.
 - [ ] Emptied directories emit no heading; default output is byte-identical.
 - [ ] `--help` and the docs-tooling reference document both mechanisms.
-- [ ] Path resolution from the W1 plan is untouched.
-- [ ] Lockstep bump and all gates pass; `git status --short` is clean.
+- [ ] Path resolution from the W1 plan is untouched, and fixtures use its
+      app-root shape.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
+- [ ] `git status --short` is clean.
 
 ## STOP conditions
 

@@ -100,8 +100,9 @@ inventory/checksum contract changed materially.
 - Lint/format check: `pnpm check` → repository checks pass.
 - Implementation pattern: use `CliError` exit code 2 and fail explicit
   overrides without fallback to packaged assets.
-- Git/PR convention: shipped CLI behavior requires one lockstep bump of all
-  five public packages; do not push or open a PR unless instructed.
+- Git/PR convention: shipped CLI behavior is release-shaped; the lockstep bump
+  is owned by the wave fan-in in lane mode (see Scope); do not push or open a
+  PR unless instructed.
 
 ## Scope
 
@@ -182,26 +183,18 @@ that the downstream remedy plan intentionally changes.
 
 **Verify:** focused assets tests pass with all table rows executed.
 
-### 4. Apply release bookkeeping and full gates
+### 4. Run the mode's gates
 
-Bump the five public package versions together and update `pnpm-lock.yaml` via
-pnpm. Fetch `origin/main` immediately before version validation.
+**Lane mode (default under the execution program):** run the focused tests
+above, then `pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps`
+with captured exit codes. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
 
-**Verify:**
-
-```bash
-pnpm check
-pnpm type-check
-pnpm test
-pnpm build
-pnpm run check:skill-bumps
-git fetch origin main
-pnpm release:check-versions
-pnpm release:validate
-pnpm build:docs
-```
-
-Every command exits zero; verify the focused assets suite actually executed.
+**Verify:** every named command exits zero; verify the focused assets suite
+actually executed (no `cache hit, replaying logs`).
 
 ## Test plan
 
@@ -219,8 +212,9 @@ Every command exits zero; verify the focused assets suite actually executed.
 - [ ] Complete packaged and explicit bundles still resolve.
 - [ ] Metadata/schema/version error precedence remains stable.
 - [ ] No checksum or exhaustive inventory scope was introduced.
-- [ ] All five public packages have one lockstep version bump.
-- [ ] Focused and full gates exit zero.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

@@ -31,7 +31,8 @@ created: '2026-08-30T23:40:20Z'
 > (0.2.53). The 2026-09-03 refresh re-anchored every evidence line on that
 > tree: Manifest V2 landed, new engine save sites exist, status gained a
 > collection-migration block, and no part of this outcome was implemented.
-> Execute against a lockstep version above `0.2.53`.
+> In standalone mode, execute against a lockstep version above the then-current
+> `origin/main`; under the execution program the wave fan-in owns that bump.
 
 ## Outcome
 
@@ -122,7 +123,9 @@ this plan is refreshed.
   human warnings in JSON mode, and compare version identity rather than semver
   ordering.
 - Git/PR convention: shipped CLI behavior requires a lockstep five-package
-  version bump; do not push or open a PR unless instructed.
+  version bump, whose owner is mode-dependent (see step 5): the wave fan-in
+  under the execution program, the executor only in standalone mode. Do not
+  push or open a PR unless instructed.
 
 ## Scope
 
@@ -228,14 +231,22 @@ JSON already exposes `versionSkew`; do not add a second redundant field there.
 assert the new message,
 continued restamp, unchanged exit code, and no false success text.
 
-### 5. Apply release bookkeeping and full gates
+### 5. Run the mode-appropriate gates
 
-Bump the five public packages together and update `pnpm-lock.yaml`. Fetch main
-immediately before version validation.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
 
-**Verify:** run the repository Definition of Done in order; every command exits
-zero. Run focused command tests independently so Turbo cache replay cannot
-stand in for execution evidence.
+**Verify:** every command in the selected mode exits zero. Run focused command
+tests independently so Turbo cache replay cannot stand in for execution
+evidence.
 
 ## Test plan
 
@@ -249,7 +260,8 @@ stand in for execution evidence.
   the dependency's final contract.
 - Sync tests: restamp-only output acknowledges refresh; true no-op keeps the
   current message.
-- Full CLI tests, build, release validation, and docs build.
+- Full CLI tests and build, then the lane-mode or standalone gate set from
+  step 5.
 
 ## Done criteria
 
@@ -261,7 +273,9 @@ stand in for execution evidence.
 - [ ] Invalid manifests retain current fail-closed schema behavior.
 - [ ] Restamp-only sync no longer says no changes were required.
 - [ ] Status behavior is based on the completed diagnostics-project baseline.
-- [ ] Five-package lockstep release bookkeeping and all gates pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

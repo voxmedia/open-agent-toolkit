@@ -34,13 +34,19 @@ created: '2026-09-02T23:59:00Z'
 
 The `oat-repo-improve` skill and its plan template codify the operator rule
 that has governed the last 25 plans by hand: candidates are evaluated for
-plan readiness and execution readiness separately; plans record the full
-`origin/main` SHA and planning date; frontmatter carries
-`oat_execution_status: READY|BLOCKED` (absent reads as `READY` for older
-plans); every plan has a typed `## Dependencies` table with named unblock
-states, a `## Landing-event impact` table, and a
-`## Revalidation Before Execution` section; links run in both directions; and
-a contract test guards the template so the rule cannot silently regress.
+plan readiness and execution readiness separately; plans record the full SHA
+of the inspected `HEAD`, the fetched `origin/main` (or merge-base) SHA as
+separate comparison evidence, and the planning date; frontmatter carries
+`oat_execution_status: READY|BLOCKED`; every plan has a typed
+`## Dependencies` table with named unblock states, a `## Landing-event impact`
+table, and a `## Revalidation Before Execution` section; links run in both
+directions; and a contract test guards the template so the rule cannot
+silently regress. The contract has two modes: prospective authoring rules for
+plans written after it lands, and a legacy-read mode for older plans (no
+`oat_external_plan_date`, or dated before the contract) that accepts a short
+SHA, missing sections, and a missing status (read as `READY`). External
+execution-readiness fields are explicitly permitted; canonical OAT lifecycle
+state remains forbidden.
 
 ## Source and live evidence
 
@@ -62,6 +68,19 @@ a contract test guards the template so the rule cannot silently regress.
     `2026-08-30-warn-on-non-sync-manifest-restamps.md:84`, `:271`; every
     2026-09-02 plan carries a full landing-event table, for example
     `2026-09-02-defer-activeproject-clearing-on-archive-completions.md`).
+  - `references/plan-template.md:5` — "must not contain OAT phase IDs, task
+    IDs, lifecycle readiness, review tables, or implementation bookkeeping";
+    read literally, `oat_execution_status` is "lifecycle readiness", so the
+    template must distinguish external execution-readiness metadata (allowed)
+    from canonical lifecycle bookkeeping (forbidden).
+  - `2026-08-19-hermetic-cli-assets-root.md:9` — `oat_external_plan_commit:
+6f443c08` (short SHA), no `oat_external_plan_date`, no status, none of the
+    three sections: the legacy shape the validator must keep accepting.
+  - The 31 plans in the 2026-08-31 execution program stamp
+    `oat_external_plan_commit` with the `origin/main` SHA whose content they
+    inspected (they were authored against main content on a planning branch);
+    legacy mode accepts that provenance as-is, and the new rule applies only
+    to plans authored after this lands.
   - `.oat/repo/pjm/backlog/reviews/priority-alignment.md:47-70` — the
     operator rule and the clause "until that item ships, apply this section
     as the operator rule".
@@ -78,19 +97,21 @@ and orchestration references independently`) guard only root bindings and
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                            | Required state                                                                                                   | Current state |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                  | Land first; both edit `validation/skills.test.ts`, and its rule justifies step 4 here.                           | Pending (W3). |
-| Soft ordering    | W5 group 2 plan [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md) | Runs before this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group. | Pending.      |
+| Type             | Dependency                                                                                                                                                            | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Current state                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                  | Land first; both edit `validation/skills.test.ts`, and its rule justifies step 4 here.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Pending (W3).                                                                                              |
+| Soft ordering    | W5 group 2 plan [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md) | Runs before this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Pending.                                                                                                   |
+| Soft ordering    | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                 | Runs after this plan; both write `packages/cli/src/validation/skills.test.ts` (this plan: the `:5330` pin and a contract case; recap: the `oat-explainer-kit` `:1197` and `oat-project-complete` `:4002` version pins), so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Pending.                                                                                                   |
+| Soft ordering    | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit)                                            | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W3 group 2 [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W5 group 1 [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md); W6 group 1 [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 2 [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time. |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                             | Required update                                                                                                                                                                         |
-| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `validation/skills.test.ts` (new case), `skills-bundled-docs-contract.test.ts` (rewritten). | Rebase; re-anchor the `:5296` version pin and the `:1770` pattern case before editing. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | No       | None.                                                                                       | None.                                                                                                                                                                                   |
+| Event                                                                                          | Affected | Files in common                                                                             | Required update                                                                                                                                                                         |
+| ---------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03)           | Minor    | `validation/skills.test.ts` (new case), `skills-bundled-docs-contract.test.ts` (rewritten). | Rebase; re-anchor the `:5296` version pin and the `:1770` pattern case before editing. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
+| `review-plan-workflow` (draft PR #190, head `63161897dd40a66e1b29cf19e286665895c40dde`) merges | Minor    | `packages/cli/src/validation/skills.test.ts`.                                               | Re-anchor the `:5330` pin and the new contract case against the merged file before editing; confirm the `oat-repo-improve` skill and template are still absent from the #190 diff.      |
 
 ## Drift check
 
@@ -113,7 +134,8 @@ re-anchor before editing.
 - Implementation pattern: the practiced plan
   `2026-08-30-warn-on-non-sync-manifest-restamps.md` and this plan's own
   structure; `skills-bundled-docs-contract.test.ts:1571` for the test shape.
-- Shipped skills require the five-package lockstep bump.
+- Shipped skills require the five-package lockstep bump, owned by the wave
+  fan-in in lane mode (see Scope).
 
 ## Scope
 
@@ -121,18 +143,32 @@ re-anchor before editing.
 
 - `oat-repo-improve/SKILL.md` — Step 4 candidate table gains `plan_ready`
   and `execution_ready` columns and the "dependency state alone does not
-  disqualify" rule; Step 5 replaces the short-HEAD command with
-  `git fetch origin main && git rev-parse origin/main` and adds the
-  readiness, typed-dependency, landing-event, bidirectional-link, and
-  revalidation requirements; Step 6 requires the plan body to link back to
-  its source item; Success Criteria and Troubleshooting updated;
-  `version:` bump.
-- `references/plan-template.md` — frontmatter fields, the IMPORTANT
-  execution-status callout, `## Dependencies`, `## Landing-event impact`,
-  `## Revalidation Before Execution`, a STOP condition for unsatisfied hard
-  dependencies, and Quality Gate assertions. Keep example rows short.
-- `skills.test.ts:5330` version pin; a new contract case in
-  `skills-bundled-docs-contract.test.ts` (pattern `:1571`).
+  disqualify" rule; Step 5 replaces the short-HEAD command with a provenance
+  block that records full `git rev-parse HEAD` as the inspected baseline,
+  records `git fetch origin main && git rev-parse origin/main` and
+  `git merge-base HEAD origin/main` separately as comparison evidence, and
+  requires `git status --porcelain` to be empty or every dirty path to be
+  named in the plan's evidence section; adds the readiness, typed-dependency,
+  landing-event, bidirectional-link, and revalidation requirements; Step 6
+  requires the plan body to link back to its source item; Success Criteria
+  and Troubleshooting updated; `version:` bump.
+- `references/plan-template.md` — frontmatter fields (`oat_external_plan_commit`
+  as the inspected `HEAD`, new `oat_external_plan_main_commit` for the
+  comparison SHA, `oat_external_plan_date`, `oat_execution_status`), the
+  IMPORTANT execution-status callout, `## Dependencies`,
+  `## Landing-event impact`, `## Revalidation Before Execution`, a STOP
+  condition for unsatisfied hard dependencies, Quality Gate assertions, and a
+  rewrite of the line-5 sentence so it forbids canonical lifecycle state
+  (phase IDs, task IDs, review tables, implementation bookkeeping) while
+  explicitly permitting external execution-readiness metadata. Add a
+  "Legacy plans" paragraph stating the schema boundary: a plan without
+  `oat_external_plan_date`, or dated before this contract's landing date, is
+  read in legacy mode. Keep example rows short.
+- `packages/cli/src/validation/skills.test.ts:5330` version pin; new contract
+  cases in `skills-bundled-docs-contract.test.ts` (pattern `:1571`) including
+  a legacy fixture read from `2026-08-19-hermetic-cli-assets-root.md` and a
+  corpus sweep over every `.oat/repo/reference/external-plans/2026-0[89]-*.md`
+  plan, plus a fixture where the recorded `HEAD` and `origin/main` differ.
 - `apps/oat-docs/docs/workflows/skills/repo-improve.md:36-46`.
 - Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
@@ -157,11 +193,19 @@ lines 33–69; insertions must be verified as rendered.
 
 ## Implementation steps
 
-### 1. Extend the frontmatter contract
+### 1. Extend the frontmatter contract and declare the schema boundary
 
-Add `oat_external_plan_date` and `oat_execution_status: READY|BLOCKED`; make
-`oat_external_plan_commit` the full `origin/main` SHA; state that a missing
-status reads as `READY`.
+Add `oat_external_plan_date`, `oat_execution_status: READY|BLOCKED`, and
+`oat_external_plan_main_commit`; make `oat_external_plan_commit` the full SHA
+of the inspected `HEAD` (never a fetched tip whose content was not reviewed);
+record the fetched `origin/main` or merge-base SHA in
+`oat_external_plan_main_commit` as comparison evidence only. Write the
+"Legacy plans" paragraph: plans without `oat_external_plan_date`, or dated
+before the contract's landing date, are read in legacy mode, where a short
+SHA, a missing main-commit field, missing sections, and a missing status
+(read as `READY`) are all accepted and never rewritten. Rewrite line 5 so the
+forbidden set is canonical lifecycle state and the permitted set names
+`oat_execution_status` and the dependency/landing/revalidation sections.
 
 **Verify:** `pnpm exec oxfmt --check '.agents/skills/oat-repo-improve/**/*.md'` → clean.
 
@@ -176,52 +220,89 @@ structure renders.
 
 **Verify:** `pnpm oat:validate-skills` → exit 0.
 
-### 3. Codify the readiness split in the skill
+### 3. Codify the readiness split and the provenance rule in the skill
 
 Steps 4, 5, and 6 as scoped above; Success Criteria; Troubleshooting entry for
-a dependency-blocked candidate.
+a dependency-blocked candidate. In Step 5 the provenance block records the
+inspected `HEAD`, the comparison SHA, and the dirty-tree disposition, and the
+skill's revalidation guidance says a plan executed inside a wave refreshes
+its drift check against the exact execution `HEAD` after predecessor lanes
+integrate, not only from the authored SHA to `origin/main`. Note explicitly
+that the 31 program plans authored before this contract stamped `origin/main`
+SHAs and are accepted in legacy mode.
 
 **Verify:** `pnpm oat:validate-skills` → exit 0 and
 `pnpm exec oxfmt --check '.agents/skills/oat-repo-improve/**/*.md'` → clean.
 
 ### 4. Add the executable backstop and bump the version
 
-New case in `skills-bundled-docs-contract.test.ts` asserting the readiness
-clause and columns in the skill and the three sections plus status enum in
-the template, and that `git rev-parse --short HEAD` is absent; update the
-`:5330` pin; bump `oat-repo-improve` `version:`.
+New cases in `skills-bundled-docs-contract.test.ts`: (a) the readiness clause
+and columns in the skill, the three sections plus status enum in the template,
+the legacy-plans paragraph, the rewritten line-5 permission, and the absence
+of `git rev-parse --short HEAD`; (b) a legacy fixture that parses the real
+`2026-08-19-hermetic-cli-assets-root.md` frontmatter (short SHA, no date, no
+status) and asserts it is accepted with status `READY`; (c) a corpus sweep
+that parses every `2026-0[89]-*.md` plan in `external-plans/` and asserts each
+is accepted under the mode its date selects, without editing any of them;
+(d) a synthetic prospective fixture whose `oat_external_plan_commit` and
+`oat_external_plan_main_commit` differ and is accepted, and one whose
+commit field is a short SHA with a post-contract date and is rejected. Update
+the `:5330` pin; bump `oat-repo-improve` `version:`.
 
 **Verify:** `pnpm exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
 → pass; `pnpm run check:skill-bumps` → pass.
 
-### 5. Docs mirror, lockstep bump, gates
+### 5. Docs mirror, bump, gates
 
-Update `repo-improve.md`; bump the five packages; format.
+Update `repo-improve.md`; format.
 
-**Verify:** `pnpm check`, then the eight AGENTS.md gates in order with
-captured exit codes.
+**Verify (lane mode, the default under the execution program):** bump the
+`oat-repo-improve` `version:` field and its pin at
+`packages/cli/src/validation/skills.test.ts:5330`; run the focused tests
+above, then `pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps`
+with captured exit codes, plus `pnpm lint`, `pnpm format`, and
+`pnpm oat:validate-skills` because this plan changes `.agents/skills`. Do not
+edit lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md
+gates in order.
 
 ## Test plan
 
 - `requires plan readiness to be evaluated separately from execution readiness`.
 - `plan template carries typed dependencies, landing events, execution status, and revalidation`.
-- `plan provenance pins the full origin/main SHA`.
+- `plan provenance pins the full inspected HEAD SHA and a separate comparison SHA`.
+- `legacy plans without a date are read in legacy mode and default to READY`
+  (real fixture: `2026-08-19-hermetic-cli-assets-root.md`).
+- `every current external plan is accepted under its date-selected mode`
+  (corpus sweep, read-only).
+- `a post-contract plan with a short SHA is rejected; HEAD and origin/main may differ`.
 - Version pin tuple updated at `skills.test.ts:5330`.
-- Regression proved: the template can no longer silently lose the contract.
+- Regression proved: the template can no longer silently lose the contract,
+  and neutralizing the legacy branch makes the legacy fixture case fail.
 
 ## Done criteria
 
-- [ ] Skill and template encode the readiness split, full-SHA provenance,
-      typed dependencies, landing events, status, links, and revalidation.
-- [ ] Older plans without a status still read as `READY`; none were edited.
-- [ ] New contract test passes; version pin and skill bump consistent.
-- [ ] Docs mirror, lockstep bump, format, and all gates pass; clean tree.
+- [ ] Skill and template encode the readiness split, inspected-`HEAD`
+      provenance with separate comparison SHA, typed dependencies, landing
+      events, status, links, and revalidation.
+- [ ] The schema boundary is explicit: legacy plans (short SHA, no date, no
+      sections, no status) are accepted and read as `READY`; none were edited;
+      external readiness fields are permitted while lifecycle state stays
+      forbidden.
+- [ ] New contract cases pass, including the real legacy fixture and the
+      31-plan corpus sweep; version pin and skill bump consistent.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 
 ## STOP conditions
 
 Stop and report instead of improvising when:
 
-- a template rule would make existing plans invalid or unimportable;
+- a template rule would make existing plans invalid or unimportable (the
+  legacy mode exists precisely to prevent this; do not narrow it);
 - satisfying the contract requires a retrofit sweep of durable plans;
 - the version pin and bump gate cannot both be satisfied in one commit;
 - the template's fence nesting cannot be kept renderable; or
@@ -238,6 +319,8 @@ the landing-event table above.
 
 ## Review focus
 
-- Additive, backward-compatible fields only.
+- Additive, backward-compatible fields only; the legacy/prospective boundary
+  is tested with a real older plan, not a synthetic one.
+- `oat_external_plan_commit` is the inspected `HEAD`, never a fetched tip.
 - Example table rows stay narrow enough for the formatter.
 - Consumers of `oat_execution_status` are deferred, not implied.

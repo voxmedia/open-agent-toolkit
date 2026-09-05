@@ -93,10 +93,11 @@ longer has a mirror, refresh the inventory and do not recreate duplication.
   indexed content requires it.
 - Run `pnpm lint && pnpm format` because `.agents/skills` test code is touched.
 - A test under `.agents/skills` and any docs-app change are bundled assets, so
-  bump all five public packages together and update `pnpm-lock.yaml`.
+  the change is release-shaped; the lockstep bump is owned by the wave fan-in
+  in lane mode (see Scope).
 - No canonical `SKILL.md` edit is planned; do not bump the explainer-kit skill
   version unless implementation changes that file.
-- Run the focused Node test independently, then the complete Definition of Done.
+- Run the focused Node test independently, then the mode's gates in step 4.
 - Do not push or open a PR unless instructed.
 
 ## Scope
@@ -169,11 +170,24 @@ Restore tracked prose after any manual red/green mutation.
 **Verify:** the negative case fails if the forbidden-phrase assertion is
 removed, and the complete focused suite passes when restored.
 
-### 4. Apply release bookkeeping and complete gates
+### 4. Run the mode's gates
 
-Bump the five public packages together, update `pnpm-lock.yaml`, and run the
-repository Definition of Done in order. Regenerate the docs index only if the
-docs change actually affects its generated inputs.
+Regenerate the docs index only if the docs change actually affects its
+generated inputs.
+
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`,
+`pnpm format`, and `pnpm oat:validate-skills` because this plan changes
+`.agents/skills`. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
+
+**Verify:** every named command exits zero with its own captured exit code.
 
 ## Test plan
 
@@ -189,7 +203,9 @@ docs change actually affects its generated inputs.
 - [ ] A docs-only forbidden phrase makes the focused suite fail.
 - [ ] Receipt-v2 completeness and immutable v1 replay remain unchanged.
 - [ ] No unnecessary skill-version bump or docs-index hand edit occurs.
-- [ ] Five public package versions and all gates are correct.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

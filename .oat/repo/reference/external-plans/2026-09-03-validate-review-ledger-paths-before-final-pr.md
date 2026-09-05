@@ -34,10 +34,16 @@ created: '2026-09-03T22:30:00Z'
 
 `oat-project-pr-final` can no longer produce a `## Reviews` ledger row whose
 artifact path does not resolve. Step 0.5 archives only review artifacts whose
-ledger row is terminal and enumerates the exact files whose references it
-rewrites, and a new guard immediately before `gh pr create` verifies every
-non-empty Artifact cell in the ledger resolves on disk, stopping with a named
-gate code otherwise. Contract tests pin both the narrowed archive rule and the
+ledger row is archive-eligible (processed: `passed` or `fixes_completed`),
+selects each event by scope, type, and artifact filename when it moves the
+file and rewrites references, and enumerates the exact files it rewrites.
+Archive eligibility is a separate predicate from final-review approval: the
+Step 2 gate still requires the latest `final`/`code` event to be `passed`,
+so an archived `fixes_completed` artifact stays discoverable while autonomous
+PR finalization still stops for re-review. A new guard immediately before
+`gh pr create` parses every non-`-` Artifact cell, requires it to normalize
+to a regular file inside the project directory, and stops with a named gate
+code otherwise. Contract tests pin both the narrowed archive rule and the
 guard's position; the pinned Step 2 block is untouched.
 
 ## Source and live evidence
@@ -78,19 +84,20 @@ guard's position; the pinned Step 2 block is untouched.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                 | Required state                                                                                                   | Current state         |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Soft integration | W5 lanes that add cases to `skills.test.ts` and `review-skill-contracts.test.ts`                                           | Sequence after W5 so the version pins and new cases do not collide.                                              | Pending.              |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                 | Its sweep covers pr-final; write any new skill pointer with a load-and-follow clause.                            | Pending (W2).         |
-| Soft ordering    | W6 group 2 plan [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md) | Runs after this plan; both edit the version pins in `validation/skills.test.ts`, so never in one parallel group. | Pending (W6 group 2). |
+| Type             | Dependency                                                                                                                 | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Current state                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Soft integration | W5 lanes that add cases to `skills.test.ts` and `review-skill-contracts.test.ts`                                           | Sequence after W5 so the version pins and new cases do not collide.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Pending.                                                                                                   |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                 | Its sweep covers pr-final; write any new skill pointer with a load-and-follow clause.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Pending (W2).                                                                                              |
+| Soft ordering    | W6 group 2 plan [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md) | Runs after this plan; both edit the version pins in `validation/skills.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Pending (W6 group 2).                                                                                      |
+| Soft ordering    | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit) | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W3 group 2 [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W5 group 1 [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 3 [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md); W5 group 2 [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time. |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                         | Affected | Files in common                                                                                                                                                                | Required update                                                   |
-| --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `review-plan-workflow` (draft PR #190) merges | Minor    | None written here: pr-final's `references/docs/autonomy-contract.md` is a symlink to `.agents/docs/autonomy-contract.md`, and the review-provide skills are read-only sources. | Rebase and re-run the inventory test; no copy and no plan change. |
+| Event                                         | Affected | Files in common                                                                                                                                                                                                                                                                                                                                    | Required update                                                                                                                                                              |
+| --------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review-plan-workflow` (draft PR #190) merges | Minor    | `packages/cli/src/validation/skills.test.ts`, which this plan writes for the pr-final version pin and one new case (PR #190 head `63161897dd40a66e1b29cf19e286665895c40dde` edits it). pr-final's `references/docs/autonomy-contract.md` is a symlink to `.agents/docs/autonomy-contract.md`, and the review-provide skills are read-only sources. | Rebase; re-anchor the `:2776`/`:4000` pins and the `:4118` block in the merged `skills.test.ts` before editing; re-run the inventory test; no copy and no other plan change. |
 
 ## Drift check
 
@@ -112,7 +119,8 @@ If Step 0.5, Step 2, or the version pins moved, re-anchor before editing.
 - Implementation pattern: the enumerated rewrite list in
   `oat-project-pr-progress/SKILL.md:119-122`; new guard as a new block,
   never inside the pinned Step 2.
-- Shipped skill: five-package lockstep bump. Never edit
+- Shipped skill: in lane mode the wave fan-in owns the lockstep bump; only
+  a standalone execution bumps the five packages itself. Never edit
   `packages/cli/assets/skills/**` (generated).
 
 ## Scope
@@ -149,20 +157,33 @@ path; only a human reading the ledger catches it.
 ### 1. Add the ledger-path guard
 
 Immediately before Step 5 splits into its synced and non-synced `gh pr create`
-paths (`:369-380` and `:411-416`), add one new block both paths pass through:
-for
-every Artifact cell in `## Reviews` that is not `-`, require
-`test -e "$PROJECT_PATH/$ARTIFACT"`; on a miss stop with a named gate code
-and the offending row. Do not modify the Step 2 block.
+paths (`:369-380` and `:411-416`), add one new block both paths pass through.
+For every row of `## Reviews`, parse the Artifact cell (not a textual grep of
+the whole section); skip `-`; otherwise require that
+`$PROJECT_PATH/$ARTIFACT` normalizes (no `..` escape, no symlink leaving the
+project) to a path inside `$PROJECT_PATH` and is a regular file
+(`test -f` on the normalized path, plus a containment check on the resolved
+path). A directory, an escaping path, or a missing file stops with a named
+gate code and the offending row (scope, type, artifact filename). Do not
+modify the Step 2 block.
 
 **Verify:** `pnpm exec vitest run src/validation/skills.test.ts` → the three
 Step 2 pins still pass.
 
 ### 2. Narrow Step 0.5
 
-Archive only artifacts whose ledger row is `passed` or `fixes_completed`;
-enumerate `plan.md`, `implementation.md`, and `state.md` as the files
-whose references are rewritten; reword Success Criteria `:459` to match.
+Define archive eligibility as its own predicate: a row is archive-eligible
+when its status is `passed` or `fixes_completed` (both are processed per
+`oat-project-review-receive/SKILL.md:457-460`; `fixes_completed` still awaits
+re-review). Archive only eligible rows. When moving a file, select the ledger
+event by scope, type, and artifact filename (`oat-project-plan-writing/SKILL.md:535-540`)
+so duplicate scope/type rows keep their identity, and rewrite that event's
+Artifact cell to `reviews/archived/<filename>`; enumerate `plan.md`,
+`implementation.md`, and `state.md` as the files whose references are
+rewritten. Leave Step 2's approval rule untouched: the latest `final`/`code`
+event must be `passed` (`oat-project-pr-final/SKILL.md:180-186`), and an
+archived `fixes_completed` final row still stops autonomous finalization
+with `PRFINAL-03`. Reword Success Criteria `:459` to match.
 
 **Verify:** same command plus
 `pnpm exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
@@ -177,29 +198,53 @@ Cases in the test plan; bump `SKILL.md:3` and both pins in the same commit.
 
 ### 4. Validate, format, gate
 
-**Verify:** `pnpm oat:validate-skills`, `pnpm format`,
+**Verify (lane mode, the default under the execution program):** bump the
+changed skill `version:` and update its pins in
+`packages/cli/src/validation/skills.test.ts`; run the focused tests above and
 `pnpm exec vitest run src/validation/autonomy-gate-inventory.test.ts`, then
-the eight AGENTS.md gates in order.
+`pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps` with
+captured exit codes, plus `pnpm lint`, `pnpm format`, and
+`pnpm oat:validate-skills` because this plan changes `.agents/skills`. Do not
+edit lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md
+gates in order.
 
 ## Test plan
 
 - `skills.test.ts` (pattern `:4118`): `validates every Reviews ledger
-artifact path before creating the final PR` — guard text present and
-  positioned before both `gh pr create` paths (`:378` and `:415`).
+artifact path before creating the final PR` — guard text present, parses
+  cells rather than grepping the section, requires a project-contained
+  regular file, and is positioned before both `gh pr create` paths (`:378`
+  and `:415`).
+- Guard behavior, executed against a fixture project directory with the
+  guard block extracted and run under `bash`: duplicate scope/type events
+  with distinct artifacts both validate; a directory at the artifact path
+  fails; an escaping path (`../outside.md` or a symlink leaving the project)
+  fails; a missing file fails; a valid `reviews/archived/<file>` passes.
+  Each failing case names the offending row.
 - `review-skill-contracts.test.ts` (pattern: the indexOf ordering guard at
   `:1134`; the summary-handling case at `:1538` is unrelated): `archives only
 terminal review artifacts during pr-final preflight` — exclusion clause and
-  enumerated rewrite list present, and the guard precedes both `gh pr create`
-  paths.
+  enumerated rewrite list present, event selection by scope, type, and
+  artifact filename present, and the guard precedes both `gh pr create`
+  paths; `archive eligibility is distinct from final approval` — Step 2's
+  `passed` gate is byte-identical and an archived `fixes_completed` final row
+  still routes to `PRFINAL-03` under `OAT_AUTONOMOUS=1`.
 - Regression proved: a dangling ledger path cannot reach `gh pr create`; a
   late final review is never moved before it is consumed.
 
 ## Done criteria
 
 - [ ] Guard present, positioned, and tested; Step 2 block byte-identical.
-- [ ] Step 0.5 archives only terminal rows and names the rewrite list.
+- [ ] Step 0.5 archives only archive-eligible rows, selects events by
+      scope/type/artifact filename, and names the rewrite list; archive
+      eligibility never grants final approval.
 - [ ] Version pins and skill bump consistent; inventory mirror byte-equal.
-- [ ] Lockstep bump, format, and all gates pass; clean tree.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 
 ## STOP conditions
 
@@ -221,5 +266,7 @@ change the contract-test files, or a load-bearing claim cannot be reproduced.
 ## Review focus
 
 - The guard is a new block; the Step 2 pins are untouched.
+- Archive eligibility (`passed` or `fixes_completed`) versus final approval
+  (latest `final`/`code` event `passed`) are two predicates and stay so.
 - `oat-project-pr-progress` retains the same inversion; a follow-up item is
   filed rather than silently widened into this plan.

@@ -32,9 +32,12 @@ created: '2026-09-02T23:59:00Z'
 ## Outcome
 
 A contract test extracts every `.oat/scripts/<name>` reference from every
-shipped skill with a syntax-aware extractor, resolves each skill to its
-owning pack, and fails when the referenced script is absent from that pack's
-manifest, naming the skill, reference, and pack. A mutation proof shows the
+manifest-shipped skill with a syntax-aware extractor, resolves each shipped
+skill to its owning pack, and fails when the referenced script is absent from
+that pack's manifest, naming the skill, reference, and pack. Canonical skill
+directories that no pack ships are classified separately (reported, never
+resolved to a pack, never a failure by themselves), so the owning-pack error
+fires only for a skill the manifest claims to ship. A mutation proof shows the
 test fails when a script is removed or renamed. The one-off
 `resolve-tracking.sh` check is subsumed by the general mechanism.
 
@@ -68,6 +71,15 @@ test fails when a script is removed or renamed. The one-off
     cases).
   - `types.ts:28-45` — `PackAssetDefinition` with `kind: 'script'`; no
     owning-pack helper exists anywhere in `packages/cli/src`.
+  - `skills-bundled-docs-contract.test.ts:140-144` — `listSkillDirs()`
+    enumerates every directory under `.agents/skills` (81 on the review
+    baseline), which includes repository-local utility and authoring skills
+    (`analyze`, `codex-skill`, `triage-oat-issues`, `subagent-orchestration`,
+    and others) that appear in no pack's skill list; `pack-manifest.ts:125+`
+    declares the shipped set through per-pack name arrays such as
+    `WORKFLOW_SKILL_NAMES`. "Every skill directory" is therefore a superset of
+    the shipped surface, and a resolver that errors on an unowned skill would
+    fail on the live tree.
   - `skills-bundled-docs-contract.test.ts:183`, `:191-195`, `:605-638`,
     `:963-1090`, `:1093-1102` — the skill lister, per-skill file lister,
     manifest-derived surface selector, table-driven extraction tests, and
@@ -76,11 +88,12 @@ test fails when a script is removed or renamed. The one-off
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                        | Required state                                                                                                              | Current state |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                              | Independent; this plan is an instance of that authoring rule.                                                               | Pending (W3). |
-| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                           | Runs before this plan; both edit `packages/cli/src/commands/tools/shared/pack-manifest.ts`, so never in one parallel group. | Pending.      |
-| Soft ordering    | W5 group 3 plan [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md) | Runs after this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group.             | Pending.      |
+| Type             | Dependency                                                                                                                                        | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Current state                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Soft integration | [Require executable backstops for contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md)                              | Independent; this plan is an instance of that authoring rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Pending (W3).                                                                                              |
+| Soft ordering    | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                           | Runs before this plan; both edit `packages/cli/src/commands/tools/shared/pack-manifest.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Pending.                                                                                                   |
+| Soft ordering    | W5 group 3 plan [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md) | Runs after this plan; both add cases to `skills-bundled-docs-contract.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Pending.                                                                                                   |
+| Soft ordering    | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit)                        | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W3 group 2 [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W5 group 1 [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md); W6 group 1 [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 3 [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time. |
 
 There are no unsatisfied hard dependencies.
 
@@ -111,8 +124,9 @@ a STOP.
 - Implementation pattern: the manifest-derived surface selector at `:605-638`
   and the `it.each` extraction table at `:963-1090`.
 - Release note: a new non-test module under `packages/cli/src` is shipped
-  behavior; bump the five lockstep packages. No skill prose changes, so no
-  skill `version:` bump; confirm with `pnpm run check:skill-bumps`.
+  behavior, so the integrated change carries a lockstep bump (fan-in owned in
+  lane mode; see Scope). No skill prose changes, so no skill `version:` bump;
+  confirm with `pnpm run check:skill-bumps`.
 
 ## Scope
 
@@ -120,7 +134,11 @@ a STOP.
 
 - New `packages/cli/src/commands/init/tools/shared/skill-script-references.ts`
   — `extractScriptReferences(text)` (bare, `$SCOPE_ROOT/`-prefixed,
-  backticked, link-form) and `resolveOwningPack(skillName, manifest)`.
+  backticked, link-form), `listShippedSkills(manifest)` (the union of every
+  pack's skill assets), `classifyCanonicalSkillDir(name, manifest)` returning
+  `shipped | canonical-unshipped`, and `resolveOwningPack(skillName, manifest)`,
+  which errors only for a name that is not in any pack (a caller bug, since
+  callers pass shipped names).
 - New `skill-script-references.test.ts` — extraction table and mutation proof.
 - `skills-bundled-docs-contract.test.ts` — the general contract case; fold or
   retain `:1812` so its `$SCOPE_ROOT` shell-shape assertions survive.
@@ -145,8 +163,11 @@ the owning pack, not uniqueness.
 
 ### 1. Add the extractor and pack resolver
 
-Create `skill-script-references.ts` with a line-aware extractor and
-`resolveOwningPack`; error when a skill belongs to no pack.
+Create `skill-script-references.ts` with a line-aware extractor,
+`listShippedSkills`, `classifyCanonicalSkillDir`, and `resolveOwningPack`.
+`resolveOwningPack` errors when the name belongs to no pack; the contract
+case never passes it an unshipped directory. A skill shipped by two packs via
+`sharedOwner` resolves to both and membership in either satisfies the check.
 
 **Verify:** `pnpm exec vitest run src/commands/init/tools/shared/skill-script-references.test.ts`
 → table passes including negatives (`.oat/scripts/` prose mention yields no
@@ -154,12 +175,19 @@ reference).
 
 ### 2. Add the general contract case
 
-For every skill directory, every extracted reference must equal a
-`destination` of a `kind: 'script'` asset in the owning pack; failure names
-skill, reference, and pack.
+Drive the case from `listShippedSkills(manifest)`, not from `listSkillDirs()`:
+for every shipped skill, every extracted reference must equal a `destination`
+of a `kind: 'script'` asset in the owning pack; failure names skill,
+reference, and pack. Add a sibling case that intersects `listSkillDirs()`
+with the manifest and asserts every directory classifies as `shipped` or
+`canonical-unshipped` (a directory the manifest names but that does not exist
+is a failure; an unshipped directory with script references is reported in
+the assertion message as informational, not failed). A skill directory whose
+`SKILL.md` yields zero references is skipped explicitly, not treated as an
+error.
 
 **Verify:** `pnpm exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
-→ passes on the live tree.
+→ passes on the live tree, with the unshipped set listed in test output.
 
 ### 3. Add the mutation proof
 
@@ -168,13 +196,18 @@ the missing path and owning pack.
 
 **Verify:** same command → mutation case passes.
 
-### 4. Fold the legacy case, bump, gate
+### 4. Fold the legacy case and verify
 
-Keep the `$SCOPE_ROOT` shape assertions from `:1812`; bump the five
-packages.
+Keep the `$SCOPE_ROOT` shape assertions from `:1812`.
 
-**Verify:** `pnpm run check:skill-bumps` (no skill bump expected), then the
-eight AGENTS.md gates in order.
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` (no skill bump expected) with captured exit
+codes. Do not edit lockstep release files or run `pnpm release:check-versions`
+/ `pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md
+gates in order.
 
 ## Test plan
 
@@ -182,6 +215,11 @@ eight AGENTS.md gates in order.
 .oat/scripts/ prose mention`; `every shipped skill's script references
 exist in its owning pack`; `reports skill, reference, and pack when the
 script is absent`; `fails when a referenced script is renamed`.
+- `classifies every canonical skill directory as shipped or
+canonical-unshipped`; `does not resolve an unshipped canonical skill to a
+pack` (a fixture skill dir outside every pack with a `.oat/scripts/` reference
+  is reported, not failed); `resolveOwningPack throws for a name in no pack`;
+  `accepts a sharedOwner script from either owning pack`.
 - Regression proved: the #199 class, pack-boundary drift when a skill moves
   packs, and silent breakage if the workflows-pack script entry were removed.
 
@@ -190,7 +228,13 @@ script is absent`; `fails when a referenced script is renamed`.
 - [ ] General extractor and owning-pack resolver exist with unit tests.
 - [ ] The contract case passes live and fails under mutation.
 - [ ] Legacy `$SCOPE_ROOT` assertions retained.
-- [ ] Lockstep bump and all gates pass; clean tree.
+- [ ] The shipped surface is manifest-derived; unshipped canonical
+      directories are classified, never failed, and the no-owner policy is
+      tested.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
+- [ ] Clean tree.
 
 ## STOP conditions
 
@@ -216,3 +260,5 @@ above.
 
 - Extraction negatives are load-bearing; false positives would block CI.
 - `sharedOwner` membership semantics are honored.
+- The contract iterates the manifest's shipped set; `listSkillDirs()` is used
+  only for the classification cross-check.

@@ -76,10 +76,10 @@ There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected         | Files in common                                                              | Required update                                                        |
-| ------------------------------------------------------------------------------------ | ---------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                      | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
-| `review-plan-workflow` (draft PR #190) merges                                        | No               | None (`.agents/agents/oat-phase-implementer.md` is not in the #190 surface). | None.                                                                  |
+| Event                                                                                | Affected         | Files in common                                                                                                                                                                                                            | Required update                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                                                                                                                    | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                                                                             |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor            | `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` (this plan adds cases; #190 head `63161897dd4` rewrites it). `.agents/agents/oat-phase-implementer.md` is not in the #190 surface. | If #190 merges first: re-read the merged test file, re-anchor the `:850-865` sequencing block, and add the new cases beside the merged content; if this lands first, #190 rebases. |
 
 ## Drift check
 
@@ -101,9 +101,12 @@ single owner and refresh this plan rather than adding parallel wording.
   cannot be reached through the existing dispatch contract. If it is edited,
   bump that skill version exactly once.
 - Run `pnpm lint && pnpm format` for `.agents` changes.
-- Bump all five public package versions together and update `pnpm-lock.yaml`.
+- Release bookkeeping is mode-dependent: under the execution program the
+  wave fan-in owns the lockstep five-package bump; only a standalone execution
+  bumps the five public packages and `pnpm-lock.yaml` itself.
 - Use semantic anchors in tests; never encode physical prose line numbers.
-- Run the focused contract test independently, then the full Definition of Done.
+- Run the focused contract test independently, then the mode-appropriate gates
+  in step 5.
 - Do not push or open a PR unless instructed.
 
 ## Scope
@@ -114,7 +117,8 @@ single owner and refresh this plan rather than adding parallel wording.
   repo-wide sweep, and mechanically-widen-or-stop rule.
 - `post-implement-sequence-contracts.test.ts` — stable contract assertions and
   a negative mutation/probe.
-- Managed provider views, five public package versions, and `pnpm-lock.yaml`.
+- Managed provider views.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -179,24 +183,35 @@ removes either repository-wide scope or the stop boundary; it must fail.
 
 **Verify:** focused test red/green proof passes after restoration.
 
-### 4. Refresh shipped views and release bookkeeping
+### 4. Refresh shipped views and skill bookkeeping
 
-Run `oat sync --scope all`, inspect generated agent views, bump all five public
-packages together, and update `pnpm-lock.yaml`. Bump
-`oat-project-implement` only if its canonical `SKILL.md` was actually changed.
+Run `oat sync --scope all` and inspect generated agent views. Bump
+`oat-project-implement` only if its canonical `SKILL.md` was actually changed,
+and update its pin in `packages/cli/src/validation/skills.test.ts` when you do.
 
-### 5. Run complete gates
+### 5. Run the mode-appropriate gates
 
-Run the repository Definition of Done in order, with the focused contract test
-executed independently and `origin/main` fetched immediately before version
-validation.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint` and `pnpm format`
+because this plan changes `.agents/agents`. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
+Run the focused contract test independently so Turbo cache replay is not the
+only evidence.
 
 ## Test plan
 
 - Stable semantic assertions over the phase task-execution section.
 - Negative probe for a local-only sweep and for silent boundary expansion.
 - Existing phase sequencing tests remain green.
-- Managed-view, lint/format, package-version, release, and full repository gates.
+- Managed-view and lint/format gates, then the lane-mode or standalone gate
+  set from step 5.
 
 ## Done criteria
 
@@ -207,7 +222,10 @@ validation.
 - [ ] Ambiguous or ownership-changing expansion stops with exact evidence.
 - [ ] `plan.md`, lifecycle ordering, and review gates are not silently changed.
 - [ ] A non-vacuous contract test guards all required properties.
-- [ ] Managed views, package versions, and all gates pass.
+- [ ] Managed views pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

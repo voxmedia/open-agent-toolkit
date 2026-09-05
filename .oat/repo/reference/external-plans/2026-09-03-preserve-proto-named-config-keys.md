@@ -106,7 +106,8 @@ editing.
 - Lint/format: `pnpm check` → passes.
 - Implementation pattern: the existing error-collection shape in `json.ts`;
   the disk round-trip case at `project-tools-config.test.ts:200`.
-- Shipped CLI behavior: five-package lockstep bump above `0.2.53`.
+- Shipped CLI behavior: in lane mode the wave fan-in owns the lockstep bump;
+  only a standalone execution bumps the five packages itself.
 
 ## Scope
 
@@ -162,11 +163,18 @@ comment at `:257-262`.
 **Verify:** `pnpm exec vitest run src/config/sync-config.test.ts src/config/user-sync-config.test.ts src/config/oat-config.test.ts src/commands/gate/index.test.ts`
 → pass unchanged (null prototypes are inert).
 
-### 5. Decide, bump, gate
+### 5. Decide and gate
 
 Record the null-prototype read policy (proposed title: "OAT config reads
-construct null-prototype objects and preserve `__proto__`-named keys"). Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`. Then bump the five
-packages; run the eight AGENTS.md gates in order with captured exit codes.
+construct null-prototype objects and preserve `__proto__`-named keys"). Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`.
+
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
@@ -184,7 +192,10 @@ packages; run the eight AGENTS.md gates in order with captured exit codes.
       objects; message and options unchanged.
 - [ ] New parser tests and the FR10 round-trip pass; consumer suites pass
       unchanged.
-- [ ] Decision record added; lockstep bump and all gates pass; clean tree.
+- [ ] Decision record added.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 
 ## STOP conditions
 

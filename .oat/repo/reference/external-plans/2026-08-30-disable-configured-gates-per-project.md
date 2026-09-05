@@ -63,6 +63,17 @@ progress makes the deliberate posture visible to reviewers.
     `.agents/skills/oat-project-quick-start/SKILL.md:721-787`,
     `.agents/skills/oat-project-plan/SKILL.md:536`, and
     `.agents/skills/oat-project-import-plan/SKILL.md:452`.
+  - The persisted exit-gate transition is consumed downstream by
+    `.agents/skills/oat-project-next/SKILL.md:303-316`, which accepts
+    `allowed/configured` only with `disposition: passed`, `warned`, or
+    `prompt_approved` plus configured gate-run provenance, and by
+    `.agents/skills/oat-project-implement/references/completion-and-closeout.md:307-320`,
+    which defines the `disposition` enum as
+    `null | passed | warned | prompt_approved | no_gate`. A repo-wide search for
+    `no_gate`, `prompt_approved`, and `allowed/configured` across
+    `.agents/skills` and `.agents/agents` finds exactly those two consumers.
+    Without changes there, a `project_disabled` closeout is malformed to the
+    router and loops back to `oat-project-implement`.
 - Consolidated predecessor:
   - [PR #246 — Harden gate execution contracts](https://github.com/voxmedia/open-agent-toolkit/pull/246)
     completed `gate-execution-contract-hardening`, including
@@ -75,21 +86,22 @@ progress makes the deliberate posture visible to reviewers.
 
 ## Dependencies
 
-| Type                  | Dependency                                                                                                                                          | Required state                                                                                                                                        | Current state                                                                                                |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Satisfied predecessor | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated. | Satisfied at merge `511ffff3822cebdc81e4380452652fe801e2bfb8`; revalidated on the current planning baseline. |
-| Preserved contract    | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md) / `artifact_missing` terminal behavior | Preserve synchronous headless completion and cause-specific fail-closed behavior when adding a pre-launch disabled resolution.                        | Delivered by PR #246; this plan does not alter launch or artifact-result semantics.                          |
-
-| Satisfied revalidation | `tool-pack-scope-provider-truthfulness` merged as PR #255 (`a06e9713a`, 2026-09-03) | Re-anchor `oat-project-plan-writing/SKILL.md:271-392` (now bumped to 1.2.21 with a dispatch-lineage paragraph) and `config/user-sync-config.ts` (+16 lines) before editing. | Landed; drift confirmed 2026-09-03 and re-run 2026-09-04. |
+| Type                   | Dependency                                                                                                                                          | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Current state                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Satisfied predecessor  | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) / `gate-execution-contract-hardening`                                            | Project completed; final review passed; implementation merged into `origin/main`; delivered gate resolve/execute and lifecycle contracts revalidated.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Satisfied at merge `511ffff3822cebdc81e4380452652fe801e2bfb8`; revalidated on the current planning baseline. |
+| Preserved contract     | [BL-260826-gate-targets-must-not-yield](../../pjm/backlog/archived/BL-260826-gate-targets-must-not-yield.md) / `artifact_missing` terminal behavior | Preserve synchronous headless completion and cause-specific fail-closed behavior when adding a pre-launch disabled resolution.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Delivered by PR #246; this plan does not alter launch or artifact-result semantics.                          |
+| Soft ordering          | W4 group 2 plan [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                      | Runs after this plan; both write `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` and the version pins in `packages/cli/src/validation/skills.test.ts` (this plan bumps `oat-project-implement`, which that plan also bumps), so never in one parallel group; dispatch stamp lands after gate override.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Pending.                                                                                                     |
+| Satisfied revalidation | `tool-pack-scope-provider-truthfulness` merged as PR #255 (`a06e9713a`, 2026-09-03)                                                                 | Re-anchor `oat-project-plan-writing/SKILL.md:271-392` (now bumped to 1.2.21 with a dispatch-lineage paragraph) and `config/user-sync-config.ts` (+16 lines) before editing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Landed; drift confirmed 2026-09-03 and re-run 2026-09-04.                                                    |
+| Soft ordering          | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit)                          | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W3 group 2 [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W5 group 1 [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md); W6 group 1 [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 3 [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md); W5 group 2 [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time.   |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected         | Files in common                                                                                                                | Required update                                                                                                                      |
-| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                        | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                               |
-| `review-plan-workflow` (draft PR #190) merges                                        | Yes              | `packages/cli/src/commands/gate/*` (resolve/execute), `apps/oat-docs/docs/cli-utilities/configuration.md`, `workflow-gates.md` | If #190 merges first: re-anchor the gate resolve/execute seam and both docs pages before editing; if this lands first, #190 rebases. |
+| Event                                                                                | Affected         | Files in common                                                                                                                                                                                                                                                                       | Required update                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                                                                                                                                                                               | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                                                                             |
+| `review-plan-workflow` (draft PR #190) merges                                        | Yes              | `packages/cli/src/commands/gate/*` (resolve/execute), `apps/oat-docs/docs/cli-utilities/configuration.md`, `workflow-gates.md`, `packages/cli/src/validation/skills.test.ts` (pins), `review-skill-contracts.test.ts`, and `oat-project-implement/SKILL.md` (#190 head `63161897dd4`) | If #190 merges first: re-anchor the gate resolve/execute seam, both docs pages, the pin tuples, and the two contract-test files before editing; if this lands first, #190 rebases. |
 
 ## Drift check
 
@@ -97,7 +109,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/config packages/cli/src/commands/gate packages/cli/src/commands/shared/frontmatter.ts .oat/templates/state.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-quick-start .agents/skills/oat-project-plan .agents/skills/oat-project-import-plan .agents/skills/oat-project-implement .agents/skills/oat-project-next .agents/skills/oat-project-progress packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
 ```
 
 Re-run all current gate resolve/execute focused tests on the delivered baseline.
@@ -115,9 +127,11 @@ this plan is refreshed.
   skills; do not edit provider copies.
 - Implementation pattern: preserve raw `oat gate resolve <skill> --json`
   compatibility unless the caller explicitly supplies project context.
-- Git/PR convention: CLI, templates, docs, and skills require one lockstep bump
-  of all five public packages plus changed skill-version bumps; do not push or
-  open a PR unless instructed.
+- Git/PR convention: changed skills require one PR-scoped `version:` bump each
+  plus their pin updates; release bookkeeping is mode-dependent (see step 6):
+  the wave fan-in owns the lockstep five-package bump, and only a standalone
+  execution bumps the five public packages and `pnpm-lock.yaml` itself. Do not
+  push or open a PR unless instructed.
 
 ## Scope
 
@@ -130,13 +144,29 @@ this plan is refreshed.
 - Shared interactive setup contract plus quick-start, plan, and import-plan
   callers before plan writing.
 - Gate-aware lifecycle callers that must pass resolved project context.
-- Explicit configured-but-disabled evidence in implementation closeout/status.
+- Explicit configured-but-disabled evidence in implementation closeout/status:
+  `oat-project-implement/references/completion-and-closeout.md:307-320`
+  (the `disposition` enum and persisted transition contract).
+- The downstream router `oat-project-next/SKILL.md:303-316`, which must accept
+  the new disposition, its contract cases in
+  `review-skill-contracts.test.ts` and
+  `post-implement-sequence-contracts.test.ts`, and its pin.
 - `oat-project-progress` visibility and workflow/project-config docs.
 - The project-state frontmatter allowlist and preserve-on-write path
   (`packages/cli/src/commands/shared/frontmatter.ts:17`
   `PROJECT_STATE_FRONTMATTER_FIELDS`, its predicate, and `frontmatter.test.ts`),
   so state writers never drop the new key.
-- Contract/unit tests, skill versions, and managed views.
+- Contract/unit tests: `frontmatter.test.ts`, gate command tests,
+  `project-start-preflight-contracts.test.ts`,
+  `post-implement-sequence-contracts.test.ts`,
+  `review-skill-contracts.test.ts`, and
+  `packages/cli/src/validation/skills.test.ts`.
+- Skill versions and their pins in `packages/cli/src/validation/skills.test.ts`
+  for every bumped skill that is pinned there: `oat-project-plan-writing`,
+  `oat-project-quick-start`, `oat-project-plan`, `oat-project-import-plan`,
+  `oat-project-implement`, and `oat-project-next` (`oat-project-progress` has
+  no pin). Managed views.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -247,9 +277,31 @@ specific `project_disabled` value while retaining configured resolution and a
 not-launched launch state. Keep completion allowed because the operator chose
 the project override; preserve all other closeout freshness and snapshot rules.
 
+Specify the persisted shape for the disabled transition in
+`completion-and-closeout.md:307-320` and teach the router to accept it:
+
+- `status: allowed`, `resolution: configured`,
+  `disposition: project_disabled`, `resolved_command` set to the configured
+  command (evidence, never executed), null gate-run and artifact provenance
+  (nothing launched, so none can exist), and a `project_override` sub-record
+  with `value: disabled` and `source: state.md:oat_skill_gate_overrides`.
+- `config_fingerprint` must cover the resolved override state as well as the
+  configured declaration, so removing the override from `state.md` changes
+  the fingerprint and a stale `project_disabled` transition can never be
+  reused as a fresh `allowed` result once the gate is re-enabled.
+- In `oat-project-next/SKILL.md:303-316`, add `allowed/configured` with
+  `disposition: project_disabled` as a third valid combination: null launch
+  provenance is required (not merely tolerated), `config_fingerprint`,
+  `reviewed_head`, and `implementation_fingerprint` must match, and the same
+  rolling-freshness rules apply. Every other combination keeps its current
+  fail-closed routing.
+
 **Verify:** from `packages/cli`, `pnpm exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts` → lifecycle contract tests prove no launch, distinct disposition,
-durable source, configured command preservation, and unchanged no-gate/passed/
-failed paths.
+durable source, configured command preservation, unchanged no-gate/passed/
+failed paths, the router's acceptance of `project_disabled` with null launch
+provenance, and the enabled→disabled→enabled transition: a
+`project_disabled` transition recorded under an override is routed as stale
+after the override is removed, and a fresh configured run is required.
 
 ### 5. Surface overrides and document boundaries
 
@@ -260,12 +312,24 @@ and the explicit phase/autonomous exclusions.
 
 **Verify:** from `packages/cli`, `pnpm exec vitest run src/validation/skills.test.ts` and, from the root, `pnpm build:docs` → pass.
 
-### 6. Refresh views, version, and run complete gates
+### 6. Refresh views, version, and run the mode-appropriate gates
 
-Bump every changed canonical skill exactly once, run managed provider sync,
-bump all five public packages together, and update `pnpm-lock.yaml`. Run focused
-tests independently, then the repository Definition of Done in order with a
-fresh `origin/main` fetch before version validation.
+Bump every changed canonical skill exactly once, update the pins listed in
+Scope, and run managed provider sync.
+
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`, `pnpm format`, and
+`pnpm oat:validate-skills` because this plan changes `.agents/skills`. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
+Run the focused tests independently so Turbo cache replay is not the only
+evidence.
 
 ## Test plan
 
@@ -275,8 +339,12 @@ fresh `origin/main` fetch before version validation.
 - Quick-start/plan/import contract tests for prompt, preservation, per-gate
   choices, no-config, and non-interactive behavior.
 - Closeout tests for distinct project-disabled evidence and zero launch.
+- Router tests: `oat-project-next` accepts `allowed/configured` with
+  `project_disabled` and null launch provenance; rejects it with non-null
+  provenance; and routes an override-era transition as stale after the
+  override is removed (enabled→disabled→enabled).
 - Progress/status contract tests for visible overrides.
-- Full skills, CLI, build, release, and docs gates.
+- Docs build, then the lane-mode or standalone gate set from step 6.
 
 ## Done criteria
 
@@ -287,9 +355,14 @@ fresh `origin/main` fetch before version validation.
       not-configured while legacy no-project output remains compatible.
 - [ ] Disabled gates do not launch and cannot appear passed or missing.
 - [ ] Project progress and durable closeout evidence show the override source.
+- [ ] `oat-project-next` routes a fresh `project_disabled` closeout forward and
+      a post-override-removal one as stale.
 - [ ] Phase review/HiLL/autonomous design-gate behavior is unchanged.
-- [ ] Changed skills and all five public packages have required version bumps.
-- [ ] Focused and full gates pass with no unexplained files.
+- [ ] Changed skills have required version bumps and pin updates.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
+- [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
 
@@ -318,9 +391,11 @@ or supersede it if a revalidation trigger fires.
 ## Review focus
 
 - Size: this plan spans state schema, gate resolution, several lifecycle
-  skills, closeout visibility, and docs. If the executing lane finds the pieces
-  cannot ship as one reviewable change, import it with
-  `oat-project-import-plan` and split by contract rather than trimming scope.
+  skills, the next-step router, closeout visibility, and docs. Every consumer
+  is named in Scope before dispatch; do not leave consumer discovery to a
+  nested import decision. If the executing lane finds the pieces cannot ship
+  as one reviewable change, import it with `oat-project-import-plan` and split
+  by contract rather than trimming scope.
 - Scrutinize backward compatibility of `oat gate resolve` without `--project`.
 - Verify disabled is explicit, durable, and never conflated with gate outcome.
 - Confirm setup preserves existing state and non-interactive safety.

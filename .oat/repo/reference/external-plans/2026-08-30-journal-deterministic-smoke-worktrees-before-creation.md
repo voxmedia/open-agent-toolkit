@@ -105,9 +105,11 @@ changed, repeat the create-to-register transaction trace before editing.
 - Tests that create Git state must use temporary repositories and clean only
   their fixture-owned resources.
 - Run `pnpm lint && pnpm format` because `tools/smoke` is touched.
-- Docs changes are bundled assets; if the docs/contract update is retained,
-  bump all five public packages together and update `pnpm-lock.yaml`.
-- Run focused smoke tests independently, then the complete Definition of Done.
+- Docs changes are bundled assets and therefore shipped functionality; the
+  release bookkeeping they require is mode-dependent (see step 6): the wave
+  fan-in owns the lockstep bump, and only a standalone execution bumps the five
+  public packages and `pnpm-lock.yaml` itself.
+- Run focused smoke tests independently, then the mode-appropriate gates.
 - Do not remove existing leaked worktrees or branches as part of implementation.
 - Do not push or open a PR unless instructed.
 
@@ -120,17 +122,26 @@ changed, repeat the create-to-register transaction trace before editing.
 - `tools/smoke/deterministic/provider.mjs` — reserve before `git worktree add`,
   finalize after current marker/worktree verification.
 - `tools/smoke/runner/cleanup.mjs` — safe reconciliation of reserved entries.
+- `tools/smoke/runner/provision.mjs` — the production manifest emitter; its
+  `ownershipJournal` initializer (`:243-246`, currently `schemaVersion: 1`)
+  must emit the new schema for new manifests.
+- `tools/smoke/runner/provision.test.mjs` — the manifest-creation assertion
+  (`:291-294`, currently `deepEqual` against `schemaVersion: 1`) plus a new
+  production-manifest transaction test.
 - Journal, cleanup, deterministic, provision, and run-smoke focused tests as
   needed to prove interruption boundaries.
-- Smoke contract/docs updates and required release bookkeeping.
+- Smoke contract/docs updates.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
 - Deleting any currently leaked branch or worktree.
 - Startup pruning by `smoke-automated-*`, path prefix, age, or ancestry.
 - Guessing whether another run is stale or active without an ownership lease.
-- Changing outer worktree provisioning, signal delivery, provider behavior, or
-  `--keep` semantics.
+- Changing outer worktree provisioning, signal delivery, or `--keep`
+  semantics. Provider behavior is likewise unchanged, with one explicit
+  exception: the deterministic provider's reserve-then-create ordering in
+  step 3 is permitted; no other provider behavior may change.
 - Generalizing reservation to every non-deterministic worktree creator without
   a separately verified transaction trace.
 
@@ -151,7 +162,13 @@ Use an explicit two-state journal entry:
   checks have succeeded.
 
 Emit a new journal schema version for new manifests and retain read support for
-schema v1 by interpreting its existing entries as `registered`.
+schema v1 by interpreting its existing entries as `registered`. The production
+emitter is `provision.mjs:243-246`, which today initializes
+`ownershipJournal: { resources: [], schemaVersion: 1 }`; the reader is
+`validateJournal` in `journal.mjs:356-365`, which today rejects anything but
+`schemaVersion === 1`. Compatibility contract: the new writer emits the new
+version; the reader accepts both versions, treats every v1 entry as
+`registered`, and never rewrites a v1 manifest's version in place.
 
 ## Implementation steps
 
@@ -166,12 +183,17 @@ shared Git directory, containment beneath the manifest run directory, safe
 branch syntax, and path/branch uniqueness. Persist a `reserved` entry before
 returning.
 
-Define the new schema explicitly. New manifests emit it; v1 manifests remain
-readable and their entries behave as already registered. A reservation may be
-idempotently replayed only when every ownership field matches.
+Define the new schema explicitly. Update the `ownershipJournal` initializer in
+`provision.mjs:243-246` so new manifests emit it, and widen `validateJournal`
+(`journal.mjs:356-365`) so v1 manifests remain readable and their entries
+behave as already registered. Update the `provision.test.mjs:291-294`
+`deepEqual` to the new emitted shape. A reservation may be idempotently
+replayed only when every ownership field matches.
 
 **Verify:** concurrent duplicate/conflicting reservations serialize correctly,
-and no temporary lock/write file remains.
+no temporary lock/write file remains, `node --test tools/smoke/runner/provision.test.mjs`
+proves a freshly provisioned manifest carries the new schema, and a v1
+fixture manifest still loads.
 
 ### 2. Finalize an existing reservation after creation
 
@@ -233,7 +255,14 @@ spies; never inspect or clean the developer's pre-existing worktrees. Run the
 existing deterministic integration suite afterward as an unchanged end-to-end
 control.
 
-**Verify:** `node --test tools/smoke/runner/journal.test.mjs tools/smoke/runner/cleanup.test.mjs tools/smoke/deterministic/deterministic.test.mjs`
+Add one end-to-end transaction test that starts from a manifest created by the
+production emitter (`provisionSmoke` in `provision.mjs:311`, in a temporary
+repository) rather than a hand-built fixture, and drives it through reserve,
+`git worktree add`, finalize, and an interrupted cleanup. A hand-built journal
+fixture can encode a schema the emitter never writes; this test proves the
+production shape round-trips.
+
+**Verify:** `node --test tools/smoke/runner/journal.test.mjs tools/smoke/runner/cleanup.test.mjs tools/smoke/runner/provision.test.mjs tools/smoke/deterministic/deterministic.test.mjs`
 exits zero without leaving fixture branches or worktrees.
 
 ### 6. Update ownership documentation and complete gates
@@ -243,8 +272,18 @@ versus registered ownership, v1 compatibility, and why automatic prefix/stale
 pruning remains prohibited. Do not claim the code can distinguish stale from
 active runs without a lease.
 
-Apply required package/lockfile bookkeeping for bundled docs, then run focused
-smoke tests and the complete repository Definition of Done in order.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint` and `pnpm format`
+because this plan changes `tools/smoke`. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
+Run the focused smoke tests independently first.
 
 ## Test plan
 
@@ -253,19 +292,26 @@ smoke tests and the complete repository Definition of Done in order.
 - Three interruption-window cleanup cases in temporary Git repositories.
 - Refusal controls for unjournaled, prefix-matching, divergent, missing-marker,
   wrong-common-Git, and path-only state.
+- Production-emitter manifest through reserve, create, finalize, and
+  interrupted cleanup.
 - Existing signal ordering, deterministic tier, and complete smoke suite.
-- Lint/format, docs, release, and complete repository gates.
+- Lint/format and docs gates, then the lane-mode or standalone gate set from
+  step 6.
 
 ## Done criteria
 
 - [ ] Deterministic phase intent is durable before `git worktree add`.
 - [ ] Registration finalizes only a matching, fully corroborated reservation.
 - [ ] Cleanup safely handles all three interruption windows.
-- [ ] Existing schema-v1 manifests remain recoverable.
+- [ ] Existing schema-v1 manifests remain recoverable, and the production
+      emitter writes the new schema.
 - [ ] Unjournaled or contradictory resources still fail closed.
 - [ ] No name-, age-, ancestry-, or prefix-only cleanup exists.
 - [ ] No existing leaked developer resource is modified.
-- [ ] Focused smoke tests and complete repository gates pass.
+- [ ] Focused smoke tests pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

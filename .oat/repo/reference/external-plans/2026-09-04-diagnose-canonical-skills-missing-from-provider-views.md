@@ -54,10 +54,21 @@ integration check proves the view converges to the canonical version.
     `{ canonical, provider, providerPath, state }` with
     `in_sync | drifted(modified|broken|replaced) | missing | stray`; no skill
     name and no version.
-  - `packages/cli/src/drift/detector.ts:26-129` — `detectDrift` is the
-    reusable per-entry primitive (`missing` on ENOENT at `:63`, symlink
-    classes at `:68-101`, hash compare and transform re-derivation at
-    `:106-124`).
+  - `packages/cli/src/drift/detector.ts:26-129` — `detectDrift(entry:
+ManifestEntryV2, scopeRoot, copyTransform?)` is the reusable per-entry
+    primitive (`missing` on ENOENT at `:63`, symlink classes at `:68-101`,
+    hash compare and transform re-derivation at `:106-124`). It requires a
+    manifest entry: a canonical skill that was never synced has no entry,
+    so `detectDrift` alone cannot say which provider or path is missing.
+  - `packages/cli/src/providers/shared/registry.ts:69-80` —
+    `ProviderScopeContext` carries `activeProviders`, `detectedProviders`,
+    `activation`, and `registrations` (each with its `adapter`);
+    `resolveProviderScopeContext` (`:320-351`) builds it from the sync
+    config. `providers/shared/adapter.types.ts:3-30` — each adapter's
+    `projectMappings`/`userMappings` give `providerDir`,
+    `providerExtension`, and `contentType` per content kind, which is how
+    `engine/compute-plan.ts:605` derives the expected provider path for a
+    canonical file without a manifest entry.
   - `packages/cli/src/commands/status/index.ts:1058-1085` — canonical entries
     with no manifest entry already render as `missing`, indistinguishable from
     a tracked entry whose provider file was deleted.
@@ -85,10 +96,10 @@ integration check proves the view converges to the canonical version.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                      | Required state                                                                                    | Current state |
-| ------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------- |
-| Soft ordering | [Populate provider reachability evidence](./2026-09-03-populate-provider-reachability-evidence.md) (W6 group 1) | Land first; it edits `info-tool.ts` and `list-tools.ts`; this plan then extends the settled seam. | Pending.      |
-| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4)                   | Owns `status/index.ts` and `manifest/manager.ts`; this plan touches neither.                      | Pending.      |
+| Type          | Dependency                                                                                                      | Required state                                                                                                                                                                                                                        | Current state |
+| ------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Soft ordering | [Populate provider reachability evidence](./2026-09-03-populate-provider-reachability-evidence.md) (W6 group 1) | Land first; it edits `info-tool.ts` and `list-tools.ts` and threads a `ProviderScopeContext` parameter through the inventory seam; this plan reuses that context boundary rather than resolving its own. Never in one parallel group. | Pending.      |
+| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4)                   | Owns `status/index.ts` and `manifest/manager.ts`; this plan touches neither.                                                                                                                                                          | Pending.      |
 
 There are no unsatisfied hard dependencies.
 
@@ -120,23 +131,38 @@ schema is a STOP.
 - Implementation pattern: injectable dependencies as in
   `InfoToolDependencies`; fixture-dir drift assertions as in
   `drift/detector.test.ts`.
-- Shipped CLI behavior: five-package lockstep bump above current
-  `origin/main`; help snapshots (`help-snapshots.test.ts`) if option text
-  changes.
+- Shipped CLI behavior: in lane mode the wave fan-in owns the lockstep
+  bump; only a standalone execution bumps the five packages itself. Help
+  snapshots (`help-snapshots.test.ts`) if option text changes.
 
 ## Scope
 
 ### In scope
 
 - New `packages/cli/src/drift/skill-view-diagnostic.ts` and test — pure
-  mapper `(skillName, scope, manifest, canonicalVersion, DriftReport | null)
-→ diagnostic` adding the additive/removed/modified classification as a
-  new field beside the unchanged `DriftState`.
+  mapper `(skillName, scope, providerScopeContext: ProviderScopeContext,
+expectedProjections: ExpectedProjection[], manifestEntry: ManifestEntryV2 | null,
+canonicalVersion, DriftReport | null) → diagnostic[]`, one diagnostic per
+  active provider, adding the additive/removed/modified classification as a
+  new field beside the unchanged `DriftState`. `ExpectedProjection` is
+  `{ provider, providerPath, strategy, contentKind }`, derived from the
+  adapter's scope mappings (`providerDir`, `providerExtension`) for
+  `contentType: 'skill'`; it exists whether or not a manifest entry does.
+  The mapper distinguishes `inactive` (provider not in
+  `activeProviders`), `unsupported` (no skill mapping for the scope),
+  `excluded` (mapping exists but the canonical path is filtered by config),
+  and `missing-additive` (active, supported, expected path absent, no
+  manifest entry); only the last is a projection gap.
 - `packages/cli/src/drift/index.ts` — export the mapper.
 - `packages/cli/src/commands/tools/info/info-tool.ts`, `index.ts`, and
   `info-tool.test.ts` — additive provider-view section in human and JSON
-  output; manifest load and `detectDrift` injected through
-  `InfoToolDependencies`.
+  output; manifest load, `detectDrift`, the provider scope context (the
+  parameter the reachability lane already threads; fall back to
+  `resolveProviderScopeContext` only if that lane did not expose it), and an
+  expected-projection resolver over the registered adapters' mappings, all
+  injected through `InfoToolDependencies`. The existing `scanTools`
+  canonical scan (`:104-112`) stays as the name resolver; no new scan
+  dependency.
 - One post-sync convergence integration case.
 - Docs: `apps/oat-docs/docs/cli-utilities/tool-packs.md` (`oat tools info`
   section, `:505`) and `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`
@@ -158,9 +184,13 @@ schema is a STOP.
 directory (`scanTools` at `info-tool.ts:104-112`), so canonical presence is
 known before the not-found path at `:149-155` fires; it knows nothing about
 the manifest or provider views; `oat status` knows drift but not names or versions and
-never suggests a sync. The detector already classifies every state the
-diagnostic needs except additive-versus-removed, which is derivable from
-whether a manifest entry exists. For `symlink` and `collection` strategies
+never suggests a sync. The detector classifies every state the diagnostic
+needs for a tracked entry, but it takes a manifest entry as input, so the
+headline case (a canonical skill nobody ever synced) has no provider or
+path identity unless the diagnostic derives the expected projection from
+the provider registry and adapter mappings itself. Additive-versus-removed
+is then derivable from whether a manifest entry exists for an expected
+projection. For `symlink` and `collection` strategies
 the view is the canonical file, so the version comparison applies only to
 `copy` entries and must say so.
 
@@ -168,18 +198,31 @@ the view is the canonical file, so the version comparison applies only to
 
 ### 1. Add the pure mapper
 
-Create `skill-view-diagnostic.ts` and its test with no CLI wiring; classify
-additive, removed, modified, in-sync, and unknown; compute the concrete-scope
-suggestion.
+Create `skill-view-diagnostic.ts` and its test with no CLI wiring. Inputs
+are the `ProviderScopeContext`, the expected projections for the skill in
+that scope (one per registered adapter that has a `skill` mapping for the
+scope, built from `providerDir` + skill directory + `providerExtension`),
+the manifest entry if any, the canonical version, and the `DriftReport` if a
+manifest entry allowed `detectDrift` to run. Classify per provider:
+`inactive`, `unsupported`, `excluded`, `missing-additive` (with the concrete
+expected path), `removed`, `modified`, `in-sync`; `unknown-skill` is a
+distinct top-level result when no canonical skill matched. Compute the
+concrete-scope suggestion only for `missing-additive`, `removed`, and
+`modified`.
 
 **Verify:** `pnpm exec vitest run src/drift/skill-view-diagnostic.test.ts` →
-all classification cases pass.
+all classification cases pass, including an active provider with no manifest
+entry that reports `missing-additive` with the expected concrete path.
 
 ### 2. Wire into `oat tools info`
 
-Inject manifest loading and `detectDrift` through `InfoToolDependencies`;
-add the provider-view block to human output and an additive JSON field; keep
-the "not found" path unchanged.
+Inject manifest loading, `detectDrift`, the provider scope context, and the
+expected-projection resolver through `InfoToolDependencies`; for each
+concrete scope where the canonical skill exists, build expected projections
+from the context's registrations, look up the manifest entry, run
+`detectDrift` only when an entry exists, and call the mapper. Add the
+provider-view block to human output and an additive JSON field; keep the
+"not found" path unchanged.
 
 **Verify:** `pnpm exec vitest run src/commands/tools/info/info-tool.test.ts`
 → existing cases unchanged; new cases assert the block and the suggestion
@@ -200,20 +243,33 @@ re-diagnose → `in_sync` with equal versions.
 **Verify:** `pnpm exec vitest run src/commands/tools/tool-pack-lifecycle.integration.test.ts`
 (or a new sibling) → passes.
 
-### 5. Docs, snapshots, bump, gates
+### 5. Docs, snapshots, gates
 
-Update both docs pages; re-run help snapshots if option text changed; bump
-the five packages; run the eight AGENTS.md gates in order with captured exit
-codes.
+Update both docs pages; re-run help snapshots if option text changed.
+
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
 - `skill-view-diagnostic.test.ts` (pattern `drift/detector.test.ts`):
-  additive; removed; modified with both versions; unknown skill distinct from
-  missing distribution; suggests the concrete scope, never `all`; symlink and
-  collection entries report no version comparison.
-- `info-tool.test.ts`: project-scope missing view; user-scope stale view;
-  unknown name keeps the existing wording; JSON keeps every current field.
+  `missing-additive` for an active provider with a skill mapping and no
+  manifest entry, asserting the exact expected provider path; `inactive`,
+  `unsupported`, and `excluded` never suggest a sync; removed; modified with
+  both versions; unknown skill distinct from missing distribution; suggests
+  the concrete scope, never `all`; symlink and collection entries report no
+  version comparison.
+- `info-tool.test.ts`: project-scope canonical skill with no manifest entry
+  and an active provider → `missing-additive` with the concrete project-scope
+  path and `oat sync --scope project`; the same skill at user scope with the
+  provider inactive there → `inactive`, no suggestion; user-scope stale
+  view; unknown name keeps the existing wording; JSON keeps every current
+  field; `detectDrift` is not called when no manifest entry exists.
 - Integration: post-sync convergence.
 - `status/index.test.ts`: one negative case asserting the status JSON keys
   are unchanged, enforcing the read-only promise.
@@ -225,7 +281,14 @@ codes.
 - [ ] Missing distribution and unknown skill are distinct outputs.
 - [ ] One concrete-scope sync suggestion per affected scope; never `all`.
 - [ ] No mutation on the diagnostic path; post-sync convergence proven.
-- [ ] Status output unchanged; lockstep bump and all gates pass; clean tree.
+- [ ] A never-synced canonical skill reports the missing provider and its
+      expected concrete path without a manifest entry; inactive,
+      unsupported, and excluded providers are reported as such, never as
+      missing.
+- [ ] Status output unchanged.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 
 ## STOP conditions
 
@@ -237,7 +300,10 @@ Stop and report instead of improvising when:
 - the additive/removed split would change `DriftState` rather than add a
   field;
 - the reachability lane has not landed and `info-tool.ts` is being edited
-  concurrently; or
+  concurrently;
+- the expected provider path cannot be derived from the registered
+  adapter mappings for a scope (a mapping shape change; re-anchor rather
+  than guessing paths); or
 - a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution
@@ -251,5 +317,7 @@ reproduced.
 ## Review focus
 
 - The additive/removed distinction is a new field, not a state change.
+- Provider and path identity for the no-manifest-entry case come from the
+  provider scope context and adapter mappings, not from `detectDrift`.
 - Scope suggestions are concrete and per-scope.
 - No status or sync surface was touched.

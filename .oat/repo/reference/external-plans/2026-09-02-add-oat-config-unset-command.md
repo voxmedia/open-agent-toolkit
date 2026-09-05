@@ -73,11 +73,11 @@ match `set`.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                                                                | Required state                                                                                                    | Current state                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------ |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                                         | Land first so the family-coverage test includes `documentation.excludes`.                                         | If it has not landed (it is BLOCKED on W1), omit that key from the coverage table and note the gap. | Pending (BLOCKED on W1). |
-| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                                         | Land first so the family-coverage test includes its `documentation.*` opt-out key.                                | Pending (W5 group 1).                                                                               |
-| Soft ordering | W5 group 1 plan [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | Runs before this plan; both edit `apps/oat-docs/docs/reference/cli-reference.md`, so never in one parallel group. | Pending.                                                                                            |
+| Type          | Dependency                                                                                                                                                                | Required state                                                                                                                                                                | Current state            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                                         | Land first so the family-coverage test includes `documentation.excludes`. If it has not landed (it is BLOCKED on W1), omit that key from the coverage table and note the gap. | Pending (BLOCKED on W1). |
+| Soft ordering | Sibling plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                                         | Land first so the family-coverage test includes its `documentation.*` opt-out key.                                                                                            | Pending (W5 group 1).    |
+| Soft ordering | W5 group 1 plan [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | Runs before this plan; both edit `apps/oat-docs/docs/reference/cli-reference.md`, so never in one parallel group.                                                             | Pending.                 |
 
 There are no unsatisfied hard dependencies.
 
@@ -107,8 +107,9 @@ before editing.
 - Lint/format/docs: `pnpm check` → passes.
 - Implementation pattern: `runSet`/`runGet` envelopes (`:2641-2721`);
   `validateSurfaceForKey`.
-- Git/PR convention: shipped CLI surface; five-package lockstep bump; help
-  snapshots may need regeneration (`help-snapshots.test.ts`).
+- Git/PR convention: shipped CLI surface, so the integrated change carries a
+  lockstep bump (fan-in owned in lane mode; see Scope); help snapshots may
+  need regeneration (`help-snapshots.test.ts`).
 
 ## Scope
 
@@ -171,12 +172,17 @@ Unset a local override and assert `get` returns the shared value with
 
 **Verify:** same command → fallback cases pass.
 
-### 5. Docs, help snapshots, bump, gates
+### 5. Docs, help snapshots, verification
 
-Update both docs pages; regenerate help snapshots if the test requires; bump
-the five packages.
+Update both docs pages; regenerate help snapshots if the test requires.
 
-**Verify:** `pnpm check`, then the eight AGENTS.md gates in order.
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
@@ -198,7 +204,10 @@ unsetConfigValue`.
 - [ ] `unset` exists with `set`-parity flags, restrictions, and envelopes.
 - [ ] Emptied parents are pruned; precedence fallback is proven.
 - [ ] Absent, unknown, and env-sourced keys have explicit outcomes.
-- [ ] Docs and help snapshots updated; lockstep bump and all gates pass.
+- [ ] Docs and help snapshots updated.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` is clean.
 
 ## STOP conditions

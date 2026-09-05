@@ -68,8 +68,15 @@ not an `oat-project-import-plan` target.
   recap and active-pointer plans both edit the completion skill and must
   never share a parallel group).
 - Plan 11's optional config keys moved to `BL-260904-add-recap-seam-config-keys`
-  (outside the program), so it shares no config seam; plan 12 follows plan 5
-  because they share a contract-test file.
+  (outside the program), so it shares no config seam and no longer follows
+  plan 6; plan 12 follows plan 5 because they share a contract-test file, and
+  plan 11 follows plan 12 because both write `validation/skills.test.ts`
+  (plan 12 adds cases and a pin; plan 11 bumps two pinned skills). The version
+  pins in that file are a shared write for every plan that bumps a pinned
+  skill (plans 7, 8, 9, 10, 11), which is why the program sequences them.
+- Plan 7 lands before the W5 terminal-status plan and plan 9 lands before it
+  too: that plan now edits `oat-project-next/SKILL.md` and its pin
+  (2026-09-05 review).
 - Plans 11 and 12 follow the W2 named-skill and W3 executable-backstops lanes
   respectively because they share skills or contract-test files.
 - Every plan lists `tool-pack-scope-provider-truthfulness` and PR #190 in a

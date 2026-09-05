@@ -38,7 +38,13 @@ whose plan is not implementation-ready to `oat-project-quick-start` with a
 load-and-follow clause, explain why spec-driven planning does not apply, and
 give a runnable continuation command. Quick-start documents how it resumes an
 existing incomplete quick project in place without re-scaffolding. One
-plan-readiness discriminator is defined once and referenced everywhere.
+plan-readiness predicate is defined once and referenced everywhere: a quick
+plan is implementation-ready only when its frontmatter says so
+(`oat_status: complete`, `oat_ready_for: oat-project-implement`,
+`oat_template: false`), its `## Reviews` section carries the Step 3.7
+disposition (a review row or the explicit policy skip), and it has at least
+one phase with substantive tasks. Substantive tasks alone never make a plan
+ready.
 
 ## Source and live evidence
 
@@ -58,6 +64,18 @@ plan-readiness discriminator is defined once and referenced everywhere.
     to implement.
   - `.agents/skills/oat-project-quick-start/SKILL.md:120-138` — Step 0.5 has
     no documented resume branch for an existing incomplete quick project.
+  - `.agents/skills/oat-project-quick-start/SKILL.md:526-541` — Step 3 writes
+    the substantive plan under `oat_status: in_progress`,
+    `oat_ready_for: null`, `oat_template: true`, the deliberate pre-review
+    state that `oat-project-next` must route back to quick-start; `:785-808`
+    — Step 3.7 flips to `oat_status: complete`,
+    `oat_ready_for: oat-project-implement`, `oat_template: false` only after
+    the review row or the explicit
+    `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`
+    line is durably written. Concrete tasks therefore exist before readiness.
+  - `packages/cli/src/validation/skills.test.ts:4003`, `:5070-5071` — version
+    pins for `oat-project-next`, `oat-project-plan`, and
+    `oat-project-quick-start`; each bump here must update its pin.
   - `oat_workflow_mode` is the canonical mode field (`oat-project-plan:19,110`,
     `oat-project-progress:174,197`, `oat-project-next:130`; written by
     `oat-project-quick-start:152` and
@@ -72,11 +90,13 @@ local-only projects through all-scope selection`; re-anchored 2026-09-04
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                  | Required state                                                                                                                  | Current state |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Soft ordering    | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                 | Land this plan first; both edit quick-start Step 0.5 and its `version:` line.                                                   | Pending.      |
-| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                  | Write every routing pointer with an explicit load-and-follow clause so its corpus test stays green.                             | Pending (W2). |
-| Soft ordering    | W5 group 4 plan [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md) | Runs after this plan; both edit `apps/oat-docs/docs/workflows/projects/picking-up-projects.md`, so never in one parallel group. | Pending.      |
+| Type             | Dependency                                                                                                                                                  | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Current state                                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Soft ordering    | Sibling plan [Make consolidated-project retirement semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                 | Land this plan first; both edit quick-start Step 0.5 and its `version:` line.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Pending.                                                                                                   |
+| Soft integration | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                  | Write every routing pointer with an explicit load-and-follow clause so its corpus test stays green.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Pending (W2).                                                                                              |
+| Soft ordering    | W5 group 4 plan [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md) | Runs after this plan; both edit `apps/oat-docs/docs/workflows/projects/picking-up-projects.md`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Pending.                                                                                                   |
+| Soft ordering    | W5 group 4 plan [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md)  | Runs after this plan; both edit `oat-project-next/SKILL.md` and its version pin in `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Pending.                                                                                                   |
+| Soft ordering    | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit)                                  | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W3 group 2 [Require executable backstops for standing contract claims](./2026-08-30-require-executable-backstops-for-contract-claims.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W6 group 1 [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 3 [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md); W5 group 2 [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time. |
 
 There are no unsatisfied hard dependencies.
 
@@ -107,7 +127,8 @@ re-anchor before editing.
   `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/autonomy-gate-inventory.test.ts`.
 - Implementation pattern: `oat-project-next/SKILL.md:418-441` load-and-follow
   wording; keep routing tables tabular.
-- Shipped skills require the five-package lockstep bump.
+- Shipped skills make the integrated change a lockstep release (fan-in owned
+  in lane mode; see Scope).
 
 ## Scope
 
@@ -118,8 +139,12 @@ re-anchor before editing.
 - `oat-project-next/SKILL.md:245` — add a plan-readiness discriminator
   rather than overloading tier.
 - `oat-project-quick-start/SKILL.md:120-138` — document resume in place.
-- Four `version:` bumps; `review-skill-contracts.test.ts` — three cases;
-  `picking-up-projects.md` — mirror sentence; five package manifests.
+- Four `version:` bumps and the matching pins in
+  `packages/cli/src/validation/skills.test.ts` (`oat-project-next`,
+  `oat-project-plan`, `oat-project-quick-start`; `oat-project-progress` has no
+  pin); `review-skill-contracts.test.ts` — four cases;
+  `picking-up-projects.md` — mirror sentence.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -138,9 +163,15 @@ Only `oat-project-next` tier 3 routes correctly. Nothing defines what
 
 ### 1. Define plan readiness once
 
-In `oat-project-quick-start/SKILL.md` add a short clause: a quick `plan.md`
-is implementation-ready when it has at least one phase with concrete tasks;
-a template or stub is not. Reference it from the other three skills.
+In `oat-project-quick-start/SKILL.md` add one named predicate ("quick plan
+readiness") beside Step 3.7: a quick `plan.md` is implementation-ready only
+when all of the following hold — `oat_status: complete`,
+`oat_ready_for: oat-project-implement`, `oat_template: false`, the
+`## Reviews` section records the Step 3.7 disposition (a `plan` review row or
+the explicit `Plan artifact review: skipped (...)` line), and at least one
+phase has substantive tasks. A plan with substantive tasks but Step 3
+pre-review frontmatter is NOT ready and routes back to quick-start. Reference
+the predicate by name from the other three skills; do not restate it.
 
 **Verify:** `pnpm oat:validate-skills` → exit 0.
 
@@ -169,18 +200,35 @@ the plan step in place and does not re-scaffold.
 
 ### 5. Add the contract tests, bump, gate
 
-Three cases in the test plan; four skill bumps; five package bumps; inventory
-test for plan/quick-start row drift; format.
+Four cases in the test plan; four skill bumps with their three
+`skills.test.ts` pins; inventory test for plan/quick-start row drift; format.
 
 **Verify:** `pnpm exec vitest run ... -t 'quick'` → pass;
-`pnpm run check:skill-bumps`, `pnpm exec vitest run src/validation/autonomy-gate-inventory.test.ts`,
-then the eight AGENTS.md gates.
+`pnpm exec vitest run src/validation/autonomy-gate-inventory.test.ts src/validation/skills.test.ts`
+→ pass.
+
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`,
+`pnpm format`, and `pnpm oat:validate-skills` because this plan changes
+`.agents/skills`. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
 
 ## Test plan
 
 Pattern: `review-skill-contracts.test.ts:1677`.
 
 - `routes incomplete quick projects to quick-start from plan, progress, and next`.
+- `defines quick plan readiness once and applies it in plan, progress, and next`
+  → the predicate text lists all four conditions exactly once (quick-start),
+  and each of the other three skills references it by name; assert a
+  substantive-tasks-only fixture (Step 3 frontmatter: `oat_status:
+in_progress`, `oat_template: true`) is classified NOT ready, while a
+  reviewed completion and a `workflow.autoArtifactReview.plan=false` policy
+  skip are both classified ready.
 - `explains why spec-driven planning stops and names a recoverable continuation`.
 - `documents quick-start resume for an existing incomplete quick project`.
 - Regression proved: all three acceptance criteria, including the stub-plan
@@ -190,9 +238,14 @@ Pattern: `review-skill-contracts.test.ts:1677`.
 
 - [ ] All three skills route not-ready quick projects to quick-start with
       load-and-follow wording; ready projects still go to implement.
+- [ ] Readiness is the frontmatter-plus-review predicate, not task presence;
+      a substantive pre-review plan is tested as not ready.
 - [ ] Quick-start documents in-place resume.
 - [ ] Tests fail on revert and pass on the change; inventory test green.
-- [ ] Four skill bumps, lockstep bump, format, and all gates pass; clean tree.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
+- [ ] Four skill bumps with pins, format, and a clean tree.
 
 ## STOP conditions
 
@@ -214,6 +267,7 @@ Apply the landing-event table above.
 
 ## Review focus
 
-- One readiness definition, referenced not duplicated.
+- One readiness definition, referenced not duplicated, and it must include the
+  Step 3.7 frontmatter and review disposition, not only task presence.
 - No bare "run skill X" pointer without a load clause.
 - Tier semantics in `oat-project-next` are preserved.
