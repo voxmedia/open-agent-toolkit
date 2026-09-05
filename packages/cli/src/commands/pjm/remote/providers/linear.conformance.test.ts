@@ -268,6 +268,41 @@ describe('Linear provider conformance', () => {
     ).toEqual([{ field: 'stable-identity', status: 'mismatch' }]);
   });
 
+  it.each([
+    ['stale', 'sha256:stale'],
+    ['missing', ''],
+    ['misattributed', 'sha256:other-capability'],
+  ] as const)(
+    'fails closed for %s public read capability evidence',
+    (_name, evidenceDigest) => {
+      const action = linearAdapter.plan('read', {
+        context,
+        hostCapability: capability,
+        stableId: fixture.expected.stableId,
+        uuid: observation.fields.uuid,
+        currentIdentifier: observation.fields.identifier,
+        stepId: 'linear-capability-bound-read',
+      });
+      const readback = {
+        ...observation,
+        capabilityEvidenceDigest: evidenceDigest,
+        fields: {
+          ...observation.fields,
+          hostCapability: { ...capability, evidenceDigest },
+        },
+      };
+      const issue = linearAdapter.normalize(observation);
+      issue.extensions.capabilityEvidenceDigest = evidenceDigest || undefined;
+
+      expect(linearAdapter.validateObservation(action, readback).valid).toBe(
+        false,
+      );
+      expect(linearAdapter.verify(action, issue)).toEqual([
+        { field: 'stable-identity', status: 'unavailable' },
+      ]);
+    },
+  );
+
   it.each(['create', 'update', 'transition', 'annotate'] as const)(
     'plans, publicly validates, and verifies real %s adapter actions',
     (operation) => {

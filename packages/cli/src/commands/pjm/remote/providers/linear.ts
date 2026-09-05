@@ -293,6 +293,7 @@ export function normalizeLinearIssueObservation(
     currentIdentifier: identifier,
     historicalIdentifiers,
     archived: requiredBoolean(observation.fields, 'archived'),
+    capabilityEvidenceDigest: observation.capabilityEvidenceDigest,
   };
   for (const key of LINEAR_EXTENSION_KEYS) {
     const value = observation.fields[key];
@@ -301,7 +302,6 @@ export function normalizeLinearIssueObservation(
     }
   }
   if (isRecord(observation.fields.mutationEvidence)) {
-    extensions.capabilityEvidenceDigest = observation.capabilityEvidenceDigest;
     extensions.mutationEvidence = observation.fields.mutationEvidence;
   }
   if (isRecord(observation.fields.createProvenance)) {
@@ -1197,7 +1197,9 @@ export const linearAdapter: ProviderAdapter = {
       if (
         !validLinearReadAction(action) ||
         issue.provider !== 'linear' ||
-        !contextsEqual(action.context, issue.context)
+        !contextsEqual(action.context, issue.context) ||
+        issue.extensions.capabilityEvidenceDigest !==
+          action.intent.capabilityEvidenceDigest
       ) {
         return [{ field: 'stable-identity', status: 'unavailable' }];
       }

@@ -118,6 +118,7 @@ describe('Linear identity and normalization', () => {
         currentIdentifier: 'ALPHA-42',
         historicalIdentifiers: ['OLD-19'],
         archived: false,
+        capabilityEvidenceDigest: 'sha256:linear-capability',
         estimate: 3,
         cycleId: 'cycle_17',
         suppressedFields: [],

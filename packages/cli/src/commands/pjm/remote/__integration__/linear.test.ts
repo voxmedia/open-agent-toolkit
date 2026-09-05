@@ -92,22 +92,17 @@ function continueRead(
   store: InspectableLinearStore,
   action: SemanticAction,
   readback: SanitizedProviderObservation,
+  normalizedIssue = linearAdapter.normalize(readback),
 ) {
   const publicValidation = linearAdapter.validateObservation(action, readback);
-  const verification = linearAdapter.verify(
-    action,
-    linearAdapter.normalize(readback),
-  );
+  const verification = linearAdapter.verify(action, normalizedIssue);
   if (
     !publicValidation.valid ||
     verification.some((field) => field.status !== 'verified')
   ) {
     return { publicValidation, verification, persisted: false };
   }
-  store.records.set(
-    String(action.intent.actionDigest),
-    linearAdapter.normalize(readback),
-  );
+  store.records.set(String(action.intent.actionDigest), normalizedIssue);
   return { publicValidation, verification, persisted: true };
 }
 
@@ -266,6 +261,42 @@ describe('Linear remote lifecycle integration', () => {
     });
     expect(store.records).toHaveLength(0);
   });
+
+  it.each([
+    ['stale', 'sha256:stale'],
+    ['missing', ''],
+    ['misattributed', 'sha256:other-capability'],
+  ] as const)(
+    'does not persist %s read capability evidence',
+    (_name, evidenceDigest) => {
+      const store = new InspectableLinearStore();
+      const action = linearAdapter.plan('read', {
+        context,
+        hostCapability: capability,
+        stableId: 'linear:workspace_01:8dc8f820-8de1-4f2b-8c3d-7be80378bffa',
+        uuid: observation.fields.uuid,
+        currentIdentifier: observation.fields.identifier,
+        stepId: 'linear-capability-bound-read',
+      });
+      const readback = {
+        ...observation,
+        capabilityEvidenceDigest: evidenceDigest,
+        fields: {
+          ...observation.fields,
+          hostCapability: { ...capability, evidenceDigest },
+        },
+      };
+      const issue = linearAdapter.normalize(observation);
+      issue.extensions.capabilityEvidenceDigest = evidenceDigest || undefined;
+
+      expect(continueRead(store, action, readback, issue)).toMatchObject({
+        publicValidation: { valid: false },
+        verification: [{ field: 'stable-identity', status: 'unavailable' }],
+        persisted: false,
+      });
+      expect(store.records).toHaveLength(0);
+    },
+  );
 
   it.each(['create', 'update', 'transition', 'annotate'] as const)(
     'persists only after real public and typed %s verification',
