@@ -90,7 +90,7 @@ export const WORKFLOW_MODES = [
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 ```
 
-Parser imports `WORKFLOW_MODES` from `../types` and deletes its local array.
+Parser adds `WORKFLOW_MODES` to its existing `import { ... } from '../types'` statement (line 13 today) and deletes its local array. No new cross-directory import is introduced; the control-plane package has no path alias configured and every module in it already imports `../types` this way, so introducing an alias is out of scope for this project and noted as a follow-up for the package.
 
 Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts`
 Expected: pass (GREEN)
@@ -593,13 +593,13 @@ git commit -m "test(p04-t02): cover lite scaffold, dashboard routing, and promot
 
 - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md` (workflow_mode enum)
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (version bump only)
-- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (mode table row, `oat_plan_source` enum, version bump)
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (mode table row, `oat_plan_source` enum, and the consumer list in the Managed Dispatch Readiness contract preamble gains lite planning; version bump)
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (plan case for lite, version bump)
 - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (lite proceeds with reduced-assurance note, version bump)
 - Modify: `.agents/skills/oat-project-plan/SKILL.md` (lite stop branch, version bump)
 - Modify: `.agents/skills/oat-project-discover/SKILL.md` (lite route: "continue with `oat-project-lite` / `oat-project-progress`", version bump)
-- Modify: `.agents/skills/oat-project-progress/SKILL.md` (Lite mode routing table, version bump)
-- Modify: `.agents/skills/oat-project-next/SKILL.md` (Lite routing table, version bump)
+- Modify: `.agents/skills/oat-project-progress/SKILL.md` (Lite mode routing table; the supported-mode statement; the "Start a new project" and "Workflow" no-project listings gain `oat-project-lite - Start a lite workflow (interview -> plan -> implement)` and the promote line reads "quick/import/lite"; version bump)
+- Modify: `.agents/skills/oat-project-next/SKILL.md` (Lite routing table; the empty-projects suggestion list gains `oat-project-lite`; the supported-mode inventory near the routing preamble names lite; version bump)
 - Modify: `.agents/skills/oat-brainstorm/SKILL.md` (fold-back handoff row; fold-back artifact selection gains a lite rule: when `oat_workflow_mode` is `lite`, `ARTIFACT_PATH` is `plan.md`, the appended section is `## Brainstorming Update` above `## Phase 1`, and the confirmation and commit wording name plan.md; version bump)
 - Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (new-goal review-density selection gains the lite heuristic for single-sitting goals; the resume routing table gains "Lite plan incomplete → `oat-project-lite`"; the completion report's workflow-mode field accepts `lite`; ALLOWED Activities and Success Criteria no longer limit selection to quick or spec-driven; version bump and pin update if present)
 - Modify: `.agents/skills/oat-project-promote-spec-driven/SKILL.md` (state that lite promotes via quick, version bump)
@@ -615,7 +615,7 @@ Skill-contract changes, using each skill's real marker strings:
 
 - Progress: markers are `**Spec-Driven mode (`, `**Quick mode (`, `**Import mode (`; add `**Lite mode (`oat_workflow_mode: lite`):**` after the import block and make the import slice end at `**Lite mode` instead of running to end of file.
 - Next: markers are `**Spec-Driven Mode**`, `**Quick Mode:**`, `**Import Mode:**`; add `**Lite Mode:**` before `### Step 4:`, make the import slice end at `**Lite Mode:**`, and slice the lite table from `**Lite Mode:**` to `### Step 4:`.
-- Assert lite routing text in both skills (plan tier 3 → `oat-project-lite`).
+- Assert lite routing text in both skills (plan tier 3 → `oat-project-lite`), and assert `oat-project-lite` appears in progress's no-project "Start a new project" and "Workflow" listings, in next's empty-projects suggestion list, and in plan-writing's consumer list, so lite is discoverable when no project is active, not only routable when one is.
 - Review-provide and pr-final: assert lite proceeds without spec or design and carries the reduced-assurance note. Keep the review-provide sentence "reviewing `design` in `quick/import` mode requires only `discovery.md`" byte-identical (review-skill-contracts.test.ts asserts it literally) and add lite guidance as a separate line.
 - Assert that both agent files name `lite` in their mode inputs, that the reviewer's Mode Contract has a lite line, that the reviewer's lite requirement source names all five contract sections, and that the implementer's lite Artifact Reads names the phase section plus all five contract sections.
 - Assert the brainstorm fold-back rule: for lite, artifact selection resolves to `plan.md`, and add a filesystem-level contract test (temp lite project with only plan.md, state.md, implementation.md) proving the documented fold-back append lands in `plan.md` and creates no `discovery.md`.
@@ -627,7 +627,7 @@ Expected: fail on the lite assertions and the version pins (RED)
 
 **Step 2: Implement (GREEN)**
 
-Apply only the one-line or one-branch changes for the files listed in this task's Files section (implement payload enum, plan-writing table and enum, review-provide plan case, pr-final artifact gate, spec-driven planner stop branch, discover route, progress and next routing tables, brainstorm fold-back handoff row and lite artifact-selection rule, autonomous new-goal selection, resume route, and report field, promote-spec-driven note, pr-progress requirement source, and both agent contracts). Do not touch plan-and-resume.md, completion-and-closeout.md, or the closeout branches of next and pr-final; those belong to p05-t03 and p05-t04. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
+Apply only the one-line or one-branch changes for the files listed in this task's Files section (implement payload enum, plan-writing table and enum, review-provide plan case, pr-final artifact gate, spec-driven planner stop branch, discover route, progress and next routing tables, progress and next supported-mode statements and no-project entry-workflow listings, plan-writing consumer list, brainstorm fold-back handoff row and lite artifact-selection rule, autonomous new-goal selection, resume route, and report field, promote-spec-driven note, pr-progress requirement source, and both agent contracts). Do not touch plan-and-resume.md, completion-and-closeout.md, or the closeout branches of next and pr-final; those belong to p05-t03 and p05-t04. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: pass (GREEN)
@@ -832,7 +832,7 @@ Not test-driven. This is the manual verification the testing strategy requires.
 
 **Step 2: Implement (GREEN)**
 
-Run `pnpm run cli -- sync --scope all` so the new skill appears in provider views. Then, in a scratch worktree or a throwaway branch, run `pnpm run cli -- project new lite-smoke --mode lite`, invoke `oat-project-lite` on a trivial change (for example, adding a one-line docs note), confirm the interview is one batched round, the approval gate fires once, the ceiling resolves, and `oat-project-implement` runs the single phase and final review. Delete the smoke project afterwards.
+Run `pnpm run cli -- sync --scope all` so the new skill appears in provider views. Then, in a scratch worktree or a throwaway branch, run `pnpm run cli -- project new lite-smoke --mode lite`, invoke `oat-project-lite` on a trivial change (for example, adding a one-line docs note), confirm the interview is one batched round, the approval gate fires once, the ceiling resolves, and `oat-project-implement` runs the single phase and final review. Continue through `oat-project-pr-final` far enough to generate the PR description artifact under the project's `pr/` directory, then decline external PR creation. Record that the route went from passed final review straight to pr-final, that no `summary.md` or documentation run was produced by default, and that the generated body was sourced from the lite plan's Summary, Decisions, Validation Criteria and the implementation.md Final Summary. Delete the smoke project afterwards.
 
 **Step 3: Refactor and format**
 
@@ -882,7 +882,7 @@ This is the last task in the plan by design: p06-t02 has already regenerated pro
 pnpm check > g1.log 2>&1; echo "check=$?"
 pnpm type-check > g2.log 2>&1; echo "type=$?"
 pnpm test > g3.log 2>&1; echo "test=$?"
-# Supplemental evidence that gate 3 was not a cache replay (it also runs test:release):
+# Supplemental evidence that gate 3 was not a cache replay (package test tasks only; test:release already ran inside pnpm test above):
 HOME=$(mktemp -d) pnpm exec turbo run test --force > g3a.log 2>&1; echo "test-forced=$?"
 pnpm test:smoke > g3b.log 2>&1; echo "smoke=$?"
 pnpm test:skills > g3c.log 2>&1; echo "skills=$?"
@@ -931,7 +931,7 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 | plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/artifact-plan-review-2026-09-05T195731Z.md          | -             | -          | -                        |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -             | gate       | cursor-gpt-5-6-sol-xhigh |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

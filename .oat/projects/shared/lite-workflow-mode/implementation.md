@@ -330,6 +330,25 @@ because each round's fixes land in one commit.
 - m1 → resolved: p04-t01 names the canonical `.agents/docs/autonomy-contract.md`
   in Files and format lists; skill-local paths are read-only symlinks.
 
+#### Review Received: plan (gate run 9)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T195731Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 76e017c7-f75b-4af6-8584-a4a35ffe5b72, blocked (1 Important, 2 Medium, 1 Minor)
+
+- I1 → resolved: p05-t01 now updates progress and next supported-mode
+  statements and no-project entry-workflow listings and plan-writing's
+  consumer list, with assertions that lite is discoverable without an active
+  project.
+- M1 → resolved with rationale: p01-t01 extends parser.ts's existing
+  `../types` import rather than adding a new cross-directory import; the
+  control-plane package has no alias and every module there already imports
+  `../types`, so adding an alias is out of scope and noted as a package
+  follow-up.
+- M2 → resolved: p06-t02's manual run continues through pr-final's PR
+  description generation (declining external creation) and records the
+  bypass of summary/document/retro and the body's source.
+- m1 → resolved: forced-Turbo comment corrected.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
