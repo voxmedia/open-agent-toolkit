@@ -15,6 +15,7 @@ export type RemoteLifecycleOperation =
   | 'refresh'
   | 'reconcile'
   | 'closeout'
+  | 'discussion'
   | 'storage-transition'
   | 'operation-continue';
 
@@ -27,6 +28,7 @@ export interface RemoteCommandRequest {
   providerRef?: string;
   backlogId?: string;
   projectPath?: string;
+  discussionLimit?: number;
   createTarget?: {
     provider: string;
     localKind: 'backlog' | 'project';
@@ -123,6 +125,25 @@ export function createPjmRemoteCommand(
         dependencies,
       );
     });
+
+  remote
+    .command('discussion')
+    .description('Read bounded remote discussion as non-persisted evidence')
+    .requiredOption('--binding <id>', 'Remote binding ID')
+    .requiredOption('--limit <count>', 'Maximum evidence items', parseCount)
+    .action(
+      async (options: { binding: string; limit: number }, command: Command) => {
+        await execute(
+          {
+            operation: 'discussion',
+            bindingId: options.binding,
+            discussionLimit: options.limit,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
   addBindingCommand(
     remote,
     'refresh',
@@ -217,6 +238,14 @@ export function createPjmRemoteCommand(
     );
 
   return remote;
+}
+
+function parseCount(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 100) {
+    throw new Error('Expected an integer from 1 to 100.');
+  }
+  return parsed;
 }
 
 function addBindingCommand(

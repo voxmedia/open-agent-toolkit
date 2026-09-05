@@ -69,6 +69,39 @@ describe('remote closeout command', () => {
   });
 });
 
+describe('remote discussion command', () => {
+  it('registers a bounded read-only discussion request', async () => {
+    const requests: RemoteCommandRequest[] = [];
+    const command = createPjmRemoteCommand({
+      resolveProjectRoot: async () => '/repo',
+      checkAdoption: async () => 'complete',
+      run: async (request) => {
+        requests.push(request);
+        return {
+          schemaVersion: 1,
+          status: 'ok',
+          operation: 'discussion',
+          projectRoot: request.projectRoot,
+          persisted: true,
+          results: [],
+          externalAction: null,
+          recovery: [],
+        };
+      },
+    });
+
+    await command.parseAsync(
+      ['discussion', '--binding', 'bnd_discussion_001', '--limit', '7'],
+      { from: 'user' },
+    );
+    expect(requests[0]).toMatchObject({
+      operation: 'discussion',
+      bindingId: 'bnd_discussion_001',
+      discussionLimit: 7,
+    });
+  });
+});
+
 async function adoptedRepository() {
   const repo = await mkdtemp(join(tmpdir(), 'oat-remote-live-'));
   tempDirs.push(repo);
