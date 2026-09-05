@@ -1,5 +1,11 @@
 import { containsSensitiveContentSignal } from '@commands/pjm/remote/credential-safety';
 import {
+  inspectJiraAdf,
+  validateJiraAdfDocument,
+  verifyJiraAdfReplacement,
+  type JiraAdfDocument,
+} from '@commands/pjm/remote/jira-adf';
+import {
   requireCurrentOutboundSafety,
   type OutboundProjection,
   type OutboundProjectionSafetyResult,
@@ -49,6 +55,7 @@ export interface JiraHostCapabilityObservation {
   operations: SemanticOperation[];
   observableFields: JiraSemanticField[];
   evidenceDigest: string;
+  observedAt: string;
 }
 
 export interface JiraReadPlanInput {
@@ -88,6 +95,14 @@ export interface JiraNormalizedMetadata {
   transitions: string[];
 }
 
+export interface JiraDescriptionAdfEvidence {
+  bindingId: string;
+  beforeDocumentDigest: string;
+  afterDocumentDigest: string;
+  surroundingDigest: string;
+  managedTextDigest: string;
+}
+
 export interface JiraMutationPreviewInput {
   operation: 'create' | 'update' | 'transition' | 'annotate';
   context: ProviderContext;
@@ -99,6 +114,11 @@ export interface JiraMutationPreviewInput {
   fieldMask: readonly string[];
   projection: OutboundProjection;
   outboundSafety: OutboundProjectionSafetyResult;
+  descriptionAdf?: {
+    bindingId: string;
+    before: JiraAdfDocument;
+    after: JiraAdfDocument;
+  };
 }
 
 export interface JiraMutationPlanInput extends JiraMutationPreviewInput {
@@ -109,9 +129,11 @@ export interface JiraMutationPreview {
   previewDigest: string;
   executionEvidence: {
     capabilityEvidenceDigest: string;
+    capabilityObservedAt: string;
     metadataEvidenceDigest: string;
     projectionDigest: string;
     outboundSafetyResultDigest: string;
+    descriptionAdfEvidence: JiraDescriptionAdfEvidence | null;
   };
 }
 
@@ -127,6 +149,7 @@ export interface JiraReadResult {
   classification:
     | 'current'
     | 'moved'
+    | 'archived'
     | 'partial'
     | 'inaccessible'
     | 'temporarily-unavailable';
@@ -291,6 +314,8 @@ export function normalizeJiraIssueObservation(
     'description',
     suppressedFields,
   );
+  const descriptionAdf = observation.fields.descriptionAdf ?? null;
+  if (descriptionAdf !== null) validateJiraAdfDocument(descriptionAdf);
   const extensions: Record<string, unknown> = {
     issueId,
     siteId,
@@ -298,7 +323,7 @@ export function normalizeJiraIssueObservation(
     currentKey: key,
     historicalKeys,
     historicalProjectIds,
-    descriptionAdf: observation.fields.descriptionAdf ?? null,
+    descriptionAdf,
     lifecycle: nullableString(observation.fields.lifecycle),
     capabilityEvidenceDigest: observation.capabilityEvidenceDigest,
     suppressedFields,
@@ -363,6 +388,9 @@ export function validateJiraHostCapability(
       reasons.push(`semantic-field-missing:${field}`);
   }
   if (!observed.evidenceDigest) reasons.push('capability-evidence-missing');
+  if (!Number.isFinite(Date.parse(observed.observedAt))) {
+    reasons.push('capability-freshness-invalid');
+  }
   return { valid: reasons.length === 0, reasons };
 }
 
@@ -392,25 +420,8 @@ export function planJiraRead(input: JiraReadPlanInput): SemanticAction {
     currentKey: input.currentKey,
     stepId: input.stepId,
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
-    resultContract: {
-      requireStableIdentity: true,
-      requireExactContext: true,
-      allowedFields: [
-        'issueId',
-        'key',
-        'historicalKeys',
-        'siteId',
-        'projectId',
-        'historicalProjectIds',
-        'title',
-        'descriptionText',
-        'descriptionAdf',
-        'status',
-        'priority',
-        'lifecycle',
-        ...JIRA_EXTENSION_KEYS,
-      ],
-    },
+    capabilityObservedAt: input.hostCapability.observedAt,
+    resultContract: jiraIssueResultContract(),
   });
 }
 
@@ -431,14 +442,8 @@ export function planJiraMetadataRead(
     purpose: input.purpose,
     issueId: input.issueId ?? null,
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
-    resultContract: {
-      normalizedOnly: true,
-      requireExactContext: true,
-      fields:
-        input.purpose === 'transition'
-          ? ['transitions']
-          : ['fields', 'issueTypes'],
-    },
+    capabilityObservedAt: input.hostCapability.observedAt,
+    resultContract: jiraMetadataResultContract(input.purpose),
   });
 }
 
@@ -462,15 +467,8 @@ export function planJiraDiscussionRead(
     cursor: input.cursor,
     limit: input.limit,
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
-    resultContract: {
-      maxItems: input.limit,
-      maxIdBytes: JIRA_DISCUSSION_LIMITS.maxIdBytes,
-      maxBodyBytes: JIRA_DISCUSSION_LIMITS.maxBodyBytes,
-      maxCursorBytes: JIRA_DISCUSSION_LIMITS.maxCursorBytes,
-      maxPageBytes: JIRA_DISCUSSION_LIMITS.maxPageBytes,
-      persistable: false,
-      contentPolicy: 'sanitized-whole-field-suppression',
-    },
+    capabilityObservedAt: input.hostCapability.observedAt,
+    resultContract: jiraDiscussionResultContract(input.limit),
   });
 }
 
@@ -482,11 +480,17 @@ export function previewJiraMutation(
   const fieldMask = normalizeJiraMutationFieldMask(input);
   requireCurrentOutboundSafety(input.projection, input.outboundSafety);
   assertJiraMetadataSupports(input, fieldMask);
+  const descriptionAdfEvidence = buildJiraDescriptionAdfEvidence(
+    input,
+    fieldMask,
+  );
   const executionEvidence = {
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    capabilityObservedAt: input.hostCapability.observedAt,
     metadataEvidenceDigest: input.normalizedMetadata.evidenceDigest,
     projectionDigest: input.outboundSafety.projectionDigest,
     outboundSafetyResultDigest: input.outboundSafety.resultDigest,
+    descriptionAdfEvidence,
   };
   return {
     previewDigest: semanticDigest({
@@ -561,33 +565,11 @@ export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
 export function classifyJiraReadObservation(
   input: JiraReadObservationInput,
 ): JiraReadResult {
-  if (
-    !validJiraActionDigest(input.action) ||
-    input.action.intent.kind !== 'issue'
-  ) {
+  if (!validJiraIssueReadAction(input.action)) {
     return unavailableJiraRead('inaccessible', ['read-action-invalid']);
   }
   if (!Number.isFinite(Date.parse(input.observedAt))) {
     throw new Error('Jira read classification requires a valid timestamp.');
-  }
-  const capability = validateJiraHostCapability(
-    'read',
-    input.action.context,
-    input.hostCapability,
-    ['stable-identity', 'title', 'status', 'revision', 'project-context'],
-  );
-  if (
-    !capability.valid ||
-    input.action.intent.capabilityEvidenceDigest !==
-      input.hostCapability.evidenceDigest
-  ) {
-    return unavailableJiraRead('inaccessible', [
-      ...capability.reasons,
-      ...(input.action.intent.capabilityEvidenceDigest !==
-      input.hostCapability.evidenceDigest
-        ? ['capability-evidence-mismatch']
-        : []),
-    ]);
   }
   if (input.outcome === 'temporary-failure') {
     return unavailableJiraRead('temporarily-unavailable', [
@@ -602,14 +584,39 @@ export function classifyJiraReadObservation(
     ]);
   }
   const observation = input.observation;
+  const exactContext = contextsEqual(input.action.context, observation.context);
+  const movedProject = isValidatedJiraProjectMoveEvidence(
+    input.action,
+    observation,
+    input.hostCapability,
+  );
+  const capabilityContext = movedProject
+    ? observation.context
+    : input.action.context;
+  const capability = validateJiraHostCapability(
+    'read',
+    capabilityContext,
+    input.hostCapability,
+    ['stable-identity', 'title', 'status', 'revision', 'project-context'],
+  );
+  const capabilityBound = movedProject
+    ? observation.capabilityEvidenceDigest ===
+        input.hostCapability.evidenceDigest &&
+      Date.parse(input.hostCapability.observedAt) >=
+        Date.parse(String(input.action.intent.capabilityObservedAt))
+    : input.action.intent.capabilityEvidenceDigest ===
+        input.hostCapability.evidenceDigest &&
+      input.action.intent.capabilityObservedAt ===
+        input.hostCapability.observedAt;
   if (
+    !capability.valid ||
     observation.provider !== 'jira' ||
-    !contextsEqual(input.action.context, observation.context) ||
-    observation.capabilityEvidenceDigest !==
-      input.action.intent.capabilityEvidenceDigest ||
+    (!exactContext && !movedProject) ||
+    !capabilityBound ||
     observation.fields.issueId !== input.action.intent.issueId
   ) {
     return unavailableJiraRead('inaccessible', [
+      ...capability.reasons,
       'observation-attribution-mismatch',
     ]);
   }
@@ -625,15 +632,25 @@ export function classifyJiraReadObservation(
     ]);
   }
   const currentKey = input.action.intent.currentKey;
-  const moved =
+  const movedKey =
     typeof currentKey === 'string' &&
     observation.fields.key !== currentKey &&
     Array.isArray(observation.fields.historicalKeys) &&
     observation.fields.historicalKeys.includes(currentKey);
+  if (!['active', 'archived'].includes(String(observation.fields.lifecycle))) {
+    return unavailableJiraRead('inaccessible', [
+      `lifecycle-unsupported:${String(observation.fields.lifecycle)}`,
+    ]);
+  }
   const revisionWeak =
     !observation.revision.token && !observation.revision.updatedAt;
   return {
-    classification: moved ? 'moved' : 'current',
+    classification:
+      observation.fields.lifecycle === 'archived'
+        ? 'archived'
+        : movedProject || movedKey
+          ? 'moved'
+          : 'current',
     issue,
     preservePriorEvidence: false,
     reasons: revisionWeak ? ['revision-evidence-weak'] : [],
@@ -646,11 +663,7 @@ export function validateJiraMetadataObservation(input: {
   observation: JiraMetadataObservation;
 }): ObservationValidation {
   const reasons: string[] = [];
-  if (
-    !validJiraActionDigest(input.action) ||
-    input.action.operation !== 'read' ||
-    input.action.intent.kind !== 'metadata'
-  ) {
+  if (!validJiraMetadataAction(input.action)) {
     reasons.push('metadata-action-invalid');
   }
   const capability = validateJiraHostCapability(
@@ -675,7 +688,8 @@ export function validateJiraMetadataObservation(input: {
     input.observation.capabilityEvidenceDigest !==
       input.action.intent.capabilityEvidenceDigest ||
     input.hostCapability.evidenceDigest !==
-      input.action.intent.capabilityEvidenceDigest
+      input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.observedAt !== input.action.intent.capabilityObservedAt
   ) {
     reasons.push('capability-evidence-mismatch');
   }
@@ -723,8 +737,7 @@ export function validateJiraDiscussionReadObservation(input: {
     reasons,
   });
   if (
-    !validJiraActionDigest(input.action) ||
-    input.action.operation !== 'read-discussion' ||
+    !validJiraDiscussionAction(input.action) ||
     input.observation.provider !== 'jira' ||
     !contextsEqual(input.action.context, input.observation.context) ||
     input.observation.stableId !== input.action.intent.stableId ||
@@ -732,10 +745,18 @@ export function validateJiraDiscussionReadObservation(input: {
       input.action.intent.capabilityEvidenceDigest ||
     input.hostCapability.evidenceDigest !==
       input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.observedAt !==
+      input.action.intent.capabilityObservedAt ||
     input.observation.requestedCursor !== input.action.intent.cursor
   ) {
     return invalid(['discussion-evidence-mismatch']);
   }
+  const capability = validateJiraHostCapability(
+    'read-discussion',
+    input.action.context,
+    input.hostCapability,
+  );
+  if (!capability.valid) return invalid(capability.reasons);
   if (input.observation.availability !== 'available') {
     return {
       classification: input.observation.availability,
@@ -816,6 +837,10 @@ export function verifyJiraMutationObservation(
       input.action.intent.capabilityEvidenceDigest ||
     input.hostCapability.evidenceDigest !==
       input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.observedAt !==
+      (isRecord(input.action.intent.executionEvidence)
+        ? input.action.intent.executionEvidence.capabilityObservedAt
+        : null) ||
     input.attempt.metadataEvidenceDigest !==
       input.action.intent.metadataEvidenceDigest ||
     input.normalizedMetadata.evidenceDigest !==
@@ -855,9 +880,12 @@ export function verifyJiraMutationObservation(
             ? issue.extensions.annotations
             : issue[field as 'title' | 'priority'];
     const verified =
-      field === 'annotation' && Array.isArray(observed)
-        ? observed.includes(postconditions[field])
-        : semanticValuesEqual(observed, postconditions[field]);
+      field === 'description'
+        ? semanticValuesEqual(observed, postconditions[field]) &&
+          verifyJiraDescriptionReadback(input.action, issue)
+        : field === 'annotation' && Array.isArray(observed)
+          ? observed.includes(postconditions[field])
+          : semanticValuesEqual(observed, postconditions[field]);
     return {
       field,
       status: verified ? ('verified' as const) : ('mismatch' as const),
@@ -902,6 +930,7 @@ export function planJiraDuplicateSearch(
     query,
     queryDigest: semanticDigest(query),
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    capabilityObservedAt: input.hostCapability.observedAt,
     resultContract: {
       maxResults: input.maxResults,
       classifications: ['no-match', 'one-match', 'ambiguous'],
@@ -939,6 +968,8 @@ export function validateJiraDuplicateSearchObservation(input: {
     !capability.valid ||
     input.hostCapability.evidenceDigest !==
       input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.observedAt !==
+      input.action.intent.capabilityObservedAt ||
     input.observation.provider !== 'jira' ||
     !contextsEqual(input.observation.context, input.action.context) ||
     input.observation.capabilityEvidenceDigest !==
@@ -1007,6 +1038,130 @@ export function validateJiraDuplicateSearchObservation(input: {
   };
 }
 
+function validateJiraPublicObservation(
+  action: SemanticAction,
+  observation: SanitizedProviderObservation,
+): ObservationValidation {
+  if (
+    action.operation === 'read-discussion' ||
+    action.operation === 'search-duplicates'
+  ) {
+    return {
+      valid: false,
+      reasons: [`typed-validator-required:${action.operation}`],
+    };
+  }
+  const mutation = ['create', 'update', 'transition', 'annotate'].includes(
+    action.operation,
+  );
+  const validAction = mutation
+    ? validJiraMutationAction(action)
+    : action.intent.kind === 'issue'
+      ? validJiraIssueReadAction(action)
+      : action.intent.kind === 'metadata'
+        ? validJiraMetadataAction(action)
+        : false;
+  if (!validAction)
+    return { valid: false, reasons: ['action-evidence-invalid'] };
+  if (action.provider !== 'jira' || observation.provider !== 'jira') {
+    return { valid: false, reasons: ['provider-mismatch'] };
+  }
+  const capability = parseJiraHostCapability(observation.fields.hostCapability);
+  if (!capability) {
+    return { valid: false, reasons: ['capability-evidence-missing'] };
+  }
+  if (action.operation === 'read' && action.intent.kind === 'issue') {
+    const result = classifyJiraReadObservation({
+      action,
+      hostCapability: capability,
+      observedAt: capability.observedAt,
+      outcome: 'found',
+      observation,
+    });
+    return result.issue
+      ? { valid: true, reasons: [] }
+      : { valid: false, reasons: result.reasons };
+  }
+  const reasons: string[] = [];
+  if (!contextsEqual(action.context, observation.context)) {
+    reasons.push('context-mismatch');
+  }
+  const requiredFields: JiraSemanticField[] =
+    action.operation === 'read' && action.intent.kind === 'metadata'
+      ? [
+          'metadata',
+          ...(action.intent.purpose === 'transition'
+            ? (['transitions'] as JiraSemanticField[])
+            : []),
+        ]
+      : [];
+  const capabilityValidation = validateJiraHostCapability(
+    action.operation,
+    action.context,
+    capability,
+    requiredFields,
+  );
+  reasons.push(...capabilityValidation.reasons);
+  const expectedCapabilityObservedAt = mutation
+    ? isRecord(action.intent.executionEvidence)
+      ? action.intent.executionEvidence.capabilityObservedAt
+      : null
+    : action.intent.capabilityObservedAt;
+  if (
+    observation.capabilityEvidenceDigest !==
+      action.intent.capabilityEvidenceDigest ||
+    capability.evidenceDigest !== action.intent.capabilityEvidenceDigest ||
+    capability.observedAt !== expectedCapabilityObservedAt
+  ) {
+    reasons.push('capability-evidence-mismatch');
+  }
+  if (
+    action.operation === 'read' &&
+    action.intent.kind === 'metadata' &&
+    typeof observation.fields.metadataEvidenceDigest !== 'string'
+  ) {
+    reasons.push('metadata-evidence-missing');
+  }
+  if (mutation) {
+    if (
+      !semanticValuesEqual(
+        observation.fields.mutationEvidence,
+        action.intent.executionEvidence,
+      )
+    ) {
+      reasons.push('mutation-evidence-mismatch');
+    }
+    if (
+      action.operation === 'create' &&
+      !semanticValuesEqual(
+        observation.fields.createProvenance,
+        action.intent.provenance,
+      )
+    ) {
+      reasons.push('create-provenance-mismatch');
+    }
+    try {
+      const issue = normalizeJiraIssueObservation(observation);
+      if (
+        action.operation !== 'create' &&
+        issue.stableId !== action.intent.stableId
+      ) {
+        reasons.push('observation-identity-mismatch');
+      }
+      if (
+        Array.isArray(action.intent.fieldMask) &&
+        action.intent.fieldMask.includes('description') &&
+        !verifyJiraDescriptionReadback(action, issue)
+      ) {
+        reasons.push('description-adf-readback-mismatch');
+      }
+    } catch {
+      reasons.push('observation-invalid');
+    }
+  }
+  return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -1045,114 +1200,7 @@ export const jiraAdapter: ProviderAdapter = {
     };
   },
   validateObservation(action, observation): ObservationValidation {
-    const reasons: string[] = [];
-    if (
-      action.operation === 'read-discussion' ||
-      action.operation === 'search-duplicates'
-    ) {
-      return {
-        valid: false,
-        reasons: [`typed-validator-required:${action.operation}`],
-      };
-    }
-    const mutation = ['create', 'update', 'transition', 'annotate'].includes(
-      action.operation,
-    );
-    if (
-      mutation
-        ? !validJiraMutationAction(action)
-        : !validJiraActionDigest(action)
-    ) {
-      reasons.push('action-evidence-invalid');
-    }
-    if (action.provider !== 'jira' || observation.provider !== 'jira')
-      reasons.push('provider-mismatch');
-    if (!contextsEqual(action.context, observation.context))
-      reasons.push('context-mismatch');
-    const capability = parseJiraHostCapability(
-      observation.fields.hostCapability,
-    );
-    if (!capability) reasons.push('capability-evidence-missing');
-    else {
-      const requiredFields: JiraSemanticField[] =
-        action.operation === 'read' && action.intent.kind === 'issue'
-          ? [
-              'stable-identity',
-              'title',
-              'status',
-              'revision',
-              'project-context',
-            ]
-          : action.operation === 'read' && action.intent.kind === 'metadata'
-            ? [
-                'metadata',
-                ...(action.intent.purpose === 'transition'
-                  ? (['transitions'] as JiraSemanticField[])
-                  : []),
-              ]
-            : [];
-      const validation = validateJiraHostCapability(
-        action.operation,
-        action.context,
-        capability,
-        requiredFields,
-      );
-      reasons.push(...validation.reasons);
-      if (
-        observation.capabilityEvidenceDigest !==
-          action.intent.capabilityEvidenceDigest ||
-        capability.evidenceDigest !== action.intent.capabilityEvidenceDigest
-      ) {
-        reasons.push('capability-evidence-mismatch');
-      }
-    }
-    if (action.operation === 'read' && action.intent.kind === 'issue') {
-      try {
-        const issue = normalizeJiraIssueObservation(observation);
-        if (issue.stableId !== action.intent.stableId)
-          reasons.push('observation-identity-mismatch');
-      } catch {
-        reasons.push('observation-invalid');
-      }
-    }
-    if (
-      action.operation === 'read' &&
-      action.intent.kind === 'metadata' &&
-      typeof observation.fields.metadataEvidenceDigest !== 'string'
-    ) {
-      reasons.push('metadata-evidence-missing');
-    }
-    if (mutation) {
-      if (
-        !semanticValuesEqual(
-          observation.fields.mutationEvidence,
-          action.intent.executionEvidence,
-        )
-      ) {
-        reasons.push('mutation-evidence-mismatch');
-      }
-      if (
-        action.operation === 'create' &&
-        !semanticValuesEqual(
-          observation.fields.createProvenance,
-          action.intent.provenance,
-        )
-      ) {
-        reasons.push('create-provenance-mismatch');
-      }
-      try {
-        const issue = normalizeJiraIssueObservation(observation);
-        if (
-          action.operation !== 'create' &&
-          issue.stableId !== action.intent.stableId
-        ) {
-          reasons.push('observation-identity-mismatch');
-        }
-      } catch {
-        reasons.push('observation-invalid');
-      }
-    }
-    return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
+    return validateJiraPublicObservation(action, observation);
   },
   verificationFields(action): string[] {
     if (action.operation === 'search-duplicates')
@@ -1205,27 +1253,33 @@ export const jiraAdapter: ProviderAdapter = {
         return {
           field,
           status:
-            field === 'annotation' && Array.isArray(observed)
-              ? observed.includes(postconditions[field])
+            field === 'description'
+              ? semanticValuesEqual(observed, postconditions[field]) &&
+                verifyJiraDescriptionReadback(action, issue)
                 ? 'verified'
                 : 'mismatch'
-              : semanticValuesEqual(observed, postconditions[field])
-                ? 'verified'
-                : 'mismatch',
+              : field === 'annotation' && Array.isArray(observed)
+                ? observed.includes(postconditions[field])
+                  ? 'verified'
+                  : 'mismatch'
+                : semanticValuesEqual(observed, postconditions[field])
+                  ? 'verified'
+                  : 'mismatch',
         };
       });
     }
     return this.verificationFields(action).map((field) => ({
       field,
       status:
-        validJiraActionDigest(action) &&
+        validJiraIssueReadAction(action) &&
         action.operation === 'read' &&
         action.intent.kind === 'issue' &&
         issue.provider === 'jira' &&
-        contextsEqual(action.context, issue.context) &&
         issue.stableId === action.intent.stableId &&
-        issue.extensions.capabilityEvidenceDigest ===
-          action.intent.capabilityEvidenceDigest
+        ((contextsEqual(action.context, issue.context) &&
+          issue.extensions.capabilityEvidenceDigest ===
+            action.intent.capabilityEvidenceDigest) ||
+          isNormalizedJiraProjectMove(action, issue))
           ? 'verified'
           : 'unavailable',
     }));
@@ -1250,6 +1304,53 @@ function validJiraStableIdForContext(
   const prefix = `jira:${context.siteId}:`;
   return (
     stableId.startsWith(prefix) && ISSUE_ID.test(stableId.slice(prefix.length))
+  );
+}
+
+function isValidatedJiraProjectMoveEvidence(
+  action: SemanticAction,
+  observation: SanitizedProviderObservation,
+  capability: JiraHostCapabilityObservation,
+): boolean {
+  const oldProjectId = action.context.projectId;
+  const newProjectId = observation.context.projectId;
+  const currentKey = action.intent.currentKey;
+  return (
+    action.provider === 'jira' &&
+    observation.provider === 'jira' &&
+    action.context.accountId === observation.context.accountId &&
+    action.context.siteId === observation.context.siteId &&
+    typeof oldProjectId === 'string' &&
+    typeof newProjectId === 'string' &&
+    oldProjectId !== newProjectId &&
+    observation.fields.issueId === action.intent.issueId &&
+    Array.isArray(observation.fields.historicalProjectIds) &&
+    observation.fields.historicalProjectIds.includes(oldProjectId) &&
+    (currentKey === null ||
+      (typeof currentKey === 'string' &&
+        observation.fields.key !== currentKey &&
+        Array.isArray(observation.fields.historicalKeys) &&
+        observation.fields.historicalKeys.includes(currentKey))) &&
+    contextsEqual(capability.context, observation.context) &&
+    capability.accountId === observation.context.accountId &&
+    capability.siteId === observation.context.siteId &&
+    capability.projectId === newProjectId &&
+    capability.evidenceDigest === observation.capabilityEvidenceDigest
+  );
+}
+
+function isNormalizedJiraProjectMove(
+  action: SemanticAction,
+  issue: NormalizedRemoteIssue,
+): boolean {
+  return (
+    action.context.accountId === issue.context.accountId &&
+    action.context.siteId === issue.context.siteId &&
+    action.context.projectId !== issue.context.projectId &&
+    Array.isArray(issue.extensions.historicalProjectIds) &&
+    issue.extensions.historicalProjectIds.includes(action.context.projectId) &&
+    typeof issue.extensions.capabilityEvidenceDigest === 'string' &&
+    issue.extensions.capabilityEvidenceDigest.length > 0
   );
 }
 
@@ -1346,6 +1447,54 @@ function assertJiraMetadataSupports(
   }
 }
 
+function buildJiraDescriptionAdfEvidence(
+  input: JiraMutationPreviewInput,
+  fieldMask: JiraMutationField[],
+): JiraDescriptionAdfEvidence | null {
+  if (!fieldMask.includes('description')) {
+    if (input.descriptionAdf !== undefined) {
+      throw new Error(
+        'Jira ADF evidence is allowed only for description mutations.',
+      );
+    }
+    return null;
+  }
+  const evidence = input.descriptionAdf;
+  const expectedText = input.projection.description;
+  if (
+    !evidence ||
+    evidence.bindingId !== input.bindingId ||
+    typeof expectedText !== 'string'
+  ) {
+    throw new Error(
+      'Jira description mutation requires binding-matched ADF evidence.',
+    );
+  }
+  validateJiraAdfDocument(evidence.before);
+  validateJiraAdfDocument(evidence.after);
+  if (
+    !verifyJiraAdfReplacement(
+      evidence.before,
+      evidence.after,
+      evidence.bindingId,
+      expectedText,
+    )
+  ) {
+    throw new Error(
+      'Jira description ADF transition is not structurally preserved.',
+    );
+  }
+  const before = inspectJiraAdf(evidence.before, evidence.bindingId);
+  const after = inspectJiraAdf(evidence.after, evidence.bindingId);
+  return {
+    bindingId: evidence.bindingId,
+    beforeDocumentDigest: before.documentDigest,
+    afterDocumentDigest: after.documentDigest,
+    surroundingDigest: after.surroundingDigest,
+    managedTextDigest: semanticDigest(expectedText),
+  };
+}
+
 function jiraAction(
   operation: SemanticOperation,
   context: ProviderContext,
@@ -1375,6 +1524,166 @@ function mutationVerificationFields(action: SemanticAction): string[] {
     : [];
 }
 
+function jiraIssueResultContract() {
+  return {
+    requireStableIdentity: true,
+    requireExactContext: true,
+    allowedFields: [
+      'issueId',
+      'key',
+      'historicalKeys',
+      'siteId',
+      'projectId',
+      'historicalProjectIds',
+      'title',
+      'descriptionText',
+      'descriptionAdf',
+      'status',
+      'priority',
+      'lifecycle',
+      ...JIRA_EXTENSION_KEYS,
+    ],
+  };
+}
+
+function jiraMetadataResultContract(
+  purpose: JiraMetadataReadPlanInput['purpose'],
+) {
+  return {
+    normalizedOnly: true,
+    requireExactContext: true,
+    fields:
+      purpose === 'transition' ? ['transitions'] : ['fields', 'issueTypes'],
+  };
+}
+
+function jiraDiscussionResultContract(limit: number) {
+  return {
+    maxItems: limit,
+    maxIdBytes: JIRA_DISCUSSION_LIMITS.maxIdBytes,
+    maxBodyBytes: JIRA_DISCUSSION_LIMITS.maxBodyBytes,
+    maxCursorBytes: JIRA_DISCUSSION_LIMITS.maxCursorBytes,
+    maxPageBytes: JIRA_DISCUSSION_LIMITS.maxPageBytes,
+    persistable: false,
+    contentPolicy: 'sanitized-whole-field-suppression',
+  };
+}
+
+function validJiraIssueReadAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'jira' ||
+    action.operation !== 'read' ||
+    !hasPinnedJiraContext(action.context) ||
+    !hasExactKeys(action.intent, [
+      'kind',
+      'stableId',
+      'issueId',
+      'currentKey',
+      'stepId',
+      'capabilityEvidenceDigest',
+      'capabilityObservedAt',
+      'resultContract',
+      'actionDigest',
+    ]) ||
+    action.intent.kind !== 'issue' ||
+    typeof action.intent.issueId !== 'string' ||
+    !ISSUE_ID.test(action.intent.issueId) ||
+    action.intent.stableId !==
+      canonicalJiraStableId(action.context.siteId!, action.intent.issueId) ||
+    (action.intent.currentKey !== null &&
+      (typeof action.intent.currentKey !== 'string' ||
+        !ISSUE_KEY.test(action.intent.currentKey))) ||
+    typeof action.intent.stepId !== 'string' ||
+    !action.intent.stepId ||
+    Buffer.byteLength(action.intent.stepId, 'utf8') > 128 ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    !action.intent.capabilityEvidenceDigest ||
+    typeof action.intent.capabilityObservedAt !== 'string' ||
+    !Number.isFinite(Date.parse(action.intent.capabilityObservedAt)) ||
+    !semanticValuesEqual(
+      action.intent.resultContract,
+      jiraIssueResultContract(),
+    )
+  ) {
+    return false;
+  }
+  return validJiraActionDigest(action);
+}
+
+function validJiraMetadataAction(action: SemanticAction): boolean {
+  const purpose = action.intent.purpose;
+  if (
+    action.provider !== 'jira' ||
+    action.operation !== 'read' ||
+    !hasPinnedJiraContext(action.context) ||
+    !hasExactKeys(action.intent, [
+      'kind',
+      'purpose',
+      'issueId',
+      'capabilityEvidenceDigest',
+      'capabilityObservedAt',
+      'resultContract',
+      'actionDigest',
+    ]) ||
+    action.intent.kind !== 'metadata' ||
+    !['create', 'update', 'transition'].includes(String(purpose)) ||
+    (action.intent.issueId !== null &&
+      (typeof action.intent.issueId !== 'string' ||
+        !ISSUE_ID.test(action.intent.issueId))) ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    !action.intent.capabilityEvidenceDigest ||
+    typeof action.intent.capabilityObservedAt !== 'string' ||
+    !Number.isFinite(Date.parse(action.intent.capabilityObservedAt)) ||
+    !semanticValuesEqual(
+      action.intent.resultContract,
+      jiraMetadataResultContract(
+        purpose as JiraMetadataReadPlanInput['purpose'],
+      ),
+    )
+  ) {
+    return false;
+  }
+  return validJiraActionDigest(action);
+}
+
+function validJiraDiscussionAction(action: SemanticAction): boolean {
+  const limit = Number(action.intent.limit);
+  if (
+    action.provider !== 'jira' ||
+    action.operation !== 'read-discussion' ||
+    !hasPinnedJiraContext(action.context) ||
+    !hasExactKeys(action.intent, [
+      'stableId',
+      'cursor',
+      'limit',
+      'capabilityEvidenceDigest',
+      'capabilityObservedAt',
+      'resultContract',
+      'actionDigest',
+    ]) ||
+    typeof action.intent.stableId !== 'string' ||
+    !validJiraStableIdForContext(action.intent.stableId, action.context) ||
+    (action.intent.cursor !== null &&
+      (typeof action.intent.cursor !== 'string' ||
+        Buffer.byteLength(action.intent.cursor, 'utf8') >
+          JIRA_DISCUSSION_LIMITS.maxCursorBytes)) ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > JIRA_DISCUSSION_LIMITS.maxItems ||
+    typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    !action.intent.capabilityEvidenceDigest ||
+    typeof action.intent.capabilityObservedAt !== 'string' ||
+    !Number.isFinite(Date.parse(action.intent.capabilityObservedAt)) ||
+    !semanticValuesEqual(
+      action.intent.resultContract,
+      jiraDiscussionResultContract(limit),
+    )
+  ) {
+    return false;
+  }
+  return validJiraActionDigest(action);
+}
+
 function validJiraMutationAction(action: SemanticAction): boolean {
   if (
     action.provider !== 'jira' ||
@@ -1387,6 +1696,23 @@ function validJiraMutationAction(action: SemanticAction): boolean {
   }
   const intent = action.intent;
   if (
+    !hasExactKeys(intent, [
+      'bindingId',
+      'stableId',
+      'provenance',
+      'fieldMask',
+      'projection',
+      'postconditions',
+      'capabilityEvidenceDigest',
+      'metadataEvidenceDigest',
+      'outboundSafety',
+      'outboundSafetyEvidence',
+      'previewDigest',
+      'approvalDigest',
+      'readbackContract',
+      'actionDigest',
+      'executionEvidence',
+    ]) ||
     typeof intent.bindingId !== 'string' ||
     !intent.bindingId ||
     !Array.isArray(intent.fieldMask) ||
@@ -1451,10 +1777,34 @@ function validJiraMutationAction(action: SemanticAction): boolean {
   const fieldMask = intent.fieldMask as JiraMutationField[];
   const baseExecutionEvidence = {
     capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
+    capabilityObservedAt: intent.executionEvidence.capabilityObservedAt,
     metadataEvidenceDigest: intent.metadataEvidenceDigest,
     projectionDigest: safety.projectionDigest,
     outboundSafetyResultDigest: safety.resultDigest,
+    descriptionAdfEvidence: intent.executionEvidence.descriptionAdfEvidence,
   };
+  if (
+    !hasExactKeys(intent.executionEvidence, [
+      'capabilityEvidenceDigest',
+      'capabilityObservedAt',
+      'metadataEvidenceDigest',
+      'projectionDigest',
+      'outboundSafetyResultDigest',
+      'descriptionAdfEvidence',
+      'previewDigest',
+      'approvalDigest',
+      'actionDigest',
+    ]) ||
+    !Number.isFinite(
+      Date.parse(String(baseExecutionEvidence.capabilityObservedAt)),
+    ) ||
+    !validDescriptionAdfEvidence(
+      baseExecutionEvidence.descriptionAdfEvidence,
+      fieldMask.includes('description'),
+    )
+  ) {
+    return false;
+  }
   const expectedPreviewDigest = semanticDigest({
     provider: 'jira',
     operation,
@@ -1502,9 +1852,19 @@ function validJiraDuplicateAction(action: SemanticAction): boolean {
     action.provider !== 'jira' ||
     action.operation !== 'search-duplicates' ||
     !hasPinnedJiraContext(action.context) ||
+    !hasExactKeys(action.intent, [
+      'query',
+      'queryDigest',
+      'capabilityEvidenceDigest',
+      'capabilityObservedAt',
+      'resultContract',
+      'actionDigest',
+    ]) ||
     !isRecord(action.intent.query) ||
     !isRecord(action.intent.resultContract) ||
     typeof action.intent.capabilityEvidenceDigest !== 'string' ||
+    typeof action.intent.capabilityObservedAt !== 'string' ||
+    !Number.isFinite(Date.parse(action.intent.capabilityObservedAt)) ||
     !validJiraActionDigest(action)
   ) {
     return false;
@@ -1577,6 +1937,59 @@ function semanticValuesEqual(left: unknown, right: unknown): boolean {
   }
 }
 
+function hasExactKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+): boolean {
+  const actual = Object.keys(value).sort();
+  return semanticValuesEqual(actual, [...expected].sort());
+}
+
+function validDescriptionAdfEvidence(
+  value: unknown,
+  required: boolean,
+): value is JiraDescriptionAdfEvidence | null {
+  if (!required) return value === null;
+  return (
+    isRecord(value) &&
+    hasExactKeys(value, [
+      'bindingId',
+      'beforeDocumentDigest',
+      'afterDocumentDigest',
+      'surroundingDigest',
+      'managedTextDigest',
+    ]) &&
+    Object.values(value).every(
+      (entry) => typeof entry === 'string' && entry.length > 0,
+    )
+  );
+}
+
+function verifyJiraDescriptionReadback(
+  action: SemanticAction,
+  issue: NormalizedRemoteIssue,
+): boolean {
+  const executionEvidence = action.intent.executionEvidence;
+  if (!isRecord(executionEvidence)) return false;
+  const evidence = executionEvidence.descriptionAdfEvidence;
+  if (!validDescriptionAdfEvidence(evidence, true) || evidence === null) {
+    return false;
+  }
+  const document = issue.extensions.descriptionAdf;
+  try {
+    validateJiraAdfDocument(document);
+    const inspection = inspectJiraAdf(document, evidence.bindingId);
+    return (
+      inspection.documentDigest === evidence.afterDocumentDigest &&
+      inspection.surroundingDigest === evidence.surroundingDigest &&
+      inspection.managedText !== null &&
+      semanticDigest(inspection.managedText) === evidence.managedTextDigest
+    );
+  } catch {
+    return false;
+  }
+}
+
 function unavailableJiraRead(
   classification: 'partial' | 'inaccessible' | 'temporarily-unavailable',
   reasons: string[],
@@ -1596,7 +2009,8 @@ function parseJiraHostCapability(
     typeof value.accountId !== 'string' ||
     typeof value.siteId !== 'string' ||
     typeof value.projectId !== 'string' ||
-    typeof value.evidenceDigest !== 'string'
+    typeof value.evidenceDigest !== 'string' ||
+    typeof value.observedAt !== 'string'
   ) {
     return null;
   }

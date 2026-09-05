@@ -4,7 +4,10 @@ import {
   verifyJiraAdfReplacement,
 } from '@commands/pjm/remote/jira-adf';
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
-import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
+import type {
+  ProviderAdapter,
+  SanitizedProviderObservation,
+} from '@commands/pjm/remote/provider';
 import { evaluateProviderConformance } from '@commands/pjm/remote/provider-conformance';
 import { describe, expect, it } from 'vitest';
 
@@ -51,6 +54,7 @@ const capability: JiraHostCapabilityObservation = {
     'transitions',
   ],
   evidenceDigest: 'sha256:jira-capability',
+  observedAt: '2026-09-05T12:00:00.000Z',
 };
 
 const observation: SanitizedProviderObservation = {
@@ -109,11 +113,31 @@ function mutation(operation: 'update' | 'transition') {
   });
 }
 
+const conformanceAdapter: ProviderAdapter = {
+  ...jiraAdapter,
+  plan(operation) {
+    if (operation !== 'update') {
+      throw new Error('The Jira conformance fixture supports update only.');
+    }
+    return mutation('update');
+  },
+  validateObservation(action, candidate) {
+    return jiraAdapter.validateObservation(action, {
+      ...candidate,
+      fields: {
+        ...candidate.fields,
+        title: (action.intent.projection as Record<string, unknown>).title,
+        mutationEvidence: action.intent.executionEvidence,
+      },
+    });
+  },
+};
+
 describe('Jira provider conformance', () => {
-  it('fails closed when the immutable generic harness omits mandatory mutation evidence', () => {
-    expect(() =>
+  it('passes the immutable generic harness through the production Jira adapter paths', () => {
+    expect(
       evaluateProviderConformance({
-        adapter: jiraAdapter,
+        adapter: conformanceAdapter,
         observation,
         expected: {
           stableId: 'jira:site_01:10042',
@@ -121,7 +145,7 @@ describe('Jira provider conformance', () => {
           verificationFields: ['title'],
         },
       }),
-    ).toThrow();
+    ).toEqual([]);
   });
 
   it('preserves stable issue identity, changed keys, safe priority, and allowlisted extensions', () => {

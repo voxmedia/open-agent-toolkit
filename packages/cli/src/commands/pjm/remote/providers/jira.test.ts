@@ -1,5 +1,13 @@
+import {
+  insertJiraAdfManagedContent,
+  replaceJiraAdfManagedContent,
+} from '@commands/pjm/remote/jira-adf';
 import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
-import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
+import {
+  semanticDigest,
+  type SanitizedProviderObservation,
+  type SemanticAction,
+} from '@commands/pjm/remote/provider';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -80,9 +88,30 @@ export const jiraCapability: JiraHostCapabilityObservation = {
     'transitions',
   ],
   evidenceDigest: 'sha256:jira-capability',
+  observedAt: '2026-09-05T12:00:00.000Z',
 };
 
 jiraObservation.fields.hostCapability = jiraCapability;
+
+function resignGenericJiraAction(
+  action: SemanticAction,
+  patch: Record<string, unknown>,
+): SemanticAction {
+  const { actionDigest: _actionDigest, ...plannedIntent } = action.intent;
+  const intent = { ...plannedIntent, ...patch };
+  return {
+    ...action,
+    intent: {
+      ...intent,
+      actionDigest: semanticDigest({
+        provider: 'jira',
+        operation: action.operation,
+        context: action.context,
+        intent,
+      }),
+    },
+  };
+}
 
 describe('Jira Cloud identity and normalization', () => {
   it('parses current key and cloud browse references', () => {
@@ -208,6 +237,68 @@ describe('Jira semantic read and metadata intents', () => {
   });
 });
 
+describe('Jira closed read and metadata action schemas', () => {
+  it('rejects rewritten issue-read selectors and injected intent fields', () => {
+    const action = planJiraRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'NEW-42',
+      stepId: 'closed-read',
+    });
+    for (const forged of [
+      resignGenericJiraAction(action, { issueId: '10043' }),
+      resignGenericJiraAction(action, { unexpectedSelector: 'NEW-43' }),
+      resignGenericJiraAction(action, {
+        resultContract: { providerRequest: 'rewritten' },
+      }),
+    ]) {
+      expect(jiraAdapter.validateObservation(forged, jiraObservation)).toEqual({
+        valid: false,
+        reasons: ['action-evidence-invalid'],
+      });
+    }
+  });
+
+  it('rejects rewritten metadata purposes and result contracts after replanning', () => {
+    const action = planJiraMetadataRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      purpose: 'transition',
+      issueId: '10042',
+    });
+    const metadataObservation = {
+      provider: 'jira' as const,
+      context: jiraContext,
+      capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+      purpose: 'transition' as const,
+      availability: 'available' as const,
+      metadataEvidenceDigest: 'sha256:jira-metadata',
+      writableFields: ['status'] as const,
+      transitions: ['Done'],
+    };
+    for (const forged of [
+      resignGenericJiraAction(action, {
+        resultContract: { providerRequest: 'status-change' },
+      }),
+      resignGenericJiraAction(action, { extraContract: true }),
+      resignGenericJiraAction(action, { issueId: 'invalid' }),
+    ]) {
+      expect(
+        validateJiraMetadataObservation({
+          action: forged,
+          hostCapability: jiraCapability,
+          observation: {
+            ...metadataObservation,
+            writableFields: [...metadataObservation.writableFields],
+          },
+        }).valid,
+      ).toBe(false);
+    }
+  });
+});
+
 describe('Jira semantic mutation intents', () => {
   const metadata = {
     evidenceDigest: 'sha256:jira-metadata',
@@ -313,6 +404,210 @@ describe('Jira semantic mutation intents', () => {
       planJiraMutation({ ...update, approvedPreviewDigest: 'sha256:stale' }),
     ).toThrow('approval');
   });
+
+  it('rejects recomputed mutation actions with injected unapproved intent keys', () => {
+    for (const operation of [
+      'create',
+      'update',
+      'transition',
+      'annotate',
+    ] as const) {
+      const input = mutationInput(operation);
+      const preview = previewJiraMutation(input);
+      const planned = planJiraMutation({
+        ...input,
+        approvedPreviewDigest: preview.previewDigest,
+      });
+      const execution = planned.intent.executionEvidence as Record<
+        string,
+        unknown
+      >;
+      const {
+        previewDigest: _previewDigest,
+        approvalDigest: _approvalDigest,
+        actionDigest: _executionActionDigest,
+        ...baseExecution
+      } = execution;
+      const {
+        actionDigest: _actionDigest,
+        executionEvidence: _executionEvidence,
+        ...approvedIntent
+      } = planned.intent;
+      const injectedIntent = {
+        ...approvedIntent,
+        providerRequest: { operation: 'unapproved-replacement' },
+      };
+      const forgedDigest = semanticDigest({
+        provider: 'jira',
+        operation,
+        context: jiraContext,
+        intent: injectedIntent,
+        executionEvidence: baseExecution,
+      });
+      const forged = {
+        ...planned,
+        intent: {
+          ...injectedIntent,
+          actionDigest: forgedDigest,
+          executionEvidence: {
+            ...execution,
+            actionDigest: forgedDigest,
+          },
+        },
+      };
+      expect(
+        jiraAdapter.validateObservation(forged, jiraObservation).reasons,
+      ).toContain('action-evidence-invalid');
+      expect(
+        jiraAdapter.verify(
+          forged,
+          normalizeJiraIssueObservation(jiraObservation),
+        ),
+      ).toEqual(
+        Object.keys(input.projection).map((field) => ({
+          field,
+          status: 'unavailable',
+        })),
+      );
+    }
+  });
+});
+
+describe('Jira description ADF mutation integrity', () => {
+  const before = insertJiraAdfManagedContent(
+    {
+      type: 'doc',
+      version: 1,
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Remote-owned rich text',
+              marks: [{ type: 'strong' }],
+            },
+          ],
+        },
+      ],
+    },
+    'binding_jira_description',
+    'old managed text',
+  );
+  const after = replaceJiraAdfManagedContent(
+    before,
+    'binding_jira_description',
+    'new managed text',
+  );
+
+  function descriptionAction() {
+    const projection = { description: 'new managed text' };
+    const input = {
+      operation: 'update' as const,
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      normalizedMetadata: {
+        evidenceDigest: 'sha256:jira-metadata',
+        writableFields: ['description'] as const,
+        transitions: [],
+      },
+      bindingId: 'binding_jira_description',
+      stableId: 'jira:site_01:10042',
+      fieldMask: ['description'],
+      projection,
+      outboundSafety: assessOutboundProjectionSafety(projection, {
+        assessedAt: '2026-09-05T12:00:00.000Z',
+      }),
+      descriptionAdf: {
+        bindingId: 'binding_jira_description',
+        before,
+        after,
+      },
+    };
+    const preview = previewJiraMutation(input);
+    return planJiraMutation({
+      ...input,
+      approvedPreviewDigest: preview.previewDigest,
+    });
+  }
+
+  function verifyDescription(action: SemanticAction, descriptionAdf: unknown) {
+    const readback = {
+      ...jiraObservation,
+      fields: {
+        ...jiraObservation.fields,
+        descriptionText: 'new managed text',
+        descriptionAdf,
+        mutationEvidence: action.intent.executionEvidence,
+      },
+    } as SanitizedProviderObservation;
+    return verifyJiraMutationObservation({
+      action,
+      attempt: {
+        count: 1,
+        outcome: 'accepted',
+        capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+        metadataEvidenceDigest: 'sha256:jira-metadata',
+      },
+      hostCapability: jiraCapability,
+      normalizedMetadata: {
+        evidenceDigest: 'sha256:jira-metadata',
+        writableFields: ['description'],
+        transitions: [],
+      },
+      readback,
+    });
+  }
+
+  it('binds canonical before/after/surrounding ADF evidence through execution', () => {
+    const action = descriptionAction();
+    expect(action.intent.executionEvidence).toMatchObject({
+      descriptionAdfEvidence: {
+        bindingId: 'binding_jira_description',
+        beforeDocumentDigest: expect.stringMatching(/^sha256:/),
+        afterDocumentDigest: expect.stringMatching(/^sha256:/),
+        surroundingDigest: expect.stringMatching(/^sha256:/),
+        managedTextDigest: semanticDigest('new managed text'),
+      },
+    });
+    expect(verifyDescription(action, after).classification).toBe('verified');
+  });
+
+  it('rejects matching plain text when ADF is lost or remote structure changes', () => {
+    const action = descriptionAction();
+    expect(
+      verifyDescription(action, { type: 'doc', version: 1, content: [] })
+        .classification,
+    ).not.toBe('verified');
+    const changed = structuredClone(after);
+    changed.content[0]!.content![0]!.text = 'Remote content was changed';
+    expect(verifyDescription(action, changed).classification).not.toBe(
+      'verified',
+    );
+  });
+
+  it('rejects description planning without codec-produced binding evidence', () => {
+    const projection = { description: 'new managed text' };
+    expect(() =>
+      previewJiraMutation({
+        operation: 'update',
+        context: jiraContext,
+        hostCapability: jiraCapability,
+        normalizedMetadata: {
+          evidenceDigest: 'sha256:jira-metadata',
+          writableFields: ['description'],
+          transitions: [],
+        },
+        bindingId: 'binding_jira_description',
+        stableId: 'jira:site_01:10042',
+        fieldMask: ['description'],
+        projection,
+        outboundSafety: assessOutboundProjectionSafety(projection, {
+          assessedAt: '2026-09-05T12:00:00.000Z',
+        }),
+      }),
+    ).toThrow('ADF evidence');
+  });
 });
 
 describe('Jira read and metadata observations', () => {
@@ -341,6 +636,106 @@ describe('Jira read and metadata observations', () => {
       valid: true,
       reasons: [],
     });
+    expect(
+      jiraAdapter.verify(
+        action,
+        normalizeJiraIssueObservation(jiraObservation),
+      ),
+    ).toEqual([{ field: 'stable-identity', status: 'verified' }]);
+  });
+
+  it('preserves stable issue identity across a validated project move', () => {
+    const priorContext = { ...jiraContext, projectId: 'project_100' };
+    const priorCapability = {
+      ...jiraCapability,
+      context: priorContext,
+      projectId: 'project_100',
+      evidenceDigest: 'sha256:jira-prior-capability',
+      observedAt: '2026-09-05T11:00:00.000Z',
+    };
+    const action = planJiraRead({
+      context: priorContext,
+      hostCapability: priorCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'OLD-42',
+      stepId: 'jira-project-move-refresh',
+    });
+
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: jiraObservation,
+      }),
+    ).toMatchObject({
+      classification: 'moved',
+      issue: { stableId: 'jira:site_01:10042' },
+    });
+    expect(jiraAdapter.validateObservation(action, jiraObservation)).toEqual({
+      valid: true,
+      reasons: [],
+    });
+    expect(
+      jiraAdapter.verify(
+        action,
+        normalizeJiraIssueObservation(jiraObservation),
+      ),
+    ).toEqual([{ field: 'stable-identity', status: 'verified' }]);
+  });
+
+  it('rejects forged project-move evidence and classifies archived issues explicitly', () => {
+    const priorContext = { ...jiraContext, projectId: 'project_100' };
+    const priorCapability = {
+      ...jiraCapability,
+      context: priorContext,
+      projectId: 'project_100',
+      evidenceDigest: 'sha256:jira-prior-capability',
+      observedAt: '2026-09-05T11:00:00.000Z',
+    };
+    const action = planJiraRead({
+      context: priorContext,
+      hostCapability: priorCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'OLD-42',
+      stepId: 'jira-project-move-refresh',
+    });
+    const forged = {
+      ...jiraObservation,
+      fields: {
+        ...jiraObservation.fields,
+        historicalProjectIds: ['project_unrelated'],
+      },
+    };
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: forged,
+      }).classification,
+    ).toBe('inaccessible');
+    expect(jiraAdapter.validateObservation(action, forged).valid).toBe(false);
+    expect(
+      jiraAdapter.verify(action, normalizeJiraIssueObservation(forged)),
+    ).toEqual([{ field: 'stable-identity', status: 'unavailable' }]);
+
+    expect(
+      classifyJiraReadObservation({
+        action: readAction(),
+        hostCapability: jiraCapability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation: {
+          ...jiraObservation,
+          fields: { ...jiraObservation.fields, lifecycle: 'archived' },
+        },
+      }).classification,
+    ).toBe('archived');
   });
 
   it('fails closed on authorization, context mismatch, partial response, and temporary failure', () => {
@@ -402,6 +797,25 @@ describe('Jira read and metadata observations', () => {
         },
       }),
     ).toEqual({ valid: true, reasons: [] });
+    expect(
+      validateJiraMetadataObservation({
+        action: metadataAction,
+        hostCapability: {
+          ...jiraCapability,
+          observedAt: '2026-09-05T11:59:59.000Z',
+        },
+        observation: {
+          provider: 'jira',
+          context: jiraContext,
+          capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+          purpose: 'transition',
+          availability: 'available',
+          metadataEvidenceDigest: 'sha256:jira-metadata',
+          writableFields: ['status'],
+          transitions: ['Done'],
+        },
+      }).valid,
+    ).toBe(false);
     const discussionAction = planJiraDiscussionRead({
       context: jiraContext,
       hostCapability: jiraCapability,
@@ -431,6 +845,79 @@ describe('Jira read and metadata observations', () => {
         },
       }),
     ).toMatchObject({ classification: 'page', persistable: false });
+  });
+
+  it('revalidates discussion action, authorization, capability freshness, and result bounds', () => {
+    const action = planJiraDiscussionRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      stableId: 'jira:site_01:10042',
+      cursor: null,
+      limit: 2,
+    });
+    const observation = {
+      provider: 'jira' as const,
+      context: jiraContext,
+      stableId: 'jira:site_01:10042',
+      availability: 'available' as const,
+      capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+      requestedCursor: null,
+      nextCursor: null,
+      items: [],
+    };
+    const validate = (
+      candidateAction: SemanticAction,
+      hostCapability: JiraHostCapabilityObservation = jiraCapability,
+      candidateObservation = observation,
+    ) =>
+      validateJiraDiscussionReadObservation({
+        action: candidateAction,
+        hostCapability,
+        observation: candidateObservation,
+      });
+
+    expect(
+      validate(action, {
+        ...jiraCapability,
+        availability: 'authorization-required',
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validate(action, {
+        ...jiraCapability,
+        operations: jiraCapability.operations.filter(
+          (operation) => operation !== 'read-discussion',
+        ),
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validate(action, {
+        ...jiraCapability,
+        observedAt: '2026-09-05T11:59:59.000Z',
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validate(resignGenericJiraAction(action, { limit: 3 })).classification,
+    ).toBe('invalid');
+    expect(
+      validate(
+        resignGenericJiraAction(action, {
+          resultContract: { maxItems: 2, persistable: true },
+        }),
+      ).classification,
+    ).toBe('invalid');
+    expect(
+      validate(action, jiraCapability, {
+        ...observation,
+        stableId: 'jira:site_01:10043',
+      }).classification,
+    ).toBe('invalid');
+    expect(
+      validate(action, {
+        ...jiraCapability,
+        evidenceDigest: 'sha256:stale-capability',
+      }).classification,
+    ).toBe('invalid');
   });
 });
 

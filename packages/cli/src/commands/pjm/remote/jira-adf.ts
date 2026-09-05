@@ -34,6 +34,8 @@ export const JIRA_ADF_LIMITS = {
   maxDocumentBytes: 1_048_576,
   maxManagedTextBytes: 65_536,
   maxBindingIdBytes: 128,
+  maxDepth: 64,
+  maxNodes: 10_000,
 } as const;
 
 const MARKER_PREFIX = 'oat-managed:';
@@ -60,6 +62,12 @@ export function inspectJiraAdf(
       document.content.filter((_, candidate) => candidate !== index),
     ),
   };
+}
+
+export function validateJiraAdfDocument(
+  document: unknown,
+): asserts document is JiraAdfDocument {
+  assertDocument(document);
 }
 
 export function insertJiraAdfManagedContent(
@@ -129,20 +137,24 @@ function managedIndexes(
   const marker = `${MARKER_PREFIX}${bindingId}`;
   const indexes: number[] = [];
   let malformed = false;
-  document.content.forEach((node, index) => {
+  const visit = (node: JiraAdfNode, topLevelIndex: number, depth: number) => {
     const localId = node.attrs?.localId;
     if (typeof localId === 'string' && localId.startsWith(MARKER_PREFIX)) {
       if (
+        depth !== 0 ||
         localId !== marker ||
         node.type !== 'panel' ||
         !Array.isArray(node.content)
       ) {
         malformed = true;
       } else {
-        indexes.push(index);
+        indexes.push(topLevelIndex);
       }
     }
-  });
+    for (const child of node.content ?? [])
+      visit(child, topLevelIndex, depth + 1);
+  };
+  document.content.forEach((node, index) => visit(node, index, 0));
   return { indexes, malformed };
 }
 
@@ -176,16 +188,60 @@ function assertSurroundingPreserved(
   }
 }
 
-function assertDocument(document: JiraAdfDocument): void {
+function assertDocument(
+  document: unknown,
+): asserts document is JiraAdfDocument {
   if (
-    document?.type !== 'doc' ||
+    !isRecord(document) ||
+    document.type !== 'doc' ||
     document.version !== 1 ||
-    !Array.isArray(document.content) ||
-    Buffer.byteLength(JSON.stringify(document), 'utf8') >
-      JIRA_ADF_LIMITS.maxDocumentBytes
+    !Array.isArray(document.content)
   ) {
     throw new Error('Jira ADF document is invalid or exceeds its byte limit.');
   }
+  let encoded: string;
+  try {
+    encoded = JSON.stringify(document);
+  } catch {
+    throw new Error('Jira ADF document is invalid or exceeds its byte limit.');
+  }
+  if (Buffer.byteLength(encoded, 'utf8') > JIRA_ADF_LIMITS.maxDocumentBytes) {
+    throw new Error('Jira ADF document is invalid or exceeds its byte limit.');
+  }
+  const counter = { nodes: 0 };
+  for (const node of document.content) validateNode(node, 0, counter);
+}
+
+function validateNode(
+  value: unknown,
+  depth: number,
+  counter: { nodes: number },
+): void {
+  counter.nodes += 1;
+  if (
+    !isRecord(value) ||
+    typeof value.type !== 'string' ||
+    value.type.length === 0 ||
+    depth > JIRA_ADF_LIMITS.maxDepth ||
+    counter.nodes > JIRA_ADF_LIMITS.maxNodes ||
+    (value.attrs !== undefined && !isRecord(value.attrs)) ||
+    (value.text !== undefined && typeof value.text !== 'string') ||
+    (value.marks !== undefined &&
+      (!Array.isArray(value.marks) ||
+        value.marks.some((mark) => !isRecord(mark)))) ||
+    (value.content !== undefined && !Array.isArray(value.content))
+  ) {
+    throw new Error(
+      'Jira ADF document is invalid or exceeds its structural limits.',
+    );
+  }
+  for (const child of (value.content as unknown[] | undefined) ?? []) {
+    validateNode(child, depth + 1, counter);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function assertBindingId(bindingId: string): void {

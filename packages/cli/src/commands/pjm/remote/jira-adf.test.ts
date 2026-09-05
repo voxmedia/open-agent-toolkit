@@ -5,6 +5,7 @@ import {
   insertJiraAdfManagedContent,
   inspectJiraAdf,
   replaceJiraAdfManagedContent,
+  validateJiraAdfDocument,
   verifyJiraAdfReplacement,
   type JiraAdfDocument,
 } from './jira-adf';
@@ -99,5 +100,71 @@ describe('Jira ADF managed content', () => {
     expect(inspectJiraAdf(reordered, 'binding_42').surroundingDigest).toBe(
       inspectJiraAdf(richDocument, 'binding_42').surroundingDigest,
     );
+  });
+
+  it('recursively rejects nested or crossing managed anchors', () => {
+    const inserted = insertJiraAdfManagedContent(
+      richDocument,
+      'binding_42',
+      'managed',
+    );
+    const nested: JiraAdfDocument = {
+      type: 'doc',
+      version: 1,
+      content: [
+        {
+          type: 'blockquote',
+          content: [inserted.content[1]!],
+        },
+      ],
+    };
+    expect(() => inspectJiraAdf(nested, 'binding_42')).toThrow('malformed');
+    expect(() =>
+      insertJiraAdfManagedContent(nested, 'binding_42', 'duplicate'),
+    ).toThrow('malformed');
+  });
+
+  it('validates normalized ADF depth, node count, and document bytes', () => {
+    const oversized: JiraAdfDocument = {
+      type: 'doc',
+      version: 1,
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'a'.repeat(JIRA_ADF_LIMITS.maxDocumentBytes),
+            },
+          ],
+        },
+      ],
+    };
+    expect(() => validateJiraAdfDocument(oversized)).toThrow('byte limit');
+    let node = { type: 'text', text: 'deep' };
+    for (let depth = 0; depth <= JIRA_ADF_LIMITS.maxDepth; depth += 1) {
+      node = { type: 'paragraph', content: [node] } as typeof node;
+    }
+    expect(() =>
+      validateJiraAdfDocument({ type: 'doc', version: 1, content: [node] }),
+    ).toThrow('structural limits');
+  });
+
+  it('detects rich-mark or surrounding-node loss in readback', () => {
+    const inserted = insertJiraAdfManagedContent(
+      richDocument,
+      'binding_42',
+      'before',
+    );
+    const replaced = replaceJiraAdfManagedContent(
+      inserted,
+      'binding_42',
+      'after',
+    );
+    const lossy = structuredClone(replaced);
+    delete lossy.content[0]!.content![0]!.marks;
+    expect(
+      verifyJiraAdfReplacement(inserted, lossy, 'binding_42', 'after'),
+    ).toBe(false);
   });
 });

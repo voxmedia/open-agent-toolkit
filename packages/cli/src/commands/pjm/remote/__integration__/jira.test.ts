@@ -22,6 +22,12 @@ import {
 } from '@commands/pjm/remote/providers/jira';
 import { describe, expect, it } from 'vitest';
 
+import {
+  FakeLifecycleStore,
+  GenericHostExecutor,
+  LifecycleHarness,
+} from './lifecycle-harness';
+
 const context = {
   host: 'jira.example',
   accountId: 'acct_jira',
@@ -57,6 +63,7 @@ const capability: JiraHostCapabilityObservation = {
     'transitions',
   ],
   evidenceDigest: 'sha256:jira-capability',
+  observedAt: '2026-09-05T12:00:00.000Z',
 };
 
 const metadata = {
@@ -141,6 +148,36 @@ function planMutation(
   });
 }
 
+function planDescriptionMutation(
+  before: ReturnType<typeof insertJiraAdfManagedContent>,
+  after: ReturnType<typeof replaceJiraAdfManagedContent>,
+) {
+  const projection = { description: 'updated' };
+  const input = {
+    operation: 'update' as const,
+    context,
+    hostCapability: capability,
+    normalizedMetadata: metadata,
+    bindingId: 'binding_jira_update',
+    stableId: 'jira:site_01:10042',
+    fieldMask: ['description'],
+    projection,
+    outboundSafety: assessOutboundProjectionSafety(projection, {
+      assessedAt: '2026-09-05T12:00:00.000Z',
+    }),
+    descriptionAdf: {
+      bindingId: 'binding_jira_update',
+      before,
+      after,
+    },
+  };
+  const preview = previewJiraMutation(input);
+  return planJiraMutation({
+    ...input,
+    approvedPreviewDigest: preview.previewDigest,
+  });
+}
+
 function readback(action: SemanticAction, patch: Record<string, unknown> = {}) {
   const projection = action.intent.projection as Record<string, unknown>;
   return {
@@ -148,6 +185,9 @@ function readback(action: SemanticAction, patch: Record<string, unknown> = {}) {
     fields: {
       ...observation.fields,
       ...(projection.title === undefined ? {} : { title: projection.title }),
+      ...(projection.description === undefined
+        ? {}
+        : { descriptionText: projection.description }),
       ...(projection.status === undefined ? {} : { status: projection.status }),
       ...(projection.annotation === undefined
         ? {}
@@ -217,6 +257,46 @@ describe('Jira remote lifecycle integration', () => {
     });
   });
 
+  it('retains immutable issue identity across a validated project move and rejects forged move history', () => {
+    const priorContext = { ...context, projectId: 'project_100' };
+    const priorCapability = {
+      ...capability,
+      context: priorContext,
+      projectId: 'project_100',
+      evidenceDigest: 'sha256:jira-prior-capability',
+      observedAt: '2026-09-05T11:00:00.000Z',
+    };
+    const action = planJiraRead({
+      context: priorContext,
+      hostCapability: priorCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'OLD-42',
+      stepId: 'jira-project-move-refresh',
+    });
+    expect(
+      classifyJiraReadObservation({
+        action,
+        hostCapability: capability,
+        observedAt: '2026-09-05T12:01:00.000Z',
+        outcome: 'found',
+        observation,
+      }),
+    ).toMatchObject({
+      classification: 'moved',
+      issue: { stableId: 'jira:site_01:10042' },
+    });
+    expect(
+      jiraAdapter.validateObservation(action, {
+        ...observation,
+        fields: {
+          ...observation.fields,
+          historicalProjectIds: ['project_unrelated'],
+        },
+      }).valid,
+    ).toBe(false);
+  });
+
   it('publishes and reconciles while preserving remote-owned ADF structurally', () => {
     const before = {
       type: 'doc' as const,
@@ -247,15 +327,106 @@ describe('Jira remote lifecycle integration', () => {
       ),
     ).toBe(true);
     const store = new InspectableJiraStore();
-    const action = planMutation('update');
+    const action = planDescriptionMutation(inserted, after);
     expect(
-      continueMutation(store, action, readback(action)).classification,
+      continueMutation(
+        store,
+        action,
+        readback(action, { descriptionAdf: after }),
+      ).classification,
     ).toBe('verified');
+    const lossy = { type: 'doc', version: 1, content: [] };
     expect(
-      continueMutation(store, action, readback(action, { title: 'drifted' }))
-        .classification,
-    ).toBe('partial');
+      continueMutation(
+        store,
+        action,
+        readback(action, { descriptionAdf: lossy }),
+      ).classification,
+    ).toBe('uncertain');
     expect(store.externalEffects).toBe(1);
+  });
+
+  it('resumes the shared lifecycle store after observation without replaying the effect', async () => {
+    const store = new FakeLifecycleStore();
+    const executor = new GenericHostExecutor();
+    const action = planMutation('update');
+    const lifecycleContext = {
+      host: context.host,
+      siteId: context.siteId,
+      projectId: context.projectId,
+    };
+    const input = {
+      operationId: 'op_jira_resume',
+      bindingId: 'binding_jira_update',
+      provider: 'jira' as const,
+      context: lifecycleContext,
+      projection: action.intent.projection as { title: string },
+      previewDigest: String(action.intent.previewDigest),
+      approvalDigest: String(action.intent.executionEvidence.approvalDigest),
+      capabilityEvidenceDigest: String(action.intent.capabilityEvidenceDigest),
+    };
+    const crashed = new LifecycleHarness({ store, executor });
+    await expect(
+      crashed.publish({ ...input, crashAt: 'after-observation' }),
+    ).rejects.toThrow('crash:after-observation');
+
+    const resumed = new LifecycleHarness({
+      store,
+      executor,
+      readback: async () => input.projection,
+    });
+    await expect(resumed.publish(input)).resolves.toMatchObject({
+      state: 'verified',
+      materializationSteps: [
+        'metadata',
+        'state',
+        'snapshot',
+        'baseline',
+        'association',
+      ],
+    });
+    expect(executor.calls).toBe(1);
+  });
+
+  it('fails shared lifecycle recovery closed after an uncertain attempt or mismatched readback', async () => {
+    const action = planMutation('update');
+    const lifecycleContext = {
+      host: context.host,
+      siteId: context.siteId,
+      projectId: context.projectId,
+    };
+    const input = {
+      bindingId: 'binding_jira_update',
+      provider: 'jira' as const,
+      context: lifecycleContext,
+      projection: action.intent.projection as { title: string },
+      previewDigest: String(action.intent.previewDigest),
+      approvalDigest: String(action.intent.executionEvidence.approvalDigest),
+      capabilityEvidenceDigest: String(action.intent.capabilityEvidenceDigest),
+    };
+    const store = new FakeLifecycleStore();
+    const executor = new GenericHostExecutor();
+    const crashed = new LifecycleHarness({ store, executor });
+    await expect(
+      crashed.publish({
+        ...input,
+        operationId: 'op_jira_uncertain',
+        crashAt: 'after-attempt-started',
+      }),
+    ).rejects.toThrow('crash:after-attempt-started');
+    await expect(
+      new LifecycleHarness({ store, executor }).publish({
+        ...input,
+        operationId: 'op_jira_uncertain',
+      }),
+    ).resolves.toMatchObject({ state: 'uncertain' });
+    expect(executor.calls).toBe(0);
+
+    await expect(
+      new LifecycleHarness({
+        readback: async () => ({ title: 'mismatched' }),
+      }).publish({ ...input, operationId: 'op_jira_mismatch' }),
+    ).resolves.toMatchObject({ state: 'uncertain' });
   });
 
   it('persists an unknown create attempt and never blindly retries it', () => {
