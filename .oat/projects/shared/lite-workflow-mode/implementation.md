@@ -388,6 +388,12 @@ because each round's fixes land in one commit.
 Important-count trend across real gate runs: 5, 4, 2, 2, 3, 1, 1, 1, 2, 2.
 Oscillating, not converging; surfaced to the user for a stopping decision.
 
+**Final planning disposition (2026-09-05):** user directed a stop after
+gate run 11 and handoff to `oat-project-implement`. Plan stays
+`oat_status: complete`, `oat_ready_for: oat-project-implement`. Eleven gate
+artifacts archived under `reviews/archived/`; `plan` artifact review rows
+remain `received`.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
