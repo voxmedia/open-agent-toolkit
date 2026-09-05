@@ -344,10 +344,12 @@ One line or branch each:
 - Collapsed closeout: the implement closeout sequence for lite is PR only,
   with summary and document opt-in and retro never added; next routes a
   passed final review to pr-final; pr-final synthesizes the PR body from
-  plan.md and implementation.md instead of generating summary.md. Because
-  this repository configures summary and document before pr, both skills
-  gain lite branches that read the five plan.md contract sections and
-  implementation.md and accept absent discovery, spec, and design.
+  plan.md and implementation.md instead of generating summary.md. The generic configured `workflow.postImplementSequence.preApproval` array
+  is not a lite opt-in: lite deterministically resolves to `[pr]` unless the
+  lite-specific `workflow.postImplementSequence.lite.preApproval` key lists
+  summary or document. Both skills gain lite branches that read the five
+  plan.md contract sections and implementation.md and accept absent
+  discovery, spec, and design, so the opt-in path works when chosen.
 - Pr-progress requirement source (lite: plan.md Summary and Validation
   Criteria).
 - Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume
@@ -373,7 +375,8 @@ One line or branch each:
 - The split detector's blind append to `discovery.md` gains an existence
   check so it never conjures a discovery file for import or lite projects.
 - `oat project validate-plan` becomes mode-aware: a lite plan must have
-  exactly one phase and no parallel groups. The implement preflight already
+  exactly one phase, no parallel groups, and a command, test name, or
+  `manual:` instruction on every validation criterion. The implement preflight already
   runs validate-plan, so the single-phase invariant is enforced before any
   checkpoint bypass can apply.
 

@@ -365,6 +365,29 @@ because each round's fixes land in one commit.
 - M2 → resolved: p04-t01 adds `oat-doctor`'s workflow-pack inventory with
   bump and pin.
 
+#### Review Received: plan (gate run 11)
+
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T201454Z.md
+**Gate:** cursor-gpt-5-6-sol-xhigh, run 54e82760-29fa-4f7a-895a-13d7feedbaab, blocked (2 Important, 1 Medium)
+
+- I1 → resolved (contradiction introduced in the round-8 fix): one
+  authoritative lite closeout policy. The generic configured
+  `workflow.postImplementSequence.preApproval` array is not a lite opt-in;
+  lite resolves to `[pr]` unless
+  `workflow.postImplementSequence.lite.preApproval` opts in. Contract test
+  uses the repository's real `[summary, document, pr]` config. p06-t02's
+  manual-run expectation now holds. Design component 7 updated.
+- I2 → resolved: p05-t01 adds oat-docs, oat-project-capture,
+  oat-pjm-review-backlog, and discover's no-project branch, plus a
+  repository-wide inventory guard test so two-mode wording cannot survive
+  future mode additions.
+- M1 → resolved: lite validation criteria must each carry a command, test
+  name, or `manual:` instruction; enforced by a third `validateLitePlan`
+  error code (p03-t03) and required by the lite skill (p04-t01).
+
+Important-count trend across real gate runs: 5, 4, 2, 2, 3, 1, 1, 1, 2, 2.
+Oscillating, not converging; surfaced to the user for a stopping decision.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
