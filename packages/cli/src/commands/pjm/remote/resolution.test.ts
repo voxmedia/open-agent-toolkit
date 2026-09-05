@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   detachBinding,
+  recreateBinding,
   relinkBinding,
   type ResolutionBinding,
   type ResolutionJournal,
@@ -220,5 +221,139 @@ describe('remote anomaly resolution', () => {
     );
     expect(store.bindingWrites).toHaveLength(1);
     expect(store.associationWrites).toHaveLength(1);
+  });
+});
+
+describe('duplicate-safe recreate', () => {
+  it('reconciles a capability-found existing replacement without creating', async () => {
+    const store = memoryStore();
+    let creates = 0;
+    const result = await recreateBinding(
+      {
+        operationId: 'op_recreate_001',
+        binding,
+        now: NOW,
+        previewDigest: approval.previewDigest,
+        approval,
+        searchDuplicates: async () => ({
+          kind: 'found-existing',
+          replacement: {
+            identity: {
+              stableId: 'found-1',
+              context: { workspaceId: 'ws-1' },
+              aliases: [],
+            },
+            verifiedAt: NOW,
+            evidenceDigest: 'sha256:found',
+          },
+        }),
+        createReplacement: async () => {
+          creates += 1;
+          return { kind: 'uncertain' };
+        },
+      },
+      store,
+    );
+    expect(result.status).toBe('verified');
+    expect(result.binding.remoteIdentity.stableId).toBe('found-1');
+    expect(creates).toBe(0);
+  });
+
+  it.each(['search-unavailable', 'ambiguous'] as const)(
+    'blocks recreate when duplicate search is %s',
+    async (kind) => {
+      const store = memoryStore();
+      let creates = 0;
+      const result = await recreateBinding(
+        {
+          operationId: 'op_recreate_001',
+          binding,
+          now: NOW,
+          previewDigest: approval.previewDigest,
+          approval,
+          searchDuplicates: async () =>
+            kind === 'ambiguous'
+              ? { kind, candidates: ['candidate-1', 'candidate-2'] }
+              : { kind },
+          createReplacement: async () => {
+            creates += 1;
+            return { kind: 'uncertain' };
+          },
+        },
+        store,
+      );
+      expect(result.status).toBe('blocked');
+      expect(creates).toBe(0);
+    },
+  );
+
+  it('persists intent, creates once, and adopts a verified replacement', async () => {
+    const store = memoryStore();
+    const result = await recreateBinding(
+      {
+        operationId: 'op_recreate_001',
+        binding,
+        now: NOW,
+        previewDigest: approval.previewDigest,
+        approval,
+        searchDuplicates: async () => ({ kind: 'no-match' }),
+        createReplacement: async () => ({
+          kind: 'committed',
+          replacement: {
+            identity: {
+              stableId: 'created-1',
+              context: { workspaceId: 'ws-1' },
+              aliases: [],
+            },
+            verifiedAt: NOW,
+            evidenceDigest: 'sha256:created',
+          },
+        }),
+      },
+      store,
+    );
+    expect(result.status).toBe('verified');
+    expect(result.journal.createIntentPersisted).toBe(true);
+    expect(result.journal.createAttempted).toBe(true);
+    expect(result.binding.remoteIdentity.stableId).toBe('created-1');
+  });
+
+  it('freezes an uncertain create and never blindly retries after restart', async () => {
+    const store = memoryStore();
+    let creates = 0;
+    const input = {
+      operationId: 'op_recreate_001',
+      binding,
+      now: NOW,
+      previewDigest: approval.previewDigest,
+      approval,
+      searchDuplicates: async () => ({ kind: 'no-match' as const }),
+      createReplacement: async () => {
+        creates += 1;
+        return { kind: 'uncertain' as const };
+      },
+    };
+    const first = await recreateBinding(input, store);
+    const resumed = await recreateBinding(input, store);
+    expect(first.status).toBe('uncertain');
+    expect(resumed.status).toBe('uncertain');
+    expect(resumed.binding.lifecycle).toBe('blocked');
+    expect(creates).toBe(1);
+  });
+
+  it('requires the immutable fresh-approval floor for recreate', async () => {
+    await expect(
+      recreateBinding(
+        {
+          operationId: 'op_recreate_001',
+          binding,
+          now: NOW,
+          previewDigest: approval.previewDigest,
+          searchDuplicates: async () => ({ kind: 'no-match' }),
+          createReplacement: async () => ({ kind: 'uncertain' }),
+        },
+        memoryStore(),
+      ),
+    ).rejects.toThrow('fresh approval');
   });
 });

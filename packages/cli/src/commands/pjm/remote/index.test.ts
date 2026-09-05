@@ -109,6 +109,7 @@ describe('remote resolution commands', () => {
       'relink',
     ],
     [['resolve', 'detach', '--binding', 'bnd_resolution_001'], 'detach'],
+    [['resolve', 'recreate', '--binding', 'bnd_resolution_001'], 'recreate'],
   ] as const)('registers %s', async (argv, resolutionKind) => {
     const requests: RemoteCommandRequest[] = [];
     const command = createPjmRemoteCommand({

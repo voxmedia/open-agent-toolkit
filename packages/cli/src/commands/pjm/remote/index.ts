@@ -194,6 +194,27 @@ export function createPjmRemoteCommand(
         );
       },
     );
+  resolveCommand
+    .command('recreate')
+    .requiredOption('--binding <id>', 'Remote binding ID')
+    .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .action(
+      async (
+        options: { binding: string; applyPreview?: string },
+        command: Command,
+      ) => {
+        await execute(
+          {
+            operation: 'resolve',
+            resolutionKind: 'recreate',
+            bindingId: options.binding,
+            previewOperationId: options.applyPreview,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
   addBindingCommand(
     remote,
     'refresh',

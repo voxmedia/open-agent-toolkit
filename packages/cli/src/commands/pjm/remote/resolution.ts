@@ -33,10 +33,13 @@ export interface ResolutionJournal {
   bindingId: string;
   kind: 'relink' | 'detach' | 'recreate';
   previewDigest: string;
-  state: 'pending' | 'partial' | 'complete';
+  state: 'pending' | 'blocked' | 'partial' | 'uncertain' | 'complete';
   bindingTransitionCompleted: boolean;
   associationCompleted: boolean;
   resultingBinding: ResolutionBinding | null;
+  searchCompleted?: boolean;
+  createIntentPersisted?: boolean;
+  createAttempted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -167,6 +170,146 @@ export async function detachBinding(
     input.crash?.('after-association');
   }
   return { binding: journal.resultingBinding!, journal };
+}
+
+export type DuplicateSearchOutcome =
+  | {
+      kind: 'found-existing';
+      replacement: {
+        identity: ResolutionIdentity;
+        verifiedAt: string;
+        evidenceDigest: string;
+      };
+    }
+  | { kind: 'search-unavailable' }
+  | { kind: 'ambiguous'; candidates: string[] }
+  | { kind: 'no-match' };
+
+export type RecreateAttemptOutcome =
+  | {
+      kind: 'committed';
+      replacement: {
+        identity: ResolutionIdentity;
+        verifiedAt: string;
+        evidenceDigest: string;
+      };
+    }
+  | { kind: 'uncertain' }
+  | { kind: 'rejected' };
+
+export async function recreateBinding(
+  input: CommonResolutionInput & {
+    searchDuplicates(): Promise<DuplicateSearchOutcome>;
+    createReplacement(): Promise<RecreateAttemptOutcome>;
+  },
+  store: ResolutionStore,
+): Promise<{
+  status: 'verified' | 'blocked' | 'uncertain';
+  binding: ResolutionBinding;
+  journal: ResolutionJournal;
+}> {
+  assertFreshApproval(input);
+  let journal = await store.readJournal(input.operationId);
+  if (journal?.createAttempted && !journal.bindingTransitionCompleted) {
+    return {
+      status: 'uncertain',
+      binding: { ...input.binding, lifecycle: 'blocked' },
+      journal,
+    };
+  }
+  if (!journal) {
+    journal = createJournal(input, 'recreate');
+    await store.writeJournal(journal);
+  }
+  const search = await input.searchDuplicates();
+  journal = {
+    ...journal,
+    searchCompleted: true,
+    updatedAt: input.now,
+  };
+  await store.writeJournal(journal);
+  if (search.kind === 'search-unavailable' || search.kind === 'ambiguous') {
+    journal = { ...journal, state: 'blocked', updatedAt: input.now };
+    await store.writeJournal(journal);
+    return { status: 'blocked', binding: input.binding, journal };
+  }
+
+  let replacement:
+    | Extract<DuplicateSearchOutcome, { kind: 'found-existing' }>['replacement']
+    | null = null;
+  if (search.kind === 'found-existing') {
+    replacement = search.replacement;
+  } else {
+    journal = {
+      ...journal,
+      createIntentPersisted: true,
+      updatedAt: input.now,
+    };
+    await store.writeJournal(journal);
+    journal = { ...journal, createAttempted: true, updatedAt: input.now };
+    await store.writeJournal(journal);
+    const create = await input.createReplacement();
+    if (create.kind !== 'committed') {
+      journal = {
+        ...journal,
+        state: create.kind === 'uncertain' ? 'uncertain' : 'blocked',
+        updatedAt: input.now,
+      };
+      await store.writeJournal(journal);
+      return {
+        status: create.kind === 'uncertain' ? 'uncertain' : 'blocked',
+        binding: { ...input.binding, lifecycle: 'blocked' },
+        journal,
+      };
+    }
+    replacement = create.replacement;
+  }
+
+  assertVerifiedReplacement(replacement);
+  const duplicate = await store.findByIdentity(
+    input.binding.provider,
+    replacement.identity,
+  );
+  if (duplicate && duplicate !== input.binding.bindingId) {
+    throw new Error(`Replacement identity is already bound by '${duplicate}'.`);
+  }
+  if (!journal.bindingTransitionCompleted) {
+    const nextBinding: ResolutionBinding = {
+      ...input.binding,
+      remoteIdentity: structuredClone(replacement.identity),
+      identityHistory: [
+        ...input.binding.identityHistory,
+        {
+          provider: input.binding.provider,
+          identity: structuredClone(input.binding.remoteIdentity),
+          replacedAt: input.now,
+          replacedByOperationId: input.operationId,
+        },
+      ],
+      lifecycle: 'active',
+    };
+    await store.writeBinding(nextBinding);
+    journal = {
+      ...journal,
+      state: 'partial',
+      bindingTransitionCompleted: true,
+      resultingBinding: nextBinding,
+      updatedAt: input.now,
+    };
+    await store.writeJournal(journal);
+    input.crash?.('after-binding');
+  }
+  if (!journal.associationCompleted) {
+    await store.writeAssociation({
+      targetRef: input.binding.targetRef,
+      bindingId: input.binding.bindingId,
+      referenceRef: null,
+    });
+    journal = completeAssociation(journal, input.now);
+    await store.writeJournal(journal);
+    input.crash?.('after-association');
+  }
+  return { status: 'verified', binding: journal.resultingBinding!, journal };
 }
 
 function assertFreshApproval(input: CommonResolutionInput): void {
