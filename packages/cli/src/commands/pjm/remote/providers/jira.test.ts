@@ -830,3 +830,49 @@ describe('Jira duplicate-search observations', () => {
     });
   });
 });
+
+describe('Jira public verification integrity', () => {
+  const readAction = () =>
+    planJiraRead({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      stableId: 'jira:site_01:10042',
+      issueId: '10042',
+      currentKey: 'NEW-42',
+      stepId: 'public-verification',
+    });
+
+  it('does not verify an intact read action against another stable issue identity', () => {
+    const wrongIssue = normalizeJiraIssueObservation({
+      ...jiraObservation,
+      identity: { stableId: '10043', aliases: ['NEW-43'] },
+      fields: { ...jiraObservation.fields, issueId: '10043', key: 'NEW-43' },
+    });
+    expect(jiraAdapter.verify(readAction(), wrongIssue)).toEqual([
+      { field: 'stable-identity', status: 'unavailable' },
+    ]);
+  });
+
+  it('requires action-bound capability semantics and digest for public read verification', () => {
+    const action = readAction();
+    const issue = normalizeJiraIssueObservation(jiraObservation);
+    expect(
+      jiraAdapter.verify(action, {
+        ...issue,
+        extensions: {
+          ...issue.extensions,
+          capabilityEvidenceDigest: 'sha256:stale',
+        },
+      }),
+    ).toEqual([{ field: 'stable-identity', status: 'unavailable' }]);
+    expect(
+      jiraAdapter.validateObservation(action, {
+        ...jiraObservation,
+        fields: {
+          ...jiraObservation.fields,
+          hostCapability: { ...jiraCapability, observableFields: [] },
+        },
+      }).valid,
+    ).toBe(false);
+  });
+});

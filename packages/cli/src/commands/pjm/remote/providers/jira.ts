@@ -1074,10 +1074,28 @@ export const jiraAdapter: ProviderAdapter = {
     );
     if (!capability) reasons.push('capability-evidence-missing');
     else {
+      const requiredFields: JiraSemanticField[] =
+        action.operation === 'read' && action.intent.kind === 'issue'
+          ? [
+              'stable-identity',
+              'title',
+              'status',
+              'revision',
+              'project-context',
+            ]
+          : action.operation === 'read' && action.intent.kind === 'metadata'
+            ? [
+                'metadata',
+                ...(action.intent.purpose === 'transition'
+                  ? (['transitions'] as JiraSemanticField[])
+                  : []),
+              ]
+            : [];
       const validation = validateJiraHostCapability(
         action.operation,
         action.context,
         capability,
+        requiredFields,
       );
       reasons.push(...validation.reasons);
       if (
@@ -1157,10 +1175,17 @@ export const jiraAdapter: ProviderAdapter = {
         !contextsEqual(action.context, issue.context) ||
         (action.operation !== 'create' &&
           issue.stableId !== action.intent.stableId) ||
+        issue.extensions.capabilityEvidenceDigest !==
+          action.intent.capabilityEvidenceDigest ||
         !semanticValuesEqual(
           issue.extensions.mutationEvidence,
           action.intent.executionEvidence,
-        )
+        ) ||
+        (action.operation === 'create' &&
+          !semanticValuesEqual(
+            issue.extensions.createProvenance,
+            action.intent.provenance,
+          ))
       ) {
         return fields.map((field) => ({ field, status: 'unavailable' }));
       }
@@ -1193,8 +1218,14 @@ export const jiraAdapter: ProviderAdapter = {
     return this.verificationFields(action).map((field) => ({
       field,
       status:
+        validJiraActionDigest(action) &&
+        action.operation === 'read' &&
+        action.intent.kind === 'issue' &&
         issue.provider === 'jira' &&
-        contextsEqual(action.context, issue.context)
+        contextsEqual(action.context, issue.context) &&
+        issue.stableId === action.intent.stableId &&
+        issue.extensions.capabilityEvidenceDigest ===
+          action.intent.capabilityEvidenceDigest
           ? 'verified'
           : 'unavailable',
     }));
