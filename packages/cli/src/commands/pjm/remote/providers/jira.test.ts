@@ -87,6 +87,7 @@ export const jiraCapability: JiraHostCapabilityObservation = {
     'metadata',
     'transitions',
   ],
+  semanticCapabilities: ['structural-description-write'],
   evidenceDigest: 'sha256:jira-capability',
   observedAt: '2026-09-05T12:00:00.000Z',
 };
@@ -561,6 +562,16 @@ describe('Jira description ADF mutation integrity', () => {
 
   it('binds canonical before/after/surrounding ADF evidence through execution', () => {
     const action = descriptionAction();
+    expect(action.intent.structuralDescriptionWrite).toMatchObject({
+      kind: 'replace-managed-description',
+      bindingId: 'binding_jira_description',
+      document: after,
+      documentDigest: semanticDigest(after),
+      managedTextDigest: semanticDigest('new managed text'),
+    });
+    expect(action.intent.requiredSemanticCapabilities).toEqual([
+      'structural-description-write',
+    ]);
     expect(action.intent.executionEvidence).toMatchObject({
       descriptionAdfEvidence: {
         bindingId: 'binding_jira_description',
@@ -608,6 +619,37 @@ describe('Jira description ADF mutation integrity', () => {
       }),
     ).toThrow('ADF evidence');
   });
+
+  it('rejects description planning without structural-write capability', () => {
+    const projection = { description: 'new managed text' };
+    expect(() =>
+      previewJiraMutation({
+        operation: 'update',
+        context: jiraContext,
+        hostCapability: {
+          ...jiraCapability,
+          semanticCapabilities: [],
+        },
+        normalizedMetadata: {
+          evidenceDigest: 'sha256:jira-metadata',
+          writableFields: ['description'],
+          transitions: [],
+        },
+        bindingId: 'binding_jira_description',
+        stableId: 'jira:site_01:10042',
+        fieldMask: ['description'],
+        projection,
+        outboundSafety: assessOutboundProjectionSafety(projection, {
+          assessedAt: '2026-09-05T12:00:00.000Z',
+        }),
+        descriptionAdf: {
+          bindingId: 'binding_jira_description',
+          before,
+          after,
+        },
+      }),
+    ).toThrow('structural-description-write');
+  });
 });
 
 describe('Jira read and metadata observations', () => {
@@ -642,6 +684,15 @@ describe('Jira read and metadata observations', () => {
         normalizeJiraIssueObservation(jiraObservation),
       ),
     ).toEqual([{ field: 'stable-identity', status: 'verified' }]);
+    expect(
+      jiraAdapter.verify(
+        action,
+        normalizeJiraIssueObservation({
+          ...jiraObservation,
+          capabilityEvidenceDigest: 'sha256:forged',
+        }),
+      ),
+    ).toEqual([{ field: 'stable-identity', status: 'unavailable' }]);
   });
 
   it('preserves stable issue identity across a validated project move', () => {
@@ -684,6 +735,15 @@ describe('Jira read and metadata observations', () => {
         normalizeJiraIssueObservation(jiraObservation),
       ),
     ).toEqual([{ field: 'stable-identity', status: 'verified' }]);
+    expect(
+      jiraAdapter.verify(
+        action,
+        normalizeJiraIssueObservation({
+          ...jiraObservation,
+          capabilityEvidenceDigest: 'sha256:forged',
+        }),
+      ),
+    ).toEqual([{ field: 'stable-identity', status: 'unavailable' }]);
   });
 
   it('rejects forged project-move evidence and classifies archived issues explicitly', () => {
@@ -1093,6 +1153,60 @@ describe('Jira mutation observations', () => {
       intent: { ...mutation.intent, projection: { title: 'forged' } },
     };
     expect(verify(forged, readback(mutation)).classification).toBe('uncertain');
+  });
+
+  it('rejects same-label capability authorization, operation, field, and transition drift', () => {
+    const mutation = action('transition');
+    const currentReadback = readback(mutation);
+    const currentMetadata = {
+      ...metadata,
+      writableFields: [...metadata.writableFields],
+    };
+    const classify = (
+      hostCapability: JiraHostCapabilityObservation,
+      normalizedMetadata = currentMetadata,
+    ) =>
+      verifyJiraMutationObservation({
+        action: mutation,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+          metadataEvidenceDigest: metadata.evidenceDigest,
+        },
+        hostCapability,
+        normalizedMetadata,
+        readback: currentReadback,
+      }).classification;
+
+    expect(
+      classify({
+        ...jiraCapability,
+        availability: 'authorization-required',
+      }),
+    ).toBe('uncertain');
+    expect(
+      classify({
+        ...jiraCapability,
+        operations: jiraCapability.operations.filter(
+          (operation) => operation !== 'transition',
+        ),
+      }),
+    ).toBe('uncertain');
+    expect(
+      classify(jiraCapability, {
+        ...currentMetadata,
+        writableFields: currentMetadata.writableFields.filter(
+          (field) => field !== 'status',
+        ),
+      }),
+    ).toBe('uncertain');
+    expect(
+      classify(jiraCapability, {
+        ...currentMetadata,
+        transitions: [],
+      }),
+    ).toBe('uncertain');
   });
 });
 

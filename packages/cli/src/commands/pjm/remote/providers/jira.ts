@@ -54,6 +54,7 @@ export interface JiraHostCapabilityObservation {
   projectId: string;
   operations: SemanticOperation[];
   observableFields: JiraSemanticField[];
+  semanticCapabilities: Array<'structural-description-write'>;
   evidenceDigest: string;
   observedAt: string;
 }
@@ -103,6 +104,21 @@ export interface JiraDescriptionAdfEvidence {
   managedTextDigest: string;
 }
 
+export interface JiraStructuralDescriptionWrite {
+  kind: 'replace-managed-description';
+  bindingId: string;
+  document: JiraAdfDocument;
+  documentDigest: string;
+  beforeDocumentDigest: string;
+  surroundingDigest: string;
+  managedTextDigest: string;
+}
+
+export interface JiraNormalizedMetadataContract {
+  writableFields: JiraMutationField[];
+  transitions: string[];
+}
+
 export interface JiraMutationPreviewInput {
   operation: 'create' | 'update' | 'transition' | 'annotate';
   context: ProviderContext;
@@ -127,10 +143,14 @@ export interface JiraMutationPlanInput extends JiraMutationPreviewInput {
 
 export interface JiraMutationPreview {
   previewDigest: string;
+  metadataContract: JiraNormalizedMetadataContract;
+  structuralDescriptionWrite: JiraStructuralDescriptionWrite | null;
+  requiredSemanticCapabilities: Array<'structural-description-write'>;
   executionEvidence: {
     capabilityEvidenceDigest: string;
     capabilityObservedAt: string;
     metadataEvidenceDigest: string;
+    metadataSemanticsDigest: string;
     projectionDigest: string;
     outboundSafetyResultDigest: string;
     descriptionAdfEvidence: JiraDescriptionAdfEvidence | null;
@@ -328,6 +348,11 @@ export function normalizeJiraIssueObservation(
     capabilityEvidenceDigest: observation.capabilityEvidenceDigest,
     suppressedFields,
   };
+  const validatedCapabilityEvidence =
+    normalizedJiraCapabilityEvidence(observation);
+  if (validatedCapabilityEvidence) {
+    extensions.validatedCapabilityEvidence = validatedCapabilityEvidence;
+  }
   for (const extension of JIRA_EXTENSION_KEYS) {
     const value = observation.fields[extension];
     if (value === null || typeof value === 'string')
@@ -388,6 +413,17 @@ export function validateJiraHostCapability(
       reasons.push(`semantic-field-missing:${field}`);
   }
   if (!observed.evidenceDigest) reasons.push('capability-evidence-missing');
+  if (
+    !Array.isArray(observed.semanticCapabilities) ||
+    observed.semanticCapabilities.length > 1 ||
+    new Set(observed.semanticCapabilities).size !==
+      observed.semanticCapabilities.length ||
+    observed.semanticCapabilities.some(
+      (capability) => capability !== 'structural-description-write',
+    )
+  ) {
+    reasons.push('semantic-capability-evidence-invalid');
+  }
   if (!Number.isFinite(Date.parse(observed.observedAt))) {
     reasons.push('capability-freshness-invalid');
   }
@@ -478,16 +514,33 @@ export function previewJiraMutation(
   requireJiraCapability(input.hostCapability, input.context, input.operation);
   assertJiraMutationIdentity(input);
   const fieldMask = normalizeJiraMutationFieldMask(input);
+  if (fieldMask.includes('description')) {
+    requireJiraSemanticCapability(
+      input.hostCapability,
+      'structural-description-write',
+    );
+  }
   requireCurrentOutboundSafety(input.projection, input.outboundSafety);
   assertJiraMetadataSupports(input, fieldMask);
+  const metadataContract = normalizeJiraMetadataContract(
+    input.normalizedMetadata,
+  );
+  const requiredSemanticCapabilities = fieldMask.includes('description')
+    ? (['structural-description-write'] as const)
+    : [];
   const descriptionAdfEvidence = buildJiraDescriptionAdfEvidence(
     input,
     fieldMask,
+  );
+  const structuralDescriptionWrite = buildJiraStructuralDescriptionWrite(
+    input,
+    descriptionAdfEvidence,
   );
   const executionEvidence = {
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
     capabilityObservedAt: input.hostCapability.observedAt,
     metadataEvidenceDigest: input.normalizedMetadata.evidenceDigest,
+    metadataSemanticsDigest: semanticDigest(metadataContract),
     projectionDigest: input.outboundSafety.projectionDigest,
     outboundSafetyResultDigest: input.outboundSafety.resultDigest,
     descriptionAdfEvidence,
@@ -503,8 +556,14 @@ export function previewJiraMutation(
       fieldMask,
       projection: input.projection,
       postconditions: input.projection,
+      metadataContract,
+      structuralDescriptionWrite,
+      requiredSemanticCapabilities,
       executionEvidence,
     }),
+    metadataContract,
+    structuralDescriptionWrite,
+    requiredSemanticCapabilities: [...requiredSemanticCapabilities],
     executionEvidence,
   };
 }
@@ -524,6 +583,10 @@ export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
     postconditions: { ...input.projection },
     capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
     metadataEvidenceDigest: input.normalizedMetadata.evidenceDigest,
+    metadataSemanticsDigest: preview.executionEvidence.metadataSemanticsDigest,
+    metadataContract: preview.metadataContract,
+    structuralDescriptionWrite: preview.structuralDescriptionWrite,
+    requiredSemanticCapabilities: preview.requiredSemanticCapabilities,
     outboundSafety: {
       projectionDigest: input.outboundSafety.projectionDigest,
       resultDigest: input.outboundSafety.resultDigest,
@@ -832,6 +895,47 @@ export function verifyJiraMutationObservation(
   if (input.attempt.outcome === 'unknown' || !input.readback) {
     return terminal('uncertain', 'authoritative-readback-required');
   }
+  const fieldMask = input.action.intent.fieldMask as JiraMutationField[];
+  const currentCapability = validateJiraHostCapability(
+    input.action.operation,
+    input.action.context,
+    input.hostCapability,
+  );
+  let currentMetadataContract: JiraNormalizedMetadataContract;
+  try {
+    currentMetadataContract = normalizeJiraMetadataContract(
+      input.normalizedMetadata,
+    );
+  } catch {
+    return terminal('uncertain', 'current-metadata-invalid');
+  }
+  if (
+    !currentCapability.valid ||
+    (fieldMask.includes('description') &&
+      !input.hostCapability.semanticCapabilities.includes(
+        'structural-description-write',
+      )) ||
+    !jiraMetadataSupports(
+      {
+        operation: input.action
+          .operation as JiraMutationPreviewInput['operation'],
+        normalizedMetadata: input.normalizedMetadata,
+        projection: input.action.intent.projection as OutboundProjection,
+      },
+      fieldMask,
+    ) ||
+    !semanticValuesEqual(
+      currentMetadataContract,
+      input.action.intent.metadataContract,
+    ) ||
+    semanticDigest(currentMetadataContract) !==
+      input.action.intent.metadataSemanticsDigest
+  ) {
+    return terminal(
+      'uncertain',
+      'current-capability-or-metadata-semantics-invalid',
+    );
+  }
   if (
     input.attempt.capabilityEvidenceDigest !==
       input.action.intent.capabilityEvidenceDigest ||
@@ -1102,6 +1206,14 @@ function validateJiraPublicObservation(
     requiredFields,
   );
   reasons.push(...capabilityValidation.reasons);
+  if (
+    mutation &&
+    Array.isArray(action.intent.fieldMask) &&
+    action.intent.fieldMask.includes('description') &&
+    !capability.semanticCapabilities.includes('structural-description-write')
+  ) {
+    reasons.push('semantic-capability-missing:structural-description-write');
+  }
   const expectedCapabilityObservedAt = mutation
     ? isRecord(action.intent.executionEvidence)
       ? action.intent.executionEvidence.capabilityObservedAt
@@ -1339,18 +1451,66 @@ function isValidatedJiraProjectMoveEvidence(
   );
 }
 
+function normalizedJiraCapabilityEvidence(
+  observation: SanitizedProviderObservation,
+): Record<string, string> | null {
+  const capability = parseJiraHostCapability(observation.fields.hostCapability);
+  if (
+    !capability ||
+    capability.evidenceDigest !== observation.capabilityEvidenceDigest ||
+    !validateJiraHostCapability('read', observation.context, capability, [
+      'stable-identity',
+      'title',
+      'status',
+      'revision',
+      'project-context',
+    ]).valid
+  ) {
+    return null;
+  }
+  return {
+    accountId: capability.accountId,
+    siteId: capability.siteId,
+    projectId: capability.projectId,
+    evidenceDigest: capability.evidenceDigest,
+    observedAt: capability.observedAt,
+  };
+}
+
 function isNormalizedJiraProjectMove(
   action: SemanticAction,
   issue: NormalizedRemoteIssue,
 ): boolean {
+  const evidence = issue.extensions.validatedCapabilityEvidence;
+  const currentKey = action.intent.currentKey;
   return (
     action.context.accountId === issue.context.accountId &&
     action.context.siteId === issue.context.siteId &&
     action.context.projectId !== issue.context.projectId &&
     Array.isArray(issue.extensions.historicalProjectIds) &&
     issue.extensions.historicalProjectIds.includes(action.context.projectId) &&
+    (currentKey === null ||
+      (typeof currentKey === 'string' &&
+        issue.extensions.currentKey !== currentKey &&
+        Array.isArray(issue.extensions.historicalKeys) &&
+        issue.extensions.historicalKeys.includes(currentKey))) &&
     typeof issue.extensions.capabilityEvidenceDigest === 'string' &&
-    issue.extensions.capabilityEvidenceDigest.length > 0
+    isRecord(evidence) &&
+    hasExactKeys(evidence, [
+      'accountId',
+      'siteId',
+      'projectId',
+      'evidenceDigest',
+      'observedAt',
+    ]) &&
+    evidence.accountId === issue.context.accountId &&
+    evidence.siteId === issue.context.siteId &&
+    evidence.projectId === issue.context.projectId &&
+    evidence.evidenceDigest === issue.extensions.capabilityEvidenceDigest &&
+    typeof evidence.observedAt === 'string' &&
+    Number.isFinite(Date.parse(evidence.observedAt)) &&
+    Date.parse(evidence.observedAt) >=
+      Date.parse(String(action.intent.capabilityObservedAt))
   );
 }
 
@@ -1370,6 +1530,15 @@ function requireJiraCapability(
     throw new Error(
       `Jira semantic capability is unavailable: ${validation.reasons.join(',')}`,
     );
+  }
+}
+
+function requireJiraSemanticCapability(
+  capability: JiraHostCapabilityObservation,
+  required: 'structural-description-write',
+): void {
+  if (!capability.semanticCapabilities.includes(required)) {
+    throw new Error(`Jira semantic capability is unavailable: ${required}`);
   }
 }
 
@@ -1425,26 +1594,66 @@ function assertJiraMetadataSupports(
   input: JiraMutationPreviewInput,
   fieldMask: JiraMutationField[],
 ): void {
+  normalizeJiraMetadataContract(input.normalizedMetadata);
   if (!input.normalizedMetadata.evidenceDigest) {
     throw new Error('Jira normalized metadata evidence is missing.');
   }
-  if (
-    fieldMask.some(
-      (field) => !input.normalizedMetadata.writableFields.includes(field),
-    )
-  ) {
+  if (!jiraMetadataSupports(input, fieldMask)) {
     throw new Error(
-      'Jira normalized metadata does not allow requested fields.',
+      input.operation === 'transition'
+        ? 'Jira transition or requested field is unavailable in normalized metadata.'
+        : 'Jira normalized metadata does not allow requested fields.',
     );
   }
+}
+
+function jiraMetadataSupports(
+  input: Pick<
+    JiraMutationPreviewInput,
+    'operation' | 'normalizedMetadata' | 'projection'
+  >,
+  fieldMask: JiraMutationField[],
+): boolean {
+  return (
+    fieldMask.every((field) =>
+      input.normalizedMetadata.writableFields.includes(field),
+    ) &&
+    (input.operation !== 'transition' ||
+      input.normalizedMetadata.transitions.includes(
+        String(input.projection.status),
+      ))
+  );
+}
+
+function normalizeJiraMetadataContract(
+  metadata: JiraNormalizedMetadata,
+): JiraNormalizedMetadataContract {
   if (
-    input.operation === 'transition' &&
-    !input.normalizedMetadata.transitions.includes(
-      String(input.projection.status),
+    !Array.isArray(metadata.writableFields) ||
+    metadata.writableFields.length > 5 ||
+    new Set(metadata.writableFields).size !== metadata.writableFields.length ||
+    metadata.writableFields.some(
+      (field) =>
+        !['title', 'description', 'priority', 'status', 'annotation'].includes(
+          field,
+        ),
+    ) ||
+    !Array.isArray(metadata.transitions) ||
+    metadata.transitions.length > 256 ||
+    new Set(metadata.transitions).size !== metadata.transitions.length ||
+    metadata.transitions.some(
+      (transition) =>
+        typeof transition !== 'string' ||
+        !transition ||
+        Buffer.byteLength(transition, 'utf8') > 255,
     )
   ) {
-    throw new Error('Jira transition is unavailable in normalized metadata.');
+    throw new Error('Jira normalized metadata semantics are invalid.');
   }
+  return {
+    writableFields: [...metadata.writableFields].sort(),
+    transitions: [...metadata.transitions].sort(),
+  };
 }
 
 function buildJiraDescriptionAdfEvidence(
@@ -1492,6 +1701,23 @@ function buildJiraDescriptionAdfEvidence(
     afterDocumentDigest: after.documentDigest,
     surroundingDigest: after.surroundingDigest,
     managedTextDigest: semanticDigest(expectedText),
+  };
+}
+
+function buildJiraStructuralDescriptionWrite(
+  input: JiraMutationPreviewInput,
+  evidence: JiraDescriptionAdfEvidence | null,
+): JiraStructuralDescriptionWrite | null {
+  if (evidence === null) return null;
+  const document = structuredClone(input.descriptionAdf!.after);
+  return {
+    kind: 'replace-managed-description',
+    bindingId: evidence.bindingId,
+    document,
+    documentDigest: evidence.afterDocumentDigest,
+    beforeDocumentDigest: evidence.beforeDocumentDigest,
+    surroundingDigest: evidence.surroundingDigest,
+    managedTextDigest: evidence.managedTextDigest,
   };
 }
 
@@ -1705,6 +1931,10 @@ function validJiraMutationAction(action: SemanticAction): boolean {
       'postconditions',
       'capabilityEvidenceDigest',
       'metadataEvidenceDigest',
+      'metadataSemanticsDigest',
+      'metadataContract',
+      'structuralDescriptionWrite',
+      'requiredSemanticCapabilities',
       'outboundSafety',
       'outboundSafetyEvidence',
       'previewDigest',
@@ -1721,6 +1951,9 @@ function validJiraMutationAction(action: SemanticAction): boolean {
     !semanticValuesEqual(intent.projection, intent.postconditions) ||
     typeof intent.capabilityEvidenceDigest !== 'string' ||
     typeof intent.metadataEvidenceDigest !== 'string' ||
+    typeof intent.metadataSemanticsDigest !== 'string' ||
+    !isRecord(intent.metadataContract) ||
+    !Array.isArray(intent.requiredSemanticCapabilities) ||
     !isRecord(intent.outboundSafety) ||
     !isRecord(intent.outboundSafetyEvidence) ||
     !isRecord(intent.executionEvidence) ||
@@ -1775,10 +2008,44 @@ function validJiraMutationAction(action: SemanticAction): boolean {
     return false;
   }
   const fieldMask = intent.fieldMask as JiraMutationField[];
+  const requiredSemanticCapabilities = fieldMask.includes('description')
+    ? ['structural-description-write']
+    : [];
+  if (
+    !semanticValuesEqual(
+      intent.requiredSemanticCapabilities,
+      requiredSemanticCapabilities,
+    )
+  ) {
+    return false;
+  }
+  let metadataContract: JiraNormalizedMetadataContract;
+  try {
+    if (
+      !hasExactKeys(intent.metadataContract, ['writableFields', 'transitions'])
+    ) {
+      return false;
+    }
+    metadataContract = normalizeJiraMetadataContract({
+      evidenceDigest: intent.metadataEvidenceDigest,
+      writableFields: intent.metadataContract
+        .writableFields as JiraMutationField[],
+      transitions: intent.metadataContract.transitions as string[],
+    });
+  } catch {
+    return false;
+  }
+  if (
+    !semanticValuesEqual(metadataContract, intent.metadataContract) ||
+    semanticDigest(metadataContract) !== intent.metadataSemanticsDigest
+  ) {
+    return false;
+  }
   const baseExecutionEvidence = {
     capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
     capabilityObservedAt: intent.executionEvidence.capabilityObservedAt,
     metadataEvidenceDigest: intent.metadataEvidenceDigest,
+    metadataSemanticsDigest: intent.metadataSemanticsDigest,
     projectionDigest: safety.projectionDigest,
     outboundSafetyResultDigest: safety.resultDigest,
     descriptionAdfEvidence: intent.executionEvidence.descriptionAdfEvidence,
@@ -1788,6 +2055,7 @@ function validJiraMutationAction(action: SemanticAction): boolean {
       'capabilityEvidenceDigest',
       'capabilityObservedAt',
       'metadataEvidenceDigest',
+      'metadataSemanticsDigest',
       'projectionDigest',
       'outboundSafetyResultDigest',
       'descriptionAdfEvidence',
@@ -1799,6 +2067,13 @@ function validJiraMutationAction(action: SemanticAction): boolean {
       Date.parse(String(baseExecutionEvidence.capabilityObservedAt)),
     ) ||
     !validDescriptionAdfEvidence(
+      baseExecutionEvidence.descriptionAdfEvidence,
+      fieldMask.includes('description'),
+    ) ||
+    !validJiraStructuralDescriptionWrite(
+      intent.structuralDescriptionWrite,
+      intent.bindingId,
+      intent.projection,
       baseExecutionEvidence.descriptionAdfEvidence,
       fieldMask.includes('description'),
     )
@@ -1815,6 +2090,9 @@ function validJiraMutationAction(action: SemanticAction): boolean {
     fieldMask,
     projection,
     postconditions: projection,
+    metadataContract,
+    structuralDescriptionWrite: intent.structuralDescriptionWrite,
+    requiredSemanticCapabilities,
     executionEvidence: baseExecutionEvidence,
   });
   const {
@@ -1965,6 +2243,52 @@ function validDescriptionAdfEvidence(
   );
 }
 
+function validJiraStructuralDescriptionWrite(
+  value: unknown,
+  bindingId: string,
+  projection: Record<string, unknown>,
+  evidence: unknown,
+  required: boolean,
+): value is JiraStructuralDescriptionWrite | null {
+  if (!required) return value === null && evidence === null;
+  if (
+    !isRecord(value) ||
+    !isRecord(evidence) ||
+    !hasExactKeys(value, [
+      'kind',
+      'bindingId',
+      'document',
+      'documentDigest',
+      'beforeDocumentDigest',
+      'surroundingDigest',
+      'managedTextDigest',
+    ]) ||
+    value.kind !== 'replace-managed-description' ||
+    value.bindingId !== bindingId ||
+    value.bindingId !== evidence.bindingId ||
+    typeof projection.description !== 'string'
+  ) {
+    return false;
+  }
+  try {
+    validateJiraAdfDocument(value.document);
+    const inspection = inspectJiraAdf(value.document, bindingId);
+    return (
+      inspection.state === 'managed' &&
+      inspection.managedText === projection.description &&
+      semanticDigest(value.document) === value.documentDigest &&
+      value.documentDigest === evidence.afterDocumentDigest &&
+      value.beforeDocumentDigest === evidence.beforeDocumentDigest &&
+      value.surroundingDigest === evidence.surroundingDigest &&
+      value.managedTextDigest === evidence.managedTextDigest &&
+      value.surroundingDigest === inspection.surroundingDigest &&
+      value.managedTextDigest === semanticDigest(projection.description)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function verifyJiraDescriptionReadback(
   action: SemanticAction,
   issue: NormalizedRemoteIssue,
@@ -2006,6 +2330,7 @@ function parseJiraHostCapability(
     !isRecord(value.context) ||
     !Array.isArray(value.operations) ||
     !Array.isArray(value.observableFields) ||
+    !Array.isArray(value.semanticCapabilities) ||
     typeof value.accountId !== 'string' ||
     typeof value.siteId !== 'string' ||
     typeof value.projectId !== 'string' ||

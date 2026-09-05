@@ -53,6 +53,7 @@ const capability: JiraHostCapabilityObservation = {
     'metadata',
     'transitions',
   ],
+  semanticCapabilities: ['structural-description-write'],
   evidenceDigest: 'sha256:jira-capability',
   observedAt: '2026-09-05T12:00:00.000Z',
 };
