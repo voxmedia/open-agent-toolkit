@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p04 recovery attempt 1 failed; attempt 2 requires operator direction
 oat_last_updated: 2026-09-05
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -259,6 +260,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-05
+
+#### p04 recovery attempt 1 failed safely
+
+### Recovery Event p04-recovery-1-bundled-autonomy-reference
+
+- Phase/task: p04 / p04-t01
+- Original request: lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36
+- Original commit: 6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d
+- Defect class: composition
+- Discovered by: `HOME=$(mktemp -d) pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli`
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: -
+- Verification: bundled-doc contract passed; autonomy inventory failed before phase verification
+- Reason: the required skill-local symlink exposed a mechanically required wildcard autonomy-coverage row in `.agents/docs/autonomy-contract.md`, which was outside the authorized attempt-1 files. The correction was restored and only the failed ledger transition was committed.
+
+**Terminal stop:** attempt 1 is settled with `used_attempts: 1` and
+`pending_attempt: null`. A second attempt requires operator direction and must
+include the canonical autonomy wildcard row.
 
 #### Phase p01 completed and reviewed
 

@@ -1,7 +1,8 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: 2e922483fe01afce019a77a38e632abb87c17eb5
-oat_blockers: []
+oat_last_commit: 6f2b12bfce34313b447f684b22d279a803957217
+oat_blockers:
+  - p04 recovery attempt 1 failed; attempt 2 requires operator direction
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -26,16 +27,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p04-recovery-1-bundled-autonomy-reference
-        original_request_id: lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36
-        original_task_id: p04-t01
-        original_commit: 6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d
-        discovered_by: HOME=$(mktemp -d) pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: d975b6a86ac159f06bd91f661a347052dc8feffe
-        status: failed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -95,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T21:09:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T21:25:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -127,8 +119,10 @@ Phase 4 - Lite Entry Skill and End-to-End Test
 
 ## Blockers
 
-None
+- p04 recovery attempt 1 failed before a candidate correction commit. Attempt 2
+  requires operator direction and must include the canonical autonomy wildcard
+  coverage row.
 
 ## Next Milestone
 
-Complete and independently review Phase 4
+Authorize or decline p04 recovery attempt 2

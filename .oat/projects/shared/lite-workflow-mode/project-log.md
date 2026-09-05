@@ -96,6 +96,10 @@ verdict=pass; fix_loops=1; review=reviews/code-p02-review-2026-09-05T210504Z.md;
 
 verdict=pass; fix_loops=1; review=reviews/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
 
+### 2026-09-05 · structural · oat-project-implement · p04-recovery-1
+
+disposition=failed-attempt; attempt=1/10; event=p04-recovery-1-bundled-autonomy-reference; original_commit=6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d; ledger_commit=6f2b12bfc; recovery_commit=-; verification=bundled-doc-pass,autonomy-inventory-fail; next=operator-direction
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
