@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 4     | 4/4       |
-| Phase 2 | complete  | 3     | 3/3       |
-| Phase 3 | complete  | 3     | 3/3       |
-| Phase 4 | in review | 2     | 2/2       |
-| Phase 5 | pending   | 4     | 0/4       |
-| Phase 6 | pending   | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | pending  | 4     | 0/4       |
+| Phase 6 | pending  | 3     | 0/3       |
 
 **Total:** 12/19 tasks completed
 
@@ -210,8 +210,9 @@ template while preserving authored brace syntax and `oat_template: true`.
 
 ## Phase 4: Lite Entry Skill and End-to-End Test
 
-**Status:** in review
+**Status:** complete
 **Started:** 2026-09-05
+**Completed:** 2026-09-05
 
 ### Phase Summary
 
@@ -252,6 +253,10 @@ quick-start, while ordinary completed quick discovery still routes to planning.
 The implementation is the source of truth; the plan's Step 2 already authorizes
 this bounded adaptation, so no plan rewrite is required.
 
+**Independent review:**
+`reviews/code-p04-review-2026-09-05T223510Z.md` passed with 0 Critical,
+0 Important, 0 Medium, and 0 Minor findings. Fix loops: 0.
+
 ---
 
 ---
@@ -290,25 +295,35 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p04 implementation:** accepted request `lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36`; durable record `dispatch/lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `3e89f14de30836512bb5aa16e46b7a68323503bd` after one failed and one successful append-only recovery attempt.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+- **p04 review:** accepted request `lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117`; durable record `dispatch/lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p04-review-2026-09-05T223510Z.md`; verdict passed with no findings.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review  | Fix Loops | Outcome   |
-| ----- | -------------- | ------- | --------- | --------- |
-| p01   | DONE (4/4)     | passed  | 0         | pass      |
-| p02   | DONE (3/3)     | passed  | 1         | pass      |
-| p03   | DONE (3/3)     | passed  | 1         | pass      |
-| p04   | DONE (2/2)     | pending | 0         | in-review |
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p01   | DONE (4/4)     | passed | 0         | pass    |
+| p02   | DONE (3/3)     | passed | 1         | pass    |
+| p03   | DONE (3/3)     | passed | 1         | pass    |
+| p04   | DONE (2/2)     | passed | 0         | pass    |
 
 #### Outstanding Items
 
-- Independent p04 review is next; p05 starts only after a passing disposition.
+- Next schedule entry: `p05`.
 
 ---
 
 ## Implementation Log
 
 ### 2026-09-05
+
+#### Phase p04 completed and reviewed
+
+**Implementation range:** `90824ab273eb75612b5abfd00462413c010e26da..3e89f14de30836512bb5aa16e46b7a68323503bd`
+**Review artifact:** `reviews/code-p04-review-2026-09-05T223510Z.md`
+**Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 0.
+**Next:** execute `p05`.
 
 #### p04 recovery attempt 2 completed
 

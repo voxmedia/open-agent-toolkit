@@ -86,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:30:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:36:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -116,7 +116,8 @@ Phase 4 - Lite Entry Skill and End-to-End Test
 - ✓ Phases 2 and 3 implemented in parallel, corrected, independently reviewed, and merged
 - ✓ `p04-t01` implemented and its bundled autonomy reference recovered
 - ✓ `p04-t02` end-to-end coverage and Phase 4 verification complete
-- ⧗ Independent p04 review pending
+- ✓ Phase 4 independently reviewed with no findings
+- ⧗ Ready to execute `p05`
 
 ## Blockers
 
@@ -124,4 +125,4 @@ None.
 
 ## Next Milestone
 
-Run and disposition the independent p04 phase review.
+Execute and independently review Phase 5.
