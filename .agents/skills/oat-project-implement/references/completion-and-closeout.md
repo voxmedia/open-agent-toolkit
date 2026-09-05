@@ -671,6 +671,12 @@ require `oat_implement_exit_gate` to remain allowed and fresh. If it becomes
 stale, malformed, pending, or blocked, persist/retain that state, stop the
 sequence, and resume through `oat-project-implement`.
 
+For `oat_workflow_mode: lite`, there is no final HiLL approval step. A passed
+final review and allowed implementation exit gate proceed directly to closeout
+with `approval: not_required`; do not read
+`oat_plan_hill_phases`, ask for approval, or invoke the autonomous approval
+branch. Per-phase review and final review remain unchanged.
+
 Identify the final implementation phase from the plan. A final HiLL checkpoint
 exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly
 contains that final phase ID. Defer only a checkpoint on the final implementation

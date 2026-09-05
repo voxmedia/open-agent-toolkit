@@ -6772,6 +6772,44 @@ describe('lite mode skill contracts', () => {
     expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.12');
   });
 
+  it('lite bypasses implementation checkpoints', async () => {
+    const [planResume, closeout, phaseExecution] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+      ),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+      ),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ]);
+    const checkpointStep = planResume.slice(
+      planResume.indexOf('### Step 2.5: Confirm Plan HiLL Checkpoints'),
+      planResume.indexOf('### Step 2.6:'),
+    );
+    const finalHill = closeout.slice(
+      closeout.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+      closeout.indexOf('### Step 16:'),
+    );
+
+    expect(checkpointStep).toMatch(
+      /oat_workflow_mode[\s\S]{0,120}lite[\s\S]{0,220}checkpoint state[\s\S]{0,120}none/i,
+    );
+    expect(checkpointStep).toMatch(
+      /without reading[\s\S]{0,120}oat_plan_hill_phases/i,
+    );
+    expect(checkpointStep).toMatch(
+      /skip[\s\S]{0,160}workflow preference[\s\S]{0,160}standard checkpoint prompt[\s\S]{0,160}auto-review preference prompt/i,
+    );
+    expect(checkpointStep).toContain(
+      'oat_auto_review_at_hill_checkpoints: false # lite: no checkpoints',
+    );
+    expect(finalHill).toMatch(/lite[\s\S]{0,100}no final HiLL approval step/i);
+    expect(finalHill).toMatch(/passed\s+final review[\s\S]{0,180}closeout/i);
+    expect(phaseExecution).toContain('lite is always a single phase');
+  });
+
   it('routes lite projects through progress and next', async () => {
     const [progress, next, planWriting] = await Promise.all([
       readRepoFile('.agents/skills/oat-project-progress/SKILL.md'),
