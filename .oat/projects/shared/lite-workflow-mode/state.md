@@ -21,6 +21,21 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #     pNN:
 #       used_attempts: 0
 #       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_usage:
+    p04:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p04-recovery-1-bundled-autonomy-reference
+        original_request_id: lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36
+        original_task_id: p04-t01
+        original_commit: 6f8d9aded4d01b73c8ec34d1b9fc7550e442b73d
+        discovered_by: HOME=$(mktemp -d) pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: d975b6a86ac159f06bd91f661a347052dc8feffe
+        status: failed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
