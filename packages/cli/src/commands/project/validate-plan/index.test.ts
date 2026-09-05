@@ -124,6 +124,42 @@ describe('oat project validate-plan', () => {
     return dir;
   }
 
+  async function writeModeAwarePlan(options: {
+    mode: 'lite' | 'quick';
+    phases: number;
+    groups?: string;
+  }): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-vplan-'));
+    tempDirs.push(dir);
+    await writeFile(
+      join(dir, 'state.md'),
+      ['---', `oat_workflow_mode: ${options.mode}`, '---', '', '# State'].join(
+        '\n',
+      ),
+      'utf8',
+    );
+    await writeFile(
+      join(dir, 'plan.md'),
+      [
+        '---',
+        `oat_plan_parallel_groups: ${options.groups ?? '[]'}`,
+        '---',
+        '',
+        '## Validation Criteria',
+        '',
+        '- [ ] Plan validation passes — Check: `pnpm test`',
+        '',
+        ...Array.from({ length: options.phases }, (_, index) => [
+          `## Phase ${index + 1}: Phase ${index + 1}`,
+          '',
+          `### Task p${String(index + 1).padStart(2, '0')}-t01: Task`,
+        ]).flat(),
+      ].join('\n'),
+      'utf8',
+    );
+    return dir;
+  }
+
   describe('--json mode', () => {
     it('emits { valid: true } when the plan is valid', async () => {
       const dir = await writeValidPlan();
@@ -176,6 +212,51 @@ describe('oat project validate-plan', () => {
   });
 
   describe('human output mode', () => {
+    it('accepts a lite project with exactly one phase', async () => {
+      const dir = await writeModeAwarePlan({ mode: 'lite', phases: 1 });
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--project-path', dir]);
+
+      expect(capture.success).toContain('Plan validation passed.');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('rejects a lite project with two phases using the lite invariant', async () => {
+      const dir = await writeModeAwarePlan({ mode: 'lite', phases: 2 });
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--project-path', dir]);
+
+      expect(capture.error.join('\n')).toContain('exactly one phase');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reports the lite parallel-groups error before the singleton-group rule', async () => {
+      const dir = await writeModeAwarePlan({
+        mode: 'lite',
+        phases: 1,
+        groups: '[[p01]]',
+      });
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--project-path', dir]);
+
+      expect(capture.error.join('\n')).toContain('no parallel groups');
+      expect(capture.error.join('\n')).not.toContain('singleton');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('continues to accept a quick project with two phases', async () => {
+      const dir = await writeModeAwarePlan({ mode: 'quick', phases: 2 });
+      const { command, capture } = createHarness();
+
+      await runCommand(command, ['--project-path', dir]);
+
+      expect(capture.success).toContain('Plan validation passed.');
+      expect(process.exitCode).toBe(0);
+    });
+
     it('logs success message without JSON payload when plan is valid', async () => {
       const dir = await writeValidPlan();
       const { command, capture } = createHarness();
