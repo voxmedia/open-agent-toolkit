@@ -239,6 +239,7 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
         'spec.md',
         'design.md',
         'plan.md',
+        'plan-lite.md',
         'implementation.md',
         'summary.md',
         'project-log.md',

@@ -100,6 +100,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'spec.md',
     'design.md',
     'plan.md',
+    'plan-lite.md',
     'implementation.md',
     'summary.md',
     'project-log.md',
