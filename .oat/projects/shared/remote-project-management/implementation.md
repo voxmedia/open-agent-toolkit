@@ -839,9 +839,8 @@ findings after operator-extension fix loop 3/3.
 
 ## Phase 5: Linear Semantic Adapter
 
-**Status:** blocked — final normal review round 3 found one Important defect;
-the 3/3 review budget is exhausted and further work requires operator
-authorization.
+**Status:** in progress — the operator authorized one bounded extension: fix
+loop 3/3 and independent review 4/4 for the sole remaining Important finding.
 **Started:** 2026-09-02
 **Implementation head:** e75f1d8e99edad72aa52442e31be9eec6116ae28
 
@@ -915,9 +914,10 @@ authorization.
   focused suite at 87/87 and remote suite at 538/538, confirmed all nine prior
   findings resolved, and reproduced stale capability evidence reported as
   verified by the public read verifier.
-- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops.
-  Further corrective work requires explicit operator authorization. Phase 6
-  has not started.
+- Normal review governance is exhausted at 3/3 reviews and 2/3 fix loops. On
+  2026-09-05, the operator authorized one bounded extension: fix loop 3/3 and
+  independent review 4/4 at the unchanged implementation/reviewer targets.
+  Phase 6 has not started.
 
 ---
 
@@ -1831,7 +1831,10 @@ review_3_artifact: reviews/p05-review-2026-09-02T215328Z.md
 review_3_head: e75f1d8e99edad72aa52442e31be9eec6116ae28
 review_3_findings: 0 critical, 1 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
-phase_outcome: blocked_review_budget_exhausted
+operator_extension_authorized: true
+operator_extension_fix_limit: 1
+operator_extension_review_limit: 1
+phase_outcome: operator_extension_fix_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p05 action=implementation
@@ -1873,8 +1876,10 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - Final normal review round 3 blocked with zero Critical and one Important
   finding at exact reviewed head `e75f1d8e99edad72aa52442e31be9eec6116ae28`;
   reconnaissance was not attempted and all nine prior findings are resolved.
-  Normal review governance is exhausted at 3/3; further corrective work needs
-  operator authorization. Phase 6 did not start.
+  Normal review governance is exhausted at 3/3.
+- The operator authorized one bounded extension on 2026-09-05: fix loop 3/3
+  and independent review 4/4 at the unchanged exact targets. Phase 6 remains
+  blocked pending a passing review.
 
 <!-- orchestration-runs-end -->
 
