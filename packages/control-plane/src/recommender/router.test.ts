@@ -180,6 +180,16 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-discover');
   });
 
+  it('routes lite implementation in progress to implement', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'in_progress',
+      workflowMode: 'lite',
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
   it('uses oat-project-implement regardless of execution mode', () => {
     const state = makeState({
       phase: 'plan',
