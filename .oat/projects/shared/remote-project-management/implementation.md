@@ -934,8 +934,8 @@ zero findings after fix loop 3/3.
 
 ## Phase 6: Jira Cloud Semantic Adapter
 
-**Status:** in progress — bounded fix loop 1/3 is complete; independent review
-round 2 is pending.
+**Status:** blocked — review round 2 found two Critical and one Important
+finding; bounded fix loop 2/3 is pending.
 **Started:** 2026-09-05
 **Implementation head:** 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
 
@@ -1005,7 +1005,12 @@ round 2 is pending.
   six-file boundary. Root independently passed the expanded Jira suite at
   57/57; the implementer reported the remote suite at 601/601 plus lint, types,
   build, format, diff integrity, and provider-neutrality passing.
-- Independent review round 2 is next. Phase 7 has not started.
+- Independent review round 2 blocked with two Critical and one Important
+  finding at exact reviewed head `937cb9efe610bc019d6a48200fc27e4a3d9e3bae`.
+  The artifact is `reviews/p06-review-2026-09-05T230856Z.md` and records
+  `Reconnaissance: not-attempted`.
+- Bounded review-fix loop 2/3 is next through the accepted Phase 6 implementer.
+  Phase 7 has not started.
 
 ---
 
@@ -2031,7 +2036,7 @@ continuation_events:
   - p06-review-fix-1-20260905-6d053a78a
 recovery_usage: 1/10
 pending_attempt: null
-review_rounds: 1/3
+review_rounds: 2/3
 fix_loops: 1/3
 recovery_reservation_commit: 961fedfbcd1fca6ed0c646179f1c98b8e616c361
 recovery_commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
@@ -2041,7 +2046,11 @@ review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 review_fix_1_commit: 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
 review_fix_1_verification: jira 57/57; remote 601/601; lint, types, build, format, diff, provider-neutrality passed
-phase_outcome: fixes_complete_review_pending
+review_2_artifact: reviews/p06-review-2026-09-05T230856Z.md
+review_2_head: 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
+review_2_findings: 2 critical, 1 important, 0 medium, 0 minor
+review_2_reconnaissance: not-attempted
+phase_outcome: review_blocked_fixes_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p06 action=implementation
@@ -2058,10 +2067,11 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - Root independently passed the Jira suite at 42/42. The implementer passed the
   full remote suite at 586/586 plus lint, type-check, build, format, diff, and
   provider-neutrality checks.
-- No optional nested dispatch occurred. Bounded fix loop 1/3 resolved all six
-  review-round-1 findings in `937cb9efe`; root independently passed Jira 57/57
-  and the implementer reported remote 601/601 plus all requested static and
-  boundary checks. Review round 2 is pending, and Phase 7 did not start.
+- No optional nested dispatch occurred. Review round 2 confirmed all six
+  round-1 findings resolved at their original assertion points, then blocked
+  on two adjacent Critical and one adjacent Important finding. Its required
+  reconnaissance signal is `not-attempted`. Bounded fix loop 2/3 is pending,
+  and Phase 7 did not start.
 
 <!-- orchestration-runs-end -->
 

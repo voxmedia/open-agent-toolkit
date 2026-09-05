@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
 oat_blockers:
   [
-    'Phase 6 bounded fix loop 1/3 is complete; independent review round 2 is pending',
+    'Phase 6 review round 2 found 2 Critical and 1 Important finding; bounded fix loop 2/3 is pending',
   ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -49,7 +49,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T23:05:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T23:09:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -63,9 +63,8 @@ oat_generated: false
 
 Phase 6 — Jira Cloud Semantic Adapter. All 10 planned tasks, one bounded
 recovery, and bounded review-fix loop 1/3 are complete through `937cb9efe`.
-Root independently passed Jira 57/57; the implementer reported remote 601/601
-and all requested checks passing. Independent review round 2 is pending; Phase
-7 has not started.
+Independent review round 2 found two Critical and one Important finding.
+Bounded fix loop 2/3 is pending; Phase 7 has not started.
 
 ## Artifacts
 
@@ -73,7 +72,7 @@ and all requested checks passing. Independent review round 2 is pending; Phase
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 6 review pending)
+- **Implementation:** implementation.md (in progress; Phase 6 fixes pending)
 
 ## Progress
 
@@ -195,15 +194,16 @@ and all requested checks passing. Independent review round 2 is pending; Phase
 - ⚠ Phase 6 review round 1 blocked with 3 Critical and 3 Important findings
 - ✓ Phase 6 bounded fix loop 1/3 committed as `937cb9efe`; Jira passed 57/57
   and remote passed 601/601
+- ⚠ Phase 6 review round 2 blocked with 2 Critical and 1 Important finding
 
 ## Blockers
 
-Phase 6 is gated on independent review round 2 of the completed fix. The
+Phase 6 is blocked on the three release-blocking review-round-2 findings. The
 branch-level lockstep version gate remains preserved for planned `p08-t05`
 release work.
 
 ## Next Milestone
 
-Run independent Phase 6 review round 2 over the full phase range ending at
-`937cb9efe610bc019d6a48200fc27e4a3d9e3bae`. Do not begin Phase 7 until a
+Run bounded Phase 6 review-fix loop 2/3 through the accepted implementer, then
+independently re-review the full phase range. Do not begin Phase 7 until a
 review passes with zero Critical and zero Important findings.
