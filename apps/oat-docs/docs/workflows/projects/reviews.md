@@ -173,7 +173,7 @@ This feature is opt-in and disabled by default (missing or `enabled: false`). Fo
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
 
-For plans, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and Important artifact-local fixes, offers Medium and Minor fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
+For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and Important artifact-local fixes, offers Medium and Minor fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
 
 For analysis artifacts, `oat-docs-analyze` and `oat-agent-instructions-analyze` run a bounded accuracy review after writing their severity-rated artifacts. The reviewer checks cited evidence, severity, and recommendations before the matching apply workflow consumes the artifact. The analysis loop updates tracking metadata to mark the artifact verified.
 

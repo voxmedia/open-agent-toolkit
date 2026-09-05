@@ -50,9 +50,15 @@ archive metadata own terminal reachability and retry identity.
 
 Mode-sensitive notes:
 
-- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`) for routing.
-- `spec.md` and `design.md` are required in spec-driven mode, optional in quick/import mode. Quick mode offers a lightweight `design.md` (architecture, components, testing strategy) at a post-discovery decision point.
-- `plan.md` remains canonical execution artifact across all modes.
+- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`) for routing.
+- `plan.md` remains the canonical execution artifact across all modes.
+
+| Mode          | Core authored artifacts                              | Optional artifacts                         |
+| ------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`    | -                                          |
+| `quick`       | `discovery.md`, `plan.md`                            | Lightweight `design.md`, `spec.md`         |
+| `import`      | `references/imported-plan.md`, `plan.md`             | `spec.md`, `design.md`                     |
+| `lite`        | Single-phase `plan.md` with validation criteria only | `summary.md` and documentation at closeout |
 
 ## Supporting artifacts
 

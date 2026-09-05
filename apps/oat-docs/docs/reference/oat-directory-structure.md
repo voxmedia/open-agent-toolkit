@@ -253,6 +253,7 @@ Not all workflow modes require every artifact:
 - `spec-driven`: discovery + spec + design + plan + implementation
 - `quick`: discovery + plan + implementation (spec/design optional)
 - `import`: imported plan + implementation (spec/design optional)
+- `lite`: single-phase plan + implementation (summary/documentation optional at closeout)
 
 ## `.oat/repo/` structure
 

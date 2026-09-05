@@ -1,6 +1,6 @@
 ---
 title: Lifecycle
-description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.'
+description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, and import paths.'
 ---
 
 # Lifecycle
@@ -27,9 +27,9 @@ Full spec-driven design supports three interaction modes: collaborative, selecti
 
 ## Quick Look
 
-- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick and import lanes.
+- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick, lite, and import lanes.
 - When to use it: when you need the actual project execution model, not just a high-level overview of workflow mode.
-- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-implement`
+- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-import-plan`, `oat-project-implement`
 
 ## Lifecycle Map
 
@@ -71,6 +71,11 @@ After implementation closeout finishes:
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
 5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
+
+Lite mode collapses the default pre-approval sequence to PR creation only.
+`oat-project-pr-final` builds the body directly from the lite plan and
+`implementation.md`; summary and documentation remain explicit lite opt-ins,
+and retro is not added to the lite closeout sequence.
 
 ### Completion archive behavior
 
@@ -165,7 +170,7 @@ When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter 
 
 ### Phase-review setup during planning
 
-Spec-driven, quick, and import planning run one shared setup after stable phase
+Spec-driven, quick, lite, and import planning run one shared setup after stable phase
 IDs exist and before the plan artifact review. The target probe qualifies only
 an explicitly configured, enabled, and available review target, then offers all
 phases, selected phases, or disabled. Existing explicit
@@ -212,6 +217,13 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 3. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 4. `oat-project-review-provide` / `oat-project-pr-final`
 5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
+
+### Lite lane diagram
+
+1. `oat-project-lite` runs one batched interview, authors a single-phase `plan.md` with validation criteria, and pauses once for approval
+2. Implement: `oat-project-implement` runs the single phase without HiLL checkpoint prompts
+3. Pass the mandatory final review, then route directly to `oat-project-pr-final`
+4. Optional `oat project promote <project-path> --to quick` when the work no longer fits one sitting
 
 ### Import lane diagram
 
@@ -268,6 +280,21 @@ still read as compatibility capped-policy input, but new quick-start selections
 should use the dispatch-policy names, including explicit `Uncapped` and
 `Inherit Host Defaults`.
 
+### Lite lane
+
+```mermaid
+flowchart LR
+  L["Lite interview\n(one batched round)"] --> P["Single-phase plan\n(one approval)"]
+  P --> I["Implement (oat-project-implement)"]
+  I --> R["Final review"] --> PR["PR (default closeout)"]
+  P -->|Scope grows| Q["Promote to Quick"]
+```
+
+Lite keeps planning and validation in `plan.md`. It has no discovery, spec, or
+design artifact by default, skips implementation HiLL prompts, and routes a
+passed final review directly to PR creation. Summary and documentation run only
+when enabled through the lite-specific post-implementation sequence.
+
 ### Import lane
 
 ```mermaid
@@ -302,6 +329,10 @@ Key differences from other lanes:
 Quick lane progression:
 
 `discovery.md` -> [`design.md` (optional lightweight)] -> `plan.md` -> `implementation.md`
+
+Lite lane progression:
+
+`plan.md` -> `implementation.md` -> `pr/*.md` (`summary.md` and documentation are opt-in)
 
 Import lane progression:
 
