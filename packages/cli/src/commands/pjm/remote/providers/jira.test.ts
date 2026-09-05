@@ -8,6 +8,7 @@ import {
   normalizeJiraIssueObservation,
   parseJiraIssueReference,
   planJiraDiscussionRead,
+  planJiraDuplicateSearch,
   planJiraMetadataRead,
   planJiraMutation,
   planJiraRead,
@@ -64,6 +65,7 @@ export const jiraCapability: JiraHostCapabilityObservation = {
     'update',
     'transition',
     'annotate',
+    'search-duplicates',
   ],
   observableFields: [
     'stable-identity',
@@ -603,5 +605,60 @@ describe('Jira mutation observations', () => {
       intent: { ...mutation.intent, projection: { title: 'forged' } },
     };
     expect(verify(forged, readback(mutation)).classification).toBe('uncertain');
+  });
+});
+
+describe('Jira duplicate-search intents', () => {
+  it('plans bounded provenance and historical-key search in exact site/project context', () => {
+    const action = planJiraDuplicateSearch({
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42', 'LEGACY-7'],
+      maxResults: 10,
+    });
+    expect(action).toMatchObject({
+      provider: 'jira',
+      operation: 'search-duplicates',
+      intent: {
+        query: {
+          provenanceToken: 'origin:local:item-42',
+          historicalKeys: ['OLD-42', 'LEGACY-7'],
+          siteId: 'site_01',
+          projectId: 'project_200',
+        },
+        resultContract: { maxResults: 10, requireStableIssueId: true },
+      },
+    });
+    expect(JSON.stringify(action)).not.toMatch(
+      /command|executable|arguments|catalog/i,
+    );
+  });
+
+  it('fails closed when semantic search is unavailable or bounds are invalid', () => {
+    const input = {
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42'],
+      maxResults: 10,
+    };
+    expect(() =>
+      planJiraDuplicateSearch({
+        ...input,
+        hostCapability: { ...jiraCapability, operations: ['read'] },
+      }),
+    ).toThrow('capability');
+    expect(() =>
+      planJiraDuplicateSearch({ ...input, maxResults: 101 }),
+    ).toThrow('bounds');
+    expect(() =>
+      planJiraDuplicateSearch({
+        ...input,
+        historicalKeys: ['OLD-42', 'OLD-42'],
+      }),
+    ).toThrow('bounds');
   });
 });

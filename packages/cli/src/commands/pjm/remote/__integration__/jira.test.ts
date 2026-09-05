@@ -11,6 +11,7 @@ import type {
 import {
   classifyJiraReadObservation,
   jiraAdapter,
+  planJiraDuplicateSearch,
   planJiraMutation,
   planJiraRead,
   previewJiraMutation,
@@ -41,6 +42,7 @@ const capability: JiraHostCapabilityObservation = {
     'update',
     'transition',
     'annotate',
+    'search-duplicates',
   ],
   observableFields: [
     'stable-identity',
@@ -327,5 +329,27 @@ describe('Jira remote lifecycle integration', () => {
         context: { ...context, siteId: 'site_other' },
       }).valid,
     ).toBe(false);
+  });
+
+  it('plans duplicate recovery from provenance and historical keys without a native query', () => {
+    const action = planJiraDuplicateSearch({
+      context,
+      hostCapability: capability,
+      provenanceToken: 'origin:local:item-42',
+      reservedBindingId: 'binding_jira_create',
+      historicalKeys: ['OLD-42'],
+      maxResults: 20,
+    });
+    expect(action.intent).toMatchObject({
+      query: {
+        historicalKeys: ['OLD-42'],
+        siteId: 'site_01',
+        projectId: 'project_200',
+      },
+      resultContract: { maxResults: 20, requireExactContext: true },
+    });
+    expect(JSON.stringify(action)).not.toMatch(
+      /command|executable|arguments|catalog|query language/i,
+    );
   });
 });

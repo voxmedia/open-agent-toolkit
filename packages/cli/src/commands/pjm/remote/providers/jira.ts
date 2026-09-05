@@ -177,6 +177,15 @@ export interface JiraMutationVerificationResult {
   retryAllowed: false;
 }
 
+export interface JiraDuplicateSearchPlanInput {
+  context: ProviderContext;
+  hostCapability: JiraHostCapabilityObservation;
+  provenanceToken: string;
+  reservedBindingId: string;
+  historicalKeys: string[];
+  maxResults: number;
+}
+
 const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/;
 const ISSUE_ID = /^[1-9][0-9]*$/;
 const URL_REFERENCE =
@@ -823,6 +832,50 @@ export function verifyJiraMutationObservation(
     : terminal('partial', 'postcondition-mismatch', statuses);
 }
 
+export function planJiraDuplicateSearch(
+  input: JiraDuplicateSearchPlanInput,
+): SemanticAction {
+  requireJiraCapability(
+    input.hostCapability,
+    input.context,
+    'search-duplicates',
+    ['stable-identity', 'project-context'],
+  );
+  if (
+    !input.provenanceToken ||
+    Buffer.byteLength(input.provenanceToken, 'utf8') > 512 ||
+    !input.reservedBindingId ||
+    Buffer.byteLength(input.reservedBindingId, 'utf8') > 128 ||
+    input.historicalKeys.length > 64 ||
+    new Set(input.historicalKeys).size !== input.historicalKeys.length ||
+    input.historicalKeys.some((key) => !ISSUE_KEY.test(key)) ||
+    !Number.isInteger(input.maxResults) ||
+    input.maxResults < 1 ||
+    input.maxResults > 100
+  ) {
+    throw new Error('Jira duplicate search bounds are invalid.');
+  }
+  const query = {
+    provenanceToken: input.provenanceToken,
+    reservedBindingId: input.reservedBindingId,
+    historicalKeys: [...input.historicalKeys],
+    siteId: input.context.siteId,
+    projectId: input.context.projectId,
+  };
+  return jiraAction('search-duplicates', input.context, {
+    query,
+    queryDigest: semanticDigest(query),
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    resultContract: {
+      maxResults: input.maxResults,
+      classifications: ['no-match', 'one-match', 'ambiguous'],
+      requireStableIssueId: true,
+      requireExactContext: true,
+      matchStatus: 'evidence-until-identity-and-context-verified',
+    },
+  });
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -846,6 +899,11 @@ export const jiraAdapter: ProviderAdapter = {
     if (operation === 'read-discussion') {
       return planJiraDiscussionRead(
         input as unknown as JiraDiscussionReadPlanInput,
+      );
+    }
+    if (operation === 'search-duplicates') {
+      return planJiraDuplicateSearch(
+        input as unknown as JiraDuplicateSearchPlanInput,
       );
     }
     return {
