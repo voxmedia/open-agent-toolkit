@@ -43,14 +43,16 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "INVALID_RUN_ABORT",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p06",
     "native-spawn-accepted",
     "canonical-role:project"
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Pre-edit base validation failed: payload.phase_base_head was 7e636cf25663b50ba70a5c64524362d15774dee0 while accepted-run HEAD was 8b985078e36a76de1788daf3ce1b7cefe8b1abba after the launch journal commit. The worktree was clean, the only intervening path was this dispatch record, and no p06 task executed."
+  ],
   "continuation_events": [],
   "fallback": {
     "mode": "block",

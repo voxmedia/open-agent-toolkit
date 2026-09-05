@@ -365,6 +365,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-05
 
+#### p06 invalid-run abort before implementation
+
+**Dispatch:** `lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a`
+**Expected phase base:** `7e636cf25663b50ba70a5c64524362d15774dee0`
+**Accepted-run HEAD:** `8b985078e36a76de1788daf3ce1b7cefe8b1abba`
+**Outcome:** `INVALID_RUN_ABORT`; 0/3 tasks executed and no implementation
+files changed. The sole intervening commit recorded the p06 launch journal, but
+the payload retained the pre-journal SHA. The canonical implementer rejected
+the mismatch before editing. A replacement run requires explicit relaunch
+authorization and a new dispatch record whose phase base equals its accepted
+launch HEAD.
+
 #### Phase p05 completed and reviewed
 
 **Implementation range:** `2565cb77a3067fb1dbfd44cce2af391582787e4e..c11a1150239dc179c60b0b82defc9c350999955d`
