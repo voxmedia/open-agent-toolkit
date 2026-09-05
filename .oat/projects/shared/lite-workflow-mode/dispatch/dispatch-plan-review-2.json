@@ -1,0 +1,70 @@
+{
+  "request_id": "dispatch-plan-review-2",
+  "caller": "oat-project-quick-start",
+  "scope": "plan",
+  "objective": "Structured artifact re-review of plan.md after applying attempt-1 findings (retry 1 of 2)",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "review",
+  "provider": "claude",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "claude-agent-tool",
+    "source": "tool-schema",
+    "observed_at": "2026-09-04T22:50:44.000Z"
+  },
+  "authority": "artifact-review",
+  "role_selector": "oat-reviewer",
+  "model_selector": null,
+  "model_selector_granularity": "inherited",
+  "effort_selector": null,
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["oat-reviewer"],
+  "selection_reason": "inherit",
+  "selected_route": "native",
+  "deadline_seconds": 900,
+  "retry_limit": 2,
+  "payload": {
+    "type": "artifact",
+    "scope": "plan",
+    "oat_output_mode": "structured",
+    "workflow_mode": "quick"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "pending",
+  "configured_invocation_evidence": [
+    "oat project dispatch-ceiling resolve --provider claude --role reviewer --preflight --json => policy high, value opus, source project-state",
+    "planning parent claude-fable-5-1 at or above opus ceiling; child model omitted (inherit)"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "user",
+      "validation": "direct-canonical",
+      "canonicalPath": "<user>/agents/oat-reviewer.md",
+      "selectedPath": "<user>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.1",
+      "contentDigest": "sha256:1e2987f2cb1d74e9c13203a45ba39de13c7a52624059985f154c04dbed87a0d4",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
