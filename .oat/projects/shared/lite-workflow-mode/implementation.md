@@ -364,6 +364,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-05
 
+#### p05 review received — fix loop 1
+
+**Review artifact:** `reviews/code-p05-review-2026-09-05T225758Z.md`
+**Reviewed head:** `1612122f03d605b9062f7b50b0806b1882f87714`
+**Findings:** 0 Critical, 3 Important, 2 Medium, 0 Minor.
+**Disposition:** fixes added for the bounded brainstorm lite handoff,
+PR-final branch exclusivity, final-HiLL bypass, lite summary source mapping,
+and load-bearing behavioral contract tests. Re-review is required.
+
 #### Phase p04 completed and reviewed
 
 **Implementation range:** `90824ab273eb75612b5abfd00462413c010e26da..3e89f14de30836512bb5aa16e46b7a68323503bd`
