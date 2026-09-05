@@ -49,14 +49,16 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p05-fix2",
     "same-handle-continuation",
     "canonical-role:project"
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Fix commit c11a1150239dc179c60b0b82defc9c350999955d changed exactly the two authorized files and passed the focused mutation control plus the full p05 suite."
+  ],
   "continuation_events": [
     {
       "id": "p05-fix2-project-recap-gate",

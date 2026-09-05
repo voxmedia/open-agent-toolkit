@@ -1,0 +1,100 @@
+{
+  "request_id": "lite-p05-rereview2-be3858ff-497d-4703-b177-611761b503ec",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Independently re-review Phase p05 after bounded fix loop 2",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-rereview-20260905T231321Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-05T23:13:21.000Z"
+  },
+  "authority": "review-artifact-only",
+  "role_selector": "oat-reviewer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-reviewer-gpt-5-6-sol-high"],
+  "selection_reason": "gate-target",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-5-6-sol-high",
+    "fork_turns": "none",
+    "scope": "p05",
+    "range_base": "2565cb77a3067fb1dbfd44cce2af391582787e4e",
+    "range_head": "c11a1150239dc179c60b0b82defc9c350999955d",
+    "prior_review": "reviews/code-p05-review-2026-09-05T230902Z.md",
+    "fix_commit": "c11a1150239dc179c60b0b82defc9c350999955d",
+    "output_mode": "artifact",
+    "worktree": "root"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "in-progress",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p05-rereview2",
+    "native-spawn-accepted",
+    "canonical-role:project"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "id": "p05-rereview2-after-fix2",
+      "kind": "review-after-fix",
+      "original_request_id": "lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4",
+      "prior_review_request_id": "lite-p05-rereview1-3ecff359-59c1-4e50-8dc5-1a132a21379c",
+      "fix_request_id": "lite-p05-fix2-4891a369-9ea1-414c-8c8d-bcc94de9baf9",
+      "review_request_id": "lite-p05-rereview2-be3858ff-497d-4703-b177-611761b503ec"
+    }
+  ],
+  "fallback": {
+    "mode": "block"
+  },
+  "authorization_scope": "lite-workflow-mode-p05-rereview2",
+  "expected_output": "One timestamped p05 re-review artifact and brief artifact-mode confirmation",
+  "verification_evidence": "Finding-by-finding revalidation, exact reviewed head, severity counts, required reconnaissance signal, and complete ordered lite closeout verification",
+  "escalate_when": [
+    "authoritative range is invalid",
+    "the recap-gate finding remains unresolved or regressions appear",
+    "review artifact contract cannot be satisfied"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.1",
+      "contentDigest": "sha256:1e2987f2cb1d74e9c13203a45ba39de13c7a52624059985f154c04dbed87a0d4",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

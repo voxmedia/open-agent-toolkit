@@ -388,6 +388,14 @@ skill validation, bump checks, lint, and format passed. Awaiting re-review.
 project-recap gate explicitly non-lite and extends the behavioral closeout
 contract test so default lite execution cannot invoke or block on recap.
 
+**Fix completed:** `c11a1150239dc179c60b0b82defc9c350999955d`
+made the project-recap subsection explicitly non-lite and extended the
+executable closeout contract to require passed phase/final reviews, report
+`PROJECT_RECAP_REACHABLE=false`, and prove the ordered lite path. The mutation
+control failed with `recap=true` when the guard was neutralized and passed
+after restoration; the full isolated-HOME p05 suite passed 234/234. Awaiting
+re-review 2.
+
 #### Phase p04 completed and reviewed
 
 **Implementation range:** `90824ab273eb75612b5abfd00462413c010e26da..3e89f14de30836512bb5aa16e46b7a68323503bd`

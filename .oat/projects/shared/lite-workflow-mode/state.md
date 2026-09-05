@@ -120,7 +120,8 @@ Phase 4 - Lite Entry Skill and End-to-End Test
 - ✓ Phase 5 implementation and verification complete
 - ✓ p05 fix loop 1 resolved 3 Important and 2 Medium findings
 - ✓ Independent p05 re-review 1 found one residual Important finding
-- ⧗ p05 fix loop 2 queued for the lite project-recap gate
+- ✓ p05 fix loop 2 resolved the lite project-recap gate
+- ⧗ Independent p05 re-review 2 pending
 
 ## Blockers
 
@@ -128,4 +129,4 @@ None.
 
 ## Next Milestone
 
-Complete p05 fix loop 2 and run independent re-review 2.
+Run and disposition independent p05 re-review 2.
