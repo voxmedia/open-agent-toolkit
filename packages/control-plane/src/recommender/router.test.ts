@@ -140,6 +140,56 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-import-plan');
   });
 
+  it('routes lite projects across planning boundary tiers', () => {
+    const litePlan = (
+      boundaryTier: 1 | 2 | 3,
+      status: 'in_progress' | 'complete',
+    ) =>
+      makeState({
+        phase: 'plan',
+        phaseStatus: status,
+        workflowMode: 'lite',
+        artifacts: makeArtifacts({
+          type: 'plan',
+          boundaryTier,
+          status,
+        }),
+      });
+
+    expect(recommendSkill(litePlan(3, 'in_progress')).skill).toBe(
+      'oat-project-lite',
+    );
+    expect(recommendSkill(litePlan(2, 'in_progress')).skill).toBe(
+      'oat-project-implement',
+    );
+    expect(recommendSkill(litePlan(1, 'complete')).skill).toBe(
+      'oat-project-implement',
+    );
+  });
+
+  it('uses the current-phase default for a lite discovery state', () => {
+    const state = makeState({
+      phase: 'discovery',
+      workflowMode: 'lite',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-discover');
+  });
+
+  it('routes lite implementation in progress to implement', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'in_progress',
+      workflowMode: 'lite',
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
   it('uses oat-project-implement regardless of execution mode', () => {
     const state = makeState({
       phase: 'plan',
@@ -406,6 +456,42 @@ describe('recommendSkill', () => {
     const state = makeState({
       phase: 'implement',
       phaseStatus: 'complete',
+      reviews: [makeReview({ scope: 'final', status: 'passed' })],
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: false,
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-summary');
+  });
+
+  it('routes lite passed final review without summary directly to pr-final', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'lite',
+      reviews: [makeReview({ scope: 'final', status: 'passed' })],
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: false,
+        boundaryTier: 3,
+      }),
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-pr-final',
+      reason:
+        'Final review passed; lite mode synthesizes the PR from plan and implementation',
+    });
+  });
+
+  it('keeps quick passed final review without summary on the summary route', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
       reviews: [makeReview({ scope: 'final', status: 'passed' })],
       artifacts: makeArtifacts({
         type: 'summary',
