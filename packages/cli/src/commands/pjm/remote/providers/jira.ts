@@ -157,6 +157,26 @@ export interface JiraDiscussionObservation {
   items: Array<{ id: string; body: string; observedAt: string }>;
 }
 
+export interface JiraMutationVerificationInput {
+  action: SemanticAction;
+  attempt: {
+    count: number;
+    outcome: 'accepted' | 'rejected' | 'unknown';
+    capabilityEvidenceDigest: string;
+    metadataEvidenceDigest: string;
+  };
+  hostCapability: JiraHostCapabilityObservation;
+  normalizedMetadata: JiraNormalizedMetadata;
+  readback: SanitizedProviderObservation | null;
+}
+
+export interface JiraMutationVerificationResult {
+  classification: 'verified' | 'partial' | 'rejected' | 'uncertain';
+  reason: string;
+  fields: FieldVerification[];
+  retryAllowed: false;
+}
+
 const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/;
 const ISSUE_ID = /^[1-9][0-9]*$/;
 const URL_REFERENCE =
@@ -242,6 +262,15 @@ export function normalizeJiraIssueObservation(
     const value = observation.fields[extension];
     if (value === null || typeof value === 'string')
       extensions[extension] = value;
+  }
+  if (isRecord(observation.fields.mutationEvidence)) {
+    extensions.mutationEvidence = observation.fields.mutationEvidence;
+  }
+  if (isRecord(observation.fields.createProvenance)) {
+    extensions.createProvenance = observation.fields.createProvenance;
+  }
+  if (Array.isArray(observation.fields.annotations)) {
+    extensions.annotations = stringArray(observation.fields.annotations);
   }
   return {
     provider: 'jira',
@@ -437,7 +466,7 @@ export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
     throw new Error('Jira mutation approval does not match its preview.');
   }
   const fieldMask = normalizeJiraMutationFieldMask(input);
-  return jiraAction(input.operation, input.context, {
+  const baseIntent = {
     bindingId: input.bindingId,
     stableId: input.stableId ?? null,
     provenance: input.provenance ?? null,
@@ -453,14 +482,35 @@ export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
     outboundSafetyEvidence: { ...input.outboundSafety },
     previewDigest: preview.previewDigest,
     approvalDigest: input.approvedPreviewDigest,
-    executionEvidence: preview.executionEvidence,
     readbackContract: {
       pinned: true,
       requireStableIdentity: true,
       requireExactContext: true,
       fields: fieldMask,
     },
+  };
+  const actionDigest = semanticDigest({
+    provider: 'jira',
+    operation: input.operation,
+    context: input.context,
+    intent: baseIntent,
+    executionEvidence: preview.executionEvidence,
   });
+  return {
+    provider: 'jira',
+    operation: input.operation,
+    context: input.context,
+    intent: {
+      ...baseIntent,
+      actionDigest,
+      executionEvidence: {
+        ...preview.executionEvidence,
+        previewDigest: preview.previewDigest,
+        approvalDigest: input.approvedPreviewDigest,
+        actionDigest,
+      },
+    },
+  };
 }
 
 export function classifyJiraReadObservation(
@@ -690,6 +740,89 @@ export function validateJiraDiscussionReadObservation(input: {
   };
 }
 
+export function verifyJiraMutationObservation(
+  input: JiraMutationVerificationInput,
+): JiraMutationVerificationResult {
+  const fields = mutationVerificationFields(input.action);
+  const terminal = (
+    classification: JiraMutationVerificationResult['classification'],
+    reason: string,
+    statuses: FieldVerification[] = fields.map((field) => ({
+      field,
+      status: 'unavailable',
+    })),
+  ): JiraMutationVerificationResult => ({
+    classification,
+    reason,
+    fields: statuses,
+    retryAllowed: false,
+  });
+  if (!validJiraMutationAction(input.action))
+    return terminal('uncertain', 'mutation-action-invalid');
+  if (input.attempt.count !== 1)
+    return terminal('uncertain', 'attempt-count-invalid');
+  if (input.attempt.outcome === 'rejected')
+    return terminal('rejected', 'provider-rejected');
+  if (input.attempt.outcome === 'unknown' || !input.readback) {
+    return terminal('uncertain', 'authoritative-readback-required');
+  }
+  if (
+    input.attempt.capabilityEvidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.hostCapability.evidenceDigest !==
+      input.action.intent.capabilityEvidenceDigest ||
+    input.attempt.metadataEvidenceDigest !==
+      input.action.intent.metadataEvidenceDigest ||
+    input.normalizedMetadata.evidenceDigest !==
+      input.action.intent.metadataEvidenceDigest
+  ) {
+    return terminal('uncertain', 'execution-evidence-mismatch');
+  }
+  const publicValidation = jiraAdapter.validateObservation(
+    input.action,
+    input.readback,
+  );
+  if (!publicValidation.valid)
+    return terminal('uncertain', publicValidation.reasons.join(','));
+  let issue: NormalizedRemoteIssue;
+  try {
+    issue = normalizeJiraIssueObservation(input.readback);
+  } catch {
+    return terminal('uncertain', 'readback-invalid');
+  }
+  if (
+    input.action.operation !== 'create' &&
+    issue.stableId !== input.action.intent.stableId
+  ) {
+    return terminal('uncertain', 'readback-identity-mismatch');
+  }
+  const postconditions = input.action.intent.postconditions as Record<
+    string,
+    unknown
+  >;
+  const statuses = fields.map((field) => {
+    const observed =
+      field === 'description'
+        ? issue.description
+        : field === 'status'
+          ? issue.status
+          : field === 'annotation'
+            ? issue.extensions.annotations
+            : issue[field as 'title' | 'priority'];
+    const verified =
+      field === 'annotation' && Array.isArray(observed)
+        ? observed.includes(postconditions[field])
+        : semanticValuesEqual(observed, postconditions[field]);
+    return {
+      field,
+      status: verified ? ('verified' as const) : ('mismatch' as const),
+    };
+  });
+  return statuses.every((field) => field.status === 'verified')
+    ? terminal('verified', 'authoritative-readback-matched', statuses)
+    : terminal('partial', 'postcondition-mismatch', statuses);
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -730,7 +863,16 @@ export const jiraAdapter: ProviderAdapter = {
         reasons: ['typed-validator-required:read-discussion'],
       };
     }
-    if (!validJiraActionDigest(action)) reasons.push('action-evidence-invalid');
+    const mutation = ['create', 'update', 'transition', 'annotate'].includes(
+      action.operation,
+    );
+    if (
+      mutation
+        ? !validJiraMutationAction(action)
+        : !validJiraActionDigest(action)
+    ) {
+      reasons.push('action-evidence-invalid');
+    }
     if (action.provider !== 'jira' || observation.provider !== 'jira')
       reasons.push('provider-mismatch');
     if (!contextsEqual(action.context, observation.context))
@@ -770,12 +912,87 @@ export const jiraAdapter: ProviderAdapter = {
     ) {
       reasons.push('metadata-evidence-missing');
     }
+    if (mutation) {
+      if (
+        !semanticValuesEqual(
+          observation.fields.mutationEvidence,
+          action.intent.executionEvidence,
+        )
+      ) {
+        reasons.push('mutation-evidence-mismatch');
+      }
+      if (
+        action.operation === 'create' &&
+        !semanticValuesEqual(
+          observation.fields.createProvenance,
+          action.intent.provenance,
+        )
+      ) {
+        reasons.push('create-provenance-mismatch');
+      }
+      try {
+        const issue = normalizeJiraIssueObservation(observation);
+        if (
+          action.operation !== 'create' &&
+          issue.stableId !== action.intent.stableId
+        ) {
+          reasons.push('observation-identity-mismatch');
+        }
+      } catch {
+        reasons.push('observation-invalid');
+      }
+    }
     return { valid: reasons.length === 0, reasons: uniqueStrings(reasons) };
   },
   verificationFields(action): string[] {
-    return action.operation === 'read' ? ['stable-identity'] : [];
+    return action.operation === 'read'
+      ? ['stable-identity']
+      : mutationVerificationFields(action);
   },
   verify(action, issue): FieldVerification[] {
+    if (
+      ['create', 'update', 'transition', 'annotate'].includes(action.operation)
+    ) {
+      const fields = mutationVerificationFields(action);
+      if (
+        !validJiraMutationAction(action) ||
+        issue.provider !== 'jira' ||
+        !contextsEqual(action.context, issue.context) ||
+        (action.operation !== 'create' &&
+          issue.stableId !== action.intent.stableId) ||
+        !semanticValuesEqual(
+          issue.extensions.mutationEvidence,
+          action.intent.executionEvidence,
+        )
+      ) {
+        return fields.map((field) => ({ field, status: 'unavailable' }));
+      }
+      const postconditions = action.intent.postconditions as Record<
+        string,
+        unknown
+      >;
+      return fields.map((field) => {
+        const observed =
+          field === 'description'
+            ? issue.description
+            : field === 'status'
+              ? issue.status
+              : field === 'annotation'
+                ? issue.extensions.annotations
+                : issue[field as 'title' | 'priority'];
+        return {
+          field,
+          status:
+            field === 'annotation' && Array.isArray(observed)
+              ? observed.includes(postconditions[field])
+                ? 'verified'
+                : 'mismatch'
+              : semanticValuesEqual(observed, postconditions[field])
+                ? 'verified'
+                : 'mismatch',
+        };
+      });
+    }
     return this.verificationFields(action).map((field) => ({
       field,
       status:
@@ -922,6 +1139,136 @@ function jiraAction(
   };
 }
 
+function mutationVerificationFields(action: SemanticAction): string[] {
+  return Array.isArray(action.intent.fieldMask)
+    ? action.intent.fieldMask.filter(
+        (field): field is string => typeof field === 'string',
+      )
+    : [];
+}
+
+function validJiraMutationAction(action: SemanticAction): boolean {
+  if (
+    action.provider !== 'jira' ||
+    !['create', 'update', 'transition', 'annotate'].includes(
+      action.operation,
+    ) ||
+    !hasPinnedJiraContext(action.context)
+  ) {
+    return false;
+  }
+  const intent = action.intent;
+  if (
+    typeof intent.bindingId !== 'string' ||
+    !intent.bindingId ||
+    !Array.isArray(intent.fieldMask) ||
+    !isRecord(intent.projection) ||
+    !isRecord(intent.postconditions) ||
+    !semanticValuesEqual(intent.projection, intent.postconditions) ||
+    typeof intent.capabilityEvidenceDigest !== 'string' ||
+    typeof intent.metadataEvidenceDigest !== 'string' ||
+    !isRecord(intent.outboundSafety) ||
+    !isRecord(intent.outboundSafetyEvidence) ||
+    !isRecord(intent.executionEvidence) ||
+    typeof intent.previewDigest !== 'string' ||
+    intent.approvalDigest !== intent.previewDigest ||
+    typeof intent.actionDigest !== 'string'
+  ) {
+    return false;
+  }
+  const operation = action.operation as JiraMutationPreviewInput['operation'];
+  const projection = intent.projection;
+  const safety =
+    intent.outboundSafetyEvidence as unknown as OutboundProjectionSafetyResult;
+  try {
+    normalizeJiraMutationFieldMask({
+      operation,
+      context: action.context,
+      hostCapability: {} as JiraHostCapabilityObservation,
+      normalizedMetadata: {} as JiraNormalizedMetadata,
+      bindingId: intent.bindingId,
+      fieldMask: intent.fieldMask as string[],
+      projection,
+      outboundSafety: safety,
+    });
+    requireCurrentOutboundSafety(projection, safety);
+  } catch {
+    return false;
+  }
+  if (
+    !semanticValuesEqual(intent.outboundSafety, {
+      projectionDigest: safety.projectionDigest,
+      resultDigest: safety.resultDigest,
+    })
+  ) {
+    return false;
+  }
+  if (operation === 'create') {
+    if (
+      intent.stableId !== null ||
+      !isRecord(intent.provenance) ||
+      intent.provenance.bindingId !== intent.bindingId ||
+      typeof intent.provenance.origin !== 'string' ||
+      !intent.provenance.origin
+    ) {
+      return false;
+    }
+  } else if (
+    intent.provenance !== null ||
+    typeof intent.stableId !== 'string' ||
+    !validJiraStableIdForContext(intent.stableId, action.context)
+  ) {
+    return false;
+  }
+  const fieldMask = intent.fieldMask as JiraMutationField[];
+  const baseExecutionEvidence = {
+    capabilityEvidenceDigest: intent.capabilityEvidenceDigest,
+    metadataEvidenceDigest: intent.metadataEvidenceDigest,
+    projectionDigest: safety.projectionDigest,
+    outboundSafetyResultDigest: safety.resultDigest,
+  };
+  const expectedPreviewDigest = semanticDigest({
+    provider: 'jira',
+    operation,
+    context: action.context,
+    bindingId: intent.bindingId,
+    stableId: intent.stableId,
+    provenance: intent.provenance,
+    fieldMask,
+    projection,
+    postconditions: projection,
+    executionEvidence: baseExecutionEvidence,
+  });
+  const {
+    actionDigest: _actionDigest,
+    executionEvidence: _executionEvidence,
+    ...baseIntent
+  } = intent;
+  const expectedActionDigest = semanticDigest({
+    provider: 'jira',
+    operation,
+    context: action.context,
+    intent: baseIntent,
+    executionEvidence: baseExecutionEvidence,
+  });
+  return (
+    intent.previewDigest === expectedPreviewDigest &&
+    intent.actionDigest === expectedActionDigest &&
+    semanticValuesEqual(intent.executionEvidence, {
+      ...baseExecutionEvidence,
+      previewDigest: expectedPreviewDigest,
+      approvalDigest: expectedPreviewDigest,
+      actionDigest: expectedActionDigest,
+    }) &&
+    semanticValuesEqual(intent.readbackContract, {
+      pinned: true,
+      requireStableIdentity: true,
+      requireExactContext: true,
+      fields: fieldMask,
+    })
+  );
+}
+
 function validJiraActionDigest(action: SemanticAction): boolean {
   if (action.provider !== 'jira' || !hasPinnedJiraContext(action.context))
     return false;
@@ -936,6 +1283,14 @@ function validJiraActionDigest(action: SemanticAction): boolean {
         intent,
       })
   );
+}
+
+function semanticValuesEqual(left: unknown, right: unknown): boolean {
+  try {
+    return semanticDigest(left) === semanticDigest(right);
+  } catch {
+    return false;
+  }
 }
 
 function unavailableJiraRead(

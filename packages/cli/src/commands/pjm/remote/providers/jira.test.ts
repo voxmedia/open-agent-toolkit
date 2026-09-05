@@ -14,6 +14,7 @@ import {
   previewJiraMutation,
   validateJiraDiscussionReadObservation,
   validateJiraMetadataObservation,
+  verifyJiraMutationObservation,
   type JiraHostCapabilityObservation,
 } from './jira';
 
@@ -427,5 +428,180 @@ describe('Jira read and metadata observations', () => {
         },
       }),
     ).toMatchObject({ classification: 'page', persistable: false });
+  });
+});
+
+describe('Jira mutation observations', () => {
+  const metadata = {
+    evidenceDigest: 'sha256:jira-metadata',
+    writableFields: [
+      'title',
+      'description',
+      'priority',
+      'status',
+      'annotation',
+    ] as const,
+    transitions: ['Done'],
+  };
+
+  function action(operation: 'create' | 'update' | 'transition' | 'annotate') {
+    const projection =
+      operation === 'transition'
+        ? { status: 'Done' }
+        : operation === 'annotate'
+          ? { annotation: 'Completed locally' }
+          : { title: 'Published title' };
+    const input = {
+      operation,
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      normalizedMetadata: {
+        ...metadata,
+        writableFields: [...metadata.writableFields],
+      },
+      bindingId: 'binding_jira_42',
+      ...(operation === 'create'
+        ? {
+            provenance: {
+              bindingId: 'binding_jira_42',
+              origin: 'local:item-42',
+            },
+          }
+        : { stableId: 'jira:site_01:10042' }),
+      fieldMask: Object.keys(projection),
+      projection,
+      outboundSafety: assessOutboundProjectionSafety(projection, {
+        assessedAt: '2026-09-05T12:00:00.000Z',
+      }),
+    };
+    const preview = previewJiraMutation(input);
+    return planJiraMutation({
+      ...input,
+      approvedPreviewDigest: preview.previewDigest,
+    });
+  }
+
+  function readback(
+    mutation: ReturnType<typeof action>,
+    patch: Record<string, unknown> = {},
+  ) {
+    const projection = mutation.intent.projection as Record<string, unknown>;
+    return {
+      ...jiraObservation,
+      fields: {
+        ...jiraObservation.fields,
+        ...(projection.title === undefined ? {} : { title: projection.title }),
+        ...(projection.description === undefined
+          ? {}
+          : { descriptionText: projection.description }),
+        ...(projection.priority === undefined
+          ? {}
+          : { priority: projection.priority }),
+        ...(projection.status === undefined
+          ? {}
+          : { status: projection.status }),
+        ...(projection.annotation === undefined
+          ? {}
+          : { annotations: [projection.annotation] }),
+        mutationEvidence: mutation.intent.executionEvidence,
+        ...(mutation.operation === 'create'
+          ? { createProvenance: mutation.intent.provenance }
+          : {}),
+        ...patch,
+      },
+    } as SanitizedProviderObservation;
+  }
+
+  function verify(
+    mutation: ReturnType<typeof action>,
+    observation: SanitizedProviderObservation | null,
+    outcome: 'accepted' | 'rejected' | 'unknown' = 'accepted',
+  ) {
+    return verifyJiraMutationObservation({
+      action: mutation,
+      attempt: {
+        count: 1,
+        outcome,
+        capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+        metadataEvidenceDigest: metadata.evidenceDigest,
+      },
+      hostCapability: jiraCapability,
+      normalizedMetadata: {
+        ...metadata,
+        writableFields: [...metadata.writableFields],
+      },
+      readback: observation,
+    });
+  }
+
+  it('verifies create, update, transition, and comment through pinned readback', () => {
+    for (const operation of [
+      'create',
+      'update',
+      'transition',
+      'annotate',
+    ] as const) {
+      const mutation = action(operation);
+      expect(verify(mutation, readback(mutation))).toMatchObject({
+        classification: 'verified',
+        retryAllowed: false,
+      });
+      expect(
+        jiraAdapter.validateObservation(mutation, readback(mutation)),
+      ).toEqual({
+        valid: true,
+        reasons: [],
+      });
+    }
+  });
+
+  it('classifies silently dropped fields as partial and unknown attempts as uncertain', () => {
+    const mutation = action('update');
+    expect(
+      verify(mutation, readback(mutation, { title: 'Old title' }))
+        .classification,
+    ).toBe('partial');
+    expect(verify(mutation, null, 'unknown')).toMatchObject({
+      classification: 'uncertain',
+      retryAllowed: false,
+    });
+    expect(verify(mutation, null, 'rejected').classification).toBe('rejected');
+  });
+
+  it('rejects metadata drift, mismatched identity, and forged action evidence', () => {
+    const mutation = action('update');
+    expect(
+      verifyJiraMutationObservation({
+        action: mutation,
+        attempt: {
+          count: 1,
+          outcome: 'accepted',
+          capabilityEvidenceDigest: jiraCapability.evidenceDigest,
+          metadataEvidenceDigest: 'sha256:stale',
+        },
+        hostCapability: jiraCapability,
+        normalizedMetadata: {
+          ...metadata,
+          writableFields: [...metadata.writableFields],
+        },
+        readback: readback(mutation),
+      }).classification,
+    ).toBe('uncertain');
+    expect(
+      verify(mutation, {
+        ...readback(mutation),
+        identity: { stableId: '10043', aliases: ['NEW-43'] },
+        fields: {
+          ...readback(mutation).fields,
+          issueId: '10043',
+          key: 'NEW-43',
+        },
+      }).classification,
+    ).toBe('uncertain');
+    const forged = {
+      ...mutation,
+      intent: { ...mutation.intent, projection: { title: 'forged' } },
+    };
+    expect(verify(forged, readback(mutation)).classification).toBe('uncertain');
   });
 });
